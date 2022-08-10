@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
+.test_common:
+    extends: .launch_rule
+    stage: test
+    variables:
+        CUDA_CACHE_DISABLE: 1
+        GIT_STRATEGY: none
+    script:
+      - 'pwd'
+      - 'ls -1 cvcuda-installer/*.deb'
+      - 'version=$(cat cvcuda-installer/VERSION)'
+      - "apt-get install -y --no-install-recommends ./cvcuda-installer/cvcuda-lib-${version}.deb ./cvcuda-installer/cvcuda-tests-${version}.deb"
+      - '/opt/nvidia/cvcuda*/bin/run_tests.sh'
+
+.test_x64:
+  extends: .test_common
+  image: 'gitlab-master.nvidia.com:5005/cv/cvcuda/test-linux-x64:$VER_IMAGE'
+
+t:x64:deb:
+    extends:
+      - .test_x64
+    needs: [ 'b:x64:deb' ]
+    tags: [ linux-x64, test, cuda11 ]
+
+t:x64:rel:
+    extends:
+      - .test_x64
+    needs: [ 'b:x64:rel' ]
+    tags: [ linux-x64, test, cuda11 ]

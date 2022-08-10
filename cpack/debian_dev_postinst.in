@@ -1,0 +1,28 @@
+#!/bin/sh -e
+
+# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
+case "$1" in
+    configure)
+        update-alternatives --install /usr/include/cvcuda cvcuda-dev @CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@/cvcuda @cvcuda_API_CODE@\
+                            --slave @CVCUDA_USR_LIB_DIR@/@CVCUDA_LIB_LINKER_FILE_NAME@ @CVCUDA_LIB_LINKER_FILE_NAME@ @CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@/@CVCUDA_LIB_LINKER_FILE_NAME@
+
+        cmakepath=/usr/lib/@CMAKE_LIBRARY_ARCHITECTURE@/cmake/
+        if [ ! -d $cmakepath ]; then
+            mkdir -p $cmakepath
+            touch $cmakepath/.cvcuda_created
+        fi
+
+        rm -rf $cmakepath/@CPACK_PACKAGE_NAME@
+        ln -sf @CMAKE_INSTALL_PREFIX@/lib/@CMAKE_LIBRARY_ARCHITECTURE@/cmake/cvcuda $cmakepath/@CPACK_PACKAGE_NAME@
+
+        ;;
+esac

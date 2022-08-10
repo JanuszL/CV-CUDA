@@ -1,0 +1,18 @@
+variables:
+    GIT_SUBMODULE_STRATEGY: normal
+    VER_IMAGE: 0
+
+stages:
+  - build
+  - test
+
+.launch_rule:
+    interruptible: true
+    only:
+        - merge_request
+        - master
+        - /^rel\/.*$/
+
+include:
+    - ci/build.yml
+    - ci/test.yml
