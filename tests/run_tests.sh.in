@@ -1,0 +1,46 @@
+#!/bin/bash -e
+
+# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
+shopt -s extglob
+
+curdir=$(dirname $(readlink -f $0))
+
+function on_exit()
+{
+    set +e
+}
+
+function on_error()
+{
+    set +e
+    echo Tests FAILED
+    exit 1
+}
+
+function on_interrupt()
+{
+    echo Tests INTERRUPTED
+}
+
+trap 'on_error' ERR
+trap 'on_interrupt' SIGINT
+trap 'on_exit' EXIT
+
+function run()
+{
+    local testsuite=$1
+
+    echo Running $testsuite test suite...
+
+    $curdir/cvcuda_test_$testsuite
+}
+

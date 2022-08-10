@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
+.build_common:
+    extends: .launch_rule
+    stage: build
+    image: 'gitlab-master.nvidia.com:5005/cv/cvcuda/build-linux:$VER_IMAGE'
+    artifacts:
+        paths: [ 'cvcuda-installer/' ]
+    before_script:
+        - 'rm -rf cvcuda-installer'
+    script:
+        - ./ci/build.sh $BUILD_TYPE build "$EXTRA_ARGS"
+        - 'pushd build && cpack && popd'
+        - 'mkdir cvcuda-installer && mv -v build/*.{deb,tar.*} build/VERSION cvcuda-installer'
+
+b:x64:deb:
+    variables:
+        BUILD_TYPE: debug 
+    extends: .build_common
+    tags: [ linux-x64, build, cuda11 ]
+
+b:x64:rel:
+    variables:
+        BUILD_TYPE: release
+    extends: .build_common
+    tags: [ linux-x64, build, cuda11 ]
+

@@ -1,0 +1,30 @@
+# Project specific
+# ----------------
+/build/
+/build-*/
+/install/
+
+# Visual Studio Code
+# ------------------
+.vscode/
+.history/
+
+# Python
+# ------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebooks
+# -----------------
+ipynb_checkpoints
+*/.ipynb_checkpoints/*
+profile_default/
+ipython_config.py
+
+# Miscellaneous
+# -------------
+*.bin
+*.gz
+*.xz
+*.bz2
