@@ -10,7 +10,7 @@ stages:
     interruptible: true
     only:
         - merge_request
-        - master
+        - main
         - /^rel\/.*$/
 
 include:
