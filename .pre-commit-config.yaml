@@ -51,3 +51,12 @@ repos:
   rev: v0.1.0
   hooks:
   - id: dockerfilelint
+
+- repo: local
+  hooks:
+  - id: copyright_check
+    name: 'check copyright message'
+    language: system
+    types: ['file', 'text']
+    exclude_types: ['markdown']
+    entry: ./lint/copyright_check.sh
