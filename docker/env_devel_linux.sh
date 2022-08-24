@@ -15,7 +15,7 @@ SDIR=$(dirname $(readlink -f $0))
 
 . $SDIR/config.sh
 
-docker run --runtime=nvidia -ti \
+docker run --pull always --runtime=nvidia -ti \
     -v $HOME/.cache:/cache \
     -v $SDIR/..:/cvcuda \
     $IMAGE_URL_BASE/devel-linux:$TAG_IMAGE
