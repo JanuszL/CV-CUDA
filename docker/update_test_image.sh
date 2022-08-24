@@ -30,7 +30,7 @@ cd $SDIR
 
 cd test
 
-image=$IMAGE_URL_BASE/test-linux-x64:$VER_IMAGE
+image=$IMAGE_URL_BASE/test-linux-x64:$TAG_IMAGE
 
 docker build \
     --build-arg VER_CUDA=$VER_CUDA \

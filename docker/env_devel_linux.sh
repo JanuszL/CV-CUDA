@@ -18,4 +18,4 @@ SDIR=$(dirname $(readlink -f $0))
 docker run --runtime=nvidia -ti \
     -v $HOME/.cache:/cache \
     -v $SDIR/..:/cvcuda \
-    $IMAGE_URL_BASE/devel-linux:$VER_IMAGE
+    $IMAGE_URL_BASE/devel-linux:$TAG_IMAGE

@@ -32,7 +32,7 @@ cd $SDIR
 
 cd build
 
-image=$IMAGE_URL_BASE/build-linux:$VER_IMAGE
+image=$IMAGE_URL_BASE/build-linux:$TAG_IMAGE
 
 docker build \
     --build-arg VER_CUDA=$VER_CUDA \

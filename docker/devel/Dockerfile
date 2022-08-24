@@ -11,8 +11,9 @@
 # Docker image used for development of CV-CUDA on linux-x64
 
 ARG BASE_IMAGE=?
+ARG TAG_IMAGE=?
 
-FROM $BASE_IMAGE
+FROM $BASE_IMAGE:$TAG_IMAGE
 
 # need to update and install in one go, or else installation might use
 # stale data from server stored in docker cache, with packages that don't exist anymore.

@@ -30,10 +30,11 @@ cd $SDIR
 
 cd devel
 
-image=$IMAGE_URL_BASE/devel-linux:$VER_IMAGE
+image=$IMAGE_URL_BASE/devel-linux:$TAG_IMAGE
 
 docker build \
-    --build-arg BASE_IMAGE=$IMAGE_URL_BASE/build-linux:$VER_IMAGE \
+    --build-arg BASE_IMAGE=$IMAGE_URL_BASE/build-linux \
+    --build-arg TAG_IMAGE=$TAG_IMAGE \
     . -t $image
 
 if [[ $do_push == 1 ]]; then

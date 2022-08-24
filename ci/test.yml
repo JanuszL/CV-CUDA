@@ -23,7 +23,7 @@
 
 .test_x64:
   extends: .test_common
-  image: 'gitlab-master.nvidia.com:5005/cv/cvcuda/test-linux-x64:$VER_IMAGE'
+  image: 'gitlab-master.nvidia.com:5005/cv/cvcuda/test-linux-x64:$TAG_IMAGE'
 
 t:x64:deb:
     extends:
