@@ -60,3 +60,11 @@ repos:
     types: ['file', 'text']
     exclude_types: ['markdown']
     entry: ./lint/copyright_check.sh
+
+- repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+  rev: v9.0.0
+  hooks:
+  - id: commitlint
+    stages: [commit-msg]
+    args: ['--config','lint/commitlint.config.js']
+    additional_dependencies: ['@commitlint/config-conventional']

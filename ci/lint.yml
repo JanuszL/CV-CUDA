@@ -20,6 +20,7 @@ formatting:
       paths:
         - ${PRE_COMMIT_HOME}
     script:
+        - 'echo ${CI_COMMIT_MESSAGE}'
         - 'git diff --stat ${CI_MERGE_REQUEST_DIFF_BASE_SHA}..HEAD'
         - 'pre-commit run --from-ref ${CI_MERGE_REQUEST_DIFF_BASE_SHA} --to-ref HEAD'
     artifacts:
