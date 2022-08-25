@@ -1,0 +1,114 @@
+# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#
+# SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
+---
+BasedOnStyle: Microsoft
+IndentWidth: 4
+TabWidth:    8
+---
+Language:        Cpp
+
+AccessModifierOffset: -4
+
+AlignArrayOfStructures: Right
+AlignConsecutiveMacros: AcrossComments
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveBitFields: AcrossComments
+AlignConsecutiveDeclarations: AcrossComments
+AlignEscapedNewlines: Left
+AlignOperands:   AlignAfterOperator
+
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortLambdasOnASingleLine: Inline
+AllowShortLoopsOnASingleLine: true
+
+AlwaysBreakBeforeMultilineStrings: true
+AlwaysBreakTemplateDeclarations: Yes
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel:  true
+  AfterUnion:      true
+  BeforeLambdaBody: true
+  BeforeWhile:     true
+
+BreakBeforeBinaryOperators: All
+BreakInheritanceList: BeforeComma
+BreakConstructorInitializers: BeforeComma
+QualifierAlignment: Custom
+
+QualifierOrder:
+  - inline
+  - static
+  - const
+  - volatile
+  - type
+
+CompactNamespaces: true
+
+PackConstructorInitializers: Never
+
+IncludeBlocks:   Regroup
+IncludeCategories:
+  - Regex:           '^".*Fwd\.hpp"'
+    Priority:        9
+  - Regex:           '^<.*Fwd\.hpp>'
+    Priority:        11
+  - Regex:           '^".*\.hpp"'
+    Priority:        1
+  - Regex:           '^".*\.h"'
+    Priority:        2
+  - Regex:           '^".*\.cuh"'
+    Priority:        3
+  - Regex:           '^".*'
+    Priority:        4
+  - Regex:           '^<.*\.hpp>'
+    Priority:        5
+  - Regex:           '^<.*\.h>'
+    Priority:        6
+  - Regex:           '^<.*\.cuh>'
+    Priority:        7
+  - Regex:           '^<.*'
+    Priority:        8
+  - Regex:           '[^.]+'
+    Priority:        11
+  - Regex:           '.*'
+    Priority:        12
+
+IncludeIsMainRegex: '([-_](test|unittest))?$'
+
+IndentGotoLabels: false
+IndentPPDirectives: AfterHash
+IndentExternBlock: NoIndent
+IndentWrappedFunctionNames: true
+
+KeepEmptyLinesAtTheStartOfBlocks: false
+
+LambdaBodyIndentation: OuterScope
+PenaltyBreakBeforeFirstCallParameter: 1
+PenaltyReturnTypeOnItsOwnLine: 200
+ReferenceAlignment: Right
+ReflowComments:  false
+SeparateDefinitionBlocks: Always
+ShortNamespaceLines: 10
+
+SpaceAfterTemplateKeyword: false
+SpaceBeforeParens: Custom
+SpacesInContainerLiterals: false
+
+SpacesInLineCommentPrefix:
+  Minimum:         1
+  Maximum:         1
+
+Standard:        c++17

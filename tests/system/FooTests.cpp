@@ -10,8 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
 #include <cvcuda/Foo.hpp>
+
+#include <gtest/gtest.h>
 
 namespace cuda = nv::cuda;
 
