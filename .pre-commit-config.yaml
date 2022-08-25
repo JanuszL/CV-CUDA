@@ -29,6 +29,10 @@ repos:
     args: ['--fix=lf']
   - id: check-executables-have-shebangs
   - id: check-shebang-scripts-are-executable
+  - id: detect-private-key
+  - id: check-added-large-files
+  - id: check-case-conflict
+  - id: destroyed-symlinks
 
 - repo: https://github.com/detailyang/pre-commit-shell
   rev: 1.0.5
