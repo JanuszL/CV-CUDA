@@ -46,3 +46,8 @@ repos:
   rev: v14.0.6
   hooks:
   - id: clang-format
+
+- repo: https://github.com/pryorda/dockerfilelint-precommit-hooks
+  rev: v0.1.0
+  hooks:
+  - id: dockerfilelint
