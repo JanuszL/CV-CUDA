@@ -62,7 +62,7 @@ mkdir -p $build_dir
 # Set build configuration depending on build type ====================
 
 # Common config
-cmake_args="-DBUILD_TESTS=1" 
+cmake_args="-DBUILD_TESTS=1"
 
 case $build_type in
     release)

@@ -61,4 +61,3 @@ message(STATUS "")
 message(STATUS "    Linker flags (exec) : ${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_EXE_LINKER_FLAGS_${BUILD_TYPE}}")
 message(STATUS "    Linker flags (lib)  : ${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_EXE_LINKER_FLAGS_${BUILD_TYPE}}")
 message(STATUS "")
-

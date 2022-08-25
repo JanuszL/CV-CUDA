@@ -27,4 +27,3 @@ CCACHE_STATSLOG=${CCACHE_STATSLOG} ${CCACHE_EXEC} $@
     set(CMAKE_C_COMPILER_LAUNCHER ${compiler_driver})
     set(CMAKE_CUDA_COMPILER_LAUNCHER ${compiler_driver})
 endif()
-

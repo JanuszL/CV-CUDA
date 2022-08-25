@@ -23,7 +23,7 @@
 
 b:x64:deb:
     variables:
-        BUILD_TYPE: debug 
+        BUILD_TYPE: debug
     extends: .build_common
     tags: [ linux-x64, build, cuda11 ]
 
@@ -32,4 +32,3 @@ b:x64:rel:
         BUILD_TYPE: release
     extends: .build_common
     tags: [ linux-x64, build, cuda11 ]
-

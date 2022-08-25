@@ -43,4 +43,3 @@ function run()
 
     $curdir/cvcuda_test_$testsuite
 }
-
