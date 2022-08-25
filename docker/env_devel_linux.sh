@@ -13,10 +13,13 @@
 # its affiliates is strictly prohibited.
 
 # SDIR is the directory where this script is located
-SDIR=$(dirname $(readlink -f $0))
+SDIR=$(dirname "$(readlink -f "$0")")
 
-. $SDIR/config.sh
+# shellcheck source=docker/config
+. "$SDIR/config"
 
+# Run docker
+# Note: first and second cache mappings are for ccache and pre-commit respectively.
 docker run --pull always --runtime=nvidia -ti \
     -v $HOME/.cache:/cache \
     -v $HOME/.cache:$HOME/.cache \

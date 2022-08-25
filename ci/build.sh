@@ -21,7 +21,7 @@
 #   - If not specified, defaults to either build-rel or build-deb, depending on the build type
 
 # SDIR is the directory where this script is located
-SDIR=$(dirname $(readlink -f $0))
+SDIR=$(dirname "$(readlink -f "$0")")
 
 # Command line parsing ===============================================
 
@@ -48,7 +48,7 @@ if [[ $# -ge 1 ]]; then
 fi
 
 # Store additional cmake args user might have passed
-user_args="$@"
+user_args="$*"
 
 # Create build directory =============================================
 
@@ -57,7 +57,7 @@ if [[ -z "$build_dir" ]]; then
     # Uses one derived from build type
     build_dir="build-${build_type:0:3}"
 fi
-mkdir -p $build_dir
+mkdir -p "$build_dir"
 
 # Set build configuration depending on build type ====================
 
@@ -76,7 +76,9 @@ esac
 # Configure build toolchain ===========================================
 
 # Make sure we use most recent gcc-11.x
-export CC=`ls -1 /usr/bin/gcc-11* | sort -rV | head -n 1` CXX=`ls -1 /usr/bin/g++-11* | sort -rV | head -n 1`
+CC=$(find /usr/bin/gcc-11* | sort -rV | head -n 1)
+CXX=$(find /usr/bin/g++-11* | sort -rV | head -n 1)
+export CC CXX
 
 # Prefer to use ninja if found
 if which ninja > /dev/null; then
@@ -91,20 +93,20 @@ if which ccache > /dev/null; then
 fi
 if [[ $has_ccache ]]; then
     ccache_stats=$(pwd)/$build_dir/ccache_stats.log
-    rm -rf $ccache_stats
+    rm -rf "$ccache_stats"
     cmake_args="${cmake_args} -DCCACHE_STATSLOG=${ccache_stats}"
 fi
 
 # Create build tree and build! ===========================================
 
 # Create build tree
-cmake -B $build_dir $source_dir  \
+cmake -B "$build_dir" "$source_dir"  \
     -DBUILD_TESTS=1 \
-    $cmake_args \
-    $user_args
+    "$cmake_args" \
+    "$user_args"
 
 # Build CV-CUDA
-cmake --build $build_dir -- $MAKE_OPTS
+cmake --build "$build_dir" -- $MAKE_OPTS
 
 # Show ccache status, if available!
 if [[ $has_ccache ]]; then

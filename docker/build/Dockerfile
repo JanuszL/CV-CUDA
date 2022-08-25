@@ -25,7 +25,7 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get update && apt-get install -y --no-i
         cmake ninja-build \
         ccache \
         libgtest-dev \
-        pre-commit
+        pre-commit shellcheck
 
 # Configure ccache
 RUN mkdir -p /cache

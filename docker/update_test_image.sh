@@ -11,7 +11,7 @@
 # its affiliates is strictly prohibited.
 
 # SDIR is the directory where this script is located
-SDIR=$(dirname $(readlink -f $0))
+SDIR=$(dirname "$(readlink -f "$0")")
 
 do_push=0
 
@@ -19,26 +19,26 @@ if [[ $# == 1 && $1 == "--push" ]]; then
     do_push=1
     shift
 elif [[ $# != 0 ]]; then
-    echo "Usage: $(basename $0) [--push]"
+    echo "Usage: $(basename "$0") [--push]"
     exit 1
 fi
 
-cd $SDIR
+cd "$SDIR"
 
 # load up configuration variables
-. ./config.sh
+. ./config
 
 cd test
 
 image=$IMAGE_URL_BASE/test-linux-x64:$TAG_IMAGE
 
 docker build \
-    --build-arg VER_CUDA=$VER_CUDA \
-    --build-arg VER_UBUNTU=$VER_UBUNTU \
-    . -t $image
+    --build-arg "VER_CUDA=$VER_CUDA" \
+    --build-arg "VER_UBUNTU=$VER_UBUNTU" \
+    . -t "$image"
 
 if [[ $do_push == 1 ]]; then
-    docker push $image
+    docker push "$image"
 fi
 
 cd ../..

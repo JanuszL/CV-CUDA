@@ -12,7 +12,7 @@
 
 shopt -s extglob
 
-curdir=$(dirname $(readlink -f $0))
+curdir=$(dirname "$(readlink -f "$0")")
 
 function on_exit()
 {
@@ -39,7 +39,7 @@ function run()
 {
     local testsuite=$1
 
-    echo Running $testsuite test suite...
+    echo "Running $testsuite test suite..."
 
-    $curdir/cvcuda_test_$testsuite
+    "$curdir/cvcuda_test_$testsuite"
 }
