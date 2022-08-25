@@ -33,6 +33,7 @@ repos:
   - id: check-added-large-files
   - id: check-case-conflict
   - id: destroyed-symlinks
+  - id: check-yaml
 
 - repo: https://github.com/detailyang/pre-commit-shell
   rev: 1.0.5
