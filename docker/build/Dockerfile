@@ -1,4 +1,6 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+# SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -22,12 +24,14 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get update && apt-get install -y --no-i
         g++-11 \
         cmake ninja-build \
         ccache \
-        libgtest-dev
+        libgtest-dev \
+        pre-commit
 
 # Configure ccache
 RUN mkdir -p /cache
 COPY ccache.conf /etc/ccache.conf
 ENV CCACHE_CONFIGPATH=/etc/ccache.conf
+ENV PRE_COMMIT_HOME=/cache/pre-commit
 
 # Allow using this image in systems without proper CUDA runtime/driver support.
 # We'll be using this image only for building, don't need strict CUDA checks.

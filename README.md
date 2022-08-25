@@ -25,6 +25,10 @@ to successfully build CV-CUDA.
 
    `cd cvcuda`
 
+2. Initialize the cloned repository. It installs git pre-commit hooks.
+
+   `./init_repo.sh`
+
 2. Start the docker environment for development
 
    `docker/env_devel_linux.sh`
@@ -40,6 +44,7 @@ to successfully build CV-CUDA.
    The library is in build-rel/lib and executables (tests, etc...) in build-rel/bin.
 
    The script accepts some parameters to control the creation of the build tree:
+
    `ci/build.sh [release|debug] [output build tree path]`
 
    By default it builds for release.
@@ -66,6 +71,11 @@ to successfully build CV-CUDA.
 
    - DEB for Debian packages
    - TXZ for \*.tar.xz tarballs.
+
+## Notes
+- To do a local lint check in all files, run:
+
+  `pre-commit run -a`
 
 ## License
 

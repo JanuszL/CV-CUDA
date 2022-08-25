@@ -13,12 +13,21 @@
 # its affiliates is strictly prohibited.
 
 # SDIR is the directory where this script is located
-SDIR=$(dirname $(readlink -f $0))
+SDIR=$(dirname "$(readlink -f "$0")")
 
-. $SDIR/config.sh
+if ! which pre-commit || ! which shellcheck ; then
+	echo "pre-commit must be fully configured. Try 'apt-get install pre-commit shellcheck'."
+	exit 1
+fi
 
-docker run --pull always --runtime=nvidia -ti \
-    -v $HOME/.cache:/cache \
-    -v $HOME/.cache:$HOME/.cache \
-    -v $SDIR/..:/cvcuda \
-    $IMAGE_URL_BASE/devel-linux:$TAG_IMAGE
+cd "$SDIR"
+
+# allow-missing-config is useful when checking out an old commit or a branch that don't have pre-config configuration.
+pre-commit install \
+    --allow-missing-config \
+    --install-hooks \
+    -t pre-commit \
+    -t pre-merge-commit \
+    -t commit-msg \
+    -t post-rewrite \
+    -t post-checkout
