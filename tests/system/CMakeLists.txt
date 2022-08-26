@@ -26,4 +26,3 @@ cvcuda_add_test(NAME system COMMAND cvcuda_test_system)
 install(TARGETS cvcuda_test_system
     DESTINATION ${CMAKE_INSTALL_BINDIR}
     COMPONENT tests)
-

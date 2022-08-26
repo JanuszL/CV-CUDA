@@ -1,5 +1,6 @@
-/*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+/* Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *
+ * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -10,15 +11,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <cvcuda/Foo.hpp>
-
-#include <gtest/gtest.h>
-
-namespace cuda = nv::cuda;
-
-TEST(FooTest, works)
-{
-    EXPECT_TRUE(cuda::Foo(42));
-    EXPECT_FALSE(cuda::Foo(41));
-    EXPECT_FALSE(cuda::Foo(43));
+module.exports = {
+    extends : [ "@commitlint/config-conventional" ],
+    helpUrl : 'https://confluence.nvidia.com/display/CVCUDA/Commit+message+format',
+    rules : {'references-empty' : [ 2, 'never' ]},
+    parserPreset : {parserOpts : {issuePrefixes : [ '^CVCUDA-' ]}}
 }

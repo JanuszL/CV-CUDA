@@ -16,7 +16,7 @@ target_include_directories(cvcuda
         $<INSTALL_INTERFACE:include>
 )
 
-# Config for semver 2.0 
+# Config for semver 2.0
 set_target_properties(cvcuda PROPERTIES
     VERSION "${cvcuda_VERSION}"
     SOVERSION "${cvcuda_VERSION_MAJOR}"
@@ -33,7 +33,7 @@ target_compile_definitions(cvcuda PRIVATE -DCUPVA_EXPORTING=1)
 
 # Configure the library linker to remove unused code
 target_link_options(cvcuda PRIVATE -Wl,--exclude-libs,ALL -Wl,--no-undefined -Wl,--gc-sections -Wl,--as-needed)
-# Put each function and it's data into separate linker sections 
+# Put each function and it's data into separate linker sections
 target_compile_options(cvcuda PRIVATE -ffunction-sections -fdata-sections)
 
 # Installer
@@ -77,5 +77,3 @@ get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" REALPATH)
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/cvcuda"
         COMPONENT dev)
 endif()
-
-

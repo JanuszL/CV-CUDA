@@ -1,4 +1,6 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+# SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -17,17 +19,21 @@ FROM nvidia/cuda:$VER_CUDA-devel-ubuntu$VER_UBUNTU
 
 # need to update and install in one go, or else installation might use
 # stale data from server stored in docker cache, with packages that don't exist anymore.
-RUN DEBIAN_FRONTEND="noninteractive" apt-get update && apt-get install -y --no-install-recommends \
+RUN DEBIAN_FRONTEND="noninteractive" apt-get update \
+    && apt-get install -y --no-install-recommends \
         git git-lfs \
         g++-11 \
         cmake ninja-build \
         ccache \
-        libgtest-dev
+        libgtest-dev \
+        pre-commit shellcheck \
+    && rm -rf /var/lib/apt/lists/*
 
 # Configure ccache
 RUN mkdir -p /cache
 COPY ccache.conf /etc/ccache.conf
 ENV CCACHE_CONFIGPATH=/etc/ccache.conf
+ENV PRE_COMMIT_HOME=/cache/pre-commit
 
 # Allow using this image in systems without proper CUDA runtime/driver support.
 # We'll be using this image only for building, don't need strict CUDA checks.

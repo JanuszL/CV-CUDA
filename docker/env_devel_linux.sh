@@ -1,6 +1,8 @@
 #!/bin/bash -e
 
-# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+# SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -11,11 +13,15 @@
 # its affiliates is strictly prohibited.
 
 # SDIR is the directory where this script is located
-SDIR=$(dirname $(readlink -f $0))
+SDIR=$(dirname "$(readlink -f "$0")")
 
-. $SDIR/config.sh
+# shellcheck source=docker/config
+. "$SDIR/config"
 
-docker run --runtime=nvidia -ti \
+# Run docker
+# Note: first and second cache mappings are for ccache and pre-commit respectively.
+docker run --pull always --runtime=nvidia -ti \
     -v $HOME/.cache:/cache \
+    -v $HOME/.cache:$HOME/.cache \
     -v $SDIR/..:/cvcuda \
-    $IMAGE_URL_BASE/devel-linux:$VER_IMAGE
+    $IMAGE_URL_BASE/devel-linux:$TAG_IMAGE

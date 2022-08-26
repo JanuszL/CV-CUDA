@@ -11,9 +11,11 @@
  */
 
 #include <cvcuda/Foo.hpp>
-#include <stdexcept>
-#include <sstream>
+
 #include <cuda_runtime.h>
+
+#include <sstream>
+#include <stdexcept>
 
 namespace nv::cuda
 {
@@ -28,7 +30,7 @@ __global__ void gpuFoo(int value, int *out)
 
 void CheckCudaError(cudaError_t err, std::string msg)
 {
-    if(err != cudaSuccess)
+    if (err != cudaSuccess)
     {
         std::ostringstream ss;
         ss << msg << ": " << cudaGetErrorName(err) << " - " << cudaGetErrorString(err);
@@ -36,11 +38,11 @@ void CheckCudaError(cudaError_t err, std::string msg)
     }
 }
 
-}
+} // namespace
 
 bool Foo(int value)
 {
-    if(value == 0)
+    if (value == 0)
     {
         throw std::invalid_argument("Invalid value parameter, it cannot be 0");
     }
@@ -52,18 +54,19 @@ bool Foo(int value)
 
     try
     {
-        gpuFoo<<<dim3(1,1), dim3(1,1)>>>(value, devPtr);
+        gpuFoo<<<dim3(1, 1), dim3(1, 1)>>>(value, devPtr);
 
         CheckCudaError(cudaDeviceSynchronize(), "Error launchign kernel");
 
-        CheckCudaError(cudaMemcpy(&result, devPtr, sizeof(int), cudaMemcpyDeviceToHost), "Error copying memory from device");
+        CheckCudaError(cudaMemcpy(&result, devPtr, sizeof(int), cudaMemcpyDeviceToHost),
+                       "Error copying memory from device");
 
-        if(result != value)
+        if (result != value)
         {
             throw std::runtime_error("Memory copied to host doesn't match contents in device memory");
         }
     }
-    catch(...)
+    catch (...)
     {
         cudaFree(devPtr);
         throw;
@@ -74,4 +77,4 @@ bool Foo(int value)
     return result == 42;
 }
 
-}
+} // namespace nv::cuda

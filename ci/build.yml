@@ -11,7 +11,7 @@
 .build_common:
     extends: .launch_rule
     stage: build
-    image: 'gitlab-master.nvidia.com:5005/cv/cvcuda/build-linux:$VER_IMAGE'
+    image: 'gitlab-master.nvidia.com:5005/cv/cvcuda/build-linux:$TAG_IMAGE'
     artifacts:
         paths: [ 'cvcuda-installer/' ]
     before_script:
@@ -23,7 +23,7 @@
 
 b:x64:deb:
     variables:
-        BUILD_TYPE: debug 
+        BUILD_TYPE: debug
     extends: .build_common
     tags: [ linux-x64, build, cuda11 ]
 
@@ -32,4 +32,3 @@ b:x64:rel:
         BUILD_TYPE: release
     extends: .build_common
     tags: [ linux-x64, build, cuda11 ]
-

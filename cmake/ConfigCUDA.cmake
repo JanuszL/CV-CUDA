@@ -35,4 +35,3 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xfatbin=--compress-all")
 # * compute_70: fast fp16 support + PTX for forward compatibility
 
 set(CMAKE_CUDA_ARCHITECTURES 70-virtual 75-real 80-real)
-
