@@ -40,6 +40,11 @@ BreakBeforeBraces: Custom
 BraceWrapping:
   AfterCaseLabel:  true
   AfterUnion:      true
+
+  # Must be false or else CompactNamespace=true won't work.
+  # Tested with clang-format-14
+  AfterNamespace:  false
+
   BeforeLambdaBody: true
   BeforeWhile:     true
 
@@ -95,13 +100,11 @@ IndentWrappedFunctionNames: true
 
 KeepEmptyLinesAtTheStartOfBlocks: false
 
-LambdaBodyIndentation: OuterScope
 PenaltyBreakBeforeFirstCallParameter: 1
 PenaltyReturnTypeOnItsOwnLine: 200
 ReferenceAlignment: Right
 ReflowComments:  false
 SeparateDefinitionBlocks: Always
-ShortNamespaceLines: 10
 
 SpaceAfterTemplateKeyword: false
 SpaceBeforeParens: Custom

@@ -15,8 +15,7 @@
 
 #include "Export.h"
 
-namespace nv::cuda
-{
+namespace nv::cuda {
 
 CVCUDA_PUBLIC bool Foo(int value);
 
