@@ -17,11 +17,9 @@
 #include <sstream>
 #include <stdexcept>
 
-namespace nv::cuda
-{
+namespace nv::cuda {
 
-namespace
-{
+namespace {
 
 __global__ void gpuFoo(int value, int *out)
 {
