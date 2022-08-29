@@ -8,10 +8,21 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
+# We're creating a shared lib, all projects it depends on must have
+# PIC enabled
+set(CMAKE_POSITION_INDEPENDENT_CODE on)
+
 # general utilities library
 add_subdirectory(util)
 
-add_library(nvcv SHARED dummy.c)
+add_library(nvcv SHARED
+    dummy.c
+)
+
+target_link_libraries(nvcv PRIVATE
+    -static-libstdc++
+    -static-libgcc
+)
 
 target_include_directories(nvcv
     PUBLIC
@@ -25,12 +36,37 @@ set_target_properties(nvcv PROPERTIES
     SOVERSION "${cvcuda_VERSION_MAJOR}"
 )
 
-# Configure symbol visibility
+# Create exports file for symbol versioning ---------------------------------
+set(EXPORTS_OUTPUT "${cvcuda_BINARY_DIR}/exports.ldscript")
+target_link_libraries(nvcv
+    PRIVATE
+    -Wl,--version-script ${EXPORTS_OUTPUT}
+)
+get_target_property(CVCUDA_SOURCES nvcv SOURCES)
+set(GEN_EXPORTS_SCRIPT "${cvcuda_SOURCE_DIR}/cmake/CreateExportsFile.cmake")
+
+add_custom_command(OUTPUT ${EXPORTS_OUTPUT}
+    COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR="${cvcuda_SOURCE_DIR}/src"
+                             -DSOURCES="${CVCUDA_SOURCES}"
+                             -DOUTPUT=${EXPORTS_OUTPUT}
+                             -P "${GEN_EXPORTS_SCRIPT}"
+    DEPENDS ${GEN_EXPORTS_SCRIPT} ${CVCUDA_SOURCES})
+
+add_custom_target(create_exports_file DEPENDS ${EXPORTS_OUTPUT})
+add_dependencies(nvcv create_exports_file)
+
+# Configure symbol visibility ---------------------------------------------
 set_target_properties(nvcv PROPERTIES VISIBILITY_INLINES_HIDDEN on
                                         C_VISIBILITY_PRESET hidden
                                         CXX_VISIBILITY_PRESET hidden
                                         CUDA_VISIBILITY_PRESET hidden)
 target_compile_definitions(nvcv PRIVATE -DCUPVA_EXPORTING=1)
+
+# our public function definitions have a different name than
+# what's in the headers due to the versioning scheme. This will
+# load to a lot of spurious -Wmissing-declaration warnings. Let's
+# silence them out.
+target_compile_options(nvcv PRIVATE -Wno-missing-declarations)
 
 # target used when only public headers are needed
 add_library(nvcv_headers INTERFACE)
