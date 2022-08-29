@@ -11,11 +11,15 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
-#define NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
+#ifndef NVCV_UTIL_STATUS_HPP
+#define NVCV_UTIL_STATUS_HPP
 
-#include <common/Printers.hpp>
-#include <gmock/gmock-matchers.h>
-#include <gtest/gtest.h>
+#include <nvcv/Status.h>
 
-#endif // NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
+namespace nv::cv::util {
+
+const char *ToString(NVCVStatus status) noexcept;
+
+}
+
+#endif // NVCV_UTIL_STATUS_HPP

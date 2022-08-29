@@ -11,11 +11,30 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
-#define NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
+#ifndef NVCV_DETAIL_CHECKERROR_HPP
+#define NVCV_DETAIL_CHECKERROR_HPP
 
-#include <common/Printers.hpp>
-#include <gmock/gmock-matchers.h>
-#include <gtest/gtest.h>
+#include "../Exception.hpp"
+#include "../Status.h"
 
-#endif // NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
+#include <cassert>
+
+namespace nv::cv::detail {
+
+inline void CheckThrow(NVCVStatus status)
+{
+    if (status != NVCV_SUCCESS)
+    {
+        char msg[NVCV_MAX_STATUS_MESSAGE_LENGTH];
+
+        NVCVStatus tmp = nvcvGetLastStatusMessage(msg, sizeof(msg));
+        (void)tmp;
+        assert(tmp == status);
+
+        throw Exception(static_cast<Status>(status), msg);
+    }
+}
+
+} // namespace nv::cv::detail
+
+#endif // NVCV_DETAIL_CHECKERROR_HPP

@@ -16,6 +16,8 @@ find_package(OpenSSL COMPONENTS Crypto REQUIRED)
 add_library(nvcv_util
     Assert.cpp
     HashMD5.cpp
+    Exception.cpp
+    Status.cpp
 )
 
 target_include_directories(nvcv_util

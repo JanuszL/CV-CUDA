@@ -11,11 +11,15 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
-#define NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
+#ifndef NVCV_PRIV_EXCEPTION_HPP
+#define NVCV_PRIV_EXCEPTION_HPP
 
-#include <common/Printers.hpp>
-#include <gmock/gmock-matchers.h>
-#include <gtest/gtest.h>
+#include <util/Exception.hpp>
 
-#endif // NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
+namespace nv::cv::priv {
+
+using util::Exception;
+
+}
+
+#endif // NVCV_PRIV_EXCEPTION_HPP

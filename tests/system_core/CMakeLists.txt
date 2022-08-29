@@ -14,11 +14,13 @@ set(CMAKE_FOLDER tests)
 # system core -------------------------------------------------
 add_executable(nvcv_test_system_core
     TestVersion.cpp
+    TestStatus.cpp
 )
 
 target_link_libraries(nvcv_test_system_core
     PUBLIC
         nvcv_test_main
+        nvcv_test_common
         nvcv
 )
 
@@ -36,6 +38,7 @@ add_executable(nvcv_test_system_core_version_commit
 target_link_libraries(nvcv_test_system_core_version_commit
     PRIVATE
         nvcv_test_main
+        nvcv_test_common
         nvcv
 )
 

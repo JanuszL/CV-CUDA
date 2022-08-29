@@ -14,12 +14,15 @@ set(CMAKE_POSITION_INDEPENDENT_CODE on)
 
 # general utilities library
 add_subdirectory(util)
+add_subdirectory(private)
 
 add_library(nvcv SHARED
     Version.cpp
+    Status.cpp
 )
 
 target_link_libraries(nvcv PRIVATE
+    nvcv_private_core
     nvcv_util
     -static-libstdc++
     -static-libgcc

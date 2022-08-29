@@ -11,11 +11,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
-#define NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
+#include "TLS.hpp"
 
-#include <common/Printers.hpp>
-#include <gmock/gmock-matchers.h>
-#include <gtest/gtest.h>
+namespace nv::cv::priv {
 
-#endif // NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
+TLS &GetTLS() noexcept
+{
+    static thread_local TLS s_TLS;
+    return s_TLS;
+}
+
+} // namespace nv::cv::priv

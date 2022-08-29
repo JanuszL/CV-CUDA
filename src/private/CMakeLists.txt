@@ -1,6 +1,6 @@
 # Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
 # SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
+
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -10,22 +10,4 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-add_library(nvcv_test_common STATIC
-    Printers.cpp
-)
-
-target_include_directories(nvcv_test_common
-    INTERFACE
-        ..
-)
-
-target_compile_definitions(nvcv_test_common
-    INTERFACE
-        -DNVCV_EXPOSE_CODE=1
-)
-
-target_link_libraries(nvcv_test_common
-    PUBLIC
-        nvcv_headers
-        nvcv_util
-)
+add_subdirectory(core)

@@ -11,11 +11,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
-#define NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
+#ifndef NVCV_TEST_COMMON_PRINTERS_HPP
+#define NVCV_TEST_COMMON_PRINTERS_HPP
 
-#include <common/Printers.hpp>
-#include <gmock/gmock-matchers.h>
-#include <gtest/gtest.h>
+#include <nvcv/Status.h>
 
-#endif // NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
+#include <iosfwd>
+
+std::ostream &operator<<(std::ostream &out, NVCVStatus status);
+
+#endif // NVCV_TEST_COMMON_PRINTERS_HPP

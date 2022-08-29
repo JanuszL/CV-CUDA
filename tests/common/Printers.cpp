@@ -11,11 +11,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
-#define NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
+#include "Printers.hpp"
 
-#include <common/Printers.hpp>
-#include <gmock/gmock-matchers.h>
-#include <gtest/gtest.h>
+#include <util/Status.hpp>
 
-#endif // NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
+#include <iostream>
+
+std::ostream &operator<<(std::ostream &out, NVCVStatus status)
+{
+    return out << nv::cv::util::ToString(status);
+}

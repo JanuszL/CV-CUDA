@@ -11,11 +11,20 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
-#define NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
+#ifndef NVCV_PRIV_TLS_HPP
+#define NVCV_PRIV_TLS_HPP
 
-#include <common/Printers.hpp>
-#include <gmock/gmock-matchers.h>
-#include <gtest/gtest.h>
+#include <exception>
 
-#endif // NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
+namespace nv::cv::priv {
+
+struct TLS
+{
+    std::exception_ptr lastError;
+};
+
+TLS &GetTLS() noexcept;
+
+} // namespace nv::cv::priv
+
+#endif // NVCV_PRIV_TLS_HPP
