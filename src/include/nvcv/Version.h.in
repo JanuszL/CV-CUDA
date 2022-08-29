@@ -21,6 +21,7 @@
 #define NVCV_VERSION_H
 
 #include <nvcv/detail/Export.h>
+#include <stdint.h>
 
 /**
  * Declarations of entities to handle NVCV versioning.
@@ -42,7 +43,7 @@ extern "C" {
  * @returns The numeric version representation.
  */
 #define NVCV_MAKE_VERSION4(major, minor, patch, tweak) \
-    ((major)*1000000 + (minor)*10000 + (patch)*100 + (tweak))
+    ((uint32_t)((major)*1000000 + (minor)*10000 + (patch)*100 + (tweak)))
 
 /** Make a NVCV version identifier with three components.
  *
@@ -193,7 +194,7 @@ extern "C" {
  * header doesn't correspond to NVCV binary. This can be used by user's program
  * to handle semantic differences between library versions.
  */
-NVCV_PUBLIC int nvcvGetVersion(void);
+NVCV_PUBLIC uint32_t nvcvGetVersion(void);
 
 #ifdef __cplusplus
 }
