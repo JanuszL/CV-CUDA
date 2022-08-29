@@ -10,6 +10,10 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
+# nvcv_test_common ================================
+# Utilities used in unit and system tests. They don't
+# call the public API functions.
+
 add_library(nvcv_test_common STATIC
     Printers.cpp
 )
@@ -33,4 +37,22 @@ target_link_libraries(nvcv_test_common
     PUBLIC
         nvcv_headers
         nvcv_util
+)
+
+# nvcv_test_common_system ==============================
+# Utilities for system tests, they call the public API functions.
+
+add_library(nvcv_test_common_system STATIC
+    ObjectBag.cpp
+)
+
+target_include_directories(nvcv_test_common_system
+    INTERFACE
+        ..
+)
+
+target_link_libraries(nvcv_test_common_system
+    PUBLIC
+        nvcv
+        nvcv_test_common
 )

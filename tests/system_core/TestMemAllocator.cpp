@@ -1,0 +1,227 @@
+/* Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *
+ * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+ *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
+ */
+
+#include "Definitions.hpp"
+
+#include <common/ObjectBag.hpp>
+#include <common/ValueTests.hpp>
+#include <nvcv/MemAllocator.h>
+
+namespace t    = ::testing;
+namespace test = nv::cv::test;
+
+// disabled temporary while the API isn't stable
+#if 0
+
+// Parameter space validity tests ============================================
+
+/********************************************
+ *         nvcvMemAllocatorCreate
+ *******************************************/
+
+class MemAllocatorCreateParamTest
+    : public t::TestWithParam<std::tuple<test::Param<"handle", bool>,        // 0
+                                         test::Param<"numCustomAllocs", int> // 1
+                                             NVCVStatus>>                    // 2
+{
+public:
+    MemAllocatorCreateParamTest()
+        : m_goldStatus(std::get<1>(GetParam()))
+    {
+        if (std::get<0>(GetParam()))
+        {
+            EXPECT_EQ(NVCV_SUCCESS, nvcvMemAllocatorCreate(&m_paramHandle));
+        }
+        else
+        {
+            m_paramHandle = nullptr;
+        }
+    }
+
+    ~MemAllocatorCreateParamTest()
+    {
+        nvcvMemAllocatorDestroy(m_paramHandle);
+    }
+
+protected:
+    NVCVMemAllocator m_paramHandle;
+    NVCVStatus       m_goldStatus;
+};
+
+// clang-format off
+NVCV_INSTANTIATE_TEST_SUITE_P(Positive_handle, MemAllocatorCreateParamTest,
+                              test::Value(true) * NVCV_SUCCESS);
+
+NVCV_INSTANTIATE_TEST_SUITE_P(Negative_handle, MemAllocatorCreateParamTest,
+                              test::Value(false) * NVCV_ERROR_INVALID_ARGUMENT);
+
+// clang-format on
+
+TEST_P(MemAllocatorCreateParamTest, stream)
+{
+    NVCVMemAllocator handle = nullptr;
+    EXPECT_EQ(m_goldStatus, nvcvMemAllocatorCreate(m_paramHandle ? &handle : nullptr));
+
+    nvcvMemAllocatorDestroy(handle); // to avoid memleaks
+}
+
+/********************************************
+ *         nvcvMemAllocatorDestroy
+ *******************************************/
+
+using MemAllocatorDestroyParamTest = MemAllocatorCreateParamTest;
+
+// clang-format off
+NVCV_INSTANTIATE_TEST_SUITE_P(Positive_handle, MemAllocatorDestroyParamTest,
+                              test::ValueList{true, false} * NVCV_SUCCESS);
+
+// clang-format on
+
+TEST_P(MemAllocatorDestroyParamTest, stream)
+{
+    // Must not crash or assert, but we can't test that without using
+    // googletest's Death Tests, as it involves forking the process.
+    nvcvMemAllocatorDestroy(m_paramHandle);
+    m_paramHandle = nullptr;
+}
+
+/********************************************
+ *    nvcvMemAllocatorSetCustomAllocator
+ *******************************************/
+
+class MemAllocatorSetAllocatorParamTest
+    : public t::TestWithParam<std::tuple<test::Param<"handle", bool, true>,                     // 0
+                                         test::Param<"memtype", NVCVMemoryType, NVCV_MEM_HOST>, // 1
+                                         test::Param<"fnMalloc", bool, true>,                   // 2
+                                         test::Param<"fnFree", bool, true>,                     // 3
+                                         test::Param<"ctx", bool, false>,                       // 4
+                                         NVCVStatus>>                                           // 5
+{
+public:
+    MemAllocatorSetAllocatorParamTest()
+        : m_paramMemType(std::get<1>(GetParam()))
+        , m_goldStatus(std::get<5>(GetParam()))
+    {
+        if (std::get<0>(GetParam()))
+        {
+            EXPECT_EQ(NVCV_SUCCESS, nvcvMemAllocatorCreate(&m_paramHandle));
+        }
+
+        if (std::get<2>(GetParam()))
+        {
+            // Dummy implementations
+            static auto fnMalloc = [](void *, int64_t, int32_t, uint32_t) -> void *
+            {
+                return nullptr;
+            };
+            m_paramFnAllocMem = fnMalloc;
+        }
+
+        if (std::get<3>(GetParam()))
+        {
+            static auto fnFree = [](void *, void *, int64_t, int32_t, uint32_t) -> void {
+            };
+            m_paramFnFreeMem = fnFree;
+        }
+
+        if (std::get<4>(GetParam()))
+        {
+            m_paramContext = this;
+        }
+    }
+
+    ~MemAllocatorSetAllocatorParamTest()
+    {
+        nvcvMemAllocatorDestroy(m_paramHandle);
+    }
+
+protected:
+    NVCVMemAllocator m_paramHandle     = nullptr;
+    NVCVMemAllocFunc m_paramFnAllocMem = nullptr;
+    ;
+    NVCVMemFreeFunc m_paramFnFreeMem = nullptr;
+    void           *m_paramContext   = nullptr;
+    NVCVMemoryType  m_paramMemType;
+    NVCVStatus      m_goldStatus;
+};
+
+static test::ValueList g_ValidMemTypes = {NVCV_MEM_HOST, NVCV_MEM_CUDA, NVCV_MEM_CUDA_PINNED};
+
+static test::ValueList g_InvalidMemTypes = {
+    (NVCVMemoryType)-1,
+    (NVCVMemoryType)NVCV_NUM_MEMORY_TYPES,
+};
+
+// clang-format off
+NVCV_INSTANTIATE_TEST_SUITE_P(Positive_handle, MemAllocatorSetAllocatorParamTest,
+                              test::Value(true) * Dup<4>(test::ValueDefault())
+                              * NVCV_SUCCESS);
+
+NVCV_INSTANTIATE_TEST_SUITE_P(Negative_handle, MemAllocatorSetAllocatorParamTest,
+                              test::Value(false) * Dup<4>(test::ValueDefault())
+                              * NVCV_ERROR_INVALID_ARGUMENT);
+
+NVCV_INSTANTIATE_TEST_SUITE_P(Positive_memtype, MemAllocatorSetAllocatorParamTest,
+                              Dup<1>(test::ValueDefault()) * g_ValidMemTypes * Dup<3>(test::ValueDefault())
+                              * NVCV_SUCCESS);
+
+NVCV_INSTANTIATE_TEST_SUITE_P(Negative_memtype, MemAllocatorSetAllocatorParamTest,
+                              Dup<1>(test::ValueDefault()) * g_InvalidMemTypes * Dup<3>(test::ValueDefault())
+                              * NVCV_ERROR_INVALID_ARGUMENT);
+
+NVCV_INSTANTIATE_TEST_SUITE_P(Positive_fnMalloc, MemAllocatorSetAllocatorParamTest,
+                              Dup<2>(test::ValueDefault()) * test::Value(true) * Dup<2>(test::ValueDefault())
+                              * NVCV_SUCCESS);
+
+NVCV_INSTANTIATE_TEST_SUITE_P(Negative_fnMalloc, MemAllocatorSetAllocatorParamTest,
+                              Dup<2>(test::ValueDefault()) * test::Value(false) * Dup<2>(test::ValueDefault())
+                              * NVCV_ERROR_INVALID_ARGUMENT);
+
+NVCV_INSTANTIATE_TEST_SUITE_P(Positive_fnFree, MemAllocatorSetAllocatorParamTest,
+                              Dup<3>(test::ValueDefault()) * test::Value(true) * Dup<1>(test::ValueDefault())
+                              * NVCV_SUCCESS);
+
+NVCV_INSTANTIATE_TEST_SUITE_P(Negative_fnFree, MemAllocatorSetAllocatorParamTest,
+                              Dup<3>(test::ValueDefault()) * test::Value(false) * Dup<1>(test::ValueDefault())
+                              * NVCV_ERROR_INVALID_ARGUMENT);
+
+NVCV_INSTANTIATE_TEST_SUITE_P(Positive_context, MemAllocatorSetAllocatorParamTest,
+                              Dup<4>(test::ValueDefault()) * test::ValueList{true,false}
+                              * NVCV_SUCCESS);
+
+// clang-format on
+
+TEST_P(MemAllocatorSetAllocatorParamTest, test)
+{
+    EXPECT_EQ(m_goldStatus, nvcvMemAllocatorSetCustomAllocator(m_paramHandle, m_paramMemType, m_paramFnAllocMem,
+                                                               m_paramFnFreeMem, m_paramContext));
+}
+
+// Execution tests ===========================================
+
+class MemAllocatorCreateExecTest : public t::Test
+{
+protected:
+    test::ObjectBag m_bag;
+};
+
+TEST_F(MemAllocatorCreateExecTest, handle_filled_in)
+{
+    NVCVMemAllocator handle = nullptr;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvMemAllocatorCreate(&handle));
+    m_bag.insert(handle);
+
+    EXPECT_NE(nullptr, handle);
+}
+
+#endif

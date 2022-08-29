@@ -14,6 +14,7 @@ add_library(nvcv_private_core STATIC
     TLS.cpp
     Status.cpp
     Version.cpp
+    MemAllocator.cpp
 )
 
 target_include_directories(nvcv_private_core
@@ -24,4 +25,5 @@ target_include_directories(nvcv_private_core
 target_link_libraries(nvcv_private_core
     PUBLIC
         nvcv_headers
+        CUDA::cudart_static
 )
