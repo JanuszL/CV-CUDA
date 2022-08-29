@@ -18,6 +18,7 @@ add_library(nvcv_util
     HashMD5.cpp
     Exception.cpp
     Status.cpp
+    CheckError.cpp
 )
 
 target_include_directories(nvcv_util

@@ -16,6 +16,7 @@ add_executable(nvcv_test_unit_core
     TestValueTests.cpp
     TestTypeList.cpp
     TestTypedTests.cpp
+    TestCheckError.cpp
 )
 
 target_link_libraries(nvcv_test_unit_core
@@ -23,6 +24,7 @@ target_link_libraries(nvcv_test_unit_core
         nvcv_util
         nvcv_test_main
         nvcv_test_common
+        nvcv_private_core
 )
 
 nvcv_add_test(nvcv_test_unit_core)

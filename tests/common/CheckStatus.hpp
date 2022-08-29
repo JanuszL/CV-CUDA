@@ -11,6 +11,7 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <common/Printers.hpp>
 #include <gtest/gtest.h>
 #include <util/Exception.hpp>
 

@@ -14,10 +14,12 @@
 #ifndef NVCV_TEST_COMMON_PRINTERS_HPP
 #define NVCV_TEST_COMMON_PRINTERS_HPP
 
+#include <cuda_runtime.h>
 #include <nvcv/Status.h>
 
 #include <iosfwd>
 
 std::ostream &operator<<(std::ostream &out, NVCVStatus status);
+std::ostream &operator<<(std::ostream &out, cudaError_t err);
 
 #endif // NVCV_TEST_COMMON_PRINTERS_HPP
