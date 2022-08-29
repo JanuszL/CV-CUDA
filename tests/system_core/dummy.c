@@ -1,5 +1,6 @@
-/*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+/* Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *
+ * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -9,30 +10,3 @@
  * without an express license agreement from NVIDIA CORPORATION or
  * its affiliates is strictly prohibited.
  */
-
-#ifndef NVCV_FOO_HPP
-#define NVCV_FOO_HPP
-
-#include "Export.h"
-
-/**
-* @file Foo.hpp
-*
-* @brief Foo : Interface for all the image processing utilities.
-*
-*/
-
-namespace nv::cv {
-
-/**
-* @brief Test function
-*
-* @param[in] value Input test values
-*
-* @returns bool value
-*/
-NVCV_PUBLIC bool Foo(int value);
-
-} // namespace nv::cv
-
-#endif // NVCV_FOO_HPP

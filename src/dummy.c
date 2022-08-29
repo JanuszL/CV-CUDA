@@ -1,5 +1,6 @@
-/*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+/* Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *
+ * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -9,16 +10,3 @@
  * without an express license agreement from NVIDIA CORPORATION or
  * its affiliates is strictly prohibited.
  */
-
-#include "Definitions.hpp"
-
-#include <nvcv/Foo.hpp>
-
-namespace ncv = nv::cv;
-
-TEST(FooTest, works)
-{
-    EXPECT_TRUE(ncv::Foo(42));
-    EXPECT_FALSE(ncv::Foo(41));
-    EXPECT_FALSE(ncv::Foo(43));
-}

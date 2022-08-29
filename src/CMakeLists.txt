@@ -11,7 +11,7 @@
 # general utilities library
 add_subdirectory(util)
 
-add_library(nvcv SHARED Foo.cu)
+add_library(nvcv SHARED dummy.c)
 
 target_include_directories(nvcv
     PUBLIC

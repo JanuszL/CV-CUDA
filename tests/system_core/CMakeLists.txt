@@ -12,7 +12,7 @@ project(nvcv_test_system_core)
 set(CMAKE_FOLDER tests)
 
 add_executable(nvcv_test_system_core
-    FooTests.cpp
+    dummy.c
 )
 
 target_link_libraries(nvcv_test_system_core
