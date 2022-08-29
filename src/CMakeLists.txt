@@ -8,6 +8,9 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
+# general utilities library
+add_subdirectory(util)
+
 add_library(nvcv SHARED Foo.cu)
 
 target_include_directories(nvcv
