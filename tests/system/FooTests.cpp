@@ -10,15 +10,15 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <cvcuda/Foo.hpp>
+#include <nvcv/Foo.hpp>
 
 #include <gtest/gtest.h>
 
-namespace cuda = nv::cuda;
+namespace ncv = nv::cv;
 
 TEST(FooTest, works)
 {
-    EXPECT_TRUE(cuda::Foo(42));
-    EXPECT_FALSE(cuda::Foo(41));
-    EXPECT_FALSE(cuda::Foo(43));
+    EXPECT_TRUE(ncv::Foo(42));
+    EXPECT_FALSE(ncv::Foo(41));
+    EXPECT_FALSE(ncv::Foo(43));
 }

@@ -8,21 +8,21 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-project(cvcuda_test_system)
+project(nvcv_test_system)
 set(CMAKE_FOLDER tests)
 
-add_executable(cvcuda_test_system
+add_executable(nvcv_test_system
     FooTests.cpp
 )
 
-target_link_libraries(cvcuda_test_system
+target_link_libraries(nvcv_test_system
     PUBLIC
         cvcuda_test_main
-        cvcuda
+        nvcv
 )
 
-cvcuda_add_test(NAME system COMMAND cvcuda_test_system)
+cvcuda_add_test(NAME system COMMAND nvcv_test_system)
 
-install(TARGETS cvcuda_test_system
+install(TARGETS nvcv_test_system
     DESTINATION ${CMAKE_INSTALL_BINDIR}
     COMPONENT tests)

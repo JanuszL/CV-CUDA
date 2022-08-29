@@ -8,57 +8,57 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-add_library(cvcuda SHARED Foo.cu)
+add_library(nvcv SHARED Foo.cu)
 
-target_include_directories(cvcuda
+target_include_directories(nvcv
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
 )
 
 # Config for semver 2.0
-set_target_properties(cvcuda PROPERTIES
+set_target_properties(nvcv PROPERTIES
     VERSION "${cvcuda_VERSION}"
     SOVERSION "${cvcuda_VERSION_MAJOR}"
 )
 
 # Configure symbol visibility
-set_target_properties(cvcuda PROPERTIES VISIBILITY_INLINES_HIDDEN on
+set_target_properties(nvcv PROPERTIES VISIBILITY_INLINES_HIDDEN on
                                         C_VISIBILITY_PRESET hidden
                                         CXX_VISIBILITY_PRESET hidden
                                         CUDA_VISIBILITY_PRESET hidden)
-target_compile_definitions(cvcuda PRIVATE -DCUPVA_EXPORTING=1)
+target_compile_definitions(nvcv PRIVATE -DCUPVA_EXPORTING=1)
 
 # Reduce executable size ==========================
 
 # Configure the library linker to remove unused code
-target_link_options(cvcuda PRIVATE -Wl,--exclude-libs,ALL -Wl,--no-undefined -Wl,--gc-sections -Wl,--as-needed)
+target_link_options(nvcv PRIVATE -Wl,--exclude-libs,ALL -Wl,--no-undefined -Wl,--gc-sections -Wl,--as-needed)
 # Put each function and it's data into separate linker sections
-target_compile_options(cvcuda PRIVATE -ffunction-sections -fdata-sections)
+target_compile_options(nvcv PRIVATE -ffunction-sections -fdata-sections)
 
 # Installer
 
-install(TARGETS cvcuda
-        EXPORT cvcuda
+install(TARGETS nvcv
+        EXPORT nvcv
         COMPONENT lib
         LIBRARY NAMELINK_COMPONENT dev)
 
 include(CMakePackageConfigHelpers)
-write_basic_package_version_file(cvcuda-config-version.cmake
+write_basic_package_version_file(nvcv-config-version.cmake
                                  COMPATIBILITY SameMajorVersion)
 
-install(DIRECTORY include/cvcuda
+install(DIRECTORY include/nvcv
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         COMPONENT dev)
 
 if(UNIX)
-    install(EXPORT cvcuda
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/cvcuda"
-        FILE cvcuda-config.cmake
+    install(EXPORT nvcv
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/nvcv"
+        FILE nvcv-config.cmake
         COMPONENT dev)
 
     # WAR for https://gitlab.kitware.com/cmake/cmake/-/issues/23563
-    install(CODE "set(CVCUDA_CONFIG_PATH \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/cmake/cvcuda/cvcuda-config.cmake\")"
+    install(CODE "set(CVCUDA_CONFIG_PATH \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/cmake/nvcv/nvcv-config.cmake\")"
         COMPONENT dev)
 
     install(CODE [=[
@@ -73,7 +73,7 @@ get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" REALPATH)
         ]=]
         COMPONENT dev)
 
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cvcuda-config-version.cmake
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/cvcuda"
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/nvcv-config-version.cmake
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/nvcv"
         COMPONENT dev)
 endif()

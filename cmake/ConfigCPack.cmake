@@ -51,8 +51,10 @@ string(REPLACE "-" "_" tmp ${CPACK_PACKAGE_VERSION})
 set(PACKAGE_FULL_VERSION "${tmp}-cuda${CUDA_VERSION_MAJOR}-${CPACK_SYSTEM_NAME}")
 
 set(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${PACKAGE_FULL_VERSION}")
-
 set(CPACK_PACKAGE_NAME "${PROJECT_NAME}${PROJECT_VERSION_MAJOR}")
+
+set(nvcv_PACKAGE_FILE_NAME "nvcv-${PACKAGE_FULL_VERSION}")
+set(nvcv_PACKAGE_NAME "nvcv${PROJECT_VERSION_MAJOR}")
 
 # CI needs this VERSION file to select the correct installer packages
 add_custom_target(cvcuda_version_file ALL
@@ -83,11 +85,11 @@ set(CPACK_COMPONENTS_ALL "")
 
 list(APPEND CPACK_COMPONENTS_ALL lib)
 set(CPACK_COMPONENT_LIB_DISPLAY_NAME "Runtime libraries")
-set(CPACK_COMPONENT_LIB_DESCRIPTION "NVIDIA CV-CUDA library")
+set(CPACK_COMPONENT_LIB_DESCRIPTION "NVIDIA NVCV library")
 set(CPACK_COMPONENT_LIB_REQUIRED true)
 
 if(UNIX)
-    set(CVCUDA_LIB_FILE_NAME "cvcuda-lib-${PACKAGE_FULL_VERSION}")
+    set(CVCUDA_LIB_FILE_NAME "nvcv-lib-${PACKAGE_FULL_VERSION}")
 
     set(CPACK_DEBIAN_LIB_FILE_NAME "${CVCUDA_LIB_FILE_NAME}.deb")
     set(CPACK_ARCHIVE_LIB_FILE_NAME "${CVCUDA_LIB_FILE_NAME}")
@@ -100,7 +102,7 @@ if(UNIX)
         "${CMAKE_CURRENT_BINARY_DIR}/cpack/lib/prerm")
 
     # as per debian convention, use the library file name
-    set(CPACK_DEBIAN_LIB_PACKAGE_NAME "lib${CPACK_PACKAGE_NAME}")
+    set(CPACK_DEBIAN_LIB_PACKAGE_NAME "lib${nvcv_PACKAGE_NAME}")
 
     set(CPACK_DEBIAN_LIB_PACKAGE_DEPENDS "libstdc++6, libc6")
 
@@ -127,14 +129,16 @@ set(CPACK_COMPONENT_DEV_DISPLAY_NAME "Development")
 set(CPACK_COMPONENT_DEV_DESCRIPTION "NVIDIA CV-CUDA C/C++ development library and headers")
 
 if(UNIX)
-    set(CVCUDA_DEV_FILE_NAME "cvcuda-dev-${PACKAGE_FULL_VERSION}")
+    set(nvcv_DEV_FILE_NAME "nvcv-dev-${PACKAGE_FULL_VERSION}")
 
-    set(CPACK_DEBIAN_DEV_FILE_NAME "${CVCUDA_DEV_FILE_NAME}.deb")
-    set(CPACK_ARCHIVE_DEV_FILE_NAME "${CVCUDA_DEV_FILE_NAME}")
+    set(CPACK_DEBIAN_DEV_FILE_NAME "${nvcv_DEV_FILE_NAME}.deb")
+    set(CPACK_ARCHIVE_DEV_FILE_NAME "${nvcv_DEV_FILE_NAME}")
 
     # dev package works with any current and futures ABIs, provided major version
     # is the same
-    set(CPACK_DEBIAN_DEV_PACKAGE_DEPENDS "lib${CPACK_PACKAGE_NAME} (>= ${cvcuda_API_VERSION})")
+    set(CPACK_DEBIAN_DEV_PACKAGE_DEPENDS "lib${nvcv_PACKAGE_NAME} (>= ${cvcuda_API_VERSION})")
+
+    set(CPACK_DEBIAN_DEV_PACKAGE_NAME "${nvcv_PACKAGE_NAME}-dev")
 
     # We're not adding compiler and cmake as dependencies, users can choose
     # whatever toolchain they want.
@@ -144,12 +148,12 @@ if(UNIX)
 
     set(args -DCVCUDA_SOURCE_DIR=${CMAKE_SOURCE_DIR}
              -DCVCUDA_BINARY_DIR=${CMAKE_BINARY_DIR}
-             -DCVCUDA_LIB_LINKER_FILE_NAME=$<TARGET_LINKER_FILE_NAME:cvcuda>)
+             -Dnvcv_LIB_LINKER_FILE_NAME=$<TARGET_LINKER_FILE_NAME:nvcv>)
 
     foreach(var CMAKE_INSTALL_PREFIX
                 CMAKE_INSTALL_INCLUDEDIR
                 CMAKE_INSTALL_LIBDIR
-                CPACK_PACKAGE_NAME
+                nvcv_PACKAGE_NAME
                 CMAKE_LIBRARY_ARCHITECTURE
                 cvcuda_API_CODE
                 CVCUDA_USR_LIB_DIR)
@@ -157,7 +161,7 @@ if(UNIX)
         list(APPEND args "-D${var}=${${var}}")
     endforeach()
 
-    add_custom_target(cvcuda_dev_control_extra ALL
+    add_custom_target(nvcv_dev_control_extra ALL
         COMMAND cmake ${args} -DSOURCE=${CMAKE_SOURCE_DIR}/cpack/debian_dev_prerm.in -DDEST=cpack/dev/prerm -P ${CMAKE_SOURCE_DIR}/cpack/ConfigureFile.cmake
         COMMAND cmake ${args} -DSOURCE=${CMAKE_SOURCE_DIR}/cpack/debian_dev_postinst.in -DDEST=cpack/dev/postinst -P ${CMAKE_SOURCE_DIR}/cpack/ConfigureFile.cmake
         BYPRODUCTS cpack/dev/prerm cpack/dev/postinst
@@ -182,7 +186,7 @@ if(BUILD_TESTS)
 
     if(UNIX)
         # Depend on current or any future ABI with same major version
-        set(CPACK_DEBIAN_TESTS_PACKAGE_DEPENDS "lib${CPACK_PACKAGE_NAME} (>= ${cvcuda_API_VERSION})")
+        set(CPACK_DEBIAN_TESTS_PACKAGE_DEPENDS "lib${nvcv_PACKAGE_NAME} (>= ${cvcuda_API_VERSION})")
 
         set(CVCUDA_TESTS_FILE_NAME "cvcuda-tests-${PACKAGE_FULL_VERSION}")
 

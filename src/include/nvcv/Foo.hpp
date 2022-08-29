@@ -10,8 +10,8 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NV_CVCUDA_FOO_HPP
-#define NV_CVCUDA_FOO_HPP
+#ifndef NVCV_FOO_HPP
+#define NVCV_FOO_HPP
 
 #include "Export.h"
 
@@ -22,7 +22,7 @@
 *
 */
 
-namespace nv::cuda {
+namespace nv::cv {
 
 /**
 * @brief Test function
@@ -31,8 +31,8 @@ namespace nv::cuda {
 *
 * @returns bool value
 */
-CVCUDA_PUBLIC bool Foo(int value);
+NVCV_PUBLIC bool Foo(int value);
 
-} // namespace nv::cuda
+} // namespace nv::cv
 
-#endif // NV_CVCUDA_FOO_HPP
+#endif // NVCV_FOO_HPP

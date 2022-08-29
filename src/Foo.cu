@@ -10,14 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <cvcuda/Foo.hpp>
+#include <nvcv/Foo.hpp>
 
 #include <cuda_runtime.h>
 
 #include <sstream>
 #include <stdexcept>
 
-namespace nv::cuda {
+namespace nv::cv {
 
 namespace {
 
@@ -75,4 +75,4 @@ bool Foo(int value)
     return result == 42;
 }
 
-} // namespace nv::cuda
+} // namespace nv::cv
