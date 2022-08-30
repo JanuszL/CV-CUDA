@@ -19,6 +19,7 @@ add_library(nvcv_util
     Exception.cpp
     Status.cpp
     CheckError.cpp
+    String.cpp
 )
 
 target_include_directories(nvcv_util
