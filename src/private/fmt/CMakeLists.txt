@@ -10,5 +10,18 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-add_subdirectory(core)
-add_subdirectory(fmt)
+add_library(nvcv_format STATIC
+    ColorSpec.cpp
+    Printers.cpp
+)
+
+target_include_directories(nvcv_format
+    PUBLIC
+        ..
+)
+
+target_link_libraries(nvcv_format
+    PUBLIC
+        nvcv_headers
+        nvcv_util
+)

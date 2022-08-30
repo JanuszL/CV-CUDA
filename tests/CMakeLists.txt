@@ -35,7 +35,7 @@ if(UNIX)
         add_test(NAME "${TESTNAME}" COMMAND "${TESTNAME}")
 
         if("${TESTNAME}" MATCHES "^[^_]+_test_system_.*$")
-            target_compile_definitions(${TESTNAME} PRIVATE -DNVCV_SYSTEM_TEST=1)
+            target_compile_definitions(${TESTNAME} PRIVATE -DNVCV_SYSTEM_TESTS=1)
         endif()
 
         # Timeouts are in seconds

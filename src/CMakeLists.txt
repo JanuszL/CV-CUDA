@@ -25,11 +25,13 @@ add_subdirectory(private)
 add_library(nvcv SHARED
     Version.cpp
     Status.cpp
+    ColorSpec.cpp
 )
 
 target_link_libraries(nvcv PRIVATE
     nvcv_private_core
     nvcv_util
+    nvcv_format
     -static-libstdc++
     -static-libgcc
 )

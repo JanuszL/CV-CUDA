@@ -14,7 +14,9 @@
 #ifndef NVCV_TEST_COMMON_PRINTERS_HPP
 #define NVCV_TEST_COMMON_PRINTERS_HPP
 
+#include <core/Status.hpp>
 #include <cuda_runtime.h>
+#include <fmt/Printers.hpp>
 #include <nvcv/Status.h>
 
 #include <iosfwd>
