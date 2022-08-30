@@ -19,6 +19,11 @@ target_include_directories(nvcv_test_common
         ..
 )
 
+target_link_libraries(nvcv_test_common
+    INTERFACE
+        nvcv_util
+)
+
 target_compile_definitions(nvcv_test_common
     INTERFACE
         -DNVCV_EXPOSE_CODE=1

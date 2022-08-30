@@ -15,6 +15,7 @@ set(CMAKE_FOLDER tests)
 add_executable(nvcv_test_system_core
     TestVersion.cpp
     TestStatus.cpp
+    TestSize.cpp
 )
 
 target_link_libraries(nvcv_test_system_core
