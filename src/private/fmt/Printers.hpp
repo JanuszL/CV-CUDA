@@ -15,6 +15,7 @@
 #define NVCV_PRIV_FORMAT_PRINTERS_HPP
 
 #include <nvcv/ColorSpec.h>
+#include <nvcv/DataLayout.h>
 
 #include <iosfwd>
 
@@ -29,5 +30,13 @@ std::ostream &operator<<(std::ostream &out, NVCVWhitePoint whitePoint);
 std::ostream &operator<<(std::ostream &out, NVCVColorSpace color_space);
 std::ostream &operator<<(std::ostream &out, NVCVChromaLocation loc);
 std::ostream &operator<<(std::ostream &out, NVCVRawPattern raw);
+
+// DataType
+std::ostream &operator<<(std::ostream &out, NVCVDataType dataType);
+std::ostream &operator<<(std::ostream &out, const NVCVPacking &packing);
+std::ostream &operator<<(std::ostream &out, NVCVMemLayout memLayout);
+std::ostream &operator<<(std::ostream &out, NVCVChannel swizzleChannel);
+std::ostream &operator<<(std::ostream &out, NVCVSwizzle swizzle);
+std::ostream &operator<<(std::ostream &out, NVCVEndianness endianness);
 
 #endif // NVCV_PRIV_FORMAT_PRINTERS_HPP

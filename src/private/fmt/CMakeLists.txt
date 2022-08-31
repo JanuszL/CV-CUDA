@@ -13,6 +13,7 @@
 add_library(nvcv_format STATIC
     ColorSpec.cpp
     Printers.cpp
+    DataLayout.cpp
 )
 
 target_include_directories(nvcv_format

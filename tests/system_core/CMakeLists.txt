@@ -17,6 +17,7 @@ add_executable(nvcv_test_system_core
     TestStatus.cpp
     TestSize.cpp
     TestColorSpec.cpp
+    TestDataLayout.cpp
 )
 
 target_link_libraries(nvcv_test_system_core
