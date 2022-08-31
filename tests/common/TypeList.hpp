@@ -16,10 +16,9 @@
 
 #include "ValueList.hpp"
 
-#include <util/Compiler.hpp>
-
 #include <gtest/gtest-typed-test.h>
 #include <gtest/gtest.h>
+#include <util/Compiler.hpp>
 
 // Utilities for creating parameters for typed tests on GoogleTest
 // We support both typed and (constexpr) value parameters. In order to work them

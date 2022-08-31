@@ -70,18 +70,14 @@ IncludeCategories:
     Priority:        9
   - Regex:           '^<.*Fwd\.hpp>'
     Priority:        11
-  - Regex:           '^".*\.hpp"'
-    Priority:        1
-  - Regex:           '^".*\.h"'
+  - Regex:           '^".*\.h.*"'
     Priority:        2
   - Regex:           '^".*\.cuh"'
     Priority:        3
   - Regex:           '^".*'
     Priority:        4
-  - Regex:           '^<.*\.hpp>'
+  - Regex:           '^<.*\.h.*>'
     Priority:        5
-  - Regex:           '^<.*\.h>'
-    Priority:        6
   - Regex:           '^<.*\.cuh>'
     Priority:        7
   - Regex:           '^<.*'
@@ -109,9 +105,5 @@ SeparateDefinitionBlocks: Always
 SpaceAfterTemplateKeyword: false
 SpaceBeforeParens: Custom
 SpacesInContainerLiterals: false
-
-SpacesInLineCommentPrefix:
-  Minimum:         1
-  Maximum:         1
 
 Standard:        c++17

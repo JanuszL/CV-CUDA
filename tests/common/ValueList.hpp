@@ -14,9 +14,8 @@
 #ifndef NVCV_TEST_COMMON_VALUELIST_HPP
 #define NVCV_TEST_COMMON_VALUELIST_HPP
 
-#include <util/HashMD5.hpp>
-
 #include <gtest/gtest.h>
+#include <util/HashMD5.hpp>
 
 #include <algorithm>
 #include <iomanip>
