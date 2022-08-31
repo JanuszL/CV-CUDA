@@ -159,8 +159,7 @@ enum class DataType : int8_t
 {
     UNSIGNED = NVCV_DATA_TYPE_UNSIGNED,
     SIGNED   = NVCV_DATA_TYPE_SIGNED,
-    FLOAT    = NVCV_DATA_TYPE_FLOAT,
-    FLOATISP = NVCV_DATA_TYPE_FLOATISP
+    FLOAT    = NVCV_DATA_TYPE_FLOAT
 };
 
 enum class MemLayout : int8_t

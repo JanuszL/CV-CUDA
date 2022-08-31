@@ -18,7 +18,7 @@
 
 namespace nv::cv::priv {
 
-using util::Size;
+using util::Size2D;
 
 } // namespace nv::cv::priv
 

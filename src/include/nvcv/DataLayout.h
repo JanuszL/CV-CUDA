@@ -225,8 +225,7 @@ typedef enum
 {
     NVCV_DATA_TYPE_UNSIGNED, /**< Channels are unsigned integer values. */
     NVCV_DATA_TYPE_SIGNED,   /**< Channels are signed integer values. */
-    NVCV_DATA_TYPE_FLOAT,    /**< Channel are floating point values. */
-    NVCV_DATA_TYPE_FLOATISP  /**< Proprietary floating point format from NVIDIA. */
+    NVCV_DATA_TYPE_FLOAT     /**< Channels are floating point values. */
 } NVCVDataType;
 
 /** Defines how the 2D plane pixels are laid out in memory.

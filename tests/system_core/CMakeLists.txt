@@ -18,6 +18,8 @@ add_executable(nvcv_test_system_core
     TestSize.cpp
     TestColorSpec.cpp
     TestDataLayout.cpp
+    TestImageFormat.cpp
+    TestPixelType.cpp
 )
 
 target_link_libraries(nvcv_test_system_core

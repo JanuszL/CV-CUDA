@@ -27,6 +27,8 @@ add_library(nvcv SHARED
     Status.cpp
     ColorSpec.cpp
     DataLayout.cpp
+    PixelType.cpp
+    ImageFormat.cpp
 )
 
 target_link_libraries(nvcv PRIVATE

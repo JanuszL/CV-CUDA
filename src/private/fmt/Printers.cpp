@@ -174,7 +174,6 @@ std::ostream &operator<<(std::ostream &out, NVCVDataType dataType)
         ENUM_CASE(NVCV_DATA_TYPE_UNSIGNED);
         ENUM_CASE(NVCV_DATA_TYPE_SIGNED);
         ENUM_CASE(NVCV_DATA_TYPE_FLOAT);
-        ENUM_CASE(NVCV_DATA_TYPE_FLOATISP);
     }
     return out << "NVCVDataType(" << (int)dataType << ")";
 }
