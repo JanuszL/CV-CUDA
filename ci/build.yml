@@ -18,6 +18,7 @@
         - 'rm -rf cvcuda-installer'
     script:
         - ./ci/build.sh $BUILD_TYPE build "$EXTRA_ARGS"
+        - ./ci/build_docs.sh "$PWD" "$PWD/build/docs"
         - 'pushd build && cpack && popd'
         - 'mkdir cvcuda-installer && mv -v build/*.{deb,tar.*} build/VERSION cvcuda-installer'
 

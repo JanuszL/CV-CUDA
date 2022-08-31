@@ -27,6 +27,7 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get update \
         ccache \
         libgtest-dev \
         pre-commit shellcheck \
+        curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Configure ccache
@@ -38,3 +39,13 @@ ENV PRE_COMMIT_HOME=/cache/pre-commit
 # Allow using this image in systems without proper CUDA runtime/driver support.
 # We'll be using this image only for building, don't need strict CUDA checks.
 ENV NVIDIA_DISABLE_REQUIRE=true
+
+#Documentation dependencies
+WORKDIR /usr/cvcuda-tools/
+RUN git clone https://gitlab-master.nvidia.com/omniverse/repo/repo_minimal.git
+WORKDIR /usr/cvcuda/tools/repo_minimal
+ADD repo-deps.packman.xml /usr/cvcuda-tools/repo_minimal/deps/
+ENV PATH=$PATH:/usr/cvcuda-tools/repo_minimal
+RUN chmod -R a+x /usr/cvcuda-tools/repo_minimal/repo
+ADD repo.toml /usr/cvcuda-tools/repo_minimal/
+RUN repo -h

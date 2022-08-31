@@ -10,6 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
+/**
+* @file Export.h
+*
+* @brief Export : Defines all macros used
+*
+*/
 #ifndef NV_CVCUDA_EXPORT_H
 #define NV_CVCUDA_EXPORT_H
 
