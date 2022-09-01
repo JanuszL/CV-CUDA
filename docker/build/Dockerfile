@@ -40,12 +40,7 @@ ENV PRE_COMMIT_HOME=/cache/pre-commit
 # We'll be using this image only for building, don't need strict CUDA checks.
 ENV NVIDIA_DISABLE_REQUIRE=true
 
-#Documentation dependencies
-WORKDIR /usr/cvcuda-tools/
-RUN git clone https://gitlab-master.nvidia.com/omniverse/repo/repo_minimal.git
-WORKDIR /usr/cvcuda/tools/repo_minimal
-ADD repo-deps.packman.xml /usr/cvcuda-tools/repo_minimal/deps/
-ENV PATH=$PATH:/usr/cvcuda-tools/repo_minimal
-RUN chmod -R a+x /usr/cvcuda-tools/repo_minimal/repo
-ADD repo.toml /usr/cvcuda-tools/repo_minimal/
-RUN repo -h
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip python3-dev doxygen && rm -rf /var/lib/apt/lists/*
+RUN python3 -m pip install sphinx-rtd-theme sphinx==4.5.0
+RUN python3 -m pip install breathe exhale recommonmark graphviz

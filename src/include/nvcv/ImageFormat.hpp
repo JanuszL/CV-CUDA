@@ -133,6 +133,7 @@ constexpr ImageFormat::ImageFormat(NVCVImageFormat format)
 {
 }
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /** Single plane with one 8-bit unsigned integer channel. */
 constexpr ImageFormat FMT_U8{NVCV_IMAGE_FORMAT_U8};
 
@@ -331,6 +332,7 @@ constexpr ImageFormat FMT_RGBA8{NVCV_IMAGE_FORMAT_RGBA8};
 
 /** Single plane with interleaved BGRA 8-bit channel. */
 constexpr ImageFormat FMT_BGRA8{NVCV_IMAGE_FORMAT_BGRA8};
+#endif
 
 inline ImageFormat::ImageFormat(ColorSpec colorSpec, ChromaSubsampling chromaSub, MemLayout memLayout,
                                 DataType dataType, Swizzle swizzle, Packing packing0, Packing packing1,

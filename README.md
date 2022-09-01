@@ -79,17 +79,10 @@ to successfully build CV-CUDA.
 
 6. Build documentation
 
-   `ci/build_docs.sh [index root path] [docs dst path]`
+   `ci/build_docs.sh [build folder]
 
    Example:
-   `ci/build_docs.sh ~/cvcuda ~/cvcuda/build/docs`
-   `ci/build_docs.sh "$PWD" "$PWD/build/docs"`
-
-   This will run repo_docs tool using the repo.toml config file.
-
-   Known issues:
-   The index.rst file needs to be updated to point to be api documentation generated in build folder.
-   The `<index root path>` should point to the folder containing index.rst
+   `ci/build_docs.sh build
 
 7. Run tests
 

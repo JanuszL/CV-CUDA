@@ -40,3 +40,7 @@ ipython_config.py
 *.gz
 *.xz
 *.bz2
+
+# Documentation
+# -------------
+_exhale_api

@@ -12,17 +12,14 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-# Builds documentation based on sphinx and doxygen using repo_docs tool
-# Usage: build_docs.sh [index_root path] [docs_dst folder]
-# Ensure index_root path includes the index.rst file
-# docs_dst folder is the folder where all the api documentation and html files are generated
+# Builds documentation based on sphinx and doxygen
+# Usage: build_docs.sh [build folder]
 
-if [[ -z "$1" || -z "$2" ]]; then
-    echo "Usage: build_docs.sh [index_root path] [docs_dst folder]"
-else
-    # Used by repo.toml file
-    export CVCUDA_DOCS_SRC_ROOT=$1
-    export CVCUDA_DOCS_DST_ROOT=$2
-    # Generate all docs
-    /usr/cvcuda-tools/repo_minimal/repo docs
+build_type="release"
+build_dir="build"
+
+if [[ $# -ge 1 ]]; then
+   build_dir=$1
 fi
+
+ ./ci/build.sh $build_type $build_dir "-DBUILD_DOCS=ON"

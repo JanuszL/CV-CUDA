@@ -148,6 +148,7 @@ private:
     NVCVColorSpec m_cspec;
 };
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 constexpr ColorSpec CSPEC_UNDEFINED        = NVCV_COLOR_SPEC_UNDEFINED;
 constexpr ColorSpec CSPEC_BT601            = NVCV_COLOR_SPEC_BT601;
 constexpr ColorSpec CSPEC_BT601_ER         = NVCV_COLOR_SPEC_BT601_ER;
@@ -168,6 +169,7 @@ constexpr ColorSpec CSPEC_sYCC             = NVCV_COLOR_SPEC_sYCC;
 constexpr ColorSpec CSPEC_SMPTE240M        = NVCV_COLOR_SPEC_SMPTE240M;
 constexpr ColorSpec CSPEC_DISPLAYP3        = NVCV_COLOR_SPEC_DISPLAYP3;
 constexpr ColorSpec CSPEC_DISPLAYP3_LINEAR = NVCV_COLOR_SPEC_DISPLAYP3_LINEAR;
+#endif
 
 constexpr ColorSpec ColorSpec::ConstCreate(ColorSpace cspace, YCbCrEncoding encoding, ColorTransferFunction xferFunc,
                                            ColorRange range, ChromaLocation locHoriz, ChromaLocation locVert)

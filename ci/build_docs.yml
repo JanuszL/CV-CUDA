@@ -16,8 +16,7 @@ b:docs:
     image: 'gitlab-master.nvidia.com:5005/cv/cvcuda/build-linux:$TAG_IMAGE'
     tags: [ linux-x64, build]
     script:
-        - ./ci/build_docs.sh "$PWD" "$PWD/build/docs"
-
+        -  ./ci/build_docs.sh build
 pages:
     extends: .launch_rule
     stage: deploy
@@ -29,6 +28,7 @@ pages:
     only:
         - main
     script:
-        - ./ci/build_docs.sh "$PWD" "$PWD/build/docs"
+        -  ./ci/build_docs.sh build
+        - rm -rf public
         - mkdir -p public
-        - cp -r build/docs/cvcuda_docs/latest/* public/
+        - cp -r build/docs/sphinx/* public/

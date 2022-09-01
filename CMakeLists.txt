@@ -38,9 +38,15 @@ include(ConfigCCache)
 # Define the build tree ====================
 
 add_subdirectory(src)
+
 if(BUILD_TESTS)
     add_subdirectory(tests)
 endif()
+
+if(BUILD_DOCS)
+    add_subdirectory(docs)
+endif()
+
 
 # Must be done after build tree is defined
 include(ConfigCPack)
