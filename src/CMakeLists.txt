@@ -12,8 +12,14 @@
 # PIC enabled
 set(CMAKE_POSITION_INDEPENDENT_CODE on)
 
+if(LTO_ENABLED)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION on)
+endif()
+
 # general utilities library
 add_subdirectory(util)
+
+# nvcv core private implementation
 add_subdirectory(private)
 
 add_library(nvcv SHARED
