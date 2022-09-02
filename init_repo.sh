@@ -16,11 +16,19 @@
 SDIR=$(dirname "$(readlink -f "$0")")
 
 if ! which pre-commit || ! which shellcheck ; then
-	echo "pre-commit must be fully configured. Try 'apt-get install pre-commit shellcheck'."
-	exit 1
+    echo "pre-commit must be fully configured. Try 'apt-get install pre-commit shellcheck'."
+    exit 1
+fi
+
+if ! which git-lfs ; then
+    echo "git-lfs must be fully configured. Try 'apt-get install git-lfs'."
+    exit 1
 fi
 
 cd "$SDIR"
+
+# We use LFS
+git lfs install
 
 # allow-missing-config is useful when checking out an old commit or a branch that don't have pre-config configuration.
 pre-commit install \
@@ -28,6 +36,4 @@ pre-commit install \
     --install-hooks \
     -t pre-commit \
     -t pre-merge-commit \
-    -t commit-msg \
-    -t post-rewrite \
-    -t post-checkout
+    -t commit-msg
