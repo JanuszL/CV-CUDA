@@ -60,6 +60,11 @@ repos:
     types: ['file', 'text']
     exclude_types: ['markdown']
     entry: ./lint/copyright_check.sh
+  - id: lfs_check
+    name: 'check LFS objects'
+    language: system
+    entry: ./lint/lfs_check.sh
+    require_serial: true
 
 - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
   rev: v9.0.0
