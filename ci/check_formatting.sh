@@ -31,5 +31,9 @@ else
     echo "Linting files touched from commit $from to $to =============="
     echo "Files to be linted:"
     git diff --stat $from..$to
-    pre-commit run --from-ref $from --to-ref $to
+    if ! pre-commit run --from-ref $from --to-ref $to ; then
+        echo "Formatting errors:"
+        git diff
+        false
+    fi
 fi
