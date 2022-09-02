@@ -28,6 +28,4 @@ pre-commit install \
     --install-hooks \
     -t pre-commit \
     -t pre-merge-commit \
-    -t commit-msg \
-    -t post-rewrite \
-    -t post-checkout
+    -t commit-msg
