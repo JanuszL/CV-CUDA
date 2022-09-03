@@ -9,10 +9,12 @@ TBD
 
 ## Pre-requisites
 
-- Linux box, Ubuntu >= 20.04 recommended.
-- docker - https://www.docker.com/
+- Recommended linux distros:
+    - Ubuntu >= 20.04 (tested with 20.04 and 22.04)
+    - WSL2 with Ubuntu >= 20.04 (tested with 20.04)
+- docker, tested with v20.10.12 - https://www.docker.com/
 - nvidia-docker2 - https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
-- CUDA driver
+- CUDA driver >= 11.7
 
 ## Build instructions
 
@@ -26,6 +28,7 @@ to successfully build CV-CUDA.
    `cd cvcuda`
 
 2. Initialize the cloned repository. It installs git pre-commit hooks.
+   In case of errors, follow the instructions shown to install some dependent packages.
 
    `./init_repo.sh`
 

@@ -15,8 +15,27 @@
 # SDIR is the directory where this script is located
 SDIR=$(dirname "$(readlink -f "$0")")
 
+distro_name=$(lsb_release -is)
+distro_ver=$(lsb_release -rs)
+
+function version_le()
+{
+    [[ $(echo -e "$1\n$2" | sort -V | head -n1) = "$1" ]] && echo true
+}
+
 if ! which pre-commit || ! which shellcheck ; then
-    echo "pre-commit must be fully configured. Try 'apt-get install pre-commit shellcheck'."
+    echo 'pre-commit must be fully configured.'
+    if [[ "$distro_name" = "Ubuntu" ]]; then
+        if [[ $(version_le "$distro_ver" "18.04") ]]; then
+            echo "Ubuntu v$distro_ver is too old, you need at least Ubuntu 20.04."
+        elif [[ $(version_le "$distro_ver" "21.10") ]]; then
+            echo "Try 'sudo apt-get install -y pip shellcheck && sudo pip install pre-commit'."
+        else
+            echo "Try 'sudo apt-get install -y pre-commit shellcheck'."
+        fi
+    else
+        echo "Try installing pre-commit and shellcheck packaged from your distro"
+    fi
     exit 1
 fi
 
