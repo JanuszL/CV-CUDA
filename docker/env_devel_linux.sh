@@ -18,10 +18,27 @@ SDIR=$(dirname "$(readlink -f "$0")")
 # shellcheck source=docker/config
 . "$SDIR/config"
 
+extra_args=""
+if [ -d $HOME/.vim ]; then
+    extra_args="$extra_args -v $HOME/.vim:$HOME/.vim"
+elif [ -f $HOME/.vimrc ]; then
+    extra_args="$extra_args -v $HOME/.vimrc:$HOME/.vimrc"
+fi
+
+if [ -f $HOME/.gdbinit ]; then
+    extra_args="$extra_args -v $HOME/.gdbinit:$HOME/.gdbinit"
+fi
+
 # Run docker
 # Note: first and second cache mappings are for ccache and pre-commit respectively.
 docker run --pull always --gpus=all -ti \
+    -v /etc/group:/etc/group:ro \
+    -v /etc/passwd:/etc/passwd:ro \
+    -v /etc/shadow:/etc/shadow:ro \
     -v $HOME/.cache:/cache \
     -v $HOME/.cache:$HOME/.cache \
-    -v $SDIR/..:/cvcuda \
+    -v $SDIR/..:$HOME/cvcuda \
+    --workdir=$HOME/cvcuda \
+    --user "$(id -u):$(id -g)" \
+    $extra_args \
     $IMAGE_URL_BASE/devel-linux:$TAG_IMAGE

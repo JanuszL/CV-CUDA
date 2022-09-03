@@ -36,7 +36,7 @@ to successfully build CV-CUDA.
 
    `docker/env_devel_linux.sh`
 
-   From now on you're inside docker. The local cloned repository is mapped to `/cvcuda` inside the
+   From now on you're inside docker. The local cloned repository is mapped to `$HOME/cvcuda` inside the
    container. The container starts in this directory.
 
 3. Build CV-CUDA
