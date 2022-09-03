@@ -20,7 +20,7 @@ SDIR=$(dirname "$(readlink -f "$0")")
 
 # Run docker
 # Note: first and second cache mappings are for ccache and pre-commit respectively.
-docker run --pull always --runtime=nvidia -ti \
+docker run --pull always --gpus=all -ti \
     -v $HOME/.cache:/cache \
     -v $HOME/.cache:$HOME/.cache \
     -v $SDIR/..:/cvcuda \
