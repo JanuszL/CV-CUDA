@@ -102,8 +102,8 @@ fi
 # Create build tree
 cmake -B "$build_dir" "$source_dir"  \
     -DBUILD_TESTS=1 \
-    "$cmake_args" \
-    "$user_args"
+    $cmake_args \
+    $user_args
 
 # Build CV-CUDA
 cmake --build "$build_dir" -- $MAKE_OPTS
