@@ -47,13 +47,16 @@ if [[ "$git_user_name" && "$git_user_email" ]]; then
 fi
 
 # Run docker
-# Note: first and second cache mappings are for ccache and pre-commit respectively.
+# Notes:
+#   - first and second cache mappings are for ccache and pre-commit respectively.
+#   - pre-commit needs $HOME/.npm
 docker run --pull always --gpus=all -ti \
     -v /etc/group:/etc/group:ro \
     -v /etc/passwd:/etc/passwd:ro \
     -v /etc/shadow:/etc/shadow:ro \
     -v $HOME/.cache:/cache \
     -v $HOME/.cache:$HOME/.cache \
+    -v $HOME/.npm:$HOME/.npm \
     -v $SDIR/..:$HOME/cvcuda \
     $extra_args \
     $IMAGE_URL_BASE/devel-linux:$TAG_IMAGE \
