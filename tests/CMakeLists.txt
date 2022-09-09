@@ -63,3 +63,6 @@ endif()
 
 # System tests for nvcv core public API
 add_subdirectory(system_core)
+
+# Unit tests for internal functions from nvcv core
+add_subdirectory(unit_core)

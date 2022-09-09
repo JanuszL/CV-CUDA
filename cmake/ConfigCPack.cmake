@@ -188,6 +188,9 @@ if(BUILD_TESTS)
         # Depend on current or any future ABI with same major version
         set(CPACK_DEBIAN_TESTS_PACKAGE_DEPENDS "lib${nvcv_PACKAGE_NAME} (>= ${cvcuda_API_VERSION})")
 
+        # External dependencies
+        set(CPACK_DEBIAN_TESTS_PACKAGE_DEPENDS "${CPACK_DEBIAN_TESTS_PACKAGE_DEPENDS},libssl3")
+
         set(CVCUDA_TESTS_FILE_NAME "cvcuda-tests-${PACKAGE_FULL_VERSION}")
 
         set(CPACK_DEBIAN_TESTS_FILE_NAME "${CVCUDA_TESTS_FILE_NAME}.deb")

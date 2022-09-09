@@ -10,8 +10,12 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
+set(OPENSSL_USE_STATIC_LIBS TRUE)
+find_package(OpenSSL COMPONENTS Crypto REQUIRED)
+
 add_library(nvcv_util
     Assert.cpp
+    HashMD5.cpp
 )
 
 target_include_directories(nvcv_util
@@ -23,6 +27,8 @@ target_link_libraries(nvcv_util
     PUBLIC
         nvcv_headers
         CUDA::cudart_static
+    PRIVATE
+        OpenSSL::Crypto
 )
 
 target_compile_definitions(nvcv_util
