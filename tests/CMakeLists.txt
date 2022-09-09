@@ -19,6 +19,7 @@ add_library(nvcv_test_main Main.cpp)
 target_link_libraries(nvcv_test_main
     PUBLIC
         GTest::gtest
+        GTest::gmock
 )
 
 # Now we want to create a script in the output directory that will run
@@ -60,6 +61,9 @@ else()
 endif()
 
 # Create build tree
+
+# Common utilities needed only by tests
+add_subdirectory(common)
 
 # System tests for nvcv core public API
 add_subdirectory(system_core)

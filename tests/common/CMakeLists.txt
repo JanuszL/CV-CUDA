@@ -10,16 +10,14 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-add_executable(nvcv_test_unit_core
-    TestHashMD5.cpp
-    TestValueList.cpp
+add_library(nvcv_test_common INTERFACE)
+
+target_include_directories(nvcv_test_common
+    INTERFACE
+        ..
 )
 
-target_link_libraries(nvcv_test_unit_core
-    PRIVATE
-        nvcv_util
-        nvcv_test_main
-        nvcv_test_common
+target_compile_definitions(nvcv_test_common
+    INTERFACE
+        -DNVCV_EXPOSE_CODE=1
 )
-
-nvcv_add_test(nvcv_test_unit_core)
