@@ -55,11 +55,12 @@ to successfully build CV-CUDA.
    ```
 
    From now on you're inside docker. The local cloned repository is mapped to `$HOME/cvcuda` inside the
-   container. The container starts in this directory.
+   container. The container starts in $HOME.
 
 5. Build CV-CUDA
 
    ```
+   cd ~/cvcuda
    ci/build.sh
    ```
 

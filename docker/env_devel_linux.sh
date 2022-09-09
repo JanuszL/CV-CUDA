@@ -45,7 +45,6 @@ docker run --pull always --gpus=all -ti \
     -v $HOME/.cache:/cache \
     -v $HOME/.cache:$HOME/.cache \
     -v $SDIR/..:$HOME/cvcuda \
-    --workdir=$HOME/cvcuda \
-    --user "$(id -u):$(id -g)" \
     $extra_args \
-    $IMAGE_URL_BASE/devel-linux:$TAG_IMAGE
+    $IMAGE_URL_BASE/devel-linux:$TAG_IMAGE \
+    /usr/bin/bash -c "mkdir -p $HOME && chown $USER:$USER $HOME && su - $USER"
