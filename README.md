@@ -29,17 +29,24 @@ to successfully build CV-CUDA.
 
 2. Initialize the cloned repository. It installs git pre-commit hooks.
    In case of errors, follow the instructions shown to install some dependent packages.
+   If it hangs, try to run it when disconnected from the VPN.  It is only needed once.
 
    `./init_repo.sh`
 
-2. Start the docker environment for development
+3. Start the docker environment for development.
+   You need to login in docker on gitlab first.
+   The current user name may be different than the docker username.
+   The current user must be in the docker group to be able to run docker without sudo.
 
-   `docker/env_devel_linux.sh`
+   ```
+   docker login gitlab-master.nvidia.com:5005 -u <your_username> -p <your_personal_access_token>
+   docker/env_devel_linux.sh
+   ```
 
    From now on you're inside docker. The local cloned repository is mapped to `$HOME/cvcuda` inside the
    container. The container starts in this directory.
 
-3. Build CV-CUDA
+4. Build CV-CUDA
 
    `ci/build.sh`
 
@@ -54,11 +61,11 @@ to successfully build CV-CUDA.
 
    If output build tree path isn't specified, it'll be `build-rel` for release builds, and build-deb for debug.
 
-4. Run tests
+5. Run tests
 
    The tests are in `<buildtree>/bin`. They can be executed from within the docker container.
 
-5. Package installers
+6. Package installers
 
    From a succesfully built project, installers can be generated using cpack:
 
