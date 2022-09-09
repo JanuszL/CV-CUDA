@@ -29,6 +29,13 @@ if [ -f $HOME/.gdbinit ]; then
     extra_args="$extra_args -v $HOME/.gdbinit:$HOME/.gdbinit"
 fi
 
+if [ -f /etc/sudoers ]; then
+    extra_args="$extra_args -v /etc/sudoers:/etc/sudoers"
+fi
+if [ -d /etc/sudoers.d ]; then
+    extra_args="$extra_args -v /etc/sudoers.d:/etc/sudoers.d"
+fi
+
 # Run docker
 # Note: first and second cache mappings are for ccache and pre-commit respectively.
 docker run --pull always --gpus=all -ti \

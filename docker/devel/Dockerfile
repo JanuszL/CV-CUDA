@@ -17,8 +17,12 @@ FROM $BASE_IMAGE:$TAG_IMAGE
 
 # need to update and install in one go, or else installation might use
 # stale data from server stored in docker cache, with packages that don't exist anymore.
-RUN DEBIAN_FRONTEND="noninteractive" apt-get update \
+
+# HACK: need to pass 'sudo' as a variable to workaround Dockerfile linter, it says
+#       we shouldn't install sudo in a container. But we know what we're doing!
+RUN HACK_SUDO=sudo && DEBIAN_FRONTEND="noninteractive" apt-get update \
     && apt-get install -y --no-install-recommends \
+         $HACK_SUDO \
          vim \
          gdb cgdb \
          less \
