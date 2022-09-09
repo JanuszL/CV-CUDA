@@ -36,6 +36,16 @@ if [ -d /etc/sudoers.d ]; then
     extra_args="$extra_args -v /etc/sudoers.d:/etc/sudoers.d"
 fi
 
+extra_cmds="true"
+
+# Set up git user inside docker
+git_user_name=$(git config --global user.name)
+git_user_email=$(git config --global user.email)
+if [[ "$git_user_name" && "$git_user_email" ]]; then
+    extra_cmds="$extra_cmds && git config --global user.name '$git_user_name'"
+    extra_cmds="$extra_cmds && git config --global user.email '$git_user_email'"
+fi
+
 # Run docker
 # Note: first and second cache mappings are for ccache and pre-commit respectively.
 docker run --pull always --gpus=all -ti \
@@ -47,4 +57,4 @@ docker run --pull always --gpus=all -ti \
     -v $SDIR/..:$HOME/cvcuda \
     $extra_args \
     $IMAGE_URL_BASE/devel-linux:$TAG_IMAGE \
-    /usr/bin/bash -c "mkdir -p $HOME && chown $USER:$USER $HOME && su - $USER"
+    /usr/bin/bash -c "mkdir -p $HOME && chown $USER:$USER $HOME && su - $USER -c \"$extra_cmds\" && su - $USER"
