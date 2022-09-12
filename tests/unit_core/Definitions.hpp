@@ -14,6 +14,7 @@
 #ifndef NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
 #define NVCV_TEST_UNIT_CORE_DEFINITIONS_HPP
 
+#include <common/CheckStatus.hpp>
 #include <common/Printers.hpp>
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
