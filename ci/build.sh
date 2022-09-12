@@ -97,6 +97,15 @@ if [[ $has_ccache ]]; then
     cmake_args="${cmake_args} -DCCACHE_STATSLOG=${ccache_stats}"
 fi
 
+# config CUDA
+CUDA_MAJOR=11
+for nvcc_path in /usr/local/cuda-$CUDA_MAJOR/bin/nvcc /usr/local/cuda/bin/nvcc; do
+    if [ -x "$nvcc_path" ]; then
+        cmake_args="$cmake_args -DCMAKE_CUDA_COMPILER=$nvcc_path"
+        break
+    fi
+done
+
 # Create build tree and build! ===========================================
 
 # Create build tree
