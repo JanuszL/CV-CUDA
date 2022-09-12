@@ -1,5 +1,7 @@
+#!/bin/bash -e
+
 # Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
+
 # SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -10,24 +12,21 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-variables:
-    GIT_SUBMODULE_STRATEGY: normal
-    TAG_IMAGE: 1
-    INSIDE_CI: "true"
+# SDIR is the directory where this script is located
+SDIR=$(dirname "$(readlink -f "$0")")
 
-stages:
-  - lint
-  - build
-  - test
+if [ $# != 1 ]; then
+    echo "Invalid arguments"
+    echo "Usage: $(basename "$0") <container tag id>"
+    exit 1
+fi
 
-.launch_rule:
-    interruptible: true
-    only:
-        - merge_request
-        - main
-        - /^rel\/.*$/
+tag_used=$1
+shift
 
-include:
-    - ci/lint.yml
-    - ci/build.yml
-    - ci/test.yml
+# shellcheck source=docker/config
+. $SDIR/../docker/config
+
+if [ "$TAG_IMAGE" != "$tag_used" ]; then
+    echo "Tag of docker image used, $IMAGE_URL_BASE:$tag_used, must be $TAG_IMAGE. Please update the .gitlab-ci.yml" && false
+fi

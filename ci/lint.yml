@@ -26,3 +26,11 @@ formatting:
         - ${PRE_COMMIT_HOME}/pre-commit.log
       when: on_failure
     tags: [ linux-x64, build, cuda11 ]
+
+cicd_config:
+    extends: .launch_rule
+    stage: lint
+    image: 'gitlab-master.nvidia.com:5005/cv/cvcuda/build-linux:$TAG_IMAGE'
+    script:
+        - 'ci/check_cicd.sh $TAG_IMAGE'
+    tags: [ linux-x64 ]
