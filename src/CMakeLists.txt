@@ -29,6 +29,10 @@ set_target_properties(nvcv PROPERTIES VISIBILITY_INLINES_HIDDEN on
                                         CUDA_VISIBILITY_PRESET hidden)
 target_compile_definitions(nvcv PRIVATE -DCUPVA_EXPORTING=1)
 
+# target used when only public headers are needed
+add_library(nvcv_headers INTERFACE)
+target_include_directories(nvcv_headers INTERFACE include)
+
 # Reduce executable size ==========================
 
 # Configure the library linker to remove unused code
