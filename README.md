@@ -36,20 +36,28 @@ to successfully build CV-CUDA.
    ./init_repo.sh
    ```
 
-3. Start the docker environment for development.
-   You need to login in docker on gitlab first.
+3. Login to docker on gitlab (needed only once).
    The current user name may be different than the docker username.
    The current user must be in the docker group to be able to run docker without sudo.
+   If you don't have already one personal access token, please go to
+   [CV-CUDA gitlab project page](https://gitlab-master.nvidia.com/cv/cvcuda) and consult
+   [Personal Access Tokens](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html)
+   for instructions on how to create them.
 
    ```
    docker login gitlab-master.nvidia.com:5005 -u <your_username> -p <your_personal_access_token>
+   ```
+
+4. Start the docker environment for development.
+
+   ```
    docker/env_devel_linux.sh
    ```
 
    From now on you're inside docker. The local cloned repository is mapped to `$HOME/cvcuda` inside the
    container. The container starts in this directory.
 
-4. Build CV-CUDA
+5. Build CV-CUDA
 
    ```
    ci/build.sh
@@ -68,7 +76,7 @@ to successfully build CV-CUDA.
 
    If output build tree path isn't specified, it'll be `build-rel` for release builds, and build-deb for debug.
 
-5. Run tests
+6. Run tests
 
    The tests are in `<buildtree>/bin`. They can be executed from within the docker container. You can run the script
    below to run all tests at once. Here's an example when build tree is created in `build-rel`
@@ -77,7 +85,7 @@ to successfully build CV-CUDA.
    build-rel/bin/run_tests.sh
    ```
 
-6. Package installers
+7. Package installers
 
    From a succesfully built project, installers can be generated using cpack:
 
