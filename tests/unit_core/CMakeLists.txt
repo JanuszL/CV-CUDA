@@ -14,6 +14,7 @@ add_executable(nvcv_test_unit_core
     TestHashMD5.cpp
     TestValueList.cpp
     TestValueTests.cpp
+    TestTypeList.cpp
 )
 
 target_link_libraries(nvcv_test_unit_core
