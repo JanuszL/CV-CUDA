@@ -23,15 +23,18 @@ to successfully build CV-CUDA.
 
 1. Clone the repository
 
-   `git clone ssh://git@gitlab-master.nvidia.com:12051/cv/cvcuda.git`
-
-   `cd cvcuda`
+   ```
+   git clone ssh://git@gitlab-master.nvidia.com:12051/cv/cvcuda.git
+   cd cvcuda
+   ```
 
 2. Initialize the cloned repository. It installs git pre-commit hooks.
    In case of errors, follow the instructions shown to install some dependent packages.
    If it hangs, try to run it when disconnected from the VPN.  It is only needed once.
 
-   `./init_repo.sh`
+   ```
+   ./init_repo.sh
+   ```
 
 3. Start the docker environment for development.
    You need to login in docker on gitlab first.
@@ -48,14 +51,18 @@ to successfully build CV-CUDA.
 
 4. Build CV-CUDA
 
-   `ci/build.sh`
+   ```
+   ci/build.sh
+   ```
 
    This will compile a x86 release build of CV-CUDA inside `build-rel` directory.
    The library is in build-rel/lib and executables (tests, etc...) in build-rel/bin.
 
    The script accepts some parameters to control the creation of the build tree:
 
-   `ci/build.sh [release|debug] [output build tree path]`
+   ```
+   ci/build.sh [release|debug] [output build tree path]
+   ```
 
    By default it builds for release.
 
@@ -63,21 +70,29 @@ to successfully build CV-CUDA.
 
 5. Run tests
 
-   The tests are in `<buildtree>/bin`. They can be executed from within the docker container.
+   The tests are in `<buildtree>/bin`. They can be executed from within the docker container. You can run the script
+   below to run all tests at once. Here's an example when build tree is created in `build-rel`
+
+   ```
+   build-rel/bin/run_tests.sh
+   ```
 
 6. Package installers
 
    From a succesfully built project, installers can be generated using cpack:
 
-   `cd build-rel`
-
-   `cpack .`
+   ```
+   cd build-rel
+   cpack .
+   ```
 
    This will generate in the build directory both Debian installers and tarballs (\*.tar.xz), needed for integration in other distros.
 
    For a fine-grained choice of what installers to generated, the full syntax is:
 
-   `cmake . -G [DEB|TXZ]`
+   ```
+   cmake . -G [DEB|TXZ]
+   ```
 
    - DEB for Debian packages
    - TXZ for \*.tar.xz tarballs.
@@ -85,7 +100,9 @@ to successfully build CV-CUDA.
 ## Notes
 - To do a local lint check in all files, run:
 
-  `pre-commit run -a`
+   ```
+   pre-commit run -a
+   ```
 
 ## License
 
