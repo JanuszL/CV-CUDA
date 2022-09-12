@@ -10,3 +10,11 @@
  * without an express license agreement from NVIDIA CORPORATION or
  * its affiliates is strictly prohibited.
  */
+
+#include <nvcv/Version.h>
+#include <util/SymbolVersioning.hpp>
+
+NVCV_DEFINE_API(0, 0, int, nvcvGetVersion, ())
+{
+    return NVCV_VERSION;
+}

@@ -40,5 +40,8 @@ EXPAND_ONLY_PREDEF = YES
 """
 
 doxygen_predefined = [
-    "NVCV_PUBLIC="
+    "NVCV_PUBLIC=",
+    "NVCV_API_VERSION_IS(x,y)=0",
+    "NVCV_API_VERSION_AT_LEAST(x,y)=1",
+    "NVCV_API_VERSION_AT_MOST(x,y)=0"
 ]
