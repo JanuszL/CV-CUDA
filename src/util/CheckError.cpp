@@ -22,14 +22,14 @@
 
 namespace nv::cv::util {
 
-static std::string GetFunctionName(const char *stmt)
+static std::string_view GetFunctionName(const std::string_view &stmt)
 {
     static std::regex rgx("^([A-Za-z0-9_]+)\\(.*$");
 
-    std::cmatch match;
-    if (regex_match(stmt, match, rgx))
+    std::match_results<std::string_view::const_iterator> match;
+    if (regex_match(stmt.begin(), stmt.end(), match, rgx))
     {
-        return match[1];
+        return std::string_view(match[1].first, match[1].second);
     }
     else
     {
@@ -38,34 +38,41 @@ static std::string GetFunctionName(const char *stmt)
 }
 
 namespace detail {
-std::string GetCheckMessage()
+const char *GetCheckMessage(char *buf, int bufsize)
 {
+    NVCV_ASSERT(buf != nullptr);
+    (void)buf;
+    (void)bufsize;
+
     return "";
 }
 
-std::string GetCheckMessage(const char *fmt, ...)
+char *GetCheckMessage(char *buf, int bufsize, const char *fmt, ...)
 {
+    NVCV_ASSERT(buf != nullptr);
+    NVCV_ASSERT(fmt != nullptr);
+
     va_list va;
     va_start(va, fmt);
 
-    char buffer[NVCV_MAX_STATUS_MESSAGE_LENGTH];
-    vsnprintf(buffer, sizeof(buffer) - 1, "%s: ", va);
+    vsnprintf(buf, bufsize - 1, fmt, va);
 
     va_end(va);
 
-    return buffer;
+    return buf;
 }
-} // namespace detail
 
-std::string FormatErrorMessage(const char *errname, const char *callstr, const std::string &msg)
+std::string FormatErrorMessage(const std::string_view &errname, const std::string_view &callstr,
+                               const std::string_view &msg)
 {
-    std::string funname = GetFunctionName(callstr);
+    std::string_view funcName = GetFunctionName(callstr);
 
+    // TODO: avoid heap memory allocation here
     std::ostringstream ss;
     ss << '(';
-    if (!funname.empty())
+    if (!funcName.empty())
     {
-        ss << funname << ':';
+        ss << funcName << ':';
     }
 
     ss << errname << ')';
@@ -76,6 +83,8 @@ std::string FormatErrorMessage(const char *errname, const char *callstr, const s
 
     return ss.str();
 }
+
+} // namespace detail
 
 NVCVStatus TranslateError(cudaError_t err)
 {
