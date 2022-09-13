@@ -15,10 +15,24 @@
 
 #include "Export.h"
 
+/**
+* @file Foo.hpp
+*
+* @brief Foo : Interface for all the image processing utilities.
+*
+*/
+
 namespace nv::cuda {
 
+/**
+* @brief Test function
+*
+* @param[in] value Input test values
+*
+* @returns bool value
+*/
 CVCUDA_PUBLIC bool Foo(int value);
 
-}
+} // namespace nv::cuda
 
 #endif // NV_CVCUDA_FOO_HPP

@@ -57,6 +57,7 @@ docker run --pull always --gpus=all -ti \
     -v $HOME/.cache:/cache \
     -v $HOME/.cache:$HOME/.cache \
     -v $HOME/.npm:$HOME/.npm \
+    -v /var/tmp:/var/tmp \
     -v $SDIR/..:$HOME/cvcuda \
     $extra_args \
     $IMAGE_URL_BASE/devel-linux:$TAG_IMAGE \

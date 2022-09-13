@@ -65,7 +65,7 @@ to successfully build CV-CUDA.
    ```
 
    This will compile a x86 release build of CV-CUDA inside `build-rel` directory.
-   The library is in build-rel/lib and executables (tests, etc...) in build-rel/bin.
+   The library is in build-rel/lib, docs in build-rel/docs and executables (tests, etc...) in build-rel/bin.
 
    The script accepts some parameters to control the creation of the build tree:
 
@@ -77,7 +77,21 @@ to successfully build CV-CUDA.
 
    If output build tree path isn't specified, it'll be `build-rel` for release builds, and build-deb for debug.
 
-6. Run tests
+6. Build documentation
+
+   `ci/build_docs.sh [index root path] [docs dst path]`
+
+   Example:
+   `ci/build_docs.sh ~/cvcuda ~/cvcuda/build/docs`
+   `ci/build_docs.sh "$PWD" "$PWD/build/docs"`
+
+   This will run repo_docs tool using the repo.toml config file.
+
+   Known issues:
+   The index.rst file needs to be updated to point to be api documentation generated in build folder.
+   The `<index root path>` should point to the folder containing index.rst
+
+7. Run tests
 
    The tests are in `<buildtree>/bin`. They can be executed from within the docker container. You can run the script
    below to run all tests at once. Here's an example when build tree is created in `build-rel`
@@ -86,7 +100,7 @@ to successfully build CV-CUDA.
    build-rel/bin/run_tests.sh
    ```
 
-7. Package installers
+8. Package installers
 
    From a succesfully built project, installers can be generated using cpack:
 

@@ -1,0 +1,31 @@
+# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#
+# SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
+[repo_docs]
+enabled = true
+project = "cvcuda_docs"
+name = "CV-CUDA Documentation"
+version = "prealpha"
+copyright_start = 2022
+enable_dark_theme_switcher = true
+docs_root ="${env:CVCUDA_DOCS_SRC_ROOT}"
+docs_dst ="${env:CVCUDA_DOCS_DST_ROOT}"
+doxygen_input = [
+    "src/include/cvcuda"
+]
+sphinx_generate_doxygen_groups = true
+sphinx_generate_doxygen_pages = true
+sphinx_exclude_patterns = [
+    "build-rel", "build", "build-deb", "README.md"
+]
+favicon = "docs/media/nv_icon.png"
+logo = "docs/media/nv_logo.png"
