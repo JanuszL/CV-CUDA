@@ -10,26 +10,25 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-variables:
-    GIT_SUBMODULE_STRATEGY: normal
-    TAG_IMAGE: 1
-    INSIDE_CI: "true"
+b:docs:
+    extends: .launch_rule
+    stage: build
+    image: 'gitlab-master.nvidia.com:5005/cv/cvcuda/build-linux:$TAG_IMAGE'
+    tags: [ linux-x64, build]
+    script:
+        - ./ci/build_docs.sh "$PWD" "$PWD/build/docs"
 
-stages:
-  - lint
-  - build
-  - deploy
-  - test
-
-.launch_rule:
-    interruptible: true
+pages:
+    extends: .launch_rule
+    stage: deploy
+    image: 'gitlab-master.nvidia.com:5005/cv/cvcuda/build-linux:$TAG_IMAGE'
+    tags: [ linux-x64, build]
+    artifacts:
+        paths:
+            - public
     only:
-        - merge_request
         - main
-        - /^rel\/.*$/
-
-include:
-    - ci/lint.yml
-    - ci/build.yml
-    - ci/build_docs.yml
-    - ci/test.yml
+    script:
+        - ./ci/build_docs.sh "$PWD" "$PWD/build/docs"
+        - mkdir -p public
+        - cp -r build/docs/cvcuda_docs/latest/* public/
