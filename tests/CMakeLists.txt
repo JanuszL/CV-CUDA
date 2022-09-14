@@ -27,26 +27,31 @@ if(UNIX)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/run_tests.sh.in ${TESTS_DRIVER}
         @ONLY)
 
-    macro(cvcuda_add_test)
-        cmake_parse_arguments(ADDTEST "" "NAME;COMMAND" "" ${ARGN})
+    macro(nvcv_add_test TESTNAME)
+        add_test(NAME "${TESTNAME}" COMMAND "${TESTNAME}")
 
-        add_test(NAME "${ADDTEST_NAME}" COMMAND "${ADDTEST_COMMAND}")
+        if("${TESTNAME}" MATCHES "^[^_]+_test_system_.*$")
+            target_compile_definitions(${TESTNAME} PRIVATE -DNVCV_SYSTEM_TEST=1)
+        endif()
 
         # Timeouts are in seconds
         set(TIMEOUT_KILL 800)
         set(TIMEOUT_TERM 620)
 
-        set_tests_properties(${ADDTEST_NAME} PROPERTIES TIMEOUT ${TIMEOUT_TERM})
+        set_tests_properties(${TESTNAME} PROPERTIES TIMEOUT ${TIMEOUT_TERM})
 
-        file(APPEND "${TESTS_DRIVER}" "run ${ADDTEST_NAME}\n")
+        file(APPEND "${TESTS_DRIVER}" "run ${TESTNAME}\n")
+
+        install(TARGETS ${TESTNAME}
+                DESTINATION ${CMAKE_INSTALL_BINDIR}
+                COMPONENT tests)
     endmacro()
-
 
     install(PROGRAMS ${TESTS_DRIVER}
         TYPE BIN
         COMPONENT tests)
 else()
-    macro(cvcuda_add_test)
+    macro(nvcv_add_test)
         add_test(${ARGV})
     endmacro()
 endif()

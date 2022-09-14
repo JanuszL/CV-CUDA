@@ -21,8 +21,4 @@ target_link_libraries(nvcv_test_system
         nvcv
 )
 
-cvcuda_add_test(NAME system COMMAND nvcv_test_system)
-
-install(TARGETS nvcv_test_system
-    DESTINATION ${CMAKE_INSTALL_BINDIR}
-    COMPONENT tests)
+nvcv_add_test(nvcv_test_system)
