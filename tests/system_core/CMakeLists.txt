@@ -8,17 +8,17 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-project(nvcv_test_system)
+project(nvcv_test_system_core)
 set(CMAKE_FOLDER tests)
 
-add_executable(nvcv_test_system
+add_executable(nvcv_test_system_core
     FooTests.cpp
 )
 
-target_link_libraries(nvcv_test_system
+target_link_libraries(nvcv_test_system_core
     PUBLIC
         cvcuda_test_main
         nvcv
 )
 
-nvcv_add_test(nvcv_test_system)
+nvcv_add_test(nvcv_test_system_core)

@@ -58,5 +58,5 @@ endif()
 
 # Create build tree
 
-# System tests for public API
-add_subdirectory(system)
+# System tests for nvcv core public API
+add_subdirectory(system_core)
