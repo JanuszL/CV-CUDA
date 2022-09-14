@@ -17,7 +17,7 @@ add_executable(nvcv_test_system_core
 
 target_link_libraries(nvcv_test_system_core
     PUBLIC
-        cvcuda_test_main
+        nvcv_test_main
         nvcv
 )
 

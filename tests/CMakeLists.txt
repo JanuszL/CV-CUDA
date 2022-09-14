@@ -15,8 +15,11 @@ enable_testing()
 
 find_package(GTest REQUIRED)
 
-add_library(cvcuda_test_main Main.cpp)
-target_link_libraries(cvcuda_test_main PUBLIC GTest::gtest)
+add_library(nvcv_test_main Main.cpp)
+target_link_libraries(nvcv_test_main
+    PUBLIC
+        GTest::gtest
+)
 
 # Now we want to create a script in the output directory that will run
 # all tests we define.
