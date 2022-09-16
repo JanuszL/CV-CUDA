@@ -1,5 +1,6 @@
-/*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+/* Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *
+ * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -10,15 +11,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "Definitions.hpp"
+#ifndef NVCV_TEST_SYSTEM_CORE_DEFINITIONS_HPP
+#define NVCV_TEST_SYSTEM_CORE_DEFINITIONS_HPP
 
-#include <nvcv/Foo.hpp>
+#include <gmock/gmock-matchers.h>
+#include <gtest/gtest.h>
 
-namespace ncv = nv::cv;
-
-TEST(FooTest, works)
-{
-    EXPECT_TRUE(ncv::Foo(42));
-    EXPECT_FALSE(ncv::Foo(41));
-    EXPECT_FALSE(ncv::Foo(43));
-}
+#endif // NVCV_TEST_SYSTEM_CORE_DEFINITIONS_HPP
