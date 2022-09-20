@@ -18,7 +18,7 @@
       - 'pwd'
       - 'ls -1 cvcuda-installer/*.deb'
       - 'version=$(cat cvcuda-installer/VERSION)'
-      - "apt-get install -y --no-install-recommends ./cvcuda-installer/cvcuda-lib-${version}.deb ./cvcuda-installer/cvcuda-tests-${version}.deb"
+      - "apt-get install -y --no-install-recommends ./cvcuda-installer/nvcv-lib-${version}.deb ./cvcuda-installer/cvcuda-tests-${version}.deb"
       - '/opt/nvidia/cvcuda*/bin/run_tests.sh'
 
 .test_x64:

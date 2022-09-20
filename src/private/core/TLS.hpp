@@ -1,5 +1,6 @@
-/*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+/* Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *
+ * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -10,29 +11,20 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NV_CVCUDA_FOO_HPP
-#define NV_CVCUDA_FOO_HPP
+#ifndef NVCV_PRIV_TLS_HPP
+#define NVCV_PRIV_TLS_HPP
 
-#include "Export.h"
+#include <exception>
 
-/**
-* @file Foo.hpp
-*
-* @brief Foo : Interface for all the image processing utilities.
-*
-*/
+namespace nv::cv::priv {
 
-namespace nv::cuda {
+struct TLS
+{
+    std::exception_ptr lastError;
+};
 
-/**
-* @brief Test function
-*
-* @param[in] value Input test values
-*
-* @returns bool value
-*/
-CVCUDA_PUBLIC bool Foo(int value);
+TLS &GetTLS() noexcept;
 
-} // namespace nv::cuda
+} // namespace nv::cv::priv
 
-#endif // NV_CVCUDA_FOO_HPP
+#endif // NVCV_PRIV_TLS_HPP

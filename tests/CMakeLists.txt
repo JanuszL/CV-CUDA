@@ -15,8 +15,12 @@ enable_testing()
 
 find_package(GTest REQUIRED)
 
-add_library(cvcuda_test_main Main.cpp)
-target_link_libraries(cvcuda_test_main PUBLIC GTest::gtest)
+add_library(nvcv_test_main Main.cpp)
+target_link_libraries(nvcv_test_main
+    PUBLIC
+        GTest::gtest
+        GTest::gmock
+)
 
 # Now we want to create a script in the output directory that will run
 # all tests we define.
@@ -27,31 +31,42 @@ if(UNIX)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/run_tests.sh.in ${TESTS_DRIVER}
         @ONLY)
 
-    macro(cvcuda_add_test)
-        cmake_parse_arguments(ADDTEST "" "NAME;COMMAND" "" ${ARGN})
+    macro(nvcv_add_test TESTNAME)
+        add_test(NAME "${TESTNAME}" COMMAND "${TESTNAME}")
 
-        add_test(NAME "${ADDTEST_NAME}" COMMAND "${ADDTEST_COMMAND}")
+        if("${TESTNAME}" MATCHES "^[^_]+_test_system_.*$")
+            target_compile_definitions(${TESTNAME} PRIVATE -DNVCV_SYSTEM_TEST=1)
+        endif()
 
         # Timeouts are in seconds
         set(TIMEOUT_KILL 800)
         set(TIMEOUT_TERM 620)
 
-        set_tests_properties(${ADDTEST_NAME} PROPERTIES TIMEOUT ${TIMEOUT_TERM})
+        set_tests_properties(${TESTNAME} PROPERTIES TIMEOUT ${TIMEOUT_TERM})
 
-        file(APPEND "${TESTS_DRIVER}" "run ${ADDTEST_NAME}\n")
+        file(APPEND "${TESTS_DRIVER}" "run ${TESTNAME}\n")
+
+        install(TARGETS ${TESTNAME}
+                DESTINATION ${CMAKE_INSTALL_BINDIR}
+                COMPONENT tests)
     endmacro()
-
 
     install(PROGRAMS ${TESTS_DRIVER}
         TYPE BIN
         COMPONENT tests)
 else()
-    macro(cvcuda_add_test)
+    macro(nvcv_add_test)
         add_test(${ARGV})
     endmacro()
 endif()
 
 # Create build tree
 
-# System tests for public API
-add_subdirectory(system)
+# Common utilities needed only by tests
+add_subdirectory(common)
+
+# System tests for nvcv core public API
+add_subdirectory(system_core)
+
+# Unit tests for internal functions from nvcv core
+add_subdirectory(unit_core)

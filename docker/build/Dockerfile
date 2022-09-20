@@ -25,7 +25,7 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get update \
         g++-11 \
         cmake ninja-build \
         ccache \
-        libgtest-dev \
+        libgtest-dev libgmock-dev \
         pre-commit shellcheck \
         curl \
     && rm -rf /var/lib/apt/lists/*

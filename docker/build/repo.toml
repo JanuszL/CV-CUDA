@@ -20,7 +20,8 @@ enable_dark_theme_switcher = true
 docs_root ="${env:CVCUDA_DOCS_SRC_ROOT}"
 docs_dst ="${env:CVCUDA_DOCS_DST_ROOT}"
 doxygen_input = [
-    "src/include/cvcuda"
+    "src/include/nvcv/*.h",
+    "src/include/nvcv/*.hpp"
 ]
 sphinx_generate_doxygen_groups = true
 sphinx_generate_doxygen_pages = true
@@ -29,3 +30,18 @@ sphinx_exclude_patterns = [
 ]
 favicon = "docs/media/nv_icon.png"
 logo = "docs/media/nv_logo.png"
+
+doxygen_strip_from_path = "src/include"
+
+doxygen_conf_extra = """
+INLINE_SIMPLE_STRUCTS = YES
+TYPEDEF_HIDES_STRUCT = YES
+EXPAND_ONLY_PREDEF = YES
+"""
+
+doxygen_predefined = [
+    "NVCV_PUBLIC=",
+    "NVCV_API_VERSION_IS(x,y)=0",
+    "NVCV_API_VERSION_AT_LEAST(x,y)=1",
+    "NVCV_API_VERSION_AT_MOST(x,y)=0"
+]

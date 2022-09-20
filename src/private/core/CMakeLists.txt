@@ -1,4 +1,6 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
+
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -8,21 +10,17 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-project(cvcuda_test_system)
-set(CMAKE_FOLDER tests)
-
-add_executable(cvcuda_test_system
-    FooTests.cpp
+add_library(nvcv_private_core STATIC
+    TLS.cpp
+    Status.cpp
 )
 
-target_link_libraries(cvcuda_test_system
+target_include_directories(nvcv_private_core
     PUBLIC
-        cvcuda_test_main
-        cvcuda
+        ../..
 )
 
-cvcuda_add_test(NAME system COMMAND cvcuda_test_system)
-
-install(TARGETS cvcuda_test_system
-    DESTINATION ${CMAKE_INSTALL_BINDIR}
-    COMPONENT tests)
+target_link_libraries(nvcv_private_core
+    PUBLIC
+        nvcv_headers
+)

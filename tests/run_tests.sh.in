@@ -37,9 +37,9 @@ trap 'on_exit' EXIT
 
 function run()
 {
-    local testsuite=$1
+    local testexec=$1
 
-    echo "Running $testsuite test suite..."
+    echo "Running $testexec test suite..."
 
-    "$curdir/cvcuda_test_$testsuite"
+    "$curdir/$testexec"
 }

@@ -31,3 +31,12 @@ set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
 
 # Executables try to find libnvvpi library relative to themselves.
 set(CMAKE_BUILD_RPATH_USE_ORIGIN true)
+
+# Whether assert dumps expose code
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(DEFAULT_EXPOSE_CODE OFF)
+else()
+    set(DEFAULT_EXPOSE_CODE ON)
+endif()
+
+option(EXPOSE_CODE "Expose in resulting binaries parts of our code" ${DEFAULT_EXPOSE_CODE})
