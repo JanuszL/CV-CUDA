@@ -109,7 +109,7 @@ target_compile_options(nvcv PRIVATE -Wno-missing-declarations)
 
 # target used when only public headers are needed
 add_library(nvcv_headers INTERFACE)
-target_include_directories(nvcv_headers INTERFACE include)
+target_include_directories(nvcv_headers INTERFACE include ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 # Reduce executable size ==========================
 
