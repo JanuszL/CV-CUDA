@@ -70,6 +70,24 @@ auto JoinTuple(T a0, TAIL &&...as)
     return std::tuple_cat(std::make_tuple(std::move(a0)), JoinTuple(std::forward<TAIL>(as)...));
 }
 
+template<class T, class... TT>
+auto Head(const std::tuple<T, TT...> &t)
+{
+    return std::get<0>(t);
+}
+
+template<size_t... IDX, class... TT>
+auto TailImpl(std::index_sequence<IDX...>, const std::tuple<TT...> &t)
+{
+    return std::make_tuple(std::get<IDX + 1>(t)...);
+}
+
+template<class T, class... TT>
+auto Tail(const std::tuple<T, TT...> &t)
+{
+    return TailImpl(std::make_index_sequence<sizeof...(TT)>(), t);
+}
+
 template<class T>
 struct Identity
 {
@@ -129,27 +147,45 @@ struct Default
 };
 
 template<int IDX, class T, class U>
-void ReplaceDefaults(U &out, const T &in)
+void ReplaceDefaultsImpl(U &out, const T &in)
 {
-    if constexpr (!std::is_same_v<typename std::tuple_element<IDX, T>::type, Default>)
+    using SRC = typename std::tuple_element<IDX, T>::type;
+    using DST = typename std::tuple_element<IDX, U>::type;
+
+    if constexpr (!std::is_same_v<SRC, Default>)
     {
-        std::get<IDX>(out) = std::get<IDX>(in);
+        std::get<IDX>(out) = static_cast<DST>(std::get<IDX>(in));
     }
 }
 
 template<class T, class U, size_t... IDX>
-void ReplaceDefaults(U &out, const T &in, std::index_sequence<IDX...>)
+void ReplaceDefaultsImpl(U &out, const T &in, std::index_sequence<IDX...>)
 {
-    (ReplaceDefaults<IDX>(out, in), ...);
+    (ReplaceDefaultsImpl<IDX>(out, in), ...);
 }
 
 template<class... UU, class... TT>
-requires(sizeof...(TT) == sizeof...(UU)) std::tuple<UU...> ReplaceDefaults(const std::tuple<TT...> &in)
+requires(sizeof...(TT) == sizeof...(UU) && std::is_default_constructible_v<std::tuple<UU...>>)
+    std::tuple<UU...> ReplaceDefaults(const std::tuple<TT...> &in)
 {
-    std::tuple<UU...> out{};
-    ReplaceDefaults(out, in, std::index_sequence_for<TT...>());
+    std::tuple<UU...> out;
+    ReplaceDefaultsImpl(out, in, std::index_sequence_for<TT...>());
     return out;
-};
+}
+
+template<class U, class... UU, class T, class... TT>
+requires(sizeof...(TT) == sizeof...(UU) && !std::is_default_constructible_v<std::tuple<U, UU...>>)
+    std::tuple<U, UU...> ReplaceDefaults(const std::tuple<T, TT...> &in)
+{
+    if constexpr (std::is_same_v<T, Default>)
+    {
+        return JoinTuple(U{}, ReplaceDefaults<UU...>(Tail(in)));
+    }
+    else
+    {
+        return JoinTuple(U{std::get<0>(in)}, ReplaceDefaults<UU...>(Tail(in)));
+    }
+}
 
 } // namespace detail
 
@@ -179,7 +215,14 @@ public:
     {
         for (auto &v : that)
         {
-            m_list.emplace_back(v);
+            if constexpr (detail::IsTuple<value_type>::value)
+            {
+                m_list.emplace_back(detail::ReplaceDefaults<TT...>(detail::JoinTuple(v)));
+            }
+            else
+            {
+                m_list.emplace_back(std::get<0>(detail::ReplaceDefaults<TT...>(detail::JoinTuple(v))));
+            }
         }
     }
 
@@ -322,7 +365,7 @@ ValueList<T> Value(T v)
     return {v};
 }
 
-inline ValueList<detail::Default> Value()
+inline ValueList<detail::Default> ValueDefault()
 {
     return {detail::Default{}};
 }

@@ -1883,6 +1883,28 @@ TEST(ValueListTests, implicit_conversion_different_types_single)
     EXPECT_EQ(5, list.begin()->value);
 }
 
+TEST(ValueListTests, default_ctor_implicit_conversion_different_types_single)
+{
+    struct Foo
+    {
+        Foo()
+            : value(123)
+        {
+        }
+
+        Foo(int value_)
+            : value(value_)
+        {
+        }
+
+        int value;
+    };
+
+    test::ValueList<Foo> list{test::ValueList<int>{{5}}};
+
+    EXPECT_EQ(5, list.begin()->value);
+}
+
 TEST(ValueListTests, explicit_conversion_different_types_single)
 {
     struct Foo
@@ -1898,4 +1920,66 @@ TEST(ValueListTests, explicit_conversion_different_types_single)
     test::ValueList<Foo> list{test::ValueList<int>{{5}}};
 
     EXPECT_EQ(5, list.begin()->value);
+}
+
+TEST(ValueListTests, default_ctor_explicit_conversion_different_types_single)
+{
+    struct Foo
+    {
+        Foo()
+            : value(123)
+        {
+        }
+
+        explicit Foo(int value_)
+            : value(value_)
+        {
+        }
+
+        int value;
+    };
+
+    test::ValueList<Foo> list{test::ValueList<int>{{5}}};
+
+    EXPECT_EQ(5, list.begin()->value);
+}
+
+TEST(ValueListTests, create_with_default_parameters)
+{
+    struct Foo
+    {
+        Foo()
+            : value(123)
+        {
+        }
+
+        int value;
+    };
+
+    test::ValueList<Foo> list{test::ValueDefault()};
+
+    ASSERT_EQ(1, list.size());
+
+    EXPECT_EQ(123, list.begin()->value);
+}
+
+TEST(ValueListTests, create_with_default_parameters_mixed)
+{
+    struct Foo
+    {
+        Foo()
+            : value(123)
+        {
+        }
+
+        int value;
+    };
+
+    test::ValueList<int, Foo, char> list{5 * test::ValueDefault() * 'r'};
+
+    ASSERT_EQ(1, list.size());
+
+    EXPECT_EQ(5, std::get<0>(*list.begin()));
+    EXPECT_EQ(123, std::get<1>(*list.begin()).value);
+    EXPECT_EQ('r', std::get<2>(*list.begin()));
 }
