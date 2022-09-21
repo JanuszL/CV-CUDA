@@ -30,3 +30,36 @@ TEST_P(ValueTestsTests, test)
     EXPECT_THAT(p1, t::AnyOf(1, 2));
     EXPECT_THAT(p2, t::AnyOf('c', 'd'));
 }
+
+namespace {
+struct Foo
+{
+    Foo(int value_)
+        : value(value_)
+    {
+    }
+
+    int value;
+
+    bool operator<(const Foo &that) const
+    {
+        return value < that.value;
+    }
+
+    bool operator==(const Foo &that) const
+    {
+        return value == that.value;
+    }
+};
+} // namespace
+
+class ValueTestsConversionTests : public t::TestWithParam<Foo>
+{
+};
+
+NVCV_INSTANTIATE_TEST_SUITE_P(_, ValueTestsConversionTests, test::Value(Foo{5}));
+
+TEST_P(ValueTestsConversionTests, test)
+{
+    EXPECT_EQ(5, GetParam().value);
+}

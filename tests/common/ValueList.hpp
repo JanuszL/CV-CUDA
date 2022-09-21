@@ -203,6 +203,12 @@ public:
         return m_list.emplace_back(std::move(v));
     }
 
+    template<class = void>
+    requires(!std::is_same_v<tuple_value_type, value_type>) auto push_back(tuple_value_type v)
+    {
+        return std::apply([this](auto &...args) { m_list.emplace_back(args...); }, v);
+    }
+
     void concat(ValueList &&other)
     {
         m_list.splice(m_list.end(), std::move(other.m_list));

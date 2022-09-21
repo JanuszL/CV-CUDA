@@ -73,9 +73,12 @@ struct TestSuffixPrinter
 
 } // namespace nv::cv::test
 
-#define NVCV_INSTANTIATE_TEST_SUITE_P(GROUP, TEST, ...)                                 \
-    INSTANTIATE_TEST_SUITE_P(GROUP, TEST, ::testing::ValuesIn(UniqueSort(__VA_ARGS__)), \
-                             ::nv::cv::test::TestSuffixPrinter())
+#define NVCV_INSTANTIATE_TEST_SUITE_P(GROUP, TEST, ...)                                                           \
+    INSTANTIATE_TEST_SUITE_P(                                                                                     \
+        GROUP, TEST,                                                                                              \
+        ::testing::ValuesIn(typename ::nv::cv::test::detail::NormalizeValueList<                                  \
+                            ::nv::cv::test::ValueList<typename TEST::ParamType>>::type(UniqueSort(__VA_ARGS__))), \
+        ::nv::cv::test::TestSuffixPrinter())
 
 #define NVCV_TEST_SUITE_P(TEST, ...)                                                              \
     static ::nv::cv::test::ValueList g_##TEST##_Params = ::nv::cv::test::UniqueSort(__VA_ARGS__); \
