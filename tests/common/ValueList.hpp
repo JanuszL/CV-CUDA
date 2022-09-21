@@ -165,20 +165,27 @@ void ReplaceDefaultsImpl(U &out, const T &in, std::index_sequence<IDX...>)
 }
 
 template<class... UU, class... TT>
-requires(sizeof...(TT) == sizeof...(UU) && std::is_default_constructible_v<std::tuple<UU...>>)
-    std::tuple<UU...> ReplaceDefaults(const std::tuple<TT...> &in)
+requires(std::is_default_constructible_v<std::tuple<UU...>>) std::tuple<UU...> ReplaceDefaults(
+    const std::tuple<TT...> &in)
 {
+    static_assert(sizeof...(TT) == sizeof...(UU));
+
     std::tuple<UU...> out;
     ReplaceDefaultsImpl(out, in, std::index_sequence_for<TT...>());
     return out;
 }
 
 template<class U, class... UU, class T, class... TT>
-requires(sizeof...(TT) == sizeof...(UU) && !std::is_default_constructible_v<std::tuple<U, UU...>>)
-    std::tuple<U, UU...> ReplaceDefaults(const std::tuple<T, TT...> &in)
+requires(!std::is_default_constructible_v<std::tuple<U, UU...>>) std::tuple<U, UU...> ReplaceDefaults(
+    const std::tuple<T, TT...> &in)
 {
+    static_assert(sizeof...(TT) == sizeof...(UU));
+
     if constexpr (std::is_same_v<T, Default>)
     {
+        static_assert(std::is_default_constructible_v<U>,
+                      "Param type must have an explicit default value as it's not default constructible");
+
         return JoinTuple(U{}, ReplaceDefaults<UU...>(Tail(in)));
     }
     else
