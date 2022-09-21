@@ -115,6 +115,42 @@ auto MaybeExtractTuple(T t)
     }
 }
 
+struct Default
+{
+    bool operator<(const Default &that) const
+    {
+        return false;
+    }
+
+    bool operator==(const Default &that) const
+    {
+        return true;
+    }
+};
+
+template<int IDX, class T, class U>
+void ReplaceDefaults(U &out, const T &in)
+{
+    if constexpr (!std::is_same_v<typename std::tuple_element<IDX, T>::type, Default>)
+    {
+        std::get<IDX>(out) = std::get<IDX>(in);
+    }
+}
+
+template<class T, class U, size_t... IDX>
+void ReplaceDefaults(U &out, const T &in, std::index_sequence<IDX...>)
+{
+    (ReplaceDefaults<IDX>(out, in), ...);
+}
+
+template<class... UU, class... TT>
+requires(sizeof...(TT) == sizeof...(UU)) std::tuple<UU...> ReplaceDefaults(const std::tuple<TT...> &in)
+{
+    std::tuple<UU...> out{};
+    ReplaceDefaults(out, in, std::index_sequence_for<TT...>());
+    return out;
+};
+
 } // namespace detail
 
 template<class... TT>
@@ -284,6 +320,11 @@ template<class T>
 ValueList<T> Value(T v)
 {
     return {v};
+}
+
+inline ValueList<detail::Default> Value()
+{
+    return {detail::Default{}};
 }
 
 namespace detail {
