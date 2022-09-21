@@ -1983,3 +1983,24 @@ TEST(ValueListTests, create_with_default_parameters_mixed)
     EXPECT_EQ(123, std::get<1>(*list.begin()).value);
     EXPECT_EQ('r', std::get<2>(*list.begin()));
 }
+
+TEST(ValueListTests, dup_zero)
+{
+    EXPECT_EQ((test::ValueList<>{std::tuple<>(), std::tuple<>(), std::tuple<>()}),
+              Dup<0>(test::ValueList<int>{1, 2, 3}));
+}
+
+TEST(ValueListTests, dup_one)
+{
+    EXPECT_EQ((test::ValueList<int>{1, 2, 3}), Dup<1>(test::ValueList<int>{1, 2, 3}));
+}
+
+TEST(ValueListTests, dup_many)
+{
+    EXPECT_EQ((test::ValueList<int, int>{
+                  {1, 1},
+                  {2, 2},
+                  {3, 3}
+    }),
+              Dup<2>(test::ValueList<int>{1, 2, 3}));
+}

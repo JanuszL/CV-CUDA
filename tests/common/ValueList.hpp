@@ -1259,6 +1259,19 @@ auto operator^(const T &a, const ValueList<UU...> &b)
     return SymmetricDifference(a, b);
 }
 
+template<size_t... IDX, class T>
+auto DupImpl(const ValueList<T> &v, std::index_sequence<IDX...>)
+{
+    return Extract<(IDX * 0)...>(v);
+}
+
+// Duplicates the value N times
+template<int N, class T>
+auto Dup(const ValueList<T> &v)
+{
+    return DupImpl(v, std::make_index_sequence<N>());
+}
+
 } // namespace nv::cv::test
 
 #endif // NVCV_TEST_COMMON_VALUELIST_HPP
