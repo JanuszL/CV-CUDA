@@ -138,6 +138,15 @@ public:
     {
     }
 
+    template<class... UU>
+    requires(!std::is_same_v<tuple_value_type, std::tuple<UU...>>) explicit ValueList(const ValueList<UU...> &that)
+    {
+        for (auto &v : that)
+        {
+            m_list.emplace_back(v);
+        }
+    }
+
     ValueList(const std::vector<value_type> &v)
     {
         m_list.insert(m_list.end(), v.begin(), v.end());

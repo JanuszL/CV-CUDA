@@ -1829,3 +1829,73 @@ TEST(ValueListTests, or_works)
     EXPECT_TRUE(test::Or([](int a, int b) { return a == 4; }, [](int a, int b) { return b == 3; })(4, 6));
     EXPECT_FALSE(test::Or([](int a, int b) { return a == 4; }, [](int a, int b) { return b == 3; })(5, 6));
 }
+
+TEST(ValueListTests, implicit_conversion_different_types_multiple)
+{
+    struct Foo
+    {
+        Foo(int value_)
+            : value(value_)
+        {
+        }
+
+        int value;
+    };
+
+    test::ValueList<Foo, char> list{test::ValueList<int, char>{{5, 'c'}}};
+
+    EXPECT_EQ(5, std::get<0>(*list.begin()).value);
+    EXPECT_EQ('c', std::get<1>(*list.begin()));
+}
+
+TEST(ValueListTests, explicit_conversion_different_types_multiple)
+{
+    struct Foo
+    {
+        explicit Foo(int value_)
+            : value(value_)
+        {
+        }
+
+        int value;
+    };
+
+    test::ValueList<Foo, char> list{test::ValueList<int, char>{{5, 'c'}}};
+
+    EXPECT_EQ(5, std::get<0>(*list.begin()).value);
+    EXPECT_EQ('c', std::get<1>(*list.begin()));
+}
+
+TEST(ValueListTests, implicit_conversion_different_types_single)
+{
+    struct Foo
+    {
+        Foo(int value_)
+            : value(value_)
+        {
+        }
+
+        int value;
+    };
+
+    test::ValueList<Foo> list{test::ValueList<int>{{5}}};
+
+    EXPECT_EQ(5, list.begin()->value);
+}
+
+TEST(ValueListTests, explicit_conversion_different_types_single)
+{
+    struct Foo
+    {
+        explicit Foo(int value_)
+            : value(value_)
+        {
+        }
+
+        int value;
+    };
+
+    test::ValueList<Foo> list{test::ValueList<int>{{5}}};
+
+    EXPECT_EQ(5, list.begin()->value);
+}
