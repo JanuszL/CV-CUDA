@@ -125,6 +125,26 @@ TEST(IsCompoundTest, IsTrue)
     EXPECT_TRUE((cuda::IsCompound<float4>));
 }
 
+// --------------------- Testing HasEnoughComponents ---------------------------
+
+TEST(HasEnoughComponentsTest, IsFalse)
+{
+    EXPECT_FALSE((cuda::HasEnoughComponents<unsigned char, 1>));
+    EXPECT_FALSE((cuda::HasEnoughComponents<uchar1, 2>));
+    EXPECT_FALSE((cuda::HasEnoughComponents<short2, 3>));
+    EXPECT_FALSE((cuda::HasEnoughComponents<uint3, 4>));
+    EXPECT_FALSE((cuda::HasEnoughComponents<float4, 5>));
+}
+
+TEST(HasEnoughComponentsTest, IsTrue)
+{
+    EXPECT_TRUE((cuda::HasEnoughComponents<unsigned char, 0>));
+    EXPECT_TRUE((cuda::HasEnoughComponents<uchar1, 1>));
+    EXPECT_TRUE((cuda::HasEnoughComponents<short2, 2>));
+    EXPECT_TRUE((cuda::HasEnoughComponents<uint3, 3>));
+    EXPECT_TRUE((cuda::HasEnoughComponents<float4, 4>));
+}
+
 // ---------------------------- Testing BaseType -------------------------------
 
 template<typename T>

@@ -14,6 +14,7 @@ project(nvcv_test_system_cudatools)
 set(CMAKE_FOLDER tests)
 
 add_executable(nvcv_test_system_cudatools
+    TestDropCast.cpp
     TestTypeTraits.cpp
     TestMetaprogramming.cpp
 )

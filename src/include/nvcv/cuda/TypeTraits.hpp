@@ -62,6 +62,10 @@ constexpr bool HasTypeTraits = (detail::HasTypeTraits_t<Ts>::value && ...);
 template<class T, class = Require<HasTypeTraits<T>>>
 constexpr bool IsCompound = TypeTraits<T>::components >= 1;
 
+// @brief Metavariable to check if a CUDA compound type T has N or more components.
+template<typename T, int N, class = Require<HasTypeTraits<T>>>
+constexpr bool HasEnoughComponents = N <= TypeTraits<T>::components;
+
 /**
  * @brief Metatype to get the base type of a CUDA compound types
  *
