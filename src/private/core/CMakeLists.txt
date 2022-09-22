@@ -13,6 +13,7 @@
 add_library(nvcv_private_core STATIC
     TLS.cpp
     Status.cpp
+    Version.cpp
 )
 
 target_include_directories(nvcv_private_core
