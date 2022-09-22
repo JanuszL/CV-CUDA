@@ -15,6 +15,8 @@
 #include <gtest/gtest.h>
 #include <util/Exception.hpp>
 
+#include <type_traits>
+
 #if NVCV_SYSTEM_TESTS
 // Let's hijack gtest and create an overload for NVCVStatus that
 // prints out the status message. This will end up being called by
@@ -39,65 +41,62 @@ inline ::testing::AssertionResult CmpHelperEQFailure(const char *lhs_expression,
 }
 #endif
 
-#define NVCV_DETAIL_THROW_STATUS(FAIL_KIND, CODE, STMT)                                              \
-    do                                                                                               \
-    {                                                                                                \
-        NVCVStatus status = (STMT);                                                                  \
-        if (status == (CODE))                                                                        \
-        {                                                                                            \
-            SUCCEEDED();                                                                             \
-        }                                                                                            \
-        else                                                                                         \
-        {                                                                                            \
-            FAIL_KIND() << "Call to " #STMT << " expected to fail with return status code  " << CODE \
-                        << ", but returned instead " << status;                                      \
-        }                                                                                            \
-    }                                                                                                \
-    while (false)
-
-#define NVCV_DETAIL_RETURN_STATUS(FAIL_KIND, CODE, STMT) \
-    STMT;                                                \
-    FAIL_KIND() << "Call to " #STMT << " expected have thrown an exception with code " << (CODE)
-
-#define NVCV_DETAIL_CHECK_STATUS(TYPE, FAIL_KIND, CODE, STMT)                                                          \
-    try                                                                                                                \
-    {                                                                                                                  \
-        TYPE;                                                                                                          \
-    }                                                                                                                  \
-    catch (::nv::cv::util::Exception & e)                                                                              \
-    {                                                                                                                  \
-        if ((CODE) == e.code())                                                                                        \
-        {                                                                                                              \
-            SUCCEED();                                                                                                 \
-        }                                                                                                              \
-        else                                                                                                           \
-        {                                                                                                              \
-            FAIL_KIND() << "Call to " #STMT << " expected have thrown an exception with code " << (CODE)               \
-                        << ", but it's '" << e.what() << "' instead";                                                  \
-        }                                                                                                              \
-    }                                                                                                                  \
-    catch (std::exception & e)                                                                                         \
-    {                                                                                                                  \
-        FAIL_KIND() << "Call to " #STMT << " expected have thrown an exception with code " << (CODE) << ", but threw " \
-                    << typeid(e).name() << " with message '" << e.what() << "'";                                       \
-    }                                                                                                                  \
-    catch (...)                                                                                                        \
-    {                                                                                                                  \
-        FAIL_KIND() << "Call to " #STMT << " expected have thrown an exception with code " << (CODE)                   \
-                    << ", but threw an unknown exception";                                                             \
+#define NVCV_DETAIL_CHECK_STATUS(FAIL_KIND, STATUS, ...)                                                     \
+    try                                                                                                      \
+    {                                                                                                        \
+        auto fn = [&]<class T>(T) -> NVCVStatus                                                              \
+        {                                                                                                    \
+            if constexpr (sizeof(T) != 0 && std::is_same_v<decltype(__VA_ARGS__), NVCVStatus>)               \
+            {                                                                                                \
+                return __VA_ARGS__;                                                                          \
+            }                                                                                                \
+            else                                                                                             \
+            {                                                                                                \
+                __VA_ARGS__;                                                                                 \
+                return NVCV_SUCCESS;                                                                         \
+            }                                                                                                \
+        };                                                                                                   \
+        NVCVStatus status = fn(0);                                                                           \
+        if (status != (STATUS))                                                                              \
+        {                                                                                                    \
+            if ((STATUS) == NVCV_SUCCESS)                                                                    \
+            {                                                                                                \
+                FAIL_KIND() << "Call to " #__VA_ARGS__ << " expected to succeed"                             \
+                            << ", but failed with status " << status;                                        \
+            }                                                                                                \
+            else                                                                                             \
+            {                                                                                                \
+                FAIL_KIND() << "Call to " #__VA_ARGS__ << " expected to fail with status  " << STATUS        \
+                            << ", but succeeded";                                                            \
+            }                                                                                                \
+        }                                                                                                    \
+    }                                                                                                        \
+    catch (::nv::cv::util::Exception & e)                                                                    \
+    {                                                                                                        \
+        if ((STATUS) == e.code())                                                                            \
+        {                                                                                                    \
+            SUCCEED();                                                                                       \
+        }                                                                                                    \
+        else                                                                                                 \
+        {                                                                                                    \
+            FAIL_KIND() << "Call to '" #__VA_ARGS__ "' expected to fail with status " << (STATUS)            \
+                        << ", but failed with '" << e.what() << "' instead";                                 \
+        }                                                                                                    \
+    }                                                                                                        \
+    catch (std::exception & e)                                                                               \
+    {                                                                                                        \
+        FAIL_KIND() << "Call to '" #__VA_ARGS__ "' expected fail with status " << (STATUS) << ", but threw " \
+                    << typeid(e).name() << " with message '" << e.what() << "'";                             \
+    }                                                                                                        \
+    catch (...)                                                                                              \
+    {                                                                                                        \
+        FAIL_KIND() << "Call to '" #__VA_ARGS__ "' expected fail with status " << (STATUS)                   \
+                    << ", but threw an unknown exception";                                                   \
     }
 
-#define NVCV_ASSERT_THROW_STATUS(CODE, STMT) \
-    NVCV_DETAIL_CHECK_STATUS(NVCV_DETAIL_THROW_STATUS(FAIL, CODE, STMT), FAIL, CODE, STMT)
+#define NVCV_ASSERT_STATUS(STATUS, ...) NVCV_DETAIL_CHECK_STATUS(FAIL, STATUS, __VA_ARGS__)
 
-#define NVCV_EXPECT_THROW_STATUS(CODE, STMT) \
-    NVCV_DETAIL_CHECK_STATUS(NVCV_DETAIL_THROW_STATUS(ADD_FAILURE, CODE, STMT), ADD_FAILURE, CODE, STMT)
-
-#define NVCV_ASSERT_STATUS(CODE, STMT) \
-    NVCV_DETAIL_CHECK_STATUS(NVCV_DETAIL_RETURN_STATUS(FAIL, CODE, STMT), FAIL, CODE, STMT)
-
-#define NVCV_EXPECT_STATUS(CODE, STMT) \
-    NVCV_DETAIL_CHECK_STATUS(NVCV_DETAIL_RETURN_STATUS(ADD_FAILURE, CODE, STMT), ADD_FAILURE, CODE, STMT)
+#define NVCV_EXPECT_STATUS(STATUS, ...) NVCV_DETAIL_CHECK_STATUS(ADD_FAILURE, STATUS, __VA_ARGS__)
 
 #define NVCV_ASSERT_THROW(E, ...)                                                                              \
     try                                                                                                        \
