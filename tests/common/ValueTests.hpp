@@ -18,8 +18,6 @@
 
 namespace nv::cv::test {
 
-namespace detail {
-
 template<size_t N>
 struct StringLiteral
 {
@@ -35,13 +33,12 @@ struct StringLiteral
         return out << p.value;
     };
 };
-} // namespace detail
 
 // Define a named test parameter
 // You can specify in 3rd parameter a default value to be used if needed.
 // If type isn't default constructible, ValueDefault() can only be used if
 // a default value is specified.
-template<detail::StringLiteral NAME, class T, T... DEFAULT>
+template<StringLiteral NAME, class T, T... DEFAULT>
 class Param
 {
     static_assert(sizeof...(DEFAULT) <= 1);
