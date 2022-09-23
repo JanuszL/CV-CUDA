@@ -70,6 +70,24 @@ auto JoinTuple(T a0, TAIL &&...as)
     return std::tuple_cat(std::make_tuple(std::move(a0)), JoinTuple(std::forward<TAIL>(as)...));
 }
 
+template<class T, class... TT>
+auto Head(const std::tuple<T, TT...> &t)
+{
+    return std::get<0>(t);
+}
+
+template<size_t... IDX, class... TT>
+auto TailImpl(std::index_sequence<IDX...>, const std::tuple<TT...> &t)
+{
+    return std::make_tuple(std::get<IDX + 1>(t)...);
+}
+
+template<class T, class... TT>
+auto Tail(const std::tuple<T, TT...> &t)
+{
+    return TailImpl(std::make_index_sequence<sizeof...(TT)>(), t);
+}
+
 template<class T>
 struct Identity
 {
@@ -115,6 +133,67 @@ auto MaybeExtractTuple(T t)
     }
 }
 
+struct Default
+{
+    bool operator<(const Default &that) const
+    {
+        return false;
+    }
+
+    bool operator==(const Default &that) const
+    {
+        return true;
+    }
+};
+
+template<int IDX, class T, class U>
+void ReplaceDefaultsImpl(U &out, const T &in)
+{
+    using SRC = typename std::tuple_element<IDX, T>::type;
+    using DST = typename std::tuple_element<IDX, U>::type;
+
+    if constexpr (!std::is_same_v<SRC, Default>)
+    {
+        std::get<IDX>(out) = static_cast<DST>(std::get<IDX>(in));
+    }
+}
+
+template<class T, class U, size_t... IDX>
+void ReplaceDefaultsImpl(U &out, const T &in, std::index_sequence<IDX...>)
+{
+    (ReplaceDefaultsImpl<IDX>(out, in), ...);
+}
+
+template<class... UU, class... TT>
+requires(std::is_default_constructible_v<std::tuple<UU...>>) std::tuple<UU...> ReplaceDefaults(
+    const std::tuple<TT...> &in)
+{
+    static_assert(sizeof...(TT) == sizeof...(UU));
+
+    std::tuple<UU...> out;
+    ReplaceDefaultsImpl(out, in, std::index_sequence_for<TT...>());
+    return out;
+}
+
+template<class U, class... UU, class T, class... TT>
+requires(!std::is_default_constructible_v<std::tuple<U, UU...>>) std::tuple<U, UU...> ReplaceDefaults(
+    const std::tuple<T, TT...> &in)
+{
+    static_assert(sizeof...(TT) == sizeof...(UU));
+
+    if constexpr (std::is_same_v<T, Default>)
+    {
+        static_assert(std::is_default_constructible_v<U>,
+                      "Param type must have an explicit default value as it's not default constructible");
+
+        return JoinTuple(U{}, ReplaceDefaults<UU...>(Tail(in)));
+    }
+    else
+    {
+        return JoinTuple(U{std::get<0>(in)}, ReplaceDefaults<UU...>(Tail(in)));
+    }
+}
+
 } // namespace detail
 
 template<class... TT>
@@ -136,6 +215,22 @@ public:
     ValueList(std::initializer_list<value_type> initList)
         : m_list(std::move(initList))
     {
+    }
+
+    template<class... UU>
+    requires(!std::is_same_v<tuple_value_type, std::tuple<UU...>>) explicit ValueList(const ValueList<UU...> &that)
+    {
+        for (auto &v : that)
+        {
+            if constexpr (detail::IsTuple<value_type>::value)
+            {
+                m_list.emplace_back(detail::ReplaceDefaults<TT...>(detail::JoinTuple(v)));
+            }
+            else
+            {
+                m_list.emplace_back(std::get<0>(detail::ReplaceDefaults<TT...>(detail::JoinTuple(v))));
+            }
+        }
     }
 
     ValueList(const std::vector<value_type> &v)
@@ -192,6 +287,12 @@ public:
     auto push_back(value_type v)
     {
         return m_list.emplace_back(std::move(v));
+    }
+
+    template<class = void>
+    requires(!std::is_same_v<tuple_value_type, value_type>) auto push_back(tuple_value_type v)
+    {
+        return std::apply([this](auto &...args) { m_list.emplace_back(args...); }, v);
     }
 
     void concat(ValueList &&other)
@@ -269,6 +370,11 @@ template<class T>
 ValueList<T> Value(T v)
 {
     return {v};
+}
+
+inline ValueList<detail::Default> ValueDefault()
+{
+    return {detail::Default{}};
 }
 
 namespace detail {
@@ -1151,6 +1257,19 @@ template<class T, class... UU>
 auto operator^(const T &a, const ValueList<UU...> &b)
 {
     return SymmetricDifference(a, b);
+}
+
+template<size_t... IDX, class T>
+auto DupImpl(const ValueList<T> &v, std::index_sequence<IDX...>)
+{
+    return Extract<(IDX * 0)...>(v);
+}
+
+// Duplicates the value N times
+template<int N, class T>
+auto Dup(const ValueList<T> &v)
+{
+    return DupImpl(v, std::make_index_sequence<N>());
 }
 
 } // namespace nv::cv::test

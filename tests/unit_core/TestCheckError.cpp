@@ -19,6 +19,7 @@
 
 namespace gt   = ::testing;
 namespace test = nv::cv::test;
+namespace util = nv::cv::util;
 
 // clang-format off
 NVCV_TEST_SUITE_P(CheckErrorCudaConversionTests, test::ValueList<cudaError_t, NVCVStatus>
@@ -42,4 +43,46 @@ TEST_P(CheckErrorCudaConversionTests, check_conversion_to_nvcvstatus)
 TEST(CheckErrorCudaTests, success_no_throw)
 {
     EXPECT_NO_THROW(NVCV_CHECK_THROW(cudaSuccess));
+}
+
+NVCV_TEST_SUITE_P(CheckStatusMacroTests, test::ValueList{NVCV_SUCCESS, NVCV_ERROR_NOT_READY, NVCV_ERROR_INTERNAL});
+
+TEST_P(CheckStatusMacroTests, return_value)
+{
+    const NVCVStatus status = GetParam();
+
+    int a = 0; // so that we have a colon in the macro
+
+    NVCV_EXPECT_STATUS(status, [a, status] { return status; })
+    NVCV_ASSERT_STATUS(status, [a, status] { return status; })
+}
+
+TEST_P(CheckStatusMacroTests, throw_return_void)
+{
+    const NVCVStatus status = GetParam();
+
+    int a = 0; // so that we have a colon in the macro
+
+    NVCV_EXPECT_STATUS(status, [a, status] { throw nv::cv::util::Exception(status, "."); })
+    NVCV_ASSERT_STATUS(status, [a, status] { throw nv::cv::util::Exception(status, "."); })
+}
+
+TEST_P(CheckStatusMacroTests, throw_return_something_else)
+{
+    const NVCVStatus status = GetParam();
+
+    int a = 0; // so that we have a colon in the macro
+
+    NVCV_EXPECT_STATUS(status,
+                       [a, status]
+                       {
+                           throw util::Exception(status, ".");
+                           return a;
+                       })
+    NVCV_ASSERT_STATUS(status,
+                       [a, status]
+                       {
+                           throw util::Exception(status, ".");
+                           return a;
+                       })
 }

@@ -30,3 +30,110 @@ TEST_P(ValueTestsTests, test)
     EXPECT_THAT(p1, t::AnyOf(1, 2));
     EXPECT_THAT(p2, t::AnyOf('c', 'd'));
 }
+
+namespace {
+struct Foo
+{
+    Foo(int value_)
+        : value(value_)
+    {
+    }
+
+    int value;
+
+    bool operator<(const Foo &that) const
+    {
+        return value < that.value;
+    }
+
+    bool operator==(const Foo &that) const
+    {
+        return value == that.value;
+    }
+
+    friend std::ostream &operator<<(std::ostream &out, Foo foo)
+    {
+        return out << foo.value;
+    }
+};
+} // namespace
+
+class ValueTestsConversionTests : public t::TestWithParam<Foo>
+{
+};
+
+NVCV_INSTANTIATE_TEST_SUITE_P(_, ValueTestsConversionTests, test::Value(Foo{5}));
+
+TEST_P(ValueTestsConversionTests, test)
+{
+    EXPECT_EQ(5, GetParam().value);
+}
+
+class ValueTestsNamedParameterTests
+    : public t::TestWithParam<
+          std::tuple<test::Param<"withDefault", int>, test::Param<"withExplicitDefault", char, 'c'>>>
+{
+};
+
+NVCV_INSTANTIATE_TEST_SUITE_P(_, ValueTestsNamedParameterTests, test::ValueList{1, 2} * test::ValueList{'a', 'b'});
+
+TEST_P(ValueTestsNamedParameterTests, test)
+{
+    int  pi = std::get<0>(GetParam());
+    char pc = std::get<1>(GetParam());
+
+    EXPECT_THAT(pi, t::AnyOf(1, 2));
+    EXPECT_THAT(pc, t::AnyOf('a', 'b'));
+}
+
+class ValueTestsNamedDefaultExplicitParameterTests
+    : public t::TestWithParam<
+          std::tuple<test::Param<"withDefault", int>, test::Param<"withExplicitDefault", char, 'c'>>>
+{
+};
+
+NVCV_INSTANTIATE_TEST_SUITE_P(_, ValueTestsNamedDefaultExplicitParameterTests,
+                              test::ValueList{1, 2} * test::ValueDefault());
+
+TEST_P(ValueTestsNamedDefaultExplicitParameterTests, test)
+{
+    int  pi = std::get<0>(GetParam());
+    char pc = std::get<1>(GetParam());
+
+    EXPECT_THAT(pi, t::AnyOf(1, 2));
+    EXPECT_THAT(pc, 'c');
+}
+
+class ValueTestsNamedDefaultImplicitParameterTests
+    : public t::TestWithParam<
+          std::tuple<test::Param<"withDefault", int>, test::Param<"withImplicitDefault", char, 'c'>>>
+{
+};
+
+NVCV_INSTANTIATE_TEST_SUITE_P(_, ValueTestsNamedDefaultImplicitParameterTests,
+                              test::ValueDefault() * test::ValueList{'a', 'b'});
+
+TEST_P(ValueTestsNamedDefaultImplicitParameterTests, test)
+{
+    int  pi = std::get<0>(GetParam());
+    char pc = std::get<1>(GetParam());
+
+    EXPECT_THAT(pi, 0);
+    EXPECT_THAT(pc, t::AnyOf('a', 'b'));
+}
+
+class ValueTestsNamedNoDefaultParameterTests
+    : public t::TestWithParam<std::tuple<test::Param<"param", Foo>, test::Param<"char", char>>>
+{
+};
+
+NVCV_INSTANTIATE_TEST_SUITE_P(_, ValueTestsNamedNoDefaultParameterTests, test::Value(123) * test::ValueList{'a', 'b'});
+
+TEST_P(ValueTestsNamedNoDefaultParameterTests, test)
+{
+    Foo  pf = std::get<0>(GetParam());
+    char pc = std::get<1>(GetParam());
+
+    EXPECT_THAT(pf.value, 123);
+    EXPECT_THAT(pc, t::AnyOf('a', 'b'));
+}

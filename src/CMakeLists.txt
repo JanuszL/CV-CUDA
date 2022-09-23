@@ -12,8 +12,14 @@
 # PIC enabled
 set(CMAKE_POSITION_INDEPENDENT_CODE on)
 
+if(LTO_ENABLED)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION on)
+endif()
+
 # general utilities library
 add_subdirectory(util)
+
+# nvcv core private implementation
 add_subdirectory(private)
 
 add_library(nvcv SHARED
@@ -103,7 +109,7 @@ target_compile_options(nvcv PRIVATE -Wno-missing-declarations)
 
 # target used when only public headers are needed
 add_library(nvcv_headers INTERFACE)
-target_include_directories(nvcv_headers INTERFACE include)
+target_include_directories(nvcv_headers INTERFACE include ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 # Reduce executable size ==========================
 

@@ -20,6 +20,69 @@ namespace nv::cv::test {
 
 namespace detail {
 
+template<size_t N>
+struct StringLiteral
+{
+    constexpr StringLiteral(const char (&str)[N])
+    {
+        std::copy_n(str, N, value);
+    }
+
+    char value[N];
+
+    friend std::ostream &operator<<(std::ostream &out, const StringLiteral &p)
+    {
+        return out << p.value;
+    };
+};
+} // namespace detail
+
+// Define a named test parameter
+// You can specify in 3rd parameter a default value to be used if needed.
+// If type isn't default constructible, ValueDefault() can only be used if
+// a default value is specified.
+template<detail::StringLiteral NAME, class T, T... DEFAULT>
+class Param
+{
+    static_assert(sizeof...(DEFAULT) <= 1);
+
+public:
+    template<class U = void *>
+    requires(sizeof(U) * 0 + sizeof...(DEFAULT) == 1) Param()
+        : m_value(DEFAULT...)
+    {
+    }
+
+    template<class U = void *>
+    requires(std::is_default_constructible_v<T> && sizeof(U) * 0 + sizeof...(DEFAULT) == 0) Param()
+        : m_value(T{})
+    {
+    }
+
+    Param(T value)
+        : m_value(value)
+    {
+    }
+
+    operator T() const
+    {
+        return m_value;
+    }
+
+    friend std::ostream &operator<<(std::ostream &out, Param p)
+    {
+        out << NAME << std::boolalpha;
+        out << '(' << p.m_value << ')';
+        out << std::noboolalpha;
+        return out;
+    };
+
+private:
+    T m_value;
+};
+
+namespace detail {
+
 template<class P>
 std::string GetTestParamHashHelper(const P &info)
 {
@@ -73,9 +136,12 @@ struct TestSuffixPrinter
 
 } // namespace nv::cv::test
 
-#define NVCV_INSTANTIATE_TEST_SUITE_P(GROUP, TEST, ...)                                 \
-    INSTANTIATE_TEST_SUITE_P(GROUP, TEST, ::testing::ValuesIn(UniqueSort(__VA_ARGS__)), \
-                             ::nv::cv::test::TestSuffixPrinter())
+#define NVCV_INSTANTIATE_TEST_SUITE_P(GROUP, TEST, ...)                                                           \
+    INSTANTIATE_TEST_SUITE_P(                                                                                     \
+        GROUP, TEST,                                                                                              \
+        ::testing::ValuesIn(typename ::nv::cv::test::detail::NormalizeValueList<                                  \
+                            ::nv::cv::test::ValueList<typename TEST::ParamType>>::type(UniqueSort(__VA_ARGS__))), \
+        ::nv::cv::test::TestSuffixPrinter())
 
 #define NVCV_TEST_SUITE_P(TEST, ...)                                                              \
     static ::nv::cv::test::ValueList g_##TEST##_Params = ::nv::cv::test::UniqueSort(__VA_ARGS__); \
