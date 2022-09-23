@@ -11,24 +11,28 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_PRIV_TLS_HPP
-#define NVCV_PRIV_TLS_HPP
+#ifndef NVCV_PRIV_BITFIELD_HPP
+#define NVCV_PRIV_BITFIELD_HPP
 
-#include <exception>
+#include <cstdint>
 
 namespace nv::cv::priv {
 
-struct TLS
+constexpr uint64_t SetBitfield(uint64_t value, int offset, int length) noexcept
 {
-    std::exception_ptr lastError;
+    return (value & ((1ULL << length) - 1)) << offset;
+}
 
-    char bufColorSpecName[1024];
-    char bufPixelTypeName[1024];
-    char bufImageFormatName[1024];
-};
+constexpr uint64_t MaskBitfield(int offset, int length) noexcept
+{
+    return SetBitfield(UINT64_MAX, offset, length);
+}
 
-TLS &GetTLS() noexcept;
+constexpr uint64_t ExtractBitfield(uint64_t value, int offset, int length) noexcept
+{
+    return (value >> offset) & ((1ULL << length) - 1);
+}
 
 } // namespace nv::cv::priv
 
-#endif // NVCV_PRIV_TLS_HPP
+#endif // NVCV_PRIV_BITFIELD_HPP

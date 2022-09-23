@@ -11,24 +11,32 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_PRIV_TLS_HPP
-#define NVCV_PRIV_TLS_HPP
-
-#include <exception>
+#include "ColorFormat.hpp"
 
 namespace nv::cv::priv {
 
-struct TLS
+bool operator==(const ColorFormat &a, const ColorFormat &b)
 {
-    std::exception_ptr lastError;
+    if (a.model == b.model)
+    {
+        if (a.model == NVCV_COLOR_MODEL_RAW)
+        {
+            return a.raw == b.raw;
+        }
+        else
+        {
+            return a.cspec == b.cspec;
+        }
+    }
+    else
+    {
+        return false;
+    }
+}
 
-    char bufColorSpecName[1024];
-    char bufPixelTypeName[1024];
-    char bufImageFormatName[1024];
-};
-
-TLS &GetTLS() noexcept;
+bool operator!=(const ColorFormat &a, const ColorFormat &b)
+{
+    return !operator==(a, b);
+}
 
 } // namespace nv::cv::priv
-
-#endif // NVCV_PRIV_TLS_HPP

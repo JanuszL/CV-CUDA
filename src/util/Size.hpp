@@ -11,24 +11,26 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_PRIV_TLS_HPP
-#define NVCV_PRIV_TLS_HPP
+#ifndef NVCV_UTIL_SIZE_HPP
+#define NVCV_UTIL_SIZE_HPP
 
-#include <exception>
+namespace nv::cv::util {
 
-namespace nv::cv::priv {
-
-struct TLS
+struct Size2D
 {
-    std::exception_ptr lastError;
-
-    char bufColorSpecName[1024];
-    char bufPixelTypeName[1024];
-    char bufImageFormatName[1024];
+    int w, h;
 };
 
-TLS &GetTLS() noexcept;
+inline bool operator==(const Size2D &a, const Size2D &b)
+{
+    return a.w == b.w && a.h == b.h;
+}
 
-} // namespace nv::cv::priv
+inline bool operator!=(const Size2D &a, const Size2D &b)
+{
+    return !(a == b);
+}
 
-#endif // NVCV_PRIV_TLS_HPP
+} // namespace nv::cv::util
+
+#endif // NVCV_UTIL_SIZE_HPP

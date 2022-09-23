@@ -11,24 +11,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_PRIV_TLS_HPP
-#define NVCV_PRIV_TLS_HPP
+#include <string_view>
 
-#include <exception>
+namespace nv::cv::util {
 
-namespace nv::cv::priv {
+void ReplaceAllInline(char *strBuffer, int bufferSize, std::string_view what, std::string_view replace) noexcept;
 
-struct TLS
-{
-    std::exception_ptr lastError;
-
-    char bufColorSpecName[1024];
-    char bufPixelTypeName[1024];
-    char bufImageFormatName[1024];
-};
-
-TLS &GetTLS() noexcept;
-
-} // namespace nv::cv::priv
-
-#endif // NVCV_PRIV_TLS_HPP
+}

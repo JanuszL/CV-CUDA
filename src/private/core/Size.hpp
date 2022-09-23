@@ -11,24 +11,15 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_PRIV_TLS_HPP
-#define NVCV_PRIV_TLS_HPP
+#ifndef NVCV_PRIV_SIZE_HPP
+#define NVCV_PRIV_SIZE_HPP
 
-#include <exception>
+#include <util/Size.hpp>
 
 namespace nv::cv::priv {
 
-struct TLS
-{
-    std::exception_ptr lastError;
-
-    char bufColorSpecName[1024];
-    char bufPixelTypeName[1024];
-    char bufImageFormatName[1024];
-};
-
-TLS &GetTLS() noexcept;
+using util::Size2D;
 
 } // namespace nv::cv::priv
 
-#endif // NVCV_PRIV_TLS_HPP
+#endif // NVCV_PRIV_SIZE_HPP

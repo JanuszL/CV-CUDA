@@ -11,24 +11,27 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_PRIV_TLS_HPP
-#define NVCV_PRIV_TLS_HPP
+#ifndef NVCV_PRIV_COLORFORMAT_HPP
+#define NVCV_PRIV_COLORFORMAT_HPP
 
-#include <exception>
+#include <nvcv/ColorSpec.h>
 
 namespace nv::cv::priv {
 
-struct TLS
+struct ColorFormat
 {
-    std::exception_ptr lastError;
+    NVCVColorModel model;
 
-    char bufColorSpecName[1024];
-    char bufPixelTypeName[1024];
-    char bufImageFormatName[1024];
+    union
+    {
+        NVCVColorSpec  cspec;
+        NVCVRawPattern raw;
+    };
 };
 
-TLS &GetTLS() noexcept;
+bool operator==(const ColorFormat &a, const ColorFormat &b);
+bool operator!=(const ColorFormat &a, const ColorFormat &b);
 
 } // namespace nv::cv::priv
 
-#endif // NVCV_PRIV_TLS_HPP
+#endif // NVCV_PRIV_COLORFORMAT_HPP
