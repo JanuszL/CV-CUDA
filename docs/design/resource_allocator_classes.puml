@@ -1,0 +1,81 @@
+' Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+'
+' SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
+' SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+'
+' NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+' property and proprietary rights in and to this material, related
+' documentation and any modifications thereto. Any use, reproduction,
+' disclosure or distribution of this material and related documentation
+' without an express license agreement from NVIDIA CORPORATION or
+' its affiliates is strictly prohibited.
+
+@startuml
+
+interface IMemAllocator
+{
+    + {field} AllocFunc: void*(int64_t size, int32_t align)
+    + {field} FreeFunc: void(void *ptr, int64_t size, int32_t align)
+
+    + alloc(int64_t size, int32_t align): void *
+    + free(void *ptr, int64_t size, int32_t align) noexcept: void *
+}
+
+interface IHostMemAllocator extends IMemAllocator
+interface IHostPinnedMemAllocator extends IMemAllocator
+interface IDeviceMemAllocator extends IMemAllocator
+
+interface ICudaArrayAllocator
+{
+    + {field} AllocFunc: void*(Size2D size, ImageFormat fmt, int32_t flags)
+    + {field} FreeFunc: void(cudaArray_t arr)
+
+    + alloc(Size2D size, ImageFormat fmt, int32_t flags)
+    + free(cudaArray_t arr)
+}
+
+class CustomCudaArrayAllocator implements ICudaArrayAllocator
+{
+    + {field} Interface: ICudaArrayAllocator
+
+    + {field} AllocFunc: std::function<Interface::AllocFunc>
+    + {field} FreeFunc: std::function<Interface::FreeFunc>
+
+    + CustomCudaArrayAllocator(AllocFunc alloc,
+                               FreeFunc free)
+}
+
+class CustomHostMemAllocator implements IHostMemAllocator
+{
+    + {field} Interface: IHostMemAllocator
+
+    + {field} AllocFunc: std::function<Interface::AllocFunc>
+    + {field} FreeFunc: std::function<Interface::FreeFunc>
+
+    + CustomHostMemAllocator(AllocFunc alloc,
+                             FreeFunc free)
+}
+
+class CustomHostPinnedMemAllocator implements IHostPinnedMemAllocator
+{
+    + {field} Interface: IHostPinnedMemAllocator
+
+    + {field} AllocFunc: std::function<Interface::AllocFunc>
+    + {field} FreeFunc: std::function<Interface::FreeFunc>
+
+    + CustomHostPinnedMemAllocator(AllocFunc alloc,
+                                   FreeFunc free)
+}
+
+class CustomDeviceMemAllocator implements IDeviceMemAllocator
+{
+    + {field} Interface: IDeviceMemAllocator
+
+    + {field} AllocFunc: std::function<Interface::AllocFunc>
+    + {field} FreeFunc: std::function<Interface::FreeFunc>
+
+    + CustomDeviceMemAllocator(AllocFunc alloc,
+                               FreeFunc free)
+}
+
+@enduml

@@ -15,10 +15,283 @@
 
 #include <common/ObjectBag.hpp>
 #include <common/ValueTests.hpp>
-#include <nvcv/MemAllocator.h>
+#include <nvcv/alloc/Allocator.h>
+#include <nvcv/alloc/CustomAllocator.hpp>
+#include <nvcv/alloc/CustomResourceAllocator.hpp>
+
+#include <thread>
 
 namespace t    = ::testing;
 namespace test = nv::cv::test;
+namespace nvcv = nv::cv;
+
+// WIP: just to check if it compiles.
+TEST(Allocator, wip_test_default)
+{
+    nvcv::CustomAllocator myalloc;
+
+    void *ptrDev        = myalloc.deviceMem().alloc(768, 256);
+    void *ptrHost       = myalloc.hostMem().alloc(123, 16);
+    void *ptrHostPinned = myalloc.hostPinnedMem().alloc(134, 16);
+
+    myalloc.deviceMem().free(ptrDev, 768, 256);
+    myalloc.hostMem().free(ptrHost, 123, 16);
+    myalloc.hostPinnedMem().free(ptrHostPinned, 134, 16);
+}
+
+// WIP: just to check if it compiles.
+TEST(Allocator, wip_test_custom_functors)
+{
+    int devCounter        = 1;
+    int hostCounter       = 1;
+    int hostPinnedCounter = 1;
+
+    // clang-format off
+    nvcv::CustomAllocator myalloc1
+    {
+        nvcv::CustomHostMemAllocator
+        {
+            [&hostCounter](int64_t size, int32_t align)
+            {
+                void *ptr = reinterpret_cast<void *>(hostCounter);
+                hostCounter += size;
+                return ptr;
+            },
+            [&hostCounter](void *ptr, int64_t size, int32_t align)
+            {
+                hostCounter -= size;
+                assert(hostCounter == reinterpret_cast<ptrdiff_t>(ptr));
+            }
+        },
+        nvcv::CustomDeviceMemAllocator
+        {
+            [&devCounter](int64_t size, int32_t align)
+            {
+                void *ptr = reinterpret_cast<void *>(devCounter);
+                devCounter += size;
+                return ptr;
+            },
+            [&devCounter](void *ptr, int64_t size, int32_t align)
+            {
+                devCounter -= size;
+                assert(devCounter == reinterpret_cast<ptrdiff_t>(ptr));
+            }
+        },
+        nvcv::CustomHostPinnedMemAllocator
+        {
+            [&hostPinnedCounter](int64_t size, int32_t align)
+            {
+                void *ptr = reinterpret_cast<void *>(hostPinnedCounter);
+                hostPinnedCounter += size;
+                return ptr;
+            },
+            [&hostPinnedCounter](void *ptr, int64_t size, int32_t align)
+            {
+                hostPinnedCounter -= size;
+                assert(hostPinnedCounter == reinterpret_cast<ptrdiff_t>(ptr));
+            }
+        },
+    };
+    // clang-format on
+
+    ASSERT_EQ((void *)1, myalloc1.hostMem().alloc(5));
+    EXPECT_EQ(6, hostCounter);
+
+    ASSERT_EQ((void *)1, myalloc1.hostPinnedMem().alloc(10));
+    EXPECT_EQ(11, hostPinnedCounter);
+
+    ASSERT_EQ((void *)1, myalloc1.deviceMem().alloc(7));
+    EXPECT_EQ(8, devCounter);
+
+    ASSERT_EQ((void *)8, myalloc1.deviceMem().alloc(2));
+    EXPECT_EQ(10, devCounter);
+
+    myalloc1.deviceMem().free((void *)8, 2);
+    EXPECT_EQ(8, devCounter);
+
+    myalloc1.deviceMem().free((void *)1, 7);
+    EXPECT_EQ(1, devCounter);
+}
+
+// WIP: just to check if it compiles.
+TEST(Allocator, wip_test_custom_object)
+{
+    class MyDeviceAlloc : public nvcv::IDeviceMemAllocator
+    {
+    private:
+        void *doAlloc(int64_t size, int32_t align) override
+        {
+            void *ptr;
+            cudaMalloc(&ptr, size);
+            return ptr;
+        }
+
+        void doFree(void *ptr, int64_t size, int32_t align) noexcept override
+        {
+            cudaFree(ptr);
+        }
+    };
+
+    class MyHostAlloc : public nvcv::IHostMemAllocator
+    {
+    private:
+        void *doAlloc(int64_t size, int32_t align) override
+        {
+            return ::malloc(size);
+        }
+
+        void doFree(void *ptr, int64_t size, int32_t align) noexcept override
+        {
+            ::free(ptr);
+        }
+    };
+
+    nvcv::CustomAllocator myalloc1{MyHostAlloc{}, MyDeviceAlloc{}};
+}
+
+TEST(Allocator, wip_test_custom_object_functor)
+{
+    class MyDeviceAlloc
+    {
+    public:
+        void *alloc(int64_t size, int32_t align)
+        {
+            void *ptr;
+            cudaMalloc(&ptr, size);
+            return ptr;
+        }
+
+        void dealloc(void *ptr, int64_t size, int32_t align) noexcept
+        {
+            cudaFree(ptr);
+        }
+    };
+
+    class MyHostAlloc
+    {
+    public:
+        void *alloc(int64_t size, int32_t align)
+        {
+            return ::malloc(size);
+        }
+
+        void dealloc(void *ptr, int64_t size, int32_t align) noexcept
+        {
+            ::free(ptr);
+        }
+    };
+
+    auto myDeviceAlloc = std::make_shared<MyDeviceAlloc>();
+    auto myHostAlloc   = std::make_shared<MyHostAlloc>();
+
+    // clang-format off
+    nvcv::CustomAllocator myalloc1
+    {
+        nvcv::CustomHostMemAllocator{
+            [myHostAlloc](int64_t size, int32_t align)
+            {
+                return myHostAlloc->alloc(size, align);
+            },
+            [myHostAlloc](void *ptr, int64_t size, int32_t align)
+            {
+                return myHostAlloc->dealloc(ptr, size, align);
+            }
+        },
+        nvcv::CustomDeviceMemAllocator{
+            [myDeviceAlloc](int64_t size, int32_t align)
+            {
+                return myDeviceAlloc->alloc(size, align);
+            },
+            [myDeviceAlloc](void *ptr, int64_t size, int32_t align)
+            {
+                return myDeviceAlloc->dealloc(ptr, size, align);
+            }
+        },
+    };
+    // clang-format on
+}
+
+// WIP: just to check if it compiles.
+TEST(Allocator, wip_test_custom_object_ref)
+{
+    class MyHostAlloc : public nvcv::IHostMemAllocator
+    {
+    private:
+        void *doAlloc(int64_t size, int32_t align) override
+        {
+            return ::malloc(size);
+        }
+
+        void doFree(void *ptr, int64_t size, int32_t align) noexcept override
+        {
+            ::free(ptr);
+        }
+    };
+
+    MyHostAlloc myHostAlloc;
+
+    nvcv::CustomAllocator myalloc1{
+        std::ref(myHostAlloc),
+    };
+
+    nvcv::CustomAllocator myalloc2{std::ref(myHostAlloc)};
+
+    auto myalloc3 = nvcv::CreateCustomAllocator(std::ref(myHostAlloc));
+}
+
+class MyAsyncAlloc : public nvcv::IDeviceMemAllocator
+{
+public:
+    void setStream(cudaStream_t stream)
+    {
+        m_stream = stream;
+    }
+
+private:
+    void *doAlloc(int64_t size, int32_t align) override
+    {
+        void *ptr;
+        EXPECT_EQ(cudaSuccess, cudaMallocAsync(&ptr, size, m_stream));
+        return ptr;
+    }
+
+    void doFree(void *ptr, int64_t size, int32_t align) noexcept override
+    {
+        EXPECT_EQ(cudaSuccess, cudaFreeAsync(ptr, m_stream));
+    }
+
+    cudaStream_t m_stream = 0;
+};
+
+TEST(Allocator, wip_test_dali_stream_async)
+{
+    cudaStream_t stream1, stream2;
+    EXPECT_EQ(cudaSuccess, cudaStreamCreate(&stream1));
+    EXPECT_EQ(cudaSuccess, cudaStreamCreate(&stream2));
+
+    auto fn = [](cudaStream_t stream)
+    {
+        thread_local MyAsyncAlloc          myAsyncAlloc;
+        thread_local nvcv::CustomAllocator myalloc{std::ref(myAsyncAlloc)};
+
+        myAsyncAlloc.setStream(stream);
+
+        void *ptr = myalloc.deviceMem().alloc(123, 5);
+        myalloc.deviceMem().free(ptr, 123, 5);
+    };
+
+    std::thread thread1(fn, stream1);
+    std::thread thread2(fn, stream2);
+
+    EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream1));
+    EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream2));
+
+    thread1.join();
+    thread2.join();
+
+    cudaStreamDestroy(stream1);
+    cudaStreamDestroy(stream2);
+}
 
 // disabled temporary while the API isn't stable
 #if 0

@@ -13,7 +13,7 @@
 
 #include "ObjectBag.hpp"
 
-#include <nvcv/MemAllocator.h>
+#include <nvcv/alloc/Allocator.h>
 
 namespace nv::cv::test {
 
@@ -27,9 +27,9 @@ ObjectBag::~ObjectBag()
     }
 }
 
-void ObjectBag::insert(NVCVMemAllocator handle)
+void ObjectBag::insert(NVCVAllocator handle)
 {
-    m_objs.push([handle]() { nvcvMemAllocatorDestroy(handle); });
+    m_objs.push([handle]() { nvcvAllocatorDestroy(handle); });
 }
 
 } // namespace nv::cv::test

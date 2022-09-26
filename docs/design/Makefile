@@ -1,6 +1,6 @@
 # Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#
 # SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
-
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -10,21 +10,15 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-add_library(nvcv_private_core STATIC
-    TLS.cpp
-    Status.cpp
-    Version.cpp
-    CustomAllocator.cpp
-    DefaultAllocator.cpp
-)
+.PHONY: all
 
-target_include_directories(nvcv_private_core
-    PUBLIC
-        ../..
-)
+DIAGRAMS = allocator_classes \
+	   resource_allocator_classes
 
-target_link_libraries(nvcv_private_core
-    PUBLIC
-        nvcv_headers
-        CUDA::cudart_static
-)
+all: $(addsuffix .eps,$(DIAGRAMS))
+
+%.eps: %.puml
+	plantuml -teps $^ $@
+
+clean:
+	rm -f $(addsuffix .eps,$(DIAGRAMS))

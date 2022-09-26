@@ -20,7 +20,7 @@ add_executable(nvcv_test_system_core
     TestDataLayout.cpp
     TestImageFormat.cpp
     TestPixelType.cpp
-    TestMemAllocator.cpp
+    TestAllocator.cpp
 )
 
 target_link_libraries(nvcv_test_system_core

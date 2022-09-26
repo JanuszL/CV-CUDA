@@ -11,27 +11,29 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_PRIV_MEMALLOCATOR_HPP
-#define NVCV_PRIV_MEMALLOCATOR_HPP
+#ifndef NVCV_PRIV_CORE_DEFAULT_ALLOCATOR_HPP
+#define NVCV_PRIV_CORE_DEFAULT_ALLOCATOR_HPP
 
-#include "IMemAllocator.hpp"
+#include "IAllocator.hpp"
 
 namespace nv::cv::priv {
 
-class MemAllocator : public IMemAllocator
+class DefaultAllocator final : public IAllocator
 {
 public:
-    MemAllocator(const NVCVCustomMemAllocator *customAllocators, int32_t numCustomAllocators);
+    void *allocHostMem(int64_t size, int32_t align) override;
+    void  freeHostMem(void *ptr, int64_t size, int32_t align) noexcept override;
 
-    void *allocMem(NVCVMemoryType memType, int64_t size, int32_t align) final;
-    void  freeMem(NVCVMemoryType memType, void *ptr, int64_t size, int32_t align) noexcept final;
+    void *allocHostPinnedMem(int64_t size, int32_t align) override;
+    void  freeHostPinnedMem(void *ptr, int64_t size, int32_t align) noexcept override;
+
+    void *allocDeviceMem(int64_t size, int32_t align) override;
+    void  freeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept override;
 
 private:
-    NVCVCustomMemAllocator m_allocators[NVCV_NUM_MEMORY_TYPES];
-
     virtual Version doGetVersion() const final;
 };
 
 } // namespace nv::cv::priv
 
-#endif // NVCV_PRIV_MEMALLOCATOR_HPP
+#endif // NVCV_PRIV_CORE_DEFAULT_ALLOCATOR_HPP

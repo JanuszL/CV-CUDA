@@ -11,32 +11,18 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVVPI_TEST_UTIL_OBJECTBAG_HPP
-#define NVVPI_TEST_UTIL_OBJECTBAG_HPP
+/**
+ * @file Fwd.h
+ *
+ * @brief Forward declaration of NVCV C allocator interface entities.
+ */
 
-#include <nvcv/alloc/Fwd.h>
+#ifndef NVCV_ALLOC_FWD_H
+#define NVCV_ALLOC_FWD_H
 
-#include <functional>
-#include <stack>
+/** Handle to an allocator instance. */
+typedef struct NVCVAllocatorImpl *NVCVAllocator;
 
-namespace nv::cv::test {
+typedef struct NVCVCustomAllocatorRec NVCVCustomAllocator;
 
-// Bag of NVCV objects, destroys them in its dtor in reverse
-// order of insertion.
-class ObjectBag final
-{
-public:
-    ObjectBag()                  = default;
-    ObjectBag(const ObjectBag &) = delete;
-
-    ~ObjectBag();
-
-    void insert(NVCVAllocator handle);
-
-private:
-    std::stack<std::function<void()>> m_objs;
-};
-
-} // namespace nv::cv::test
-
-#endif // NVVPI_TEST_UTIL_OBJECTBAG_HPP
+#endif // NVCV_ALLOC_FWD_H

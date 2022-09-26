@@ -11,27 +11,18 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_PRIV_IMEMALLOCATOR_HPP
-#define NVCV_PRIV_IMEMALLOCATOR_HPP
+#ifndef NVCV_ALLOC_FWD_HPP
+#define NVCV_ALLOC_FWD_HPP
 
-#include "ICoreObject.hpp"
+#include "Fwd.h"
 
-#include <cuda_runtime.h>
-#include <nvcv/MemAllocator.h>
+namespace nv { namespace cv {
 
-#include <cstddef> // for std::max_align_t
-#include <functional>
+class IAllocator;
+class IHostMemAllocator;
+class IHostPinnedMemAllocator;
+class IDeviceMemAllocator;
 
-namespace nv::cv::priv {
+}} // namespace nv::cv
 
-class IMemAllocator : public ICoreObjectHandle<IMemAllocator, NVCVMemAllocator>
-{
-public:
-    virtual void *allocMem(NVCVMemoryType memType, int64_t size, int32_t align) = 0;
-
-    virtual void freeMem(NVCVMemoryType memType, void *ptr, int64_t size, int32_t align) noexcept = 0;
-};
-
-} // namespace nv::cv::priv
-
-#endif // NVCV_PRIV_IMEMALLOCATOR_HPP
+#endif // NVCV_ALLOC_FWD_HPP
