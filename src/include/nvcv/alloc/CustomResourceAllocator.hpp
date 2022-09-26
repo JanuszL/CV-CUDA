@@ -26,113 +26,68 @@ namespace nv::cv {
 
 // Definition ------------------
 
-class CustomHostMemAllocator final : public IHostMemAllocator
+namespace detail {
+
+class CustomMemAllocatorImpl : public virtual IMemAllocator
+{
+public:
+    using Interface = IMemAllocator;
+
+    using AllocFunc = std::function<Interface::AllocFunc>;
+    using FreeFunc  = std::function<Interface::FreeFunc>;
+
+    CustomMemAllocatorImpl(AllocFunc alloc, FreeFunc free)
+        : m_alloc(std::move(alloc))
+        , m_free(std::move(free))
+    {
+    }
+
+private:
+    AllocFunc m_alloc;
+    FreeFunc  m_free;
+
+    void *doAlloc(int64_t size, int32_t align) override
+    {
+        return m_alloc(size, align);
+    }
+
+    void doFree(void *ptr, int64_t size, int32_t align) noexcept override
+    {
+        return m_free(ptr, size, align);
+    }
+};
+
+} // namespace detail
+
+class CustomHostMemAllocator final
+    : public virtual IHostMemAllocator
+    , private detail::CustomMemAllocatorImpl
 {
 public:
     using Interface = IHostMemAllocator;
 
-    using AllocFunc = std::function<Interface::AllocFunc>;
-    using FreeFunc  = std::function<Interface::FreeFunc>;
-
-    CustomHostMemAllocator(AllocFunc alloc, FreeFunc free);
-
-private:
-    AllocFunc m_alloc;
-    FreeFunc  m_free;
-
-    void *doAlloc(int64_t size, int32_t align) override;
-    void  doFree(void *ptr, int64_t size, int32_t align) noexcept override;
+    using detail::CustomMemAllocatorImpl::CustomMemAllocatorImpl;
 };
 
-class CustomHostPinnedMemAllocator final : public IHostPinnedMemAllocator
+class CustomHostPinnedMemAllocator final
+    : public virtual IHostPinnedMemAllocator
+    , private detail::CustomMemAllocatorImpl
 {
 public:
     using Interface = IHostPinnedMemAllocator;
 
-    using AllocFunc = std::function<Interface::AllocFunc>;
-    using FreeFunc  = std::function<Interface::FreeFunc>;
-
-    CustomHostPinnedMemAllocator(AllocFunc alloc, FreeFunc free);
-
-private:
-    AllocFunc m_alloc;
-    FreeFunc  m_free;
-
-    void *doAlloc(int64_t size, int32_t align) override;
-    void  doFree(void *ptr, int64_t size, int32_t align) noexcept override;
+    using detail::CustomMemAllocatorImpl::CustomMemAllocatorImpl;
 };
 
-class CustomDeviceMemAllocator final : public IDeviceMemAllocator
+class CustomDeviceMemAllocator final
+    : public virtual IDeviceMemAllocator
+    , private detail::CustomMemAllocatorImpl
 {
 public:
     using Interface = IDeviceMemAllocator;
 
-    using AllocFunc = std::function<Interface::AllocFunc>;
-    using FreeFunc  = std::function<Interface::FreeFunc>;
-
-    CustomDeviceMemAllocator(AllocFunc alloc, FreeFunc free);
-
-private:
-    AllocFunc m_alloc;
-    FreeFunc  m_free;
-
-    void *doAlloc(int64_t size, int32_t align) override;
-    void  doFree(void *ptr, int64_t size, int32_t align) noexcept override;
+    using detail::CustomMemAllocatorImpl::CustomMemAllocatorImpl;
 };
-
-// CustomHostMemAllocator implementation ------------------
-
-CustomHostMemAllocator::CustomHostMemAllocator(AllocFunc alloc, FreeFunc free)
-    : m_alloc(std::move(alloc))
-    , m_free(std::move(free))
-{
-}
-
-void *CustomHostMemAllocator::doAlloc(int64_t size, int32_t align)
-{
-    return m_alloc(size, align);
-}
-
-void CustomHostMemAllocator::doFree(void *ptr, int64_t size, int32_t align) noexcept
-{
-    return m_free(ptr, size, align);
-}
-
-// CustomHostPinnedMemAllocator implementation ------------------
-
-CustomHostPinnedMemAllocator::CustomHostPinnedMemAllocator(AllocFunc alloc, FreeFunc free)
-    : m_alloc(std::move(alloc))
-    , m_free(std::move(free))
-{
-}
-
-void *CustomHostPinnedMemAllocator::doAlloc(int64_t size, int32_t align)
-{
-    return m_alloc(size, align);
-}
-
-void CustomHostPinnedMemAllocator::doFree(void *ptr, int64_t size, int32_t align) noexcept
-{
-    return m_free(ptr, size, align);
-}
-
-// CustomDeviceMemAllocator implementation ------------------
-
-CustomDeviceMemAllocator::CustomDeviceMemAllocator(AllocFunc alloc, FreeFunc free)
-    : m_alloc(std::move(alloc))
-    , m_free(std::move(free))
-{
-}
-
-void *CustomDeviceMemAllocator::doAlloc(int64_t size, int32_t align)
-{
-    return m_alloc(size, align);
-}
-
-void CustomDeviceMemAllocator::doFree(void *ptr, int64_t size, int32_t align) noexcept
-{
-    return m_free(ptr, size, align);
-}
 
 } // namespace nv::cv
 

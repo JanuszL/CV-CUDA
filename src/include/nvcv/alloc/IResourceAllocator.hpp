@@ -44,15 +44,15 @@ private:
     virtual void  doFree(void *ptr, int64_t size, int32_t align) noexcept = 0;
 };
 
-class IHostMemAllocator : public IMemAllocator
+class IHostMemAllocator : public virtual IMemAllocator
 {
 };
 
-class IHostPinnedMemAllocator : public IMemAllocator
+class IHostPinnedMemAllocator : public virtual IMemAllocator
 {
 };
 
-class IDeviceMemAllocator : public IMemAllocator
+class IDeviceMemAllocator : public virtual IMemAllocator
 {
 };
 

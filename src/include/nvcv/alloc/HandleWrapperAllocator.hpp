@@ -35,7 +35,7 @@ namespace nv { namespace cv {
 // The class doesn't own the handle.
 // Used when interfacing with other libraries that use NVCV C objects.
 // Does the opposite of "IAllocator::handle()"
-class HandleWrapperAllocator final : public IAllocator
+class HandleWrapperAllocator final : public virtual IAllocator
 {
 public:
     explicit HandleWrapperAllocator(NVCVAllocator handle)

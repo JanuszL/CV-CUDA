@@ -21,9 +21,13 @@ interface IMemAllocator
     + free(void *ptr, int64_t size, int32_t align) noexcept: void *
 }
 
-interface IHostMemAllocator extends IMemAllocator
-interface IHostPinnedMemAllocator extends IMemAllocator
-interface IDeviceMemAllocator extends IMemAllocator
+interface IHostMemAllocator
+interface IHostPinnedMemAllocator
+interface IDeviceMemAllocator
+
+IMemAllocator <|..# IHostMemAllocator: virtual
+IMemAllocator <|..# IHostPinnedMemAllocator: virtual
+IMemAllocator <|..# IDeviceMemAllocator: virtual
 
 interface ICudaArrayAllocator
 {
@@ -45,12 +49,21 @@ class CustomCudaArrayAllocator implements ICudaArrayAllocator
                                FreeFunc free)
 }
 
-class CustomHostMemAllocator implements IHostMemAllocator
+class CustomMemAllocatorImpl
 {
-    + {field} Interface: IHostMemAllocator
+    + {field} Interface: IMemAllocator
 
     + {field} AllocFunc: std::function<Interface::AllocFunc>
     + {field} FreeFunc: std::function<Interface::FreeFunc>
+
+    + CustomMemAllocatorImpl(AllocFunc alloc,
+                             FreeFunc free)
+}
+IMemAllocator <|..# CustomMemAllocatorImpl: virtual
+
+class CustomHostMemAllocator implements IHostMemAllocator
+{
+    + {field} Interface: IHostMemAllocator;
 
     + CustomHostMemAllocator(AllocFunc alloc,
                              FreeFunc free)
@@ -58,10 +71,7 @@ class CustomHostMemAllocator implements IHostMemAllocator
 
 class CustomHostPinnedMemAllocator implements IHostPinnedMemAllocator
 {
-    + {field} Interface: IHostPinnedMemAllocator
-
-    + {field} AllocFunc: std::function<Interface::AllocFunc>
-    + {field} FreeFunc: std::function<Interface::FreeFunc>
+    + {field} Interface: IHostPinnedMemAllocator;
 
     + CustomHostPinnedMemAllocator(AllocFunc alloc,
                                    FreeFunc free)
@@ -69,13 +79,14 @@ class CustomHostPinnedMemAllocator implements IHostPinnedMemAllocator
 
 class CustomDeviceMemAllocator implements IDeviceMemAllocator
 {
-    + {field} Interface: IDeviceMemAllocator
-
-    + {field} AllocFunc: std::function<Interface::AllocFunc>
-    + {field} FreeFunc: std::function<Interface::FreeFunc>
+    + {field} Interface: IDeviceMemAllocator;
 
     + CustomDeviceMemAllocator(AllocFunc alloc,
                                FreeFunc free)
 }
+
+CustomMemAllocatorImpl <|..* CustomHostMemAllocator: private
+CustomMemAllocatorImpl <|..* CustomHostPinnedMemAllocator: private
+CustomMemAllocatorImpl <|..* CustomDeviceMemAllocator: private
 
 @enduml
