@@ -72,19 +72,15 @@ public:
     }
 };
 
-template<class T>
-T *ToPtr(typename T::HandleType h)
+inline ICoreObject *ToCoreObjectPtr(void *handle)
 {
-    using ICore = std::conditional_t<std::is_const_v<T>, const ICoreObject, ICoreObject>;
-
     // First cast to the core interface, this must always succeed.
-    if (ICore *core = reinterpret_cast<ICore *>(h))
+    if (ICoreObject *core = reinterpret_cast<ICoreObject *>(handle))
     {
         // If major version are the same,
         if (core->version().major() == CURRENT_VERSION.major())
         {
-            // We now can cat to the required type.
-            return dynamic_cast<T *>(core);
+            return core;
         }
         else
         {
@@ -99,21 +95,44 @@ T *ToPtr(typename T::HandleType h)
 }
 
 template<class T>
-T &ToRef(typename T::HandleType h)
+T *ToStaticPtr(typename T::HandleType h)
+{
+    return static_cast<T *>(ToCoreObjectPtr(h));
+}
+
+template<class T>
+T &ToStaticRef(typename T::HandleType h)
 {
     if (h == nullptr)
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Handle cannot be NULL");
     }
 
-    if (T *child = ToPtr<T>(h))
+    T *child = ToStaticPtr<T>(h);
+    return *child;
+}
+
+template<class T>
+T *ToDynamicPtr(typename T::HandleType h)
+{
+    return dynamic_cast<T *>(ToCoreObjectPtr(h));
+}
+
+template<class T>
+T &ToDynamicRef(typename T::HandleType h)
+{
+    if (h == nullptr)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Handle cannot be NULL");
+    }
+
+    if (T *child = ToDynamicPtr<T>(h))
     {
         return *child;
     }
     else
     {
-        throw Exception(NVCV_ERROR_NOT_COMPATIBLE,
-                        "Handle doesn't correspond to the requested object, or versions are incompatible.");
+        throw Exception(NVCV_ERROR_NOT_COMPATIBLE, "Handle doesn't correspond to the requested object.");
     }
 }
 

@@ -52,7 +52,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvAllocatorCreateCustom,
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvAllocatorDestroy, (NVCVAllocator halloc))
 {
-    return priv::ProtectCall([&] { delete priv::ToPtr<priv::IAllocator>(halloc); });
+    return priv::ProtectCall([&] { delete priv::ToStaticPtr<priv::IAllocator>(halloc); });
 }
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvAllocatorAllocHostMemory,
@@ -66,7 +66,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvAllocatorAllocHostMemory,
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output buffer must not be NULL");
             }
 
-            auto &alloc = priv::ToRef<priv::IAllocator>(halloc);
+            auto &alloc = priv::ToStaticRef<priv::IAllocator>(halloc);
             *ptr        = alloc.allocHostMem(sizeBytes, alignBytes);
         });
 }
@@ -79,7 +79,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvAllocatorFreeHostMemory,
         {
             if (ptr != nullptr)
             {
-                auto &alloc = priv::ToRef<priv::IAllocator>(halloc);
+                auto &alloc = priv::ToStaticRef<priv::IAllocator>(halloc);
                 alloc.freeHostMem(ptr, sizeBytes, alignBytes);
             }
         });
@@ -96,7 +96,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvAllocatorAllocHostPinnedMemory,
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output buffer must not be NULL");
             }
 
-            auto &alloc = priv::ToRef<priv::IAllocator>(halloc);
+            auto &alloc = priv::ToStaticRef<priv::IAllocator>(halloc);
             *ptr        = alloc.allocHostPinnedMem(sizeBytes, alignBytes);
         });
 }
@@ -109,7 +109,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvAllocatorFreeHostPinnedMemory,
         {
             if (ptr != nullptr)
             {
-                auto &alloc = priv::ToRef<priv::IAllocator>(halloc);
+                auto &alloc = priv::ToStaticRef<priv::IAllocator>(halloc);
                 alloc.freeHostPinnedMem(ptr, sizeBytes, alignBytes);
             }
         });
@@ -126,7 +126,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvAllocatorAllocDeviceMemory,
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output buffer must not be NULL");
             }
 
-            auto &alloc = priv::ToRef<priv::IAllocator>(halloc);
+            auto &alloc = priv::ToStaticRef<priv::IAllocator>(halloc);
             *ptr        = alloc.allocDeviceMem(sizeBytes, alignBytes);
         });
 }
@@ -139,7 +139,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvAllocatorFreeDeviceMemory,
         {
             if (ptr != nullptr)
             {
-                auto &alloc = priv::ToRef<priv::IAllocator>(halloc);
+                auto &alloc = priv::ToStaticRef<priv::IAllocator>(halloc);
                 alloc.freeDeviceMem(ptr, sizeBytes, alignBytes);
             }
         });
