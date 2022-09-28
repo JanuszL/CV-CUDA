@@ -13,7 +13,7 @@
 
 .. _cvcuda_doc_system:
 
-CV-CUDA Documentation System
+CV-CUDA
 ============================
 
 Project CV-CUDA is NVIDIA's open-source, graphics processing unit (GPU)-accelerated toolkit for computer vision (CV).
@@ -42,19 +42,20 @@ Read on to learn more about how to use and benefit from CV-CUDA.
     :maxdepth: 1
     :hidden:
 
-    Installation <docs/installation>
-    Getting Started <docs/getting_started>
+    Installation <installation>
+    Getting Started <getting_started>
 
 .. toctree::
-    :caption: API Documentation
-    :maxdepth: 1
+    :caption: C++ API Documentation
+    :maxdepth: 2
     :hidden:
 
-    C++ Documentation Guide <build/docs/cvcuda_docs/latest/cvcuda_docs_api>
+    Modules <cpp_modules>
+    Index <_exhale_api/cvcuda_api>
 
 .. toctree::
     :caption: Benchmarks
     :maxdepth: 1
     :hidden:
 
-    Performance Benchmark <docs/perf_benchmark>
+    Performance Benchmark <perf_benchmark>

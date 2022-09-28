@@ -62,6 +62,7 @@ constexpr PixelType::PixelType(NVCVPixelType type)
 {
 }
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /** One channel of unsigned 8-bit value. */
 constexpr PixelType TYPE_U8{NVCV_PIXEL_TYPE_U8};
 /** Two interleaved channels of unsigned 8-bit values. */
@@ -151,6 +152,7 @@ constexpr PixelType TYPE_2F64{NVCV_PIXEL_TYPE_2F64};
 constexpr PixelType TYPE_3F64{NVCV_PIXEL_TYPE_3F64};
 /** Four interleaved channels of 64-bit IEEE 754 floating-point values. */
 constexpr PixelType TYPE_4F64{NVCV_PIXEL_TYPE_4F64};
+#endif
 
 inline PixelType::PixelType(MemLayout memLayout, DataType dataType, Packing packing)
 {

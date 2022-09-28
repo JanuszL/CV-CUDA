@@ -12,7 +12,7 @@
 
 variables:
     GIT_SUBMODULE_STRATEGY: normal
-    TAG_IMAGE: 1
+    TAG_IMAGE: 2
     INSIDE_CI: "true"
 
 stages:
