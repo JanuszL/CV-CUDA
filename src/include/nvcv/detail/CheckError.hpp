@@ -19,7 +19,7 @@
 
 #include <cassert>
 
-namespace nv::cv::detail {
+namespace nv { namespace cv { namespace detail {
 
 inline void ThrowException(NVCVStatus status)
 {
@@ -44,6 +44,6 @@ inline void CheckThrow(NVCVStatus status)
     }
 }
 
-} // namespace nv::cv::detail
+}}} // namespace nv::cv::detail
 
 #endif // NVCV_DETAIL_CHECKERROR_HPP

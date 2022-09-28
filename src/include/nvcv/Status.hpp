@@ -25,7 +25,7 @@
 #include <cstdint>
 #include <ostream>
 
-namespace nv::cv {
+namespace nv { namespace cv {
 
 /**
  * @brief Status codes.
@@ -57,6 +57,6 @@ inline std::ostream &operator<<(std::ostream &out, Status status)
     return out << GetName(status);
 }
 
-} // namespace nv::cv
+}} // namespace nv::cv
 
 #endif // NVCV_STATUS_HPP

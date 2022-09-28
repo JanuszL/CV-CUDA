@@ -25,7 +25,7 @@
 #include <cassert>
 #include <cstring>
 
-namespace nv::cv {
+namespace nv { namespace cv {
 
 class Exception : public std::exception
 {
@@ -65,6 +65,6 @@ private:
     char m_msgBuffer[NVCV_MAX_STATUS_MESSAGE_LENGTH + 64 + 2];
 };
 
-} // namespace nv::cv
+}} // namespace nv::cv
 
 #endif // NVCV_EXCEPTION_HPP

@@ -29,7 +29,7 @@
 #include <array>
 #include <iostream>
 
-namespace nv::cv {
+namespace nv { namespace cv {
 
 class ImageFormat
 {
@@ -628,6 +628,6 @@ inline std::ostream &operator<<(std::ostream &out, ImageFormat fmt)
     return out << nvcvImageFormatGetName(fmt);
 }
 
-} // namespace nv::cv
+}} // namespace nv::cv
 
 #endif // NVCV_IMAGE_FORMAT_HPP

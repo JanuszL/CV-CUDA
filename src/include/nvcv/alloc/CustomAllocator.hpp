@@ -21,6 +21,7 @@
 #define NVCV_CUSTOMALLOCATOR_HPP
 
 #include "../detail/CheckError.hpp"
+#include "../detail/IndexSequence.hpp"
 #include "HandleWrapperAllocator.hpp"
 #include "IAllocator.hpp"
 
@@ -60,7 +61,7 @@ private:
 
         NVCVCustomAllocator custAllocList[sizeof...(AA)];
 
-        doFillAllocatorList(custAllocList, std::make_index_sequence<sizeof...(AA)>());
+        doFillAllocatorList(custAllocList, detail::MakeIndexSequence<sizeof...(AA)>());
 
         NVCVAllocator halloc;
         detail::CheckThrow(nvcvAllocatorCreateCustom(custAllocList, sizeof...(AA), &halloc));
@@ -90,13 +91,13 @@ private:
         // out.resType is already filled by caller
     }
 
-    void doFillAllocatorList(NVCVCustomAllocator *outResAlloc, std::index_sequence<>)
+    void doFillAllocatorList(NVCVCustomAllocator *outResAlloc, detail::IndexSequence<>)
     {
         // meta-loop termination
     }
 
     template<size_t HEAD, size_t... TAIL>
-    void doFillAllocatorList(NVCVCustomAllocator *outResAlloc, std::index_sequence<HEAD, TAIL...>)
+    void doFillAllocatorList(NVCVCustomAllocator *outResAlloc, detail::IndexSequence<HEAD, TAIL...>)
     {
         struct GetResType
         {
@@ -120,7 +121,7 @@ private:
 
         doFillAllocator(outResAlloc[HEAD], std::get<HEAD>(m_resAllocators));
 
-        doFillAllocatorList(outResAlloc, std::index_sequence<TAIL...>());
+        doFillAllocatorList(outResAlloc, detail::IndexSequence<TAIL...>());
     }
 
     NVCVAllocator doGetHandle() const noexcept override
@@ -132,7 +133,7 @@ private:
     struct FindResAlloc
     {
         template<size_t... II>
-        static T *Find(std::tuple<AA...> &allocs, std::index_sequence<II...>, T &head)
+        static T *Find(std::tuple<AA...> &allocs, detail::IndexSequence<II...>, T &head)
         {
             static_assert(std::is_base_of<IResourceAllocator, T>::value, "Type must represent a resource allocator");
 
@@ -141,30 +142,30 @@ private:
         }
 
         template<size_t I>
-        static T *Find(std::tuple<AA...> &allocs, std::index_sequence<I>, IResourceAllocator &)
+        static T *Find(std::tuple<AA...> &allocs, detail::IndexSequence<I>, IResourceAllocator &)
         {
             // Not found.
             return nullptr;
         }
 
         template<size_t HEAD, size_t NECK, size_t... TAIL>
-        static T *Find(std::tuple<AA...> &allocs, std::index_sequence<HEAD, NECK, TAIL...>, IResourceAllocator &)
+        static T *Find(std::tuple<AA...> &allocs, detail::IndexSequence<HEAD, NECK, TAIL...>, IResourceAllocator &)
         {
             // Not found yet, try the next one.
-            return Find(allocs, std::index_sequence<NECK, TAIL...>(), std::get<NECK>(allocs));
+            return Find(allocs, detail::IndexSequence<NECK, TAIL...>(), std::get<NECK>(allocs));
         }
     };
 
     template<class T, size_t HEAD, size_t... TAIL>
-    T *doGetResAllocator(std::index_sequence<HEAD, TAIL...>)
+    T *doGetResAllocator(detail::IndexSequence<HEAD, TAIL...>)
     {
         // Loop through all custom allocators, try to find the one that has 'T' as base.
-        return FindResAlloc<T>::Find(m_resAllocators, std::index_sequence<HEAD, TAIL...>(),
+        return FindResAlloc<T>::Find(m_resAllocators, detail::IndexSequence<HEAD, TAIL...>(),
                                      std::get<HEAD>(m_resAllocators));
     }
 
     template<class T>
-    T *doGetResAllocator(std::index_sequence<>)
+    T *doGetResAllocator(detail::IndexSequence<>)
     {
         // No custom allocators passed, therefore...
         return nullptr; // not found
@@ -173,7 +174,7 @@ private:
     IHostMemAllocator &doGetHostMemAllocator() override
     {
         // User-customed resource allocator defined?
-        if (auto *hostAlloc = doGetResAllocator<IHostMemAllocator>(std::make_index_sequence<sizeof...(AA)>()))
+        if (auto *hostAlloc = doGetResAllocator<IHostMemAllocator>(detail::MakeIndexSequence<sizeof...(AA)>()))
         {
             // return it
             return *hostAlloc;
@@ -188,7 +189,7 @@ private:
     IHostPinnedMemAllocator &doGetHostPinnedMemAllocator() override
     {
         if (auto *hostPinnedAlloc
-            = doGetResAllocator<IHostPinnedMemAllocator>(std::make_index_sequence<sizeof...(AA)>()))
+            = doGetResAllocator<IHostPinnedMemAllocator>(detail::MakeIndexSequence<sizeof...(AA)>()))
         {
             return *hostPinnedAlloc;
         }
@@ -200,7 +201,7 @@ private:
 
     IDeviceMemAllocator &doGetDeviceMemAllocator() override
     {
-        if (auto *devAlloc = doGetResAllocator<IDeviceMemAllocator>(std::make_index_sequence<sizeof...(AA)>()))
+        if (auto *devAlloc = doGetResAllocator<IDeviceMemAllocator>(detail::MakeIndexSequence<sizeof...(AA)>()))
         {
             return *devAlloc;
         }

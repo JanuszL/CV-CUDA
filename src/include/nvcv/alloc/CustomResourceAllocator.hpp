@@ -22,7 +22,7 @@
 
 #include "IResourceAllocator.hpp"
 
-namespace nv::cv {
+namespace nv { namespace cv {
 
 // Definition ------------------
 
@@ -89,6 +89,6 @@ public:
     using detail::CustomMemAllocatorImpl::CustomMemAllocatorImpl;
 };
 
-} // namespace nv::cv
+}} // namespace nv::cv
 
 #endif // NVCV_CUSTOMRESOURCEALLOCATOR_HPP

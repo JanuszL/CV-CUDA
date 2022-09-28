@@ -25,7 +25,7 @@
 
 #include <iostream>
 
-namespace nv::cv {
+namespace nv { namespace cv {
 
 enum class ColorModel : int8_t
 {
@@ -305,6 +305,6 @@ inline bool NeedsColorspec(ColorModel cmodel)
     return out != 0;
 }
 
-} // namespace nv::cv
+}} // namespace nv::cv
 
 #endif // NVCV_COLORSPEC_HPP
