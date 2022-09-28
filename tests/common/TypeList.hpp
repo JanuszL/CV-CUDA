@@ -650,24 +650,6 @@ using Zip = typename ZipImpl<T...>::type;
 template<class T, class U>
 using SetDifference = RemoveIf<ContainedIn<U>, T>;
 
-// Helper to be able to define typed test cases by defining the
-// types inline (no worries about commas in macros)
-
-#define NVCV_TYPED_TEST_SUITE_F(TEST, ...) \
-    using TEST##_Types = __VA_ARGS__;      \
-    TYPED_TEST_SUITE(TEST, TEST##_Types)
-
-#define NVCV_TYPED_TEST_SUITE(TEST, ...) \
-    template<class T>                    \
-    class TEST : public ::testing::Test  \
-    {                                    \
-    };                                   \
-    NVCV_TYPED_TEST_SUITE_F(TEST, __VA_ARGS__)
-
-#define NVCV_INSTANTIATE_TYPED_TEST_SUITE_P(INSTNAME, TEST, ...) \
-    using TEST##INSTNAME##_Types = __VA_ARGS__;                  \
-    INSTANTIATE_TYPED_TEST_SUITE_P(INSTNAME, TEST, TEST##INSTNAME##_Types)
-
 // Contains ------------------------------
 // check if value is in Values container
 
