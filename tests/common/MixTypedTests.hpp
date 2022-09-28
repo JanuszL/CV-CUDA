@@ -310,78 +310,79 @@ struct MakeDependent
 };
 } // namespace detail
 
-#define NVCV_TEST_SUITE_F(CaseName, ...)                                                                         \
-    using CaseName##_Types          = typename ::test::type::detail::WrapParams<__VA_ARGS__>::type;              \
-    using CaseName##_Tuple          = ::test::type::detail::ToTuple<::test::type::GetType<CaseName##_Types, 0>>; \
-    const auto CaseName##_TupleData = ::test::type::detail::make_parameters_tuple<CaseName##_Tuple>(             \
-        typename ::test::type::detail::GetUniqueTypes<CaseName##_Types>::type(), CaseName##_Types());
+#define NVCV_MIXTYPED_TEST_SUITE_F(CaseName, ...)                                                            \
+    using CaseName##_Types = typename ::nv::cv::test::type::detail::WrapParams<__VA_ARGS__>::type;           \
+    using CaseName##_Tuple                                                                                   \
+        = ::nv::cv::test::type::detail::ToTuple<::nv::cv::test::type::GetType<CaseName##_Types, 0>>;         \
+    const auto CaseName##_TupleData = ::nv::cv::test::type::detail::make_parameters_tuple<CaseName##_Tuple>( \
+        typename ::nv::cv::test::type::detail::GetUniqueTypes<CaseName##_Types>::type(), CaseName##_Types());
 
-#define NVCV_TEST_SUITE(CaseName, ...)      \
-    class CaseName : public ::testing::Test \
-    {                                       \
-    };                                      \
-    NVCV_TEST_SUITE_F(CaseName, __VA_ARGS__)
+#define NVCV_MIXTYPED_TEST_SUITE(CaseName, ...) \
+    class CaseName : public ::testing::Test     \
+    {                                           \
+    };                                          \
+    NVCV_MIXTYPED_TEST_SUITE_F(CaseName, __VA_ARGS__)
 
-#define NVCV_TEST(CaseName, TestName)                                                                             \
-    template<class T>                                                                                             \
-    class CaseName##TestName##_Fixture final : public CaseName                                                    \
-    {                                                                                                             \
-    public:                                                                                                       \
-        using BaseFixture = CaseName;                                                                             \
-        using TypeParam   = T;                                                                                    \
-        using Tuple       = CaseName##_Tuple;                                                                     \
-        CaseName##TestName##_Fixture(const Tuple &p)                                                              \
-            : m_params(p)                                                                                         \
-        {                                                                                                         \
-        }                                                                                                         \
-        virtual void TestBody() override;                                                                         \
-        template<int I>                                                                                           \
-        using GetType = typename ::test::type::detail::GetTypeImpl<TypeParam, I>::type;                           \
-        template<int I>                                                                                           \
-        auto &&GetValue() const                                                                                   \
-        {                                                                                                         \
-            static_assert(!std::is_same_v<std::tuple_element_t<I, Tuple>, ::test::type::detail::TypeSlot>,        \
-                          "Test parameter isn't a value");                                                        \
-            return std::get<I>(m_params);                                                                         \
-        }                                                                                                         \
-                                                                                                                  \
-    private:                                                                                                      \
-        template<class C>                                                                                         \
-        static constexpr std::true_type parentHasShouldSkip(decltype(&C::ShouldSkip));                            \
-        template<class C>                                                                                         \
-        static constexpr std::true_type parentHasShouldSkip(decltype(&C::template ShouldSkip<TypeParam, Tuple>)); \
-        template<class C>                                                                                         \
-        static constexpr std::false_type parentHasShouldSkip(...);                                                \
-        static constexpr bool            ParentHasShouldSkip                                                      \
-            = std::is_same_v<decltype(parentHasShouldSkip<CaseName>(nullptr)), std::true_type>;                   \
-                                                                                                                  \
-    public:                                                                                                       \
-        template<class DUMMY = void>                                                                              \
-        bool ShouldSkip(const TypeParam &a, const Tuple &b) const                                                 \
-        {                                                                                                         \
-            using AUX = typename ::test::type::detail::MakeDependent<CaseName, DUMMY>::type;                      \
-            if constexpr (ParentHasShouldSkip)                                                                    \
-            {                                                                                                     \
-                return AUX::ShouldSkip(a, b);                                                                     \
-            }                                                                                                     \
-            else                                                                                                  \
-            {                                                                                                     \
-                return false;                                                                                     \
-            }                                                                                                     \
-        }                                                                                                         \
-                                                                                                                  \
-    private:                                                                                                      \
-        const Tuple m_params;                                                                                     \
-    };                                                                                                            \
-    static auto dummy_##CaseName##TestName = []()                                                                 \
-    {                                                                                                             \
-        const auto &TupleData = CaseName##_TupleData;                                                             \
-        ::test::type::detail::RegisterTests<CaseName##TestName##_Fixture>(                                        \
-            CaseName##_TupleData, #CaseName, #TestName, __FILE__, __LINE__,                                       \
-            std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<decltype(TupleData)>>>());         \
-        return nullptr;                                                                                           \
-    }();                                                                                                          \
-    template<class T>                                                                                             \
-    void CaseName##TestName##_Fixture<T>::TestBody()
+#define NVCV_MIXTYPED_TEST(CaseName, TestName)                                                                     \
+    template<class T>                                                                                              \
+    class CaseName##TestName##_Fixture final : public CaseName                                                     \
+    {                                                                                                              \
+    public:                                                                                                        \
+        using BaseFixture = CaseName;                                                                              \
+        using TypeParam   = T;                                                                                     \
+        using Tuple       = CaseName##_Tuple;                                                                      \
+        CaseName##TestName##_Fixture(const Tuple &p)                                                               \
+            : m_params(p)                                                                                          \
+        {                                                                                                          \
+        }                                                                                                          \
+        virtual void TestBody() override;                                                                          \
+        template<int I>                                                                                            \
+        using GetType = typename ::nv::cv::test::type::detail::GetTypeImpl<TypeParam, I>::type;                    \
+        template<int I>                                                                                            \
+        auto &&GetValue() const                                                                                    \
+        {                                                                                                          \
+            static_assert(!std::is_same_v<std::tuple_element_t<I, Tuple>, ::nv::cv::test::type::detail::TypeSlot>, \
+                          "Test parameter isn't a value");                                                         \
+            return std::get<I>(m_params);                                                                          \
+        }                                                                                                          \
+                                                                                                                   \
+    private:                                                                                                       \
+        template<class C>                                                                                          \
+        static constexpr std::true_type parentHasShouldSkip(decltype(&C::ShouldSkip));                             \
+        template<class C>                                                                                          \
+        static constexpr std::true_type parentHasShouldSkip(decltype(&C::template ShouldSkip<TypeParam, Tuple>));  \
+        template<class C>                                                                                          \
+        static constexpr std::false_type parentHasShouldSkip(...);                                                 \
+        static constexpr bool            ParentHasShouldSkip                                                       \
+            = std::is_same_v<decltype(parentHasShouldSkip<CaseName>(nullptr)), std::true_type>;                    \
+                                                                                                                   \
+    public:                                                                                                        \
+        template<class DUMMY = void>                                                                               \
+        bool ShouldSkip(const TypeParam &a, const Tuple &b) const                                                  \
+        {                                                                                                          \
+            using AUX = typename ::nv::cv::test::type::detail::MakeDependent<CaseName, DUMMY>::type;               \
+            if constexpr (ParentHasShouldSkip)                                                                     \
+            {                                                                                                      \
+                return AUX::ShouldSkip(a, b);                                                                      \
+            }                                                                                                      \
+            else                                                                                                   \
+            {                                                                                                      \
+                return false;                                                                                      \
+            }                                                                                                      \
+        }                                                                                                          \
+                                                                                                                   \
+    private:                                                                                                       \
+        const Tuple m_params;                                                                                      \
+    };                                                                                                             \
+    static auto dummy_##CaseName##TestName = []()                                                                  \
+    {                                                                                                              \
+        const auto &TupleData = CaseName##_TupleData;                                                              \
+        ::nv::cv::test::type::detail::RegisterTests<CaseName##TestName##_Fixture>(                                 \
+            CaseName##_TupleData, #CaseName, #TestName, __FILE__, __LINE__,                                        \
+            std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<decltype(TupleData)>>>());          \
+        return nullptr;                                                                                            \
+    }();                                                                                                           \
+    template<class NVCV_TypeParam>                                                                                 \
+    void CaseName##TestName##_Fixture<NVCV_TypeParam>::TestBody()
 
 } // namespace nv::cv::test::type

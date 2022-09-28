@@ -13,7 +13,7 @@
 
 #include "Definitions.hpp"
 
-#include <common/TypedTests.hpp>
+#include <common/TypeList.hpp>
 
 namespace t    = ::testing;
 namespace test = nv::cv::test;
