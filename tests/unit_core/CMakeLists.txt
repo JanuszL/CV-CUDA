@@ -20,6 +20,7 @@ add_executable(nvcv_test_unit_core
     TestString.cpp
     TestStaticVector.cpp
     TestVersion.cpp
+    TestIndexSequence.cpp
 )
 
 target_link_libraries(nvcv_test_unit_core
