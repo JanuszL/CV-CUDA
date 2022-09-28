@@ -12,7 +12,9 @@
 
 @startuml
 
-interface IMemAllocator
+interface IResourceAllocator
+
+interface IMemAllocator extends IResourceAllocator
 {
     + {field} AllocFunc: void*(int64_t size, int32_t align)
     + {field} FreeFunc: void(void *ptr, int64_t size, int32_t align)
@@ -29,7 +31,7 @@ IMemAllocator <|..# IHostMemAllocator: virtual
 IMemAllocator <|..# IHostPinnedMemAllocator: virtual
 IMemAllocator <|..# IDeviceMemAllocator: virtual
 
-interface ICudaArrayAllocator
+interface ICudaArrayAllocator extends IResourceAllocator
 {
     + {field} AllocFunc: void*(Size2D size, ImageFormat fmt, int32_t flags)
     + {field} FreeFunc: void(cudaArray_t arr)

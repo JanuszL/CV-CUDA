@@ -116,9 +116,7 @@ private:
             }
         };
 
-        NVCVResourceType resType = GetResType{}(std::get<HEAD>(m_resAllocators));
-
-        outResAlloc[HEAD].resType = resType;
+        outResAlloc[HEAD].resType = GetResType{}(std::get<HEAD>(m_resAllocators));
 
         doFillAllocator(outResAlloc[HEAD], std::get<HEAD>(m_resAllocators));
 
@@ -130,19 +128,86 @@ private:
         return m_wrap.handle();
     }
 
+    template<class T>
+    struct FindResAlloc
+    {
+        template<size_t... II>
+        static T *Find(std::tuple<AA...> &allocs, std::index_sequence<II...>, T &head)
+        {
+            static_assert(std::is_base_of<IResourceAllocator, T>::value, "Type must represent a resource allocator");
+
+            // Found!
+            return &head;
+        }
+
+        template<size_t I>
+        static T *Find(std::tuple<AA...> &allocs, std::index_sequence<I>, IResourceAllocator &)
+        {
+            // Not found.
+            return nullptr;
+        }
+
+        template<size_t HEAD, size_t NECK, size_t... TAIL>
+        static T *Find(std::tuple<AA...> &allocs, std::index_sequence<HEAD, NECK, TAIL...>, IResourceAllocator &)
+        {
+            // Not found yet, try the next one.
+            return Find(allocs, std::index_sequence<NECK, TAIL...>(), std::get<NECK>(allocs));
+        }
+    };
+
+    template<class T, size_t HEAD, size_t... TAIL>
+    T *doGetResAllocator(std::index_sequence<HEAD, TAIL...>)
+    {
+        // Loop through all custom allocators, try to find the one that has 'T' as base.
+        return FindResAlloc<T>::Find(m_resAllocators, std::index_sequence<HEAD, TAIL...>(),
+                                     std::get<HEAD>(m_resAllocators));
+    }
+
+    template<class T>
+    T *doGetResAllocator(std::index_sequence<>)
+    {
+        // No custom allocators passed, therefore...
+        return nullptr; // not found
+    }
+
     IHostMemAllocator &doGetHostMemAllocator() override
     {
-        return m_wrap.hostMem();
+        // User-customed resource allocator defined?
+        if (auto *hostAlloc = doGetResAllocator<IHostMemAllocator>(std::make_index_sequence<sizeof...(AA)>()))
+        {
+            // return it
+            return *hostAlloc;
+        }
+        else
+        {
+            // or else return the default resource allocator
+            return m_wrap.hostMem();
+        }
     }
 
     IHostPinnedMemAllocator &doGetHostPinnedMemAllocator() override
     {
-        return m_wrap.hostPinnedMem();
+        if (auto *hostPinnedAlloc
+            = doGetResAllocator<IHostPinnedMemAllocator>(std::make_index_sequence<sizeof...(AA)>()))
+        {
+            return *hostPinnedAlloc;
+        }
+        else
+        {
+            return m_wrap.hostPinnedMem();
+        }
     }
 
     IDeviceMemAllocator &doGetDeviceMemAllocator() override
     {
-        return m_wrap.deviceMem();
+        if (auto *devAlloc = doGetResAllocator<IDeviceMemAllocator>(std::make_index_sequence<sizeof...(AA)>()))
+        {
+            return *devAlloc;
+        }
+        else
+        {
+            return m_wrap.deviceMem();
+        }
     }
 };
 

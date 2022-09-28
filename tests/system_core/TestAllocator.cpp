@@ -237,6 +237,9 @@ TEST(Allocator, wip_test_custom_object_ref)
     nvcv::CustomAllocator myalloc2{std::ref(myHostAlloc)};
 
     auto myalloc3 = nvcv::CreateCustomAllocator(std::ref(myHostAlloc));
+
+    EXPECT_EQ(&myHostAlloc, dynamic_cast<MyHostAlloc *>(&myalloc3.hostMem()));
+    EXPECT_EQ(nullptr, dynamic_cast<MyHostAlloc *>(&myalloc3.deviceMem()));
 }
 
 class MyAsyncAlloc : public nvcv::IDeviceMemAllocator

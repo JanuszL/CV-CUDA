@@ -25,12 +25,18 @@
 
 namespace nv { namespace cv {
 
-class IMemAllocator
+class IResourceAllocator
+{
+public:
+    virtual ~IResourceAllocator() = 0;
+};
+
+inline IResourceAllocator::~IResourceAllocator() {}
+
+class IMemAllocator : public IResourceAllocator
 {
 public:
     static constexpr int DEFAULT_ALIGN = alignof(std::max_align_t);
-
-    virtual ~IMemAllocator() = default;
 
     using AllocFunc = void *(int64_t size, int32_t align);
     using FreeFunc  = void(void *ptr, int64_t size, int32_t align);
