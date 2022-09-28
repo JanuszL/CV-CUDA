@@ -17,8 +17,8 @@
  * @brief Defines the public C++ implementation of allocators that wraps C allocators.
  */
 
-#ifndef NVCV_HANDLE_WRAPPER_ALLOCATOR_HPP
-#define NVCV_HANDLE_WRAPPER_ALLOCATOR_HPP
+#ifndef NVCV_ALLOCATOR_WRAP_HANDLE_HPP
+#define NVCV_ALLOCATOR_WRAP_HANDLE_HPP
 
 #include "../detail/CheckError.hpp"
 #include "IAllocator.hpp"
@@ -35,10 +35,10 @@ namespace nv { namespace cv {
 // The class doesn't own the handle.
 // Used when interfacing with other libraries that use NVCV C objects.
 // Does the opposite of "IAllocator::handle()"
-class HandleWrapperAllocator final : public virtual IAllocator
+class AllocatorWrapHandle final : public virtual IAllocator
 {
 public:
-    explicit HandleWrapperAllocator(NVCVAllocator handle)
+    explicit AllocatorWrapHandle(NVCVAllocator handle)
         : m_handle(handle)
         , m_allocHostMem(handle)
         , m_allocHostPinnedMem(handle)
@@ -148,4 +148,4 @@ private:
 
 }} // namespace nv::cv
 
-#endif // NVCV_HANDLE_WRAPPER_ALLOCATOR_HPP
+#endif // NVCV_ALLOCATOR_WRAP_HANDLE_HPP

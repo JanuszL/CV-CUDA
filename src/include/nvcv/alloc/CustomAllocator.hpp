@@ -22,7 +22,7 @@
 
 #include "../detail/CheckError.hpp"
 #include "../detail/IndexSequence.hpp"
-#include "HandleWrapperAllocator.hpp"
+#include "AllocatorWrapHandle.hpp"
 #include "IAllocator.hpp"
 
 #include <cassert>
@@ -52,7 +52,7 @@ public:
 private:
     std::tuple<AA...> m_resAllocators;
 
-    HandleWrapperAllocator m_wrap;
+    AllocatorWrapHandle m_wrap;
 
     NVCVAllocator doCreateAllocator()
     {
