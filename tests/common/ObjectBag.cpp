@@ -11,10 +11,25 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <nvcv/Version.h>
-#include <util/SymbolVersioning.hpp>
+#include "ObjectBag.hpp"
 
-NVCV_DEFINE_API(0, 0, uint32_t, nvcvGetVersion, ())
+#include <nvcv/alloc/Allocator.h>
+
+namespace nv::cv::test {
+
+ObjectBag::~ObjectBag()
 {
-    return NVCV_VERSION;
+    // Destroy from back to front
+    while (!m_objs.empty())
+    {
+        m_objs.top()(); // call object destructor
+        m_objs.pop();
+    }
 }
+
+void ObjectBag::insert(NVCVAllocator handle)
+{
+    m_objs.push([handle]() { nvcvAllocatorDestroy(handle); });
+}
+
+} // namespace nv::cv::test

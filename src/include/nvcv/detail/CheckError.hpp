@@ -19,22 +19,31 @@
 
 #include <cassert>
 
-namespace nv::cv::detail {
+namespace nv { namespace cv { namespace detail {
+
+inline void ThrowException(NVCVStatus status)
+{
+    // Because of this stack allocation, compiler might
+    // not inline this call. This it happens only in
+    // error cases, it's ok.
+    char msg[NVCV_MAX_STATUS_MESSAGE_LENGTH];
+
+    NVCVStatus tmp = nvcvGetLastStatusMessage(msg, sizeof(msg));
+    (void)tmp;
+    assert(tmp == status);
+
+    throw Exception(static_cast<Status>(status), msg);
+}
 
 inline void CheckThrow(NVCVStatus status)
 {
+    // This check gets inlined easier, and it's normal code path.
     if (status != NVCV_SUCCESS)
     {
-        char msg[NVCV_MAX_STATUS_MESSAGE_LENGTH];
-
-        NVCVStatus tmp = nvcvGetLastStatusMessage(msg, sizeof(msg));
-        (void)tmp;
-        assert(tmp == status);
-
-        throw Exception(static_cast<Status>(status), msg);
+        ThrowException(status);
     }
 }
 
-} // namespace nv::cv::detail
+}}} // namespace nv::cv::detail
 
 #endif // NVCV_DETAIL_CHECKERROR_HPP

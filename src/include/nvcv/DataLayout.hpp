@@ -27,7 +27,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace nv::cv {
+namespace nv { namespace cv {
 
 enum class Packing : int32_t
 {
@@ -345,6 +345,6 @@ inline int32_t GetBitsPerPixel(Packing packing)
     return out;
 }
 
-} // namespace nv::cv
+}} // namespace nv::cv
 
 #endif // NVCV_DATALAYOUT_HPP

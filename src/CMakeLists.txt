@@ -29,6 +29,7 @@ add_library(nvcv SHARED
     DataLayout.cpp
     PixelType.cpp
     ImageFormat.cpp
+    Allocator.cpp
 )
 
 target_link_libraries(nvcv PRIVATE

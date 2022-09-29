@@ -11,10 +11,32 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <nvcv/Version.h>
-#include <util/SymbolVersioning.hpp>
+#ifndef NVVPI_TEST_UTIL_OBJECTBAG_HPP
+#define NVVPI_TEST_UTIL_OBJECTBAG_HPP
 
-NVCV_DEFINE_API(0, 0, uint32_t, nvcvGetVersion, ())
+#include <nvcv/alloc/Fwd.h>
+
+#include <functional>
+#include <stack>
+
+namespace nv::cv::test {
+
+// Bag of NVCV objects, destroys them in its dtor in reverse
+// order of insertion.
+class ObjectBag final
 {
-    return NVCV_VERSION;
-}
+public:
+    ObjectBag()                  = default;
+    ObjectBag(const ObjectBag &) = delete;
+
+    ~ObjectBag();
+
+    void insert(NVCVAllocator handle);
+
+private:
+    std::stack<std::function<void()>> m_objs;
+};
+
+} // namespace nv::cv::test
+
+#endif // NVVPI_TEST_UTIL_OBJECTBAG_HPP

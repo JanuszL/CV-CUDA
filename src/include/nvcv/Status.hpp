@@ -25,7 +25,7 @@
 #include <cstdint>
 #include <ostream>
 
-namespace nv::cv {
+namespace nv { namespace cv {
 
 /**
  * @brief Status codes.
@@ -44,6 +44,7 @@ enum class Status : int8_t
     ERROR_NOT_READY            = NVCV_ERROR_NOT_READY,
     ERROR_OUT_OF_MEMORY        = NVCV_ERROR_OUT_OF_MEMORY,
     ERROR_INTERNAL             = NVCV_ERROR_INTERNAL,
+    ERROR_NOT_COMPATIBLE       = NVCV_ERROR_NOT_COMPATIBLE,
 };
 
 inline const char *GetName(Status status)
@@ -56,6 +57,6 @@ inline std::ostream &operator<<(std::ostream &out, Status status)
     return out << GetName(status);
 }
 
-} // namespace nv::cv
+}} // namespace nv::cv
 
 #endif // NVCV_STATUS_HPP

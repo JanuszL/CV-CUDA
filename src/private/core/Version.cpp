@@ -11,10 +11,20 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <nvcv/Version.h>
-#include <util/SymbolVersioning.hpp>
+#include "Version.hpp"
 
-NVCV_DEFINE_API(0, 0, uint32_t, nvcvGetVersion, ())
+#include <iostream>
+
+namespace nv::cv::priv {
+
+std::ostream &operator<<(std::ostream &out, const Version &ver)
 {
-    return NVCV_VERSION;
+    out << 'v' << ver.major() << '.' << ver.minor() << '.' << ver.patch();
+    if (ver.tweak() != 0)
+    {
+        out << '.' << ver.tweak();
+    }
+    return out;
 }
+
+} // namespace nv::cv::priv

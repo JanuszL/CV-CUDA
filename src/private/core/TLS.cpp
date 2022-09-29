@@ -15,9 +15,12 @@
 
 namespace nv::cv::priv {
 
+namespace {
+thread_local TLS s_TLS;
+}
+
 TLS &GetTLS() noexcept
 {
-    static thread_local TLS s_TLS;
     return s_TLS;
 }
 

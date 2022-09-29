@@ -48,7 +48,8 @@ typedef enum
     NVCV_ERROR_DEVICE,               /**< Device backend error. */
     NVCV_ERROR_NOT_READY,            /**< Operation not completed yet, try again later. */
     NVCV_ERROR_OUT_OF_MEMORY,        /**< Not enough free memory to allocate object. */
-    NVCV_ERROR_INTERNAL              /**< Internal, non specific error. */
+    NVCV_ERROR_INTERNAL,             /**< Internal, non specific error. */
+    NVCV_ERROR_NOT_COMPATIBLE        /**< Implementation version incompatibility. */
 } NVCVStatus;
 
 /**

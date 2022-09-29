@@ -11,10 +11,18 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <nvcv/Version.h>
-#include <util/SymbolVersioning.hpp>
+/**
+ * @file Fwd.h
+ *
+ * @brief Forward declaration of NVCV C allocator interface entities.
+ */
 
-NVCV_DEFINE_API(0, 0, uint32_t, nvcvGetVersion, ())
-{
-    return NVCV_VERSION;
-}
+#ifndef NVCV_ALLOC_FWD_H
+#define NVCV_ALLOC_FWD_H
+
+/** Handle to an allocator instance. */
+typedef struct NVCVAllocatorImpl *NVCVAllocator;
+
+typedef struct NVCVCustomAllocatorRec NVCVCustomAllocator;
+
+#endif // NVCV_ALLOC_FWD_H

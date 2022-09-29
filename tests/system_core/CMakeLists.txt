@@ -20,12 +20,13 @@ add_executable(nvcv_test_system_core
     TestDataLayout.cpp
     TestImageFormat.cpp
     TestPixelType.cpp
+    TestAllocator.cpp
 )
 
 target_link_libraries(nvcv_test_system_core
     PUBLIC
         nvcv_test_main
-        nvcv_test_common
+        nvcv_test_common_system
         nvcv
 )
 

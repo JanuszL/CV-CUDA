@@ -11,10 +11,18 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <nvcv/Version.h>
-#include <util/SymbolVersioning.hpp>
+#ifndef NVCV_ALLOC_FWD_HPP
+#define NVCV_ALLOC_FWD_HPP
 
-NVCV_DEFINE_API(0, 0, uint32_t, nvcvGetVersion, ())
-{
-    return NVCV_VERSION;
-}
+#include "Fwd.h"
+
+namespace nv { namespace cv {
+
+class IAllocator;
+class IHostMemAllocator;
+class IHostPinnedMemAllocator;
+class IDeviceMemAllocator;
+
+}} // namespace nv::cv
+
+#endif // NVCV_ALLOC_FWD_HPP

@@ -25,7 +25,7 @@
 
 #include <iostream>
 
-namespace nv::cv {
+namespace nv { namespace cv {
 
 class PixelType
 {
@@ -232,6 +232,6 @@ inline std::ostream &operator<<(std::ostream &out, PixelType type)
     return out << nvcvPixelTypeGetName(type);
 }
 
-} // namespace nv::cv
+}} // namespace nv::cv
 
 #endif // NVCV_PIXEL_TYPE_HPP
