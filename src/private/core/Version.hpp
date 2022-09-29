@@ -21,6 +21,15 @@
 #include <cstdint>
 #include <iosfwd>
 
+// WAR for some unwanted macros
+#include <sys/types.h>
+#ifdef major
+#    undef major
+#endif
+#ifdef minor
+#    undef minor
+#endif
+
 namespace nv::cv::priv {
 
 class Version
