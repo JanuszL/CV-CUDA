@@ -573,159 +573,39 @@ TEST(PackingTests, valid_values)
 
     // Handle exceptions to the default representation scheme
 
-    p.packing           = NVCV_PACKING_X8_Y8__X8_Z8;
-    p.params.bits[0]    = 8;
-    p.params.bits[1]    = 8;
-    p.params.bits[2]    = 8;
-    p.params.bits[3]    = 8;
-    p.params.endianness = NVCV_BIG_ENDIAN;
-    p.params.swizzle    = NVCV_SWIZZLE_XYXZ;
+    auto testPacking = [&packingList](NVCVPacking packing, const std::array<int, 4> &bits, NVCVEndianness endianness,
+                                      NVCVSwizzle swizzle)
+    {
+        PackingTestParams p;
 
-    NVCVPacking packing;
+        p.packing           = packing;
+        p.params.endianness = endianness;
+        p.params.swizzle    = swizzle;
+        p.params.bits[0]    = bits[0];
+        p.params.bits[1]    = bits[1];
+        p.params.bits[2]    = bits[2];
+        p.params.bits[3]    = bits[3];
 
-    auto it = packingList.find(p);
-    ASSERT_TRUE(it != packingList.end()) << p.packing;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvMakePacking(&packing, &p.params));
-    EXPECT_EQ(it->packing, packing);
-    packingList.erase(it);
+        auto it = packingList.find(p);
+        ASSERT_TRUE(it != packingList.end()) << p.packing;
+        ASSERT_EQ(NVCV_SUCCESS, nvcvMakePacking(&packing, &p.params));
+        EXPECT_EQ(it->packing, packing);
+        packingList.erase(it);
+    };
 
-    p.packing        = NVCV_PACKING_Y8_X8__Z8_X8;
-    p.params.swizzle = NVCV_SWIZZLE_YXZX;
-    it               = packingList.find(p);
-    ASSERT_TRUE(it != packingList.end()) << p.packing;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvMakePacking(&packing, &p.params));
-    EXPECT_EQ(it->packing, packing);
-    packingList.erase(it);
-
-    p.params.bits[0]    = 0;
-    p.params.bits[1]    = 0;
-    p.params.bits[2]    = 0;
-    p.params.bits[3]    = 0;
-    p.params.endianness = NVCV_HOST_ENDIAN;
-
-    p.packing        = NVCV_PACKING_X12b4;
-    p.params.swizzle = NVCV_SWIZZLE_X000;
-    p.params.bits[0] = 12;
-    p.params.bits[1] = 4;
-    it               = packingList.find(p);
-    ASSERT_TRUE(it != packingList.end()) << p.packing;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvMakePacking(&packing, &p.params));
-    EXPECT_EQ(it->packing, packing);
-    packingList.erase(it);
-
-    p.packing        = NVCV_PACKING_X10b6;
-    p.params.swizzle = NVCV_SWIZZLE_X000;
-    p.params.bits[0] = 10;
-    p.params.bits[1] = 6;
-    it               = packingList.find(p);
-    ASSERT_TRUE(it != packingList.end()) << p.packing;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvMakePacking(&packing, &p.params));
-    EXPECT_EQ(it->packing, packing);
-    packingList.erase(it);
-
-    p.packing        = NVCV_PACKING_b4X12;
-    p.params.swizzle = NVCV_SWIZZLE_Y000;
-    p.params.bits[0] = 4;
-    p.params.bits[1] = 12;
-    it               = packingList.find(p);
-    ASSERT_TRUE(it != packingList.end()) << p.packing;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvMakePacking(&packing, &p.params));
-    EXPECT_EQ(it->packing, packing);
-    packingList.erase(it);
-
-    p.packing        = NVCV_PACKING_b12X20;
-    p.params.swizzle = NVCV_SWIZZLE_Y000;
-    p.params.bits[0] = 12;
-    p.params.bits[1] = 20;
-    it               = packingList.find(p);
-    ASSERT_TRUE(it != packingList.end()) << p.packing;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvMakePacking(&packing, &p.params));
-    EXPECT_EQ(it->packing, packing);
-    packingList.erase(it);
-
-    p.packing        = NVCV_PACKING_b6X10;
-    p.params.swizzle = NVCV_SWIZZLE_Y000;
-    p.params.bits[0] = 6;
-    p.params.bits[1] = 10;
-    it               = packingList.find(p);
-    ASSERT_TRUE(it != packingList.end()) << p.packing;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvMakePacking(&packing, &p.params));
-    EXPECT_EQ(it->packing, packing);
-    packingList.erase(it);
-
-    p.packing        = NVCV_PACKING_b2X14;
-    p.params.swizzle = NVCV_SWIZZLE_Y000;
-    p.params.bits[0] = 2;
-    p.params.bits[1] = 14;
-    it               = packingList.find(p);
-    ASSERT_TRUE(it != packingList.end()) << p.packing;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvMakePacking(&packing, &p.params));
-    EXPECT_EQ(it->packing, packing);
-    packingList.erase(it);
-
-    p.params.endianness = NVCV_BIG_ENDIAN;
-
-    p.packing        = NVCV_PACKING_X10b6_Y10b6;
-    p.params.swizzle = NVCV_SWIZZLE_XZ00;
-    p.params.bits[0] = 10;
-    p.params.bits[1] = 6;
-    p.params.bits[2] = 10;
-    p.params.bits[3] = 6;
-    it               = packingList.find(p);
-    ASSERT_TRUE(it != packingList.end()) << p.packing;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvMakePacking(&packing, &p.params));
-    EXPECT_EQ(it->packing, packing);
-    packingList.erase(it);
-
-    p.packing        = NVCV_PACKING_X12b4_Y12b4;
-    p.params.swizzle = NVCV_SWIZZLE_XZ00;
-    p.params.bits[0] = 12;
-    p.params.bits[1] = 4;
-    p.params.bits[2] = 12;
-    p.params.bits[3] = 4;
-    it               = packingList.find(p);
-    ASSERT_TRUE(it != packingList.end()) << p.packing;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvMakePacking(&packing, &p.params));
-    EXPECT_EQ(it->packing, packing);
-    packingList.erase(it);
-
-    p.params.endianness = NVCV_HOST_ENDIAN;
-
-    p.packing        = NVCV_PACKING_b4X4Y4Z4;
-    p.params.swizzle = NVCV_SWIZZLE_YZW0;
-    p.params.bits[0] = 4;
-    p.params.bits[1] = 4;
-    p.params.bits[2] = 4;
-    p.params.bits[3] = 4;
-    it               = packingList.find(p);
-    ASSERT_TRUE(it != packingList.end()) << p.packing;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvMakePacking(&packing, &p.params));
-    EXPECT_EQ(it->packing, packing);
-    packingList.erase(it);
-
-    p.packing        = NVCV_PACKING_b1X5Y5Z5;
-    p.params.swizzle = NVCV_SWIZZLE_YZW0;
-    p.params.bits[0] = 1;
-    p.params.bits[1] = 5;
-    p.params.bits[2] = 5;
-    p.params.bits[3] = 5;
-    it               = packingList.find(p);
-    ASSERT_TRUE(it != packingList.end()) << p.packing;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvMakePacking(&packing, &p.params));
-    EXPECT_EQ(it->packing, packing);
-    packingList.erase(it);
-
-    p.packing        = NVCV_PACKING_X5Y5b1Z5;
-    p.params.swizzle = NVCV_SWIZZLE_XYW0;
-    p.params.bits[0] = 5;
-    p.params.bits[1] = 5;
-    p.params.bits[2] = 1;
-    p.params.bits[3] = 5;
-    it               = packingList.find(p);
-    ASSERT_TRUE(it != packingList.end()) << p.packing;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvMakePacking(&packing, &p.params));
-    EXPECT_EQ(it->packing, packing);
-    packingList.erase(it);
+    testPacking(NVCV_PACKING_X8_Y8__X8_Z8, {8, 8, 8, 8}, NVCV_BIG_ENDIAN, NVCV_SWIZZLE_XYXZ);
+    testPacking(NVCV_PACKING_Y8_X8__Z8_X8, {8, 8, 8, 8}, NVCV_BIG_ENDIAN, NVCV_SWIZZLE_YXZX);
+    testPacking(NVCV_PACKING_X12b4, {12, 4}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_X000);
+    testPacking(NVCV_PACKING_X10b6, {10, 6}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_X000);
+    testPacking(NVCV_PACKING_b4X12, {4, 12}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_Y000);
+    testPacking(NVCV_PACKING_b12X20, {12, 20}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_Y000);
+    testPacking(NVCV_PACKING_b6X10, {6, 10}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_Y000);
+    testPacking(NVCV_PACKING_b2X14, {2, 14}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_Y000);
+    testPacking(NVCV_PACKING_X10b6_Y10b6, {10, 6, 10, 6}, NVCV_BIG_ENDIAN, NVCV_SWIZZLE_XZ00);
+    testPacking(NVCV_PACKING_X12b4_Y12b4, {12, 4, 12, 4}, NVCV_BIG_ENDIAN, NVCV_SWIZZLE_XZ00);
+    testPacking(NVCV_PACKING_b4X4Y4Z4, {4, 4, 4, 4}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_YZW0);
+    testPacking(NVCV_PACKING_b1X5Y5Z5, {1, 5, 5, 5}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_YZW0);
+    testPacking(NVCV_PACKING_X5Y5b1Z5, {5, 5, 1, 5}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_XYW0);
 
     EXPECT_TRUE(packingList.empty());
 
