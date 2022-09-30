@@ -63,69 +63,69 @@ bool operator<(const PackingData &a, const PackingData &b)
 #define STRINGIZE(x) #x
 
 const std::map<NVCVPacking, PackingData> g_packingToData = {
-#define DEF_PACK1(x)                                   \
-    {                                                  \
-        NVCV_PACKING_X##x,                             \
-        {                                              \
-            STRINGIZE(NVCV_PACKING_X##x),              \
-            {                                          \
-                NVCV_HOST_ENDIAN, NVCV_SWIZZLE_0000, x \
-            }                                          \
-        }                                              \
+#define DEF_PACK1(x)                                 \
+    {                                                \
+        NVCV_PACKING_X##x,                           \
+        {                                            \
+            STRINGIZE(NVCV_PACKING_X##x),            \
+            {                                        \
+                NVCV_ORDER_LSB, NVCV_SWIZZLE_0000, x \
+            }                                        \
+        }                                            \
     }
 
-#define DEF_PACK2(x, y)                                   \
-    {                                                     \
-        NVCV_PACKING_X##x##Y##y,                          \
-        {                                                 \
-            STRINGIZE(NVCV_PACKING_X##x##Y##y),           \
-            {                                             \
-                NVCV_HOST_ENDIAN, NVCV_SWIZZLE_0000, x, y \
-            }                                             \
-        }                                                 \
+#define DEF_PACK2(x, y)                                 \
+    {                                                   \
+        NVCV_PACKING_X##x##Y##y,                        \
+        {                                               \
+            STRINGIZE(NVCV_PACKING_X##x##Y##y),         \
+            {                                           \
+                NVCV_ORDER_LSB, NVCV_SWIZZLE_0000, x, y \
+            }                                           \
+        }                                               \
     }
 
-#define DEF_PACK3(x, y, z)                                   \
-    {                                                        \
-        NVCV_PACKING_X##x##Y##y##Z##z,                       \
-        {                                                    \
-            STRINGIZE(NVCV_PACKING_X##x##Y##y##Z##z),        \
-            {                                                \
-                NVCV_HOST_ENDIAN, NVCV_SWIZZLE_0000, x, y, z \
-            }                                                \
-        }                                                    \
+#define DEF_PACK3(x, y, z)                                 \
+    {                                                      \
+        NVCV_PACKING_X##x##Y##y##Z##z,                     \
+        {                                                  \
+            STRINGIZE(NVCV_PACKING_X##x##Y##y##Z##z),      \
+            {                                              \
+                NVCV_ORDER_LSB, NVCV_SWIZZLE_0000, x, y, z \
+            }                                              \
+        }                                                  \
     }
 
-#define DEF_PACK4(x, y, z, w)                                   \
-    {                                                           \
-        NVCV_PACKING_X##x##Y##y##Z##z##W##w,                    \
-        {                                                       \
-            STRINGIZE(NVCV_PACKING_X##x##Y##y##Z##z##W##w),     \
-            {                                                   \
-                NVCV_HOST_ENDIAN, NVCV_SWIZZLE_0000, x, y, z, w \
-            }                                                   \
-        }                                                       \
+#define DEF_PACK4(x, y, z, w)                                 \
+    {                                                         \
+        NVCV_PACKING_X##x##Y##y##Z##z##W##w,                  \
+        {                                                     \
+            STRINGIZE(NVCV_PACKING_X##x##Y##y##Z##z##W##w),   \
+            {                                                 \
+                NVCV_ORDER_LSB, NVCV_SWIZZLE_0000, x, y, z, w \
+            }                                                 \
+        }                                                     \
     }
 
-#define DEF_FIX_PACK2(x, y)                              \
-    {                                                    \
-        NVCV_PACKING_X##x##_Y##y,                        \
-        {                                                \
-            STRINGIZE(NVCV_PACKING_X##x##_Y##y),         \
-            {                                            \
-                NVCV_BIG_ENDIAN, NVCV_SWIZZLE_0000, x, y \
-            }                                            \
-        }                                                \
+#define DEF_FIX_PACK2(x, y)                             \
+    {                                                   \
+        NVCV_PACKING_X##x##_Y##y,                       \
+        {                                               \
+            STRINGIZE(NVCV_PACKING_X##x##_Y##y),        \
+            {                                           \
+                NVCV_ORDER_MSB, NVCV_SWIZZLE_0000, x, y \
+            }                                           \
+        }                                               \
     }
-#define DEF_FIX_PACK3(x, y, z)                              \
-    {                                                       \
-        NVCV_PACKING_X##x##_Y##y##_Z##z,                    \
-        {                                                   \
-            STRINGIZE(NVCV_PACKING_X##x##_Y##y##_Z##z),     \
-            {                                               \
-                NVCV_BIG_ENDIAN, NVCV_SWIZZLE_0000, x, y, z \
-            }                                               \
-        }                                                   \
+#define DEF_FIX_PACK3(x, y, z)                             \
+    {                                                      \
+        NVCV_PACKING_X##x##_Y##y##_Z##z,                   \
+        {                                                  \
+            STRINGIZE(NVCV_PACKING_X##x##_Y##y##_Z##z),    \
+            {                                              \
+                NVCV_ORDER_MSB, NVCV_SWIZZLE_0000, x, y, z \
+            }                                              \
+        }                                                  \
     }
 
 #define DEF_FIX_PACK4(x, y, z, w)                              \
@@ -134,64 +134,64 @@ const std::map<NVCVPacking, PackingData> g_packingToData = {
         {                                                      \
             STRINGIZE(NVCV_PACKING_X##x##_Y##y##_Z##z##_W##w), \
             {                                                  \
-                NVCV_BIG_ENDIAN, NVCV_SWIZZLE_0000, x, y, z, w \
+                NVCV_ORDER_MSB, NVCV_SWIZZLE_0000, x, y, z, w  \
             }                                                  \
         }                                                      \
     }
 
-#define DEF_MSB_PACK1(x, bx)                              \
-    {                                                     \
-        NVCV_PACKING_X##x##b##bx,                         \
-        {                                                 \
-            STRINGIZE(NVCV_PACKING_X##x##b##bx),          \
-            {                                             \
-                NVCV_BIG_ENDIAN, NVCV_SWIZZLE_X000, x, bx \
-            }                                             \
-        }                                                 \
+#define DEF_MSB_PACK1(x, bx)                             \
+    {                                                    \
+        NVCV_PACKING_X##x##b##bx,                        \
+        {                                                \
+            STRINGIZE(NVCV_PACKING_X##x##b##bx),         \
+            {                                            \
+                NVCV_ORDER_MSB, NVCV_SWIZZLE_X000, x, bx \
+            }                                            \
+        }                                                \
     }
 
-#define DEF_LSB_PACK1(bx, x)                               \
-    {                                                      \
-        NVCV_PACKING_b##bx##X##x,                          \
-        {                                                  \
-            STRINGIZE(NVCV_PACKING_b##bx##X##x),           \
-            {                                              \
-                NVCV_HOST_ENDIAN, NVCV_SWIZZLE_Y000, bx, x \
-            }                                              \
-        }                                                  \
+#define DEF_LSB_PACK1(bx, x)                             \
+    {                                                    \
+        NVCV_PACKING_b##bx##X##x,                        \
+        {                                                \
+            STRINGIZE(NVCV_PACKING_b##bx##X##x),         \
+            {                                            \
+                NVCV_ORDER_LSB, NVCV_SWIZZLE_Y000, bx, x \
+            }                                            \
+        }                                                \
     }
 
-#define DEF_FIX_MSB_PACK2(x, bx, y, by)                          \
-    {                                                            \
-        NVCV_PACKING_X##x##b##bx##_Y##y##b##by,                  \
-        {                                                        \
-            STRINGIZE(NVCV_PACKING_X##x##b##bx##_Y##y##b##by),   \
-            {                                                    \
-                NVCV_BIG_ENDIAN, NVCV_SWIZZLE_XZ00, x, bx, y, by \
-            }                                                    \
-        }                                                        \
+#define DEF_FIX_MSB_PACK2(x, bx, y, by)                         \
+    {                                                           \
+        NVCV_PACKING_X##x##b##bx##_Y##y##b##by,                 \
+        {                                                       \
+            STRINGIZE(NVCV_PACKING_X##x##b##bx##_Y##y##b##by),  \
+            {                                                   \
+                NVCV_ORDER_MSB, NVCV_SWIZZLE_XZ00, x, bx, y, by \
+            }                                                   \
+        }                                                       \
     }
 
-#define DEF_FIX_LSB_PACK2(bx, x, by, y)                           \
-    {                                                             \
-        NVCV_PACKING_b##bx##X##x##_Y##y##b##by,                   \
-        {                                                         \
-            STRINGIZE(NVCV_PACKING_b##bx##X##x##_Y##y##b##by),    \
-            {                                                     \
-                NVCV_HOST_ENDIAN, NVCV_SWIZZLE_YW00, bx, x, by, y \
-            }                                                     \
-        }                                                         \
+#define DEF_FIX_LSB_PACK2(bx, x, by, y)                         \
+    {                                                           \
+        NVCV_PACKING_b##bx##X##x##_Y##y##b##by,                 \
+        {                                                       \
+            STRINGIZE(NVCV_PACKING_b##bx##X##x##_Y##y##b##by),  \
+            {                                                   \
+                NVCV_ORDER_LSB, NVCV_SWIZZLE_YW00, bx, x, by, y \
+            }                                                   \
+        }                                                       \
     }
 
-#define DEF_LSB_PACK3(bx, x, y, z)                               \
-    {                                                            \
-        NVCV_PACKING_b##bx##X##x##Y##y##Z##z,                    \
-        {                                                        \
-            STRINGIZE(NVCV_PACKING_b##bx##X##x##Y##y##Z##z),     \
-            {                                                    \
-                NVCV_HOST_ENDIAN, NVCV_SWIZZLE_YZW0, bx, x, y, z \
-            }                                                    \
-        }                                                        \
+#define DEF_LSB_PACK3(bx, x, y, z)                             \
+    {                                                          \
+        NVCV_PACKING_b##bx##X##x##Y##y##Z##z,                  \
+        {                                                      \
+            STRINGIZE(NVCV_PACKING_b##bx##X##x##Y##y##Z##z),   \
+            {                                                  \
+                NVCV_ORDER_LSB, NVCV_SWIZZLE_YZW0, bx, x, y, z \
+            }                                                  \
+        }                                                      \
     }
 
     DEF_PACK1(1),
@@ -263,10 +263,10 @@ const std::map<NVCVPacking, PackingData> g_packingToData = {
 // mark them with clang-format off
 // clang-format off
 #define CLANGFORMAT_WAR                                                             \
-    {NVCV_PACKING_0,            {"NVCV_PACKING_0",            {NVCV_HOST_ENDIAN, NVCV_SWIZZLE_0000}}},          \
-    {NVCV_PACKING_X8_Y8__X8_Z8, {"NVCV_PACKING_X8_Y8__X8_Z8", {NVCV_BIG_ENDIAN,  NVCV_SWIZZLE_XYXZ, 8, 8, 8, 8}}}, \
-    {NVCV_PACKING_Y8_X8__Z8_X8, {"NVCV_PACKING_Y8_X8__Z8_X8", {NVCV_BIG_ENDIAN,  NVCV_SWIZZLE_YXZX, 8, 8, 8, 8}}}, \
-    {NVCV_PACKING_X5Y5b1Z5,     {"NVCV_PACKING_X5Y5b1Z5",     {NVCV_HOST_ENDIAN, NVCV_SWIZZLE_XYW0, 5, 5, 1, 5}}}
+    {NVCV_PACKING_0,            {"NVCV_PACKING_0",            {NVCV_ORDER_LSB, NVCV_SWIZZLE_0000}}},          \
+    {NVCV_PACKING_X8_Y8__X8_Z8, {"NVCV_PACKING_X8_Y8__X8_Z8", {NVCV_ORDER_MSB,  NVCV_SWIZZLE_XYXZ, 8, 8, 8, 8}}}, \
+    {NVCV_PACKING_Y8_X8__Z8_X8, {"NVCV_PACKING_Y8_X8__Z8_X8", {NVCV_ORDER_MSB,  NVCV_SWIZZLE_YXZX, 8, 8, 8, 8}}}, \
+    {NVCV_PACKING_X5Y5b1Z5,     {"NVCV_PACKING_X5Y5b1Z5",     {NVCV_ORDER_LSB, NVCV_SWIZZLE_XYW0, 5, 5, 1, 5}}}
     CLANGFORMAT_WAR,
     // clang-format on
 };
@@ -359,7 +359,7 @@ std::optional<NVCVPacking> MakeNVCVPacking(const NVCVPackingParams &params) noex
         if (GetNumChannels(params.swizzle) >= 2)
         {
             // Endian don't match?
-            if (it->first.params.endianness != params.endianness)
+            if (it->first.params.byteOrder != params.byteOrder)
             {
                 return std::nullopt;
             }
@@ -716,7 +716,7 @@ NVCVSwizzle MergePlaneSwizzles(NVCVSwizzle sw0, NVCVSwizzle sw1, NVCVSwizzle sw2
     return MakeNVCVSwizzle(swResult[0], swResult[1], swResult[2], swResult[3]);
 }
 
-NVCVSwizzle FlipEndianness(NVCVSwizzle swizzle, int off, int len) noexcept
+NVCVSwizzle FlipByteOrder(NVCVSwizzle swizzle, int off, int len) noexcept
 {
     // there's nothing to flip for 0 or 1 channels.
     if (len <= 1)
@@ -729,7 +729,7 @@ NVCVSwizzle FlipEndianness(NVCVSwizzle swizzle, int off, int len) noexcept
     NVCV_ASSERT(off >= 0);
     NVCV_ASSERT(off + len <= 4);
 
-    // Flipping endianness must occur at memory space, not component space.
+    // Flipping byteOrder must occur at memory space, not component space.
     // So first map swizzle to memory space, i.e., sort components in order
     // they will show up in memory, from lowest address to highest.
 

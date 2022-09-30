@@ -278,17 +278,16 @@ inline int32_t GetNumChannels(Swizzle swizzle)
 #    undef BIG_ENDIAN
 #endif
 
-enum class Endianness : int8_t
+enum class ByteOrder : int8_t
 {
-    INVALID,
-    HOST_ENDIAN,
-    BIG_ENDIAN
+    LSB,
+    MSB
 };
 
 struct PackingParams
 {
-    Endianness endianness;
-    Swizzle    swizzle;
+    ByteOrder byteOrder;
+    Swizzle   swizzle;
 
     std::array<int32_t, NVCV_MAX_CHANNEL_COUNT> bits;
 };
@@ -296,8 +295,8 @@ struct PackingParams
 inline Packing MakePacking(const PackingParams &params)
 {
     NVCVPackingParams p;
-    p.endianness = static_cast<NVCVEndianness>(params.endianness);
-    p.swizzle    = static_cast<NVCVSwizzle>(params.swizzle);
+    p.byteOrder = static_cast<NVCVByteOrder>(params.byteOrder);
+    p.swizzle   = static_cast<NVCVSwizzle>(params.swizzle);
     for (size_t i = 0; i < params.bits.size(); ++i)
     {
         p.bits[i] = params.bits[i];
@@ -314,8 +313,8 @@ inline PackingParams GetParams(Packing packing)
     detail::CheckThrow(nvcvPackingGetParams(static_cast<NVCVPacking>(packing), &p));
 
     PackingParams out;
-    out.endianness = static_cast<Endianness>(p.endianness);
-    out.swizzle    = static_cast<Swizzle>(p.swizzle);
+    out.byteOrder = static_cast<ByteOrder>(p.byteOrder);
+    out.swizzle   = static_cast<Swizzle>(p.swizzle);
 
     for (size_t i = 0; i < out.bits.size(); ++i)
     {

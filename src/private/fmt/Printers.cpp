@@ -227,13 +227,13 @@ std::ostream &operator<<(std::ostream &out, const NVCVPacking &packing)
     return out << nv::cv::priv::ToString(packing);
 }
 
-std::ostream &operator<<(std::ostream &out, NVCVEndianness endianness)
+std::ostream &operator<<(std::ostream &out, NVCVByteOrder byteOrder)
 {
-    switch (endianness)
+    switch (byteOrder)
     {
-        ENUM_CASE(NVCV_HOST_ENDIAN);
-        ENUM_CASE(NVCV_BIG_ENDIAN);
+        ENUM_CASE(NVCV_ORDER_LSB);
+        ENUM_CASE(NVCV_ORDER_MSB);
     }
 
-    return out << "NVCVEndianness(" << (int)endianness << ")";
+    return out << "NVCVByteOrder(" << (int)byteOrder << ")";
 }

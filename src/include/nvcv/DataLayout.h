@@ -434,18 +434,18 @@ NVCV_PUBLIC NVCVStatus nvcvSwizzleGetChannels(NVCVSwizzle swizzle, NVCVChannel *
  */
 NVCV_PUBLIC NVCVStatus nvcvSwizzleGetNumChannels(NVCVSwizzle swizzle, int32_t *outNumChannels);
 
-/** Endianness of a \ref NVCVPacking value. */
+/** Byte/bit order of a \ref NVCVPacking value in a word. */
 typedef enum
 {
-    NVCV_HOST_ENDIAN, /**< Endianness of the host machine. */
-    NVCV_BIG_ENDIAN   /**< Big endian, where most significant byte has lower memory address. */
-} NVCVEndianness;
+    NVCV_ORDER_LSB, /**< Least significant byte/bit has higher memory address. */
+    NVCV_ORDER_MSB  /**< Most significant byte/bit has lower memory address. */
+} NVCVByteOrder;
 
 /** Defines the parameters encoded in a \ref NVCVPacking. */
 typedef struct
 {
     /** Component ordering in a word. */
-    NVCVEndianness endianness;
+    NVCVByteOrder byteOrder;
 
     /** Channel ordering. */
     NVCVSwizzle swizzle;
