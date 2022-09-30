@@ -99,10 +99,17 @@ typedef enum
     NVCV_PACKING_X2 = NVCV_DETAIL_BPP_NCH(2, 1),
     /** One 4-bit channel. */
     NVCV_PACKING_X4 = NVCV_DETAIL_BPP_NCH(4, 1),
+
     /** One 8-bit channel. */
     NVCV_PACKING_X8 = NVCV_DETAIL_BPP_NCH(8, 1),
-    /** Two 4-bit channels in one word. */
+    /** One LSB 4-bit channel in a 8-bit word */
+    NVCV_PACKING_b4X4,
+    /** One MSB 4-bit channel in a 8-bit word */
+    NVCV_PACKING_X4b4,
+
+    /** Two 4-bit channels in one 8-bit word. */
     NVCV_PACKING_X4Y4 = NVCV_DETAIL_BPP_NCH(8, 2),
+
     /** Three 3-, 3- and 2-bit channels in one 8-bit word. */
     NVCV_PACKING_X3Y3Z2 = NVCV_DETAIL_BPP_NCH(8, 3),
 
@@ -118,6 +125,8 @@ typedef enum
     NVCV_PACKING_X12b4,
     /** One LSB 14-bit channel in one 16-bit word. */
     NVCV_PACKING_b2X14,
+    /** One MSB 14-bit channel in one 16-bit word. */
+    NVCV_PACKING_X14b2,
 
     /** Two 8-bit channels in two 8-bit words. */
     NVCV_PACKING_X8_Y8 = NVCV_DETAIL_BPP_NCH(16, 2),
@@ -161,6 +170,12 @@ typedef enum
     NVCV_PACKING_X32 = NVCV_DETAIL_BPP_NCH(32, 1),
     /** One LSB 20-bit channel in one 32-bit word. */
     NVCV_PACKING_b12X20,
+    /** One MSB 20-bit channel in one 32-bit word. */
+    NVCV_PACKING_X20b12,
+    /** One MSB 24-bit channel in one 32-bit word. */
+    NVCV_PACKING_X24b8,
+    /** One LSB 24-bit channel in one 32-bit word. */
+    NVCV_PACKING_b8X24,
 
     /** Two 16-bit channels in two 16-bit words. */
     NVCV_PACKING_X16_Y16 = NVCV_DETAIL_BPP_NCH(32, 2),
@@ -173,6 +188,10 @@ typedef enum
     NVCV_PACKING_X10Y11Z11 = NVCV_DETAIL_BPP_NCH(32, 3),
     /** Three 11-, 11- and 10-bit channels in one 32-bit word. */
     NVCV_PACKING_X11Y11Z10,
+    /** Three LSB 10-bit channels in one 32-bit word. */
+    NVCV_PACKING_b2X10Y10Z10,
+    /** Three MSB 10-bit channels in one 32-bit word. */
+    NVCV_PACKING_X10Y10Z10b2,
 
     /** Four 8-bit channels in one 32-bit word. */
     NVCV_PACKING_X8_Y8_Z8_W8 = NVCV_DETAIL_BPP_NCH(32, 4),
@@ -190,6 +209,9 @@ typedef enum
     NVCV_PACKING_X64 = NVCV_DETAIL_BPP_NCH(64, 1),
     /** Two 32-bit channels in two 32-bit words. */
     NVCV_PACKING_X32_Y32 = NVCV_DETAIL_BPP_NCH(64, 2),
+    /** Two channels: 32-bit in a 32-bit word, 24-bit MSB in a 32-bit word */
+    NVCV_PACKING_X32_Y24b8,
+
     /** Four 16-bit channels in one 64-bit word. */
     NVCV_PACKING_X16_Y16_Z16_W16 = NVCV_DETAIL_BPP_NCH(64, 4),
 
@@ -348,6 +370,7 @@ typedef enum
     NVCV_SWIZZLE_YW00 = NVCV_DETAIL_MAKE_SWZL(Y, W, 0, 0),
     NVCV_SWIZZLE_XYW0 = NVCV_DETAIL_MAKE_SWZL(X, Y, W, 0),
     NVCV_SWIZZLE_YZW0 = NVCV_DETAIL_MAKE_SWZL(Y, Z, W, 0),
+    NVCV_SWIZZLE_YZ00 = NVCV_DETAIL_MAKE_SWZL(Y, Z, 0, 0),
     /** @} */
 } NVCVSwizzle;
 
@@ -424,18 +447,18 @@ NVCV_PUBLIC NVCVStatus nvcvSwizzleGetChannels(NVCVSwizzle swizzle, NVCVChannel *
  */
 NVCV_PUBLIC NVCVStatus nvcvSwizzleGetNumChannels(NVCVSwizzle swizzle, int32_t *outNumChannels);
 
-/** Endianness of a \ref NVCVPacking value. */
+/** Byte/bit order of a \ref NVCVPacking value in a word. */
 typedef enum
 {
-    NVCV_HOST_ENDIAN, /**< Endianness of the host machine. */
-    NVCV_BIG_ENDIAN   /**< Big endian, where most significant byte has lower memory address. */
-} NVCVEndianness;
+    NVCV_ORDER_LSB, /**< Least significant byte/bit has higher memory address. */
+    NVCV_ORDER_MSB  /**< Most significant byte/bit has lower memory address. */
+} NVCVByteOrder;
 
 /** Defines the parameters encoded in a \ref NVCVPacking. */
 typedef struct
 {
     /** Component ordering in a word. */
-    NVCVEndianness endianness;
+    NVCVByteOrder byteOrder;
 
     /** Channel ordering. */
     NVCVSwizzle swizzle;

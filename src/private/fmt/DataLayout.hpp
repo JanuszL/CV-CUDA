@@ -49,10 +49,12 @@ std::array<int32_t, 4> GetBitsPerComponent(NVCVPacking packing) noexcept;
 NVCVSwizzle MergePlaneSwizzles(NVCVSwizzle sw0, NVCVSwizzle sw1 = NVCV_SWIZZLE_0000,
                                NVCVSwizzle sw2 = NVCV_SWIZZLE_0000, NVCVSwizzle sw3 = NVCV_SWIZZLE_0000);
 
-// Flips endianness in memory space and return the resulting swizzle.
+// Flips byte order in memory space and return the resulting swizzle.
 // Optionally an offset+length in component space can be specified, it'll
 // restrict the flipping only to these components alone.
-NVCVSwizzle FlipEndianness(NVCVSwizzle swizzle, int off = 0, int len = 4) noexcept;
+NVCVSwizzle FlipByteOrder(NVCVSwizzle swizzle, int off = 0, int len = 4) noexcept;
+
+const char *ToString(NVCVPacking packing);
 
 } // namespace nv::cv::priv
 

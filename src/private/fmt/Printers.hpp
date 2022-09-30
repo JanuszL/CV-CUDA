@@ -37,6 +37,6 @@ std::ostream &operator<<(std::ostream &out, const NVCVPacking &packing);
 std::ostream &operator<<(std::ostream &out, NVCVMemLayout memLayout);
 std::ostream &operator<<(std::ostream &out, NVCVChannel swizzleChannel);
 std::ostream &operator<<(std::ostream &out, NVCVSwizzle swizzle);
-std::ostream &operator<<(std::ostream &out, NVCVEndianness endianness);
+std::ostream &operator<<(std::ostream &out, NVCVByteOrder byteOrder);
 
 #endif // NVCV_PRIV_FORMAT_PRINTERS_HPP

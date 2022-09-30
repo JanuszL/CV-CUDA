@@ -31,121 +31,178 @@
 //  |                       | XYZ,LAB,LUV,... | 1| 1  1  1| 1|
 //  | 1  1  1  1  1  1  1  UNDEFINED   1  1  1  1  1  1  1  1|
 
-static bool operator<(const NVCVPackingParams &a, const NVCVPackingParams &b)
+namespace nv::cv::priv {
+
+namespace {
+
+struct PackingData
 {
-    if (a.swizzle == b.swizzle)
+    const char       *name;
+    NVCVPackingParams params;
+};
+
+bool operator<(const PackingData &a, const PackingData &b)
+{
+    if (a.params.swizzle == b.params.swizzle)
     {
         for (int i = 0; i < 4; ++i)
         {
-            if (a.bits[i] != b.bits[i])
+            if (a.params.bits[i] != b.params.bits[i])
             {
-                return a.bits[i] < b.bits[i];
+                return a.params.bits[i] < b.params.bits[i];
             }
         }
         return false;
     }
     else
     {
-        return a.swizzle < b.swizzle;
+        return a.params.swizzle < b.params.swizzle;
     }
 }
 
-namespace nv::cv::priv {
+#define STRINGIZE(x) #x
 
-static const std::map<NVCVPacking, NVCVPackingParams> g_paramsToPacking = {
-#define DEF_PACK1(x)                               \
-    {                                              \
-        NVCV_PACKING_X##x,                         \
-        {                                          \
-            NVCV_HOST_ENDIAN, NVCV_SWIZZLE_0000, x \
-        }                                          \
-    }
-
-#define DEF_PACK2(x, y)                               \
-    {                                                 \
-        NVCV_PACKING_X##x##Y##y,                      \
-        {                                             \
-            NVCV_HOST_ENDIAN, NVCV_SWIZZLE_0000, x, y \
-        }                                             \
-    }
-
-#define DEF_PACK3(x, y, z)                               \
-    {                                                    \
-        NVCV_PACKING_X##x##Y##y##Z##z,                   \
-        {                                                \
-            NVCV_HOST_ENDIAN, NVCV_SWIZZLE_0000, x, y, z \
-        }                                                \
-    }
-
-#define DEF_PACK4(x, y, z, w)                               \
-    {                                                       \
-        NVCV_PACKING_X##x##Y##y##Z##z##W##w,                \
-        {                                                   \
-            NVCV_HOST_ENDIAN, NVCV_SWIZZLE_0000, x, y, z, w \
-        }                                                   \
-    }
-
-#define DEF_FIX_PACK2(x, y)                          \
+const std::map<NVCVPacking, PackingData> g_packingToData = {
+#define DEF_PACK1(x)                                 \
     {                                                \
-        NVCV_PACKING_X##x##_Y##y,                    \
+        NVCV_PACKING_X##x,                           \
         {                                            \
-            NVCV_BIG_ENDIAN, NVCV_SWIZZLE_0000, x, y \
+            STRINGIZE(NVCV_PACKING_X##x),            \
+            {                                        \
+                NVCV_ORDER_LSB, NVCV_SWIZZLE_0000, x \
+            }                                        \
         }                                            \
     }
-#define DEF_FIX_PACK3(x, y, z)                          \
+
+#define DEF_PACK2(x, y)                                 \
     {                                                   \
-        NVCV_PACKING_X##x##_Y##y##_Z##z,                \
+        NVCV_PACKING_X##x##Y##y,                        \
         {                                               \
-            NVCV_BIG_ENDIAN, NVCV_SWIZZLE_0000, x, y, z \
+            STRINGIZE(NVCV_PACKING_X##x##Y##y),         \
+            {                                           \
+                NVCV_ORDER_LSB, NVCV_SWIZZLE_0000, x, y \
+            }                                           \
         }                                               \
     }
 
-#define DEF_FIX_PACK4(x, y, z, w)                          \
+#define DEF_PACK3(x, y, z)                                 \
     {                                                      \
-        NVCV_PACKING_X##x##_Y##y##_Z##z##_W##w,            \
+        NVCV_PACKING_X##x##Y##y##Z##z,                     \
         {                                                  \
-            NVCV_BIG_ENDIAN, NVCV_SWIZZLE_0000, x, y, z, w \
+            STRINGIZE(NVCV_PACKING_X##x##Y##y##Z##z),      \
+            {                                              \
+                NVCV_ORDER_LSB, NVCV_SWIZZLE_0000, x, y, z \
+            }                                              \
         }                                                  \
     }
 
-#define DEF_MSB_PACK1(x, bx)                           \
-    {                                                  \
-        NVCV_PACKING_X##x##b##bx,                      \
-        {                                              \
-            NVCV_HOST_ENDIAN, NVCV_SWIZZLE_X000, x, bx \
-        }                                              \
-    }
-
-#define DEF_LSB_PACK1(bx, x)                           \
-    {                                                  \
-        NVCV_PACKING_b##bx##X##x,                      \
-        {                                              \
-            NVCV_HOST_ENDIAN, NVCV_SWIZZLE_Y000, bx, x \
-        }                                              \
-    }
-
-#define DEF_FIX_MSB_PACK2(x, bx, y, by)                      \
-    {                                                        \
-        NVCV_PACKING_X##x##b##bx##_Y##y##b##by,              \
-        {                                                    \
-            NVCV_BIG_ENDIAN, NVCV_SWIZZLE_XZ00, x, bx, y, by \
-        }                                                    \
-    }
-
-#define DEF_FIX_LSB_PACK2(bx, x, by, y)                       \
+#define DEF_PACK4(x, y, z, w)                                 \
     {                                                         \
-        NVCV_PACKING_b##bx##X##x##_Y##y##b##by,               \
+        NVCV_PACKING_X##x##Y##y##Z##z##W##w,                  \
         {                                                     \
-            NVCV_HOST_ENDIAN, NVCV_SWIZZLE_YW00, bx, x, by, y \
+            STRINGIZE(NVCV_PACKING_X##x##Y##y##Z##z##W##w),   \
+            {                                                 \
+                NVCV_ORDER_LSB, NVCV_SWIZZLE_0000, x, y, z, w \
+            }                                                 \
         }                                                     \
     }
 
-#define DEF_LSB_PACK3(bx, x, y, z)                           \
-    {                                                        \
-        NVCV_PACKING_b##bx##X##x##Y##y##Z##z,                \
-        {                                                    \
-            NVCV_HOST_ENDIAN, NVCV_SWIZZLE_YZW0, bx, x, y, z \
-        }                                                    \
+#define DEF_FIX_PACK2(x, y)                             \
+    {                                                   \
+        NVCV_PACKING_X##x##_Y##y,                       \
+        {                                               \
+            STRINGIZE(NVCV_PACKING_X##x##_Y##y),        \
+            {                                           \
+                NVCV_ORDER_MSB, NVCV_SWIZZLE_0000, x, y \
+            }                                           \
+        }                                               \
+    }
+#define DEF_FIX_PACK3(x, y, z)                             \
+    {                                                      \
+        NVCV_PACKING_X##x##_Y##y##_Z##z,                   \
+        {                                                  \
+            STRINGIZE(NVCV_PACKING_X##x##_Y##y##_Z##z),    \
+            {                                              \
+                NVCV_ORDER_MSB, NVCV_SWIZZLE_0000, x, y, z \
+            }                                              \
+        }                                                  \
+    }
+
+#define DEF_FIX_PACK4(x, y, z, w)                              \
+    {                                                          \
+        NVCV_PACKING_X##x##_Y##y##_Z##z##_W##w,                \
+        {                                                      \
+            STRINGIZE(NVCV_PACKING_X##x##_Y##y##_Z##z##_W##w), \
+            {                                                  \
+                NVCV_ORDER_MSB, NVCV_SWIZZLE_0000, x, y, z, w  \
+            }                                                  \
+        }                                                      \
+    }
+
+#define DEF_MSB_PACK1(x, bx)                             \
+    {                                                    \
+        NVCV_PACKING_X##x##b##bx,                        \
+        {                                                \
+            STRINGIZE(NVCV_PACKING_X##x##b##bx),         \
+            {                                            \
+                NVCV_ORDER_MSB, NVCV_SWIZZLE_X000, x, bx \
+            }                                            \
+        }                                                \
+    }
+
+#define DEF_LSB_PACK1(bx, x)                             \
+    {                                                    \
+        NVCV_PACKING_b##bx##X##x,                        \
+        {                                                \
+            STRINGIZE(NVCV_PACKING_b##bx##X##x),         \
+            {                                            \
+                NVCV_ORDER_LSB, NVCV_SWIZZLE_Y000, bx, x \
+            }                                            \
+        }                                                \
+    }
+
+#define DEF_FIX_MSB_PACK2(x, bx, y, by)                         \
+    {                                                           \
+        NVCV_PACKING_X##x##b##bx##_Y##y##b##by,                 \
+        {                                                       \
+            STRINGIZE(NVCV_PACKING_X##x##b##bx##_Y##y##b##by),  \
+            {                                                   \
+                NVCV_ORDER_MSB, NVCV_SWIZZLE_XZ00, x, bx, y, by \
+            }                                                   \
+        }                                                       \
+    }
+
+#define DEF_FIX_LSB_PACK2(bx, x, by, y)                         \
+    {                                                           \
+        NVCV_PACKING_b##bx##X##x##_Y##y##b##by,                 \
+        {                                                       \
+            STRINGIZE(NVCV_PACKING_b##bx##X##x##_Y##y##b##by),  \
+            {                                                   \
+                NVCV_ORDER_LSB, NVCV_SWIZZLE_YW00, bx, x, by, y \
+            }                                                   \
+        }                                                       \
+    }
+
+#define DEF_LSB_PACK3(bx, x, y, z)                             \
+    {                                                          \
+        NVCV_PACKING_b##bx##X##x##Y##y##Z##z,                  \
+        {                                                      \
+            STRINGIZE(NVCV_PACKING_b##bx##X##x##Y##y##Z##z),   \
+            {                                                  \
+                NVCV_ORDER_LSB, NVCV_SWIZZLE_YZW0, bx, x, y, z \
+            }                                                  \
+        }                                                      \
+    }
+
+#define DEF_MSB_PACK3(x, y, z, bz)                             \
+    {                                                          \
+        NVCV_PACKING_X##x##Y##y##Z##z##b##bz,                  \
+        {                                                      \
+            STRINGIZE(NVCV_PACKING_b##bx##X##x##Y##y##Z##z),   \
+            {                                                  \
+                NVCV_ORDER_MSB, NVCV_SWIZZLE_XYZ0, x, y, z, bz \
+            }                                                  \
+        }                                                      \
     }
 
     DEF_PACK1(1),
@@ -155,6 +212,9 @@ static const std::map<NVCVPacking, NVCVPackingParams> g_paramsToPacking = {
     DEF_PACK1(4),
 
     DEF_PACK1(8),
+    DEF_LSB_PACK1(4, 4),
+    DEF_MSB_PACK1(4, 4),
+
     DEF_PACK2(4, 4),
     DEF_PACK3(3, 3, 2),
 
@@ -163,6 +223,7 @@ static const std::map<NVCVPacking, NVCVPackingParams> g_paramsToPacking = {
     DEF_LSB_PACK1(6, 10),
     DEF_MSB_PACK1(10, 6),
     DEF_LSB_PACK1(2, 14),
+    DEF_MSB_PACK1(14, 2),
     DEF_MSB_PACK1(12, 4),
     DEF_LSB_PACK1(4, 12),
     DEF_PACK3(5, 5, 6),
@@ -179,7 +240,10 @@ static const std::map<NVCVPacking, NVCVPackingParams> g_paramsToPacking = {
 
     DEF_PACK1(32),
     DEF_FIX_PACK2(16, 16),
+    DEF_MSB_PACK1(20, 12),
     DEF_LSB_PACK1(12, 20),
+    DEF_MSB_PACK1(24, 8),
+    DEF_LSB_PACK1(8, 24),
     DEF_PACK3(10, 11, 11),
     DEF_PACK3(11, 11, 10),
     DEF_PACK4(2, 10, 10, 10),
@@ -187,6 +251,9 @@ static const std::map<NVCVPacking, NVCVPackingParams> g_paramsToPacking = {
     DEF_FIX_MSB_PACK2(10, 6, 10, 6),
     DEF_PACK4(10, 10, 10, 2),
     DEF_FIX_MSB_PACK2(12, 4, 12, 4),
+
+    DEF_LSB_PACK3(2, 10, 10, 10),
+    DEF_MSB_PACK3(10, 10, 10, 2),
 
     DEF_PACK1(48),
     DEF_FIX_PACK3(16, 16, 16),
@@ -213,25 +280,28 @@ static const std::map<NVCVPacking, NVCVPackingParams> g_paramsToPacking = {
 // mark them with clang-format off
 // clang-format off
 #define CLANGFORMAT_WAR                                                             \
-    {NVCV_PACKING_0,            {NVCV_HOST_ENDIAN, NVCV_SWIZZLE_0000}},          \
-    {NVCV_PACKING_X8_Y8__X8_Z8, {NVCV_BIG_ENDIAN,  NVCV_SWIZZLE_XYXZ, 8, 8, 8, 8}}, \
-    {NVCV_PACKING_Y8_X8__Z8_X8, {NVCV_BIG_ENDIAN,  NVCV_SWIZZLE_YXZX, 8, 8, 8, 8}}, \
-    {NVCV_PACKING_X5Y5b1Z5,     {NVCV_HOST_ENDIAN, NVCV_SWIZZLE_XYW0, 5, 5, 1, 5}}
+    {NVCV_PACKING_0,            {"NVCV_PACKING_0",            {NVCV_ORDER_LSB, NVCV_SWIZZLE_0000}}},          \
+    {NVCV_PACKING_X8_Y8__X8_Z8, {"NVCV_PACKING_X8_Y8__X8_Z8", {NVCV_ORDER_MSB,  NVCV_SWIZZLE_XYXZ, 8, 8, 8, 8}}}, \
+    {NVCV_PACKING_Y8_X8__Z8_X8, {"NVCV_PACKING_Y8_X8__Z8_X8", {NVCV_ORDER_MSB,  NVCV_SWIZZLE_YXZX, 8, 8, 8, 8}}}, \
+    {NVCV_PACKING_X5Y5b1Z5,     {"NVCV_PACKING_X5Y5b1Z5",     {NVCV_ORDER_LSB, NVCV_SWIZZLE_XYW0, 5, 5, 1, 5}}}, \
+    {NVCV_PACKING_X32_Y24b8,     {"NVCV_PACKING_X32_Y24b8",     {NVCV_ORDER_MSB, NVCV_SWIZZLE_XY00, 32, 24, 8, 0}}}
     CLANGFORMAT_WAR,
     // clang-format on
 };
 
-static const std::map<NVCVPackingParams, NVCVPacking> g_packingToParams = []
+const std::map<PackingData, NVCVPacking> g_dataToPacking = []
 {
-    std::map<NVCVPackingParams, NVCVPacking> map;
+    std::map<PackingData, NVCVPacking> map;
 
-    for (const auto &item : g_paramsToPacking)
+    for (const auto &item : g_packingToData)
     {
         map.emplace(item.second, item.first);
     }
 
     return map;
 }();
+
+} // namespace
 
 std::optional<NVCVPacking> MakeNVCVPacking(int bitsX, int bitsY, int bitsZ, int bitsW) noexcept
 {
@@ -291,22 +361,23 @@ static NVCVSwizzle MakeNVCVSwizzleFromBits(const int (&bits)[4])
 
 std::optional<NVCVPacking> MakeNVCVPacking(const NVCVPackingParams &params) noexcept
 {
-    NVCVPackingParams key = params;
+    PackingData key;
+    key.params = params;
 
     // Normalize swizzle
-    if (key.swizzle != NVCV_SWIZZLE_XYXZ && key.swizzle != NVCV_SWIZZLE_YXZX && !IsSubWord(key))
+    if (key.params.swizzle != NVCV_SWIZZLE_XYXZ && key.params.swizzle != NVCV_SWIZZLE_YXZX && !IsSubWord(key.params))
     {
-        key.swizzle = NVCV_SWIZZLE_0000;
+        key.params.swizzle = NVCV_SWIZZLE_0000;
     }
 
-    auto it = g_packingToParams.find(key);
-    if (it != g_packingToParams.end())
+    auto it = g_dataToPacking.find(key);
+    if (it != g_dataToPacking.end())
     {
         // if 0 or one channel, packing is both host and big endian, so don't need to filter out.
         if (GetNumChannels(params.swizzle) >= 2)
         {
             // Endian don't match?
-            if (it->first.endianness != params.endianness)
+            if (it->first.params.byteOrder != params.byteOrder)
             {
                 return std::nullopt;
             }
@@ -316,7 +387,7 @@ std::optional<NVCVPacking> MakeNVCVPacking(const NVCVPackingParams &params) noex
         if (params.swizzle != NVCV_SWIZZLE_0000)
         {
             // If our swizzle is not specified, let's reconstruct it from bits
-            NVCVSwizzle sw = it->first.swizzle;
+            NVCVSwizzle sw = it->first.params.swizzle;
             if (sw == NVCV_SWIZZLE_0000)
             {
                 sw = MakeNVCVSwizzleFromBits(params.bits);
@@ -334,6 +405,19 @@ std::optional<NVCVPacking> MakeNVCVPacking(const NVCVPackingParams &params) noex
     else
     {
         return std::nullopt;
+    }
+}
+
+const char *ToString(NVCVPacking packing)
+{
+    auto it = g_packingToData.find(packing);
+    if (it != g_packingToData.end())
+    {
+        return it->second.name;
+    }
+    else
+    {
+        return "NVCV_PACKING_INVALID";
     }
 }
 
@@ -368,10 +452,10 @@ bool IsSubWord(const NVCVPackingParams &p)
 
 NVCVPackingParams GetPackingParams(NVCVPacking packing) noexcept
 {
-    auto it = g_paramsToPacking.find(packing);
-    NVCV_ASSERT(it != g_paramsToPacking.end());
+    auto it = g_packingToData.find(packing);
+    NVCV_ASSERT(it != g_packingToData.end());
 
-    NVCVPackingParams params = it->second;
+    NVCVPackingParams params = it->second.params;
     if (params.swizzle == NVCV_SWIZZLE_0000)
     {
         params.swizzle = MakeNVCVSwizzleFromBits(params.bits);
@@ -650,7 +734,7 @@ NVCVSwizzle MergePlaneSwizzles(NVCVSwizzle sw0, NVCVSwizzle sw1, NVCVSwizzle sw2
     return MakeNVCVSwizzle(swResult[0], swResult[1], swResult[2], swResult[3]);
 }
 
-NVCVSwizzle FlipEndianness(NVCVSwizzle swizzle, int off, int len) noexcept
+NVCVSwizzle FlipByteOrder(NVCVSwizzle swizzle, int off, int len) noexcept
 {
     // there's nothing to flip for 0 or 1 channels.
     if (len <= 1)
@@ -663,7 +747,7 @@ NVCVSwizzle FlipEndianness(NVCVSwizzle swizzle, int off, int len) noexcept
     NVCV_ASSERT(off >= 0);
     NVCV_ASSERT(off + len <= 4);
 
-    // Flipping endianness must occur at memory space, not component space.
+    // Flipping byteOrder must occur at memory space, not component space.
     // So first map swizzle to memory space, i.e., sort components in order
     // they will show up in memory, from lowest address to highest.
 
