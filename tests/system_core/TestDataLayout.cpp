@@ -323,6 +323,9 @@ const std::vector<PackingTestParams> g_packingParams = {
     DEF_FIX_PACK1(4),
 
     DEF_PACK1(8),
+    DEF_LSB_PACK1(4, 4),
+    DEF_MSB_PACK1(4, 4),
+
     DEF_FIX_PACK1(8),
     DEF_PACK2(4, 4),
     DEF_PACK3(3, 3, 2),
@@ -333,6 +336,7 @@ const std::vector<PackingTestParams> g_packingParams = {
     DEF_LSB_PACK1(6, 10),
     DEF_MSB_PACK1(10, 6),
     DEF_LSB_PACK1(2, 14),
+    DEF_MSB_PACK1(14, 2),
     DEF_MSB_PACK1(12, 4),
     DEF_LSB_PACK1(4, 12),
     DEF_PACK3(5, 5, 6),
@@ -600,12 +604,15 @@ TEST(PackingTests, valid_values)
     testPacking(NVCV_PACKING_b4X12, {4, 12}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_Y000);
     testPacking(NVCV_PACKING_b12X20, {12, 20}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_Y000);
     testPacking(NVCV_PACKING_b6X10, {6, 10}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_Y000);
+    testPacking(NVCV_PACKING_X14b2, {14, 2}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_X000);
     testPacking(NVCV_PACKING_b2X14, {2, 14}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_Y000);
     testPacking(NVCV_PACKING_X10b6_Y10b6, {10, 6, 10, 6}, NVCV_BIG_ENDIAN, NVCV_SWIZZLE_XZ00);
     testPacking(NVCV_PACKING_X12b4_Y12b4, {12, 4, 12, 4}, NVCV_BIG_ENDIAN, NVCV_SWIZZLE_XZ00);
     testPacking(NVCV_PACKING_b4X4Y4Z4, {4, 4, 4, 4}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_YZW0);
     testPacking(NVCV_PACKING_b1X5Y5Z5, {1, 5, 5, 5}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_YZW0);
     testPacking(NVCV_PACKING_X5Y5b1Z5, {5, 5, 1, 5}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_XYW0);
+    testPacking(NVCV_PACKING_X4b4, {4, 4}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_X000);
+    testPacking(NVCV_PACKING_b4X4, {4, 4}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_Y000);
 
     EXPECT_TRUE(packingList.empty());
 

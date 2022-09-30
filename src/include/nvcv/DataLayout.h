@@ -99,10 +99,17 @@ typedef enum
     NVCV_PACKING_X2 = NVCV_DETAIL_BPP_NCH(2, 1),
     /** One 4-bit channel. */
     NVCV_PACKING_X4 = NVCV_DETAIL_BPP_NCH(4, 1),
+
     /** One 8-bit channel. */
     NVCV_PACKING_X8 = NVCV_DETAIL_BPP_NCH(8, 1),
-    /** Two 4-bit channels in one word. */
+    /** One LSB 4-bit channel in a 8-bit word */
+    NVCV_PACKING_b4X4,
+    /** One MSB 4-bit channel in a 8-bit word */
+    NVCV_PACKING_X4b4,
+
+    /** Two 4-bit channels in one 8-bit word. */
     NVCV_PACKING_X4Y4 = NVCV_DETAIL_BPP_NCH(8, 2),
+
     /** Three 3-, 3- and 2-bit channels in one 8-bit word. */
     NVCV_PACKING_X3Y3Z2 = NVCV_DETAIL_BPP_NCH(8, 3),
 
@@ -118,6 +125,8 @@ typedef enum
     NVCV_PACKING_X12b4,
     /** One LSB 14-bit channel in one 16-bit word. */
     NVCV_PACKING_b2X14,
+    /** One MSB 14-bit channel in one 16-bit word. */
+    NVCV_PACKING_X14b2,
 
     /** Two 8-bit channels in two 8-bit words. */
     NVCV_PACKING_X8_Y8 = NVCV_DETAIL_BPP_NCH(16, 2),

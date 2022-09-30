@@ -201,6 +201,9 @@ const std::map<NVCVPacking, PackingData> g_packingToData = {
     DEF_PACK1(4),
 
     DEF_PACK1(8),
+    DEF_LSB_PACK1(4, 4),
+    DEF_MSB_PACK1(4, 4),
+
     DEF_PACK2(4, 4),
     DEF_PACK3(3, 3, 2),
 
@@ -209,6 +212,7 @@ const std::map<NVCVPacking, PackingData> g_packingToData = {
     DEF_LSB_PACK1(6, 10),
     DEF_MSB_PACK1(10, 6),
     DEF_LSB_PACK1(2, 14),
+    DEF_MSB_PACK1(14, 2),
     DEF_MSB_PACK1(12, 4),
     DEF_LSB_PACK1(4, 12),
     DEF_PACK3(5, 5, 6),
