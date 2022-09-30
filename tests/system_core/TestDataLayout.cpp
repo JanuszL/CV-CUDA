@@ -266,12 +266,12 @@ class PackingTests : public t::TestWithParam<PackingTestParams>
         }                                                     \
     }
 
-#define DEF_MSB_PACK1(x, bx)                           \
-    {                                                  \
-        NVCV_PACKING_X##x##b##bx, {x},                 \
-        {                                              \
-            NVCV_HOST_ENDIAN, NVCV_SWIZZLE_X000, x, bx \
-        }                                              \
+#define DEF_MSB_PACK1(x, bx)                          \
+    {                                                 \
+        NVCV_PACKING_X##x##b##bx, {x},                \
+        {                                             \
+            NVCV_BIG_ENDIAN, NVCV_SWIZZLE_X000, x, bx \
+        }                                             \
     }
 
 #define DEF_LSB_PACK1(bx, x)                           \
@@ -599,19 +599,19 @@ TEST(PackingTests, valid_values)
 
     testPacking(NVCV_PACKING_X8_Y8__X8_Z8, {8, 8, 8, 8}, NVCV_BIG_ENDIAN, NVCV_SWIZZLE_XYXZ);
     testPacking(NVCV_PACKING_Y8_X8__Z8_X8, {8, 8, 8, 8}, NVCV_BIG_ENDIAN, NVCV_SWIZZLE_YXZX);
-    testPacking(NVCV_PACKING_X12b4, {12, 4}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_X000);
-    testPacking(NVCV_PACKING_X10b6, {10, 6}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_X000);
+    testPacking(NVCV_PACKING_X12b4, {12, 4}, NVCV_BIG_ENDIAN, NVCV_SWIZZLE_X000);
+    testPacking(NVCV_PACKING_X10b6, {10, 6}, NVCV_BIG_ENDIAN, NVCV_SWIZZLE_X000);
     testPacking(NVCV_PACKING_b4X12, {4, 12}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_Y000);
     testPacking(NVCV_PACKING_b12X20, {12, 20}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_Y000);
     testPacking(NVCV_PACKING_b6X10, {6, 10}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_Y000);
-    testPacking(NVCV_PACKING_X14b2, {14, 2}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_X000);
+    testPacking(NVCV_PACKING_X14b2, {14, 2}, NVCV_BIG_ENDIAN, NVCV_SWIZZLE_X000);
     testPacking(NVCV_PACKING_b2X14, {2, 14}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_Y000);
     testPacking(NVCV_PACKING_X10b6_Y10b6, {10, 6, 10, 6}, NVCV_BIG_ENDIAN, NVCV_SWIZZLE_XZ00);
     testPacking(NVCV_PACKING_X12b4_Y12b4, {12, 4, 12, 4}, NVCV_BIG_ENDIAN, NVCV_SWIZZLE_XZ00);
     testPacking(NVCV_PACKING_b4X4Y4Z4, {4, 4, 4, 4}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_YZW0);
     testPacking(NVCV_PACKING_b1X5Y5Z5, {1, 5, 5, 5}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_YZW0);
     testPacking(NVCV_PACKING_X5Y5b1Z5, {5, 5, 1, 5}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_XYW0);
-    testPacking(NVCV_PACKING_X4b4, {4, 4}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_X000);
+    testPacking(NVCV_PACKING_X4b4, {4, 4}, NVCV_BIG_ENDIAN, NVCV_SWIZZLE_X000);
     testPacking(NVCV_PACKING_b4X4, {4, 4}, NVCV_HOST_ENDIAN, NVCV_SWIZZLE_Y000);
 
     EXPECT_TRUE(packingList.empty());

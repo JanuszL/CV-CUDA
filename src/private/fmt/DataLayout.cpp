@@ -139,15 +139,15 @@ const std::map<NVCVPacking, PackingData> g_packingToData = {
         }                                                      \
     }
 
-#define DEF_MSB_PACK1(x, bx)                               \
-    {                                                      \
-        NVCV_PACKING_X##x##b##bx,                          \
-        {                                                  \
-            STRINGIZE(NVCV_PACKING_X##x##b##bx),           \
-            {                                              \
-                NVCV_HOST_ENDIAN, NVCV_SWIZZLE_X000, x, bx \
-            }                                              \
-        }                                                  \
+#define DEF_MSB_PACK1(x, bx)                              \
+    {                                                     \
+        NVCV_PACKING_X##x##b##bx,                         \
+        {                                                 \
+            STRINGIZE(NVCV_PACKING_X##x##b##bx),          \
+            {                                             \
+                NVCV_BIG_ENDIAN, NVCV_SWIZZLE_X000, x, bx \
+            }                                             \
+        }                                                 \
     }
 
 #define DEF_LSB_PACK1(bx, x)                               \
