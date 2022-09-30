@@ -54,6 +54,8 @@ NVCVSwizzle MergePlaneSwizzles(NVCVSwizzle sw0, NVCVSwizzle sw1 = NVCV_SWIZZLE_0
 // restrict the flipping only to these components alone.
 NVCVSwizzle FlipEndianness(NVCVSwizzle swizzle, int off = 0, int len = 4) noexcept;
 
+const char *ToString(NVCVPacking packing);
+
 } // namespace nv::cv::priv
 
 #endif // NVCV_PRIV_DATA_LAYOUT_HPP

@@ -156,9 +156,9 @@ struct PackingTestParams
 
     friend std::ostream &operator<<(std::ostream &out, const PackingTestParams &p)
     {
-        out << p.params.endianness << ",";
-        out << p.packing;
-        out << p.params.swizzle;
+        out << p.params.endianness;
+        out << ',' << p.packing;
+        out << ',' << p.params.swizzle;
         out << ",X" << p.params.bits[0];
         out << ",Y" << p.params.bits[1];
         out << ",Z" << p.params.bits[2];
