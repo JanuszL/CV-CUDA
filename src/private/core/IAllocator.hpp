@@ -44,6 +44,9 @@ private:
     virtual void  doFreeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept = 0;
 };
 
+priv::IAllocator &GetAllocator(NVCVAllocator handle);
+priv::IAllocator &GetDefaultAllocator();
+
 } // namespace nv::cv::priv
 
 #endif // NVCV_PRIV_CORE_IALLOCATOR_HPP
