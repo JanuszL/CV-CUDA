@@ -42,7 +42,8 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageCreate,
 }
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageCreateWrapData,
-                (const NVCVImageData *data, NVCVAllocator halloc, NVCVImage *handle))
+                (const NVCVImageData *data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup, NVCVAllocator halloc,
+                 NVCVImage *handle))
 {
     return priv::ProtectCall(
         [&]
@@ -58,7 +59,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageCreateWrapData,
 
             if (data)
             {
-                obj = AllocHostObj<priv::ImageWrapData>(alloc, *data, alloc);
+                obj = AllocHostObj<priv::ImageWrapData>(alloc, *data, cleanup, ctxCleanup, alloc);
             }
             else
             {
@@ -169,20 +170,25 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageExportData, (NVCVImage handle, NVCVIm
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageWrapSetData, (NVCVImage himg, const NVCVImageData *data))
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageWrapResetData, (NVCVImage himg, const NVCVImageData *data))
 {
     return priv::ProtectCall(
         [&]
         {
             auto &img = priv::ToDynamicRef<priv::IImageWrapData>(himg);
 
-            if (data != nullptr)
-            {
-                img.setData(*data);
-            }
-            else
-            {
-                img.resetData();
-            }
+            img.setData(data);
+        });
+}
+
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageWrapResetDataAndCleanup,
+                (NVCVImage himg, const NVCVImageData *data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            auto &img = priv::ToDynamicRef<priv::IImageWrapData>(himg);
+
+            img.setDataAndCleanup(data, cleanup, ctxCleanup);
         });
 }

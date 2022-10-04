@@ -110,21 +110,11 @@ typedef union NVCVImageBufferRec
 // Forward declaration
 typedef struct NVCVImageDataRec NVCVImageData;
 
-/** Image data cleanup function type */
-typedef void (*NVCVImageDataCleanupFunc)(NVCVImageData *data);
-
 /** Stores information about image characteristics and content. */
 typedef struct NVCVImageDataRec
 {
     /** Image format. */
     NVCVImageFormat format;
-
-    /** Image data cleanup function
-     * If not NULL, it'll be called when the NVCVImage container that holds
-     * the image data is destroyed.
-     * When wrapping external image data, it allows for transfer of ownership
-     * to the NVCVImage object. */
-    NVCVImageDataCleanupFunc cleanup;
 
     /** Type of image buffer.
      *  It defines which member of the \ref NVCVImageBuffer tagged union that

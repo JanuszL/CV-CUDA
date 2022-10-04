@@ -24,7 +24,7 @@ class ImageDataCudaArray final : public IImageDataCudaArray
 public:
     using Buffer = NVCVImageBufferCudaArray;
 
-    explicit ImageDataCudaArray(ImageFormat format, const Buffer &data, NVCVImageDataCleanupFunc cleanup = nullptr);
+    explicit ImageDataCudaArray(ImageFormat format, const Buffer &data);
 
 private:
     NVCVImageData m_data;
@@ -41,7 +41,7 @@ class ImageDataDevicePitch final : public IImageDataDevicePitch
 public:
     using Buffer = NVCVImageBufferPitch;
 
-    explicit ImageDataDevicePitch(ImageFormat format, const Buffer &data, NVCVImageDataCleanupFunc cleanup = nullptr);
+    explicit ImageDataDevicePitch(ImageFormat format, const Buffer &data);
 
 private:
     NVCVImageData m_data;
@@ -56,10 +56,9 @@ private:
 };
 
 // ImageDataBlock implementation -----------------------
-inline ImageDataCudaArray::ImageDataCudaArray(ImageFormat format, const Buffer &data, NVCVImageDataCleanupFunc cleanup)
+inline ImageDataCudaArray::ImageDataCudaArray(ImageFormat format, const Buffer &data)
 {
     m_data.format           = format;
-    m_data.cleanup          = cleanup;
     m_data.bufferType       = NVCV_IMAGE_BUFFER_CUDA_ARRAY;
     m_data.buffer.cudaarray = data;
 }
@@ -85,11 +84,9 @@ inline const NVCVImageData &ImageDataCudaArray::doGetCData() const
 }
 
 // ImageDataDevicePitch implementation -----------------------
-inline ImageDataDevicePitch::ImageDataDevicePitch(ImageFormat format, const Buffer &data,
-                                                  NVCVImageDataCleanupFunc cleanup)
+inline ImageDataDevicePitch::ImageDataDevicePitch(ImageFormat format, const Buffer &data)
 {
     m_data.format       = format;
-    m_data.cleanup      = cleanup;
     m_data.bufferType   = NVCV_IMAGE_BUFFER_DEVICE_PITCH;
     m_data.buffer.pitch = data;
 }

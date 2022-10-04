@@ -47,7 +47,10 @@ class ImageWrapData final : public IImageWrapData
 public:
     explicit ImageWrapData(IAllocator &alloc);
 
-    explicit ImageWrapData(const NVCVImageData &data, IAllocator &alloc);
+    explicit ImageWrapData(const NVCVImageData &data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup,
+                           IAllocator &alloc);
+
+    ~ImageWrapData();
 
     Size2D        size() const override;
     ImageFormat   format() const override;
@@ -56,14 +59,19 @@ public:
 
     void exportData(NVCVImageData &data) const override;
 
-    void setData(const NVCVImageData &data) override;
-    void resetData() override;
+    void setData(const NVCVImageData *data) override;
+    void setDataAndCleanup(const NVCVImageData *data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup) override;
 
 private:
     NVCVImageData m_data;
     IAllocator   &m_alloc;
 
+    NVCVImageDataCleanupFunc m_cleanup;
+    void                    *m_ctxCleanup;
+
     Version doGetVersion() const override;
+
+    void doCleanup() noexcept;
 
     void doValidateData(const NVCVImageData &data) const;
 };

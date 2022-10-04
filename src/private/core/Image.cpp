@@ -94,17 +94,27 @@ void Image::exportData(NVCVImageData &data) const
 
 ImageWrapData::ImageWrapData(IAllocator &alloc)
     : m_alloc(alloc)
+    , m_cleanup(nullptr)
+    , m_ctxCleanup(nullptr)
 {
     m_data.bufferType = NVCV_IMAGE_BUFFER_NONE;
     m_data.format     = NVCV_IMAGE_FORMAT_NONE;
 }
 
-ImageWrapData::ImageWrapData(const NVCVImageData &data, IAllocator &alloc)
+ImageWrapData::ImageWrapData(const NVCVImageData &data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup,
+                             IAllocator &alloc)
     : m_alloc(alloc)
+    , m_cleanup(cleanup)
+    , m_ctxCleanup(ctxCleanup)
 {
     doValidateData(data);
 
     m_data = data;
+}
+
+ImageWrapData::~ImageWrapData()
+{
+    doCleanup();
 }
 
 void ImageWrapData::doValidateData(const NVCVImageData &data) const
@@ -195,16 +205,41 @@ Version ImageWrapData::doGetVersion() const
     return CURRENT_VERSION;
 }
 
-void ImageWrapData::setData(const NVCVImageData &data)
+void ImageWrapData::setData(const NVCVImageData *data)
 {
-    doValidateData(data);
-    m_data = data;
+    if (data)
+    {
+        doValidateData(*data);
+    }
+
+    doCleanup();
+
+    if (data)
+    {
+        m_data = *data;
+    }
+    else
+    {
+        m_data            = {}; // safety
+        m_data.bufferType = NVCV_IMAGE_BUFFER_NONE;
+        m_data.format     = NVCV_IMAGE_FORMAT_NONE;
+    }
 }
 
-void ImageWrapData::resetData()
+void ImageWrapData::setDataAndCleanup(const NVCVImageData *data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup)
 {
-    m_data.bufferType = NVCV_IMAGE_BUFFER_NONE;
-    m_data.format     = NVCV_IMAGE_FORMAT_NONE;
+    this->setData(data);
+
+    m_cleanup    = cleanup;
+    m_ctxCleanup = ctxCleanup;
+}
+
+void ImageWrapData::doCleanup() noexcept
+{
+    if (m_cleanup && m_data.bufferType != NVCV_IMAGE_BUFFER_NONE)
+    {
+        m_cleanup(m_ctxCleanup, &m_data);
+    }
 }
 
 } // namespace nv::cv::priv

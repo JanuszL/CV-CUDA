@@ -39,8 +39,8 @@ public:
 class IImageWrapData : public IImage
 {
 public:
-    virtual void setData(const NVCVImageData &data) = 0;
-    virtual void resetData()                        = 0;
+    virtual void setData(const NVCVImageData *data)                                                               = 0;
+    virtual void setDataAndCleanup(const NVCVImageData *data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup) = 0;
 };
 
 } // namespace nv::cv::priv

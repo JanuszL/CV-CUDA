@@ -105,7 +105,7 @@ TEST(Image, wip_create_managed)
 
 TEST(ImageWrapData, wip_create_empty)
 {
-    nvcv::ImageWrapData img;
+    nvcv::ImageWrapData img(nullptr);
 
     EXPECT_EQ(nvcv::Size2D(0, 0), img.size());
     EXPECT_EQ(nvcv::FMT_NONE, img.format());
@@ -189,7 +189,7 @@ TEST(ImageWrapData, wip_set_data)
 
     nvcv::ImageWrapData img;
 
-    img.setData(nvcv::ImageDataDevicePitch{nvcv::FMT_U8, buf});
+    img.resetData(nvcv::ImageDataDevicePitch{nvcv::FMT_U8, buf});
 
     EXPECT_EQ(nvcv::Size2D(173, 79), img.size());
     EXPECT_EQ(nvcv::FMT_U8, img.format());
@@ -249,6 +249,55 @@ TEST(Image, wip_operator)
         cudaMemcpy2D(outPlane.buffer, outPlane.pitchBytes, inPlane.buffer, inPlane.pitchBytes,
                      (inData->format().planeBitsPerPixel(p) + 7) / 8 * inPlane.width, inPlane.height,
                      cudaMemcpyDeviceToDevice);
+    }
+}
+
+TEST(ImageWrapData, wip_cleanup)
+{
+    nvcv::ImageDataDevicePitch::Buffer buf;
+    buf.numPlanes            = 1;
+    buf.planes[0].width      = 173;
+    buf.planes[0].height     = 79;
+    buf.planes[0].pitchBytes = 190;
+    buf.planes[0].buffer     = reinterpret_cast<void *>(678);
+
+    int  cleanupCalled[2] = {};
+    auto cleanup0         = [&cleanupCalled](const nvcv::IImageData &data)
+    {
+        ++cleanupCalled[0];
+    };
+
+    auto cleanup1 = [&cleanupCalled](const nvcv::IImageData &data)
+    {
+        ++cleanupCalled[1];
+    };
+
+    {
+        nvcv::ImageWrapData img(nvcv::ImageDataDevicePitch{nvcv::FMT_U8, buf}, cleanup0);
+        EXPECT_EQ(0, cleanupCalled[0]);
+    }
+    EXPECT_EQ(1, cleanupCalled[0]) << "Cleanup must have been called when img got destroyed";
+
+    {
+        cleanupCalled[0] = 0;
+        nvcv::ImageWrapData img(nvcv::ImageDataDevicePitch{nvcv::FMT_U8, buf}, cleanup0);
+
+        img.resetDataAndCleanup(nvcv::ImageDataDevicePitch{nvcv::FMT_U8, buf}, cleanup1);
+        EXPECT_EQ(1, cleanupCalled[0]) << "Current cleanup must have been called";
+
+        EXPECT_EQ(0, cleanupCalled[1]) << "New cleanup must NOT have been called";
+
+        img.resetData();
+
+        EXPECT_EQ(1, cleanupCalled[1]) << "New cleanup must have been called after reset data";
+
+        img.resetData(nvcv::ImageDataDevicePitch{nvcv::FMT_U8, buf});
+
+        EXPECT_EQ(1, cleanupCalled[1]) << "New cleanup must NOT have been called when data is empty";
+
+        img.resetData();
+        EXPECT_EQ(2, cleanupCalled[1])
+            << "New cleanup must have been called when data isn't empty and cleanup wasn't redefined";
     }
 }
 
