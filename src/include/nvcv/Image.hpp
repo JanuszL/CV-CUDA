@@ -80,6 +80,26 @@ private:
     IAllocator       &doGetAlloc() const override;
 };
 
+// ImageWrapData definition -------------------------------------
+// Image that wraps an image data allocated outside cv-cuda
+class ImageWrapData final
+    : public IImageWrapData
+    , private ImageWrapHandle
+{
+public:
+    explicit ImageWrapData(IAllocator *alloc = nullptr);
+    explicit ImageWrapData(const IImageData &data, IAllocator *alloc = nullptr);
+    ~ImageWrapData();
+
+private:
+    IAllocator *m_alloc;
+
+    void              doSetData(const IImageData &data) override;
+    void              doResetData() override;
+    IAllocator       &doGetAlloc() const override;
+    const IImageData *doExportData() const override;
+};
+
 // ImageWrapHandle implementation -------------------------------------
 
 inline ImageWrapHandle::ImageWrapHandle(const ImageWrapHandle &that)
@@ -210,6 +230,78 @@ inline const IImageData *Image::doExportData() const
     else
     {
         return ImageWrapHandle::doExportData();
+    }
+}
+
+// ImageWrapData implementation -------------------------------------
+
+inline ImageWrapData::ImageWrapData(IAllocator *alloc)
+    : ImageWrapHandle(
+        [&]
+        {
+            NVCVImage himg;
+            detail::CheckThrow(nvcvImageCreateWrapData(nullptr, alloc ? alloc->handle() : nullptr, &himg));
+            return himg;
+        }())
+    , m_alloc(alloc)
+{
+}
+
+inline ImageWrapData::ImageWrapData(const IImageData &data, IAllocator *alloc)
+    : ImageWrapHandle(
+        [&]
+        {
+            NVCVImage himg;
+            detail::CheckThrow(nvcvImageCreateWrapData(&data.cdata(), alloc ? alloc->handle() : nullptr, &himg));
+            return himg;
+        }())
+    , m_alloc(alloc)
+{
+}
+
+inline ImageWrapData::~ImageWrapData()
+{
+    // TODO: we're destroying the VPIImage *before* ImageWrapHandle is
+    // destroyed, which isn't advisable. But since we know its destructor won't
+    // touch the handle, it's ok, or else we'd have to use some sort of
+    // base-from-member idiom to get the destruction order right.
+    nvcvImageDestroy(ImageWrapHandle::doGetHandle());
+}
+
+inline const IImageData *ImageWrapData::doExportData() const
+{
+    // Export data already fetched?
+    if (m_ptrData != nullptr)
+    {
+        // export data of an Image object is immutable (both buffer and
+        // metadata), so we can just return here what we previously fetched.
+        return m_ptrData;
+    }
+    else
+    {
+        return ImageWrapHandle::doExportData();
+    }
+}
+
+inline void ImageWrapData::doSetData(const IImageData &data)
+{
+    detail::CheckThrow(nvcvImageWrapSetData(this->handle(), &data.cdata()));
+}
+
+inline void ImageWrapData::doResetData()
+{
+    detail::CheckThrow(nvcvImageWrapSetData(this->handle(), nullptr));
+}
+
+inline IAllocator &ImageWrapData::doGetAlloc() const
+{
+    if (m_alloc != nullptr)
+    {
+        return *m_alloc;
+    }
+    else
+    {
+        return ImageWrapHandle::doGetAlloc();
     }
 }
 

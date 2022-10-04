@@ -45,6 +45,17 @@ private:
     virtual const IImageData *doExportData() const = 0;
 };
 
+class IImageWrapData : public virtual IImage
+{
+public:
+    void setData(const IImageData &data);
+    void resetData();
+
+private:
+    virtual void doSetData(const IImageData &data) = 0;
+    virtual void doResetData()                     = 0;
+};
+
 // Implementation ------------------------------------
 
 inline NVCVImage IImage::handle() const
@@ -77,6 +88,16 @@ inline IAllocator &IImage::alloc() const
 inline const IImageData *IImage::exportData() const
 {
     return doExportData();
+}
+
+void IImageWrapData::setData(const IImageData &data)
+{
+    doSetData(data);
+}
+
+void IImageWrapData::resetData()
+{
+    doResetData();
 }
 
 }} // namespace nv::cv

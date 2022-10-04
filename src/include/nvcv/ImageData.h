@@ -94,6 +94,8 @@ typedef union NVCVImageBufferRec
 {
     /** Image stored in pitch-linear layout.
      * To be used when \ref NVCVImageData::bufferType is:
+     * - \ref NVCV_IMAGE_BUFFER_HOST_PITCH
+     * - \ref NVCV_IMAGE_BUFFER_HOST_PINNED_PITCH
      * - \ref NVCV_IMAGE_BUFFER_DEVICE_PITCH
      */
     NVCVImageBufferPitch pitch;

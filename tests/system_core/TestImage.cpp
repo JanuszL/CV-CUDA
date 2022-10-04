@@ -103,6 +103,155 @@ TEST(Image, wip_create_managed)
     }
 }
 
+TEST(ImageWrapData, wip_create_empty)
+{
+    nvcv::ImageWrapData img;
+
+    EXPECT_EQ(nvcv::Size2D(0, 0), img.size());
+    EXPECT_EQ(nvcv::FMT_NONE, img.format());
+    ASSERT_NE(nullptr, img.handle());
+
+    NVCVTypeImage type;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvImageGetType(img.handle(), &type));
+    EXPECT_EQ(NVCV_TYPE_IMAGE_WRAP_DATA, type);
+
+    const nvcv::IImageData *data = img.exportData();
+    ASSERT_EQ(nullptr, data);
+}
+
+TEST(ImageWrapData, wip_create_not_empty)
+{
+    nvcv::ImageDataDevicePitch::Buffer buf;
+    buf.numPlanes            = 1;
+    buf.planes[0].width      = 173;
+    buf.planes[0].height     = 79;
+    buf.planes[0].pitchBytes = 190;
+    buf.planes[0].buffer     = reinterpret_cast<void *>(678);
+
+    nvcv::ImageWrapData img{
+        nvcv::ImageDataDevicePitch{nvcv::FMT_U8, buf}
+    };
+
+    EXPECT_NE(nullptr, dynamic_cast<nvcv::AllocatorWrapHandle *>(&img.alloc()));
+
+    EXPECT_EQ(nvcv::Size2D(173, 79), img.size());
+    EXPECT_EQ(nvcv::FMT_U8, img.format());
+    ASSERT_NE(nullptr, img.handle());
+
+    NVCVTypeImage type;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvImageGetType(img.handle(), &type));
+    EXPECT_EQ(NVCV_TYPE_IMAGE_WRAP_DATA, type);
+
+    const nvcv::IImageData *data = img.exportData();
+    ASSERT_NE(nullptr, data);
+
+    auto *devdata = dynamic_cast<const nvcv::IImageDataDevicePitch *>(data);
+    ASSERT_NE(nullptr, devdata);
+
+    ASSERT_EQ(1, devdata->numPlanes());
+    EXPECT_EQ(img.format(), devdata->format());
+    EXPECT_EQ(img.size(), devdata->size());
+    EXPECT_EQ(img.size().w, devdata->plane(0).width);
+    EXPECT_EQ(img.size().h, devdata->plane(0).height);
+    EXPECT_LE(190, devdata->plane(0).pitchBytes);
+    EXPECT_EQ(buf.planes[0].buffer, devdata->plane(0).buffer);
+}
+
+TEST(ImageWrapData, wip_reset_data)
+{
+    nvcv::ImageDataDevicePitch::Buffer buf;
+    buf.numPlanes            = 1;
+    buf.planes[0].width      = 173;
+    buf.planes[0].height     = 79;
+    buf.planes[0].pitchBytes = 190;
+    buf.planes[0].buffer     = reinterpret_cast<void *>(678);
+
+    nvcv::ImageWrapData img{
+        nvcv::ImageDataDevicePitch{nvcv::FMT_U8, buf}
+    };
+
+    img.resetData();
+
+    EXPECT_EQ(nvcv::Size2D(0, 0), img.size());
+    EXPECT_EQ(nvcv::FMT_NONE, img.format());
+    const nvcv::IImageData *data = img.exportData();
+    ASSERT_EQ(nullptr, data);
+}
+
+TEST(ImageWrapData, wip_set_data)
+{
+    nvcv::ImageDataDevicePitch::Buffer buf;
+    buf.numPlanes            = 1;
+    buf.planes[0].width      = 173;
+    buf.planes[0].height     = 79;
+    buf.planes[0].pitchBytes = 190;
+    buf.planes[0].buffer     = reinterpret_cast<void *>(678);
+
+    nvcv::ImageWrapData img;
+
+    img.setData(nvcv::ImageDataDevicePitch{nvcv::FMT_U8, buf});
+
+    EXPECT_EQ(nvcv::Size2D(173, 79), img.size());
+    EXPECT_EQ(nvcv::FMT_U8, img.format());
+    ASSERT_NE(nullptr, img.handle());
+
+    const nvcv::IImageData *data = img.exportData();
+    ASSERT_NE(nullptr, data);
+
+    auto *devdata = dynamic_cast<const nvcv::IImageDataDevicePitch *>(data);
+    ASSERT_NE(nullptr, devdata);
+
+    ASSERT_EQ(1, devdata->numPlanes());
+    EXPECT_EQ(img.format(), devdata->format());
+    EXPECT_EQ(img.size(), devdata->size());
+    EXPECT_EQ(img.size().w, devdata->plane(0).width);
+    EXPECT_EQ(img.size().h, devdata->plane(0).height);
+    EXPECT_LE(190, devdata->plane(0).pitchBytes);
+    EXPECT_EQ(buf.planes[0].buffer, devdata->plane(0).buffer);
+}
+
+TEST(Image, wip_operator)
+{
+    namespace nvcv = nv::cv;
+
+    nvcv::Image in{
+        {512, 256},
+        nvcv::FMT_RGBA8
+    };
+    nvcv::Image out{
+        {512, 256},
+        nvcv::FMT_RGBA8
+    };
+
+    auto *inData  = dynamic_cast<const nvcv::IImageDataDevicePitch *>(in.exportData());
+    auto *outData = dynamic_cast<const nvcv::IImageDataDevicePitch *>(out.exportData());
+
+    if (inData == nullptr || outData == nullptr)
+    {
+        throw std::runtime_error("Input and output images must have device-accessible pitch-linear memory");
+    }
+    if (inData->format() != outData->format())
+    {
+        throw std::runtime_error("Input and output images must have same format");
+    }
+    if (inData->size() != outData->size())
+    {
+        throw std::runtime_error("Input and output images must have same size");
+    }
+
+    assert(inData->numPlanes() == outData->numPlanes());
+
+    for (int p = 0; p < inData->numPlanes(); ++p)
+    {
+        const nvcv::ImagePlanePitch &inPlane  = inData->plane(p);
+        const nvcv::ImagePlanePitch &outPlane = outData->plane(p);
+
+        cudaMemcpy2D(outPlane.buffer, outPlane.pitchBytes, inPlane.buffer, inPlane.pitchBytes,
+                     (inData->format().planeBitsPerPixel(p) + 7) / 8 * inPlane.width, inPlane.height,
+                     cudaMemcpyDeviceToDevice);
+    }
+}
+
 // Future API ideas
 #if 0
 TEST(Image, wip_image_managed_memory)

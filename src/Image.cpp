@@ -41,6 +41,35 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageCreate,
         });
 }
 
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageCreateWrapData,
+                (const NVCVImageData *data, NVCVAllocator halloc, NVCVImage *handle))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            if (handle == nullptr)
+            {
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output handle must not be NULL");
+            }
+
+            priv::IAllocator &alloc = priv::GetAllocator(halloc);
+
+            std::unique_ptr<priv::IImageWrapData> obj;
+
+            if (data)
+            {
+                obj = AllocHostObj<priv::ImageWrapData>(alloc, *data, alloc);
+            }
+            else
+            {
+                obj = AllocHostObj<priv::ImageWrapData>(alloc, alloc);
+            }
+
+            *handle = obj->handle();
+            obj.release();
+        });
+}
+
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageDestroy, (NVCVImage handle))
 {
     return priv::ProtectCall(
@@ -137,5 +166,23 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageExportData, (NVCVImage handle, NVCVIm
 
             auto &img = priv::ToStaticRef<const priv::IImage>(handle);
             img.exportData(*data);
+        });
+}
+
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageWrapSetData, (NVCVImage himg, const NVCVImageData *data))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            auto &img = priv::ToDynamicRef<priv::IImageWrapData>(himg);
+
+            if (data != nullptr)
+            {
+                img.setData(*data);
+            }
+            else
+            {
+                img.resetData();
+            }
         });
 }

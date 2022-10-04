@@ -28,9 +28,18 @@ interface IImage
     + {abstract} exportData() const: const IImageData *
 }
 
-
 IAllocator -right-o IImage: refers to <
 IImageData -left-o IImage: refers to <
+
+interface IImageWrapData extends IImage
+{
+    + {abstract} setData(const IImageData &data): void
+    + {abstract} setDataWithCleanup(const IImageData &data,
+                                    std::function<void(const IImageData &)> cleanup): void
+
+    + {abstract} resetData(): void
+}
+
 
 class Image implements IImage
 {
@@ -41,6 +50,13 @@ class Image implements IImage
 class ImageWrapHandle implements IImage
 {
     + ImageWrapData(NVCVImage handle)
+}
+
+class ImageWrapData implements IImageWrapData
+{
+    + ImageWrapData
+    + ImageWrapData(const IImageData &data,
+                    std::function<void(const IImageData &)> cleanup)
 }
 
 @enduml

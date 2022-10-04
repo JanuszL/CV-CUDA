@@ -90,4 +90,121 @@ void Image::exportData(NVCVImageData &data) const
     }
 }
 
+// ImageWrap implementation -------------------------------------------
+
+ImageWrapData::ImageWrapData(IAllocator &alloc)
+    : m_alloc(alloc)
+{
+    m_data.bufferType = NVCV_IMAGE_BUFFER_NONE;
+    m_data.format     = NVCV_IMAGE_FORMAT_NONE;
+}
+
+ImageWrapData::ImageWrapData(const NVCVImageData &data, IAllocator &alloc)
+    : m_alloc(alloc)
+{
+    doValidateData(data);
+
+    m_data = data;
+}
+
+void ImageWrapData::doValidateData(const NVCVImageData &data) const
+{
+    ImageFormat format{data.format};
+
+    bool success = false;
+    switch (data.bufferType)
+    {
+    case NVCV_IMAGE_BUFFER_DEVICE_PITCH:
+        if (format.memLayout() != NVCV_MEM_LAYOUT_PL)
+        {
+            throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
+                << "Image buffer type DEVICE_PITCH not consistent with image format " << format;
+        }
+
+        if (data.buffer.pitch.numPlanes < 1)
+        {
+            throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
+                << "Number of planes must be >= 1, not " << data.buffer.pitch.numPlanes;
+        }
+
+        for (int p = 0; p < data.buffer.pitch.numPlanes; ++p)
+        {
+            const NVCVImagePlanePitch &plane = data.buffer.pitch.planes[p];
+            if (plane.width < 1 || plane.height < 1)
+            {
+                throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
+                    << "Plane #" << p << " must have dimensions >= 1x1, not " << plane.width << "x" << plane.height;
+            }
+
+            if (plane.buffer == nullptr)
+            {
+                throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Plane #" << p << "'s buffer pointer must not be NULL";
+            }
+        }
+        success = true;
+        break;
+
+    case NVCV_IMAGE_BUFFER_CUDA_ARRAY:
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Wrapping of cudaArray into an image isn't currently supported";
+
+    case NVCV_IMAGE_BUFFER_NONE:
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Invalid wrapping of buffer type NONE";
+    }
+
+    if (!success)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Image buffer type not supported";
+    }
+}
+
+IAllocator &ImageWrapData::alloc() const
+{
+    return m_alloc;
+}
+
+Size2D ImageWrapData::size() const
+{
+    if (m_data.bufferType == NVCV_IMAGE_BUFFER_DEVICE_PITCH)
+    {
+        return {m_data.buffer.pitch.planes[0].width, m_data.buffer.pitch.planes[0].height};
+    }
+    else
+    {
+        NVCV_ASSERT(m_data.bufferType == NVCV_IMAGE_BUFFER_NONE);
+        return {0, 0};
+    }
+}
+
+ImageFormat ImageWrapData::format() const
+{
+    return ImageFormat{m_data.format};
+}
+
+void ImageWrapData::exportData(NVCVImageData &data) const
+{
+    data = m_data;
+}
+
+NVCVTypeImage ImageWrapData::type() const
+{
+    return NVCV_TYPE_IMAGE_WRAP_DATA;
+}
+
+Version ImageWrapData::doGetVersion() const
+{
+    return CURRENT_VERSION;
+}
+
+void ImageWrapData::setData(const NVCVImageData &data)
+{
+    doValidateData(data);
+    m_data = data;
+}
+
+void ImageWrapData::resetData()
+{
+    m_data.bufferType = NVCV_IMAGE_BUFFER_NONE;
+    m_data.format     = NVCV_IMAGE_FORMAT_NONE;
+}
+
 } // namespace nv::cv::priv

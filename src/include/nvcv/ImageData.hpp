@@ -24,7 +24,7 @@ class ImageDataCudaArray final : public IImageDataCudaArray
 public:
     using Buffer = NVCVImageBufferCudaArray;
 
-    explicit ImageDataCudaArray(ImageFormat format, const Buffer &data, NVCVImageDataCleanupFunc cleanup);
+    explicit ImageDataCudaArray(ImageFormat format, const Buffer &data, NVCVImageDataCleanupFunc cleanup = nullptr);
 
 private:
     NVCVImageData m_data;
@@ -41,7 +41,7 @@ class ImageDataDevicePitch final : public IImageDataDevicePitch
 public:
     using Buffer = NVCVImageBufferPitch;
 
-    explicit ImageDataDevicePitch(ImageFormat format, const Buffer &data, NVCVImageDataCleanupFunc cleanup);
+    explicit ImageDataDevicePitch(ImageFormat format, const Buffer &data, NVCVImageDataCleanupFunc cleanup = nullptr);
 
 private:
     NVCVImageData m_data;

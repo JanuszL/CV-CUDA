@@ -44,6 +44,8 @@ typedef enum
 {
     /** 2D image. */
     NVCV_TYPE_IMAGE,
+    /** Image that wraps an user-allocated image buffer. */
+    NVCV_TYPE_IMAGE_WRAP_DATA
 } NVCVTypeImage;
 
 /** Handle to an image instance. */
@@ -70,6 +72,39 @@ typedef struct NVCVImageImpl *NVCVImage;
  */
 NVCV_PUBLIC NVCVStatus nvcvImageCreate(int32_t width, int32_t height, NVCVImageFormat fmt, NVCVAllocator alloc,
                                        NVCVImage *handle);
+
+/** Wraps an existing image buffer into an NVCV image instance.
+ *
+ * It allows for interoperation of external image representations with NVCV.
+ * The created image type is \ref NVCV_TYPE_IMAGE_WRAP_DATA .
+ *
+ * If the image doesn't refer to a buffer, it's considered empty. In this case, it's dimensions is 0x0,
+ * and image foramt is \ref NVCV_IMAGE_FORMAT_NONE .
+ *
+ * The image buffer can be redefined by \ref nvcvImageWrapSetData, or reset by
+ * \ref nvcvImageWrapResetData .
+ *
+ * @param [in] data Image contents.
+ *                  If NULL, the created image is empty.
+ *                  When not NULL, the buffer ownership isn't transferred. It
+ *                  must not be destroyed while the NVCV image still refers to
+ *                  it.
+ *                  + When not NULL, buffer type must not be \ref NVCV_IMAGE_BUFFER_NONE.
+ *
+ * @param [in] alloc        Allocator to be used to allocate needed memory buffers.
+ *                          The following resources are used:
+ *                          - host memory: for internal structures.
+ *                          If NULL, it'll use the internal default allocator.
+ *                          + Allocator must not be destroyed while an image still refers to it.
+ *
+ * @param [out] handle      Where the image instance handle will be written to.
+ *                          + Must not be NULL.
+ *
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
+ * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the image.
+ * @retval #NVCV_SUCCESS                Operation executed successfully.
+ */
+NVCV_PUBLIC NVCVStatus nvcvImageCreateWrapData(const NVCVImageData *data, NVCVAllocator alloc, NVCVImage *handle);
 
 /** Destroys an existing image instance.
  *
@@ -146,6 +181,23 @@ NVCV_PUBLIC NVCVStatus nvcvImageGetAllocator(NVCVImage handle, NVCVAllocator *al
  * @retval #VPI_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvImageExportData(NVCVImage handle, NVCVImageData *data);
+
+/** Redefines the buffer pointed by the image wrap object.
+ *
+ * @param [in] handle Handle to the image to have its buffer replaced.
+ *                    + The image type must be @ref NVCV_TYPE_IMAGE_WRAP_DATA
+ *
+ * @param [in] data New image contents.
+ *                  If NULL, the image will be set to empty.
+ *                  When not NULL, the buffer ownership isn't transferred. It
+ *                  must not be destroyed while the NVCV image still refers to
+ *                  it.
+ *                  + When not NULL, buffer type must not be \ref NVCV_IMAGE_BUFFER_NONE.
+ *
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
+ * @retval #NVCV_SUCCESS                Operation executed successfully.
+ */
+NVCV_PUBLIC NVCVStatus nvcvImageWrapSetData(NVCVImage handle, const NVCVImageData *data);
 
 #ifdef __cplusplus
 }
