@@ -18,24 +18,6 @@ namespace t      = ::testing;
 namespace test   = nv::cv::test;
 namespace detail = nv::cv::cuda::detail;
 
-// ------------------------------ Testing void_t -------------------------------
-
-template<typename T>
-class VoidTypeTest : public t::Test
-{
-public:
-    using SourceType = T;
-};
-
-NVCV_TYPED_TEST_SUITE_F(VoidTypeTest, t::Types<float, const unsigned long long>);
-
-TYPED_TEST(VoidTypeTest, CorrectVoidType)
-{
-    using VoidType = detail::void_t<typename TestFixture::SourceType>;
-
-    EXPECT_TRUE(std::is_void<VoidType>::value);
-}
-
 // ------------------------- Testing CopyConstness_t ---------------------------
 
 template<typename T>
@@ -53,14 +35,14 @@ TYPED_TEST(CopyConstnessTest, CorrectConstType)
 {
     using ConstType = detail::CopyConstness_t<typename TestFixture::SourceType, typename TestFixture::TargetType>;
 
-    EXPECT_TRUE(std::is_const<ConstType>::value);
+    EXPECT_TRUE(std::is_const_v<ConstType>);
 }
 
 TYPED_TEST(CopyConstnessTest, CorrectTargetType)
 {
     using ConstType = detail::CopyConstness_t<typename TestFixture::SourceType, typename TestFixture::TargetType>;
 
-    EXPECT_TRUE((std::is_same<typename std::remove_const<ConstType>::type, typename TestFixture::TargetType>::value));
+    EXPECT_TRUE((std::is_same_v<typename std::remove_const_t<ConstType>, typename TestFixture::TargetType>));
 }
 
 // ------------------------- Testing HasTypeTraits -----------------------------
@@ -77,13 +59,23 @@ class HasTypeTraitsUnsupportedTest : public HasTypeTraitsTest<T>
 {
 };
 
-using UnsupportedBaseTypes = t::Types<void, long double>;
+typedef struct _float5
+{
+    float a, b, c, d, e;
+} float5;
+
+using UnsupportedBaseTypes = t::Types<void, long double, float5>;
 
 TYPED_TEST_SUITE(HasTypeTraitsUnsupportedTest, UnsupportedBaseTypes);
 
 TYPED_TEST(HasTypeTraitsUnsupportedTest, IsFalse)
 {
-    EXPECT_FALSE(detail::HasTypeTraits<typename TestFixture::Type>::value);
+    EXPECT_FALSE(detail::HasTypeTraits_v<typename TestFixture::Type>);
+}
+
+TEST(HasTypeTraitsWithTwoUnsupportedTypesTest, IsFalse)
+{
+    EXPECT_FALSE((detail::HasTypeTraits_v<long double, float5>));
 }
 
 template<typename T>
@@ -97,5 +89,40 @@ TYPED_TEST_SUITE(HasTypeTraitsSupportedTest, SupportedBaseTypes);
 
 TYPED_TEST(HasTypeTraitsSupportedTest, IsTrue)
 {
-    EXPECT_TRUE(detail::HasTypeTraits<typename TestFixture::Type>::value);
+    EXPECT_TRUE(detail::HasTypeTraits_v<typename TestFixture::Type>);
+}
+
+TEST(HasTypeTraitsWithTwoSupportedTypesTest, IsTrue)
+{
+    EXPECT_TRUE((detail::HasTypeTraits_v<unsigned int, double4>));
+}
+
+// -------------------------- Testing IsCompound -------------------------------
+
+TEST(IsCompoundTest, IsFalse)
+{
+    EXPECT_FALSE((detail::IsCompound<unsigned char>));
+    EXPECT_FALSE((detail::IsCompound<char>));
+    EXPECT_FALSE((detail::IsCompound<unsigned short>));
+    EXPECT_FALSE((detail::IsCompound<int>));
+}
+
+TEST(IsCompoundTest, IsTrue)
+{
+    EXPECT_TRUE((detail::IsCompound<uchar1>));
+    EXPECT_TRUE((detail::IsCompound<short2>));
+    EXPECT_TRUE((detail::IsCompound<uint3>));
+    EXPECT_TRUE((detail::IsCompound<float4>));
+}
+
+// ---------------------------- Testing IsSame ---------------------------------
+
+TEST(IsSameTest, IsFalse)
+{
+    EXPECT_FALSE((detail::IsSame<uint3, int3>));
+}
+
+TEST(IsSameTest, IsTrue)
+{
+    EXPECT_TRUE((detail::IsSame<int3, int3>));
 }

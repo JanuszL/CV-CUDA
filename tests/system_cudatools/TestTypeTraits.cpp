@@ -47,9 +47,12 @@ TYPED_TEST(TypeTraitsSupportedBaseTest, CorectTypeTraits)
 {
     using TypeTraitsT = cuda::TypeTraits<typename TestFixture::Type>;
 
-    EXPECT_TRUE((std::is_same<typename TestFixture::Type, typename TypeTraitsT::base_type>::value));
+    EXPECT_TRUE((std::is_same_v<typename TestFixture::Type, typename TypeTraitsT::base_type>));
 
-    EXPECT_FALSE(cuda::detail::IsCompound<typename TestFixture::Type>::value);
+    EXPECT_FALSE(cuda::IsCompound<typename TestFixture::Type>);
+
+    EXPECT_EQ(TypeTraitsT::components, cuda::NumComponents<typename TestFixture::Type>);
+    EXPECT_EQ(TypeTraitsT::elements, cuda::NumElements<typename TestFixture::Type>);
 
     EXPECT_EQ(TypeTraitsT::components, 0);
 
@@ -76,9 +79,12 @@ TYPED_TEST(TypeTraitsSupportedVectorTest, CorrectTypeTraits)
     using TypeTraitsT = cuda::TypeTraits<typename TestFixture::Type>;
     using BaseType    = cuda::BaseType<typename TestFixture::Type>;
 
-    EXPECT_TRUE((std::is_same<BaseType, typename TypeTraitsT::base_type>::value));
+    EXPECT_TRUE((std::is_same_v<BaseType, typename TypeTraitsT::base_type>));
 
-    EXPECT_TRUE(cuda::detail::IsCompound<typename TestFixture::Type>::value);
+    EXPECT_TRUE(cuda::IsCompound<typename TestFixture::Type>);
+
+    EXPECT_EQ(TypeTraitsT::components, cuda::NumComponents<typename TestFixture::Type>);
+    EXPECT_EQ(TypeTraitsT::elements, cuda::NumElements<typename TestFixture::Type>);
 
     EXPECT_TRUE(TypeTraitsT::components >= 1);
     EXPECT_TRUE(TypeTraitsT::components <= 4);
@@ -102,17 +108,17 @@ TEST_F(TypeTraitsTypeQualifierTest, CorrectTypeTraitsAsIfNoQualifier)
 {
     using Type = char;
 
-    EXPECT_TRUE((std::is_same<cuda::BaseType<const Type>, cuda::BaseType<Type>>::value));
-    EXPECT_TRUE((std::is_same<cuda::BaseType<volatile Type>, cuda::BaseType<Type>>::value));
-    EXPECT_TRUE((std::is_same<cuda::BaseType<const volatile Type>, cuda::BaseType<Type>>::value));
+    EXPECT_TRUE((std::is_same_v<cuda::BaseType<const Type>, cuda::BaseType<Type>>));
+    EXPECT_TRUE((std::is_same_v<cuda::BaseType<volatile Type>, cuda::BaseType<Type>>));
+    EXPECT_TRUE((std::is_same_v<cuda::BaseType<const volatile Type>, cuda::BaseType<Type>>));
 
-    EXPECT_TRUE(cuda::TypeTraits<const Type>::components == cuda::TypeTraits<Type>::components);
-    EXPECT_TRUE(cuda::TypeTraits<volatile Type>::components == cuda::TypeTraits<Type>::components);
-    EXPECT_TRUE(cuda::TypeTraits<const volatile Type>::components == cuda::TypeTraits<Type>::components);
+    EXPECT_TRUE(cuda::NumComponents<const Type> == cuda::NumComponents<Type>);
+    EXPECT_TRUE(cuda::NumComponents<volatile Type> == cuda::NumComponents<Type>);
+    EXPECT_TRUE(cuda::NumComponents<const volatile Type> == cuda::NumComponents<Type>);
 
-    EXPECT_TRUE(cuda::TypeTraits<const Type>::elements == cuda::TypeTraits<Type>::elements);
-    EXPECT_TRUE(cuda::TypeTraits<volatile Type>::elements == cuda::TypeTraits<Type>::elements);
-    EXPECT_TRUE(cuda::TypeTraits<const volatile Type>::elements == cuda::TypeTraits<Type>::elements);
+    EXPECT_TRUE(cuda::NumElements<const Type> == cuda::NumElements<Type>);
+    EXPECT_TRUE(cuda::NumElements<volatile Type> == cuda::NumElements<Type>);
+    EXPECT_TRUE(cuda::NumElements<const volatile Type> == cuda::NumElements<Type>);
 }
 
 // ---------------------------- Testing MakeType -------------------------------
@@ -134,14 +140,13 @@ TYPED_TEST(TypeTraitsMakeTypeVectorTest, CorrectTypeTraits)
 {
     using CompoundType = cuda::MakeType<typename TestFixture::BaseType, TestFixture::NumComponents>;
 
-    EXPECT_TRUE((std::is_same<typename TestFixture::BaseType, typename cuda::BaseType<CompoundType>>::value));
+    EXPECT_TRUE((std::is_same_v<typename TestFixture::BaseType, typename cuda::BaseType<CompoundType>>));
 
-    EXPECT_TRUE(cuda::TypeTraits<CompoundType>::components == TestFixture::NumComponents);
+    EXPECT_TRUE(cuda::NumComponents<CompoundType> == TestFixture::NumComponents);
 
-    EXPECT_TRUE(cuda::TypeTraits<CompoundType>::elements == TestFixture::NumElements);
+    EXPECT_TRUE(cuda::NumElements<CompoundType> == TestFixture::NumElements);
 
-    EXPECT_EQ(TestFixture::NumComponents == 0,
-              (cuda::detail::IsSame<typename TestFixture::BaseType, CompoundType>::value));
+    EXPECT_EQ(TestFixture::NumComponents == 0, (cuda::IsSame<typename TestFixture::BaseType, CompoundType>));
 }
 
 // -------------------- Testing MakeType with Type Qualifiers ------------------
@@ -162,8 +167,8 @@ TYPED_TEST(TypeTraitsMakeTypeWithQualifierTest, CorrectTypeQualifiers)
 {
     using CompoundType = cuda::MakeType<typename TestFixture::BaseType, TestFixture::NumComponents>;
 
-    EXPECT_EQ(std::is_const<typename TestFixture::BaseType>::value, std::is_const<CompoundType>::value);
-    EXPECT_EQ(std::is_volatile<typename TestFixture::BaseType>::value, std::is_volatile<CompoundType>::value);
+    EXPECT_EQ(std::is_const_v<typename TestFixture::BaseType>, std::is_const_v<CompoundType>);
+    EXPECT_EQ(std::is_volatile_v<typename TestFixture::BaseType>, std::is_volatile_v<CompoundType>);
 }
 
 // ------------------------ Testing ConvertBaseTypeTo --------------------------
@@ -179,13 +184,13 @@ TYPED_TEST(TypeTraitsConvertBaseTypeToTest, CorrectTypeTraits)
 {
     using FloatType = cuda::ConvertBaseTypeTo<float, typename TestFixture::Type>;
 
-    EXPECT_TRUE((std::is_same<cuda::BaseType<FloatType>, float>::value));
+    EXPECT_TRUE((std::is_same_v<cuda::BaseType<FloatType>, float>));
 
-    EXPECT_TRUE(cuda::TypeTraits<typename TestFixture::Type>::components == cuda::TypeTraits<FloatType>::components);
+    EXPECT_TRUE(cuda::NumComponents<typename TestFixture::Type> == cuda::NumComponents<FloatType>);
 
-    EXPECT_TRUE(cuda::TypeTraits<typename TestFixture::Type>::elements == cuda::TypeTraits<FloatType>::elements);
+    EXPECT_TRUE(cuda::NumElements<typename TestFixture::Type> == cuda::NumElements<FloatType>);
 
-    EXPECT_FALSE((cuda::detail::IsSame<FloatType, typename TestFixture::Type>::value));
+    EXPECT_FALSE((cuda::IsSame<FloatType, typename TestFixture::Type>));
 }
 
 // -------------- Testing ConvertBaseTypeTo with Type Qualifiers ---------------
@@ -202,8 +207,8 @@ TYPED_TEST(TypeTraitsConvertBaseTypeToWithQualifiersTest, CorrectTypeQualifiers)
 {
     using FloatType = cuda::ConvertBaseTypeTo<float, typename TestFixture::Type>;
 
-    EXPECT_EQ(std::is_const<typename TestFixture::Type>::value, std::is_const<FloatType>::value);
-    EXPECT_EQ(std::is_volatile<typename TestFixture::Type>::value, std::is_volatile<FloatType>::value);
+    EXPECT_EQ(std::is_const_v<typename TestFixture::Type>, std::is_const_v<FloatType>);
+    EXPECT_EQ(std::is_volatile_v<typename TestFixture::Type>, std::is_volatile_v<FloatType>);
 }
 
 // --------------------------- Testing GetElement ------------------------------
@@ -213,7 +218,7 @@ class TypeTraitsGetElementTest : public TypeTraitsBaseTest<T>
 {
 public:
     using PixelType                  = typename TypeTraitsBaseTest<T>::Type;
-    static constexpr int NumElements = cuda::TypeTraits<PixelType>::elements;
+    static constexpr int NumElements = cuda::NumElements<PixelType>;
 
     PixelType pix;
 
@@ -261,16 +266,19 @@ NVCV_TYPED_TEST_SUITE_F(TypeTraitsSetAllTest, t::Types<char, short1, uchar2, int
 
 TYPED_TEST(TypeTraitsSetAllTest, CorrectOutputOfSetAll)
 {
-    int  gold = 3;
-    auto test = cuda::SetAll<typename TestFixture::Type>(gold);
+    using T = typename TestFixture::Type;
+
+    cuda::BaseType<T> gold = 3;
+
+    auto test = cuda::SetAll<T>(gold);
 
     using TestType = decltype(test);
 
-    EXPECT_TRUE((std::is_same<TestType, typename TestFixture::Type>::value));
+    EXPECT_TRUE((cuda::IsSame<TestType, T>));
 
-    for (int c = 0; c < cuda::TypeTraits<TestType>::elements; ++c)
+    for (int c = 0; c < cuda::NumElements<TestType>; ++c)
     {
-        EXPECT_EQ(static_cast<int>(cuda::GetElement(test, c)), gold);
+        EXPECT_EQ(cuda::GetElement(test, c), gold);
     }
 }
 
@@ -289,7 +297,7 @@ public:
 
     TypeTraitsVectorTypePrintTest()
     {
-        for (int e = 0; e < cuda::TypeTraits<Type>::elements; ++e)
+        for (int e = 0; e < cuda::NumElements<Type>; ++e)
         {
             cuda::GetElement(val, e) = e + 1;
         }

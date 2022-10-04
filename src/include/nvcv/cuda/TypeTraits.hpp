@@ -28,27 +28,30 @@
 namespace nv::cv::cuda {
 
 /**
- * @brief Metastruct to define type traits for regular C types and CUDA built-in vector types
+ * @brief Metastruct to define type traits for regular C types and CUDA built-in vector (or compound) types
  *
  * @details CUDA built-in vector types are also called compound types.  The number of components in the metastruct
- * is zero for regular C types and between 1 and 4 for CUDA built-in vector types.  On the flip side, the number of
- * elements is between 1 and 4 for regular C types and CUDA built-in vector types.  The number of components may be
- * used to check if a type is of regular type (is zero) or compound type (is greater than zero).  The number of
- * elements may be used regardless of the type.  The base type of a CUDA built-in vector type is the type of each
- * of its components, for instance uchar4 has 4 elements of base type unsigned char.
+ * is zero for regular C types and between 1 and 4 for CUDA compound types.  On the flip side, the number of
+ * elements is between 1 and 4 for regular C types and CUDA compound types, i.e. the number of elements may be used
+ * regardless of the type.  The base type of a CUDA compound type is the type of each of its components, for
+ * instance uchar4 has 4 elements of base type unsigned char.  Type traits also provide the name of the type, each
+ * element minimum and maximum representable values.
  *
  * @code
+ * using BaseType = typename nv::cv::cuda::TypeTraits<T>::base_type;
  * int nc = nv::cv::cuda::TypeTraits<T>::components;
  * int ne = nv::cv::cuda::TypeTraits<T>::elements;
+ * const char *name = nv::cv::cuda::TypeTraits<T>::name;
+ * T min = nv::cv::cuda::TypeTraits<T>::min;
+ * T max = nv::cv::cuda::TypeTraits<T>::max;
  * @endcode
  *
  * @tparam T Type to get traits from
  */
-template<class T>
-using TypeTraits = detail::TypeTraits<T>;
+using detail::TypeTraits;
 
 /**
- * @brief Metatype to get the base type of a CUDA built-in vector types
+ * @brief Metatype to get the base type of a CUDA compound types
  *
  * @code
  * using PixelType = ...;
@@ -59,14 +62,75 @@ using TypeTraits = detail::TypeTraits<T>;
  *
  * @tparam T Type to get the base type from
  */
-template<class T>
+template<class T, class Req = detail::RequireHasTypeTraits<T>>
 using BaseType = typename TypeTraits<T>::base_type;
+
+/**
+ * @brief Metavariable to get the number of components of a type
+ *
+ * @code
+ * using PixelType = ...;
+ * int nc = nv::cv::cuda::NumComponents<PixelType>;
+ * @endcode
+ *
+ * @note This is zero for regular C types.
+ *
+ * @tparam T Type to get the number of components from
+ */
+template<class T, class Req = detail::RequireHasTypeTraits<T>>
+constexpr int NumComponents = TypeTraits<T>::components;
+
+/**
+ * @brief Metavariable to get the number of elements of a type
+ *
+ * @code
+ * using PixelType = ...;
+ * for (int e = 0; e < nv::cv::cuda::NumElements<PixelType>; ++e)
+ *     // ...
+ * @endcode
+ *
+ * @note This is one for regular C types and one to four for CUDA compound types.
+ *
+ * @tparam T Type to get the number of elements from
+ */
+template<class T, class Req = detail::RequireHasTypeTraits<T>>
+constexpr int NumElements = TypeTraits<T>::elements;
+
+/**
+ * @brief Metavariable to check if a type is a CUDA compound type
+ *
+ * @code
+ * using PixelType = ...;
+ * if constexpr (nv::cv::cuda::IsCompound<PixelType>)
+ *     // ...
+ * @endcode
+ *
+ * @note This is false for regular C types and true for CUDA compound types.
+ *
+ * @tparam T Type to check if it is a CUDA compound type
+ */
+using detail::IsCompound;
+
+/**
+ * @brief Metavariable to check if two types are of the same type
+ *
+ * @code
+ * using PixelType1 = ...;
+ * using PixelType2 = ...;
+ * if constexpr (nv::cv::cuda::IsSame<PixelType1, PixelType2>)
+ *     // ...
+ * @endcode
+ *
+ * @tparam T First type to check if it is the same
+ * @tparam U Second type to check if it is the same
+ */
+using detail::IsSame;
 
 /**
  * @brief Metatype to make a type from a base type and number of components
  *
  * @details When number of components is zero, it yields the identity (regular C) type, and when it is between 1
- * and 4 it yields the CUDA built-in compound (or vector) type.
+ * and 4 it yields the CUDA compound type.
  *
  * @code
  * using RGB8Type = MakeType<unsigned char, 3>; // yields uchar3
@@ -77,8 +141,8 @@ using BaseType = typename TypeTraits<T>::base_type;
  * @tparam T Base type to make the type from
  * @tparam C Number of components to make the type
  */
-template<class T, int C>
-using MakeType = typename detail::MakeType<T, C>::type;
+template<class T, int C, class Req = detail::RequireHasTypeTraits<T>>
+using MakeType = detail::MakeType_t<T, C>;
 
 /**
  * @brief Metatype to convert the base type of a type
@@ -93,8 +157,8 @@ using MakeType = typename detail::MakeType<T, C>::type;
  * @tparam BT Base type to use in the conversion
  * @tparam T Target type to convert its base type
  */
-template<class BT, class T>
-using ConvertBaseTypeTo = typename detail::ConvertBaseTypeTo<BT, T>::type;
+template<class BT, class T, class Req = detail::RequireAllHaveTypeTraits<BT, T>>
+using ConvertBaseTypeTo = detail::ConvertBaseTypeTo_t<BT, T>;
 
 /**
  * @brief Metafunction to get an element by reference from a given value reference
@@ -102,7 +166,8 @@ using ConvertBaseTypeTo = typename detail::ConvertBaseTypeTo<BT, T>::type;
  * @details The value may be of CUDA compound type with 1 to 4 elements, where the corresponding element index is 0
  * to 3, and the return is a reference to the element with the base type of the compound type, copying the
  * constness (that is the return reference is constant if the input value is constant).  The value may be a regular
- * C type, in which case the element index is ignored and the identity is returned.
+ * C type, in which case the element index is ignored and the identity is returned.  It is a requirement of the
+ * GetElement function that the type \p T has type traits.
  *
  * @code
  * using PixelRGB8Type = MakeType<unsigned char, 3>;
@@ -118,17 +183,19 @@ using ConvertBaseTypeTo = typename detail::ConvertBaseTypeTo<BT, T>::type;
  *
  * @return The reference of the value's element
  */
-template<typename T, typename RT = detail::CopyConstness_t<T, BaseType<T>>>
-__host__ __device__ typename std::enable_if<detail::IsCompound<T>::value, RT &>::type GetElement(T &v, int eidx)
+template<typename T, typename RT = detail::CopyConstness_t<T, std::conditional_t<IsCompound<T>, BaseType<T>, T>>,
+         class Req = detail::RequireHasTypeTraits<T>>
+__host__ __device__ RT &GetElement(T &v, int eidx)
 {
-    assert(eidx < TypeTraits<T>::elements);
-    return reinterpret_cast<RT *>(&v)[eidx];
-}
-
-template<typename T, typename RT = detail::CopyConstness_t<T, T>>
-__host__ __device__ typename std::enable_if<!detail::IsCompound<T>::value, RT &>::type GetElement(T &v, int)
-{
-    return v;
+    if constexpr (IsCompound<T>)
+    {
+        assert(eidx < NumElements<T>);
+        return reinterpret_cast<RT *>(&v)[eidx];
+    }
+    else
+    {
+        return v;
+    }
 }
 
 /**
@@ -153,9 +220,9 @@ __host__ __device__ T SetAll(BaseType<T> x)
     T out{};
 
 #pragma unroll
-    for (int c = 0; c < TypeTraits<T>::elements; ++c)
+    for (int e = 0; e < NumElements<T>; ++e)
     {
-        GetElement(out, c) = x;
+        GetElement(out, e) = x;
     }
 
     return out;
@@ -206,8 +273,8 @@ template<class T, class Req = nv::cv::cuda::detail::RequireIsCompound<T>>
 __host__ std::ostream &operator<<(std::ostream &out, const T &v)
 {
     using BT         = nv::cv::cuda::BaseType<T>;
-    using OutType    = typename std::conditional<sizeof(BT) == 1, int, BT>::type;
-    constexpr int NC = nv::cv::cuda::TypeTraits<T>::components;
+    using OutType    = std::conditional_t<sizeof(BT) == 1, int, BT>;
+    constexpr int NC = nv::cv::cuda::NumComponents<T>;
 
     out << nv::cv::cuda::GetTypeName<T>() << "(";
 

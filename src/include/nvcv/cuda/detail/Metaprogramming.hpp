@@ -25,33 +25,19 @@
 
 namespace nv::cv::cuda::detail {
 
-template<typename... Ts>
-struct MakeVoid
-{
-    using type = void;
-};
-
-// Metatype to leverage SFINAE prior to C++20 concepts implementing C++17 std::void_t.
-// The void_t implementation could be simply: "template <class...T> using void_t = void;" but in old
-// compilers (gcc < 5.0) unused parameters in alias templates are not guaranteed to ensure SFINAE thus cannot be
-// ignored.  We need a more complex definition.
-template<typename... Ts>
-using void_t = typename MakeVoid<Ts...>::type;
-
 template<class FROM, class TO>
 struct CopyConstness
 {
-    using type = typename std::remove_const<TO>::type;
+    using type = typename std::remove_const_t<TO>;
 };
 
 template<class FROM, class TO>
 struct CopyConstness<const FROM, TO>
 {
-    using type = typename std::add_const<TO>::type;
+    using type = typename std::add_const_t<TO>;
 };
 
 // Metatype to copy the const FROM type TO type.
-// This uses C++14 idiom to suppress typename ::type with _t.
 template<class FROM, class TO>
 using CopyConstness_t = typename CopyConstness<FROM, TO>::type;
 
@@ -183,30 +169,36 @@ struct MakeType<const volatile T, C>
     using type = const volatile typename MakeType<T, C>::type;
 };
 
+template<class T, int C>
+using MakeType_t = typename detail::MakeType<T, C>::type;
+
 // Metatype to convert the base type of a target type to another base type.
 template<class BT, class T>
 struct ConvertBaseTypeTo
 {
-    using type = typename detail::MakeType<BT, detail::TypeTraits<T>::components>::type;
+    using type = MakeType_t<BT, TypeTraits<T>::components>;
 };
 
 template<class BT, class T>
 struct ConvertBaseTypeTo<BT, const T>
 {
-    using type = const typename detail::MakeType<BT, detail::TypeTraits<T>::components>::type;
+    using type = const MakeType_t<BT, TypeTraits<T>::components>;
 };
 
 template<class BT, class T>
 struct ConvertBaseTypeTo<BT, volatile T>
 {
-    using type = volatile typename detail::MakeType<BT, detail::TypeTraits<T>::components>::type;
+    using type = volatile MakeType_t<BT, TypeTraits<T>::components>;
 };
 
 template<class BT, class T>
 struct ConvertBaseTypeTo<BT, const volatile T>
 {
-    using type = const volatile typename detail::MakeType<BT, detail::TypeTraits<T>::components>::type;
+    using type = const volatile MakeType_t<BT, TypeTraits<T>::components>;
 };
+
+template<class BT, class T>
+using ConvertBaseTypeTo_t = typename ConvertBaseTypeTo<BT, T>::type;
 
 // Metatype to check if a type has type traits associated with it.
 // If T does not have TypeTrait<T>, value is false, otherwise value is true.
@@ -216,50 +208,41 @@ struct HasTypeTraits : std::false_type
 };
 
 template<typename T>
-struct HasTypeTraits<T, void_t<typename TypeTraits<T>::base_type>> : std::true_type
+struct HasTypeTraits<T, std::void_t<typename TypeTraits<T>::base_type>> : std::true_type
 {
 };
+
+// clang-format off
+
+// Metavariable to check if one or more types have type traits.
+template<typename... Ts>
+constexpr bool HasTypeTraits_v = (HasTypeTraits<Ts>::value && ...);
 
 // Metatype to require that a type has type traits.
 template<typename T>
-using RequireHasTypeTraits = typename std::enable_if<HasTypeTraits<T>::value>::type;
+using RequireHasTypeTraits = std::enable_if_t<HasTypeTraits_v<T>>;
 
-// Metatype to check if a type is a CUDA built-in compound (or vector) type.
-template<typename T, typename = void>
-struct IsCompound
-{
-    static constexpr bool value = false;
-};
+// Metatype to require that one or more types have type traits.
+template<typename... Ts>
+using RequireAllHaveTypeTraits = std::enable_if_t<HasTypeTraits_v<Ts...>>;
 
+// Metavariable to check if a type is a CUDA compound type.
+template<class T, class Req = RequireHasTypeTraits<T>>
+constexpr bool IsCompound = TypeTraits<T>::components >= 1;
+
+// Metatype to require that a type is a CUDA compound type.
 template<typename T>
-struct IsCompound<T, typename std::enable_if<TypeTraits<T>::components >= 1>::type>
-{
-    static constexpr bool value = true;
-};
+using RequireIsCompound = std::enable_if_t<IsCompound<T>>;
 
-// Metatype to require that a type is a CUDA built-in compound (or vector) type.
+// Metatype to require that a type is not a CUDA compound type.
 template<typename T>
-using RequireIsCompound = typename std::enable_if<IsCompound<T>::value>::type;
+using RequireIsNotCompound = std::enable_if_t<!IsCompound<T>>;
 
-// Metatype to require that a type is not a CUDA built-in compound (or vector) type.
-template<typename T>
-using RequireIsNotCompound = typename std::enable_if<!IsCompound<T>::value>::type;
+// Metavariable to check if two types are the same.
+template<class T, class U, class Req = RequireAllHaveTypeTraits<T, U>>
+constexpr bool IsSame = std::is_same_v<std::remove_cv_t<T>, std::remove_cv_t<U>>;
 
-// Metatype to check if two types are the same.
-template<typename T, typename U, typename = void>
-struct IsSame
-{
-    static constexpr bool value = false;
-};
-
-template<typename T, typename U>
-struct IsSame<
-    T, U,
-    typename std::enable_if<std::is_same<typename TypeTraits<T>::base_type, typename TypeTraits<U>::base_type>::value
-                            && TypeTraits<T>::components == TypeTraits<U>::components>::type>
-{
-    static constexpr bool value = true;
-};
+// clang-format on
 
 } // namespace nv::cv::cuda::detail
 
