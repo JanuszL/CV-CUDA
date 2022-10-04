@@ -16,25 +16,6 @@ interface IAllocator
 
 interface IImageData
 
-enum LockMode
-{
-    + READ
-    + WRITE
-    + READ_WRITE
-}
-
-class LockedImageData
-{
-    + LockedImageData(LockedImageData &&that)
-    + LockedImageData()
-    + ~LockedImageData()
-
-    + data(): const IImageData *
-    + mode(): LockMode
-}
-
-LockMode -[hidden]- LockedImageData
-
 interface IImage
 {
     + {abstract} handle() const: NVCVImage
@@ -44,35 +25,12 @@ interface IImage
 
     + {abstract} alloc() const: IAllocator &
 
-    + {abstract} lock(LockMode mode) const: LockedImageData
+    + {abstract} exportData() const: const IImageData *
 }
 
-IImageData --o LockedImageData: refers to <
 
 IAllocator -right-o IImage: refers to <
-
-interface IImageWrapData extends IImage
-{
-    + {abstract} setData(const IImageData &data): void
-    + {abstract} resetData(): void
-}
-
-IImageData -down-o IImageWrapData: refers to <
-
-interface IImageView
-{
-    + {abstract} target() const: const IImage &
-    + {abstract} rectTarget() const: Rect2D
-
-    + {abstract} setTarget(const IImage &newTarget, Rect2D rc): void
-    + {abstract} setRect(Rect2D rc): void
-}
-IImage <|-down- IImageView
-IImage --o IImageView: refers to <
-
-IImageView -[hidden]right- ImageWrapData
-
-together {
+IImageData -left-o IImage: refers to <
 
 class Image implements IImage
 {
@@ -80,19 +38,9 @@ class Image implements IImage
             IAllocator *alloc=nullptr)
 }
 
-class ImageView implements IImageView
+class ImageWrapHandle implements IImage
 {
-    + ImageView(IImage &target, Rect2D rc,
-                IAllocator *alloc=nullptr)
-}
-
-class ImageWrapData implements IImageWrapData
-{
-    + ImageWrapData()
-    + ImageWrapData(const IImageData &data,
-                    IAllocator *alloc=nullptr)
-}
-
+    + ImageWrapData(NVCVImage handle)
 }
 
 @enduml

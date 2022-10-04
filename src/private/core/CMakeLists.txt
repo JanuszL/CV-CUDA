@@ -18,6 +18,8 @@ add_library(nvcv_private_core STATIC
     DefaultAllocator.cpp
     IAllocator.cpp
     Requirements.cpp
+    AllocInfo.cpp
+    Image.cpp
 )
 
 target_include_directories(nvcv_private_core
@@ -29,5 +31,6 @@ target_link_libraries(nvcv_private_core
     PUBLIC
         nvcv_headers
         nvcv_util_sanitizer
+        nvcv_format
         CUDA::cudart_static
 )

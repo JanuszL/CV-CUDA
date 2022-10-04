@@ -12,87 +12,41 @@
 
 @startuml
 
-struct ImagePlanePitchMem
+struct NVCVImageDataBufferPitch
 {
-    + size: Size2D
+    + width: int32_t
+    + height: int32_t
     + pitchBytes: int32_t
-    + data: void *
-}
-
-struct NVCVImageData
-
-interface IVisitorImageData
-{
-    + {abstract} visit(IImageDataHostMem &data): bool
-    + {abstract} visit(IImageDataHostPinnedMem &data): bool
-    + {abstract} visit(IImageDataDeviceMem &data): bool
-    + {abstract} visit(IImageDataCudaArray &data): bool
+    + buffer: void *
 }
 
 interface IImageData
 {
+    + {abstract} format() const: ImageFormat
+
     + {abstract} cdata() const: const NVCVImageData &
-
-    + {abstract} accept(IVisitorImageData &visitor): void
 }
-
-IImageData *-right- NVCVImageData
-IImageData -[hidden]left- IVisitorImageData
 
 interface IImageDataCudaArray extends IImageData
 {
+    + {abstract} numPlanes() const: int32_t
     + {abstract} plane(int p) const: cudaArray_t
 }
 
-interface IImageDataPitchMem extends IImageData
+interface IImageDataDeviceMem extends IImageData
 {
     + {abstract} size() const: Size2D
-    + {abstract} format() const: ImageFormat
 
-    + {abstract} plane(int p) const: ImagePlanePitchMem &
+    + {abstract} numPlanes() const: int32_t
+    + {abstract} plane(int p) const: const NVCVImageDataBufferPitch &
 }
-
-IImageDataPitchMem -[hidden]left- ImagePlanePitchMem
-
-interface IImageDataHostMem
-{
-}
-IImageDataPitchMem <|--# IImageDataHostMem: virtual
-
-interface IImageDataHostPinnedMem
-{
-}
-IImageDataPitchMem <|--# IImageDataHostPinnedMem: virtual
-
-interface IImageDataDeviceMem
-{
-}
-IImageDataPitchMem <|--# IImageDataDeviceMem: virtual
-
-class ImageDataCudaArray implements IImageDataCudaArray
-{
-}
-
-class ImageDataPitchMem
-{
-}
-IImageDataPitchMem <|..# ImageDataPitchMem: virtual
-
-class ImageDataHostMem implements IImageDataHostMem
-{
-}
-ImageDataPitchMem <|--* ImageDataHostMem: private
-
-class ImageDataHostPinnedMem implements IImageDataHostPinnedMem
-{
-}
-ImageDataPitchMem <|--* ImageDataHostPinnedMem: private
 
 class ImageDataDeviceMem implements IImageDataDeviceMem
 {
 }
-ImageDataPitchMem <|--* ImageDataDeviceMem: private
 
-ImageDataCudaArray -[hidden]left- ImageDataDeviceMem
+class ImageDataCudaArray implements IImageDataCudaArray
+{
+}
 
 @enduml
