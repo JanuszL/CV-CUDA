@@ -23,6 +23,7 @@ add_executable(nvcv_test_unit_core
     TestIndexSequence.cpp
     TestMath.cpp
     TestMetaprogramming.cpp
+    TestOptional.cpp
 )
 
 target_link_libraries(nvcv_test_unit_core
