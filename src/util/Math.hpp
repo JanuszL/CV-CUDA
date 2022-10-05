@@ -32,6 +32,18 @@ NVCV_CUDA_HOST_DEVICE constexpr bool IsPowerOfTwo(T value)
     return (value & (value - 1)) == 0;
 }
 
+NVCV_CUDA_HOST_DEVICE constexpr uint32_t RoundUpPowerOfTwo(uint32_t x)
+{
+    // Source: Hacker's Delight 1st ed, p.48
+    x = x - 1;
+    x = x | (x >> 1);
+    x = x | (x >> 2);
+    x = x | (x >> 4);
+    x = x | (x >> 8);
+    x = x | (x >> 16);
+    return x + 1;
+}
+
 } // namespace nv::cv::util
 
 #endif // NVCV_UTIL_MATH_HPP

@@ -106,3 +106,31 @@ TEST_P(MathIsPowerOfTwoTests, works)
 
     EXPECT_EQ(gold, util::IsPowerOfTwo(input));
 }
+
+class MathRoundUpPowerOfTwoTests
+    : public t::TestWithParam<std::tuple<test::Param<"input", int64_t>, test::Param<"gold", int64_t>>>
+{
+};
+
+// clang-format off
+NVCV_INSTANTIATE_TEST_SUITE_P(_, MathRoundUpPowerOfTwoTests,
+    test::ValueList<int64_t, int64_t>
+    {
+        {0, 0},
+        {1, 1},
+        {2, 2},
+        {3, 4},
+        {4, 4},
+        {37, 64},
+        {(1ull << 31) - 1, 1ull << 31},
+    });
+
+// clang-format on
+
+TEST_P(MathRoundUpPowerOfTwoTests, works)
+{
+    const uint64_t input = std::get<0>(GetParam());
+    const uint64_t gold  = std::get<1>(GetParam());
+
+    EXPECT_EQ(gold, util::RoundUpPowerOfTwo(input));
+}
