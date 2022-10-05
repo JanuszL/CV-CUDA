@@ -203,40 +203,28 @@ using ConvertBaseTypeTo_t = typename ConvertBaseTypeTo<BT, T>::type;
 // Metatype to check if a type has type traits associated with it.
 // If T does not have TypeTrait<T>, value is false, otherwise value is true.
 template<typename T, typename = void>
-struct HasTypeTraits : std::false_type
+struct HasTypeTraits_t : std::false_type
 {
 };
 
 template<typename T>
-struct HasTypeTraits<T, std::void_t<typename TypeTraits<T>::base_type>> : std::true_type
+struct HasTypeTraits_t<T, std::void_t<typename TypeTraits<T>::base_type>> : std::true_type
 {
 };
 
 // clang-format off
 
+// Metatype to serve as a requirement for a template object to meet the given boolean expression.
+template<bool B>
+using Require = std::enable_if_t<B>;
+
 // Metavariable to check if one or more types have type traits.
 template<typename... Ts>
-constexpr bool HasTypeTraits_v = (HasTypeTraits<Ts>::value && ...);
-
-// Metatype to require that a type has type traits.
-template<typename T>
-using RequireHasTypeTraits = std::enable_if_t<HasTypeTraits_v<T>>;
-
-// Metatype to require that one or more types have type traits.
-template<typename... Ts>
-using RequireAllHaveTypeTraits = std::enable_if_t<HasTypeTraits_v<Ts...>>;
+constexpr bool HasTypeTraits = (HasTypeTraits_t<Ts>::value && ...);
 
 // Metavariable to check if a type is a CUDA compound type.
-template<class T, class Req = RequireHasTypeTraits<T>>
+template<class T, class = Require<HasTypeTraits<T>>>
 constexpr bool IsCompound = TypeTraits<T>::components >= 1;
-
-// Metatype to require that a type is a CUDA compound type.
-template<typename T>
-using RequireIsCompound = std::enable_if_t<IsCompound<T>>;
-
-// Metatype to require that a type is not a CUDA compound type.
-template<typename T>
-using RequireIsNotCompound = std::enable_if_t<!IsCompound<T>>;
 
 // clang-format on
 

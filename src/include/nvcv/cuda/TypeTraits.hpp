@@ -62,7 +62,7 @@ using detail::TypeTraits;
  *
  * @tparam T Type to get the base type from
  */
-template<class T, class Req = detail::RequireHasTypeTraits<T>>
+template<class T, class = detail::Require<detail::HasTypeTraits<T>>>
 using BaseType = typename TypeTraits<T>::base_type;
 
 /**
@@ -77,7 +77,7 @@ using BaseType = typename TypeTraits<T>::base_type;
  *
  * @tparam T Type to get the number of components from
  */
-template<class T, class Req = detail::RequireHasTypeTraits<T>>
+template<class T, class = detail::Require<detail::HasTypeTraits<T>>>
 constexpr int NumComponents = TypeTraits<T>::components;
 
 /**
@@ -93,7 +93,7 @@ constexpr int NumComponents = TypeTraits<T>::components;
  *
  * @tparam T Type to get the number of elements from
  */
-template<class T, class Req = detail::RequireHasTypeTraits<T>>
+template<class T, class = detail::Require<detail::HasTypeTraits<T>>>
 constexpr int NumElements = TypeTraits<T>::elements;
 
 /**
@@ -126,7 +126,7 @@ using detail::IsCompound;
  * @tparam T Base type to make the type from
  * @tparam C Number of components to make the type
  */
-template<class T, int C, class Req = detail::RequireHasTypeTraits<T>>
+template<class T, int C, class = detail::Require<detail::HasTypeTraits<T>>>
 using MakeType = detail::MakeType_t<T, C>;
 
 /**
@@ -142,7 +142,7 @@ using MakeType = detail::MakeType_t<T, C>;
  * @tparam BT Base type to use in the conversion
  * @tparam T Target type to convert its base type
  */
-template<class BT, class T, class Req = detail::RequireAllHaveTypeTraits<BT, T>>
+template<class BT, class T, class = detail::Require<detail::HasTypeTraits<BT, T>>>
 using ConvertBaseTypeTo = detail::ConvertBaseTypeTo_t<BT, T>;
 
 /**
@@ -169,7 +169,7 @@ using ConvertBaseTypeTo = detail::ConvertBaseTypeTo_t<BT, T>;
  * @return The reference of the value's element
  */
 template<typename T, typename RT = detail::CopyConstness_t<T, std::conditional_t<IsCompound<T>, BaseType<T>, T>>,
-         class Req = detail::RequireHasTypeTraits<T>>
+         class = detail::Require<detail::HasTypeTraits<T>>>
 __host__ __device__ RT &GetElement(T &v, int eidx)
 {
     if constexpr (IsCompound<T>)
@@ -199,7 +199,7 @@ __host__ __device__ RT &GetElement(T &v, int eidx)
  *
  * @return The object of type T with all elements set to \p x
  */
-template<typename T, class Req = detail::RequireHasTypeTraits<T>>
+template<typename T, class = detail::Require<detail::HasTypeTraits<T>>>
 __host__ __device__ T SetAll(BaseType<T> x)
 {
     T out{};
@@ -227,7 +227,7 @@ __host__ __device__ T SetAll(BaseType<T> x)
  *
  * @return String with the name of the type
  */
-template<class T, class Req = detail::RequireHasTypeTraits<T>>
+template<class T, class = detail::Require<detail::HasTypeTraits<T>>>
 __host__ __device__ const char *GetTypeName()
 {
     return TypeTraits<T>::name;
@@ -254,7 +254,7 @@ __host__ __device__ const char *GetTypeName()
  *
  * @return Output stream with the pixel type and values
  */
-template<class T, class Req = nv::cv::cuda::detail::RequireIsCompound<T>>
+template<class T, class = nv::cv::cuda::detail::Require<nv::cv::cuda::detail::IsCompound<T>>>
 __host__ std::ostream &operator<<(std::ostream &out, const T &v)
 {
     using BT         = nv::cv::cuda::BaseType<T>;
