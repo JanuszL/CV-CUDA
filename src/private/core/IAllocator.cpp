@@ -30,6 +30,13 @@ void *IAllocator::allocHostMem(int64_t size, int32_t align)
                         "Alignment when allocating host memory must be a power of two, not %d", align);
     }
 
+    if (util::RoundUp(size, align) != size)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                        "Host memory allocator size must be an integral multiple of alignment %d, not %ld", align,
+                        size);
+    }
+
     return doAllocHostMem(size, align);
 }
 
@@ -51,6 +58,13 @@ void *IAllocator::allocHostPinnedMem(int64_t size, int32_t align)
                         "Alignment when allocating host-pinned memory must be a power of two, not %d", align);
     }
 
+    if (util::RoundUp(size, align) != size)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                        "Host memory allocator size must be an integral multiple of alignment %d, not %ld", align,
+                        size);
+    }
+
     return doAllocHostPinnedMem(size, align);
 }
 
@@ -70,6 +84,13 @@ void *IAllocator::allocDeviceMem(int64_t size, int32_t align)
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT,
                         "Alignment when allocating device memory must be a power of two, not %d", align);
+    }
+
+    if (util::RoundUp(size, align) != size)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                        "Host memory allocator size must be an integral multiple of alignment %d, not %ld", align,
+                        size);
     }
 
     return doAllocDeviceMem(size, align);
