@@ -112,21 +112,6 @@ constexpr int NumElements = TypeTraits<T>::elements;
 using detail::IsCompound;
 
 /**
- * @brief Metavariable to check if two types are of the same type
- *
- * @code
- * using PixelType1 = ...;
- * using PixelType2 = ...;
- * if constexpr (nv::cv::cuda::IsSame<PixelType1, PixelType2>)
- *     // ...
- * @endcode
- *
- * @tparam T First type to check if it is the same
- * @tparam U Second type to check if it is the same
- */
-using detail::IsSame;
-
-/**
  * @brief Metatype to make a type from a base type and number of components
  *
  * @details When number of components is zero, it yields the identity (regular C) type, and when it is between 1

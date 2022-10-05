@@ -238,10 +238,6 @@ using RequireIsCompound = std::enable_if_t<IsCompound<T>>;
 template<typename T>
 using RequireIsNotCompound = std::enable_if_t<!IsCompound<T>>;
 
-// Metavariable to check if two types are the same.
-template<class T, class U, class Req = RequireAllHaveTypeTraits<T, U>>
-constexpr bool IsSame = std::is_same_v<std::remove_cv_t<T>, std::remove_cv_t<U>>;
-
 // clang-format on
 
 } // namespace nv::cv::cuda::detail

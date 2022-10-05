@@ -114,15 +114,3 @@ TEST(IsCompoundTest, IsTrue)
     EXPECT_TRUE((detail::IsCompound<uint3>));
     EXPECT_TRUE((detail::IsCompound<float4>));
 }
-
-// ---------------------------- Testing IsSame ---------------------------------
-
-TEST(IsSameTest, IsFalse)
-{
-    EXPECT_FALSE((detail::IsSame<uint3, int3>));
-}
-
-TEST(IsSameTest, IsTrue)
-{
-    EXPECT_TRUE((detail::IsSame<int3, int3>));
-}
