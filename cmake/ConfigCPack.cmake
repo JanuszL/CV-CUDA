@@ -106,6 +106,10 @@ if(UNIX)
 
     set(CPACK_DEBIAN_LIB_PACKAGE_DEPENDS "libstdc++6, libc6")
 
+    if(ENABLE_SANITIZER)
+        set(CPACK_DEBIAN_LIB_PACKAGE_DEPENDS "${CPACK_DEBIAN_LIB_PACKAGE_DEPENDS}, libasan6")
+    endif()
+
     configure_file(cpack/ld.so.conf.in cpack/ld.so.conf @ONLY)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cpack/ld.so.conf
         DESTINATION "etc/ld.so.conf.d"

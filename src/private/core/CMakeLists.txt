@@ -27,5 +27,6 @@ target_include_directories(nvcv_private_core
 target_link_libraries(nvcv_private_core
     PUBLIC
         nvcv_headers
+        nvcv_util_sanitizer
         CUDA::cudart_static
 )
