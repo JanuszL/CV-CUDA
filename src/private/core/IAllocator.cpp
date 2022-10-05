@@ -19,6 +19,11 @@ namespace nv::cv::priv {
 
 void *IAllocator::allocHostMem(int64_t size, int32_t align)
 {
+    if (size < 0)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Host memory allocator size must be >= 0, not %ld", size);
+    }
+
     if (!util::IsPowerOfTwo(align))
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT,
@@ -35,6 +40,11 @@ void IAllocator::freeHostMem(void *ptr, int64_t size, int32_t align) noexcept
 
 void *IAllocator::allocHostPinnedMem(int64_t size, int32_t align)
 {
+    if (size < 0)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Host-pinned memory allocator size must be >= 0, not %ld", size);
+    }
+
     if (!util::IsPowerOfTwo(align))
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT,
@@ -51,6 +61,11 @@ void IAllocator::freeHostPinnedMem(void *ptr, int64_t size, int32_t align) noexc
 
 void *IAllocator::allocDeviceMem(int64_t size, int32_t align)
 {
+    if (size < 0)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Device memory allocator size must be >= 0, not %ld", size);
+    }
+
     if (!util::IsPowerOfTwo(align))
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT,
