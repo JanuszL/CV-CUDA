@@ -26,6 +26,12 @@ NVCV_CUDA_HOST_DEVICE constexpr T RoundUp(T value, U multiple)
     return (value + multiple - 1) / multiple * multiple;
 }
 
+template<class T, class = std::enable_if_t<std::is_integral_v<T>>>
+NVCV_CUDA_HOST_DEVICE constexpr bool IsPowerOfTwo(T value)
+{
+    return (value & (value - 1)) == 0;
+}
+
 } // namespace nv::cv::util
 
 #endif // NVCV_UTIL_MATH_HPP
