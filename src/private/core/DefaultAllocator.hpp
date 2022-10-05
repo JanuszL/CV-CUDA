@@ -20,18 +20,17 @@ namespace nv::cv::priv {
 
 class DefaultAllocator final : public IAllocator
 {
-public:
-    void *allocHostMem(int64_t size, int32_t align) override;
-    void  freeHostMem(void *ptr, int64_t size, int32_t align) noexcept override;
-
-    void *allocHostPinnedMem(int64_t size, int32_t align) override;
-    void  freeHostPinnedMem(void *ptr, int64_t size, int32_t align) noexcept override;
-
-    void *allocDeviceMem(int64_t size, int32_t align) override;
-    void  freeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept override;
-
 private:
     virtual Version doGetVersion() const final;
+
+    void *doAllocHostMem(int64_t size, int32_t align) override;
+    void  doFreeHostMem(void *ptr, int64_t size, int32_t align) noexcept override;
+
+    void *doAllocHostPinnedMem(int64_t size, int32_t align) override;
+    void  doFreeHostPinnedMem(void *ptr, int64_t size, int32_t align) noexcept override;
+
+    void *doAllocDeviceMem(int64_t size, int32_t align) override;
+    void  doFreeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept override;
 };
 
 } // namespace nv::cv::priv

@@ -59,7 +59,8 @@ extern "C"
  *
  * @param [in] ctx        Pointer to user context.
  * @param [in] sizeBytes  How many bytes to allocate.
- *                        + Must be >= 0.
+ *                        It's guaranteed that >= 0 and it's an integral
+ *                        multiple of alignBytes.
  * @param [in] alignBytes Address alignment in bytes.
  *                        It's guaranteed to be a power of two.
  *                        The returned address will be multiple of this value.
@@ -169,6 +170,7 @@ NVCV_PUBLIC void nvcvAllocatorDestroy(NVCVAllocator halloc);
  *                        + Cannot be NULL.
  * @param [in] sizeBytes  How many bytes to allocate.
  *                        + Must be >= 0.
+ *                        + Must be an integral multiple of @p alignBytes.
  * @param [in] alignBytes Address alignment in bytes.
  *                        The returned address will be multiple of this value.
  *                        + Must a power of 2.
@@ -210,6 +212,7 @@ NVCV_PUBLIC NVCVStatus nvcvAllocatorFreeHostMemory(NVCVAllocator halloc, void *p
  *                        + Cannot be NULL.
  * @param [in] sizeBytes  How many bytes to allocate.
  *                        + Must be >= 0.
+ *                        + Must be an integral multiple of @p alignBytes.
  * @param [in] alignBytes Address alignment in bytes.
  *                        The returned address will be multiple of this value.
  *                        + Must a power of 2.
@@ -251,6 +254,7 @@ NVCV_PUBLIC NVCVStatus nvcvAllocatorFreeHostPinnedMemory(NVCVAllocator halloc, v
  *                        + Cannot be NULL.
  * @param [in] sizeBytes  How many bytes to allocate.
  *                        + Must be >= 0.
+ *                        + Must be an integral multiple of @p alignBytes.
  * @param [in] alignBytes Address alignment in bytes.
  *                        The returned address will be multiple of this value.
  *                        + Must a power of 2.

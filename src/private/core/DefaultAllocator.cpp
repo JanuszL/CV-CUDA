@@ -27,19 +27,19 @@ Version DefaultAllocator::doGetVersion() const
     return CURRENT_VERSION;
 }
 
-void *DefaultAllocator::allocHostMem(int64_t size, int32_t align)
+void *DefaultAllocator::doAllocHostMem(int64_t size, int32_t align)
 {
     return std::aligned_alloc(align, size);
 }
 
-void DefaultAllocator::freeHostMem(void *ptr, int64_t size, int32_t align) noexcept
+void DefaultAllocator::doFreeHostMem(void *ptr, int64_t size, int32_t align) noexcept
 {
     (void)size;
     (void)align;
     std::free(ptr);
 }
 
-void *DefaultAllocator::allocHostPinnedMem(int64_t size, int32_t align)
+void *DefaultAllocator::doAllocHostPinnedMem(int64_t size, int32_t align)
 {
     void *ptr = nullptr;
     NVCV_CHECK_THROW(::cudaHostAlloc(&ptr, size, cudaHostAllocWriteCombined | cudaHostAllocMapped));
@@ -53,14 +53,15 @@ void *DefaultAllocator::allocHostPinnedMem(int64_t size, int32_t align)
     return ptr;
 }
 
-void DefaultAllocator::freeHostPinnedMem(void *ptr, int64_t size, int32_t align) noexcept
+void DefaultAllocator::doFreeHostPinnedMem(void *ptr, int64_t size, int32_t align) noexcept
 {
     (void)size;
     (void)align;
+
     NVCV_CHECK_LOG(::cudaFreeHost(ptr));
 }
 
-void *DefaultAllocator::allocDeviceMem(int64_t size, int32_t align)
+void *DefaultAllocator::doAllocDeviceMem(int64_t size, int32_t align)
 {
     void *ptr = nullptr;
     NVCV_CHECK_THROW(::cudaMalloc(&ptr, size));
@@ -75,10 +76,11 @@ void *DefaultAllocator::allocDeviceMem(int64_t size, int32_t align)
     return ptr;
 }
 
-void DefaultAllocator::freeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept
+void DefaultAllocator::doFreeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept
 {
     (void)size;
     (void)align;
+
     NVCV_CHECK_LOG(::cudaFree(ptr));
 }
 

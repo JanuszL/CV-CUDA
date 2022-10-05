@@ -23,14 +23,25 @@ namespace nv::cv::priv {
 class IAllocator : public ICoreObjectHandle<IAllocator, NVCVAllocator>
 {
 public:
-    virtual void *allocHostMem(int64_t size, int32_t align)                    = 0;
-    virtual void  freeHostMem(void *ptr, int64_t size, int32_t align) noexcept = 0;
+    void *allocHostMem(int64_t size, int32_t align);
+    void  freeHostMem(void *ptr, int64_t size, int32_t align) noexcept;
 
-    virtual void *allocHostPinnedMem(int64_t size, int32_t align)                    = 0;
-    virtual void  freeHostPinnedMem(void *ptr, int64_t size, int32_t align) noexcept = 0;
+    void *allocHostPinnedMem(int64_t size, int32_t align);
+    void  freeHostPinnedMem(void *ptr, int64_t size, int32_t align) noexcept;
 
-    virtual void *allocDeviceMem(int64_t size, int32_t align)                    = 0;
-    virtual void  freeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept = 0;
+    void *allocDeviceMem(int64_t size, int32_t align);
+    void  freeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept;
+
+private:
+    // NVI idiom
+    virtual void *doAllocHostMem(int64_t size, int32_t align)                    = 0;
+    virtual void  doFreeHostMem(void *ptr, int64_t size, int32_t align) noexcept = 0;
+
+    virtual void *doAllocHostPinnedMem(int64_t size, int32_t align)                    = 0;
+    virtual void  doFreeHostPinnedMem(void *ptr, int64_t size, int32_t align) noexcept = 0;
+
+    virtual void *doAllocDeviceMem(int64_t size, int32_t align)                    = 0;
+    virtual void  doFreeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept = 0;
 };
 
 } // namespace nv::cv::priv

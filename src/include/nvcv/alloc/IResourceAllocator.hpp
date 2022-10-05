@@ -64,14 +64,14 @@ class IDeviceMemAllocator : public virtual IMemAllocator
 
 // Implementation ----------------------
 
-void *IMemAllocator::alloc(int64_t size, int32_t align)
+inline void *IMemAllocator::alloc(int64_t size, int32_t align)
 {
     void *ptr = doAlloc(size, align);
     assert(ptr != nullptr && "nv::cv::IMemAllocator::alloc post-condition failed");
     return ptr;
 }
 
-void IMemAllocator::free(void *ptr, int64_t size, int32_t align) noexcept
+inline void IMemAllocator::free(void *ptr, int64_t size, int32_t align) noexcept
 {
     doFree(ptr, size, align);
 }

@@ -25,19 +25,19 @@ class CustomAllocator final : public IAllocator
 public:
     CustomAllocator(const NVCVCustomAllocator *customAllocators, int32_t numCustomAllocators);
 
-    void *allocHostMem(int64_t size, int32_t align) override;
-    void  freeHostMem(void *ptr, int64_t size, int32_t align) noexcept override;
-
-    void *allocHostPinnedMem(int64_t size, int32_t align) override;
-    void  freeHostPinnedMem(void *ptr, int64_t size, int32_t align) noexcept override;
-
-    void *allocDeviceMem(int64_t size, int32_t align) override;
-    void  freeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept override;
-
 private:
     NVCVCustomAllocator m_allocators[NVCV_NUM_RESOURCE_TYPES];
 
     virtual Version doGetVersion() const final;
+
+    void *doAllocHostMem(int64_t size, int32_t align) override;
+    void  doFreeHostMem(void *ptr, int64_t size, int32_t align) noexcept override;
+
+    void *doAllocHostPinnedMem(int64_t size, int32_t align) override;
+    void  doFreeHostPinnedMem(void *ptr, int64_t size, int32_t align) noexcept override;
+
+    void *doAllocDeviceMem(int64_t size, int32_t align) override;
+    void  doFreeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept override;
 };
 
 } // namespace nv::cv::priv

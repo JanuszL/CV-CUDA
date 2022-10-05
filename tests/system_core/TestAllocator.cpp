@@ -31,12 +31,12 @@ TEST(Allocator, wip_test_default)
     nvcv::CustomAllocator myalloc;
 
     void *ptrDev        = myalloc.deviceMem().alloc(768, 256);
-    void *ptrHost       = myalloc.hostMem().alloc(123, 16);
-    void *ptrHostPinned = myalloc.hostPinnedMem().alloc(134, 16);
+    void *ptrHost       = myalloc.hostMem().alloc(160, 16);
+    void *ptrHostPinned = myalloc.hostPinnedMem().alloc(144, 16);
 
     myalloc.deviceMem().free(ptrDev, 768, 256);
-    myalloc.hostMem().free(ptrHost, 123, 16);
-    myalloc.hostPinnedMem().free(ptrHostPinned, 134, 16);
+    myalloc.hostMem().free(ptrHost, 160, 16);
+    myalloc.hostPinnedMem().free(ptrHostPinned, 144, 16);
 }
 
 // WIP: just to check if it compiles.
