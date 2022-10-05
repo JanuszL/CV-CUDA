@@ -10,8 +10,9 @@
 
 find_package(CUDA REQUIRED)
 
-add_executable(nvcv_samples_cropandresize Main.cpp)
 set(CMAKE_CXX_FLAGS "-Wno-deprecated-enum-enum-conversion")
+
+add_executable(nvcv_samples_cropandresize Main.cpp)
 target_link_libraries(nvcv_samples_cropandresize nvcv CUDA::cudart_static nvcv_samples_common)
 
 target_include_directories(nvcv_samples_cropandresize
