@@ -19,6 +19,12 @@ namespace nv::cv::priv {
 
 void *IAllocator::allocHostMem(int64_t size, int32_t align)
 {
+    if (!util::IsPowerOfTwo(align))
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                        "Alignment when allocating host memory must be a power of two, not %d", align);
+    }
+
     return doAllocHostMem(size, align);
 }
 
@@ -29,6 +35,12 @@ void IAllocator::freeHostMem(void *ptr, int64_t size, int32_t align) noexcept
 
 void *IAllocator::allocHostPinnedMem(int64_t size, int32_t align)
 {
+    if (!util::IsPowerOfTwo(align))
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                        "Alignment when allocating host-pinned memory must be a power of two, not %d", align);
+    }
+
     return doAllocHostPinnedMem(size, align);
 }
 
@@ -39,6 +51,12 @@ void IAllocator::freeHostPinnedMem(void *ptr, int64_t size, int32_t align) noexc
 
 void *IAllocator::allocDeviceMem(int64_t size, int32_t align)
 {
+    if (!util::IsPowerOfTwo(align))
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                        "Alignment when allocating device memory must be a power of two, not %d", align);
+    }
+
     return doAllocDeviceMem(size, align);
 }
 

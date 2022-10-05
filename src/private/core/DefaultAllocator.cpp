@@ -57,6 +57,7 @@ void DefaultAllocator::doFreeHostPinnedMem(void *ptr, int64_t size, int32_t alig
 {
     (void)size;
     (void)align;
+
     NVCV_CHECK_LOG(::cudaFreeHost(ptr));
 }
 
@@ -79,6 +80,7 @@ void DefaultAllocator::doFreeDeviceMem(void *ptr, int64_t size, int32_t align) n
 {
     (void)size;
     (void)align;
+
     NVCV_CHECK_LOG(::cudaFree(ptr));
 }
 
