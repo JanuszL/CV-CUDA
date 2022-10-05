@@ -16,6 +16,7 @@ add_library(nvcv_private_core STATIC
     Version.cpp
     CustomAllocator.cpp
     DefaultAllocator.cpp
+    IAllocator.cpp
 )
 
 target_include_directories(nvcv_private_core

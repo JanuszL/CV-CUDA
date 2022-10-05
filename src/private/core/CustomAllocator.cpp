@@ -162,14 +162,14 @@ Version CustomAllocator::doGetVersion() const
 
 // Host Memory ------------------
 
-void *CustomAllocator::allocHostMem(int64_t size, int32_t align)
+void *CustomAllocator::doAllocHostMem(int64_t size, int32_t align)
 {
     NVCVCustomAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_HOST];
     NVCV_ASSERT(custom.res.mem.fnAlloc != nullptr);
     return custom.res.mem.fnAlloc(custom.ctx, size, align);
 }
 
-void CustomAllocator::freeHostMem(void *ptr, int64_t size, int32_t align) noexcept
+void CustomAllocator::doFreeHostMem(void *ptr, int64_t size, int32_t align) noexcept
 {
     NVCVCustomAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_HOST];
     NVCV_ASSERT(custom.res.mem.fnFree != nullptr);
@@ -178,14 +178,14 @@ void CustomAllocator::freeHostMem(void *ptr, int64_t size, int32_t align) noexce
 
 // Host Pinned Memory ------------------
 
-void *CustomAllocator::allocHostPinnedMem(int64_t size, int32_t align)
+void *CustomAllocator::doAllocHostPinnedMem(int64_t size, int32_t align)
 {
     NVCVCustomAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_HOST_PINNED];
     NVCV_ASSERT(custom.res.mem.fnAlloc != nullptr);
     return custom.res.mem.fnAlloc(custom.ctx, size, align);
 }
 
-void CustomAllocator::freeHostPinnedMem(void *ptr, int64_t size, int32_t align) noexcept
+void CustomAllocator::doFreeHostPinnedMem(void *ptr, int64_t size, int32_t align) noexcept
 {
     NVCVCustomAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_HOST_PINNED];
     NVCV_ASSERT(custom.res.mem.fnFree != nullptr);
@@ -194,14 +194,14 @@ void CustomAllocator::freeHostPinnedMem(void *ptr, int64_t size, int32_t align) 
 
 // Device Memory ------------------
 
-void *CustomAllocator::allocDeviceMem(int64_t size, int32_t align)
+void *CustomAllocator::doAllocDeviceMem(int64_t size, int32_t align)
 {
     NVCVCustomAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_DEVICE];
     NVCV_ASSERT(custom.res.mem.fnAlloc != nullptr);
     return custom.res.mem.fnAlloc(custom.ctx, size, align);
 }
 
-void CustomAllocator::freeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept
+void CustomAllocator::doFreeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept
 {
     NVCVCustomAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_DEVICE];
     NVCV_ASSERT(custom.res.mem.fnFree != nullptr);
