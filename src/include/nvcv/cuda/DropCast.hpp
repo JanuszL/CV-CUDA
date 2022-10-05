@@ -33,6 +33,9 @@ namespace nv::cv::cuda {
  * template argument (see example below).  The type \p T is not needed as it is inferred from the argument \p v.
  * It is a requirement of the DropCast function that the type \p T has at least N components.
  *
+ * @defgroup NVCV_CPP_CUDATOOLS_DROPCAST Drop Cast
+ * @{
+ *
  * @code
  * uint2 dstIdx = DropCast<2>(blockIdx * blockDim + threadIdx);
  * @endcode
@@ -64,6 +67,8 @@ __host__ __device__ auto DropCast(T v)
         return out;
     }
 }
+
+/**@}*/
 
 } // namespace nv::cv::cuda
 

@@ -28,6 +28,8 @@
  * @brief Declares entities to handle return status codes used in NVCV.
  *
  * NVCV functions uses status codes to return if they succeeded or not.
+ * @defgroup NVCV_C_UTIL_STATUS Status Codes
+ * @{
  */
 
 #ifdef __cplusplus
@@ -129,6 +131,8 @@ NVCV_PUBLIC NVCVStatus nvcvPeekAtLastStatus();
  * @returns The status of the last CV-CUDA function call in current thread.
  */
 NVCV_PUBLIC NVCVStatus nvcvPeekAtLastStatusMessage(char *msgBuffer, int32_t lenBuffer);
+
+/**@}*/
 
 #ifdef __cplusplus
 }

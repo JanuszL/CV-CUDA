@@ -31,6 +31,12 @@
 
 namespace nv { namespace cv {
 
+/**
+ * @brief Defines types and functions to handle image format types.
+ *
+ * @defgroup NVCV_CPP_CORE_IMAGETYPE Image Formats
+ * @{
+ */
 class ImageFormat
 {
 public:
@@ -644,6 +650,8 @@ inline std::ostream &operator<<(std::ostream &out, ImageFormat fmt)
 {
     return out << nvcvImageFormatGetName(fmt);
 }
+
+/**@}*/
 
 }} // namespace nv::cv
 

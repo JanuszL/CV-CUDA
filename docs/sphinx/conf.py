@@ -157,7 +157,7 @@ exhale_args = {
     "createTreeView":        True,
     # TIP: if using the sphinx-bootstrap-theme, you need
     # "treeViewIsBootstrap": True,
-    "exhaleExecutesDoxygen": True,
+    "exhaleExecutesDoxygen": False,
     "fullToctreeMaxDepth": 1,
     "minifyTreeView": False,
     "contentsDirectives": False,

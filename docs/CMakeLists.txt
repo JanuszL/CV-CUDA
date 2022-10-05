@@ -34,8 +34,15 @@ add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE}
 add_custom_target(cvcuda_doxygen ALL DEPENDS ${DOXYGEN_INDEX_FILE})
 
 set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/sphinx)
+set(EXHALE_SOURCE ${SPHINX_SOURCE}/_exhale_api)
 set(SPHINX_BUILD ${CMAKE_CURRENT_BINARY_DIR}/sphinx)
 set(SPHINX_INDEX_FILE ${SPHINX_BUILD}/index.html)
+set(SPHINX_GROUP_INDEX_FILE ${SPHINX_BUILD}/groupindex.html)
+
+# Generate rst files for groups from doxygen index.xml
+add_custom_target(cvcuda_groups ALL
+	COMMAND python3 ${SPHINX_SOURCE}/generate_groups.py ${EXHALE_SOURCE} ${DOXYGEN_OUTPUT_DIR}/xml
+		  DEPENDS ${DOXYGEN_INDEX_FILE})
 
 # Generate Sphinx
 add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
@@ -50,6 +57,7 @@ add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
                    ${DOXYGEN_INDEX_FILE}
                    MAIN_DEPENDENCY ${SPHINX_SOURCE}/conf.py
                    COMMENT "Generating documentation with Sphinx")
+
 
 add_custom_target(cvcuda_sphinx ALL DEPENDS ${SPHINX_INDEX_FILE})
 

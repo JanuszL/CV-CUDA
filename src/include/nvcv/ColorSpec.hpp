@@ -15,6 +15,8 @@
  * @file ColorSpec.hpp
  *
  * @brief Defines C++ types and functions to handle color specs.
+ * @defgroup NVCV_CPP_CORE_COLORSPEC Color Models
+ * @{
  */
 
 #ifndef NVCV_COLORSPEC_HPP
@@ -304,6 +306,8 @@ inline bool NeedsColorspec(ColorModel cmodel)
     detail::CheckThrow(nvcvColorModelNeedsColorspec(static_cast<NVCVColorModel>(cmodel), &out));
     return out != 0;
 }
+
+/**@}*/
 
 }} // namespace nv::cv
 

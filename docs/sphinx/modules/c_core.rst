@@ -11,7 +11,12 @@
    # without an express license agreement from NVIDIA CORPORATION or
    # its affiliates is strictly prohibited.
 
-Modules
-=======
+Core
+====
 
-Placeholder for modules
+Core components and related functions.
+
+.. toctree::
+   :glob:
+
+   ../_exhale_api/group__NVCV__C__CORE__*

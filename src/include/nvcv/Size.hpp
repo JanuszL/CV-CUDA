@@ -25,6 +25,11 @@
 
 namespace nv { namespace cv {
 
+/**
+ * @defgroup NVCV_CPP_CORE_SIZE Size Operator
+ * @{
+*/
+
 struct Size2D
 {
     int w, h;
@@ -67,6 +72,8 @@ inline std::ostream &operator<<(std::ostream &out, const Size2D &size)
 {
     return out << size.w << "x" << size.h;
 }
+
+/**@}*/
 
 }} // namespace nv::cv
 
