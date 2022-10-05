@@ -60,10 +60,10 @@
 
 #if defined(__has_feature)
 #    if __has_feature(address_sanitizer)
-#        define NVCV_ADDRESS_SANITIZER 1
+#        define NVCV_SANITIZED 1
 #    endif
 #elif defined(__SANITIZE_ADDRESS__)
-#    define NVCV_ADDRESS_SANITIZER 1
+#    define NVCV_SANITIZED 1
 #endif
 
 #endif // NVCV_UTIL_COMPILER_HPP

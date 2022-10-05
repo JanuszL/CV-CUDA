@@ -35,3 +35,20 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebI
 else()
     set(LTO_ENABLED OFF)
 endif()
+
+if(ENABLE_SANITIZER)
+    set(COMPILER_SANITIZER_FLAGS
+        -fsanitize=address
+        -fsanitize-address-use-after-scope
+        -fsanitize=leak
+        -fsanitize=undefined
+        -fno-sanitize-recover=all
+        # not properly supported, see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=64234
+        #-static-libasan
+        -static-liblsan
+        -static-libubsan)
+    string(REPLACE ";" " " COMPILER_SANITIZER_FLAGS "${COMPILER_SANITIZER_FLAGS}" )
+
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILER_SANITIZER_FLAGS}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${COMPILER_SANITIZER_FLAGS}")
+endif()

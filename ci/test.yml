@@ -18,6 +18,7 @@
       - 'pwd'
       - 'ls -1 cvcuda-installer/*.deb'
       - 'version=$(cat cvcuda-installer/VERSION)'
+      - "apt-get update"
       - "apt-get install -y --no-install-recommends ./cvcuda-installer/nvcv-lib-${version}.deb ./cvcuda-installer/cvcuda-tests-${version}.deb"
       - '/opt/nvidia/cvcuda*/bin/run_tests.sh'
 
@@ -35,4 +36,10 @@ t:x64:rel:
     extends:
       - .test_x64
     needs: [ 'b:x64:rel' ]
+    tags: [ linux-x64, test, cuda11 ]
+
+t:x64:sanit:
+    extends:
+      - .test_x64
+    needs: [ 'b:x64:sanit' ]
     tags: [ linux-x64, test, cuda11 ]

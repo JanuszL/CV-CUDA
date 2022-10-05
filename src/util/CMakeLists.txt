@@ -13,6 +13,25 @@
 set(OPENSSL_USE_STATIC_LIBS TRUE)
 find_package(OpenSSL COMPONENTS Crypto REQUIRED)
 
+# nvcv_util_sanitizer ---------------------------------
+add_library(nvcv_util_sanitizer
+    SanitizerOptions.c
+)
+
+if(ENABLE_SANITIZER)
+    # needed to force inclusion of ASAN default option functions in
+    # modules that link to this library, see SanitizerOptions.c
+    target_link_libraries(nvcv_util_sanitizer
+        PUBLIC
+        -Wl,-u__asan_default_options
+        -Wl,-u__asan_default_suppressions
+        -Wl,-u__lsan_default_options
+        -Wl,-u__lsan_default_suppressions
+        -Wl,-u__ubsan_default_options
+        -Wl,-u__ubsan_default_suppressions)
+endif()
+
+# nvcv_util ---------------------------------
 add_library(nvcv_util
     Assert.cpp
     HashMD5.cpp
@@ -31,6 +50,7 @@ target_link_libraries(nvcv_util
     PUBLIC
         nvcv_headers
         nvcv_format
+        nvcv_util_sanitizer
         CUDA::cudart_static
     PRIVATE
         OpenSSL::Crypto

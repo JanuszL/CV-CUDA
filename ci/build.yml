@@ -34,3 +34,10 @@ b:x64:rel:
         BUILD_TYPE: release
     extends: .build_common
     tags: [ linux-x64, build, cuda11 ]
+
+b:x64:sanit:
+    variables:
+        BUILD_TYPE: release
+        EXTRA_ARGS: -DENABLE_SANITIZER=true
+    extends: .build_common
+    tags: [ linux-x64, build, cuda11 ]

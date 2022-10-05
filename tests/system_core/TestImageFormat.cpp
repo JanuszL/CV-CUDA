@@ -17,6 +17,7 @@
 #include <nvcv/ImageFormat.h>
 #include <nvcv/ImageFormat.hpp>
 #include <util/Assert.h>
+#include <util/Compiler.hpp>
 #include <util/Size.hpp>
 
 #include <unordered_set>
@@ -768,6 +769,7 @@ TEST(ImageFormatTests, packing_and_bits_per_pixel)
     }
 }
 
+#if !NVCV_SANITIZED
 TEST(ImageFormatTests, get_swizzle)
 {
     for (int pos = 0; pos < 4; ++pos)
@@ -860,6 +862,7 @@ TEST(ImageFormatTests, get_color_model)
         ASSERT_EQ(model + 7 + 2, testColorModel);
     }
 }
+#endif
 
 TEST(ImageFormatTests, make_image_format_null_packing_returns_invalid)
 {

@@ -25,6 +25,7 @@ set(CMAKE_INSTALL_PREFIX "/opt/nvidia/cvcuda${PROJECT_VERSION_MAJOR}")
 
 # Options to configure the build tree =======
 option(BUILD_TESTS "Enable testsuite" OFF)
+option(ENABLE_SANITIZER "Enabled sanitized build" OFF)
 
 # Configure build tree ======================
 

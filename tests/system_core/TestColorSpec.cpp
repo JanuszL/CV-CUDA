@@ -15,6 +15,7 @@
 
 #include <common/ValueTests.hpp>
 #include <nvcv/ColorSpec.h>
+#include <util/Compiler.hpp>
 #include <util/Size.hpp>
 
 namespace t    = ::testing;
@@ -86,6 +87,140 @@ TEST(ColorSpecTests, get_name_non_predefined)
                  nvcvColorSpecGetName(fmt));
 }
 
+TEST(ColorSpecTests, set_encoding_to_undefined)
+{
+    NVCVColorSpec cspec = NVCV_COLOR_SPEC_BT601;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvColorSpecSetYCbCrEncoding(&cspec, NVCV_YCbCr_ENC_UNDEFINED));
+
+    EXPECT_EQ(NVCV_COLOR_SPEC_BT601,
+              NVCV_MAKE_COLOR_SPEC(NVCV_COLOR_SPACE_BT709, NVCV_YCbCr_ENC_BT601, NVCV_COLOR_XFER_BT709,
+                                   NVCV_COLOR_RANGE_LIMITED, NVCV_CHROMA_LOC_EVEN, NVCV_CHROMA_LOC_EVEN));
+}
+
+TEST(ColorSpecTests, get_chroma_loc_both_null)
+{
+    ASSERT_EQ(NVCV_ERROR_INVALID_ARGUMENT, nvcvColorSpecGetChromaLoc(NVCV_COLOR_SPEC_BT601, nullptr, nullptr));
+}
+
+class ColorSpecColorRangeTests : public t::TestWithParam<std::tuple<NVCVColorSpec, NVCVColorRange>>
+{
+};
+
+NVCV_INSTANTIATE_TEST_SUITE_P(Full, ColorSpecColorRangeTests,
+                              test::ValueList{
+                                  NVCV_COLOR_SPEC_UNDEFINED, NVCV_COLOR_SPEC_BT601_ER, NVCV_COLOR_SPEC_BT709_ER,
+                                  NVCV_COLOR_SPEC_BT2020_ER, NVCV_COLOR_SPEC_BT2020c_ER, NVCV_COLOR_SPEC_BT2020_PQ_ER,
+                                  NVCV_COLOR_SPEC_sRGB, NVCV_COLOR_SPEC_DISPLAYP3_LINEAR, NVCV_COLOR_SPEC_DISPLAYP3,
+                                  NVCV_COLOR_SPEC_sYCC, NVCV_COLOR_SPEC_MPEG2_BT601, NVCV_COLOR_SPEC_MPEG2_BT709,
+                                  NVCV_COLOR_SPEC_MPEG2_SMPTE240M}
+                                  * NVCV_COLOR_RANGE_FULL);
+
+NVCV_INSTANTIATE_TEST_SUITE_P(Limited, ColorSpecColorRangeTests,
+                              test::ValueList{NVCV_COLOR_SPEC_BT601, NVCV_COLOR_SPEC_BT709,
+                                              NVCV_COLOR_SPEC_BT709_LINEAR, NVCV_COLOR_SPEC_BT2020,
+                                              NVCV_COLOR_SPEC_BT2020c, NVCV_COLOR_SPEC_BT2020_PQ,
+                                              NVCV_COLOR_SPEC_BT2020_LINEAR, NVCV_COLOR_SPEC_SMPTE240M}
+                                  * NVCV_COLOR_RANGE_LIMITED);
+
+TEST_P(ColorSpecColorRangeTests, color_range_correct)
+{
+    const NVCVColorSpec  cspec = std::get<0>(GetParam());
+    const NVCVColorRange gold  = std::get<1>(GetParam());
+
+    NVCVColorRange test;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvColorSpecGetRange(cspec, &test));
+    EXPECT_EQ(gold, test);
+}
+
+class ColorSpecColorTransferFunctionTests
+    : public t::TestWithParam<std::tuple<NVCVColorSpec, NVCVColorTransferFunction>>
+{
+};
+
+NVCV_INSTANTIATE_TEST_SUITE_P(Linear, ColorSpecColorTransferFunctionTests,
+                              test::ValueList{NVCV_COLOR_SPEC_UNDEFINED, NVCV_COLOR_SPEC_BT709_LINEAR,
+                                              NVCV_COLOR_SPEC_BT2020_LINEAR, NVCV_COLOR_SPEC_DISPLAYP3_LINEAR}
+                                  * NVCV_COLOR_XFER_LINEAR);
+
+NVCV_INSTANTIATE_TEST_SUITE_P(PQ, ColorSpecColorTransferFunctionTests,
+                              test::ValueList{NVCV_COLOR_SPEC_BT2020_PQ, NVCV_COLOR_SPEC_BT2020_PQ_ER}
+                                  * NVCV_COLOR_XFER_PQ);
+
+NVCV_INSTANTIATE_TEST_SUITE_P(sRGB, ColorSpecColorTransferFunctionTests,
+                              test::ValueList{NVCV_COLOR_SPEC_sRGB, NVCV_COLOR_SPEC_DISPLAYP3, NVCV_COLOR_SPEC_sRGB}
+                                  * NVCV_COLOR_XFER_sRGB);
+
+NVCV_INSTANTIATE_TEST_SUITE_P(BT601, ColorSpecColorTransferFunctionTests,
+                              test::ValueList{NVCV_COLOR_SPEC_BT601, NVCV_COLOR_SPEC_BT601_ER,
+                                              NVCV_COLOR_SPEC_MPEG2_BT601, NVCV_COLOR_SPEC_MPEG2_BT709,
+                                              NVCV_COLOR_SPEC_BT709, NVCV_COLOR_SPEC_BT709_ER}
+                                  * NVCV_COLOR_XFER_BT709);
+
+NVCV_INSTANTIATE_TEST_SUITE_P(BT2020, ColorSpecColorTransferFunctionTests,
+                              test::ValueList{NVCV_COLOR_SPEC_BT2020, NVCV_COLOR_SPEC_BT2020c,
+                                              NVCV_COLOR_SPEC_BT2020c_ER, NVCV_COLOR_SPEC_BT2020_ER}
+                                  * NVCV_COLOR_XFER_BT2020);
+
+NVCV_INSTANTIATE_TEST_SUITE_P(SMPTE240M, ColorSpecColorTransferFunctionTests,
+                              test::ValueList{NVCV_COLOR_SPEC_SMPTE240M, NVCV_COLOR_SPEC_MPEG2_SMPTE240M}
+                                  * NVCV_COLOR_XFER_SMPTE240M);
+
+NVCV_INSTANTIATE_TEST_SUITE_P(sYCC, ColorSpecColorTransferFunctionTests,
+                              test::ValueList{NVCV_COLOR_SPEC_sYCC} * NVCV_COLOR_XFER_sYCC);
+
+TEST_P(ColorSpecColorTransferFunctionTests, color_mapping_correct)
+{
+    const NVCVColorSpec             cspec = std::get<0>(GetParam());
+    const NVCVColorTransferFunction gold  = std::get<1>(GetParam());
+
+    NVCVColorTransferFunction test;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvColorSpecGetColorTransferFunction(cspec, &test));
+    EXPECT_EQ(gold, test);
+}
+
+class ColorModelNeedsColorSpecTests : public t::TestWithParam<std::tuple<NVCVColorModel, bool, NVCVStatus>>
+{
+};
+
+NVCV_INSTANTIATE_TEST_SUITE_P(Positive, ColorModelNeedsColorSpecTests,
+                              test::ValueList<NVCVColorModel, bool>{
+                                  {    NVCV_COLOR_MODEL_YCbCr,  true},
+                                  {      NVCV_COLOR_MODEL_RGB,  true},
+                                  {NVCV_COLOR_MODEL_UNDEFINED, false},
+                                  {      NVCV_COLOR_MODEL_RAW, false},
+                                  {      NVCV_COLOR_MODEL_XYZ, false},
+} * NVCV_SUCCESS);
+
+#if !NVCV_SANITIZED
+NVCV_INSTANTIATE_TEST_SUITE_P(Negative, ColorModelNeedsColorSpecTests,
+                              test::ValueList<NVCVColorModel, bool>{
+                                  {NVCVColorModel(419), true},
+} * NVCV_ERROR_INVALID_ARGUMENT);
+#endif
+
+TEST_P(ColorModelNeedsColorSpecTests, run)
+{
+    const NVCVColorModel cmodel     = std::get<0>(GetParam());
+    const bool           goldResult = std::get<1>(GetParam());
+    const NVCVStatus     goldStatus = std::get<2>(GetParam());
+
+    int8_t testResult = !goldResult;
+    ASSERT_EQ(goldStatus, nvcvColorModelNeedsColorspec(cmodel, &testResult));
+
+    if (goldStatus == NVCV_SUCCESS)
+    {
+        EXPECT_EQ(goldResult, testResult);
+    }
+    else
+    {
+        EXPECT_EQ(!goldResult, testResult) << "Must not have changed output";
+    }
+}
+
+// The tests below explicitly create invalid enums just to test if there's any
+// overflow in bitfield representation. This will trigger -fsanitize=enum. Let's
+// disable them now in sanitized builds.
+#if !NVCV_SANITIZED
 TEST(ColorSpecTests, set_color_space)
 {
     for (int cspace = 0; cspace < 1 << 3; cspace ? cspace <<= 1 : ++cspace)
@@ -134,16 +269,6 @@ TEST(ColorSpecTests, set_encodings)
         ASSERT_EQ(NVCV_SUCCESS, nvcvColorSpecSetYCbCrEncoding(&type, (NVCVYCbCrEncoding)enc));
         ASSERT_EQ(gold, type);
     }
-}
-
-TEST(ColorSpecTests, set_encoding_to_undefined)
-{
-    NVCVColorSpec cspec = NVCV_COLOR_SPEC_BT601;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvColorSpecSetYCbCrEncoding(&cspec, NVCV_YCbCr_ENC_UNDEFINED));
-
-    EXPECT_EQ(NVCV_COLOR_SPEC_BT601,
-              NVCV_MAKE_COLOR_SPEC(NVCV_COLOR_SPACE_BT709, NVCV_YCbCr_ENC_BT601, NVCV_COLOR_XFER_BT709,
-                                   NVCV_COLOR_RANGE_LIMITED, NVCV_CHROMA_LOC_EVEN, NVCV_CHROMA_LOC_EVEN));
 }
 
 TEST(ColorSpecTests, get_encodings)
@@ -295,124 +420,7 @@ TEST(ColorSpecTests, get_chroma_loc_both)
         EXPECT_EQ(goldVert, testVert);
     }
 }
-
-TEST(ColorSpecTests, get_chroma_loc_both_null)
-{
-    ASSERT_EQ(NVCV_ERROR_INVALID_ARGUMENT, nvcvColorSpecGetChromaLoc(NVCV_COLOR_SPEC_BT601, nullptr, nullptr));
-}
-
-class ColorSpecColorRangeTests : public t::TestWithParam<std::tuple<NVCVColorSpec, NVCVColorRange>>
-{
-};
-
-NVCV_INSTANTIATE_TEST_SUITE_P(Full, ColorSpecColorRangeTests,
-                              test::ValueList{
-                                  NVCV_COLOR_SPEC_UNDEFINED, NVCV_COLOR_SPEC_BT601_ER, NVCV_COLOR_SPEC_BT709_ER,
-                                  NVCV_COLOR_SPEC_BT2020_ER, NVCV_COLOR_SPEC_BT2020c_ER, NVCV_COLOR_SPEC_BT2020_PQ_ER,
-                                  NVCV_COLOR_SPEC_sRGB, NVCV_COLOR_SPEC_DISPLAYP3_LINEAR, NVCV_COLOR_SPEC_DISPLAYP3,
-                                  NVCV_COLOR_SPEC_sYCC, NVCV_COLOR_SPEC_MPEG2_BT601, NVCV_COLOR_SPEC_MPEG2_BT709,
-                                  NVCV_COLOR_SPEC_MPEG2_SMPTE240M}
-                                  * NVCV_COLOR_RANGE_FULL);
-
-NVCV_INSTANTIATE_TEST_SUITE_P(Limited, ColorSpecColorRangeTests,
-                              test::ValueList{NVCV_COLOR_SPEC_BT601, NVCV_COLOR_SPEC_BT709,
-                                              NVCV_COLOR_SPEC_BT709_LINEAR, NVCV_COLOR_SPEC_BT2020,
-                                              NVCV_COLOR_SPEC_BT2020c, NVCV_COLOR_SPEC_BT2020_PQ,
-                                              NVCV_COLOR_SPEC_BT2020_LINEAR, NVCV_COLOR_SPEC_SMPTE240M}
-                                  * NVCV_COLOR_RANGE_LIMITED);
-
-TEST_P(ColorSpecColorRangeTests, color_range_correct)
-{
-    const NVCVColorSpec  cspec = std::get<0>(GetParam());
-    const NVCVColorRange gold  = std::get<1>(GetParam());
-
-    NVCVColorRange test;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvColorSpecGetRange(cspec, &test));
-    EXPECT_EQ(gold, test);
-}
-
-class ColorSpecColorTransferFunctionTests
-    : public t::TestWithParam<std::tuple<NVCVColorSpec, NVCVColorTransferFunction>>
-{
-};
-
-NVCV_INSTANTIATE_TEST_SUITE_P(Linear, ColorSpecColorTransferFunctionTests,
-                              test::ValueList{NVCV_COLOR_SPEC_UNDEFINED, NVCV_COLOR_SPEC_BT709_LINEAR,
-                                              NVCV_COLOR_SPEC_BT2020_LINEAR, NVCV_COLOR_SPEC_DISPLAYP3_LINEAR}
-                                  * NVCV_COLOR_XFER_LINEAR);
-
-NVCV_INSTANTIATE_TEST_SUITE_P(PQ, ColorSpecColorTransferFunctionTests,
-                              test::ValueList{NVCV_COLOR_SPEC_BT2020_PQ, NVCV_COLOR_SPEC_BT2020_PQ_ER}
-                                  * NVCV_COLOR_XFER_PQ);
-
-NVCV_INSTANTIATE_TEST_SUITE_P(sRGB, ColorSpecColorTransferFunctionTests,
-                              test::ValueList{NVCV_COLOR_SPEC_sRGB, NVCV_COLOR_SPEC_DISPLAYP3, NVCV_COLOR_SPEC_sRGB}
-                                  * NVCV_COLOR_XFER_sRGB);
-
-NVCV_INSTANTIATE_TEST_SUITE_P(BT601, ColorSpecColorTransferFunctionTests,
-                              test::ValueList{NVCV_COLOR_SPEC_BT601, NVCV_COLOR_SPEC_BT601_ER,
-                                              NVCV_COLOR_SPEC_MPEG2_BT601, NVCV_COLOR_SPEC_MPEG2_BT709,
-                                              NVCV_COLOR_SPEC_BT709, NVCV_COLOR_SPEC_BT709_ER}
-                                  * NVCV_COLOR_XFER_BT709);
-
-NVCV_INSTANTIATE_TEST_SUITE_P(BT2020, ColorSpecColorTransferFunctionTests,
-                              test::ValueList{NVCV_COLOR_SPEC_BT2020, NVCV_COLOR_SPEC_BT2020c,
-                                              NVCV_COLOR_SPEC_BT2020c_ER, NVCV_COLOR_SPEC_BT2020_ER}
-                                  * NVCV_COLOR_XFER_BT2020);
-
-NVCV_INSTANTIATE_TEST_SUITE_P(SMPTE240M, ColorSpecColorTransferFunctionTests,
-                              test::ValueList{NVCV_COLOR_SPEC_SMPTE240M, NVCV_COLOR_SPEC_MPEG2_SMPTE240M}
-                                  * NVCV_COLOR_XFER_SMPTE240M);
-
-NVCV_INSTANTIATE_TEST_SUITE_P(sYCC, ColorSpecColorTransferFunctionTests,
-                              test::ValueList{NVCV_COLOR_SPEC_sYCC} * NVCV_COLOR_XFER_sYCC);
-
-TEST_P(ColorSpecColorTransferFunctionTests, color_mapping_correct)
-{
-    const NVCVColorSpec             cspec = std::get<0>(GetParam());
-    const NVCVColorTransferFunction gold  = std::get<1>(GetParam());
-
-    NVCVColorTransferFunction test;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvColorSpecGetColorTransferFunction(cspec, &test));
-    EXPECT_EQ(gold, test);
-}
-
-class ColorModelNeedsColorSpecTests : public t::TestWithParam<std::tuple<NVCVColorModel, bool, NVCVStatus>>
-{
-};
-
-NVCV_INSTANTIATE_TEST_SUITE_P(Positive, ColorModelNeedsColorSpecTests,
-                              test::ValueList<NVCVColorModel, bool>{
-                                  {    NVCV_COLOR_MODEL_YCbCr,  true},
-                                  {      NVCV_COLOR_MODEL_RGB,  true},
-                                  {NVCV_COLOR_MODEL_UNDEFINED, false},
-                                  {      NVCV_COLOR_MODEL_RAW, false},
-                                  {      NVCV_COLOR_MODEL_XYZ, false},
-} * NVCV_SUCCESS);
-
-NVCV_INSTANTIATE_TEST_SUITE_P(Negative, ColorModelNeedsColorSpecTests,
-                              test::ValueList<NVCVColorModel, bool>{
-                                  {NVCVColorModel(419), true},
-} * NVCV_ERROR_INVALID_ARGUMENT);
-
-TEST_P(ColorModelNeedsColorSpecTests, run)
-{
-    const NVCVColorModel cmodel     = std::get<0>(GetParam());
-    const bool           goldResult = std::get<1>(GetParam());
-    const NVCVStatus     goldStatus = std::get<2>(GetParam());
-
-    int8_t testResult = !goldResult;
-    ASSERT_EQ(goldStatus, nvcvColorModelNeedsColorspec(cmodel, &testResult));
-
-    if (goldStatus == NVCV_SUCCESS)
-    {
-        EXPECT_EQ(goldResult, testResult);
-    }
-    else
-    {
-        EXPECT_EQ(!goldResult, testResult) << "Must not have changed output";
-    }
-}
+#endif // !NVCV_SANITIZED
 
 // Color Model ===========================
 
