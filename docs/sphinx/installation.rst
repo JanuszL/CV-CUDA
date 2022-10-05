@@ -16,4 +16,59 @@
 Installation
 ============
 
-Install instructions TBA
+Pre-requisites
+--------------
+
+This section describes the recommended dependencies to compile cvcuda
+
+* Ubuntu >= 20.04
+* CUDA driver >= 11.7
+
+Setup
+-----
+
+The following steps describe how to install cvcuda. Choose the installation method that meets your environment needs.
+
+Download the cvcuda tar/deb package from <link here>
+
+* Tar File Installation
+
+Navigate to your <cvcudapath> directory containing the cvcuda tar file.
+
+Unzip the cvcuda runtime package: ::
+
+    tar -xvf nvcv-lib-x.x.x-cuda11-x86_64-linux.tar.xz
+
+Unzip the cvcuda developer package: ::
+
+    tar -xvf nvcv-dev-x.x.x-cuda11-x86_64-linux.tar.xz
+
+Optionally Unzip the tests. ::
+
+    tar -xvf cvcuda-tests-cuda11-x86_64-linux.tar.xz
+
+* Debian Local Installation
+
+Navigate to your <cvcudapath> directory containing the cvcuda Debian local installer file. ::
+
+Install the runtime library. ::
+
+    sudo dpkg -i nvcv-lib-x.x.x-cuda11-x86_64-linux.deb
+
+Install the developer library. ::
+
+    sudo dpkg -i nvcv-dev-x.x.x-cuda11-x86_64-linux.deb
+
+Optionally install the tests. ::
+
+    sudo dpkg -i cvcuda-tests-x.x.x-cuda11-x86_64-linux.deb
+
+* Verifying the Installation on Linux
+
+To verify that cvcuda is installed and is running properly, run the tests from the install folder for tests.
+Default installation path is /opt/nvidia/cvcuda0/bin. ::
+
+    cd /opt/nvidia/cvcuda0/bin
+    ./run_tests.sh
+
+If CVCUDA is properly installed and running on your Linux system, all tests will pass.
