@@ -95,7 +95,6 @@ public:
     ImageFormat rawPattern(RawPattern newRawPattern) const;
     RawPattern  rawPattern() const noexcept;
 
-    int                bitsPerPixel(int plane) const noexcept;
     Swizzle            swizzle() const noexcept;
     ColorModel         colorModel() const noexcept;
     int                blockHeightLog2() const noexcept;
