@@ -14,7 +14,7 @@
 #include <nvcv/Status.h>
 #include <nvcv/Status.hpp>
 #include <private/core/Status.hpp>
-#include <util/SymbolVersioning.hpp>
+#include <private/core/SymbolVersioning.hpp>
 
 namespace priv = nv::cv::priv;
 

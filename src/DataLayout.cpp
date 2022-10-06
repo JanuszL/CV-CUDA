@@ -17,8 +17,8 @@
 #include <nvcv/Status.h>
 #include <private/core/Exception.hpp>
 #include <private/core/Status.hpp>
+#include <private/core/SymbolVersioning.hpp>
 #include <util/Assert.h>
-#include <util/SymbolVersioning.hpp>
 
 #include <cstring>
 

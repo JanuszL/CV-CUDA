@@ -17,7 +17,7 @@
 #include <private/core/DefaultAllocator.hpp>
 #include <private/core/Exception.hpp>
 #include <private/core/Status.hpp>
-#include <util/SymbolVersioning.hpp>
+#include <private/core/SymbolVersioning.hpp>
 
 #include <memory>
 

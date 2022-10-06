@@ -25,7 +25,7 @@ Header:
  NVCV_PUBLIC NVCVStatus nvcvFooCreate(uint64_t flags, NVCVFoo *handle);
 
 Implementation:
- NVCV_DEFINE_API(1, 0, NVCVStatus, nvcvFooCreate, (uint64_t flags, NVCVFoo *handle))
+ NVCV_PROJ_DEFINE_API(NVCV, 1, 0, NVCVStatus, nvcvFooCreate, (uint64_t flags, NVCVFoo *handle))
  {
     implementation 1;
  }
@@ -42,12 +42,12 @@ Header:
 
 Implementation:
 
- NVCV_DEFINE_API_OLD(1, 0, NVCVStatus, nvcvFooCreate(uint64_t flags, NVCVFoo *handle))
+ NVCV_PROJ_DEFINE_API_OLD(NVCV, 1, 0, NVCVStatus, nvcvFooCreate(uint64_t flags, NVCVFoo *handle))
  {
     implementation 1;
  }
 
- NVCV_DEFINE_API(1, 1, NVCVStatus, nvcvFooCreate, (int32_t size, uint64_t flags, NVCVFoo *handle))
+ NVCV_PROJ_DEFINE_API(NVCV, 1, 1, NVCVStatus, nvcvFooCreate, (int32_t size, uint64_t flags, NVCVFoo *handle))
  {
     implementation 2;
  }
@@ -64,16 +64,16 @@ void *foo11_tmp = dlsym(lib, "nvcvFoo");
 assert(foo11 == foo11_tmp);
 */
 
-#define NVCV_FUNCTION_API(VER_MAJOR, VER_MINOR, NAME) NAME##_v##VER_MAJOR##_##VER_MINOR
+#define NVCV_PROJ_FUNCTION_API(FUNC, VER_MAJOR, VER_MINOR) FUNC##_v##VER_MAJOR##_##VER_MINOR
 
-#define NVCV_DEFINE_API_HELPER(VER_MAJOR, VER_MINOR, VERTYPE, RETTYPE, NAME, ARGS)                              \
-    extern "C" __attribute__((__symver__(#NAME VERTYPE "NVCV_" #VER_MAJOR "." #VER_MINOR))) NVCV_PUBLIC RETTYPE \
-        NVCV_FUNCTION_API(VER_MAJOR, VER_MINOR, NAME) ARGS
+#define NVCV_PROJ_DEFINE_API_HELPER(PROJ, VER_MAJOR, VER_MINOR, VERTYPE, RETTYPE, FUNC, ARGS)                     \
+    extern "C" __attribute__((__symver__(#FUNC VERTYPE #PROJ "_" #VER_MAJOR "." #VER_MINOR))) NVCV_PUBLIC RETTYPE \
+        NVCV_PROJ_FUNCTION_API(FUNC, VER_MAJOR, VER_MINOR) ARGS
 
-#define NVCV_DEFINE_API_OLD(VER_MAJOR, VER_MINOR, RETTYPE, NAME, ARGS) \
-    NVCV_DEFINE_API_HELPER(VER_MAJOR, VER_MINOR, "@", RETTYPE, NAME, ARGS)
+#define NVCV_PROJ_DEFINE_API_OLD(PROJ, VER_MAJOR, VER_MINOR, RETTYPE, FUNC, ARGS) \
+    NVCV_PROJ_DEFINE_API_HELPER(PROJ, VER_MAJOR, VER_MINOR, "@", RETTYPE, FUNC, ARGS)
 
-#define NVCV_DEFINE_API(VER_MAJOR, VER_MINOR, RETTYPE, NAME, ARGS) \
-    NVCV_DEFINE_API_HELPER(VER_MAJOR, VER_MINOR, "@@", RETTYPE, NAME, ARGS)
+#define NVCV_PROJ_DEFINE_API(PROJ, VER_MAJOR, VER_MINOR, RETTYPE, FUNC, ARGS) \
+    NVCV_PROJ_DEFINE_API_HELPER(PROJ, VER_MAJOR, VER_MINOR, "@@", RETTYPE, FUNC, ARGS)
 
 #endif // NVCV_UTIL_SYMBOLVERSIONING_HPP
