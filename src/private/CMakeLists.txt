@@ -13,3 +13,4 @@
 add_subdirectory(core)
 add_subdirectory(fmt)
 add_subdirectory(legacy)
+add_subdirectory(operators)

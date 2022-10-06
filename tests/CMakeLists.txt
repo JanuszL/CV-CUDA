@@ -68,6 +68,9 @@ add_subdirectory(common)
 # System tests for nvcv core public API
 add_subdirectory(system_core)
 
+# System tests for nvcv operators public API
+add_subdirectory(system_core_op)
+
 # System tests for nvcv CUDA tools public API
 add_subdirectory(system_cudatools)
 

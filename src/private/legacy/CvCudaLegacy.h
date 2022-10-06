@@ -20,7 +20,10 @@
 #ifndef CV_CUDA_OP_H_
 #define CV_CUDA_OP_H_
 
-namespace cuda_op {
+#include <cuda_runtime.h>
+#include <nvcv/ITensorData.hpp>
+
+namespace nv::cv::legacy::cuda_op {
 
 struct Rect
 {
@@ -66,7 +69,7 @@ enum DataType
     kCV_32S = 4,
     kCV_32F = 5,
     kCV_64F = 6,
-    kCV_16F = 7
+    kCV_16F = 7,
 };
 
 struct DataShape
@@ -212,18 +215,17 @@ public:
      * @param data_type data type of the input images, e.g. kCV_32F.
      * @param stream for the asynchronous execution.
      */
-    int    infer(const void *const *inputs, void **outputs, void *workspace, DataShape input_shape,
-                 DataFormat input_format, DataFormat output_format, DataType data_type, cudaStream_t stream);
+    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, cudaStream_t stream);
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator
      * @param max_input_shape maximum input DataShape that may be used
      * @param max_output_shape maximum output DataShape that may be used
      * @param max_data_type DataType with the maximum size that may be used
      */
-    size_t calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
-    void   checkDataFormat(DataFormat format);
+    size_t    calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
+    void      checkDataFormat(DataFormat format);
 };
 
-} // namespace cuda_op
+} // namespace nv::cv::legacy::cuda_op
 
 #endif

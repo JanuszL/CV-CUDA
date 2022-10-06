@@ -1,6 +1,6 @@
 # Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
 # SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
+
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -10,30 +10,20 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-add_executable(nvcv_test_unit_core
-    TestHashMD5.cpp
-    TestValueList.cpp
-    TestValueTests.cpp
-    TestTypeList.cpp
-    TestTypedTests.cpp
-    TestCheckError.cpp
-    TestString.cpp
-    TestStaticVector.cpp
-    TestVersion.cpp
-    TestIndexSequence.cpp
-    TestMath.cpp
-    TestMetaprogramming.cpp
-    TestOptional.cpp
-    TestLegacyHelpers.cpp
+add_library(nvcv_private_operators STATIC
+    OpReformat.cpp
 )
 
-target_link_libraries(nvcv_test_unit_core
-    PRIVATE
-        nvcv_util
-        nvcv_test_main
-        nvcv_test_common
-        nvcv_private_core
-        nvcv_private_operators
+target_include_directories(nvcv_private_operators
+    PUBLIC
+        ../..
 )
 
-nvcv_add_test(nvcv_test_unit_core)
+target_link_libraries(nvcv_private_operators
+    PUBLIC
+        nvcv_headers
+        nvcv_util_sanitizer
+        nvcv_format
+        cvcuda_legacy
+        CUDA::cudart_static
+)

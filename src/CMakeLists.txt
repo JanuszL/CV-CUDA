@@ -35,10 +35,13 @@ add_library(nvcv SHARED
     ImageBatch.cpp
     Tensor.cpp
     TensorData.cpp
+    operators/Operator.cpp
+    operators/OpReformat.cpp
 )
 
 target_link_libraries(nvcv PRIVATE
     nvcv_private_core
+    nvcv_private_operators
     nvcv_util
     nvcv_format
     -static-libstdc++
