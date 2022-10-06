@@ -98,7 +98,7 @@ public:
     int                    numPlanes() const noexcept;
 
     constexpr NVCVPacking planePacking(int plane) const noexcept;
-    int                   planeElemStride(int plane) const noexcept;
+    int                   planePixelStrideBytes(int plane) const noexcept;
     PixelType             planePixelType(int plane) const noexcept;
     int                   planeNumChannels(int plane) const noexcept;
     int                   planeBPP(int plane) const noexcept;

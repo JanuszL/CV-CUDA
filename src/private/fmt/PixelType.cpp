@@ -39,7 +39,7 @@ int PixelType::numChannels() const noexcept
     return ImageFormat{m_type}.planeNumChannels(0);
 }
 
-int PixelType::elemStride() const noexcept
+int PixelType::strideBytes() const noexcept
 {
     return (this->bpp() + 7) / 8;
 }
