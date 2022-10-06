@@ -21,6 +21,7 @@ add_executable(nvcv_test_system_core
     TestImageFormat.cpp
     TestPixelType.cpp
     TestAllocator.cpp
+    TestRequirements.cpp
 )
 
 target_link_libraries(nvcv_test_system_core
