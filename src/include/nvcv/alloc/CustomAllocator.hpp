@@ -50,11 +50,14 @@ public:
     }
 
 private:
+    // Must come before m_wrap;
+    NVCVAllocator m_handle;
+
     std::tuple<AA...> m_resAllocators;
 
     AllocatorWrapHandle m_wrap;
 
-    NVCVAllocator doCreateAllocator()
+    NVCVAllocator *doCreateAllocator()
     {
         static_assert(sizeof...(AA) <= NVCV_NUM_RESOURCE_TYPES,
                       "Maximum number of resource allocators per custom allocator exceeded.");
@@ -63,9 +66,8 @@ private:
 
         doFillAllocatorList(custAllocList, detail::MakeIndexSequence<sizeof...(AA)>());
 
-        NVCVAllocator halloc;
-        detail::CheckThrow(nvcvAllocatorCreateCustom(custAllocList, sizeof...(AA), &halloc));
-        return halloc;
+        detail::CheckThrow(nvcvAllocatorCreateCustom(custAllocList, sizeof...(AA), &m_handle));
+        return &m_handle;
     }
 
     void doFillAllocator(NVCVCustomAllocator &out, IMemAllocator &alloc)
@@ -124,7 +126,7 @@ private:
         doFillAllocatorList(outResAlloc, detail::IndexSequence<TAIL...>());
     }
 
-    NVCVAllocator doGetHandle() const noexcept override
+    NVCVAllocator *doGetHandle() const noexcept override
     {
         return m_wrap.handle();
     }

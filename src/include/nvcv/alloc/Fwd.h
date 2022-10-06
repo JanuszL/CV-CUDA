@@ -21,7 +21,7 @@
 #define NVCV_ALLOC_FWD_H
 
 /** Handle to an allocator instance. */
-typedef struct NVCVAllocatorImpl *NVCVAllocator;
+typedef struct NVCVAllocatorImpl NVCVAllocator;
 
 typedef struct NVCVCustomAllocatorRec NVCVCustomAllocator;
 

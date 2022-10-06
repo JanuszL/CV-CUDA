@@ -38,7 +38,7 @@ namespace nv { namespace cv {
 class AllocatorWrapHandle final : public virtual IAllocator
 {
 public:
-    explicit AllocatorWrapHandle(NVCVAllocator handle)
+    explicit AllocatorWrapHandle(NVCVAllocator *handle)
         : m_handle(handle)
         , m_allocHostMem(handle)
         , m_allocHostPinnedMem(handle)
@@ -50,13 +50,13 @@ private:
     class HostMemAllocator final : public IHostMemAllocator
     {
     public:
-        HostMemAllocator(NVCVAllocator handle)
+        HostMemAllocator(NVCVAllocator *handle)
             : m_handle(handle)
         {
         }
 
     private:
-        NVCVAllocator m_handle;
+        NVCVAllocator *m_handle;
 
         void *doAlloc(int64_t size, int32_t align) override
         {
@@ -74,13 +74,13 @@ private:
     class HostPinnedMemAllocator final : public IHostPinnedMemAllocator
     {
     public:
-        HostPinnedMemAllocator(NVCVAllocator handle)
+        HostPinnedMemAllocator(NVCVAllocator *handle)
             : m_handle(handle)
         {
         }
 
     private:
-        NVCVAllocator m_handle;
+        NVCVAllocator *m_handle;
 
         void *doAlloc(int64_t size, int32_t align) override
         {
@@ -98,13 +98,13 @@ private:
     class DeviceMemAllocator final : public IDeviceMemAllocator
     {
     public:
-        DeviceMemAllocator(NVCVAllocator handle)
+        DeviceMemAllocator(NVCVAllocator *handle)
             : m_handle(handle)
         {
         }
 
     private:
-        NVCVAllocator m_handle;
+        NVCVAllocator *m_handle;
 
         void *doAlloc(int64_t size, int32_t align) override
         {
@@ -119,13 +119,13 @@ private:
         }
     };
 
-    NVCVAllocator m_handle;
+    NVCVAllocator *m_handle;
 
     HostMemAllocator       m_allocHostMem;
     HostPinnedMemAllocator m_allocHostPinnedMem;
     DeviceMemAllocator     m_allocDeviceMem;
 
-    NVCVAllocator doGetHandle() const noexcept override
+    NVCVAllocator *doGetHandle() const noexcept override
     {
         return m_handle;
     }

@@ -101,7 +101,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageCalcRequirements(int32_t width, int32_t height, 
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the image.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvImageCreate(const NVCVImageRequirements *reqs, NVCVAllocator alloc, NVCVImage *handle);
+NVCV_PUBLIC NVCVStatus nvcvImageCreate(const NVCVImageRequirements *reqs, NVCVAllocator *alloc, NVCVImage *handle);
 
 /** Wraps an existing image buffer into an NVCV image instance.
  *
@@ -142,7 +142,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageCreate(const NVCVImageRequirements *reqs, NVCVAl
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvImageCreateWrapData(const NVCVImageData *data, NVCVImageDataCleanupFunc cleanup,
-                                               void *ctxCleanup, NVCVAllocator alloc, NVCVImage *handle);
+                                               void *ctxCleanup, NVCVAllocator *alloc, NVCVImage *handle);
 
 /** Destroys an existing image instance.
  *
@@ -207,7 +207,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageGetFormat(NVCVImage handle, NVCVImageFormat *fmt
  * @retval #VPI_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
  * @retval #VPI_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvImageGetAllocator(NVCVImage handle, NVCVAllocator *alloc);
+NVCV_PUBLIC NVCVStatus nvcvImageGetAllocator(NVCVImage handle, NVCVAllocator **alloc);
 
 /**
  * Retrieve the image contents.

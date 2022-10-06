@@ -50,6 +50,8 @@
 #include "../Status.h"
 #include "../detail/Export.h"
 
+#include <stdalign.h>
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -123,8 +125,12 @@ typedef struct NVCVCustomAllocatorRec
     NVCVCustomResourceAllocator res;
 } NVCVCustomAllocator;
 
-/** Handle to an allocator instance. */
-typedef struct NVCVAllocatorImpl *NVCVAllocator;
+/** Storage for allocator instance. */
+typedef struct NVCVAllocatorImpl
+{
+    /** Instance storage */
+    alignas(8) uint8_t storage[128];
+} NVCVAllocator;
 
 /** Creates a custom allocator instance.
  *
@@ -158,7 +164,7 @@ NVCV_PUBLIC NVCVStatus nvcvAllocatorCreateCustom(const NVCVCustomAllocator *cust
  *                    If NULL, no operation is performed, successfully.
  *                    + The handle must have been created with @ref nvcvAllocatorCreate.
  */
-NVCV_PUBLIC void nvcvAllocatorDestroy(NVCVAllocator halloc);
+NVCV_PUBLIC void nvcvAllocatorDestroy(NVCVAllocator *halloc);
 
 /** Allocates a memory buffer of a host-accessible memory.
  *
@@ -179,7 +185,7 @@ NVCV_PUBLIC void nvcvAllocatorDestroy(NVCVAllocator halloc);
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough free memory.
  * @retval #NVCV_SUCCESS                Operation completed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvAllocatorAllocHostMemory(NVCVAllocator halloc, void **ptr, int64_t sizeBytes,
+NVCV_PUBLIC NVCVStatus nvcvAllocatorAllocHostMemory(NVCVAllocator *halloc, void **ptr, int64_t sizeBytes,
                                                     int32_t alignBytes);
 
 /** Frees a host-accessible memory buffer.
@@ -199,7 +205,7 @@ NVCV_PUBLIC NVCVStatus nvcvAllocatorAllocHostMemory(NVCVAllocator halloc, void *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation completed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvAllocatorFreeHostMemory(NVCVAllocator halloc, void *ptr, int64_t sizeBytes,
+NVCV_PUBLIC NVCVStatus nvcvAllocatorFreeHostMemory(NVCVAllocator *halloc, void *ptr, int64_t sizeBytes,
                                                    int32_t alignBytes);
 
 /** Allocates a memory buffer of both host- and device-accessible memory.
@@ -221,7 +227,7 @@ NVCV_PUBLIC NVCVStatus nvcvAllocatorFreeHostMemory(NVCVAllocator halloc, void *p
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough free memory.
  * @retval #NVCV_SUCCESS                Operation completed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvAllocatorAllocHostPinnedMemory(NVCVAllocator halloc, void **ptr, int64_t sizeBytes,
+NVCV_PUBLIC NVCVStatus nvcvAllocatorAllocHostPinnedMemory(NVCVAllocator *halloc, void **ptr, int64_t sizeBytes,
                                                           int32_t alignBytes);
 
 /** Frees a both host- and device-accessible memory buffer.
@@ -241,7 +247,7 @@ NVCV_PUBLIC NVCVStatus nvcvAllocatorAllocHostPinnedMemory(NVCVAllocator halloc, 
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation completed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvAllocatorFreeHostPinnedMemory(NVCVAllocator halloc, void *ptr, int64_t sizeBytes,
+NVCV_PUBLIC NVCVStatus nvcvAllocatorFreeHostPinnedMemory(NVCVAllocator *halloc, void *ptr, int64_t sizeBytes,
                                                          int32_t alignBytes);
 
 /** Allocates a memory buffer of device-accessible memory.
@@ -263,7 +269,7 @@ NVCV_PUBLIC NVCVStatus nvcvAllocatorFreeHostPinnedMemory(NVCVAllocator halloc, v
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough free memory.
  * @retval #NVCV_SUCCESS                Operation completed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvAllocatorAllocDeviceMemory(NVCVAllocator halloc, void **ptr, int64_t sizeBytes,
+NVCV_PUBLIC NVCVStatus nvcvAllocatorAllocDeviceMemory(NVCVAllocator *halloc, void **ptr, int64_t sizeBytes,
                                                       int32_t alignBytes);
 
 /** Frees a device-accessible memory buffer.
@@ -283,7 +289,7 @@ NVCV_PUBLIC NVCVStatus nvcvAllocatorAllocDeviceMemory(NVCVAllocator halloc, void
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation completed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvAllocatorFreeDeviceMemory(NVCVAllocator halloc, void *ptr, int64_t sizeBytes,
+NVCV_PUBLIC NVCVStatus nvcvAllocatorFreeDeviceMemory(NVCVAllocator *halloc, void *ptr, int64_t sizeBytes,
                                                      int32_t alignBytes);
 
 #ifdef __cplusplus

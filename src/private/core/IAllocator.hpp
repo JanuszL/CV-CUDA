@@ -22,7 +22,7 @@
 
 namespace nv::cv::priv {
 
-class IAllocator : public ICoreObjectHandle<IAllocator, NVCVAllocator>
+class IAllocator : public ICoreObjectHandle<IAllocator, NVCVAllocator *>
 {
 public:
     void *allocHostMem(int64_t size, int32_t align);
@@ -71,7 +71,7 @@ void FreeHostObj(IAllocator &alloc, T *ptr) noexcept
     }
 }
 
-priv::IAllocator &GetAllocator(NVCVAllocator handle);
+priv::IAllocator &GetAllocator(NVCVAllocator *handle);
 priv::IAllocator &GetDefaultAllocator();
 
 } // namespace nv::cv::priv

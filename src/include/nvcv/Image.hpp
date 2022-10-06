@@ -155,7 +155,7 @@ inline IAllocator &ImageWrapHandle::doGetAlloc() const
 {
     if (!m_alloc)
     {
-        NVCVAllocator halloc;
+        NVCVAllocator *halloc;
         detail::CheckThrow(nvcvImageGetAllocator(m_handle, &halloc));
         m_alloc.emplace(halloc);
     }

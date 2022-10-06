@@ -27,7 +27,7 @@ ObjectBag::~ObjectBag()
     }
 }
 
-void ObjectBag::insert(NVCVAllocator handle)
+void ObjectBag::insert(NVCVAllocator *handle)
 {
     m_objs.push([handle]() { nvcvAllocatorDestroy(handle); });
 }
