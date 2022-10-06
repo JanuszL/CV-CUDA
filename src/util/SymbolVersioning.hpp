@@ -25,7 +25,7 @@ Header:
  NVCV_PUBLIC NVCVStatus nvcvFooCreate(uint64_t flags, NVCVFoo *handle);
 
 Implementation:
- NVCV_DEFINE_API(NVCVStatus, nvcvFooCreate, 1, 0)(uint64_t flags, NVCVFoo *handle)
+ NVCV_DEFINE_API(1, 0, NVCVStatus, nvcvFooCreate, (uint64_t flags, NVCVFoo *handle))
  {
     implementation 1;
  }
@@ -42,12 +42,12 @@ Header:
 
 Implementation:
 
- NVCV_DEFINE_API_OLD(NVCVStatus, nvcvFooCreate, 1, 0)(uint64_t flags, NVCVFoo *handle)
+ NVCV_DEFINE_API_OLD(1, 0, NVCVStatus, nvcvFooCreate(uint64_t flags, NVCVFoo *handle))
  {
     implementation 1;
  }
 
- NVCV_DEFINE_API(NVCVStatus, nvcvFooCreate, 1, 1)(int32_t size, uint64_t flags, NVCVFoo *handle)
+ NVCV_DEFINE_API(1, 1, NVCVStatus, nvcvFooCreate, (int32_t size, uint64_t flags, NVCVFoo *handle))
  {
     implementation 2;
  }
