@@ -17,9 +17,9 @@
 #include <nvcv/ColorSpec.hpp>
 #include <private/core/Exception.hpp>
 #include <private/core/Status.hpp>
+#include <private/core/SymbolVersioning.hpp>
 #include <private/core/TLS.hpp>
 #include <util/String.hpp>
-#include <util/SymbolVersioning.hpp>
 
 #include <cstring>
 #ifdef __GNUC__

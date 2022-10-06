@@ -17,10 +17,10 @@
 #include <nvcv/PixelType.hpp>
 #include <private/core/Exception.hpp>
 #include <private/core/Status.hpp>
+#include <private/core/SymbolVersioning.hpp>
 #include <private/core/TLS.hpp>
 #include <util/Assert.h>
 #include <util/String.hpp>
-#include <util/SymbolVersioning.hpp>
 
 #include <cstring>
 #ifdef __GNUC__

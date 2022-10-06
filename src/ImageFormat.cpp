@@ -19,9 +19,9 @@
 #include <nvcv/ImageFormat.hpp>
 #include <private/core/Exception.hpp>
 #include <private/core/Status.hpp>
+#include <private/core/SymbolVersioning.hpp>
 #include <util/Assert.h>
 #include <util/String.hpp>
-#include <util/SymbolVersioning.hpp>
 
 #include <cstring>
 

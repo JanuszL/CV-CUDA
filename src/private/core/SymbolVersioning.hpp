@@ -11,10 +11,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <nvcv/Version.h>
-#include <private/core/SymbolVersioning.hpp>
+#ifndef NVCV_PRIV_CORE_SYMBOLVERSIONING_HPP
+#define NVCV_PRIV_CORE_SYMBOLVERSIONING_HPP
 
-NVCV_DEFINE_API(0, 0, uint32_t, nvcvGetVersion, ())
-{
-    return NVCV_VERSION;
-}
+#include <util/SymbolVersioning.hpp>
+
+#define NVCV_DEFINE_API(...)     NVCV_PROJ_DEFINE_API(NVCV, __VA_ARGS__)
+#define NVCV_DEFINE_OLD_API(...) NVCV_PROJ_DEFINE_OLD_API(NVCV, __VA_ARGS__)
+
+#endif // NVCV_PRIV_CORE_SYMBOLVERSIONING_HPP
