@@ -188,12 +188,17 @@ __host__ __device__ RT &GetElement(T &v, int eidx)
  *
  * @details Set all elements to the value \p x passed as argument.  For instance, an int3 can have all its elements
  * set to zero by calling SetAll and passing int3 as template argument and zero as argument (see example below).
+ * Another way to set all elements to a value is by using the type of the argument as base type and passing the
+ * number of channels of the return type (see example below).
  *
  * @code
- * auto idx = SetAll<int3>(0); // starts an index int3 local variable with all elements zeros, as {0, 0, 0}
+ * auto idx = SetAll<int3>(0); // sets to zero all elements of an int3 index idx: {0, 0, 0}
+ * unsigned char ch = 127;
+ * auto pix = SetAll<4>(ch); // sets all elements of an uchar3 pixel pix: {127, 127, 127, 127}
  * @endcode
  *
  * @tparam T Type to be returned with all elements set to the given value \p x
+ * @tparam N Number of components as a second option instead of passing the type \p T
  *
  * @param[in] x Value to set all elements to
  *
@@ -211,6 +216,12 @@ __host__ __device__ T SetAll(BaseType<T> x)
     }
 
     return out;
+}
+
+template<int N, typename BT, typename RT = MakeType<BT, N>, class = detail::Require<detail::HasTypeTraits<BT>>>
+__host__ __device__ RT SetAll(BT x)
+{
+    return SetAll<RT>(x);
 }
 
 /**

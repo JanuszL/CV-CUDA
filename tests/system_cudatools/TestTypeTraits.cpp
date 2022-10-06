@@ -262,15 +262,34 @@ class TypeTraitsSetAllTest : public TypeTraitsBaseTest<T>
 {
 };
 
-NVCV_TYPED_TEST_SUITE_F(TypeTraitsSetAllTest, t::Types<char, short1, uchar2, int3, float4>);
+NVCV_TYPED_TEST_SUITE_F(TypeTraitsSetAllTest, t::Types<double, short1, uchar2, int3, float4>);
 
-TYPED_TEST(TypeTraitsSetAllTest, CorrectOutputOfSetAll)
+TYPED_TEST(TypeTraitsSetAllTest, CorrectOutputOfSetAllWithT)
 {
     using T = typename TestFixture::Type;
 
     cuda::BaseType<T> gold = 3;
 
     auto test = cuda::SetAll<T>(gold);
+
+    using TestType = decltype(test);
+
+    EXPECT_TRUE((std::is_same_v<TestType, T>));
+
+    for (int c = 0; c < cuda::NumElements<TestType>; ++c)
+    {
+        EXPECT_EQ(cuda::GetElement(test, c), gold);
+    }
+}
+
+TYPED_TEST(TypeTraitsSetAllTest, CorrectOutputOfSetAllWithN)
+{
+    using T         = typename TestFixture::Type;
+    constexpr int N = cuda::NumComponents<T>;
+
+    cuda::BaseType<T> gold = 3;
+
+    auto test = cuda::SetAll<N>(gold);
 
     using TestType = decltype(test);
 
