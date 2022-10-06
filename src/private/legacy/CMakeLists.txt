@@ -10,6 +10,17 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-add_subdirectory(core)
-add_subdirectory(fmt)
-add_subdirectory(legacy)
+add_library(cvcuda_legacy STATIC
+     ./operators/custom_crop.cu
+     ./operators/reformat.cu
+)
+#
+target_include_directories(cvcuda_legacy
+    PUBLIC
+        ../..
+)
+
+target_link_libraries(cvcuda_legacy
+    PUBLIC
+        CUDA::cudart_static
+)
