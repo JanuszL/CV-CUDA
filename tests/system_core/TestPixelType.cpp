@@ -268,3 +268,33 @@ TEST_P(ChannelPixelTypeTests, get_channel_type)
         EXPECT_EQ(gold, pix);
     }
 }
+
+class PixelTypeStrideTests
+    : public t::TestWithParam<std::tuple<test::Param<"pix", NVCVPixelType>, test::Param<"goldStride", int>>>
+{
+};
+
+// clang-format off
+NVCV_INSTANTIATE_TEST_SUITE_P(_,PixelTypeStrideTests,
+                              test::ValueList<NVCVPixelType, int>
+                              {
+                                {NVCV_PIXEL_TYPE_U8, 1},
+                                {NVCV_PIXEL_TYPE_U16, 2},
+                                {NVCV_PIXEL_TYPE_3S8, 3},
+                                {NVCV_PIXEL_TYPE_2U16, 4},
+                                {MAKE_PIXEL_TYPE_ABBREV(PL, SIGNED, X256), 32},
+                                {NVCV_PIXEL_TYPE_2F32, 8},
+                                {MAKE_PIXEL_TYPE_ABBREV(BL, FLOAT, X8_Y8_Z8), 3},
+                              });
+
+// clang-format on
+
+TEST_P(PixelTypeStrideTests, works)
+{
+    const NVCVPixelType pixType    = std::get<0>(GetParam());
+    const int           goldStride = std::get<1>(GetParam());
+
+    int32_t testStride;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvPixelTypeGetStrideBytes(pixType, &testStride));
+    EXPECT_EQ(goldStride, testStride);
+}

@@ -106,7 +106,7 @@ public:
                                   Packing newPacking3) const;
 
     Packing     planePacking(int plane) const noexcept;
-    int         planeElemStride(int plane) const noexcept;
+    int         planePixelStrideBytes(int plane) const noexcept;
     PixelType   planePixelType(int plane) const noexcept;
     int         planeNumChannels(int plane) const noexcept;
     int         planeBitsPerPixel(int plane) const noexcept;
@@ -585,6 +585,13 @@ inline PixelType ImageFormat::planePixelType(int plane) const noexcept
     NVCVPixelType out;
     detail::CheckThrow(nvcvImageFormatGetPlanePixelType(m_format, plane, &out));
     return static_cast<PixelType>(out);
+}
+
+inline int32_t ImageFormat::planePixelStrideBytes(int plane) const noexcept
+{
+    int32_t out;
+    detail::CheckThrow(nvcvImageFormatGetPlanePixelStrideBytes(m_format, plane, &out));
+    return out;
 }
 
 inline int32_t ImageFormat::planeNumChannels(int plane) const noexcept
