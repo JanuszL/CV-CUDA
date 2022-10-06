@@ -70,12 +70,12 @@ TYPED_TEST_SUITE(HasTypeTraitsUnsupportedTest, UnsupportedBaseTypes);
 
 TYPED_TEST(HasTypeTraitsUnsupportedTest, IsFalse)
 {
-    EXPECT_FALSE(detail::HasTypeTraits_v<typename TestFixture::Type>);
+    EXPECT_FALSE(detail::HasTypeTraits<typename TestFixture::Type>);
 }
 
 TEST(HasTypeTraitsWithTwoUnsupportedTypesTest, IsFalse)
 {
-    EXPECT_FALSE((detail::HasTypeTraits_v<long double, float5>));
+    EXPECT_FALSE((detail::HasTypeTraits<long double, float5>));
 }
 
 template<typename T>
@@ -89,12 +89,12 @@ TYPED_TEST_SUITE(HasTypeTraitsSupportedTest, SupportedBaseTypes);
 
 TYPED_TEST(HasTypeTraitsSupportedTest, IsTrue)
 {
-    EXPECT_TRUE(detail::HasTypeTraits_v<typename TestFixture::Type>);
+    EXPECT_TRUE(detail::HasTypeTraits<typename TestFixture::Type>);
 }
 
 TEST(HasTypeTraitsWithTwoSupportedTypesTest, IsTrue)
 {
-    EXPECT_TRUE((detail::HasTypeTraits_v<unsigned int, double4>));
+    EXPECT_TRUE((detail::HasTypeTraits<unsigned int, double4>));
 }
 
 // -------------------------- Testing IsCompound -------------------------------
@@ -113,16 +113,4 @@ TEST(IsCompoundTest, IsTrue)
     EXPECT_TRUE((detail::IsCompound<short2>));
     EXPECT_TRUE((detail::IsCompound<uint3>));
     EXPECT_TRUE((detail::IsCompound<float4>));
-}
-
-// ---------------------------- Testing IsSame ---------------------------------
-
-TEST(IsSameTest, IsFalse)
-{
-    EXPECT_FALSE((detail::IsSame<uint3, int3>));
-}
-
-TEST(IsSameTest, IsTrue)
-{
-    EXPECT_TRUE((detail::IsSame<int3, int3>));
 }

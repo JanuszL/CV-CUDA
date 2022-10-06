@@ -62,7 +62,7 @@ using detail::TypeTraits;
  *
  * @tparam T Type to get the base type from
  */
-template<class T, class Req = detail::RequireHasTypeTraits<T>>
+template<class T, class = detail::Require<detail::HasTypeTraits<T>>>
 using BaseType = typename TypeTraits<T>::base_type;
 
 /**
@@ -77,7 +77,7 @@ using BaseType = typename TypeTraits<T>::base_type;
  *
  * @tparam T Type to get the number of components from
  */
-template<class T, class Req = detail::RequireHasTypeTraits<T>>
+template<class T, class = detail::Require<detail::HasTypeTraits<T>>>
 constexpr int NumComponents = TypeTraits<T>::components;
 
 /**
@@ -93,7 +93,7 @@ constexpr int NumComponents = TypeTraits<T>::components;
  *
  * @tparam T Type to get the number of elements from
  */
-template<class T, class Req = detail::RequireHasTypeTraits<T>>
+template<class T, class = detail::Require<detail::HasTypeTraits<T>>>
 constexpr int NumElements = TypeTraits<T>::elements;
 
 /**
@@ -112,21 +112,6 @@ constexpr int NumElements = TypeTraits<T>::elements;
 using detail::IsCompound;
 
 /**
- * @brief Metavariable to check if two types are of the same type
- *
- * @code
- * using PixelType1 = ...;
- * using PixelType2 = ...;
- * if constexpr (nv::cv::cuda::IsSame<PixelType1, PixelType2>)
- *     // ...
- * @endcode
- *
- * @tparam T First type to check if it is the same
- * @tparam U Second type to check if it is the same
- */
-using detail::IsSame;
-
-/**
  * @brief Metatype to make a type from a base type and number of components
  *
  * @details When number of components is zero, it yields the identity (regular C) type, and when it is between 1
@@ -141,7 +126,7 @@ using detail::IsSame;
  * @tparam T Base type to make the type from
  * @tparam C Number of components to make the type
  */
-template<class T, int C, class Req = detail::RequireHasTypeTraits<T>>
+template<class T, int C, class = detail::Require<detail::HasTypeTraits<T>>>
 using MakeType = detail::MakeType_t<T, C>;
 
 /**
@@ -157,7 +142,7 @@ using MakeType = detail::MakeType_t<T, C>;
  * @tparam BT Base type to use in the conversion
  * @tparam T Target type to convert its base type
  */
-template<class BT, class T, class Req = detail::RequireAllHaveTypeTraits<BT, T>>
+template<class BT, class T, class = detail::Require<detail::HasTypeTraits<BT, T>>>
 using ConvertBaseTypeTo = detail::ConvertBaseTypeTo_t<BT, T>;
 
 /**
@@ -184,7 +169,7 @@ using ConvertBaseTypeTo = detail::ConvertBaseTypeTo_t<BT, T>;
  * @return The reference of the value's element
  */
 template<typename T, typename RT = detail::CopyConstness_t<T, std::conditional_t<IsCompound<T>, BaseType<T>, T>>,
-         class Req = detail::RequireHasTypeTraits<T>>
+         class = detail::Require<detail::HasTypeTraits<T>>>
 __host__ __device__ RT &GetElement(T &v, int eidx)
 {
     if constexpr (IsCompound<T>)
@@ -203,18 +188,23 @@ __host__ __device__ RT &GetElement(T &v, int eidx)
  *
  * @details Set all elements to the value \p x passed as argument.  For instance, an int3 can have all its elements
  * set to zero by calling SetAll and passing int3 as template argument and zero as argument (see example below).
+ * Another way to set all elements to a value is by using the type of the argument as base type and passing the
+ * number of channels of the return type (see example below).
  *
  * @code
- * auto idx = SetAll<int3>(0); // starts an index int3 local variable with all elements zeros, as {0, 0, 0}
+ * auto idx = SetAll<int3>(0); // sets to zero all elements of an int3 index idx: {0, 0, 0}
+ * unsigned char ch = 127;
+ * auto pix = SetAll<4>(ch); // sets all elements of an uchar3 pixel pix: {127, 127, 127, 127}
  * @endcode
  *
  * @tparam T Type to be returned with all elements set to the given value \p x
+ * @tparam N Number of components as a second option instead of passing the type \p T
  *
  * @param[in] x Value to set all elements to
  *
  * @return The object of type T with all elements set to \p x
  */
-template<typename T, class Req = detail::RequireHasTypeTraits<T>>
+template<typename T, class = detail::Require<detail::HasTypeTraits<T>>>
 __host__ __device__ T SetAll(BaseType<T> x)
 {
     T out{};
@@ -226,6 +216,12 @@ __host__ __device__ T SetAll(BaseType<T> x)
     }
 
     return out;
+}
+
+template<int N, typename BT, typename RT = MakeType<BT, N>, class = detail::Require<detail::HasTypeTraits<BT>>>
+__host__ __device__ RT SetAll(BT x)
+{
+    return SetAll<RT>(x);
 }
 
 /**
@@ -242,7 +238,7 @@ __host__ __device__ T SetAll(BaseType<T> x)
  *
  * @return String with the name of the type
  */
-template<class T, class Req = detail::RequireHasTypeTraits<T>>
+template<class T, class = detail::Require<detail::HasTypeTraits<T>>>
 __host__ __device__ const char *GetTypeName()
 {
     return TypeTraits<T>::name;
@@ -269,7 +265,7 @@ __host__ __device__ const char *GetTypeName()
  *
  * @return Output stream with the pixel type and values
  */
-template<class T, class Req = nv::cv::cuda::detail::RequireIsCompound<T>>
+template<class T, class = nv::cv::cuda::detail::Require<nv::cv::cuda::detail::IsCompound<T>>>
 __host__ std::ostream &operator<<(std::ostream &out, const T &v)
 {
     using BT         = nv::cv::cuda::BaseType<T>;

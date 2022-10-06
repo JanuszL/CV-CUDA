@@ -146,7 +146,7 @@ TYPED_TEST(TypeTraitsMakeTypeVectorTest, CorrectTypeTraits)
 
     EXPECT_TRUE(cuda::NumElements<CompoundType> == TestFixture::NumElements);
 
-    EXPECT_EQ(TestFixture::NumComponents == 0, (cuda::IsSame<typename TestFixture::BaseType, CompoundType>));
+    EXPECT_EQ(TestFixture::NumComponents == 0, (std::is_same_v<typename TestFixture::BaseType, CompoundType>));
 }
 
 // -------------------- Testing MakeType with Type Qualifiers ------------------
@@ -190,7 +190,7 @@ TYPED_TEST(TypeTraitsConvertBaseTypeToTest, CorrectTypeTraits)
 
     EXPECT_TRUE(cuda::NumElements<typename TestFixture::Type> == cuda::NumElements<FloatType>);
 
-    EXPECT_FALSE((cuda::IsSame<FloatType, typename TestFixture::Type>));
+    EXPECT_FALSE((std::is_same_v<FloatType, typename TestFixture::Type>));
 }
 
 // -------------- Testing ConvertBaseTypeTo with Type Qualifiers ---------------
@@ -262,9 +262,9 @@ class TypeTraitsSetAllTest : public TypeTraitsBaseTest<T>
 {
 };
 
-NVCV_TYPED_TEST_SUITE_F(TypeTraitsSetAllTest, t::Types<char, short1, uchar2, int3, float4>);
+NVCV_TYPED_TEST_SUITE_F(TypeTraitsSetAllTest, t::Types<double, short1, uchar2, int3, float4>);
 
-TYPED_TEST(TypeTraitsSetAllTest, CorrectOutputOfSetAll)
+TYPED_TEST(TypeTraitsSetAllTest, CorrectOutputOfSetAllWithT)
 {
     using T = typename TestFixture::Type;
 
@@ -274,7 +274,26 @@ TYPED_TEST(TypeTraitsSetAllTest, CorrectOutputOfSetAll)
 
     using TestType = decltype(test);
 
-    EXPECT_TRUE((cuda::IsSame<TestType, T>));
+    EXPECT_TRUE((std::is_same_v<TestType, T>));
+
+    for (int c = 0; c < cuda::NumElements<TestType>; ++c)
+    {
+        EXPECT_EQ(cuda::GetElement(test, c), gold);
+    }
+}
+
+TYPED_TEST(TypeTraitsSetAllTest, CorrectOutputOfSetAllWithN)
+{
+    using T         = typename TestFixture::Type;
+    constexpr int N = cuda::NumComponents<T>;
+
+    cuda::BaseType<T> gold = 3;
+
+    auto test = cuda::SetAll<N>(gold);
+
+    using TestType = decltype(test);
+
+    EXPECT_TRUE((std::is_same_v<TestType, T>));
 
     for (int c = 0; c < cuda::NumElements<TestType>; ++c)
     {
