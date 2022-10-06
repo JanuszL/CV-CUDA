@@ -13,33 +13,86 @@
 
 #include "Image.hpp"
 
-#include "AllocInfo.hpp"
 #include "IAllocator.hpp"
+#include "Requirements.hpp"
 
+#include <cuda_runtime.h>
 #include <fmt/PixelType.hpp>
+#include <util/CheckError.hpp>
+#include <util/Math.hpp>
+
+#include <cmath>
+#include <numeric>
 
 namespace nv::cv::priv {
 
 // Image implementation -------------------------------------------
 
-Image::Image(Size2D size, ImageFormat fmt, IAllocator &alloc)
-    : m_alloc{alloc}
-    , m_size(size)
-    , m_format(fmt)
+NVCVImageRequirements Image::CalcRequirements(Size2D size, ImageFormat fmt)
 {
-    if (fmt.memLayout() != NVCV_MEM_LAYOUT_PL)
+    NVCVImageRequirements reqs;
+    reqs.width  = size.w;
+    reqs.height = size.h;
+    reqs.format = fmt.value();
+    reqs.mem    = {};
+
+    int dev;
+    NVCV_CHECK_THROW(cudaGetDevice(&dev));
+
+    int pitchAlign;
+    int addrAlign;
+    NVCV_CHECK_THROW(cudaDeviceGetAttribute(&pitchAlign, cudaDevAttrTexturePitchAlignment, dev));
+    NVCV_CHECK_THROW(cudaDeviceGetAttribute(&addrAlign, cudaDevAttrTextureAlignment, dev));
+
+    reqs.alignBytes = std::lcm(addrAlign, pitchAlign);
+
+    // Alignment must be compatible with each plane's pixel stride.
+    for (int p = 0; p < fmt.numPlanes(); ++p)
+    {
+        int pixStride = fmt.planePixelStrideBytes(p);
+
+        reqs.alignBytes = std::lcm(reqs.alignBytes, pixStride);
+    }
+    reqs.alignBytes = util::RoundUpNextPowerOfTwo(reqs.alignBytes);
+
+    if (reqs.alignBytes > NVCV_MAX_MEM_REQUIREMENTS_BLOCK_SIZE)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                        "Alignment requirement of %d is larger than the maximum allowed %ld", reqs.alignBytes,
+                        NVCV_MAX_MEM_REQUIREMENTS_BLOCK_SIZE);
+    }
+
+    // Calculate total device memory needed in blocks
+    for (int p = 0; p < fmt.numPlanes(); ++p)
+    {
+        Size2D planeSize = fmt.planeSize(size, p);
+
+        int64_t rowPitchBytes
+            = util::RoundUpPowerOfTwo((int64_t)planeSize.w * fmt.planePixelStrideBytes(p), reqs.alignBytes);
+
+        AddBuffer(reqs.mem.deviceMem, rowPitchBytes * planeSize.h, reqs.alignBytes);
+    }
+
+    return reqs;
+}
+
+Image::Image(NVCVImageRequirements reqs, IAllocator &alloc)
+    : m_alloc{alloc}
+    , m_reqs{std::move(reqs)}
+{
+    if (ImageFormat{m_reqs.format}.memLayout() != NVCV_MEM_LAYOUT_PL)
     {
         throw Exception(NVCV_ERROR_NOT_IMPLEMENTED, "Image with block-linear format is not currently supported.");
     }
 
-    m_allocInfo = CalcAllocInfo(size, fmt);
-    m_buffer    = m_alloc.allocDeviceMem(m_allocInfo.size, m_allocInfo.alignment);
+    int64_t bufSize = CalcTotalSizeBytes(m_reqs.mem.deviceMem);
+    m_buffer        = m_alloc.allocDeviceMem(bufSize, m_reqs.alignBytes);
     NVCV_ASSERT(m_buffer != nullptr);
 }
 
 Image::~Image()
 {
-    m_alloc.freeDeviceMem(m_buffer, m_allocInfo.size, m_allocInfo.alignment);
+    m_alloc.freeDeviceMem(m_buffer, CalcTotalSizeBytes(m_reqs.mem.deviceMem), m_reqs.alignBytes);
 }
 
 NVCVTypeImage Image::type() const
@@ -54,12 +107,12 @@ Version Image::doGetVersion() const
 
 Size2D Image::size() const
 {
-    return m_size;
+    return {m_reqs.width, m_reqs.height};
 }
 
 ImageFormat Image::format() const
 {
-    return m_format;
+    return ImageFormat{m_reqs.format};
 }
 
 IAllocator &Image::alloc() const
@@ -69,25 +122,34 @@ IAllocator &Image::alloc() const
 
 void Image::exportData(NVCVImageData &data) const
 {
-    NVCV_ASSERT(this->format().memLayout() == NVCV_MEM_LAYOUT_PL);
+    ImageFormat fmt{m_reqs.format};
 
-    data.format     = m_format.value();
+    NVCV_ASSERT(fmt.memLayout() == NVCV_MEM_LAYOUT_PL);
+
+    data.format     = m_reqs.format;
     data.bufferType = NVCV_IMAGE_BUFFER_DEVICE_PITCH;
 
     NVCVImageBufferPitch &buf = data.buffer.pitch;
 
-    buf.numPlanes = m_allocInfo.planes.size();
+    buf.numPlanes            = fmt.numPlanes();
+    int64_t planeOffsetBytes = 0;
     for (int p = 0; p < buf.numPlanes; ++p)
     {
         NVCVImagePlanePitch &plane = buf.planes[p];
 
-        Size2D planeSize = m_format.planeSize(m_size, p);
+        Size2D planeSize = fmt.planeSize({m_reqs.width, m_reqs.height}, p);
+
+        size_t rowPitchBytes = util::RoundUp((size_t)planeSize.w * fmt.planePixelStrideBytes(p), m_reqs.alignBytes);
 
         plane.width      = planeSize.w;
         plane.height     = planeSize.h;
-        plane.pitchBytes = m_allocInfo.planes[p].rowPitchBytes;
-        plane.buffer     = reinterpret_cast<std::byte *>(m_buffer) + m_allocInfo.planes[p].offsetBytes;
+        plane.pitchBytes = rowPitchBytes;
+        plane.buffer     = reinterpret_cast<std::byte *>(m_buffer) + planeOffsetBytes;
+
+        planeOffsetBytes += plane.height * plane.pitchBytes;
     }
+
+    NVCV_ASSERT(planeOffsetBytes == CalcTotalSizeBytes(m_reqs.mem.deviceMem));
 }
 
 // ImageWrap implementation -------------------------------------------

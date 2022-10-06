@@ -21,12 +21,32 @@
 
 namespace priv = nv::cv::priv;
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageCreate,
-                (int width, int height, NVCVImageFormat fmt, NVCVAllocator halloc, NVCVImage *handle))
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageCalcRequirements,
+                (int32_t width, int32_t height, NVCVImageFormat format, NVCVImageRequirements *reqs))
 {
     return priv::ProtectCall(
         [&]
         {
+            if (reqs == nullptr)
+            {
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output requirements must not be NULL");
+            }
+
+            *reqs = priv::Image::CalcRequirements({width, height}, priv::ImageFormat{format});
+        });
+}
+
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageCreate,
+                (const NVCVImageRequirements *reqs, NVCVAllocator halloc, NVCVImage *handle))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            if (reqs == nullptr)
+            {
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to image requirements must not be NULL");
+            }
+
             if (handle == nullptr)
             {
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output handle must not be NULL");
@@ -34,9 +54,8 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageCreate,
 
             priv::IAllocator &alloc = priv::GetAllocator(halloc);
 
-            std::unique_ptr obj
-                = AllocHostObj<priv::Image>(alloc, priv::Size2D{width, height}, priv::ImageFormat{fmt}, alloc);
-            *handle = obj->handle();
+            std::unique_ptr obj = AllocHostObj<priv::Image>(alloc, *reqs, alloc);
+            *handle             = obj->handle();
             obj.release();
         });
 }

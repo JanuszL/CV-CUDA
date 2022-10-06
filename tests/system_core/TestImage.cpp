@@ -301,6 +301,38 @@ TEST(ImageWrapData, wip_cleanup)
     }
 }
 
+TEST(ImageWrapData, wip_mem_reqs)
+{
+    nvcv::Image::Requirements reqs = nvcv::Image::CalcRequirements({512, 256}, nvcv::FMT_NV12);
+
+    nvcv::Image img(reqs);
+
+    EXPECT_EQ(512, img.size().w);
+    EXPECT_EQ(256, img.size().h);
+    EXPECT_EQ(nvcv::FMT_NV12, img.format());
+
+    const auto *data = dynamic_cast<const nvcv::IImageDataDevicePitch *>(img.exportData());
+
+    ASSERT_NE(nullptr, data);
+    ASSERT_EQ(2, data->numPlanes());
+    EXPECT_EQ(512, data->plane(0).width);
+    EXPECT_EQ(256, data->plane(0).height);
+
+    EXPECT_EQ(256, data->plane(1).width);
+    EXPECT_EQ(128, data->plane(1).height);
+
+    EXPECT_EQ(data->plane(1).buffer,
+              reinterpret_cast<std::byte *>(data->plane(0).buffer) + data->plane(0).pitchBytes * 256);
+
+    for (int p = 0; p < 2; ++p)
+    {
+        EXPECT_EQ(cudaSuccess,
+                  cudaMemset2D(data->plane(p).buffer, data->plane(p).pitchBytes, 123,
+                               data->plane(p).width * img.format().planePixelStrideBytes(p), data->plane(p).height))
+            << "Plane " << p;
+    }
+}
+
 // Future API ideas
 #if 0
 TEST(Image, wip_image_managed_memory)

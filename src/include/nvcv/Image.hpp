@@ -68,8 +68,12 @@ class Image final
     , private ImageWrapHandle
 {
 public:
+    using Requirements = NVCVImageRequirements;
+    static Requirements CalcRequirements(const Size2D &size, ImageFormat fmt);
+
     Image(const Image &) = delete;
 
+    explicit Image(const Requirements &reqs, IAllocator *alloc = nullptr);
     explicit Image(const Size2D &size, ImageFormat fmt, IAllocator *alloc = nullptr);
     ~Image();
 
@@ -189,15 +193,27 @@ inline const IImageData *ImageWrapHandle::doExportData() const
 
 // Image implementation -------------------------------------
 
-inline Image::Image(const Size2D &size, ImageFormat fmt, IAllocator *alloc)
+inline auto Image::CalcRequirements(const Size2D &size, ImageFormat fmt) -> Requirements
+{
+    Requirements reqs;
+    detail::CheckThrow(nvcvImageCalcRequirements(size.w, size.h, fmt, &reqs));
+    return reqs;
+}
+
+inline Image::Image(const Requirements &reqs, IAllocator *alloc)
     : ImageWrapHandle(
         [&]
         {
             NVCVImage handle;
-            detail::CheckThrow(nvcvImageCreate(size.w, size.h, fmt, alloc ? alloc->handle() : nullptr, &handle));
+            detail::CheckThrow(nvcvImageCreate(&reqs, alloc ? alloc->handle() : nullptr, &handle));
             return handle;
         }())
     , m_alloc(alloc)
+{
+}
+
+inline Image::Image(const Size2D &size, ImageFormat fmt, IAllocator *alloc)
+    : Image(CalcRequirements(size, fmt), alloc)
 {
 }
 

@@ -14,7 +14,6 @@
 #ifndef NVCV_PRIV_IMAGE_HPP
 #define NVCV_PRIV_IMAGE_HPP
 
-#include "AllocInfo.hpp"
 #include "IImage.hpp"
 
 namespace nv::cv::priv {
@@ -22,8 +21,10 @@ namespace nv::cv::priv {
 class Image final : public IImage
 {
 public:
-    explicit Image(Size2D size, ImageFormat fmt, IAllocator &alloc);
+    explicit Image(NVCVImageRequirements reqs, IAllocator &alloc);
     ~Image();
+
+    static NVCVImageRequirements CalcRequirements(Size2D size, ImageFormat fmt);
 
     Size2D        size() const override;
     ImageFormat   format() const override;
@@ -33,11 +34,9 @@ public:
     void exportData(NVCVImageData &data) const override;
 
 private:
-    IAllocator &m_alloc;
-    AllocInfo2D m_allocInfo;
-    Size2D      m_size;
-    ImageFormat m_format;
-    void       *m_buffer;
+    IAllocator           &m_alloc;
+    NVCVImageRequirements m_reqs;
+    void                 *m_buffer;
 
     Version doGetVersion() const override;
 };

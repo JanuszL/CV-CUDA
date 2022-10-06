@@ -24,6 +24,7 @@
 #include "ImageFormat.h"
 #include "Status.h"
 #include "alloc/Allocator.h"
+#include "alloc/Requirements.h"
 #include "detail/CudaFwd.h"
 #include "detail/Export.h"
 
@@ -54,18 +55,45 @@ typedef struct NVCVImageImpl *NVCVImage;
 /** Image data cleanup function type */
 typedef void (*NVCVImageDataCleanupFunc)(void *ctx, const NVCVImageData *data);
 
-/** Creates and allocates an image instance.
+/** Stores the requirements of an image. */
+typedef struct NVCVImageRequirementsRec
+{
+    int32_t         width, height; /*< Image dimensions. */
+    NVCVImageFormat format;        /*< Image format. */
+
+    int32_t          alignBytes; /*< Alignment/block size in bytes */
+    NVCVRequirements mem;        /*< Image resource requirements. */
+} NVCVImageRequirements;
+
+/** Calculates the resource requirements needed to create an image.
  *
  * @param [in] width,height Image dimensions.
  *                          + Width and height must be > 0.
- * @param [in] fmt          Image format.
+ *
+ * @param [in] format       Image format.
  *                          + Must not be \ref NVCV_IMAGE_FORMAT_NONE.
+ *
+ * @param [out] handle      Where the image instance handle will be written to.
+ *                          + Must not be NULL.
+ *
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
+ * @retval #NVCV_SUCCESS                Operation executed successfully.
+ */
+NVCV_PUBLIC NVCVStatus nvcvImageCalcRequirements(int32_t width, int32_t height, NVCVImageFormat format,
+                                                 NVCVImageRequirements *reqs);
+
+/** Creates and allocates an image instance given its requirements.
+ *
+ * @param [in] reqs Image requirements. Must have been filled in by @ref nvcvImageGatherRequirements.
+ *                  + Must not be NULL
+ *
  * @param [in] alloc        Allocator to be used to allocate needed memory buffers.
  *                          The following resources are used:
  *                          - host memory: for internal structures.
  *                          - device memory: for image contents buffer.
  *                          If NULL, it'll use the internal default allocator.
  *                          + Allocator must not be destroyed while an image still refers to it.
+ *
  * @param [out] handle      Where the image instance handle will be written to.
  *                          + Must not be NULL.
  *
@@ -73,8 +101,7 @@ typedef void (*NVCVImageDataCleanupFunc)(void *ctx, const NVCVImageData *data);
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the image.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvImageCreate(int32_t width, int32_t height, NVCVImageFormat fmt, NVCVAllocator alloc,
-                                       NVCVImage *handle);
+NVCV_PUBLIC NVCVStatus nvcvImageCreate(const NVCVImageRequirements *reqs, NVCVAllocator alloc, NVCVImage *handle);
 
 /** Wraps an existing image buffer into an NVCV image instance.
  *

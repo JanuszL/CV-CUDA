@@ -18,7 +18,6 @@ add_library(nvcv_private_core STATIC
     DefaultAllocator.cpp
     IAllocator.cpp
     Requirements.cpp
-    AllocInfo.cpp
     Image.cpp
 )
 
