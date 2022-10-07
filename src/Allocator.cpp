@@ -23,27 +23,6 @@
 
 namespace priv = nv::cv::priv;
 
-namespace {
-
-// For the most common case, when the default allocator is being used, we can
-// save some cycles by directly using the singleton below.
-priv::DefaultAllocator g_DefaultAllocator;
-const NVCVAllocator    DEFAULT_ALLOCATOR_HANDLE = reinterpret_cast<NVCVAllocator>(&g_DefaultAllocator);
-
-inline priv::IAllocator &GetAllocator(NVCVAllocator handle)
-{
-    if (handle == DEFAULT_ALLOCATOR_HANDLE)
-    {
-        return g_DefaultAllocator;
-    }
-    else
-    {
-        return priv::ToStaticRef<priv::IAllocator>(handle);
-    }
-}
-
-} // namespace
-
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvAllocatorCreateCustom,
                 (const NVCVCustomAllocator *customAllocators, int32_t numCustomAllocators, NVCVAllocator *halloc))
 {
@@ -63,7 +42,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvAllocatorCreateCustom,
             }
             else
             {
-                *halloc = DEFAULT_ALLOCATOR_HANDLE;
+                *halloc = priv::GetDefaultAllocator().handle();
             }
         });
 }
@@ -73,7 +52,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvAllocatorDestroy, (NVCVAllocator halloc))
     return priv::ProtectCall(
         [&]
         {
-            if (halloc != DEFAULT_ALLOCATOR_HANDLE && halloc != nullptr)
+            if (halloc != priv::GetDefaultAllocator().handle() && halloc != nullptr)
             {
                 delete priv::ToStaticPtr<priv::IAllocator>(halloc);
             }
@@ -91,7 +70,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvAllocatorAllocHostMemory,
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output buffer must not be NULL");
             }
 
-            *ptr = GetAllocator(halloc).allocHostMem(sizeBytes, alignBytes);
+            *ptr = priv::GetAllocator(halloc).allocHostMem(sizeBytes, alignBytes);
         });
 }
 
@@ -103,7 +82,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvAllocatorFreeHostMemory,
         {
             if (ptr != nullptr)
             {
-                GetAllocator(halloc).freeHostMem(ptr, sizeBytes, alignBytes);
+                priv::GetAllocator(halloc).freeHostMem(ptr, sizeBytes, alignBytes);
             }
         });
 }
@@ -119,7 +98,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvAllocatorAllocHostPinnedMemory,
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output buffer must not be NULL");
             }
 
-            *ptr = GetAllocator(halloc).allocHostPinnedMem(sizeBytes, alignBytes);
+            *ptr = priv::GetAllocator(halloc).allocHostPinnedMem(sizeBytes, alignBytes);
         });
 }
 
@@ -131,7 +110,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvAllocatorFreeHostPinnedMemory,
         {
             if (ptr != nullptr)
             {
-                GetAllocator(halloc).freeHostPinnedMem(ptr, sizeBytes, alignBytes);
+                priv::GetAllocator(halloc).freeHostPinnedMem(ptr, sizeBytes, alignBytes);
             }
         });
 }
@@ -147,7 +126,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvAllocatorAllocDeviceMemory,
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output buffer must not be NULL");
             }
 
-            *ptr = GetAllocator(halloc).allocDeviceMem(sizeBytes, alignBytes);
+            *ptr = priv::GetAllocator(halloc).allocDeviceMem(sizeBytes, alignBytes);
         });
 }
 
@@ -159,7 +138,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvAllocatorFreeDeviceMemory,
         {
             if (ptr != nullptr)
             {
-                GetAllocator(halloc).freeDeviceMem(ptr, sizeBytes, alignBytes);
+                priv::GetAllocator(halloc).freeDeviceMem(ptr, sizeBytes, alignBytes);
             }
         });
 }

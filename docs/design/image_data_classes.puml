@@ -1,0 +1,52 @@
+' Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+'
+' SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
+' SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+'
+' NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+' property and proprietary rights in and to this material, related
+' documentation and any modifications thereto. Any use, reproduction,
+' disclosure or distribution of this material and related documentation
+' without an express license agreement from NVIDIA CORPORATION or
+' its affiliates is strictly prohibited.
+
+@startuml
+
+struct NVCVImageDataBufferPitch
+{
+    + width: int32_t
+    + height: int32_t
+    + pitchBytes: int32_t
+    + buffer: void *
+}
+
+interface IImageData
+{
+    + {abstract} format() const: ImageFormat
+
+    + {abstract} cdata() const: const NVCVImageData &
+}
+
+interface IImageDataCudaArray extends IImageData
+{
+    + {abstract} numPlanes() const: int32_t
+    + {abstract} plane(int p) const: cudaArray_t
+}
+
+interface IImageDataDeviceMem extends IImageData
+{
+    + {abstract} size() const: Size2D
+
+    + {abstract} numPlanes() const: int32_t
+    + {abstract} plane(int p) const: const NVCVImageDataBufferPitch &
+}
+
+class ImageDataDeviceMem implements IImageDataDeviceMem
+{
+}
+
+class ImageDataCudaArray implements IImageDataCudaArray
+{
+}
+
+@enduml

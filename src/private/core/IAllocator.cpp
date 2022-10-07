@@ -13,6 +13,8 @@
 
 #include "IAllocator.hpp"
 
+#include "DefaultAllocator.hpp"
+
 #include <util/Math.hpp>
 
 namespace nv::cv::priv {
@@ -99,6 +101,27 @@ void *IAllocator::allocDeviceMem(int64_t size, int32_t align)
 void IAllocator::freeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept
 {
     doFreeDeviceMem(ptr, size, align);
+}
+
+namespace {
+priv::DefaultAllocator g_DefaultAllocator;
+}
+
+priv::IAllocator &GetDefaultAllocator()
+{
+    return g_DefaultAllocator;
+}
+
+priv::IAllocator &GetAllocator(NVCVAllocator handle)
+{
+    if (handle == nullptr || handle == g_DefaultAllocator.handle())
+    {
+        return g_DefaultAllocator;
+    }
+    else
+    {
+        return priv::ToStaticRef<priv::IAllocator>(handle);
+    }
 }
 
 } // namespace nv::cv::priv

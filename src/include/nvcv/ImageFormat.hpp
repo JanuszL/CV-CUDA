@@ -133,6 +133,10 @@ constexpr ImageFormat::ImageFormat(NVCVImageFormat format)
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+/** Used when no image format is defined. */
+constexpr ImageFormat FMT_NONE{NVCV_IMAGE_FORMAT_NONE};
+
 /** Single plane with one 8-bit unsigned integer channel. */
 constexpr ImageFormat FMT_U8{NVCV_IMAGE_FORMAT_U8};
 

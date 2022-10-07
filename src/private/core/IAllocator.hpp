@@ -18,6 +18,8 @@
 
 #include <nvcv/alloc/Fwd.h>
 
+#include <memory>
+
 namespace nv::cv::priv {
 
 class IAllocator : public ICoreObjectHandle<IAllocator, NVCVAllocator>
@@ -43,6 +45,34 @@ private:
     virtual void *doAllocDeviceMem(int64_t size, int32_t align)                    = 0;
     virtual void  doFreeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept = 0;
 };
+
+template<class T, class... ARGS>
+std::unique_ptr<T> AllocHostObj(IAllocator &alloc, ARGS &&...args)
+{
+    void *arena = alloc.allocHostMem(sizeof(T), alignof(T));
+    try
+    {
+        return std::unique_ptr<T>{new (arena) T{std::forward<ARGS>(args)...}};
+    }
+    catch (...)
+    {
+        alloc.freeHostMem(arena, sizeof(T), alignof(T));
+        throw;
+    }
+}
+
+template<class T>
+void FreeHostObj(IAllocator &alloc, T *ptr) noexcept
+{
+    if (ptr != nullptr)
+    {
+        ptr->~T();
+        alloc.freeHostMem(ptr, sizeof(T), alignof(T));
+    }
+}
+
+priv::IAllocator &GetAllocator(NVCVAllocator handle);
+priv::IAllocator &GetDefaultAllocator();
 
 } // namespace nv::cv::priv
 

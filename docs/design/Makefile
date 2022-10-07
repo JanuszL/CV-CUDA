@@ -13,7 +13,9 @@
 .PHONY: all
 
 DIAGRAMS = allocator_classes \
-	   resource_allocator_classes
+	   resource_allocator_classes \
+	   image_classes image_future_classes \
+	   image_data_classes image_data_future_classes
 
 all: $(addsuffix .eps,$(DIAGRAMS))
 
