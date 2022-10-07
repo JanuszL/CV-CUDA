@@ -109,6 +109,16 @@ constexpr int ILog2(T value)
     }
 }
 
+template<class T, class = std::enable_if_t<std::is_integral_v<T>>>
+NVCV_CUDA_HOST_DEVICE constexpr auto DivUpPowerOfTwo(T num, TypeIdentity<T> den)
+{
+    assert(num >= 0);
+    assert(den > 0);
+    assert(IsPowerOfTwo(den));
+
+    return (num >> ILog2(den)) + !!(num & (den - 1));
+}
+
 } // namespace nv::cv::util
 
 #endif // NVCV_UTIL_MATH_HPP

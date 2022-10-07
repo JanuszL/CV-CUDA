@@ -253,3 +253,36 @@ TEST_P(MathILog2Tests, works)
 
     EXPECT_EQ(gold, util::ILog2(value));
 }
+
+class MathDivUpPowerOfTwoTests
+    : public t::TestWithParam<
+          std::tuple<test::Param<"num", int64_t>, test::Param<"den", int32_t>, test::Param<"gold", int64_t>>>
+{
+};
+
+// clang-format off
+NVCV_INSTANTIATE_TEST_SUITE_P(_, MathDivUpPowerOfTwoTests,
+    test::ValueList<int64_t, int32_t, int64_t>
+    {
+        {0, 1, 0},
+        {4, 2, 2},
+        {5, 2, 3},
+        {127, 16, (127+15)/16},
+        {5381, 256, (5381+255)/256},
+        {255, 256, 1},
+        {256, 256, 1},
+        {257, 256, 2},
+        {1024, 256, 4},
+        {1025, 256, 5},
+    });
+
+// clang-format on
+
+TEST_P(MathDivUpPowerOfTwoTests, works)
+{
+    const int64_t num  = std::get<0>(GetParam());
+    const int64_t den  = std::get<1>(GetParam());
+    const int64_t gold = std::get<2>(GetParam());
+
+    EXPECT_EQ(gold, util::DivUpPowerOfTwo(num, den));
+}
