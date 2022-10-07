@@ -16,6 +16,7 @@
 
 #include "Compiler.hpp"
 
+#include <cassert>
 #include <type_traits>
 
 namespace nv::cv::util {
@@ -32,16 +33,33 @@ NVCV_CUDA_HOST_DEVICE constexpr bool IsPowerOfTwo(T value)
     return (value & (value - 1)) == 0;
 }
 
-NVCV_CUDA_HOST_DEVICE constexpr uint32_t RoundUpPowerOfTwo(uint32_t x)
+template<class T, class = std::enable_if_t<std::is_integral_v<T>>>
+NVCV_CUDA_HOST_DEVICE constexpr auto RoundUpNextPowerOfTwo(T x)
 {
-    // Source: Hacker's Delight 1st ed, p.48
+    assert(x >= 0);
+
+    // Source: Hacker's Delight 1st ed, p.48,
+    // adapted for any integer size.
+
     x = x - 1;
-    x = x | (x >> 1);
-    x = x | (x >> 2);
-    x = x | (x >> 4);
-    x = x | (x >> 8);
-    x = x | (x >> 16);
-    return x + 1;
+    // all constants, compiler can unroll it
+    for (size_t i = 1; i < sizeof(T) * 8; i <<= 1)
+    {
+        x = x | (x >> i);
+    }
+
+    if constexpr (std::is_same_v<T, int32_t>)
+    {
+        return (int64_t)x + 1;
+    }
+    else if constexpr (std::is_same_v<T, int64_t>)
+    {
+        return (uint64_t)x + 1;
+    }
+    else
+    {
+        return x + 1;
+    }
 }
 
 } // namespace nv::cv::util
