@@ -35,7 +35,9 @@ INSTANTIATE_TEST_SUITE_P(AllStatuses, StatusNameTest,
                                     MAKE_STATUS_NAME(NVCV_ERROR_DEVICE),
                                     MAKE_STATUS_NAME(NVCV_ERROR_NOT_READY),
                                     MAKE_STATUS_NAME(NVCV_ERROR_OUT_OF_MEMORY),
-                                    MAKE_STATUS_NAME(NVCV_ERROR_INTERNAL)));
+                                    MAKE_STATUS_NAME(NVCV_ERROR_INTERNAL),
+                                    MAKE_STATUS_NAME(NVCV_ERROR_OVERFLOW),
+                                    MAKE_STATUS_NAME(NVCV_ERROR_UNDERFLOW)));
 
 // clang-format on
 

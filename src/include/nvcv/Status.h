@@ -49,7 +49,9 @@ typedef enum
     NVCV_ERROR_NOT_READY,            /**< Operation not completed yet, try again later. */
     NVCV_ERROR_OUT_OF_MEMORY,        /**< Not enough free memory to allocate object. */
     NVCV_ERROR_INTERNAL,             /**< Internal, non specific error. */
-    NVCV_ERROR_NOT_COMPATIBLE        /**< Implementation version incompatibility. */
+    NVCV_ERROR_NOT_COMPATIBLE,       /**< Implementation version incompatibility. */
+    NVCV_ERROR_OVERFLOW,             /**< Result is larger than maximum accepted value. */
+    NVCV_ERROR_UNDERFLOW,            /**< Result is smaller than minimum accepted value. */
 } NVCVStatus;
 
 /**
