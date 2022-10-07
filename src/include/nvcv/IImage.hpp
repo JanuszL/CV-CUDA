@@ -29,7 +29,8 @@ class IImage
 public:
     virtual ~IImage() = default;
 
-    NVCVImage handle() const;
+    const NVCVImage *handle() const;
+    NVCVImage       *handle();
 
     Size2D      size() const;
     ImageFormat format() const;
@@ -40,36 +41,25 @@ public:
 
 private:
     // NVI idiom
-    virtual NVCVImage         doGetHandle() const  = 0;
+    virtual NVCVImage        *doGetHandle() const  = 0;
     virtual Size2D            doGetSize() const    = 0;
     virtual ImageFormat       doGetFormat() const  = 0;
     virtual IAllocator       &doGetAlloc() const   = 0;
     virtual const IImageData *doExportData() const = 0;
 };
 
-using ImageDataCleanupFunc = void(const IImageData &);
-
-class IImageWrapData : public virtual IImage
-{
-public:
-    // Redefines the data only.
-    void resetData(const IImageData &data);
-    void resetData();
-
-    // Redefines the data and its cleanup function.
-    void resetDataAndCleanup(const IImageData &data, std::function<ImageDataCleanupFunc> cleanup);
-    void resetDataAndCleanup();
-
-private:
-    virtual void doResetData(const IImageData *data)                                                        = 0;
-    virtual void doResetDataAndCleanup(const IImageData *data, std::function<ImageDataCleanupFunc> cleanup) = 0;
-};
-
 // Implementation ------------------------------------
 
-inline NVCVImage IImage::handle() const
+inline const NVCVImage *IImage::handle() const
 {
-    NVCVImage h = doGetHandle();
+    const NVCVImage *h = doGetHandle();
+    assert(h != nullptr && "Post-condition failed");
+    return h;
+}
+
+inline NVCVImage *IImage::handle()
+{
+    NVCVImage *h = doGetHandle();
     assert(h != nullptr && "Post-condition failed");
     return h;
 }
@@ -97,26 +87,6 @@ inline IAllocator &IImage::alloc() const
 inline const IImageData *IImage::exportData() const
 {
     return doExportData();
-}
-
-void IImageWrapData::resetData(const IImageData &data)
-{
-    doResetData(&data);
-}
-
-void IImageWrapData::resetData()
-{
-    doResetData(nullptr);
-}
-
-void IImageWrapData::resetDataAndCleanup(const IImageData &data, std::function<ImageDataCleanupFunc> cleanup)
-{
-    doResetDataAndCleanup(&data, std::move(cleanup));
-}
-
-void IImageWrapData::resetDataAndCleanup()
-{
-    doResetDataAndCleanup(nullptr, nullptr);
 }
 
 }} // namespace nv::cv

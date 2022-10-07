@@ -44,10 +44,9 @@ private:
 class ImageWrapData final : public IImageWrapData
 {
 public:
-    explicit ImageWrapData(IAllocator &alloc);
+    explicit ImageWrapData();
 
-    explicit ImageWrapData(const NVCVImageData &data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup,
-                           IAllocator &alloc);
+    explicit ImageWrapData(const NVCVImageData &data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup);
 
     ~ImageWrapData();
 
@@ -63,7 +62,6 @@ public:
 
 private:
     NVCVImageData m_data;
-    IAllocator   &m_alloc;
 
     NVCVImageDataCleanupFunc m_cleanup;
     void                    *m_ctxCleanup;

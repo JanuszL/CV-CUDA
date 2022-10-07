@@ -103,23 +103,7 @@ TEST(Image, wip_create_managed)
     }
 }
 
-TEST(ImageWrapData, wip_create_empty)
-{
-    nvcv::ImageWrapData img(nullptr);
-
-    EXPECT_EQ(nvcv::Size2D(0, 0), img.size());
-    EXPECT_EQ(nvcv::FMT_NONE, img.format());
-    ASSERT_NE(nullptr, img.handle());
-
-    NVCVTypeImage type;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvImageGetType(img.handle(), &type));
-    EXPECT_EQ(NVCV_TYPE_IMAGE_WRAP_DATA, type);
-
-    const nvcv::IImageData *data = img.exportData();
-    ASSERT_EQ(nullptr, data);
-}
-
-TEST(ImageWrapData, wip_create_not_empty)
+TEST(ImageWrapData, wip_create)
 {
     nvcv::ImageDataDevicePitch::Buffer buf;
     buf.numPlanes            = 1;
@@ -141,59 +125,6 @@ TEST(ImageWrapData, wip_create_not_empty)
     NVCVTypeImage type;
     ASSERT_EQ(NVCV_SUCCESS, nvcvImageGetType(img.handle(), &type));
     EXPECT_EQ(NVCV_TYPE_IMAGE_WRAP_DATA, type);
-
-    const nvcv::IImageData *data = img.exportData();
-    ASSERT_NE(nullptr, data);
-
-    auto *devdata = dynamic_cast<const nvcv::IImageDataDevicePitch *>(data);
-    ASSERT_NE(nullptr, devdata);
-
-    ASSERT_EQ(1, devdata->numPlanes());
-    EXPECT_EQ(img.format(), devdata->format());
-    EXPECT_EQ(img.size(), devdata->size());
-    EXPECT_EQ(img.size().w, devdata->plane(0).width);
-    EXPECT_EQ(img.size().h, devdata->plane(0).height);
-    EXPECT_LE(190, devdata->plane(0).pitchBytes);
-    EXPECT_EQ(buf.planes[0].buffer, devdata->plane(0).buffer);
-}
-
-TEST(ImageWrapData, wip_reset_data)
-{
-    nvcv::ImageDataDevicePitch::Buffer buf;
-    buf.numPlanes            = 1;
-    buf.planes[0].width      = 173;
-    buf.planes[0].height     = 79;
-    buf.planes[0].pitchBytes = 190;
-    buf.planes[0].buffer     = reinterpret_cast<void *>(678);
-
-    nvcv::ImageWrapData img{
-        nvcv::ImageDataDevicePitch{nvcv::FMT_U8, buf}
-    };
-
-    img.resetData();
-
-    EXPECT_EQ(nvcv::Size2D(0, 0), img.size());
-    EXPECT_EQ(nvcv::FMT_NONE, img.format());
-    const nvcv::IImageData *data = img.exportData();
-    ASSERT_EQ(nullptr, data);
-}
-
-TEST(ImageWrapData, wip_set_data)
-{
-    nvcv::ImageDataDevicePitch::Buffer buf;
-    buf.numPlanes            = 1;
-    buf.planes[0].width      = 173;
-    buf.planes[0].height     = 79;
-    buf.planes[0].pitchBytes = 190;
-    buf.planes[0].buffer     = reinterpret_cast<void *>(678);
-
-    nvcv::ImageWrapData img;
-
-    img.resetData(nvcv::ImageDataDevicePitch{nvcv::FMT_U8, buf});
-
-    EXPECT_EQ(nvcv::Size2D(173, 79), img.size());
-    EXPECT_EQ(nvcv::FMT_U8, img.format());
-    ASSERT_NE(nullptr, img.handle());
 
     const nvcv::IImageData *data = img.exportData();
     ASSERT_NE(nullptr, data);
@@ -261,44 +192,17 @@ TEST(ImageWrapData, wip_cleanup)
     buf.planes[0].pitchBytes = 190;
     buf.planes[0].buffer     = reinterpret_cast<void *>(678);
 
-    int  cleanupCalled[2] = {};
-    auto cleanup0         = [&cleanupCalled](const nvcv::IImageData &data)
+    int  cleanupCalled = 0;
+    auto cleanup       = [&cleanupCalled](const nvcv::IImageData &data)
     {
-        ++cleanupCalled[0];
-    };
-
-    auto cleanup1 = [&cleanupCalled](const nvcv::IImageData &data)
-    {
-        ++cleanupCalled[1];
+        ++cleanupCalled;
     };
 
     {
-        nvcv::ImageWrapData img(nvcv::ImageDataDevicePitch{nvcv::FMT_U8, buf}, cleanup0);
-        EXPECT_EQ(0, cleanupCalled[0]);
+        nvcv::ImageWrapData img(nvcv::ImageDataDevicePitch{nvcv::FMT_U8, buf}, cleanup);
+        EXPECT_EQ(0, cleanupCalled);
     }
-    EXPECT_EQ(1, cleanupCalled[0]) << "Cleanup must have been called when img got destroyed";
-
-    {
-        cleanupCalled[0] = 0;
-        nvcv::ImageWrapData img(nvcv::ImageDataDevicePitch{nvcv::FMT_U8, buf}, cleanup0);
-
-        img.resetDataAndCleanup(nvcv::ImageDataDevicePitch{nvcv::FMT_U8, buf}, cleanup1);
-        EXPECT_EQ(1, cleanupCalled[0]) << "Current cleanup must have been called";
-
-        EXPECT_EQ(0, cleanupCalled[1]) << "New cleanup must NOT have been called";
-
-        img.resetData();
-
-        EXPECT_EQ(1, cleanupCalled[1]) << "New cleanup must have been called after reset data";
-
-        img.resetData(nvcv::ImageDataDevicePitch{nvcv::FMT_U8, buf});
-
-        EXPECT_EQ(1, cleanupCalled[1]) << "New cleanup must NOT have been called when data is empty";
-
-        img.resetData();
-        EXPECT_EQ(2, cleanupCalled[1])
-            << "New cleanup must have been called when data isn't empty and cleanup wasn't redefined";
-    }
+    EXPECT_EQ(1, cleanupCalled) << "Cleanup must have been called when img got destroyed";
 }
 
 TEST(ImageWrapData, wip_mem_reqs)
