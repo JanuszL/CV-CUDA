@@ -17,6 +17,8 @@
 #include "Exception.hpp"
 #include "Version.hpp"
 
+#include <nvcv/alloc/Fwd.h>
+
 #include <type_traits>
 
 // Here we define the base classes for all objects that can be created/destroyed
@@ -63,13 +65,9 @@ bool IsDestroyed(T handle)
     return false;
 }
 
-// Used by fat handles (their type is fully defined)
-template<class T, class EN = std::enable_if_t<sizeof(T) != 0>>
-bool IsDestroyed(T *handle)
+inline bool IsDestroyed(NVCVAllocatorHandle handle)
 {
     // A handle is freed if first 8 bytes are set to zero.
-
-    static_assert(8 <= sizeof(T));
     return std::all_of(reinterpret_cast<const std::byte *>(handle), reinterpret_cast<const std::byte *>(handle) + 8,
                        [](std::byte b) { return b == std::byte{0}; });
 }

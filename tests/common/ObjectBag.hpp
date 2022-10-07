@@ -31,7 +31,7 @@ public:
 
     ~ObjectBag();
 
-    void insert(NVCVAllocator *handle);
+    void insert(NVCVAllocatorHandle handle);
 
 private:
     std::stack<std::function<void()>> m_objs;

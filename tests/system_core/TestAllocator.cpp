@@ -298,15 +298,16 @@ TEST(Allocator, wip_test_dali_stream_async)
 
 TEST(Allocator, wip_double_destroy_noop)
 {
-    NVCVAllocator alloc;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvAllocatorCreateCustom(nullptr, 0, &alloc));
+    NVCVAllocatorStorage allocStorage;
+    NVCVAllocatorHandle  handle;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvAllocatorConstructCustom(nullptr, 0, &allocStorage, &handle));
 
-    nvcvAllocatorDestroy(&alloc);
+    nvcvAllocatorDestroy(handle);
 
     void *ptr;
-    NVCV_ASSERT_STATUS(NVCV_ERROR_INVALID_ARGUMENT, nvcvAllocatorFreeHostMemory(&alloc, &ptr, 16, 16));
+    NVCV_ASSERT_STATUS(NVCV_ERROR_INVALID_ARGUMENT, nvcvAllocatorFreeHostMemory(handle, &ptr, 16, 16));
 
-    nvcvAllocatorDestroy(&alloc); // no-op, already destroyed
+    nvcvAllocatorDestroy(handle); // no-op, already destroyed
 }
 
 // disabled temporary while the API isn't stable

@@ -37,7 +37,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageCalcRequirements,
 }
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageCreate,
-                (const NVCVImageRequirements *reqs, NVCVAllocator *halloc, NVCVImage *handle))
+                (const NVCVImageRequirements *reqs, NVCVAllocatorHandle halloc, NVCVImage *handle))
 {
     return priv::ProtectCall(
         [&]
@@ -61,8 +61,8 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageCreate,
 }
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageCreateWrapData,
-                (const NVCVImageData *data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup, NVCVAllocator *halloc,
-                 NVCVImage *handle))
+                (const NVCVImageData *data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup,
+                 NVCVAllocatorHandle halloc, NVCVImage *handle))
 {
     return priv::ProtectCall(
         [&]
@@ -142,7 +142,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageGetFormat, (NVCVImage handle, NVCVIma
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageGetAllocator, (NVCVImage handle, NVCVAllocator **halloc))
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageGetAllocator, (NVCVImage handle, NVCVAllocatorHandle *halloc))
 {
     return priv::ProtectCall(
         [&]

@@ -112,7 +112,7 @@ priv::IAllocator &GetDefaultAllocator()
     return g_DefaultAllocator;
 }
 
-priv::IAllocator &GetAllocator(NVCVAllocator *handle)
+priv::IAllocator &GetAllocator(NVCVAllocatorHandle handle)
 {
     if (handle == nullptr)
     {

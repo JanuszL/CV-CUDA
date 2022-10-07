@@ -29,7 +29,7 @@ class IAllocator
 public:
     virtual ~IAllocator() = default;
 
-    NVCVAllocator *handle() const noexcept;
+    NVCVAllocatorHandle handle() const noexcept;
 
     IHostMemAllocator       &hostMem();
     IHostPinnedMemAllocator &hostPinnedMem();
@@ -37,14 +37,14 @@ public:
 
 private:
     // Using the NVI pattern.
-    virtual NVCVAllocator *doGetHandle() const noexcept = 0;
+    virtual NVCVAllocatorHandle doGetHandle() const noexcept = 0;
 
     virtual IHostMemAllocator       &doGetHostMemAllocator()       = 0;
     virtual IHostPinnedMemAllocator &doGetHostPinnedMemAllocator() = 0;
     virtual IDeviceMemAllocator     &doGetDeviceMemAllocator()     = 0;
 };
 
-inline NVCVAllocator *IAllocator::handle() const noexcept
+inline NVCVAllocatorHandle IAllocator::handle() const noexcept
 {
     return doGetHandle();
 }
