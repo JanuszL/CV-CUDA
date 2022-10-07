@@ -48,24 +48,6 @@ private:
     virtual const IImageData *doExportData() const = 0;
 };
 
-using ImageDataCleanupFunc = void(const IImageData &);
-
-class IImageWrapData : public virtual IImage
-{
-public:
-    // Redefines the data only.
-    void resetData(const IImageData &data);
-    void resetData();
-
-    // Redefines the data and its cleanup function.
-    void resetDataAndCleanup(const IImageData &data, std::function<ImageDataCleanupFunc> cleanup);
-    void resetDataAndCleanup();
-
-private:
-    virtual void doResetData(const IImageData *data)                                                        = 0;
-    virtual void doResetDataAndCleanup(const IImageData *data, std::function<ImageDataCleanupFunc> cleanup) = 0;
-};
-
 // Implementation ------------------------------------
 
 inline const NVCVImage *IImage::handle() const
@@ -105,26 +87,6 @@ inline IAllocator &IImage::alloc() const
 inline const IImageData *IImage::exportData() const
 {
     return doExportData();
-}
-
-void IImageWrapData::resetData(const IImageData &data)
-{
-    doResetData(&data);
-}
-
-void IImageWrapData::resetData()
-{
-    doResetData(nullptr);
-}
-
-void IImageWrapData::resetDataAndCleanup(const IImageData &data, std::function<ImageDataCleanupFunc> cleanup)
-{
-    doResetDataAndCleanup(&data, std::move(cleanup));
-}
-
-void IImageWrapData::resetDataAndCleanup()
-{
-    doResetDataAndCleanup(nullptr, nullptr);
 }
 
 }} // namespace nv::cv

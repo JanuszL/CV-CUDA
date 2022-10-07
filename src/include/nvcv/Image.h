@@ -221,55 +221,6 @@ NVCV_PUBLIC NVCVStatus nvcvImageGetAllocator(NVCVImage *handle, NVCVAllocatorHan
  */
 NVCV_PUBLIC NVCVStatus nvcvImageExportData(NVCVImage *handle, NVCVImageData *data);
 
-/** Redefines the buffer pointed by the image wrap object, leaving cleanup function intact.
- *
- * If the image currently has a cleanup function defined and the image is not empty,
- * this cleanup will be called on the old image data. The cleanup function won't be changed.
- *
- * @param [in] handle Handle to the image to have its buffer replaced.
- *                    + The image type must be @ref NVCV_TYPE_IMAGE_WRAP_DATA
- *
- * @param [in] data New image contents.
- *                  If NULL, the image will be set to empty.
- *                  When not NULL, the buffer ownership isn't transferred automatically.
- *                  If needed, ownership transfer can be implemted via cleanup function,
- *                  or else ot must not be destroyed while the NVCV image still refers to it.
- *                  must not be destroyed while the NVCV image still refers to
- *                  it.
- *                  + When not NULL, buffer type must not be \ref NVCV_IMAGE_BUFFER_NONE.
- *
- * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
- * @retval #NVCV_SUCCESS                Operation executed successfully.
- */
-NVCV_PUBLIC NVCVStatus nvcvImageWrapResetData(NVCVImage *handle, const NVCVImageData *data);
-
-/** Redefines the buffer pointed by the image wrap object and its cleanup function.
- *
- * If the image currently has a cleanup function defined and the image is not empty,
- * this old cleanup will be called on the old image data prior to setting them to the
- * new values.
- *
- * @param [in] handle Handle to the image to have its buffer replaced.
- *                    + The image type must be @ref NVCV_TYPE_IMAGE_WRAP_DATA
- *
- * @param [in] data New image contents.
- *                  If NULL, the image will be set to empty.
- *                  When not NULL, the buffer ownership isn't automatically transferred.
- *                  If needed, ownership transfer can be implemted via cleanup function,
- *                  or else ot must not be destroyed while the NVCV image still refers to it.
- *                  + When not NULL, buffer type must not be \ref NVCV_IMAGE_BUFFER_NONE.
- *
- * @param [in] cleanup Replaces the existing cleanup function.
- *                     Pass NULL to undefine it.
- *
- * @param [in] ctxCleanup Pointer to be passed unchanged to the cleanup function, if defined.
- *
- * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
- * @retval #NVCV_SUCCESS                Operation executed successfully.
- */
-NVCV_PUBLIC NVCVStatus nvcvImageWrapResetDataAndCleanup(NVCVImage *handle, const NVCVImageData *data,
-                                                        NVCVImageDataCleanupFunc cleanup, void *ctxCleanup);
-
 #ifdef __cplusplus
 }
 #endif

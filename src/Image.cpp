@@ -186,26 +186,3 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageExportData, (NVCVImage * handle, NVCV
             img.exportData(*data);
         });
 }
-
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageWrapResetData, (NVCVImage * handle, const NVCVImageData *data))
-{
-    return priv::ProtectCall(
-        [&]
-        {
-            auto &img = priv::ToDynamicRef<priv::IImageWrapData>(handle);
-
-            img.setData(data);
-        });
-}
-
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageWrapResetDataAndCleanup,
-                (NVCVImage * handle, const NVCVImageData *data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup))
-{
-    return priv::ProtectCall(
-        [&]
-        {
-            auto &img = priv::ToDynamicRef<priv::IImageWrapData>(handle);
-
-            img.setDataAndCleanup(data, cleanup, ctxCleanup);
-        });
-}

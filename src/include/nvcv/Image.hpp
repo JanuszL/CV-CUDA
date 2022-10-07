@@ -85,29 +85,25 @@ private:
     IAllocator       &doGetAlloc() const override;
 };
 
+using ImageDataCleanupFunc = void(const IImageData &);
+
 // ImageWrapData definition -------------------------------------
 // Image that wraps an image data allocated outside cv-cuda
 class ImageWrapData final
-    : public IImageWrapData
+    : public virtual IImage
     , private ImageWrapHandle
 {
 public:
-    explicit ImageWrapData();
-    explicit ImageWrapData(const IImageData &data);
-    explicit ImageWrapData(const IImageData &data, std::function<ImageDataCleanupFunc> cleanup);
+    explicit ImageWrapData(const IImageData &data, std::function<ImageDataCleanupFunc> cleanup = nullptr);
 
     ~ImageWrapData();
 
 private:
-    NVCVImage   m_instance;
-    IAllocator *m_alloc;
+    NVCVImage m_instance;
 
     std::function<ImageDataCleanupFunc> m_cleanup;
     static void                         doCleanup(void *ctx, const NVCVImageData *data);
 
-    void        doResetData(const IImageData *data) override;
-    void        doResetDataAndCleanup(const IImageData *data, std::function<ImageDataCleanupFunc> cleanup) override;
-    IAllocator &doGetAlloc() const override;
     const IImageData *doExportData() const override;
 };
 
@@ -255,18 +251,6 @@ inline const IImageData *Image::doExportData() const
 
 // ImageWrapData implementation -------------------------------------
 
-inline ImageWrapData::ImageWrapData()
-    : ImageWrapHandle(
-        [&]
-        {
-            detail::CheckThrow(nvcvImageCreateWrapData(nullptr,          // data
-                                                       nullptr, nullptr, // cleanup and ctx
-                                                       &m_instance));
-            return &m_instance;
-        }())
-{
-}
-
 inline ImageWrapData::ImageWrapData(const IImageData &data, std::function<ImageDataCleanupFunc> cleanup)
     : ImageWrapHandle(
         [&]
@@ -276,11 +260,6 @@ inline ImageWrapData::ImageWrapData(const IImageData &data, std::function<ImageD
             return &m_instance;
         }())
     , m_cleanup(std::move(cleanup))
-{
-}
-
-inline ImageWrapData::ImageWrapData(const IImageData &data)
-    : ImageWrapData(data, nullptr)
 {
 }
 
@@ -320,33 +299,6 @@ inline const IImageData *ImageWrapData::doExportData() const
     else
     {
         return ImageWrapHandle::doExportData();
-    }
-}
-
-inline void ImageWrapData::doResetDataAndCleanup(const IImageData *data, std::function<ImageDataCleanupFunc> cleanup)
-{
-    detail::CheckThrow(nvcvImageWrapResetDataAndCleanup(this->handle(), data ? &data->cdata() : nullptr,
-                                                        cleanup ? &doCleanup : nullptr, this));
-
-    // Only set the new cleanup function after we call C API, as it'll end up calling the
-    // current m_cleanup, if defined.
-    m_cleanup = std::move(cleanup);
-}
-
-inline void ImageWrapData::doResetData(const IImageData *data)
-{
-    detail::CheckThrow(nvcvImageWrapResetData(this->handle(), data ? &data->cdata() : nullptr));
-}
-
-inline IAllocator &ImageWrapData::doGetAlloc() const
-{
-    if (m_alloc != nullptr)
-    {
-        return *m_alloc;
-    }
-    else
-    {
-        return ImageWrapHandle::doGetAlloc();
     }
 }
 
