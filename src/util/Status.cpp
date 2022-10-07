@@ -38,6 +38,8 @@ const char *ToString(NVCVStatus err) noexcept
         CASE(NVCV_ERROR_OUT_OF_MEMORY);
         CASE(NVCV_ERROR_INTERNAL);
         CASE(NVCV_ERROR_NOT_COMPATIBLE);
+        CASE(NVCV_ERROR_OVERFLOW);
+        CASE(NVCV_ERROR_UNDERFLOW);
     }
 
     // Status not found?

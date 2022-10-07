@@ -45,6 +45,8 @@ enum class Status : int8_t
     ERROR_OUT_OF_MEMORY        = NVCV_ERROR_OUT_OF_MEMORY,
     ERROR_INTERNAL             = NVCV_ERROR_INTERNAL,
     ERROR_NOT_COMPATIBLE       = NVCV_ERROR_NOT_COMPATIBLE,
+    ERROR_OVERFLOW             = NVCV_ERROR_OVERFLOW,
+    ERROR_UNDERFLOW            = NVCV_ERROR_UNDERFLOW
 };
 
 inline const char *GetName(Status status)

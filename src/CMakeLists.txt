@@ -30,6 +30,7 @@ add_library(nvcv SHARED
     PixelType.cpp
     ImageFormat.cpp
     Allocator.cpp
+    Requirements.cpp
 )
 
 target_link_libraries(nvcv PRIVATE
