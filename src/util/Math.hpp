@@ -72,6 +72,19 @@ NVCV_CUDA_HOST_DEVICE constexpr auto DivUp(T num, TypeIdentity<T> den)
     return (num + (den - 1)) / den;
 }
 
+template<class T, class U, class = std::enable_if_t<std::is_integral_v<T> && std::is_integral_v<U>>>
+NVCV_CUDA_HOST_DEVICE constexpr auto RoundUpPowerOfTwo(T value, U multiple)
+{
+    assert(value >= 0);
+    assert(multiple >= 0);
+
+    assert(IsPowerOfTwo(multiple));
+
+    // Source: Hacker's Delight 1st ed, p.45,
+
+    return (value + (multiple - 1)) & -multiple;
+}
+
 } // namespace nv::cv::util
 
 #endif // NVCV_UTIL_MATH_HPP

@@ -193,3 +193,34 @@ TEST_P(MathDivUpTests, works)
 
     EXPECT_EQ(gold, util::DivUp(num, den));
 }
+
+class MathRoundUpPowerOfTwoTests
+    : public t::TestWithParam<
+          std::tuple<test::Param<"value", int64_t>, test::Param<"multiple", int64_t>, test::Param<"gold", int64_t>>>
+{
+};
+
+// clang-format off
+NVCV_INSTANTIATE_TEST_SUITE_P(_, MathRoundUpPowerOfTwoTests,
+    test::ValueList<int64_t, int64_t, int64_t>
+    {
+        {0, 2, 0},
+        {1, 2, 2},
+        {2, 2, 2},
+        {3, 2, 4},
+
+        {127, 128, 128},
+        {128, 128, 128},
+        {129, 128, 256},
+    });
+
+// clang-format on
+
+TEST_P(MathRoundUpPowerOfTwoTests, works)
+{
+    const int64_t value    = std::get<0>(GetParam());
+    const int64_t multiple = std::get<1>(GetParam());
+    const int64_t gold     = std::get<2>(GetParam());
+
+    EXPECT_EQ(gold, util::RoundUpPowerOfTwo(value, multiple));
+}
