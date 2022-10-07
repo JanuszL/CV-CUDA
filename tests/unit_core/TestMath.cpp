@@ -166,3 +166,30 @@ TEST_P(MathRoundUpNextPowerOfTwoTests, works)
         EXPECT_EQ(gold, util::RoundUpNextPowerOfTwo(input));
     }
 }
+
+class MathDivUpTests
+    : public t::TestWithParam<
+          std::tuple<test::Param<"num", int64_t>, test::Param<"den", int32_t>, test::Param<"gold", int64_t>>>
+{
+};
+
+// clang-format off
+NVCV_INSTANTIATE_TEST_SUITE_P(_, MathDivUpTests,
+    test::ValueList<int64_t, int32_t, int64_t>
+    {
+        {0, 1, 0},
+        {4, 2, 2},
+        {5, 2, 3},
+        {127, 11, (127+10)/11},
+    });
+
+// clang-format on
+
+TEST_P(MathDivUpTests, works)
+{
+    const int64_t num  = std::get<0>(GetParam());
+    const int64_t den  = std::get<1>(GetParam());
+    const int64_t gold = std::get<2>(GetParam());
+
+    EXPECT_EQ(gold, util::DivUp(num, den));
+}

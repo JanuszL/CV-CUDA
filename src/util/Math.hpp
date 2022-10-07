@@ -15,6 +15,7 @@
 #define NVCV_UTIL_MATH_HPP
 
 #include "Compiler.hpp"
+#include "Metaprogramming.hpp"
 
 #include <cassert>
 #include <type_traits>
@@ -60,6 +61,15 @@ NVCV_CUDA_HOST_DEVICE constexpr auto RoundUpNextPowerOfTwo(T x)
     {
         return x + 1;
     }
+}
+
+template<class T, class = std::enable_if_t<std::is_integral_v<T>>>
+NVCV_CUDA_HOST_DEVICE constexpr auto DivUp(T num, TypeIdentity<T> den)
+{
+    assert(num >= 0);
+    assert(den > 0);
+
+    return (num + (den - 1)) / den;
 }
 
 } // namespace nv::cv::util
