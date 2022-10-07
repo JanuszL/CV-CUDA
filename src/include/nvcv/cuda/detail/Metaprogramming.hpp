@@ -212,22 +212,6 @@ struct HasTypeTraits_t<T, std::void_t<typename TypeTraits<T>::base_type>> : std:
 {
 };
 
-// clang-format off
-
-// Metatype to serve as a requirement for a template object to meet the given boolean expression.
-template<bool B>
-using Require = std::enable_if_t<B>;
-
-// Metavariable to check if one or more types have type traits.
-template<typename... Ts>
-constexpr bool HasTypeTraits = (HasTypeTraits_t<Ts>::value && ...);
-
-// Metavariable to check if a type is a CUDA compound type.
-template<class T, class = Require<HasTypeTraits<T>>>
-constexpr bool IsCompound = TypeTraits<T>::components >= 1;
-
-// clang-format on
-
 } // namespace nv::cv::cuda::detail
 
 #endif // NVCV_CUDA_DETAIL_METAPROGRAMMING_HPP

@@ -62,6 +62,69 @@ TYPED_TEST(TypeTraitsSupportedBaseTest, CorectTypeTraits)
     EXPECT_EQ(TypeTraitsT::max, std::numeric_limits<typename TestFixture::Type>::max());
 }
 
+// ------------------------- Testing HasTypeTraits -----------------------------
+
+template<typename T>
+class HasTypeTraitsUnsupportedTest : public TypeTraitsBaseTest<T>
+{
+};
+
+typedef struct _float5
+{
+    float a, b, c, d, e;
+} float5;
+
+using UnsupportedBaseTypes = t::Types<void, long double, float5>;
+
+TYPED_TEST_SUITE(HasTypeTraitsUnsupportedTest, UnsupportedBaseTypes);
+
+TYPED_TEST(HasTypeTraitsUnsupportedTest, IsFalse)
+{
+    EXPECT_FALSE(cuda::HasTypeTraits<typename TestFixture::Type>);
+}
+
+TEST(HasTypeTraitsWithTwoUnsupportedTypesTest, IsFalse)
+{
+    EXPECT_FALSE((cuda::HasTypeTraits<long double, float5>));
+}
+
+template<typename T>
+class HasTypeTraitsSupportedTest : public TypeTraitsBaseTest<T>
+{
+};
+
+using SupportedBaseTypes = t::Types<int, float3>;
+
+TYPED_TEST_SUITE(HasTypeTraitsSupportedTest, SupportedBaseTypes);
+
+TYPED_TEST(HasTypeTraitsSupportedTest, IsTrue)
+{
+    EXPECT_TRUE(cuda::HasTypeTraits<typename TestFixture::Type>);
+}
+
+TEST(HasTypeTraitsWithTwoSupportedTypesTest, IsTrue)
+{
+    EXPECT_TRUE((cuda::HasTypeTraits<unsigned int, double4>));
+}
+
+// -------------------------- Testing IsCompound -------------------------------
+
+TEST(IsCompoundTest, IsFalse)
+{
+    EXPECT_FALSE((cuda::IsCompound<unsigned char>));
+    EXPECT_FALSE((cuda::IsCompound<char>));
+    EXPECT_FALSE((cuda::IsCompound<unsigned short>));
+    EXPECT_FALSE((cuda::IsCompound<int>));
+}
+
+TEST(IsCompoundTest, IsTrue)
+{
+    EXPECT_TRUE((cuda::IsCompound<uchar1>));
+    EXPECT_TRUE((cuda::IsCompound<short2>));
+    EXPECT_TRUE((cuda::IsCompound<uint3>));
+    EXPECT_TRUE((cuda::IsCompound<float4>));
+}
+
 // ---------------------------- Testing BaseType -------------------------------
 
 template<typename T>
