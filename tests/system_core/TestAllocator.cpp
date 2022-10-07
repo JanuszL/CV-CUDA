@@ -296,6 +296,20 @@ TEST(Allocator, wip_test_dali_stream_async)
     cudaStreamDestroy(stream2);
 }
 
+TEST(Allocator, wip_double_destroy_noop)
+{
+    NVCVAllocatorStorage allocStorage;
+    NVCVAllocatorHandle  handle;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvAllocatorConstructCustom(nullptr, 0, &allocStorage, &handle));
+
+    nvcvAllocatorDestroy(handle);
+
+    void *ptr;
+    NVCV_ASSERT_STATUS(NVCV_ERROR_INVALID_ARGUMENT, nvcvAllocatorFreeHostMemory(handle, &ptr, 16, 16));
+
+    nvcvAllocatorDestroy(handle); // no-op, already destroyed
+}
+
 // disabled temporary while the API isn't stable
 #if 0
 

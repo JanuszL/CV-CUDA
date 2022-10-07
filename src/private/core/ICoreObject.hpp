@@ -17,6 +17,8 @@
 #include "Exception.hpp"
 #include "Version.hpp"
 
+#include <nvcv/alloc/Fwd.h>
+
 #include <type_traits>
 
 // Here we define the base classes for all objects that can be created/destroyed
@@ -55,6 +57,20 @@ protected:
     // Using NVI idiom.
     virtual Version doGetVersion() const = 0;
 };
+
+// Used by thin handles
+template<class T>
+bool IsDestroyed(T handle)
+{
+    return false;
+}
+
+inline bool IsDestroyed(NVCVAllocatorHandle handle)
+{
+    // A handle is freed if first 8 bytes are set to zero.
+    return std::all_of(reinterpret_cast<const std::byte *>(handle), reinterpret_cast<const std::byte *>(handle) + 8,
+                       [](std::byte b) { return b == std::byte{0}; });
+}
 
 // Base class for all core objects that exposes a handle with a particular type.
 // Along with the ToPtr and ToRef methods below, it provides facilities to convert
@@ -97,7 +113,14 @@ inline ICoreObject *ToCoreObjectPtr(void *handle)
 template<class T>
 T *ToStaticPtr(typename T::HandleType h)
 {
-    return static_cast<T *>(ToCoreObjectPtr(h));
+    if (!IsDestroyed(h))
+    {
+        return static_cast<T *>(ToCoreObjectPtr(h));
+    }
+    else
+    {
+        return nullptr;
+    }
 }
 
 template<class T>
@@ -109,13 +132,26 @@ T &ToStaticRef(typename T::HandleType h)
     }
 
     T *child = ToStaticPtr<T>(h);
+
+    if (child == nullptr)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Handle was already destroyed");
+    }
+
     return *child;
 }
 
 template<class T>
 T *ToDynamicPtr(typename T::HandleType h)
 {
-    return dynamic_cast<T *>(ToCoreObjectPtr(h));
+    if (!IsDestroyed(h))
+    {
+        return dynamic_cast<T *>(ToCoreObjectPtr(h));
+    }
+    else
+    {
+        return nullptr;
+    }
 }
 
 template<class T>
@@ -132,7 +168,8 @@ T &ToDynamicRef(typename T::HandleType h)
     }
     else
     {
-        throw Exception(NVCV_ERROR_NOT_COMPATIBLE, "Handle doesn't correspond to the requested object.");
+        throw Exception(NVCV_ERROR_NOT_COMPATIBLE,
+                        "Handle doesn't correspond to the requested object or was already destroyed.");
     }
 }
 
