@@ -58,14 +58,8 @@ protected:
     virtual Version doGetVersion() const = 0;
 };
 
-// Used by thin handles
 template<class T>
 bool IsDestroyed(T handle)
-{
-    return false;
-}
-
-inline bool IsDestroyed(NVCVAllocatorHandle handle)
 {
     // A handle is freed if first 8 bytes are set to zero.
     return std::all_of(reinterpret_cast<const std::byte *>(handle), reinterpret_cast<const std::byte *>(handle) + 8,

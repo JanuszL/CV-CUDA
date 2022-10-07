@@ -49,8 +49,12 @@ typedef enum
     NVCV_TYPE_IMAGE_WRAP_DATA
 } NVCVTypeImage;
 
-/** Handle to an image instance. */
-typedef struct NVCVImageImpl *NVCVImage;
+/** Storage for image instance. */
+typedef struct NVCVImageImpl
+{
+    /** Instance storage */
+    alignas(8) uint8_t storage[1024];
+} NVCVImage;
 
 /** Image data cleanup function type */
 typedef void (*NVCVImageDataCleanupFunc)(void *ctx, const NVCVImageData *data);
@@ -128,12 +132,6 @@ NVCV_PUBLIC NVCVStatus nvcvImageCreate(const NVCVImageRequirements *reqs, NVCVAl
  *
  * @param [in] ctxCleanup Pointer to be passed unchanged to the cleanup function, if defined.
  *
- * @param [in] alloc        Allocator to be used to allocate needed memory buffers.
- *                          The following resources are used:
- *                          - host memory: for internal structures.
- *                          If NULL, it'll use the internal default allocator.
- *                          + Allocator must not be destroyed while an image still refers to it.
- *
  * @param [out] handle      Where the image instance handle will be written to.
  *                          + Must not be NULL.
  *
@@ -142,7 +140,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageCreate(const NVCVImageRequirements *reqs, NVCVAl
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvImageCreateWrapData(const NVCVImageData *data, NVCVImageDataCleanupFunc cleanup,
-                                               void *ctxCleanup, NVCVAllocatorHandle alloc, NVCVImage *handle);
+                                               void *ctxCleanup, NVCVImage *handle);
 
 /** Destroys an existing image instance.
  *
@@ -155,7 +153,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageCreateWrapData(const NVCVImageData *data, NVCVIm
  *                    If NULL, no operation is performed, successfully.
  *                    + The handle must have been created with any of the nvcvImageCreate functions.
  */
-NVCV_PUBLIC void nvcvImageDestroy(NVCVImage handle);
+NVCV_PUBLIC void nvcvImageDestroy(NVCVImage *handle);
 
 /** Returns the underlying image type.
  *
@@ -166,7 +164,7 @@ NVCV_PUBLIC void nvcvImageDestroy(NVCVImage handle);
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvImageGetType(NVCVImage handle, NVCVTypeImage *type);
+NVCV_PUBLIC NVCVStatus nvcvImageGetType(NVCVImage *handle, NVCVTypeImage *type);
 
 /**
  * Get the image dimensions in pixels.
@@ -179,7 +177,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageGetType(NVCVImage handle, NVCVTypeImage *type);
  * @retval #VPI_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
  * @retval #VPI_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvImageGetSize(NVCVImage handle, int32_t *width, int32_t *height);
+NVCV_PUBLIC NVCVStatus nvcvImageGetSize(NVCVImage *handle, int32_t *width, int32_t *height);
 
 /**
  * Get the image format.
@@ -193,7 +191,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageGetSize(NVCVImage handle, int32_t *width, int32_
  * @retval #VPI_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
  * @retval #VPI_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvImageGetFormat(NVCVImage handle, NVCVImageFormat *fmt);
+NVCV_PUBLIC NVCVStatus nvcvImageGetFormat(NVCVImage *handle, NVCVImageFormat *fmt);
 
 /**
  * Get the allocator associated with an image.
@@ -207,7 +205,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageGetFormat(NVCVImage handle, NVCVImageFormat *fmt
  * @retval #VPI_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
  * @retval #VPI_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvImageGetAllocator(NVCVImage handle, NVCVAllocatorHandle *alloc);
+NVCV_PUBLIC NVCVStatus nvcvImageGetAllocator(NVCVImage *handle, NVCVAllocatorHandle *alloc);
 
 /**
  * Retrieve the image contents.
@@ -221,7 +219,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageGetAllocator(NVCVImage handle, NVCVAllocatorHand
  * @retval #VPI_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
  * @retval #VPI_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvImageExportData(NVCVImage handle, NVCVImageData *data);
+NVCV_PUBLIC NVCVStatus nvcvImageExportData(NVCVImage *handle, NVCVImageData *data);
 
 /** Redefines the buffer pointed by the image wrap object, leaving cleanup function intact.
  *
@@ -243,7 +241,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageExportData(NVCVImage handle, NVCVImageData *data
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvImageWrapResetData(NVCVImage handle, const NVCVImageData *data);
+NVCV_PUBLIC NVCVStatus nvcvImageWrapResetData(NVCVImage *handle, const NVCVImageData *data);
 
 /** Redefines the buffer pointed by the image wrap object and its cleanup function.
  *
@@ -269,7 +267,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageWrapResetData(NVCVImage handle, const NVCVImageD
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvImageWrapResetDataAndCleanup(NVCVImage handle, const NVCVImageData *data,
+NVCV_PUBLIC NVCVStatus nvcvImageWrapResetDataAndCleanup(NVCVImage *handle, const NVCVImageData *data,
                                                         NVCVImageDataCleanupFunc cleanup, void *ctxCleanup);
 
 #ifdef __cplusplus

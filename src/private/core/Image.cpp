@@ -154,19 +154,16 @@ void Image::exportData(NVCVImageData &data) const
 
 // ImageWrap implementation -------------------------------------------
 
-ImageWrapData::ImageWrapData(IAllocator &alloc)
-    : m_alloc(alloc)
-    , m_cleanup(nullptr)
+ImageWrapData::ImageWrapData()
+    : m_cleanup(nullptr)
     , m_ctxCleanup(nullptr)
 {
     m_data.bufferType = NVCV_IMAGE_BUFFER_NONE;
     m_data.format     = NVCV_IMAGE_FORMAT_NONE;
 }
 
-ImageWrapData::ImageWrapData(const NVCVImageData &data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup,
-                             IAllocator &alloc)
-    : m_alloc(alloc)
-    , m_cleanup(cleanup)
+ImageWrapData::ImageWrapData(const NVCVImageData &data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup)
+    : m_cleanup(cleanup)
     , m_ctxCleanup(ctxCleanup)
 {
     doValidateData(data);
@@ -231,7 +228,7 @@ void ImageWrapData::doValidateData(const NVCVImageData &data) const
 
 IAllocator &ImageWrapData::alloc() const
 {
-    return m_alloc;
+    return GetDefaultAllocator();
 }
 
 Size2D ImageWrapData::size() const

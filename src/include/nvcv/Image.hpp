@@ -32,7 +32,7 @@ class ImageWrapHandle : public virtual IImage
 public:
     ImageWrapHandle(const ImageWrapHandle &that);
 
-    explicit ImageWrapHandle(NVCVImage handle);
+    explicit ImageWrapHandle(NVCVImage *handle);
     ~ImageWrapHandle();
 
 protected:
@@ -40,10 +40,10 @@ protected:
 
     IAllocator       &doGetAlloc() const override;
     const IImageData *doExportData() const override;
-    NVCVImage         doGetHandle() const override;
+    NVCVImage        *doGetHandle() const override;
 
 private:
-    NVCVImage m_handle;
+    NVCVImage *m_handle;
 
     // Where the concrete class for exported image data will be allocated
     // Should be an std::variant in C++17.
@@ -78,6 +78,7 @@ public:
     ~Image();
 
 private:
+    NVCVImage   m_instance;
     IAllocator *m_alloc;
 
     const IImageData *doExportData() const override;
@@ -91,14 +92,14 @@ class ImageWrapData final
     , private ImageWrapHandle
 {
 public:
-    explicit ImageWrapData(IAllocator *alloc = nullptr);
-    explicit ImageWrapData(const IImageData &data, IAllocator *alloc = nullptr);
-    explicit ImageWrapData(const IImageData &data, std::function<ImageDataCleanupFunc> cleanup,
-                           IAllocator *alloc = nullptr);
+    explicit ImageWrapData();
+    explicit ImageWrapData(const IImageData &data);
+    explicit ImageWrapData(const IImageData &data, std::function<ImageDataCleanupFunc> cleanup);
 
     ~ImageWrapData();
 
 private:
+    NVCVImage   m_instance;
     IAllocator *m_alloc;
 
     std::function<ImageDataCleanupFunc> m_cleanup;
@@ -118,7 +119,7 @@ inline ImageWrapHandle::ImageWrapHandle(const ImageWrapHandle &that)
 {
 }
 
-inline ImageWrapHandle::ImageWrapHandle(NVCVImage handle)
+inline ImageWrapHandle::ImageWrapHandle(NVCVImage *handle)
     : m_ptrData(nullptr)
     , m_handle(handle)
 {
@@ -132,7 +133,7 @@ inline ImageWrapHandle::~ImageWrapHandle()
     }
 }
 
-inline NVCVImage ImageWrapHandle::doGetHandle() const
+inline NVCVImage *ImageWrapHandle::doGetHandle() const
 {
     return m_handle;
 }
@@ -204,9 +205,8 @@ inline Image::Image(const Requirements &reqs, IAllocator *alloc)
     : ImageWrapHandle(
         [&]
         {
-            NVCVImage handle;
-            detail::CheckThrow(nvcvImageCreate(&reqs, alloc ? alloc->handle() : nullptr, &handle));
-            return handle;
+            detail::CheckThrow(nvcvImageCreate(&reqs, alloc ? alloc->handle() : nullptr, &m_instance));
+            return &m_instance;
         }())
     , m_alloc(alloc)
 {
@@ -255,37 +255,32 @@ inline const IImageData *Image::doExportData() const
 
 // ImageWrapData implementation -------------------------------------
 
-inline ImageWrapData::ImageWrapData(IAllocator *alloc)
+inline ImageWrapData::ImageWrapData()
     : ImageWrapHandle(
         [&]
         {
-            NVCVImage himg;
             detail::CheckThrow(nvcvImageCreateWrapData(nullptr,          // data
                                                        nullptr, nullptr, // cleanup and ctx
-                                                       alloc ? alloc->handle() : nullptr, &himg));
-            return himg;
+                                                       &m_instance));
+            return &m_instance;
         }())
-    , m_alloc(alloc)
 {
 }
 
-inline ImageWrapData::ImageWrapData(const IImageData &data, std::function<ImageDataCleanupFunc> cleanup,
-                                    IAllocator *alloc)
+inline ImageWrapData::ImageWrapData(const IImageData &data, std::function<ImageDataCleanupFunc> cleanup)
     : ImageWrapHandle(
         [&]
         {
-            NVCVImage himg;
-            detail::CheckThrow(nvcvImageCreateWrapData(&data.cdata(), cleanup ? &doCleanup : nullptr, this,
-                                                       alloc ? alloc->handle() : nullptr, &himg));
-            return himg;
+            detail::CheckThrow(
+                nvcvImageCreateWrapData(&data.cdata(), cleanup ? &doCleanup : nullptr, this, &m_instance));
+            return &m_instance;
         }())
-    , m_alloc(alloc)
     , m_cleanup(std::move(cleanup))
 {
 }
 
-inline ImageWrapData::ImageWrapData(const IImageData &data, IAllocator *alloc)
-    : ImageWrapData(data, nullptr, alloc)
+inline ImageWrapData::ImageWrapData(const IImageData &data)
+    : ImageWrapData(data, nullptr)
 {
 }
 

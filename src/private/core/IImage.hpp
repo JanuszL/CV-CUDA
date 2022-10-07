@@ -23,7 +23,7 @@ namespace nv::cv::priv {
 
 class IAllocator;
 
-class IImage : public ICoreObjectHandle<IImage, NVCVImage>
+class IImage : public ICoreObjectHandle<IImage, NVCVImage *>
 {
 public:
     virtual Size2D      size() const   = 0;

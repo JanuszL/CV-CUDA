@@ -105,7 +105,7 @@ TEST(Image, wip_create_managed)
 
 TEST(ImageWrapData, wip_create_empty)
 {
-    nvcv::ImageWrapData img(nullptr);
+    nvcv::ImageWrapData img{};
 
     EXPECT_EQ(nvcv::Size2D(0, 0), img.size());
     EXPECT_EQ(nvcv::FMT_NONE, img.format());

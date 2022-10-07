@@ -29,7 +29,8 @@ class IImage
 public:
     virtual ~IImage() = default;
 
-    NVCVImage handle() const;
+    const NVCVImage *handle() const;
+    NVCVImage       *handle();
 
     Size2D      size() const;
     ImageFormat format() const;
@@ -40,7 +41,7 @@ public:
 
 private:
     // NVI idiom
-    virtual NVCVImage         doGetHandle() const  = 0;
+    virtual NVCVImage        *doGetHandle() const  = 0;
     virtual Size2D            doGetSize() const    = 0;
     virtual ImageFormat       doGetFormat() const  = 0;
     virtual IAllocator       &doGetAlloc() const   = 0;
@@ -67,9 +68,16 @@ private:
 
 // Implementation ------------------------------------
 
-inline NVCVImage IImage::handle() const
+inline const NVCVImage *IImage::handle() const
 {
-    NVCVImage h = doGetHandle();
+    const NVCVImage *h = doGetHandle();
+    assert(h != nullptr && "Post-condition failed");
+    return h;
+}
+
+inline NVCVImage *IImage::handle()
+{
+    NVCVImage *h = doGetHandle();
     assert(h != nullptr && "Post-condition failed");
     return h;
 }
