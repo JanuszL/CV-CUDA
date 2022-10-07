@@ -321,6 +321,21 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageFormatGetPlaneNumChannels,
         });
 }
 
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageFormatGetPlanePixelStrideBytes,
+                (NVCVImageFormat fmt, int32_t plane, int32_t *outStrideBytes))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            if (outStrideBytes == nullptr)
+            {
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to pixel stride output cannot be NULL");
+            }
+            priv::ImageFormat pfmt{fmt};
+            *outStrideBytes = pfmt.planePixelStrideBytes(plane);
+        });
+}
+
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageFormatGetBitsPerChannel, (NVCVImageFormat fmt, int32_t *outBits))
 {
     return priv::ProtectCall(

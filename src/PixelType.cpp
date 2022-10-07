@@ -206,3 +206,18 @@ NVCV_DEFINE_API(0, 0, const char *, nvcvPixelTypeGetName, (NVCVPixelType type))
 
     return buffer;
 }
+
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvPixelTypeGetStrideBytes, (NVCVPixelType type, int32_t *pixStride))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            if (pixStride == nullptr)
+            {
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to pixel stride output cannot be NULL");
+            }
+
+            priv::PixelType ptype{type};
+            *pixStride = ptype.strideBytes();
+        });
+}

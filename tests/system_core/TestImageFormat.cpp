@@ -2003,3 +2003,34 @@ TEST(ImageFormatFourCCTests, invalid_fourcc_returns_invalid_imageformat)
     EXPECT_EQ(NVCV_ERROR_INVALID_ARGUMENT,
               nvcvMakeImageFormatFromFourCC(&fmt, FCC('R', 'O', 'D', 'S'), NVCV_COLOR_SPEC_BT601, NVCV_MEM_LAYOUT_PL));
 }
+
+class ImageFormatPlanePixelStrideBytesExecTests
+    : public t::TestWithParam<std::tuple<test::Param<"fmt", NVCVImageFormat>, test::Param<"plane", int>,
+                                         test::Param<"goldStrideBytes", int>>>
+{
+};
+
+// clang-format off
+NVCV_INSTANTIATE_TEST_SUITE_P(_,ImageFormatPlanePixelStrideBytesExecTests,
+                              test::ValueList<NVCVImageFormat, int, int>
+                              {
+                                {NVCV_IMAGE_FORMAT_NV12, 0, 1},
+                                {NVCV_IMAGE_FORMAT_NV12, 1, 2},
+                                {NVCV_IMAGE_FORMAT_RGB8, 0, 3},
+                                {NVCV_IMAGE_FORMAT_RGBA8, 0, 4},
+                                {NVCV_IMAGE_FORMAT_U8, 0, 1},
+                                {NVCV_IMAGE_FORMAT_U16, 0, 2},
+                              });
+
+// clang-format on
+
+TEST_P(ImageFormatPlanePixelStrideBytesExecTests, works)
+{
+    const NVCVImageFormat pixType    = std::get<0>(GetParam());
+    const int             plane      = std::get<1>(GetParam());
+    const int             goldStride = std::get<2>(GetParam());
+
+    int32_t testStride;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvImageFormatGetPlanePixelStrideBytes(pixType, plane, &testStride));
+    EXPECT_EQ(goldStride, testStride);
+}

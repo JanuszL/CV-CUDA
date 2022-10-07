@@ -46,6 +46,7 @@ public:
     DataType               dataType() const;
     int32_t                numChannels() const;
     PixelType              channelType(int32_t channel) const;
+    int32_t                strideBytes() const;
     int32_t                bitsPerPixel() const;
 
 private:
@@ -225,6 +226,13 @@ inline PixelType PixelType::channelType(int32_t channel) const
     NVCVPixelType out;
     detail::CheckThrow(nvcvPixelTypeGetChannelType(m_type, channel, &out));
     return static_cast<PixelType>(out);
+}
+
+inline int32_t PixelType::strideBytes() const
+{
+    int32_t out;
+    detail::CheckThrow(nvcvPixelTypeGetStrideBytes(m_type, &out));
+    return out;
 }
 
 inline std::ostream &operator<<(std::ostream &out, PixelType type)

@@ -97,20 +97,16 @@ public:
 
     Swizzle            swizzle() const noexcept;
     ColorModel         colorModel() const noexcept;
-    int                blockHeightLog2() const noexcept;
     int                numChannels() const noexcept;
     std::array<int, 4> bitsPerChannel() const noexcept;
     uint               fourCC() const;
-    ColorRange         colorRange() const;
-    int                bitDepth() const;
-    bool               hasUniformBitDepth() const;
     int                numPlanes() const noexcept;
 
     ImageFormat swizzleAndPacking(Swizzle newSwizzle, Packing newPacking0, Packing newPacking1, Packing newPacking2,
                                   Packing newPacking3) const;
 
     Packing     planePacking(int plane) const noexcept;
-    int         planeElemStride(int plane) const noexcept;
+    int         planePixelStrideBytes(int plane) const noexcept;
     PixelType   planePixelType(int plane) const noexcept;
     int         planeNumChannels(int plane) const noexcept;
     int         planeBitsPerPixel(int plane) const noexcept;
@@ -121,6 +117,10 @@ public:
 private:
     NVCVImageFormat m_format;
 };
+
+std::ostream &operator<<(std::ostream &out, ImageFormat fmt);
+
+bool HasSameDataLayout(ImageFormat a, ImageFormat b);
 
 constexpr ImageFormat::ImageFormat()
     : m_format(NVCV_IMAGE_FORMAT_NONE)
@@ -413,29 +413,6 @@ constexpr ImageFormat ImageFormat::ConstCreate(RawPattern rawPattern, MemLayout 
         static_cast<NVCVPacking>(packing1), static_cast<NVCVPacking>(packing2), static_cast<NVCVPacking>(packing3))};
 }
 
-inline ImageFormat ImageFormat::FromPlanes(ImageFormat plane0, ImageFormat plane1, ImageFormat plane2,
-                                           ImageFormat plane3)
-{
-    NVCVImageFormat fmt;
-
-    detail::CheckThrow(nvcvMakeImageFormatFromPlanes(&fmt, plane0, plane1, plane2, plane3));
-    return ImageFormat{fmt};
-}
-
-inline RawPattern ImageFormat::rawPattern() const noexcept
-{
-    NVCVRawPattern out;
-    detail::CheckThrow(nvcvImageFormatGetRawPattern(m_format, &out));
-    return static_cast<RawPattern>(out);
-}
-
-inline bool HasSameDataLayout(ImageFormat a, ImageFormat b)
-{
-    int8_t out;
-    detail::CheckThrow(nvcvImageFormatHasSameDataLayout(a, b, &out));
-    return out != 0;
-}
-
 inline ImageFormat ImageFormat::FromFourCC(uint fourcc, ColorSpec colorSpec, MemLayout memLayout)
 {
     NVCVImageFormat out;
@@ -444,11 +421,13 @@ inline ImageFormat ImageFormat::FromFourCC(uint fourcc, ColorSpec colorSpec, Mem
     return ImageFormat{out};
 }
 
-inline uint32_t ImageFormat::fourCC() const
+inline ImageFormat ImageFormat::FromPlanes(ImageFormat plane0, ImageFormat plane1, ImageFormat plane2,
+                                           ImageFormat plane3)
 {
-    uint32_t out;
-    detail::CheckThrow(nvcvImageFormatToFourCC(m_format, &out));
-    return out;
+    NVCVImageFormat fmt;
+
+    detail::CheckThrow(nvcvMakeImageFormatFromPlanes(&fmt, plane0, plane1, plane2, plane3));
+    return ImageFormat{fmt};
 }
 
 constexpr ImageFormat::operator NVCVImageFormat() const noexcept
@@ -471,25 +450,11 @@ constexpr bool ImageFormat::operator!=(ImageFormat that) const noexcept
     return !operator==(that);
 }
 
-inline Packing ImageFormat::planePacking(int plane) const noexcept
+inline ImageFormat ImageFormat::dataType(DataType newDataType) const
 {
-    NVCVPacking out;
-    detail::CheckThrow(nvcvImageFormatGetPlanePacking(m_format, plane, &out));
-    return static_cast<Packing>(out);
-}
-
-inline Size2D ImageFormat::planeSize(Size2D imgSize, int plane) const noexcept
-{
-    Size2D psize;
-    detail::CheckThrow(nvcvImageFormatGetPlaneSize(m_format, plane, imgSize.w, imgSize.h, &psize.w, &psize.h));
-    return psize;
-}
-
-inline int32_t ImageFormat::planeBitsPerPixel(int plane) const noexcept
-{
-    int32_t out;
-    detail::CheckThrow(nvcvImageFormatGetPlaneBitsPerPixel(m_format, plane, &out));
-    return out;
+    NVCVImageFormat out = m_format;
+    detail::CheckThrow(nvcvImageFormatSetDataType(&out, static_cast<NVCVDataType>(newDataType)));
+    return ImageFormat{out};
 }
 
 inline DataType ImageFormat::dataType() const noexcept
@@ -499,18 +464,11 @@ inline DataType ImageFormat::dataType() const noexcept
     return static_cast<DataType>(out);
 }
 
-inline Swizzle ImageFormat::swizzle() const noexcept
+inline ImageFormat ImageFormat::memLayout(MemLayout newMemLayout) const
 {
-    NVCVSwizzle out;
-    detail::CheckThrow(nvcvImageFormatGetSwizzle(m_format, &out));
-    return static_cast<Swizzle>(out);
-}
-
-inline Swizzle ImageFormat::planeSwizzle(int plane) const noexcept
-{
-    NVCVSwizzle out;
-    detail::CheckThrow(nvcvImageFormatGetPlaneSwizzle(m_format, plane, &out));
-    return static_cast<Swizzle>(out);
+    NVCVImageFormat out = m_format;
+    detail::CheckThrow(nvcvImageFormatSetMemLayout(&out, static_cast<NVCVMemLayout>(newMemLayout)));
+    return ImageFormat{out};
 }
 
 inline MemLayout ImageFormat::memLayout() const noexcept
@@ -520,6 +478,13 @@ inline MemLayout ImageFormat::memLayout() const noexcept
     return static_cast<MemLayout>(out);
 }
 
+inline ImageFormat ImageFormat::colorSpec(ColorSpec newColorSpec) const
+{
+    NVCVImageFormat out = m_format;
+    detail::CheckThrow(nvcvImageFormatSetColorSpec(&out, static_cast<NVCVColorSpec>(newColorSpec)));
+    return ImageFormat{out};
+}
+
 inline ColorSpec ImageFormat::colorSpec() const noexcept
 {
     NVCVColorSpec out;
@@ -527,11 +492,11 @@ inline ColorSpec ImageFormat::colorSpec() const noexcept
     return static_cast<ColorSpec>(out);
 }
 
-inline ColorModel ImageFormat::colorModel() const noexcept
+inline ImageFormat ImageFormat::chromaSubsampling(ChromaSubsampling newCSS) const
 {
-    NVCVColorModel out;
-    detail::CheckThrow(nvcvImageFormatGetColorModel(m_format, &out));
-    return static_cast<ColorModel>(out);
+    NVCVImageFormat out = m_format;
+    detail::CheckThrow(nvcvImageFormatSetChromaSubsampling(&out, static_cast<NVCVChromaSubsampling>(newCSS)));
+    return ImageFormat{out};
 }
 
 inline ChromaSubsampling ImageFormat::chromaSubsampling() const noexcept
@@ -541,18 +506,32 @@ inline ChromaSubsampling ImageFormat::chromaSubsampling() const noexcept
     return static_cast<ChromaSubsampling>(out);
 }
 
-inline int32_t ImageFormat::planeNumChannels(int plane) const noexcept
+inline ImageFormat ImageFormat::rawPattern(RawPattern newRawPattern) const
 {
-    int32_t out;
-    detail::CheckThrow(nvcvImageFormatGetPlaneNumChannels(m_format, plane, &out));
-    return out;
+    NVCVImageFormat out = m_format;
+    detail::CheckThrow(nvcvImageFormatSetRawPattern(&out, static_cast<NVCVRawPattern>(newRawPattern)));
+    return ImageFormat{out};
 }
 
-inline int32_t ImageFormat::numPlanes() const noexcept
+inline RawPattern ImageFormat::rawPattern() const noexcept
 {
-    int32_t out;
-    detail::CheckThrow(nvcvImageFormatGetNumPlanes(m_format, &out));
-    return out;
+    NVCVRawPattern out;
+    detail::CheckThrow(nvcvImageFormatGetRawPattern(m_format, &out));
+    return static_cast<RawPattern>(out);
+}
+
+inline Swizzle ImageFormat::swizzle() const noexcept
+{
+    NVCVSwizzle out;
+    detail::CheckThrow(nvcvImageFormatGetSwizzle(m_format, &out));
+    return static_cast<Swizzle>(out);
+}
+
+inline ColorModel ImageFormat::colorModel() const noexcept
+{
+    NVCVColorModel out;
+    detail::CheckThrow(nvcvImageFormatGetColorModel(m_format, &out));
+    return static_cast<ColorModel>(out);
 }
 
 inline int32_t ImageFormat::numChannels() const noexcept
@@ -569,11 +548,18 @@ inline std::array<int32_t, 4> ImageFormat::bitsPerChannel() const noexcept
     return out;
 }
 
-inline PixelType ImageFormat::planePixelType(int plane) const noexcept
+inline uint32_t ImageFormat::fourCC() const
 {
-    NVCVPixelType out;
-    detail::CheckThrow(nvcvImageFormatGetPlanePixelType(m_format, plane, &out));
-    return static_cast<PixelType>(out);
+    uint32_t out;
+    detail::CheckThrow(nvcvImageFormatToFourCC(m_format, &out));
+    return out;
+}
+
+inline int32_t ImageFormat::numPlanes() const noexcept
+{
+    int32_t out;
+    detail::CheckThrow(nvcvImageFormatGetNumPlanes(m_format, &out));
+    return out;
 }
 
 inline ImageFormat ImageFormat::swizzleAndPacking(Swizzle newSwizzle, Packing newPacking0, Packing newPacking1,
@@ -587,39 +573,67 @@ inline ImageFormat ImageFormat::swizzleAndPacking(Swizzle newSwizzle, Packing ne
     return ImageFormat{out};
 }
 
-inline ImageFormat ImageFormat::dataType(DataType newDataType) const
+inline Packing ImageFormat::planePacking(int plane) const noexcept
 {
-    NVCVImageFormat out = m_format;
-    detail::CheckThrow(nvcvImageFormatSetDataType(&out, static_cast<NVCVDataType>(newDataType)));
+    NVCVPacking out;
+    detail::CheckThrow(nvcvImageFormatGetPlanePacking(m_format, plane, &out));
+    return static_cast<Packing>(out);
+}
+
+inline PixelType ImageFormat::planePixelType(int plane) const noexcept
+{
+    NVCVPixelType out;
+    detail::CheckThrow(nvcvImageFormatGetPlanePixelType(m_format, plane, &out));
+    return static_cast<PixelType>(out);
+}
+
+inline int32_t ImageFormat::planePixelStrideBytes(int plane) const noexcept
+{
+    int32_t out;
+    detail::CheckThrow(nvcvImageFormatGetPlanePixelStrideBytes(m_format, plane, &out));
+    return out;
+}
+
+inline int32_t ImageFormat::planeNumChannels(int plane) const noexcept
+{
+    int32_t out;
+    detail::CheckThrow(nvcvImageFormatGetPlaneNumChannels(m_format, plane, &out));
+    return out;
+}
+
+inline int32_t ImageFormat::planeBitsPerPixel(int plane) const noexcept
+{
+    int32_t out;
+    detail::CheckThrow(nvcvImageFormatGetPlaneBitsPerPixel(m_format, plane, &out));
+    return out;
+}
+
+inline Size2D ImageFormat::planeSize(Size2D imgSize, int plane) const noexcept
+{
+    Size2D psize;
+    detail::CheckThrow(nvcvImageFormatGetPlaneSize(m_format, plane, imgSize.w, imgSize.h, &psize.w, &psize.h));
+    return psize;
+}
+
+inline Swizzle ImageFormat::planeSwizzle(int plane) const noexcept
+{
+    NVCVSwizzle out;
+    detail::CheckThrow(nvcvImageFormatGetPlaneSwizzle(m_format, plane, &out));
+    return static_cast<Swizzle>(out);
+}
+
+inline ImageFormat ImageFormat::planeFormat(int plane) const noexcept
+{
+    NVCVImageFormat out;
+    detail::CheckThrow(nvcvImageFormatGetPlaneFormat(m_format, plane, &out));
     return ImageFormat{out};
 }
 
-inline ImageFormat ImageFormat::memLayout(MemLayout newMemLayout) const
+inline bool HasSameDataLayout(ImageFormat a, ImageFormat b)
 {
-    NVCVImageFormat out = m_format;
-    detail::CheckThrow(nvcvImageFormatSetMemLayout(&out, static_cast<NVCVMemLayout>(newMemLayout)));
-    return ImageFormat{out};
-}
-
-inline ImageFormat ImageFormat::colorSpec(ColorSpec newColorSpec) const
-{
-    NVCVImageFormat out = m_format;
-    detail::CheckThrow(nvcvImageFormatSetColorSpec(&out, static_cast<NVCVColorSpec>(newColorSpec)));
-    return ImageFormat{out};
-}
-
-inline ImageFormat ImageFormat::chromaSubsampling(ChromaSubsampling newCSS) const
-{
-    NVCVImageFormat out = m_format;
-    detail::CheckThrow(nvcvImageFormatSetChromaSubsampling(&out, static_cast<NVCVChromaSubsampling>(newCSS)));
-    return ImageFormat{out};
-}
-
-inline ImageFormat ImageFormat::rawPattern(RawPattern newRawPattern) const
-{
-    NVCVImageFormat out = m_format;
-    detail::CheckThrow(nvcvImageFormatSetRawPattern(&out, static_cast<NVCVRawPattern>(newRawPattern)));
-    return ImageFormat{out};
+    int8_t out;
+    detail::CheckThrow(nvcvImageFormatHasSameDataLayout(a, b, &out));
+    return out != 0;
 }
 
 inline std::ostream &operator<<(std::ostream &out, ImageFormat fmt)

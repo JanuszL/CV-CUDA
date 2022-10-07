@@ -299,6 +299,15 @@ NVCV_PUBLIC const char *nvcvPixelTypeGetName(NVCVPixelType type);
  */
 NVCV_PUBLIC NVCVStatus nvcvPixelTypeGetChannelType(NVCVPixelType type, int32_t channel, NVCVPixelType *outChannelTpe);
 
+/** Returns the stride/size in bytes of the pixel in memory.
+ *
+ * @param[in] type Pixel type to be queried.
+ *
+ * @param[out] pixStrideBytes The size in bytes of the pixel
+ *                            + Must not be NULL.
+ */
+NVCV_PUBLIC NVCVStatus nvcvPixelTypeGetStrideBytes(NVCVPixelType type, int32_t *pixStrideBytes);
+
 #ifdef __cplusplus
 }
 #endif

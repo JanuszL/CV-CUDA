@@ -732,9 +732,9 @@ PixelType ImageFormat::planePixelType(int plane) const noexcept
     return PixelType{memLayout, dataType, packing};
 }
 
-int ImageFormat::planeElemStride(int plane) const noexcept
+int ImageFormat::planePixelStrideBytes(int plane) const noexcept
 {
-    return this->planePixelType(plane).elemStride();
+    return this->planePixelType(plane).strideBytes();
 }
 
 uint32_t ImageFormat::fourCC() const

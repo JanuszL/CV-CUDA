@@ -777,6 +777,22 @@ NVCV_PUBLIC NVCVStatus nvcvImageFormatGetPlanePixelType(NVCVImageFormat fmt, int
  */
 NVCV_PUBLIC NVCVStatus nvcvImageFormatGetPlaneFormat(NVCVImageFormat fmt, int32_t plane, NVCVImageFormat *outFormat);
 
+/** Get the stride of the pixel in the given plane of an image format.
+ *
+ * @param[in] fmt Image format to be queried.
+ *
+ * @param[in] plane Plane to be queried.
+ *                  + Valid values range from 0 (first) to 3 (fourth and last) plane.
+ *
+ * @param[out] outStrideBytes Stride (size) of the pixel in bytes.
+ *                            + Cannot be NULL.
+ *
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT Some argument is outside its valid range.
+ * @retval #NVCV_SUCCESS                Operation executed successfully.
+ */
+NVCV_PUBLIC NVCVStatus nvcvImageFormatGetPlanePixelStrideBytes(NVCVImageFormat fmt, int32_t plane,
+                                                               int32_t *outStrideBytes);
+
 /** Constructs an image format given the format of each plane.
  *
  * @param[out] outFormat The image format whose planes have the given formats.
