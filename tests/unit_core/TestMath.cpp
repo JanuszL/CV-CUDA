@@ -224,3 +224,32 @@ TEST_P(MathRoundUpPowerOfTwoTests, works)
 
     EXPECT_EQ(gold, util::RoundUpPowerOfTwo(value, multiple));
 }
+
+class MathILog2Tests : public t::TestWithParam<std::tuple<test::Param<"value", int64_t>, test::Param<"gold", int64_t>>>
+{
+};
+
+// clang-format off
+NVCV_INSTANTIATE_TEST_SUITE_P(_, MathILog2Tests,
+    test::ValueList<int64_t, int64_t>
+    {
+        {1, 0},
+        {2, 1},
+        {3, 1},
+        {4, 2},
+        {5, 2},
+
+        {127, 6},
+        {128, 7},
+        {129, 7},
+    });
+
+// clang-format on
+
+TEST_P(MathILog2Tests, works)
+{
+    const int64_t value = std::get<0>(GetParam());
+    const int64_t gold  = std::get<1>(GetParam());
+
+    EXPECT_EQ(gold, util::ILog2(value));
+}

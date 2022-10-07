@@ -85,6 +85,30 @@ NVCV_CUDA_HOST_DEVICE constexpr auto RoundUpPowerOfTwo(T value, U multiple)
     return (value + (multiple - 1)) & -multiple;
 }
 
+template<class T, class = std::enable_if_t<std::is_integral_v<T>>>
+constexpr int ILog2(T value)
+{
+    assert(value > 0);
+
+    if constexpr (sizeof(T) <= sizeof(unsigned))
+    {
+        return sizeof(unsigned) * 8 - __builtin_clz(value) - 1;
+    }
+    else if constexpr (sizeof(T) <= sizeof(unsigned long))
+    {
+        return sizeof(unsigned long) * 8 - __builtin_clzl(value) - 1;
+    }
+    else if constexpr (sizeof(T) <= sizeof(unsigned long long))
+    {
+        return sizeof(unsigned long long) * 8 - __builtin_clzll(value) - 1;
+    }
+    else
+    {
+        static_assert(sizeof(T) == 0, "Type too large");
+        return 0;
+    }
+}
+
 } // namespace nv::cv::util
 
 #endif // NVCV_UTIL_MATH_HPP
