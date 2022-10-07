@@ -239,7 +239,7 @@ __host__ __device__ RT SetAll(BT x)
  * @return String with the name of the type
  */
 template<class T, class = detail::Require<detail::HasTypeTraits<T>>>
-__host__ __device__ const char *GetTypeName()
+__host__ const char *GetTypeName()
 {
     return TypeTraits<T>::name;
 }
