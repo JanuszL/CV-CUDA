@@ -78,8 +78,8 @@ public:
     ~Image();
 
 private:
-    NVCVImage   m_instance;
-    IAllocator *m_alloc;
+    NVCVImageStorage m_storage;
+    IAllocator      *m_alloc;
 
     const IImageData *doExportData() const override;
     IAllocator       &doGetAlloc() const override;
@@ -99,7 +99,7 @@ public:
     ~ImageWrapData();
 
 private:
-    NVCVImage m_instance;
+    NVCVImageStorage m_storage;
 
     std::function<ImageDataCleanupFunc> m_cleanup;
     static void                         doCleanup(void *ctx, const NVCVImageData *data);
@@ -201,8 +201,9 @@ inline Image::Image(const Requirements &reqs, IAllocator *alloc)
     : ImageWrapHandle(
         [&]
         {
-            detail::CheckThrow(nvcvImageCreate(&reqs, alloc ? alloc->handle() : nullptr, &m_instance));
-            return &m_instance;
+            NVCVImageHandle handle;
+            detail::CheckThrow(nvcvImageConstruct(&reqs, alloc ? alloc->handle() : nullptr, &m_storage, &handle));
+            return handle;
         }())
     , m_alloc(alloc)
 {
@@ -255,9 +256,10 @@ inline ImageWrapData::ImageWrapData(const IImageData &data, std::function<ImageD
     : ImageWrapHandle(
         [&]
         {
+            NVCVImageHandle handle;
             detail::CheckThrow(
-                nvcvImageCreateWrapData(&data.cdata(), cleanup ? &doCleanup : nullptr, this, &m_instance));
-            return &m_instance;
+                nvcvImageConstructWrapData(&data.cdata(), cleanup ? &doCleanup : nullptr, this, &m_storage, &handle));
+            return handle;
         }())
     , m_cleanup(std::move(cleanup))
 {
