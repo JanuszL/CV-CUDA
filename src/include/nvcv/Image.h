@@ -79,7 +79,7 @@ typedef struct NVCVImageRequirementsRec
  * @param [in] format       Image format.
  *                          + Must not be \ref NVCV_IMAGE_FORMAT_NONE.
  *
- * @param [out] handle      Where the image instance handle will be written to.
+ * @param [out] reqs        Where the image requirements will be written to.
  *                          + Must not be NULL.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
@@ -90,20 +90,20 @@ NVCV_PUBLIC NVCVStatus nvcvImageCalcRequirements(int32_t width, int32_t height, 
 
 /** Constructs and an image instance with given requirements in the given storage.
  *
- * @param [in] reqs Image requirements. Must have been filled in by @ref nvcvImageGatherRequirements.
+ * @param [in] reqs Image requirements. Must have been filled in by @ref nvcvImageCalcRequirements.
  *                  + Must not be NULL
  *
- * @param [in] alloc        Allocator to be used to allocate needed memory buffers.
- *                          The following resources are used:
- *                          - host memory: for internal structures.
- *                          - device memory: for image contents buffer.
- *                          If NULL, it'll use the internal default allocator.
- *                          + Allocator must not be destroyed while an image still refers to it.
+ * @param [in] alloc Allocator to be used to allocate needed memory buffers.
+ *                   - The following resources are used:
+ *                     - host memory: for internal structures.
+ *                     - device memory: for image contents buffer.
+ *                       If NULL, it'll use the internal default allocator.
+ *                   + Allocator must not be destroyed while an image still refers to it.
  *
- * @param [in,out] storage Memory storage where the image instance will be created in.
+ * @param [in,out] storage Memory storage where the image instance will be constructed in.
  *
- * @param [out] handle      Where the image instance handle will be written to.
- *                          + Must not be NULL.
+ * @param [out] handle Where the image instance handle will be written to.
+ *                     + Must not be NULL.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the image.
@@ -204,7 +204,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageGetFormat(NVCVImageHandle handle, NVCVImageForma
  * Get the allocator associated with an image.
  *
  * @param[in] handle Image to be queried.
- *                + Must not be NULL.
+ *                   + Must not be NULL.
  *
  * @param[out] alloc Where the allocator handle will be written to.
  *                   + Must not be NULL.
@@ -218,7 +218,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageGetAllocator(NVCVImageHandle handle, NVCVAllocat
  * Retrieve the image contents.
  *
  * @param[in] handle Image to be queried.
- *                + Must not be NULL.
+ *                   + Must not be NULL.
  *
  * @param[out] data Where the image buffer information will be written to.
  *                  + Must not be NULL.
