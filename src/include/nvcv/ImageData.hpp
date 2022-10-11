@@ -63,7 +63,7 @@ inline ImageDataCudaArray::ImageDataCudaArray(ImageFormat format, const Buffer &
     m_data.buffer.cudaarray = data;
 }
 
-ImageFormat ImageDataCudaArray::doGetFormat() const
+inline ImageFormat ImageDataCudaArray::doGetFormat() const
 {
     return ImageFormat{m_data.format};
 }
