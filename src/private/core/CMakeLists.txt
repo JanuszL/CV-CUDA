@@ -19,6 +19,7 @@ add_library(nvcv_private_core STATIC
     IAllocator.cpp
     Requirements.cpp
     Image.cpp
+    ImageBatchVarShape.cpp
 )
 
 target_include_directories(nvcv_private_core

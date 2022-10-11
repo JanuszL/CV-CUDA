@@ -23,6 +23,7 @@ add_executable(nvcv_test_system_core
     TestAllocator.cpp
     TestRequirements.cpp
     TestImage.cpp
+    TestImageBatch.cpp
 )
 
 target_link_libraries(nvcv_test_system_core

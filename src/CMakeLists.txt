@@ -32,6 +32,7 @@ add_library(nvcv SHARED
     Allocator.cpp
     Requirements.cpp
     Image.cpp
+    ImageBatch.cpp
 )
 
 target_link_libraries(nvcv PRIVATE
