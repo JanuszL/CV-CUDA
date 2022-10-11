@@ -66,32 +66,32 @@ private:
 };
 
 // Implementation - IImageData
-ImageFormat IImageData::format() const
+inline ImageFormat IImageData::format() const
 {
     return doGetFormat();
 }
 
-const NVCVImageData &IImageData::cdata() const
+inline const NVCVImageData &IImageData::cdata() const
 {
     return doGetCData();
 }
 
 // Implementation - IImageDataCudaArray
-int32_t IImageDataCudaArray::numPlanes() const
+inline int32_t IImageDataCudaArray::numPlanes() const
 {
     int32_t planes = doGetNumPlanes();
     assert(planes == this->format().numPlanes() && "Post-condition failed");
     return planes;
 }
 
-cudaArray_t IImageDataCudaArray::plane(int p) const
+inline cudaArray_t IImageDataCudaArray::plane(int p) const
 {
     assert(0 <= p && p < this->numPlanes() && "Pre-condition failed");
     return doGetPlane(p);
 }
 
 // Implementation - IImageDataDevicePitch
-Size2D IImageDataDevicePitch::size() const
+inline Size2D IImageDataDevicePitch::size() const
 {
     Size2D size = doGetSize();
     assert(size.w >= 0 && "Post-condition failed");
@@ -99,14 +99,14 @@ Size2D IImageDataDevicePitch::size() const
     return size;
 }
 
-int32_t IImageDataDevicePitch::numPlanes() const
+inline int32_t IImageDataDevicePitch::numPlanes() const
 {
     int32_t np = doGetNumPlanes();
     assert(np >= 0 && "Post-condition failed");
     return np;
 }
 
-const ImagePlanePitch &IImageDataDevicePitch::plane(int p) const
+inline const ImagePlanePitch &IImageDataDevicePitch::plane(int p) const
 {
     assert(0 <= p && p < this->numPlanes() && "Pre-condition failed");
     return doGetPlane(p);
