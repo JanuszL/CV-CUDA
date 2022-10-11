@@ -31,10 +31,65 @@ typedef char          schar;
 
 #define get_batch_idx() (blockIdx.z)
 
-int divUp(int a, int b)
+inline int divUp(int a, int b)
 {
     return ceil((float)a / b);
 };
+
+template<class T>
+struct PlaneArray
+{
+    __host__ __device__ T *operator[](int c) const
+    {
+        return planes[c];
+    }
+
+    T *planes[4];
+};
+
+// convert legacy NCHW packed image representation into plane array
+template<class T>
+__host__ __device__ PlaneArray<T> ToPlaneArray(int rows, int cols, int channels, void *data)
+{
+    PlaneArray<T> p = {};
+    for (int c = 0; c < channels; ++c)
+    {
+        p.planes[c] = reinterpret_cast<T *>(data) + c * rows * cols;
+    }
+    return p;
+}
+
+template<class T> // base type
+__host__ __device__ int32_t CalcNCHWImagePitchBytes(int rows, int cols, int channels)
+{
+    return rows * cols * channels * sizeof(T);
+}
+
+template<class T> // base type
+__host__ __device__ int32_t CalcNCHWRowPitchBytes(int cols, int channels)
+{
+    return cols * sizeof(T);
+}
+
+template<class T> // base type
+__host__ __device__ int32_t CalcNHWCImagePitchBytes(int rows, int cols, int channels)
+{
+    return rows * cols * channels * sizeof(T);
+}
+
+template<class T> // base type
+__host__ __device__ int32_t CalcNHWCRowPitchBytes(int cols, int channels)
+{
+    return cols * channels * sizeof(T);
+}
+
+// Used to disambiguate between the constructors that accept legacy memory buffers,
+// and the ones that accept the new ones. Just pass NewAPI as first parameter.
+struct NewAPITag
+{
+};
+
+constexpr NewAPITag NewAPI = {};
 
 template<typename T>
 struct Ptr2dNCHW
@@ -46,6 +101,9 @@ struct Ptr2dNCHW
         , rows(0)
         , cols(0)
         , ch(0)
+        , imgPitchBytes(0)
+        , rowPitchBytes(0)
+        , data{}
     {
     }
 
@@ -54,7 +112,9 @@ struct Ptr2dNCHW
         , rows(rows_)
         , cols(cols_)
         , ch(ch_)
-        , data(data_)
+        , imgPitchBytes(0)
+        , rowPitchBytes(CalcNCHWRowPitchBytes<T>(cols, ch_))
+        , data(ToPlaneArray<T>(rows_, cols_, ch_, data_))
     {
     }
 
@@ -63,6 +123,32 @@ struct Ptr2dNCHW
         , rows(rows_)
         , cols(cols_)
         , ch(ch_)
+        , imgPitchBytes(CalcNCHWImagePitchBytes<T>(rows_, cols_, ch_))
+        , rowPitchBytes(CalcNCHWRowPitchBytes<T>(cols, ch_))
+        , data(ToPlaneArray<T>(rows_, cols_, ch_, data_))
+    {
+    }
+
+    __host__ __device__ __forceinline__ Ptr2dNCHW(NewAPITag, int rows_, int cols_, int ch_, int rowPitchBytes_,
+                                                  const PlaneArray<T> &data_)
+        : batches(1)
+        , rows(rows_)
+        , cols(cols_)
+        , ch(ch_)
+        , imgPitchBytes(0)
+        , rowPitchBytes(rowPitchBytes_)
+        , data(data_)
+    {
+    }
+
+    __host__ __device__ __forceinline__ Ptr2dNCHW(NewAPITag, int batches_, int rows_, int cols_, int ch_,
+                                                  int imgPitchBytes_, int rowPitchBytes_, const PlaneArray<T> &data_)
+        : batches(batches_)
+        , rows(rows_)
+        , cols(cols_)
+        , ch(ch_)
+        , imgPitchBytes(imgPitchBytes_)
+        , rowPitchBytes(rowPitchBytes_)
         , data(data_)
     {
     }
@@ -71,19 +157,24 @@ struct Ptr2dNCHW
     // each fetch operation get a single channel element
     __host__ __device__ __forceinline__ T *ptr(int b, int y, int x, int c)
     {
-        return (T *)(data + b * ch * rows * cols + c * rows * cols + y * cols + x);
+        //return (T *)(data + b * ch * rows * cols + c * rows * cols + y * cols + x);
+        return (T *)(reinterpret_cast<std::byte *>(data[c]) + b * imgPitchBytes + y * rowPitchBytes + x * sizeof(T));
     }
 
     const __host__ __device__ __forceinline__ T *ptr(int b, int y, int x, int c) const
     {
-        return (const T *)(data + b * ch * rows * cols + c * rows * cols + y * cols + x);
+        //return (const T *)(data + b * ch * rows * cols + c * rows * cols + y * cols + x);
+        return (const T *)(reinterpret_cast<const std::byte *>(data[c]) + b * imgPitchBytes + y * rowPitchBytes
+                           + x * sizeof(T));
     }
 
-    int batches;
-    int rows;
-    int cols;
-    int ch;
-    T  *data;
+    int           batches;
+    int           rows;
+    int           cols;
+    int           ch;
+    int           imgPitchBytes;
+    int           rowPitchBytes;
+    PlaneArray<T> data;
 };
 
 template<typename T>
@@ -95,6 +186,8 @@ struct Ptr2dNHWC
         : batches(0)
         , rows(0)
         , cols(0)
+        , imgPitchBytes(0)
+        , rowPitchBytes(0)
         , ch(0)
     {
     }
@@ -104,6 +197,8 @@ struct Ptr2dNHWC
         , rows(rows_)
         , cols(cols_)
         , ch(ch_)
+        , imgPitchBytes(0)
+        , rowPitchBytes(CalcNHWCRowPitchBytes<T>(cols_, ch_))
         , data(data_)
     {
     }
@@ -113,6 +208,32 @@ struct Ptr2dNHWC
         , rows(rows_)
         , cols(cols_)
         , ch(ch_)
+        , imgPitchBytes(CalcNHWCImagePitchBytes<T>(rows_, cols_, ch_))
+        , rowPitchBytes(CalcNHWCRowPitchBytes<T>(cols_, ch_))
+        , data(data_)
+    {
+    }
+
+    __host__ __device__ __forceinline__ Ptr2dNHWC(NewAPITag, int rows_, int cols_, int ch_, int rowPitchBytes_,
+                                                  T *data_)
+        : batches(1)
+        , rows(rows_)
+        , cols(cols_)
+        , ch(ch_)
+        , imgPitchBytes(0)
+        , rowPitchBytes(rowPitchBytes_)
+        , data(data_)
+    {
+    }
+
+    __host__ __device__ __forceinline__ Ptr2dNHWC(NewAPITag, int batches_, int rows_, int cols_, int ch_,
+                                                  int imgPitchBytes_, int rowPitchBytes_, T *data_)
+        : batches(batches_)
+        , rows(rows_)
+        , cols(cols_)
+        , ch(ch_)
+        , imgPitchBytes(imgPitchBytes_)
+        , rowPitchBytes(rowPitchBytes_)
         , data(data_)
     {
     }
@@ -121,24 +242,31 @@ struct Ptr2dNHWC
     // each fetch operation get a x-channel elements
     __host__ __device__ __forceinline__ T *ptr(int b, int y, int x)
     {
-        return (T *)(data + b * rows * cols + y * cols + x);
+        //return (T *)(data + b * rows * cols + y * cols + x);
+        return (T *)(reinterpret_cast<std::byte *>(data) + b * imgPitchBytes + y * rowPitchBytes + x * sizeof(T));
     }
 
     const __host__ __device__ __forceinline__ T *ptr(int b, int y, int x) const
     {
-        return (const T *)(data + b * rows * cols + y * cols + x);
+        //return (const T *)(data + b * rows * cols + y * cols + x);
+        return (const T *)(reinterpret_cast<const std::byte *>(data) + b * imgPitchBytes + y * rowPitchBytes
+                           + x * sizeof(T));
     }
 
     // ptr for uchar, ushort, float, typename T -> uchar etc.
     // each fetch operation get a single channel element
     __host__ __device__ __forceinline__ T *ptr(int b, int y, int x, int c)
     {
-        return (T *)(data + b * rows * cols * ch + y * cols * ch + x * ch + c);
+        //return (T *)(data + b * rows * cols * ch + y * cols * ch + x * ch + c);
+        return (T *)(reinterpret_cast<std::byte *>(data) + b * imgPitchBytes + y * rowPitchBytes
+                     + (x * ch + c) * sizeof(T));
     }
 
     const __host__ __device__ __forceinline__ T *ptr(int b, int y, int x, int c) const
     {
-        return (const T *)(data + b * rows * cols * ch + y * cols * ch + x * ch + c);
+        //return (const T *)(data + b * rows * cols * ch + y * cols * ch + x * ch + c);
+        return (const T *)(reinterpret_cast<const std::byte *>(data) + b * imgPitchBytes + y * rowPitchBytes
+                           + (x * ch + c) * sizeof(T));
     }
 
     __host__ __device__ __forceinline__ int at_rows(int b)
@@ -165,6 +293,8 @@ struct Ptr2dNHWC
     int rows;
     int cols;
     int ch;
+    int imgPitchBytes;
+    int rowPitchBytes;
     T  *data;
 };
 
