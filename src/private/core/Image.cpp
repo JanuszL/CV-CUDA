@@ -67,10 +67,12 @@ NVCVImageRequirements Image::CalcRequirements(Size2D size, ImageFormat fmt)
     {
         Size2D planeSize = fmt.planeSize(size, p);
 
-        int64_t rowPitchBytes
+        NVCV_ASSERT((size_t)p < sizeof(reqs.planeRowPitchBytes) / sizeof(reqs.planeRowPitchBytes[0]));
+
+        reqs.planeRowPitchBytes[p]
             = util::RoundUpPowerOfTwo((int64_t)planeSize.w * fmt.planePixelStrideBytes(p), reqs.alignBytes);
 
-        AddBuffer(reqs.mem.deviceMem, rowPitchBytes * planeSize.h, reqs.alignBytes);
+        AddBuffer(reqs.mem.deviceMem, reqs.planeRowPitchBytes[p] * planeSize.h, reqs.alignBytes);
     }
 
     return reqs;
@@ -139,11 +141,9 @@ void Image::exportData(NVCVImageData &data) const
 
         Size2D planeSize = fmt.planeSize({m_reqs.width, m_reqs.height}, p);
 
-        size_t rowPitchBytes = util::RoundUp((size_t)planeSize.w * fmt.planePixelStrideBytes(p), m_reqs.alignBytes);
-
         plane.width      = planeSize.w;
         plane.height     = planeSize.h;
-        plane.pitchBytes = rowPitchBytes;
+        plane.pitchBytes = m_reqs.planeRowPitchBytes[p];
         plane.buffer     = reinterpret_cast<std::byte *>(m_buffer) + planeOffsetBytes;
 
         planeOffsetBytes += plane.height * plane.pitchBytes;
