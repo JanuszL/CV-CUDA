@@ -22,6 +22,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <tuple>
 
 namespace nv { namespace cv {
 
@@ -37,7 +38,7 @@ struct Size2D
 
 inline bool operator==(const Size2D &a, const Size2D &b)
 {
-    return a.w == b.w && a.h == b.h;
+    return std::tie(a.w, a.h) == std::tie(b.w, b.h);
 }
 
 inline bool operator!=(const Size2D &a, const Size2D &b)
@@ -47,25 +48,7 @@ inline bool operator!=(const Size2D &a, const Size2D &b)
 
 inline bool operator<(const Size2D &a, const Size2D &b)
 {
-    int64_t areaA = static_cast<int64_t>(a.w) * a.h;
-    int64_t areaB = static_cast<int64_t>(b.w) * b.h;
-
-    if (areaA == areaB)
-    {
-        if (a.w == b.w)
-        {
-            assert(a.h == b.h);
-            return false;
-        }
-        else
-        {
-            return a.w < b.w;
-        }
-    }
-    else
-    {
-        return areaA < areaB;
-    }
+    return std::tie(a.w, a.h) < std::tie(b.w, b.h);
 }
 
 inline std::ostream &operator<<(std::ostream &out, const Size2D &size)
