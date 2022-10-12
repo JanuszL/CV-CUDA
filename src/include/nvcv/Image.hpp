@@ -26,13 +26,13 @@
 namespace nv { namespace cv {
 
 // ImageWrapHandle definition -------------------------------------
-// Refers to an external NVCVImage handle. It doesn't own it.
+// Refers to an external NVCVImageHandle. It doesn't own it.
 class ImageWrapHandle : public virtual IImage
 {
 public:
     ImageWrapHandle(const ImageWrapHandle &that);
 
-    explicit ImageWrapHandle(NVCVImage *handle);
+    explicit ImageWrapHandle(NVCVImageHandle handle);
     ~ImageWrapHandle();
 
 protected:
@@ -40,10 +40,10 @@ protected:
 
     IAllocator       &doGetAlloc() const override;
     const IImageData *doExportData() const override;
-    NVCVImage        *doGetHandle() const override;
+    NVCVImageHandle   doGetHandle() const override;
 
 private:
-    NVCVImage *m_handle;
+    NVCVImageHandle m_handle;
 
     // Where the concrete class for exported image data will be allocated
     // Should be an std::variant in C++17.
@@ -115,7 +115,7 @@ inline ImageWrapHandle::ImageWrapHandle(const ImageWrapHandle &that)
 {
 }
 
-inline ImageWrapHandle::ImageWrapHandle(NVCVImage *handle)
+inline ImageWrapHandle::ImageWrapHandle(NVCVImageHandle handle)
     : m_ptrData(nullptr)
     , m_handle(handle)
 {
@@ -129,7 +129,7 @@ inline ImageWrapHandle::~ImageWrapHandle()
     }
 }
 
-inline NVCVImage *ImageWrapHandle::doGetHandle() const
+inline NVCVImageHandle ImageWrapHandle::doGetHandle() const
 {
     return m_handle;
 }
