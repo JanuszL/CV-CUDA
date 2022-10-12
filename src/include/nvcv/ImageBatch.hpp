@@ -29,6 +29,10 @@ public:
     explicit ImageBatchWrapHandle(NVCVImageBatchHandle handle);
 
 protected:
+    mutable IImageBatchData *m_ptrData;
+
+    const IImageBatchData *doExportData(CUstream stream) const override;
+
     IAllocator &doGetAlloc() const override;
 
     NVCVImageBatchHandle doGetHandle() const override;
@@ -44,8 +48,6 @@ private:
     int32_t     doGetCapacity() const override;
     int32_t     doGetSize() const override;
     ImageFormat doGetFormat() const override;
-
-    const IImageBatchData *doExportData(CUstream stream) const override;
 };
 
 // ImageBatch varshape definition -------------------------------------

@@ -20,6 +20,11 @@ add_library(nvcv_private_core STATIC
     Requirements.cpp
     Image.cpp
     ImageBatchVarShape.cpp
+    Tensor.cpp
+    TensorWrapData.cpp
+    Dims.cpp
+    TensorLayout.cpp
+    TensorData.cpp
 )
 
 target_include_directories(nvcv_private_core

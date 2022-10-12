@@ -11,22 +11,34 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_PRIV_DIMS_HPP
-#define NVCV_PRIV_DIMS_HPP
+#ifndef NVCV_PRIV_ITENSOR_HPP
+#define NVCV_PRIV_ITENSOR_HPP
 
+#include "Dims.hpp"
+#include "ICoreObject.hpp"
+
+#include <fmt/ImageFormat.hpp>
 #include <nvcv/Tensor.h>
-#include <util/Dims.hpp>
-
-#include <array>
 
 namespace nv::cv::priv {
 
-using Shape = std::array<int32_t, NVCV_TENSOR_MAX_NDIMS>;
+class IAllocator;
 
-using util::DimsNCHW;
+class ITensor : public ICoreObjectHandle<ITensor, NVCVTensorHandle>
+{
+public:
+    virtual const Shape &shape() const = 0;
 
-DimsNCHW ToNCHW(const Shape &shape, NVCVTensorLayout layout);
+    virtual NVCVTensorLayout layout() const = 0;
+    virtual DimsNCHW         dims() const   = 0;
+
+    virtual ImageFormat format() const = 0;
+
+    virtual IAllocator &alloc() const = 0;
+
+    virtual void exportData(NVCVTensorData &data) const = 0;
+};
 
 } // namespace nv::cv::priv
 
-#endif // NVCV_PRIV_DIMS_HPP
+#endif // NVCV_PRIV_ITENSOR_HPP

@@ -33,6 +33,8 @@ add_library(nvcv SHARED
     Requirements.cpp
     Image.cpp
     ImageBatch.cpp
+    Tensor.cpp
+    TensorData.cpp
 )
 
 target_link_libraries(nvcv PRIVATE

@@ -11,22 +11,22 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_PRIV_DIMS_HPP
-#define NVCV_PRIV_DIMS_HPP
+#include "TensorLayout.hpp"
 
-#include <nvcv/Tensor.h>
-#include <util/Dims.hpp>
-
-#include <array>
+#include "Exception.hpp"
 
 namespace nv::cv::priv {
 
-using Shape = std::array<int32_t, NVCV_TENSOR_MAX_NDIMS>;
+int32_t GetNDims(NVCVTensorLayout layout)
+{
+    switch (layout)
+    {
+    case NVCV_TENSOR_NCHW:
+    case NVCV_TENSOR_NHWC:
+        return 4;
+    }
 
-using util::DimsNCHW;
-
-DimsNCHW ToNCHW(const Shape &shape, NVCVTensorLayout layout);
+    throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Invalid tensor layout: " << layout;
+}
 
 } // namespace nv::cv::priv
-
-#endif // NVCV_PRIV_DIMS_HPP
