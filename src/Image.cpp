@@ -50,7 +50,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageConstruct,
 
             if (storage == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to image storag must not be NULL");
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to image storage must not be NULL");
             }
 
             if (handle == nullptr)
@@ -81,21 +81,18 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageConstructWrapData,
 
             if (storage == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to image storag must not be NULL");
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to image storage must not be NULL");
+            }
+
+            if (data == nullptr)
+            {
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Image data must not be NULL");
             }
 
             static_assert(sizeof(NVCVImageStorage) >= sizeof(priv::ImageWrapData));
             static_assert(alignof(NVCVImageStorage) % alignof(priv::ImageWrapData) == 0);
 
-            if (data)
-            {
-                *handle
-                    = reinterpret_cast<NVCVImageHandle>(new (storage) priv::ImageWrapData{*data, cleanup, ctxCleanup});
-            }
-            else
-            {
-                *handle = reinterpret_cast<NVCVImageHandle>(new (storage) priv::ImageWrapData{});
-            }
+            *handle = reinterpret_cast<NVCVImageHandle>(new (storage) priv::ImageWrapData{*data, cleanup, ctxCleanup});
         });
 }
 

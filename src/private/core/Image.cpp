@@ -154,14 +154,6 @@ void Image::exportData(NVCVImageData &data) const
 
 // ImageWrap implementation -------------------------------------------
 
-ImageWrapData::ImageWrapData()
-    : m_cleanup(nullptr)
-    , m_ctxCleanup(nullptr)
-{
-    m_data.bufferType = NVCV_IMAGE_BUFFER_NONE;
-    m_data.format     = NVCV_IMAGE_FORMAT_NONE;
-}
-
 ImageWrapData::ImageWrapData(const NVCVImageData &data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup)
     : m_cleanup(cleanup)
     , m_ctxCleanup(ctxCleanup)
@@ -262,35 +254,6 @@ NVCVTypeImage ImageWrapData::type() const
 Version ImageWrapData::doGetVersion() const
 {
     return CURRENT_VERSION;
-}
-
-void ImageWrapData::setData(const NVCVImageData *data)
-{
-    if (data)
-    {
-        doValidateData(*data);
-    }
-
-    doCleanup();
-
-    if (data)
-    {
-        m_data = *data;
-    }
-    else
-    {
-        m_data            = {}; // safety
-        m_data.bufferType = NVCV_IMAGE_BUFFER_NONE;
-        m_data.format     = NVCV_IMAGE_FORMAT_NONE;
-    }
-}
-
-void ImageWrapData::setDataAndCleanup(const NVCVImageData *data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup)
-{
-    this->setData(data);
-
-    m_cleanup    = cleanup;
-    m_ctxCleanup = ctxCleanup;
 }
 
 void ImageWrapData::doCleanup() noexcept

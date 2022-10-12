@@ -36,10 +36,7 @@ extern "C"
 /** Underlying image type.
  *
  * Images can have different underlying types depending on the function used to
- * create them. Some functions expect an image of some type, for instance, images
- * that wrap an user-allocated image allow users to redefine the image buffer after
- * the image is allocated, or reset it altogether. These operations aren't available
- * to other image types, and calling these function on them will result in an error.
+ * create them.
  * */
 typedef enum
 {
@@ -117,22 +114,13 @@ NVCV_PUBLIC NVCVStatus nvcvImageConstruct(const NVCVImageRequirements *reqs, NVC
  * It allows for interoperation of external image representations with NVCV.
  * The created image type is \ref NVCV_TYPE_IMAGE_WRAP_DATA .
  *
- * If the image doesn't refer to a buffer, it's considered empty. In this case, it's dimensions is 0x0,
- * and image foramt is \ref NVCV_IMAGE_FORMAT_NONE .
- *
- * The image buffer can be redefined by \ref nvcvImageWrapResetData, or reset by
- * \ref nvcvImageWrapResetData .
- *
  * @param [in] data Image contents.
- *                  If NULL, the created image is empty.
- *                  When not NULL, the buffer ownership isn't transferred. It
- *                  must not be destroyed while the NVCV image still refers to
- *                  it.
- *                  + When not NULL, buffer type must not be \ref NVCV_IMAGE_BUFFER_NONE.
+ *                  + Must not be NULL
+ *                  + Buffer type must not be \ref NVCV_IMAGE_BUFFER_NONE.
+ *                  + Image dimensions must be >= 1x1
  *
- * @param [in] cleanup Cleanup function to be called when an not empty image is destroyed
- *                     via @ref nvcvImageDestroy, or the image data is reset via
- *                     @ref nvcvImageResetData.
+ * @param [in] cleanup Cleanup function to be called when the image is destroyed
+ *                     via @ref nvcvImageDestroy
  *                     If NULL, no cleanup function is defined.
  *
  * @param [in] ctxCleanup Pointer to be passed unchanged to the cleanup function, if defined.
@@ -151,7 +139,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageConstructWrapData(const NVCVImageData *data, NVC
 
 /** Destroys an existing image instance.
  *
- * If the image has type @ref NVCV_TYPE_IMAGE_WRAP_DATA, is not empty and has a cleanup function defined,
+ * If the image has type @ref NVCV_TYPE_IMAGE_WRAP_DATA and has a cleanup function defined,
  * cleanup will be called.
  *
  * @note The image must not be in use in current and future operations.
