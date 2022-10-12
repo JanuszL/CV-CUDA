@@ -21,6 +21,7 @@
 #ifndef CV_CUDA_UTILS_H_
 #define CV_CUDA_UTILS_H_
 
+#include <cassert>
 #include <cmath>
 #include <cstdio>
 
@@ -33,6 +34,7 @@ typedef char          schar;
 
 inline int divUp(int a, int b)
 {
+    assert(b > 0);
     return ceil((float)a / b);
 };
 
@@ -41,6 +43,7 @@ struct PlaneArray
 {
     __host__ __device__ T *operator[](int c) const
     {
+        assert(0 <= c && c < 4);
         return planes[c];
     }
 
