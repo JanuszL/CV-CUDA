@@ -43,7 +43,7 @@ typedef enum
     /** 2D image. */
     NVCV_TYPE_IMAGE,
     /** Image that wraps an user-allocated image buffer. */
-    NVCV_TYPE_IMAGE_WRAP_DATA
+    NVCV_TYPE_IMAGE_WRAPDATA
 } NVCVTypeImage;
 
 /** Storage for image instance. */
@@ -112,7 +112,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageConstruct(const NVCVImageRequirements *reqs, NVC
 /** Wraps an existing image buffer into an NVCV image instance constructed in given storage
  *
  * It allows for interoperation of external image representations with NVCV.
- * The created image type is \ref NVCV_TYPE_IMAGE_WRAP_DATA .
+ * The created image type is \ref NVCV_TYPE_IMAGE_WRAPDATA .
  *
  * @param [in] data Image contents.
  *                  + Must not be NULL
@@ -134,12 +134,12 @@ NVCV_PUBLIC NVCVStatus nvcvImageConstruct(const NVCVImageRequirements *reqs, NVC
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the image.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvImageConstructWrapData(const NVCVImageData *data, NVCVImageDataCleanupFunc cleanup,
+NVCV_PUBLIC NVCVStatus nvcvImageWrapDataConstruct(const NVCVImageData *data, NVCVImageDataCleanupFunc cleanup,
                                                   void *ctxCleanup, NVCVImageStorage *storage, NVCVImageHandle *handle);
 
 /** Destroys an existing image instance.
  *
- * If the image has type @ref NVCV_TYPE_IMAGE_WRAP_DATA and has a cleanup function defined,
+ * If the image has type @ref NVCV_TYPE_IMAGE_WRAPDATA and has a cleanup function defined,
  * cleanup will be called.
  *
  * @note The image must not be in use in current and future operations.

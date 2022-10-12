@@ -248,7 +248,7 @@ void ImageWrapData::exportData(NVCVImageData &data) const
 
 NVCVTypeImage ImageWrapData::type() const
 {
-    return NVCV_TYPE_IMAGE_WRAP_DATA;
+    return NVCV_TYPE_IMAGE_WRAPDATA;
 }
 
 Version ImageWrapData::doGetVersion() const

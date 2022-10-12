@@ -124,7 +124,7 @@ TEST(ImageWrapData, wip_create)
 
     NVCVTypeImage type;
     ASSERT_EQ(NVCV_SUCCESS, nvcvImageGetType(img.handle(), &type));
-    EXPECT_EQ(NVCV_TYPE_IMAGE_WRAP_DATA, type);
+    EXPECT_EQ(NVCV_TYPE_IMAGE_WRAPDATA, type);
 
     const nvcv::IImageData *data = img.exportData();
     ASSERT_NE(nullptr, data);

@@ -67,7 +67,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageConstruct,
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageConstructWrapData,
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageWrapDataConstruct,
                 (const NVCVImageData *data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup,
                  NVCVImageStorage *storage, NVCVImageHandle *handle))
 {
