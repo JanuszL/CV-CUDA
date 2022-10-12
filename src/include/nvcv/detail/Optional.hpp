@@ -173,7 +173,7 @@ public:
     {
         if (m_hasValue)
         {
-            this->Value().~T();
+            this->value().~T();
             m_hasValue = false;
         }
     }
