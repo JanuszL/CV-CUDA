@@ -341,6 +341,19 @@ constexpr ImageFormat FMT_RGBA8{NVCV_IMAGE_FORMAT_RGBA8};
 
 /** Single plane with interleaved BGRA 8-bit channel. */
 constexpr ImageFormat FMT_BGRA8{NVCV_IMAGE_FORMAT_BGRA8};
+
+/** Planar RGB unsigned 8-bit per channel. */
+constexpr ImageFormat FMT_RGB8p{NVCV_IMAGE_FORMAT_RGB8p};
+
+/** Planar BGR unsigned 8-bit per channel. */
+constexpr ImageFormat FMT_BGR8p{NVCV_IMAGE_FORMAT_BGR8p};
+
+/** Planar RGBA unsigned 8-bit per channel. */
+constexpr ImageFormat FMT_RGBA8p{NVCV_IMAGE_FORMAT_RGBA8p};
+
+/** Planar BGRA unsigned 8-bit per channel. */
+constexpr ImageFormat FMT_BGRA8p{NVCV_IMAGE_FORMAT_BGRA8p};
+
 #endif
 
 inline ImageFormat::ImageFormat(ColorSpec colorSpec, ChromaSubsampling chromaSub, MemLayout memLayout,
