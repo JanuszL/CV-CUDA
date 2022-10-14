@@ -34,6 +34,9 @@ namespace nv::cv::cuda {
  * type \p U is not needed as it is inferred from the argument \u.  It is a requirement of the StaticCast function
  * that the type \p T is of regular C type and the type \p U is of CUDA compound type.
  *
+ * @defgroup NVCV_CPP_CUDATOOLS_STATICCAST Static Cast
+ * @{
+ *
  * @code
  * int3 idx = StaticCast<int>(blockIdx * blockDim + threadIdx);
  * @endcode
@@ -58,6 +61,8 @@ __host__ __device__ auto StaticCast(U u)
 
     return out;
 }
+
+/**@}*/
 
 } // namespace nv::cv::cuda
 

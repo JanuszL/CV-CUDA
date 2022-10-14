@@ -35,6 +35,9 @@ extern "C"
  * For example, a \ref NVCV_IMAGE_FORMAT_NV12 is composed of 2 planes, each one with the following pixel types:
  * + \ref NVCV_PIXEL_TYPE_U8 representing pixels as 8-bit unsigned values.
  * + \ref NVCV_PIXEL_TYPE_2U8 representing pixels as two interleaved 32-bit floating-point values.
+ *
+ * @defgroup NVCV_C_CORE_PIXELTYPE Pixel types
+ * @{
  */
 typedef uint64_t NVCVPixelType;
 
@@ -307,6 +310,8 @@ NVCV_PUBLIC NVCVStatus nvcvPixelTypeGetChannelType(NVCVPixelType type, int32_t c
  *                            + Must not be NULL.
  */
 NVCV_PUBLIC NVCVStatus nvcvPixelTypeGetStrideBytes(NVCVPixelType type, int32_t *pixStrideBytes);
+
+/**@}*/
 
 #ifdef __cplusplus
 }

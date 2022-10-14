@@ -37,6 +37,9 @@ namespace nv::cv::cuda {
  * instance uchar4 has 4 elements of base type unsigned char.  Type traits also provide the name of the type, each
  * element minimum and maximum representable values.
  *
+ * @defgroup NVCV_CPP_CUDATOOLS_TYPETRAITS Type Traits
+ * @{
+ *
  * @code
  * using BaseType = typename nv::cv::cuda::TypeTraits<T>::base_type;
  * int nc = nv::cv::cuda::TypeTraits<T>::components;
@@ -244,6 +247,8 @@ __host__ const char *GetTypeName()
 {
     return TypeTraits<T>::name;
 }
+
+/**@}*/
 
 } // namespace nv::cv::cuda
 

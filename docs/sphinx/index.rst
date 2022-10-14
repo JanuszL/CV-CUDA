@@ -46,11 +46,12 @@ Read on to learn more about how to use and benefit from CV-CUDA.
     Getting Started <getting_started>
 
 .. toctree::
-    :caption: C++ API Documentation
+    :caption: API Documentation
     :maxdepth: 2
     :hidden:
 
-    Modules <cpp_modules>
+    C Modules <modules/c_modules>
+    C++ Modules <modules/cpp_modules>
     Index <_exhale_api/cvcuda_api>
 
 .. toctree::

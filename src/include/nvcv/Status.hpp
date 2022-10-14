@@ -32,6 +32,8 @@ namespace nv { namespace cv {
  *
  * This enum is coupled to NVCVStatus, the status codes are the same.
  * For further details, see \ref NVCVStatus.
+ * @defgroup NVCV_CPP_UTIL_STATUS Status Codes
+ * @{
  */
 enum class Status : int8_t
 {
@@ -58,6 +60,8 @@ inline std::ostream &operator<<(std::ostream &out, Status status)
 {
     return out << GetName(status);
 }
+
+/**@}*/
 
 }} // namespace nv::cv
 

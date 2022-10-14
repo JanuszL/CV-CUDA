@@ -30,6 +30,11 @@ extern "C"
 #endif
 
 /**
+ * @defgroup NVCV_C_CORE_DATALAYOUT Data Layout
+ * @{
+*/
+
+/**
  * Maximum channel count
  */
 #define NVCV_MAX_CHANNEL_COUNT (4)
@@ -531,6 +536,8 @@ NVCV_PUBLIC NVCVStatus nvcvPackingGetBitsPerComponent(NVCVPacking packing, int32
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvPackingGetBitsPerPixel(NVCVPacking packing, int32_t *outBPP);
+
+/**@}*/
 
 #ifdef __cplusplus
 }

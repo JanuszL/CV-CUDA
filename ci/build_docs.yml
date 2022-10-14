@@ -17,6 +17,9 @@ b:docs:
     tags: [ linux-x64, build]
     script:
         -  ./ci/build_docs.sh build
+    artifacts:
+        paths:
+            - build/docs/sphinx
 pages:
     extends: .launch_rule
     stage: deploy

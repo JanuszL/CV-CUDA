@@ -29,6 +29,11 @@
 
 namespace nv { namespace cv {
 
+/**
+ * @defgroup NVCV_CPP_CORE_DATALAYOUT Data Layout
+ * @{
+*/
+
 enum class Packing : int32_t
 {
     NONE,
@@ -343,6 +348,8 @@ inline int32_t GetBitsPerPixel(Packing packing)
     detail::CheckThrow(nvcvPackingGetBitsPerPixel(static_cast<NVCVPacking>(packing), &out));
     return out;
 }
+
+/**@}*/
 
 }} // namespace nv::cv
 

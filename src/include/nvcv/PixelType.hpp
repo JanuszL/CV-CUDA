@@ -27,6 +27,13 @@
 
 namespace nv { namespace cv {
 
+/**
+ * @brief Defines types and functions to handle pixel types.
+ *
+ * @defgroup NVCV_CPP_CORE_PIXELTYPE Pixel types
+ * @{
+ */
+
 class PixelType
 {
 public:
@@ -239,6 +246,8 @@ inline std::ostream &operator<<(std::ostream &out, PixelType type)
 {
     return out << nvcvPixelTypeGetName(type);
 }
+
+/**@}*/
 
 }} // namespace nv::cv
 

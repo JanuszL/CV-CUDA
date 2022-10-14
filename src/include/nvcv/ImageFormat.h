@@ -32,7 +32,7 @@ extern "C"
 #endif
 
 /**
- * Pre-defined image formats.
+ * @brief Pre-defined image formats.
  * An image format defines how image pixels are interpreted.
  * Each image format is defined by the following components:
  * - \ref NVCVColorModel
@@ -50,6 +50,9 @@ extern "C"
  * Using user-defined image formats with algorithms can lead to undefined behavior (segfaults, etc),
  * but usually it works as expected. Result of algorithms using these image formats must be checked
  * for correctness, as it's not guaranteed that they will work.
+ *
+ * @defgroup NVCV_C_CORE_IMAGETYPE Image Formats
+ * @{
  */
 typedef uint64_t NVCVImageFormat;
 
@@ -870,6 +873,8 @@ NVCV_PUBLIC NVCVStatus nvcvImageFormatSetRawPattern(NVCVImageFormat *fmt, NVCVRa
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvImageFormatHasSameDataLayout(NVCVImageFormat a, NVCVImageFormat b, int8_t *outBool);
+
+/**@}*/
 
 #ifdef __cplusplus
 }

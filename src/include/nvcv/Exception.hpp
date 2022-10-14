@@ -26,6 +26,10 @@
 #include <cstring>
 
 namespace nv { namespace cv {
+/**
+ * @defgroup NVCV_CPP_UTIL_EXCEPTION Exception
+ * @{
+*/
 
 class Exception : public std::exception
 {
@@ -64,6 +68,8 @@ private:
     // 2: ': '
     char m_msgBuffer[NVCV_MAX_STATUS_MESSAGE_LENGTH + 64 + 2];
 };
+
+/**@}*/
 
 }} // namespace nv::cv
 

@@ -23,20 +23,19 @@
 #include <nvcv/detail/Export.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Declarations of entities to handle NVCV versioning.
  *
  * These utilities allow querying the NVCV header and library versions and
  * properly handle NVCV forward- or backward-compatibility .
  *
- * @defgroup NVCV_Version Versioning
- * @ingroup NVCV_API_Misc
+ * @defgroup NVCV_CPP_UTIL_VERSION Versioning
  * @{
  */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /** Make a NVCV version identifier with four components.
  * @param[in] major,minor,patch,tweak Version components to be converted to a number.
@@ -196,10 +195,10 @@ extern "C" {
  */
 NVCV_PUBLIC uint32_t nvcvGetVersion(void);
 
+/** @} */
+
 #ifdef __cplusplus
 }
 #endif
-
-/** @} */
 
 #endif // NVCV_VERSION_H

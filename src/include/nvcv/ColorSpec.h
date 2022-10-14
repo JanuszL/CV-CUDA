@@ -32,6 +32,8 @@ extern "C"
 /** Defines color models.
  * A color model gives meaning to each channel of an image format. They are specified
  * in a canonical XYZW ordering that can then be swizzled to the desired ordering.
+ * @defgroup NVCV_C_CORE_COLORSPEC Color Models
+ * @{
  */
 typedef enum
 {
@@ -544,6 +546,8 @@ NVCV_PUBLIC const char *nvcvColorSpecGetName(NVCVColorSpec cspec);
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvColorModelNeedsColorspec(NVCVColorModel cmodel, int8_t *outBool);
+
+/**@}*/
 
 #ifdef __cplusplus
 }
