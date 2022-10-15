@@ -13,6 +13,7 @@
 
 #include "Cache.hpp"
 #include "ImageFormat.hpp"
+#include "Stream.hpp"
 
 #include <nvcv/Version.h>
 #include <pybind11/pybind11.h>
@@ -33,5 +34,11 @@ PYBIND11_MODULE(nvcv, m)
     using namespace nv::cvpy;
 
     Cache::Export(m);
+
+    {
+        py::module_ cuda = m.def_submodule("cuda");
+        Stream::Export(cuda);
+    }
+
     ExportImageFormat(m);
 }
