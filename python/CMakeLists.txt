@@ -33,6 +33,7 @@ add_custom_command(OUTPUT ${imgformat_defs}
 
 pybind11_add_module(nvcv_python MODULE
     ${imgformat_defs}
+    Assert.cpp
     Main.cpp
     ImageFormat.cpp
     Object.cpp
