@@ -13,6 +13,7 @@
 add_library(nvcv_private_operators STATIC
     OpReformat.cpp
     OpResize.cpp
+    OpCustomCrop.cpp
 )
 
 target_include_directories(nvcv_private_operators

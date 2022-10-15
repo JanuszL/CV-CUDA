@@ -279,6 +279,19 @@ struct Ptr2dNHWC
         data          = reinterpret_cast<T *>(inData.plane(0).buffer);
     }
 
+    __host__ __forceinline__ Ptr2dNHWC(const ITensorDataPitchDevice &tensor, int cols_, int rows_)
+    {
+        DimsNCHW dims = tensor.dims();
+        batches       = dims.n;
+        rows          = rows_; // allow override of rows and cols with smaller crop rect
+        cols          = cols_;
+        ch            = dims.c;
+
+        imgPitchBytes = tensor.pitchBytes(0);
+        rowPitchBytes = tensor.pitchBytes(1);
+        data          = reinterpret_cast<T *>(tensor.mem());
+    }
+
     __host__ __forceinline__ Ptr2dNHWC(const ITensorDataPitchDevice &tensor)
     {
         DimsNCHW dims = tensor.dims();
