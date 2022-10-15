@@ -40,6 +40,11 @@ COPY gdbinit /root/.gdbinit
 RUN DEBIAN_FRONTEND="noninteractive" apt-get update \
     && apt-get install -y --no-install-recommends \
          python3-pytest \
+         python3-pip \
     && rm -rf /var/lib/apt/lists/*
+
+# needed by tests
+RUN python3 -m pip install numba \
+    && rm -rf /root/.cache/pip
 
 WORKDIR /cvcuda
