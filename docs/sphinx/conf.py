@@ -26,11 +26,12 @@
 
 # -- Project information -----------------------------------------------------
 import os
+import sphinx_rtd_theme
 
-project = 'CVCUDA'
-copyright = '2022, NVIDIA.'
-author = 'NVIDIA'
-version = 'PreAlpha'
+project = "CVCUDA"
+copyright = "2022, NVIDIA."
+author = "NVIDIA"
+version = "PreAlpha"
 release = version
 
 
@@ -42,45 +43,44 @@ release = version
 extensions = []
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['templates']
+templates_path = ["templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'docs/manuals/py/**']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "docs/manuals/py/**"]
 
-#source_parsers = { '.md': 'recommonmark.parser.CommonMarkParser',}
+# source_parsers = { '.md': 'recommonmark.parser.CommonMarkParser',}
 
-extensions=['recommonmark']
+extensions = ["recommonmark"]
 
 
-source_suffix = {'.rst': 'restructuredtext', '.md':'markdown'}
+source_suffix = {".rst": "restructuredtext", ".md": "markdown"}
 
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-import sphinx_rtd_theme
 
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 html_theme = "sphinx_rtd_theme"
-html_logo = os.path.join('content', 'nv_logo.png')
+html_logo = os.path.join("content", "nv_logo.png")
 
 html_theme_options = {
-    'logo_only': True,
-    'display_version': True,
-    'prev_next_buttons_location': 'bottom',
-    'style_external_links': False,
-    'style_nav_header_background': '#000000',
+    "logo_only": True,
+    "display_version": True,
+    "prev_next_buttons_location": "bottom",
+    "style_external_links": False,
+    "style_nav_header_background": "#000000",
     # Toc options
-    'collapse_navigation': False,
-    'sticky_navigation': False,
+    "collapse_navigation": False,
+    "sticky_navigation": False,
     # 'navigation_depth': 10,
-    'sidebarwidth': 12,
-    'includehidden': True,
-    'titles_only': False
+    "sidebarwidth": 12,
+    "includehidden": True,
+    "titles_only": False,
 }
 
 
@@ -88,38 +88,41 @@ html_theme_options = {
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 
-html_favicon = os.path.join('content', 'nv_icon.png')
+html_favicon = os.path.join("content", "nv_icon.png")
 
-html_static_path = ['templates']
+html_static_path = ["templates"]
 
-html_last_updated_fmt = ''
+html_last_updated_fmt = ""
 
 html_js_files = [
-    'pk_scripts.js',
+    "pk_scripts.js",
 ]
 
+
 def setup(app):
-    app.add_css_file('custom.css')
+    app.add_css_file("custom.css")
+
+
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # -- Options for breathe --------------------------------------------------
 
 # Enable the breathe extension
-extensions.append('breathe')
-extensions.append('exhale')
+extensions.append("breathe")
+extensions.append("exhale")
 
 # Set up the default project for breathe extension
-breathe_default_project = 'cvcuda'
+breathe_default_project = "cvcuda"
 
 
 # -- Options for sphinx_rtd_theme -----------------------------------------
 
 # Enable the sphinx_rtd_theme extension
-extensions.append('sphinx_rtd_theme')
+extensions.append("sphinx_rtd_theme")
 
 # Enable the sphinx.ext.todo extension
-extensions.append('sphinx.ext.todo')
+extensions.append("sphinx.ext.todo")
 
 # -- Extension configuration -------------------------------------------------
 
@@ -142,30 +145,30 @@ doxygen_predefined = [
     "NVCV_PUBLIC=",
     "NVCV_API_VERSION_IS(x,y)=0",
     "NVCV_API_VERSION_AT_LEAST(x,y)=1",
-    "NVCV_API_VERSION_AT_MOST(x,y)=0"
+    "NVCV_API_VERSION_AT_MOST(x,y)=0",
 ]
 
 # Setup the exhale extension
 exhale_args = {
     # These arguments are required
-    "containmentFolder":     "_exhale_api",
-    "rootFileName":          "cvcuda_api.rst",
-    "doxygenStripFromPath":  "../../src/include",
+    "containmentFolder": "_exhale_api",
+    "rootFileName": "cvcuda_api.rst",
+    "doxygenStripFromPath": "../../src/include",
     # Heavily encouraged optional argument (see docs)
-    "rootFileTitle":         "Library API",
+    "rootFileTitle": "Library API",
     # Suggested optional arguments
-    "createTreeView":        True,
+    "createTreeView": True,
     # TIP: if using the sphinx-bootstrap-theme, you need
     # "treeViewIsBootstrap": True,
     "exhaleExecutesDoxygen": False,
     "fullToctreeMaxDepth": 1,
     "minifyTreeView": False,
     "contentsDirectives": False,
-    "exhaleDoxygenStdin":    "INPUT = ../../src/include"
+    "exhaleDoxygenStdin": "INPUT = ../../src/include",
 }
 
 # Tell sphinx what the primary language being documented is.
-primary_domain = 'cpp'
+primary_domain = "cpp"
 
 # Tell sphinx what the pygments highlight language should be.
-highlight_language = 'cpp'
+highlight_language = "cpp"
