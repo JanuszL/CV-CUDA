@@ -11,6 +11,7 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "Cache.hpp"
 #include "ImageFormat.hpp"
 
 #include <nvcv/Version.h>
@@ -29,5 +30,8 @@ PYBIND11_MODULE(nvcv, m)
 
     m.attr("__version__") = NVCV_VERSION_STRING;
 
-    nv::cvpy::ExportImageFormat(m);
+    using namespace nv::cvpy;
+
+    Cache::Export(m);
+    ExportImageFormat(m);
 }
