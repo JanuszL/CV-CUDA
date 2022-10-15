@@ -11,23 +11,21 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "ImageFormat.hpp"
+#ifndef NVCV_PYTHON_IMAGEFORMAT_HPP
+#define NVCV_PYTHON_IMAGEFORMAT_HPP
 
-#include <nvcv/Version.h>
+#include <nvcv/ImageFormat.hpp>
 #include <pybind11/pybind11.h>
 
+namespace nv::cv {
+size_t ComputeHash(const cv::ImageFormat &fmt);
+}
+
+namespace nv::cvpy {
 namespace py = pybind11;
 
-PYBIND11_MODULE(nvcv, m)
-{
-    m.doc() = R"pbdoc(
-        NVCV Python API reference
-        ========================
+void ExportImageFormat(py::module &m);
 
-        This is the Python API reference for the NVIDIA® NVCV library.
-    )pbdoc";
+} // namespace nv::cvpy
 
-    m.attr("__version__") = NVCV_VERSION_STRING;
-
-    nv::cvpy::ExportImageFormat(m);
-}
+#endif // NVCV_PYTHON_IMAGEFORMAT_HPP
