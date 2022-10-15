@@ -35,6 +35,7 @@ pybind11_add_module(nvcv_python MODULE
     ${imgformat_defs}
     Main.cpp
     ImageFormat.cpp
+    Object.cpp
 )
 
 target_include_directories(nvcv_python
