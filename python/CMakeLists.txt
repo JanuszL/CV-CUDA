@@ -1,0 +1,53 @@
+# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#
+# SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
+cmake_minimum_required(VERSION 3.22)
+
+project(nvcv_python CXX)
+
+set(PYBIND11_PYTHON_VERSION ${PYTHON_VERSION})
+add_subdirectory(pybind11)
+
+find_package(nvcv REQUIRED)
+
+set(CMAKE_CXX_STANDARD 20)
+
+pybind11_add_module(nvcv_python MODULE
+    Main.cpp
+)
+
+set_target_properties(nvcv_python PROPERTIES
+    OUTPUT_NAME nvcv
+    DEBUG_POSTFIX ""
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
+)
+
+find_package(CUDAToolkit REQUIRED)
+
+target_link_libraries(nvcv_python
+    PRIVATE
+        nvcv
+        CUDA::cudart_static
+        -static-libstdc++
+)
+
+target_compile_options(nvcv_python
+    PRIVATE
+        -Wno-deprecated-declarations
+        -Wsuggest-override
+)
+
+include(GNUInstallDirs)
+
+install(TARGETS nvcv_python
+    LIBRARY DESTINATION lib
+)

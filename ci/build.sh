@@ -64,6 +64,17 @@ mkdir -p "$build_dir"
 # Common config
 cmake_args="-DBUILD_TESTS=1"
 
+if [[ "$ENABLE_PYTHON" = '0' || "$ENABLE_PYTHON" = 'no' ]]; then
+    cmake_args="$cmake_args -DBUILD_PYTHON=0"
+else
+    # enables python by default or when asked
+    cmake_args="$cmake_args -DBUILD_PYTHON=1"
+fi
+
+if [ "$PYTHON_VERSIONS" ]; then
+    cmake_args="-DPYTHON_VERSIONS=$PYTHON_VERSIONS"
+fi
+
 case $build_type in
     release)
         cmake_args="$cmake_args -DCMAKE_BUILD_TYPE=Release"

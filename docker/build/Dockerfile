@@ -36,6 +36,8 @@ COPY ccache.conf /etc/ccache.conf
 ENV CCACHE_CONFIGPATH=/etc/ccache.conf
 ENV PRE_COMMIT_HOME=/cache/pre-commit
 
+# Documentation ======================================
+
 # Allow using this image in systems without proper CUDA runtime/driver support.
 # We'll be using this image only for building, don't need strict CUDA checks.
 ENV NVIDIA_DISABLE_REQUIRE=true
@@ -44,3 +46,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 python3-pip python3-dev doxygen && rm -rf /var/lib/apt/lists/*
 RUN python3 -m pip install sphinx-rtd-theme sphinx==4.5.0
 RUN python3 -m pip install breathe exhale recommonmark graphviz
+
+# Python bindings ======================================
+
+# Add deadsnakes apt repo to fetch older pythonv versions
+ADD deadsnakes-ubuntu-ppa-jammy.list /etc/apt/sources.list.d
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys BA6932366A755776
+
+# Add so that tzdata don't ask for timezone info in a noninteractive installation.
+RUN ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
+
+RUN DEBIAN_FRONTEND="noninteractive" apt-get update \
+    && apt-get install -y --no-install-recommends \
+        python3.7-dev python3.7-distutils \
+        python3.8-dev python3.8-distutils \
+        python3.9-dev python3.9-distutils \
+        python3.10-dev python3.10-distutils \
+    && rm -rf /var/lib/apt/lists/*

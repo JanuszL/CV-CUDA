@@ -25,6 +25,7 @@ set(CMAKE_INSTALL_PREFIX "/opt/nvidia/cvcuda${PROJECT_VERSION_MAJOR}")
 
 # Options to configure the build tree =======
 option(BUILD_TESTS "Enable testsuite" OFF)
+option(BUILD_PYTHON "Build python bindings" OFF)
 option(ENABLE_SANITIZER "Enabled sanitized build" OFF)
 
 # Configure build tree ======================
@@ -35,10 +36,17 @@ include(ConfigBuildTree)
 include(ConfigCompiler)
 include(ConfigCUDA)
 include(ConfigCCache)
+if(BUILD_PYTHON)
+    include(ConfigPython)
+endif()
 
 # Define the build tree ====================
 
 add_subdirectory(src)
+
+if(BUILD_PYTHON)
+    include(BuildPython)
+endif()
 
 if(BUILD_TESTS)
     add_subdirectory(tests)

@@ -31,8 +31,10 @@ if(UNIX)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/run_tests.sh.in ${TESTS_DRIVER}
         @ONLY)
 
-    macro(nvcv_add_test TESTNAME)
-        add_test(NAME "${TESTNAME}" COMMAND "${TESTNAME}")
+    macro(nvcv_add_test TESTCMD)
+        get_filename_component(TESTNAME "${TESTCMD}" NAME)
+
+        add_test(NAME "${TESTNAME}" COMMAND "${TESTCMD}")
 
         if("${TESTNAME}" MATCHES "^[^_]+_test_system_.*$")
             target_compile_definitions(${TESTNAME} PRIVATE -DNVCV_SYSTEM_TESTS=1)
@@ -46,9 +48,15 @@ if(UNIX)
 
         file(APPEND "${TESTS_DRIVER}" "run ${TESTNAME}\n")
 
-        install(TARGETS ${TESTNAME}
-                DESTINATION ${CMAKE_INSTALL_BINDIR}
-                COMPONENT tests)
+        if(TARGET ${TESTNAME})
+            install(TARGETS ${TESTNAME}
+                    DESTINATION ${CMAKE_INSTALL_BINDIR}
+                    COMPONENT tests)
+        else()
+            install(PROGRAMS "${TESTCMD}"
+                    TYPE BIN
+                    COMPONENT tests)
+        endif()
     endmacro()
 
     install(PROGRAMS ${TESTS_DRIVER}
@@ -76,3 +84,7 @@ add_subdirectory(system_cudatools)
 
 # Unit tests for internal functions from nvcv core
 add_subdirectory(unit_core)
+
+if(BUILD_PYTHON)
+    add_subdirectory(system_python_core)
+endif()

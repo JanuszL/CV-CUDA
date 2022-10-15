@@ -19,7 +19,9 @@
       - 'ls -1 cvcuda-installer/*.deb'
       - 'version=$(cat cvcuda-installer/VERSION)'
       - "apt-get update"
-      - "apt-get install -y --no-install-recommends ./cvcuda-installer/nvcv-lib-${version}.deb ./cvcuda-installer/cvcuda-tests-${version}.deb"
+      - "packages=\"./cvcuda-installer/nvcv-lib-${version}.deb ./cvcuda-installer/cvcuda-tests-${version}.deb\""
+      - "[[ $NVCV_FORCE_PYTHON = 1 ]] && packages=\"$packages ./cvcuda-installer/nvcv-python*-${version}.deb\""
+      - "apt-get install -y --no-install-recommends $packages"
       - '/opt/nvidia/cvcuda*/bin/run_tests.sh'
 
 .test_x64:
@@ -29,12 +31,16 @@
 t:x64:deb:
     extends:
       - .test_x64
+    variables:
+        NVCV_FORCE_PYTHON: 1
     needs: [ 'b:x64:deb' ]
     tags: [ linux-x64, test, cuda11 ]
 
 t:x64:rel:
     extends:
       - .test_x64
+    variables:
+        NVCV_FORCE_PYTHON: 1
     needs: [ 'b:x64:rel' ]
     tags: [ linux-x64, test, cuda11 ]
 

@@ -1,0 +1,36 @@
+#!/bin/bash -e
+#
+# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#
+# SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
+tests_dir="@PYTHON_TEST_DIR@"
+python_versions="@PYTHON_TEST_VERSIONS@"
+
+tmpdir=$(mktemp -d)
+
+function on_exit()
+{
+    rm -rf $tmpdir
+}
+trap 'on_exit' EXIT
+
+for ver in $python_versions; do
+
+    if [[ "$NVCV_FORCE_PYTHON" != 1 && "$NVCV_FORCE_PYTHON" != yes ]]; then
+        if ! PYTHONPATH="$PYTHONPATH:@PYTHON_MODULE_DIR@" python$ver -c 'import nvcv'; then
+            echo "Skipping python-$ver, NVCV python bindings not installed"
+            continue
+        fi
+    fi
+
+    PYTHONPATH="$PYTHONPATH:@PYTHON_MODULE_DIR@" NVCV_VERSION="@cvcuda_VERSION@" python$ver -m pytest -o cache_dir="$tmpdir" "$@" "$tests_dir"
+done

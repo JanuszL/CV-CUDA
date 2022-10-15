@@ -36,4 +36,10 @@ ENV NVIDIA_DISABLE_REQUIRE=false
 COPY vimrc /root/.vimrc
 COPY gdbinit /root/.gdbinit
 
+# For running tests inside dev container
+RUN DEBIAN_FRONTEND="noninteractive" apt-get update \
+    && apt-get install -y --no-install-recommends \
+         python3-pytest \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /cvcuda

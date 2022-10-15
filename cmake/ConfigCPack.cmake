@@ -205,6 +205,11 @@ if(BUILD_TESTS)
     endif()
 endif()
 
+# Python =================================================
+if(BUILD_PYTHON)
+    include(InstallPython)
+endif()
+
 # Finish GPack configuration =================================================
 
 include(CPack)
