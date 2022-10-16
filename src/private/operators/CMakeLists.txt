@@ -16,6 +16,7 @@ add_library(nvcv_private_operators STATIC
     OpCustomCrop.cpp
     OpNormalize.cpp
     OpPadAndStack.cpp
+    OpConvertTo.cpp
 )
 
 target_include_directories(nvcv_private_operators

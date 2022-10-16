@@ -52,6 +52,16 @@ inline int divUp(int a, int b)
     return ceil((float)a / b);
 };
 
+struct DefaultTransformPolicy
+{
+    enum
+    {
+        block_size_x = 32,
+        block_size_y = 8,
+        shift        = 4
+    };
+};
+
 template<class T> // base type
 __host__ __device__ int32_t CalcNCHWImagePitchBytes(int rows, int cols, int channels)
 {
