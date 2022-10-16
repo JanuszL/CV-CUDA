@@ -1,0 +1,44 @@
+# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#
+# SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
+b:samples:
+    extends: .launch_rule
+    stage: build
+    image: 'gitlab-master.nvidia.com:5005/cv/cvcuda/samples-linux-x64:$TAG_IMAGE'
+    tags: [ linux-x64, build]
+    artifacts:
+        paths: [ 'cvcuda-installer/' ]
+    before_script:
+        - 'rm -rf cvcuda-installer'
+    script:
+        -  ./ci/build_samples.sh
+        - 'pushd build && cpack && popd'
+        - 'mkdir cvcuda-installer && mv -v build/*.{deb,tar.*} build/VERSION cvcuda-installer'
+
+test:samples:
+    extends: .launch_rule
+    stage: test
+    image: 'gitlab-master.nvidia.com:5005/cv/cvcuda/samples-linux-x64:$TAG_IMAGE'
+    variables:
+        CUDA_CACHE_DISABLE: 1
+        GIT_STRATEGY: none
+    needs: [ 'b:samples' ]
+    tags: [ linux-x64, test, cuda11 ]
+    script:
+      - 'pwd'
+      - 'ls -1 cvcuda-installer/*.deb'
+      - 'version=$(cat cvcuda-installer/VERSION)'
+      - "apt-get update"
+      - "apt-get install -y --no-install-recommends ./cvcuda-installer/nvcv-lib-${version}.deb ./cvcuda-installer/nvcv-dev-${version}.deb ./cvcuda-installer/cvcuda-samples-${version}.deb"
+      - "cd /opt/nvidia/cvcuda*/samples"
+      - "chmod a+x ./scripts/*.sh"
+      - "./scripts/run_samples.sh"

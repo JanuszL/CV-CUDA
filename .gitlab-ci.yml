@@ -33,3 +33,4 @@ include:
     - ci/build.yml
     - ci/build_docs.yml
     - ci/test.yml
+    - ci/samples.yml

@@ -1,5 +1,5 @@
 # Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
+
 # SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -10,42 +10,25 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-# Project specific
-# ----------------
-/build/
-/build-*/
-/install/
+import torch
+from torchvision import models
 
-# Visual Studio Code
-# ------------------
-.vscode/
-.history/
+# Get pretrained model
+resnet50 = models.resnet50(pretrained=True)
 
-# Python
-# ------
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Jupyter Notebooks
-# -----------------
-ipynb_checkpoints
-*/.ipynb_checkpoints/*
-profile_default/
-ipython_config.py
-
-# Miscellaneous
-# -------------
-*.bin
-*.gz
-*.xz
-*.bz2
-
-# Documentation
-# -------------
-_exhale_api
-
-# Samples
-# -------------
-models
-*.engine
+# Export the model to ONNX
+inputWidth = 224
+inputHeight = 224
+maxBatchSize = 32
+x = torch.randn(maxBatchSize, 3, inputHeight, inputWidth, requires_grad=True)
+torch.onnx.export(
+    resnet50,
+    x,
+    "./models/resnet50.onnx",
+    export_params=True,
+    opset_version=12,
+    do_constant_folding=True,
+    input_names=["input"],
+    output_names=["output"],
+    dynamic_axes={"input": {0: "maxBatchSize"}, "output": {0: "maxBatchSize"}},
+)

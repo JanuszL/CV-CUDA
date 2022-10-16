@@ -1,3 +1,5 @@
+#!/bin/bash -e
+
 # Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
@@ -10,42 +12,13 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-# Project specific
-# ----------------
-/build/
-/build-*/
-/install/
+# Builds samples
+# Usage: build_samples.sh [build folder]
 
-# Visual Studio Code
-# ------------------
-.vscode/
-.history/
+build_dir="build"
 
-# Python
-# ------
-__pycache__/
-*.py[cod]
-*$py.class
+mkdir -p
 
-# Jupyter Notebooks
-# -----------------
-ipynb_checkpoints
-*/.ipynb_checkpoints/*
-profile_default/
-ipython_config.py
+cd $build_dir
 
-# Miscellaneous
-# -------------
-*.bin
-*.gz
-*.xz
-*.bz2
-
-# Documentation
-# -------------
-_exhale_api
-
-# Samples
-# -------------
-models
-*.engine
+cmake .. && make

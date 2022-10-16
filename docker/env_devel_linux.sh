@@ -60,5 +60,5 @@ docker run --gpus=all -ti \
     -v /var/tmp:/var/tmp \
     -v $SDIR/..:$HOME/cvcuda \
     $extra_args \
-    $IMAGE_URL_BASE/devel-linux:$TAG_IMAGE \
+    $IMAGE_URL_BASE/samples-linux-x64:$TAG_IMAGE \
     /usr/bin/bash -c "mkdir -p $HOME && chown $USER:$USER $HOME && su - $USER -c \"$extra_cmds\" && su - $USER"

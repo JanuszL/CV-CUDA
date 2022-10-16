@@ -131,5 +131,5 @@ cmake --build "$build_dir" -- $MAKE_OPTS
 # Show ccache status, if available!
 if [[ $has_ccache ]]; then
     # Show build stats
-    CCACHE_STATSLOG=${ccache_stats} ccache --show-log-stats -v
+    CCACHE_STATSLOG=${ccache_stats} ccache --show-stats -V
 fi

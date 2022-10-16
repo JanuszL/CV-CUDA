@@ -56,6 +56,9 @@ if(BUILD_DOCS)
     add_subdirectory(docs)
 endif()
 
+if(BUILD_SAMPLES)
+    add_subdirectory(samples)
+endif()
 
 # Must be done after build tree is defined
 include(ConfigCPack)
