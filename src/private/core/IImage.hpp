@@ -36,13 +36,6 @@ public:
     virtual void exportData(NVCVImageData &data) const = 0;
 };
 
-class IImageWrapData : public IImage
-{
-public:
-    virtual void setData(const NVCVImageData *data)                                                               = 0;
-    virtual void setDataAndCleanup(const NVCVImageData *data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup) = 0;
-};
-
 } // namespace nv::cv::priv
 
 #endif // NVCV_PRIV_IIMAGE_HPP

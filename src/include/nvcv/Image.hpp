@@ -258,7 +258,7 @@ inline ImageWrapData::ImageWrapData(const IImageData &data, std::function<ImageD
         {
             NVCVImageHandle handle;
             detail::CheckThrow(
-                nvcvImageConstructWrapData(&data.cdata(), cleanup ? &doCleanup : nullptr, this, &m_storage, &handle));
+                nvcvImageWrapDataConstruct(&data.cdata(), cleanup ? &doCleanup : nullptr, this, &m_storage, &handle));
             return handle;
         }())
     , m_cleanup(std::move(cleanup))

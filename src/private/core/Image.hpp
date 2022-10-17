@@ -41,11 +41,9 @@ private:
     Version doGetVersion() const override;
 };
 
-class ImageWrapData final : public IImageWrapData
+class ImageWrapData final : public IImage
 {
 public:
-    explicit ImageWrapData();
-
     explicit ImageWrapData(const NVCVImageData &data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup);
 
     ~ImageWrapData();
@@ -56,9 +54,6 @@ public:
     NVCVTypeImage type() const override;
 
     void exportData(NVCVImageData &data) const override;
-
-    void setData(const NVCVImageData *data) override;
-    void setDataAndCleanup(const NVCVImageData *data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup) override;
 
 private:
     NVCVImageData m_data;

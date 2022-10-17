@@ -67,10 +67,12 @@ NVCVImageRequirements Image::CalcRequirements(Size2D size, ImageFormat fmt)
     {
         Size2D planeSize = fmt.planeSize(size, p);
 
-        int64_t rowPitchBytes
+        NVCV_ASSERT((size_t)p < sizeof(reqs.planeRowPitchBytes) / sizeof(reqs.planeRowPitchBytes[0]));
+
+        reqs.planeRowPitchBytes[p]
             = util::RoundUpPowerOfTwo((int64_t)planeSize.w * fmt.planePixelStrideBytes(p), reqs.alignBytes);
 
-        AddBuffer(reqs.mem.deviceMem, rowPitchBytes * planeSize.h, reqs.alignBytes);
+        AddBuffer(reqs.mem.deviceMem, reqs.planeRowPitchBytes[p] * planeSize.h, reqs.alignBytes);
     }
 
     return reqs;
@@ -139,11 +141,9 @@ void Image::exportData(NVCVImageData &data) const
 
         Size2D planeSize = fmt.planeSize({m_reqs.width, m_reqs.height}, p);
 
-        size_t rowPitchBytes = util::RoundUp((size_t)planeSize.w * fmt.planePixelStrideBytes(p), m_reqs.alignBytes);
-
         plane.width      = planeSize.w;
         plane.height     = planeSize.h;
-        plane.pitchBytes = rowPitchBytes;
+        plane.pitchBytes = m_reqs.planeRowPitchBytes[p];
         plane.buffer     = reinterpret_cast<std::byte *>(m_buffer) + planeOffsetBytes;
 
         planeOffsetBytes += plane.height * plane.pitchBytes;
@@ -153,14 +153,6 @@ void Image::exportData(NVCVImageData &data) const
 }
 
 // ImageWrap implementation -------------------------------------------
-
-ImageWrapData::ImageWrapData()
-    : m_cleanup(nullptr)
-    , m_ctxCleanup(nullptr)
-{
-    m_data.bufferType = NVCV_IMAGE_BUFFER_NONE;
-    m_data.format     = NVCV_IMAGE_FORMAT_NONE;
-}
 
 ImageWrapData::ImageWrapData(const NVCVImageData &data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup)
     : m_cleanup(cleanup)
@@ -256,41 +248,12 @@ void ImageWrapData::exportData(NVCVImageData &data) const
 
 NVCVTypeImage ImageWrapData::type() const
 {
-    return NVCV_TYPE_IMAGE_WRAP_DATA;
+    return NVCV_TYPE_IMAGE_WRAPDATA;
 }
 
 Version ImageWrapData::doGetVersion() const
 {
     return CURRENT_VERSION;
-}
-
-void ImageWrapData::setData(const NVCVImageData *data)
-{
-    if (data)
-    {
-        doValidateData(*data);
-    }
-
-    doCleanup();
-
-    if (data)
-    {
-        m_data = *data;
-    }
-    else
-    {
-        m_data            = {}; // safety
-        m_data.bufferType = NVCV_IMAGE_BUFFER_NONE;
-        m_data.format     = NVCV_IMAGE_FORMAT_NONE;
-    }
-}
-
-void ImageWrapData::setDataAndCleanup(const NVCVImageData *data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup)
-{
-    this->setData(data);
-
-    m_cleanup    = cleanup;
-    m_ctxCleanup = ctxCleanup;
 }
 
 void ImageWrapData::doCleanup() noexcept
