@@ -17,8 +17,8 @@
 *
 */
 
-#ifndef NVCV_OP_EXPORT_H
-#define NVCV_OP_EXPORT_H
+#ifndef NVCVOP_EXPORT_H
+#define NVCVOP_EXPORT_H
 
 #if defined _WIN32 || defined __CYGWIN__
 #    ifdef NVCV_EXPORTING
@@ -36,4 +36,4 @@
 #    endif
 #endif
 
-#endif /* NVCV_OP_EXPORT_H */
+#endif /* NVCVOP_EXPORT_H */

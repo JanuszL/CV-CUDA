@@ -31,13 +31,15 @@ TEST(OpReformat, OpReformat_to_hwc)
 
     nvcv::Tensor imgOut(1, {640, 480}, nvcv::FMT_RGB8);
 
-    nvcv::TensorDataPitchDevice bufIn(nvcv::FMT_RGB8p, 1, {640, 480}, nullptr);
+    nvcv::Requirements reqsPlanar{nvcv::Tensor::CalcRequirements(1, {640, 480}, nvcv::FMT_RGB8p).mem};
 
-    int64_t inBufferSize = bufIn.imgPitchBytes() * bufIn.numImages();
+    int64_t inBufferSize = CalcTotalSizeBytes(reqsPlanar.deviceMem());
+    ASSERT_LT(0, inBufferSize);
 
     void *data;
     EXPECT_EQ(cudaSuccess, cudaMalloc(&data, inBufferSize));
-    bufIn.setMem(data);
+
+    nvcv::TensorDataPitchDevice bufIn(nvcv::FMT_RGB8p, 1, {640, 480}, data);
 
     ASSERT_EQ(1, bufIn.numImages());
 
@@ -52,14 +54,14 @@ TEST(OpReformat, OpReformat_to_hwc)
     // wrap the buffer
     nvcv::TensorWrapData imgIn{bufIn};
 
-    const auto *outData = dynamic_cast<const ITensorDataPitchDevice *>(imgOut.exportData());
+    const auto *outData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgOut.exportData());
     ASSERT_NE(nullptr, outData);
 
     // Set output buffer to dummy value
     EXPECT_EQ(cudaSuccess, cudaMemset(outData->mem(), 0xFA, outData->imgPitchBytes() * outData->numImages()));
 
     // Call operator
-    nv::cv_op::Reformat reformatOp;
+    nv::cvop::Reformat reformatOp;
     EXPECT_NO_THROW(reformatOp(stream, imgIn, imgOut));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
@@ -90,8 +92,8 @@ TEST(OpReformat, wip_OpReformat_same)
     nvcv::Tensor imgOut(1, {640, 480}, nvcv::FMT_RGBA8);
     nvcv::Tensor imgIn(1, {640, 480}, nvcv::FMT_RGBA8);
 
-    const auto *inData  = dynamic_cast<const ITensorDataPitchDevice *>(imgIn.exportData());
-    const auto *outData = dynamic_cast<const ITensorDataPitchDevice *>(imgOut.exportData());
+    const auto *inData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgIn.exportData());
+    const auto *outData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgOut.exportData());
 
     EXPECT_NE(nullptr, inData);
     EXPECT_NE(nullptr, outData);
@@ -110,7 +112,7 @@ TEST(OpReformat, wip_OpReformat_same)
     EXPECT_EQ(cudaSuccess, cudaMemcpy(inData->mem(), gold.data(), gold.size(), cudaMemcpyHostToDevice));
 
     // run operator
-    nv::cv_op::Reformat reformatOp;
+    nv::cvop::Reformat reformatOp;
 
     EXPECT_NO_THROW(reformatOp(stream, imgIn, imgOut));
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));

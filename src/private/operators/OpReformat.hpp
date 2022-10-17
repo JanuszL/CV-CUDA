@@ -35,21 +35,21 @@
 #include <memory>
 
 // Use the public nvcv API
-namespace nv::cv::op::priv {
+namespace nv::cvop::priv {
 
 class Reformat final : public IOperator
 {
 public:
     explicit Reformat();
 
-    void operator()(cudaStream_t stream, const ITensor &in, const ITensor &out) const;
+    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out) const;
 
     cv::priv::Version doGetVersion() const override;
 
 private:
-    std::unique_ptr<legacy::cuda_op::Reformat> m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::Reformat> m_legacyOp;
 };
 
-} // namespace nv::cv::op::priv
+} // namespace nv::cvop::priv
 
 #endif // NVCV_OP_PRIV_REFORMAT_HPP

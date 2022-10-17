@@ -20,7 +20,7 @@
 #include <util/Assert.h>
 
 namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cv::op::priv;
+namespace priv_op = nv::cvop::priv;
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvOperatorDestroy, (NVCVOperatorHandle handle))
 {

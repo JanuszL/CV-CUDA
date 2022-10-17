@@ -20,7 +20,7 @@
 #include <util/Assert.h>
 
 namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cv::op::priv;
+namespace priv_op = nv::cvop::priv;
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopReformatCreate, (NVCVOperatorHandle * handle))
 {
@@ -42,7 +42,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopReformatSubmit,
     return priv::ProtectCall(
         [&]
         {
-            TensorWrapHandle input(in), output(out);
+            nv::cv::TensorWrapHandle input(in), output(out);
             priv::ToDynamicRef<priv_op::Reformat>(handle)(stream, input, output);
         });
 }

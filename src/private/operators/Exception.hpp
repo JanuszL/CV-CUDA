@@ -11,29 +11,15 @@
  * its affiliates is strictly prohibited.
  */
 
-/**
- * @file IOperator.hpp
- *
- * @brief Defines the public C++ interface to operator interfaces.
- */
+#ifndef NVCV_OP_PRIV_EXCEPTION_HPP
+#define NVCV_OP_PRIV_EXCEPTION_HPP
 
-#ifndef NVCV_OP_IOPERATOR_HPP
-#define NVCV_OP_IOPERATOR_HPP
+#include <util/Exception.hpp>
 
-#include "Operator.h"
+namespace nv::cvop::priv {
 
-namespace nv { namespace cvop {
+using cv::util::Exception;
 
-class IOperator
-{
-public:
-    virtual ~IOperator() = default;
+}
 
-    virtual NVCVOperatorHandle handle() const noexcept = 0;
-
-private:
-};
-
-}} // namespace nv::cvop
-
-#endif // NVCV_OP_IOPERATOR_HPP
+#endif // NVCVOP_PRIV_EXCEPTION_HPP

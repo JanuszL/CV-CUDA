@@ -30,9 +30,7 @@
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 
-using namespace nv::cv;
-
-namespace nv { namespace cv_op {
+namespace nv { namespace cvop {
 
 class Reformat final : public IOperator
 {
@@ -41,7 +39,7 @@ public:
 
     ~Reformat();
 
-    void operator()(cudaStream_t stream, ITensor &in, ITensor &out);
+    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -51,7 +49,7 @@ private:
 
 inline Reformat::Reformat()
 {
-    detail::CheckThrow(nvcvopReformatCreate(&m_handle));
+    cv::detail::CheckThrow(nvcvopReformatCreate(&m_handle));
     assert(m_handle);
 }
 
@@ -61,9 +59,9 @@ inline Reformat::~Reformat()
     m_handle = nullptr;
 }
 
-inline void Reformat::operator()(cudaStream_t stream, ITensor &in, ITensor &out)
+inline void Reformat::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out)
 {
-    detail::CheckThrow(nvcvopReformatSubmit(m_handle, stream, in.handle(), out.handle()));
+    cv::detail::CheckThrow(nvcvopReformatSubmit(m_handle, stream, in.handle(), out.handle()));
 }
 
 inline NVCVOperatorHandle Reformat::handle() const noexcept
@@ -71,6 +69,6 @@ inline NVCVOperatorHandle Reformat::handle() const noexcept
     return m_handle;
 }
 
-}} // namespace nv::cv_op
+}} // namespace nv::cvop
 
 #endif // NVCV_OP_REFORMAT_HPP

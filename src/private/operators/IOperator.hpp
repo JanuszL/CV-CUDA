@@ -24,12 +24,12 @@
 #include <operators/IOperator.hpp>
 #include <private/core/ICoreObject.hpp>
 
-namespace nv::cv::op::priv {
+namespace nv::cvop::priv {
 
 class IOperator : public nv::cv::priv::ICoreObjectHandle<IOperator, NVCVOperatorHandle>
 {
 };
 
-} // namespace nv::cv::op::priv
+} // namespace nv::cvop::priv
 
 #endif // NVCV_OP_PRIV_IOPERATOR_HPP

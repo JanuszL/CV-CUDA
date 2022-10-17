@@ -14,7 +14,7 @@
 /**
  * @file Operator.h
  *
- * @brief Defines types and functions to handle color specs.
+ * @brief Defines types and functions to handle operators
  */
 
 #ifndef NVCV_OP_OPERATOR_H
