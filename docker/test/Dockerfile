@@ -46,3 +46,10 @@ RUN set -e \
            python$ver -m pip install numba; \
        done \
     && rm -rf /root/.cache/pip
+
+# and torch
+RUN set -e \
+    && for ver in 3.7 3.8 3.9 3.10; do \
+           python$ver -m pip install torch; \
+       done \
+    && rm -rf /root/.cache/pip

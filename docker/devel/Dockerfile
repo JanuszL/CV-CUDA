@@ -47,4 +47,7 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get update \
 RUN python3 -m pip install numba \
     && rm -rf /root/.cache/pip
 
+RUN python3 -m pip install torch \
+    && rm -rf /root/.cache/pip
+
 WORKDIR /cvcuda
