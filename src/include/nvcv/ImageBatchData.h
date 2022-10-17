@@ -31,6 +31,34 @@ typedef struct NVCVImageBatchVarShapeBufferPitchRec
     NVCVImagePlanePitch *imgPlanes;
 } NVCVImageBatchVarShapeBufferPitch;
 
+/** Stores the tensor plane contents. */
+typedef struct NVCVImageBatchTensorBufferPitchRec
+{
+    /** Number of images in the batch.
+     *  + Must be >= 1. */
+    int32_t numImages;
+
+    /** Distance in bytes from beginning of first plane of one image to the
+     *  first plane of the next image.
+     *  + Must be >= 1. */
+    int64_t imgPitchBytes;
+
+    /** Distance in bytes from beginning of one row to the next.
+     *  + Must be >= 1. */
+    int32_t rowPitchBytes;
+
+    /** Dimensions of each image.
+     * + Must be >= 1x1 */
+    int32_t imgWidth, imgHeight;
+
+    /** Buffer of all image planes in pitch-linear layout.
+     *  It assumes all planes have same dimension specified by imgWidth/imgHeight,
+     *  and that all planes have the same row pitch.
+     *  + Only the first N elements must have valid data, where N is the number of planes
+     *    defined by @ref NVCVImageBatchData::format. */
+    void *planeBuffer[NVCV_MAX_PLANE_COUNT];
+} NVCVImageBatchTensorBufferPitch;
+
 /** Represents how the image buffer data is stored. */
 typedef enum
 {

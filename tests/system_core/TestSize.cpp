@@ -62,17 +62,14 @@ class Size2DLessThanTests : public gt::TestWithParam<std::tuple<nvcv::Size2D, nv
 
 // clang-format off
 INSTANTIATE_TEST_SUITE_P(Positive, Size2DLessThanTests,
-                         gt::Values(std::make_tuple(nvcv::Size2D{2,4}, nvcv::Size2D{2,6}, true),
-                                    std::make_tuple(nvcv::Size2D{3,3}, nvcv::Size2D{2,6}, true),
-                                    std::make_tuple(nvcv::Size2D{3,4}, nvcv::Size2D{3,6}, true),
-                                    std::make_tuple(nvcv::Size2D{3,4}, nvcv::Size2D{2,7}, true)));
+                         gt::Values(std::make_tuple(nvcv::Size2D{1,4}, nvcv::Size2D{2,4}, true),
+                                    std::make_tuple(nvcv::Size2D{2,4}, nvcv::Size2D{2,6}, true),
+                                    std::make_tuple(nvcv::Size2D{-2,-5}, nvcv::Size2D{-1,10}, true)));
 
 INSTANTIATE_TEST_SUITE_P(Negative, Size2DLessThanTests,
-                         gt::Values(std::make_tuple(nvcv::Size2D{3,4}, nvcv::Size2D{2,6}, false), // same area
-                                    std::make_tuple(nvcv::Size2D{4,4}, nvcv::Size2D{2,6}, false),
-                                    std::make_tuple(nvcv::Size2D{3,5}, nvcv::Size2D{2,6}, false),
-                                    std::make_tuple(nvcv::Size2D{3,4}, nvcv::Size2D{1,6}, false),
-                                    std::make_tuple(nvcv::Size2D{3,4}, nvcv::Size2D{2,5}, false)));
+                         gt::Values(std::make_tuple(nvcv::Size2D{2,4}, nvcv::Size2D{2,4}, false),
+                                    std::make_tuple(nvcv::Size2D{2,4}, nvcv::Size2D{2,3}, false),
+                                    std::make_tuple(nvcv::Size2D{-2,-5}, nvcv::Size2D{-3,-1}, false)));
 
 // clang-format on
 

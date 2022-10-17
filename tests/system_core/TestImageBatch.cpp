@@ -13,6 +13,7 @@
 
 #include "Definitions.hpp"
 
+#include <common/ValueTests.hpp>
 #include <nvcv/ImageBatch.hpp>
 
 #include <list>
@@ -20,6 +21,7 @@
 
 namespace nvcv = nv::cv;
 namespace t    = ::testing;
+namespace test = nv::cv::test;
 
 static bool operator==(const NVCVImagePlanePitch &a, const NVCVImagePlanePitch &b)
 {

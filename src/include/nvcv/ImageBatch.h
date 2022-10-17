@@ -39,6 +39,10 @@ typedef enum
 {
     /** Batch of 2D images of different dimensions. */
     NVCV_TYPE_IMAGEBATCH_VARSHAPE,
+    /** Batch of 2D images that have the same dimensions. */
+    NVCV_TYPE_IMAGEBATCH_TENSOR,
+    /** Image batch that wraps an user-allocated tensor buffer. */
+    NVCV_TYPE_IMAGEBATCH_TENSOR_WRAPDATA,
 } NVCVTypeImageBatch;
 
 /** Storage for image batch instance. */
@@ -49,6 +53,9 @@ typedef struct NVCVImageBatchStorageRec
 } NVCVImageBatchStorage;
 
 typedef struct NVCVImageBatch *NVCVImageBatchHandle;
+
+/** Image batch data cleanup function type */
+typedef void (*NVCVImageBatchDataCleanupFunc)(void *ctx, const NVCVImageBatchData *data);
 
 /** Stores the requirements of an varshape image batch. */
 typedef struct NVCVImageBatchVarShapeRequirementsRec
@@ -103,6 +110,9 @@ NVCV_PUBLIC NVCVStatus nvcvImageBatchVarShapeConstruct(const NVCVImageBatchVarSh
                                                        NVCVImageBatchHandle *handle);
 
 /** Destroys an existing image batch instance.
+ *
+ * If the image has type @ref NVCV_TYPE_IMAGEBATCH_TENSOR_WRAPDATA and has a cleanup function defined,
+ * cleanup will be called.
  *
  * @note The image batch object must not be in use in current and future operations.
  *

@@ -12,13 +12,13 @@
  */
 
 /**
- * @file Size.hpp
+ * @file Dims.hpp
  *
- * @brief Declaration of NVCV C++ Size class and its operators.
+ * @brief Declaration of NVCV C++ Dims class and its operators.
  */
 
-#ifndef NVCV_SIZE_HPP
-#define NVCV_SIZE_HPP
+#ifndef NVCV_DIMS_HPP
+#define NVCV_DIMS_HPP
 
 #include <cassert>
 #include <iostream>
@@ -26,38 +26,31 @@
 
 namespace nv { namespace cv {
 
-/**
- * @defgroup NVCV_CPP_CORE_SIZE Size Operator
- * @{
-*/
-
-struct Size2D
+struct DimsNCHW
 {
-    int w, h;
+    int n, c, h, w;
 };
 
-inline bool operator==(const Size2D &a, const Size2D &b)
+inline bool operator==(const DimsNCHW &a, const DimsNCHW &b)
 {
-    return std::tie(a.w, a.h) == std::tie(b.w, b.h);
+    return a.n == b.n && a.c == b.c && a.h == b.h && a.w == b.w;
 }
 
-inline bool operator!=(const Size2D &a, const Size2D &b)
+inline bool operator!=(const DimsNCHW &a, const DimsNCHW &b)
 {
     return !(a == b);
 }
 
-inline bool operator<(const Size2D &a, const Size2D &b)
+inline bool operator<(const DimsNCHW &a, const DimsNCHW &b)
 {
-    return std::tie(a.w, a.h) < std::tie(b.w, b.h);
+    return std::tie(a.n, a.c, a.h, a.w) < std::tie(b.n, b.c, b.h, b.w);
 }
 
-inline std::ostream &operator<<(std::ostream &out, const Size2D &size)
+inline std::ostream &operator<<(std::ostream &out, const DimsNCHW &dims)
 {
-    return out << size.w << "x" << size.h;
+    return out << "NCHW{" << dims.n << ',' << dims.c << ',' << dims.h << ',' << dims.w << '}';
 }
-
-/**@}*/
 
 }} // namespace nv::cv
 
-#endif // NVCV_SIZE_HPP
+#endif // NVCV_NCHW_HPP

@@ -24,6 +24,8 @@ add_executable(nvcv_test_system_core
     TestRequirements.cpp
     TestImage.cpp
     TestImageBatch.cpp
+    TestDims.cpp
+    TestTensor.cpp
 )
 
 target_link_libraries(nvcv_test_system_core

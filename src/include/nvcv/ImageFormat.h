@@ -258,6 +258,18 @@ typedef uint64_t NVCVImageFormat;
 /** Single plane with interleaved BGRA 8-bit channel. */
 #define NVCV_IMAGE_FORMAT_BGRA8 NVCV_DETAIL_MAKE_COLOR_FMT1(RGB, UNDEFINED, PL, UNSIGNED, ZYXW, X8_Y8_Z8_W8)
 
+/** Planar RGB unsigned 8-bit per channel. */
+#define NVCV_IMAGE_FORMAT_RGB8p NVCV_DETAIL_MAKE_COLOR_FMT3(RGB, UNDEFINED, PL, UNSIGNED, XYZ0, X8, X8, X8)
+
+/** Planar BGR unsigned 8-bit per channel. */
+#define NVCV_IMAGE_FORMAT_BGR8p NVCV_DETAIL_MAKE_COLOR_FMT3(RGB, UNDEFINED, PL, UNSIGNED, ZYX1, X8, X8, X8)
+
+/** Planar RGBA unsigned 8-bit per channel. */
+#define NVCV_IMAGE_FORMAT_RGBA8p NVCV_DETAIL_MAKE_COLOR_FMT4(RGB, UNDEFINED, PL, UNSIGNED, XYZW, X8, X8, X8, X8)
+
+/** Planar BGRA unsigned 8-bit per channel. */
+#define NVCV_IMAGE_FORMAT_BGRA8p NVCV_DETAIL_MAKE_COLOR_FMT4(RGB, UNDEFINED, PL, UNSIGNED, ZYXW, X8, X8, X8, X8)
+
 /** Creates a user-defined YCbCr color image format constant.
  *
  * Example to create a YUV422R ITU-R BT.709 full-range with SMPTE240M transfer function, block-linear format.
