@@ -17,6 +17,7 @@
 #include <private/legacy/CvCudaLegacy.h>
 
 #include <iostream>
+
 using namespace std;
 
 namespace nv::cv::legacy::helpers {
@@ -37,7 +38,7 @@ cuda_op::DataFormat GetLegacyDataFormat(int32_t numberChannels, int32_t numberPl
                           numberPlanes, numberInBatch);
 }
 
-static cuda_op::DataType getLegacyCvFloatType(int32_t bpc)
+static cuda_op::DataType GetLegacyCvFloatType(int32_t bpc)
 {
     if (bpc == 64)
         return cuda_op::DataType::kCV_64F;
@@ -49,7 +50,7 @@ static cuda_op::DataType getLegacyCvFloatType(int32_t bpc)
     throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Invalid bpc(%d) for float cuda op type ", bpc);
 }
 
-static cuda_op::DataType getLegacyCvSignedType(int32_t bpc)
+static cuda_op::DataType GetLegacyCvSignedType(int32_t bpc)
 {
     if (bpc == 8)
         return cuda_op::DataType::kCV_8S;
@@ -61,7 +62,7 @@ static cuda_op::DataType getLegacyCvSignedType(int32_t bpc)
     throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Invalid bpc(%d) for signed cuda op type ", bpc);
 }
 
-static cuda_op::DataType getLegacyCvUnsignedType(int32_t bpc)
+static cuda_op::DataType GetLegacyCvUnsignedType(int32_t bpc)
 {
     if (bpc == 8)
         return cuda_op::DataType::kCV_8U;
@@ -77,17 +78,17 @@ cuda_op::DataType GetLegacyDataType(int32_t bpc, cv::DataType type)
     {
     case cv::DataType::FLOAT:
     {
-        return getLegacyCvFloatType(bpc);
+        return GetLegacyCvFloatType(bpc);
     }
 
     case cv::DataType::SIGNED:
     {
-        return getLegacyCvSignedType(bpc);
+        return GetLegacyCvSignedType(bpc);
     }
 
     case cv::DataType::UNSIGNED:
     {
-        return getLegacyCvUnsignedType(bpc);
+        return GetLegacyCvUnsignedType(bpc);
     }
     }
     throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Only planar formats supported ");
