@@ -24,7 +24,4 @@
 
 namespace nvcv = nv::cv;
 
-TEST(OpNormalize, OpNormalize_sanity)
-{
-   
-}
+TEST(OpNormalize, OpNormalize_sanity) {}

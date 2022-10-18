@@ -30,9 +30,7 @@
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 
-using namespace nv::cv;
-
-namespace nv { namespace cv_op {
+namespace nv { namespace cvop {
 
 class Normalize final : public IOperator
 {
@@ -41,8 +39,8 @@ public:
 
     ~Normalize();
 
-    void operator()(cudaStream_t stream, ITensor &in, ITensor &out, bool scale_is_stddev, float global_scale,
-                     float shift, float epsilon);
+    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, bool scale_is_stddev, float global_scale,
+                    float shift, float epsilon);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -52,7 +50,7 @@ private:
 
 inline Normalize::Normalize()
 {
-    detail::CheckThrow(nvcvopNormalizeCreate(&m_handle));
+    cv::detail::CheckThrow(nvcvopNormalizeCreate(&m_handle));
     assert(m_handle);
 }
 
@@ -62,11 +60,11 @@ inline Normalize::~Normalize()
     m_handle = nullptr;
 }
 
-inline void Normalize::operator()(cudaStream_t stream, ITensor &in, ITensor &out,  bool scale_is_stddev, float global_scale,
-                     float shift, float epsilon)
+inline void Normalize::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, bool scale_is_stddev,
+                                  float global_scale, float shift, float epsilon)
 {
-    detail::CheckThrow(nvcvopNormalizeSubmit(m_handle, stream, in.handle(), out.handle(),  scale_is_stddev, global_scale,
-                      shift,  epsilon));
+    cv::detail::CheckThrow(nvcvopNormalizeSubmit(m_handle, stream, in.handle(), out.handle(), scale_is_stddev,
+                                                 global_scale, shift, epsilon));
 }
 
 inline NVCVOperatorHandle Normalize::handle() const noexcept
@@ -74,6 +72,6 @@ inline NVCVOperatorHandle Normalize::handle() const noexcept
     return m_handle;
 }
 
-}} // namespace nv::cv_op
+}} // namespace nv::cvop
 
 #endif // NVCV_OP_NORMALIZE_HPP

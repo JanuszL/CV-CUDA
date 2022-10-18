@@ -55,20 +55,21 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopNormalizeCreate(NVCVOperatorHandle *handle);
  * @param [in] in intput tensor.
  *
  * @param [out] out output tensor.
- * 
+ *
  * @param [in] scale_is_stddev
  *
  * @param [in] global_scale
- * 
+ *
  * @param [in] shift
- * 
+ *
  * @param [in] epsilon
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
  * @retval #NVCV_ERROR_INTERNAL         Internal error in the operator, invalid types passed in.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_OP_PUBLIC NVCVStatus nvcvopNormalizeSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                                                const bool scale_is_stddev, const float global_scale,  const float shift, const float epsilon);
+NVCV_OP_PUBLIC NVCVStatus nvcvopNormalizeSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
+                                                NVCVTensorHandle out, const bool scale_is_stddev,
+                                                const float global_scale, const float shift, const float epsilon);
 
 #ifdef __cplusplus
 }

@@ -13,11 +13,12 @@
 
 #include "OpNormalize.hpp"
 
+#include "Exception.hpp"
+
 #include <private/legacy/CvCudaLegacy.h>
 #include <private/legacy/CvCudaLegacyHelpers.hpp>
-#include <util/Exception.hpp>
 
-namespace nv::cv::op::priv {
+namespace nv::cvop::priv {
 
 namespace leg = cv::legacy;
 
@@ -28,28 +29,28 @@ Normalize::Normalize()
     //m_legacyOp = std::make_unique<leg::cuda_op::Normalize>(maxIn, maxOut);
 }
 
-void Normalize::operator()(cudaStream_t stream, const ITensor &in, const ITensor &out, 
-                           bool scale_is_stddev, float global_scale, float shift, float epsilon) const
+void Normalize::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, bool scale_is_stddev,
+                           float global_scale, float shift, float epsilon) const
 {
-    auto *inData = dynamic_cast<const ITensorDataPitchDevice *>(in.exportData());
+    auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
     if (inData == nullptr)
     {
-        throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be device-acessible, pitch-linear tensor");
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be device-acessible, pitch-linear tensor");
     }
 
-    auto *outData = dynamic_cast<const ITensorDataPitchDevice *>(out.exportData());
+    auto *outData = dynamic_cast<const cv::ITensorDataPitchDevice *>(out.exportData());
     if (outData == nullptr)
     {
-        throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be device-acessible, pitch-linear tensor");
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be device-acessible, pitch-linear tensor");
     }
 
     //leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, stream));
 }
 
-nv::cv::priv::Version Normalize::doGetVersion() const
+cv::priv::Version Normalize::doGetVersion() const
 {
     //todo need to have a version decoupled from NVCV
-    return nv::cv::priv::CURRENT_VERSION;
+    return cv::priv::CURRENT_VERSION;
 }
 
-} // namespace nv::cv::op::priv
+} // namespace nv::cvop::priv

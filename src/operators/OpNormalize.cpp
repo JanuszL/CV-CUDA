@@ -20,7 +20,7 @@
 #include <util/Assert.h>
 
 namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cv::op::priv;
+namespace priv_op = nv::cvop::priv;
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopNormalizeCreate, (NVCVOperatorHandle * handle))
 {
@@ -38,12 +38,13 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopNormalizeCreate, (NVCVOperatorHandle * h
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopNormalizeSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                const bool scale_is_stddev, const float global_scale,  const float shift, const float epsilon))
+                 const bool scale_is_stddev, const float global_scale, const float shift, const float epsilon))
 {
     return priv::ProtectCall(
         [&]
         {
-            TensorWrapHandle input(in), output(out);
-            priv::ToDynamicRef<priv_op::Normalize>(handle)(stream, input, output, scale_is_stddev,  global_scale, shift, epsilon);
+            nv::cv::TensorWrapHandle input(in), output(out);
+            priv::ToDynamicRef<priv_op::Normalize>(handle)(stream, input, output, scale_is_stddev, global_scale, shift,
+                                                           epsilon);
         });
 }
