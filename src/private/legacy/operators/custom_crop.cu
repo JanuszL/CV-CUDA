@@ -24,7 +24,7 @@
 
 #include <cstdio>
 
-using namespace cuda_op;
+using namespace nv::cv::legacy::cuda_op;
 
 template<typename Ptr2D>
 __global__ void custom_crop_kernel(const Ptr2D src, Ptr2D dst, int start_x, int start_y)
@@ -52,7 +52,7 @@ void customCrop(const void *input, void *output, int start_x, int start_y, DataS
     checkKernelErrors();
 }
 
-namespace cuda_op {
+namespace nv::cv::legacy::cuda_op {
 
 size_t CustomCrop::calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type)
 {
@@ -111,4 +111,4 @@ int CustomCrop::infer(const void *const *inputs, void **outputs, void *workspace
     return 0;
 }
 
-} // namespace cuda_op
+} // namespace nv::cv::legacy::cuda_op
