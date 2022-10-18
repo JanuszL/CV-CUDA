@@ -21,6 +21,7 @@
 #ifndef CV_CUDA_UTILS_CUH
 #define CV_CUDA_UTILS_CUH
 
+#include <nvcv/IImageBatchData.hpp>
 #include <nvcv/IImageData.hpp>        // for IImageDataDevicePitch, etc.
 #include <nvcv/ITensorData.hpp>       // for ITensorDataPitchDevice, etc.
 #include <nvcv/cuda/MathOps.hpp>      // for math operators
@@ -349,6 +350,91 @@ struct Ptr2dNHWC
     int imgPitchBytes;
     int rowPitchBytes;
     T  *data;
+};
+
+template<typename T>
+struct Ptr2dVarShapeNHWC
+{
+    typedef T value_type;
+
+    __host__ __device__ __forceinline__ Ptr2dVarShapeNHWC()
+        : batches(0)
+        , imgList(NULL)
+        , nch(0)
+    {
+    }
+
+    __host__ __forceinline__ Ptr2dVarShapeNHWC(const cv::IImageBatchVarShapeDataDevicePitch &data)
+        : batches(data.numImages())
+        , imgList(data.imgPlanes())
+        , nch(data.format().numChannels())
+    {
+        assert(1 == data.format().numPlanes() && "This class is only for NHWC");
+    }
+
+    // ptr for uchar1/3/4, ushort1/3/4, float1/3/4, typename T -> uchar3 etc.
+    // each fetch operation get a x-channel elements
+    __host__ __device__ __forceinline__ T *ptr(int b, int y, int x)
+    {
+        return reinterpret_cast<T *>(reinterpret_cast<uint8_t *>(imgList[b].buffer) + imgList[b].pitchBytes * y) + x;
+    }
+
+    const __host__ __device__ __forceinline__ T *ptr(int b, int y, int x) const
+    {
+        return reinterpret_cast<const T *>(reinterpret_cast<const uint8_t *>(imgList[b].buffer)
+                                           + imgList[b].pitchBytes * y)
+             + x;
+    }
+
+    // ptr for uchar, ushort, float, typename T -> uchar etc.
+    // each fetch operation get a single channel element
+    __host__ __device__ __forceinline__ T *ptr(int b, int y, int x, int c)
+    {
+        return reinterpret_cast<T *>(reinterpret_cast<uint8_t *>(imgList[b].buffer) + imgList[b].pitchBytes * y)
+             + (x * nch + c);
+    }
+
+    const __host__ __device__ __forceinline__ T *ptr(int b, int y, int x, int c) const
+    {
+        return reinterpret_cast<const T *>(reinterpret_cast<const uint8_t *>(imgList[b].buffer)
+                                           + imgList[b].pitchBytes * y)
+             + (x * nch + c);
+    }
+
+    // Commented out, "offset" doesn't take into account row pitch, but this info is needed.
+    // If this function is actually needed, the kernel that calls it has to take into account
+    // the pitch info. Use "at_pitchBytes" to get it.
+#if 0
+    // ptr for direct offset, less duplicated computation for higher performance
+    __host__ __device__ __forceinline__ T *ptr(int b, int offset)
+    {
+        return (T *)(data[b] + offset);
+    }
+    __host__ __device__ __forceinline__ const T *ptr(int b, int offset) const
+    {
+        return (const T *)(data[b] + offset);
+    }
+#endif
+
+    __host__ __device__ __forceinline__ int at_pitchBytes(int b) const
+    {
+        return imgList[b].pitchBytes;
+    }
+
+    __host__ __device__ __forceinline__ int at_rows(int b) const
+    {
+        return imgList[b].height;
+    }
+
+    __host__ __device__ __forceinline__ int at_cols(int b) const
+    {
+        return imgList[b].width;
+    }
+
+    const int                  batches;
+    // Assuming each image has only one plane, as per class name.
+    const NVCVImagePlanePitch *imgList;
+    const int                  nch;
 };
 
 template<typename D>

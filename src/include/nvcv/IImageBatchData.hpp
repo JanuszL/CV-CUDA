@@ -49,25 +49,25 @@ private:
 };
 
 // Implementation - IImageBatchData
-ImageFormat IImageBatchData::format() const
+inline ImageFormat IImageBatchData::format() const
 {
     return doGetFormat();
 }
 
-const NVCVImageBatchData &IImageBatchData::cdata() const
+inline const NVCVImageBatchData &IImageBatchData::cdata() const
 {
     return doGetCData();
 }
 
 // Implementation - IImageBatchVarShapeDataDevicePitch
-int32_t IImageBatchVarShapeDataDevicePitch::numImages() const
+inline int32_t IImageBatchVarShapeDataDevicePitch::numImages() const
 {
     int32_t size = doGetNumImages();
     assert(size >= 0 && "Post-condition failed");
     return size;
 }
 
-const ImagePlanePitch *IImageBatchVarShapeDataDevicePitch::imgPlanes() const
+inline const ImagePlanePitch *IImageBatchVarShapeDataDevicePitch::imgPlanes() const
 {
     return doGetImagePlanes();
 }
