@@ -3,6 +3,7 @@
 ## Description
 
 CV-CUDA is a library of CUDA-accelerated computer vision and image processing algorithms.
+CV-CUDA originated as a collaborative effort between NVIDIA and Bytedance.
 
 ## Badges
 TBD
@@ -122,4 +123,4 @@ to successfully build CV-CUDA.
 
 ## License
 
-Currently CV-CUDA is for internal use only, within NVIDIA.
+Nvidia Software Evaluation License

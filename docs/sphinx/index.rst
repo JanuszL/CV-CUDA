@@ -60,3 +60,10 @@ Read on to learn more about how to use and benefit from CV-CUDA.
     :hidden:
 
     Performance Benchmark <perf_benchmark>
+
+.. toctree::
+    :caption: Release Notes
+    :maxdepth: 1
+    :hidden:
+
+    PreAlpha <relnotes/prealpha>
