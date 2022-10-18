@@ -13,6 +13,7 @@
 
 #include "Cache.hpp"
 #include "Container.hpp"
+#include "CudaBuffer.hpp"
 #include "ImageFormat.hpp"
 #include "PixelType.hpp"
 #include "Resource.hpp"
@@ -42,6 +43,7 @@ PYBIND11_MODULE(nvcv, m)
     {
         py::module_ cuda = m.def_submodule("cuda");
         Stream::Export(cuda);
+        CudaBuffer::Export(cuda);
     }
 
     ExportImageFormat(m);

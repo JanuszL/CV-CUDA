@@ -37,4 +37,48 @@ std::string GetFullyQualifiedName(py::handle h)
     ss << type.attr("__module__").cast<std::string>() << '.' << type.attr("__qualname__").cast<std::string>();
     return ss.str();
 }
+
+static std::string ProcessBufferInfoFormat(const std::string &fmt)
+{
+    // pybind11 (as of v2.6.2) doesn't recognize formats 'l' and 'L',
+    // which according to https://docs.python.org/3/library/struct.html#format-characters
+    // are equal to 'i' and 'I', respectively.
+    if (fmt == "l")
+    {
+        return "i";
+    }
+    else if (fmt == "L")
+    {
+        return "I";
+    }
+    else
+    {
+        return fmt;
+    }
+}
+
+py::dtype ToDType(const py::buffer_info &info)
+{
+    std::string fmt = ProcessBufferInfoFormat(info.format);
+
+    PyObject *ptr = nullptr;
+    if ((py::detail::npy_api::get().PyArray_DescrConverter_(py::str(fmt).ptr(), &ptr) == 0) || !ptr)
+    {
+        PyErr_Clear();
+        return py::dtype(info);
+    }
+    else
+    {
+        return py::dtype(fmt);
+    }
+}
+
+py::dtype ToDType(const std::string &fmt)
+{
+    py::buffer_info buf;
+    buf.format = ProcessBufferInfoFormat(fmt);
+
+    return ToDType(buf);
+}
+
 } // namespace nv::cvpy
