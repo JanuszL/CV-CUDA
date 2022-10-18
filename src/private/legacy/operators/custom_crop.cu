@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+/* Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
@@ -21,8 +21,6 @@
 #include "../CvCudaLegacy.h"
 
 #include "../CvCudaUtils.cuh"
-
-#include <cstdio>
 
 using namespace nv::cv::legacy::cuda_op;
 
@@ -69,13 +67,13 @@ int CustomCrop::infer(const void *const *inputs, void **outputs, void *workspace
 
     if (!(format == kNHWC || format == kHWC))
     {
-        printf("Invliad DataFormat %d\n", format);
+        LOG_ERROR("Invalid DataFormat " << format);
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
     if (channels > 4)
     {
-        printf("Invalid channel number %d\n", channels);
+        LOG_ERROR("Invalid channel number " << channels);
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
@@ -87,7 +85,7 @@ int CustomCrop::infer(const void *const *inputs, void **outputs, void *workspace
 #ifdef CUDA_DEBUG_LOG
     printf("x %d, y %d, w %d, h %d\n", roi.x, roi.y, roi.width, roi.height);
 #endif
-    cuda_op::DataShape output_shape(batch, channels, roi.height, roi.width);
+    DataShape output_shape(batch, channels, roi.height, roi.width);
 
     if (start_x < 0 || start_y < 0 || end_x >= cols || end_y >= rows)
     {

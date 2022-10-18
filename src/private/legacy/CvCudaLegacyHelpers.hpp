@@ -12,7 +12,7 @@
  */
 
 /**
- * @file CvCuda:egacyHelpers.hpp
+ * @file CvCudaLegacyHelpers.hpp
  *
  * @brief Defines util functions for conversion between nvcv and legacy cv cuda
  */
@@ -22,10 +22,7 @@
 
 #include "CvCudaLegacy.h"
 
-#include "CvCudaUtils.cuh"
-
 #include <nvcv/IImage.hpp>
-#include <private/core/Exception.hpp>
 #include <private/fmt/ImageFormat.hpp>
 
 namespace nv::cv::legacy::helpers {
@@ -39,16 +36,8 @@ cuda_op::DataFormat GetLegacyDataFormat(priv::ImageFormat fmt, int32_t numberInB
 
 cuda_op::DataType   GetLegacyDataType(ImageFormat fmt);
 cuda_op::DataFormat GetLegacyDataFormat(ImageFormat fmt, int32_t numberInBatch);
-cuda_op::DataFormat GetLegacyDataFormat(TensorLayout layout);
 
-template<typename data_type>
-inline void PopulatePlaneArrayFromPitch(legacy::cuda_op::PlaneArray<data_type> &planes, const NVCVImageData &imageData)
-{
-    for (uint32_t i = 0; i < imageData.buffer.pitch.numPlanes; ++i)
-    {
-        planes.planes[i] = (data_type *)imageData.buffer.pitch.planes[i].buffer;
-    }
-};
+cuda_op::DataFormat GetLegacyDataFormat(TensorLayout layout);
 
 inline void CheckOpErrThrow(cuda_op::ErrorCode status)
 {

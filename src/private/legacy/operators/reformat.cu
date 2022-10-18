@@ -27,7 +27,6 @@
 #include <nvcv/IImageData.hpp>
 
 #include <cassert>
-#include <cstdio>
 
 using namespace nv::cv::legacy::cuda_op;
 using namespace nv::cv::legacy::helpers;
@@ -96,7 +95,7 @@ namespace nv::cv::legacy::cuda_op {
 
 void Reformat::checkDataFormat(DataFormat format)
 {
-    assert(format == kNHWC || format == kHWC || format == kNCHW || format == kCHW);
+    NVCV_ASSERT(format == kNHWC || format == kHWC || format == kNCHW || format == kCHW);
 }
 
 size_t Reformat::calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type)
@@ -134,7 +133,7 @@ ErrorCode Reformat::infer(const nvcv::ITensorDataPitchDevice &inData, const nvcv
     if (!(data_type == kCV_8U || data_type == kCV_8S || data_type == kCV_16U || data_type == kCV_16S
           || data_type == kCV_32S || data_type == kCV_32F || data_type == kCV_64F))
     {
-        printf("Invalid DataType %d\n", data_type);
+        LOG_ERROR("Invalid DataType " << data_type);
         return ErrorCode::INVALID_DATA_TYPE;
     }
 

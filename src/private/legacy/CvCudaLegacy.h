@@ -17,8 +17,8 @@
  * limitations under the License.
 */
 
-#ifndef CV_CUDA_OP_H_
-#define CV_CUDA_OP_H_
+#ifndef CV_CUDA_LEGACY_H
+#define CV_CUDA_LEGACY_H
 
 #include <cuda_runtime.h>
 #include <nvcv/ITensorData.hpp>
@@ -41,6 +41,17 @@ struct Rect
     int y;      //!< y coordinate of the top-left corner
     int width;  //!< width of the rectangle
     int height; //!< height of the rectangle
+};
+
+struct Size
+{
+    int width, height;
+
+    __host__ __device__ Size(int _width, int _height)
+        : width(_width)
+        , height(_height)
+    {
+    }
 };
 
 enum ErrorCode
@@ -228,4 +239,4 @@ public:
 
 } // namespace nv::cv::legacy::cuda_op
 
-#endif
+#endif // CV_CUDA_LEGACY_H
