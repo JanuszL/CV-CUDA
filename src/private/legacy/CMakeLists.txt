@@ -13,12 +13,14 @@
 add_library(cvcuda_legacy STATIC
     ./operators/custom_crop.cu
     ./operators/reformat.cu
+    ./operators/resize.cu
     CvCudaLegacyHelpers.cpp
 )
 
 target_include_directories(cvcuda_legacy
     PUBLIC
         ../..
+        ../../include
 )
 
 target_link_libraries(cvcuda_legacy

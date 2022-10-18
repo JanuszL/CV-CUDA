@@ -42,12 +42,13 @@ class Resize final : public IOperator
 public:
     explicit Resize();
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out) const;
+    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
+                    const NVCVInterpolationType interpolation) const;
 
     cv::priv::Version doGetVersion() const override;
 
 private:
-    //std::unique_ptr<legacy::cuda_op::Resize> m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::Resize> m_legacyOp;
 };
 
 } // namespace nv::cvop::priv

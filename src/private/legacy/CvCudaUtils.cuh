@@ -46,8 +46,6 @@ typedef signed char   schar;
 
 #define get_batch_idx() (blockIdx.z)
 
-#define IS_DOUBLE_EQUAL_ZERO(d) (abs(d) < 1e-15)
-
 inline int divUp(int a, int b)
 {
     assert(b > 0);
@@ -1040,18 +1038,6 @@ enum BorderTypes
     BORDER_REFLECT101  = BORDER_REFLECT_101,
     BORDER_DEFAULT     = BORDER_REFLECT_101,
     BORDER_ISOLATED    = 16,
-};
-
-enum InterpolationFlags
-{
-    INTER_NEAREST      = 0,
-    INTER_LINEAR       = 1,
-    INTER_CUBIC        = 2,
-    INTER_AREA         = 3,
-    INTER_LANCZOS4     = 4,
-    INTER_MAX          = 7,
-    WARP_FILL_OUTLIERS = 8,
-    WARP_INVERSE_MAP   = 16,
 };
 
 #ifndef checkKernelErrors

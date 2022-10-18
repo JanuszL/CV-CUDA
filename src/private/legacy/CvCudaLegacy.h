@@ -23,19 +23,9 @@
 #include <cuda_runtime.h>
 #include <nvcv/ITensorData.hpp>
 #include <nvcv/Rect.h>
+#include <operators/Types.h>
 
 namespace nv::cv::legacy::cuda_op {
-
-struct Size
-{
-    int width, height;
-
-    __host__ __device__ Size(int _width, int _height)
-        : width(_width)
-        , height(_height)
-    {
-    }
-};
 
 enum ErrorCode
 {
@@ -217,6 +207,36 @@ public:
      */
     size_t    calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
     void      checkDataFormat(DataFormat format);
+};
+
+class Resize : public CudaBaseOp
+{
+public:
+    Resize() = delete;
+
+    Resize(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * @brief Resizes the input images. This class resizes the images down to or up to the specified size.
+     *
+     * @param [in] inData Intput tensor.
+     * @param [out] outData Output tensor.
+     * @param [in] interpolation Interpolation method. See \ref NVCVInterpolationType for more details.
+     * @param [in] stream Stream for the asynchronous execution.
+     *
+     */
+    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+                    const NVCVInterpolationType interpolation, cudaStream_t stream);
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param max_input_shape maximum input DataShape that may be used
+     * @param max_output_shape maximum output DataShape that may be used
+     * @param max_data_type DataType with the maximum size that may be used
+     */
+    size_t    calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
 };
 
 } // namespace nv::cv::legacy::cuda_op

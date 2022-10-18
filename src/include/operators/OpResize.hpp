@@ -39,7 +39,7 @@ public:
 
     ~Resize();
 
-    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out);
+    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const NVCVInterpolationType interpolation);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -59,9 +59,10 @@ inline Resize::~Resize()
     m_handle = nullptr;
 }
 
-inline void Resize::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out)
+inline void Resize::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out,
+                               const NVCVInterpolationType interpolation)
 {
-    cv::detail::CheckThrow(nvcvopResizeSubmit(m_handle, stream, in.handle(), out.handle()));
+    cv::detail::CheckThrow(nvcvopResizeSubmit(m_handle, stream, in.handle(), out.handle(), interpolation));
 }
 
 inline NVCVOperatorHandle Resize::handle() const noexcept

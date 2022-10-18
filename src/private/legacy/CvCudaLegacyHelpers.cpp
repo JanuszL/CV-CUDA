@@ -124,6 +124,11 @@ cuda_op::DataFormat GetLegacyDataFormat(ImageFormat fmt, int32_t numberInBatch)
     return GetLegacyDataFormat(priv::ImageFormat(fmt.cvalue()), numberInBatch);
 }
 
+cuda_op::DataShape GetLegacyDataShape(DimsNCHW dims)
+{
+    return cuda_op::DataShape(dims.n, dims.c, dims.h, dims.w);
+}
+
 cuda_op::DataFormat GetLegacyDataFormat(TensorLayout layout)
 {
     switch (layout)
