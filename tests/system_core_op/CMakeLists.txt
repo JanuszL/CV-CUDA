@@ -14,6 +14,7 @@ set(CMAKE_FOLDER tests)
 # system core -------------------------------------------------
 add_executable(nvcv_test_system_core_op
     TestOpReformat.cpp
+    TestOpResize.cpp
 )
 
 target_link_libraries(nvcv_test_system_core_op

@@ -37,6 +37,7 @@ add_library(nvcv SHARED
     TensorData.cpp
     operators/Operator.cpp
     operators/OpReformat.cpp
+    operators/OpResize.cpp
 )
 
 target_link_libraries(nvcv PRIVATE
