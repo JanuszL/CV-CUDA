@@ -19,16 +19,14 @@
 
 #include "MathWrappersImpl.hpp" // for RoundImpl, etc.
 #include "Metaprogramming.hpp"  // for TypeTraits, etc.
+#include "SaturateCastImpl.hpp" // for BaseSaturateImpl, etc.
 
 namespace nv::cv::cuda::detail {
 
 template<typename T, typename U>
 inline __host__ __device__ T RangeCastImpl(U u)
 {
-    constexpr bool SmallToBig = sizeof(U) <= sizeof(T);
-    constexpr bool BigToSmall = sizeof(U) > sizeof(T);
-
-    if constexpr (std::is_floating_point_v<U> && std::is_floating_point_v<T> && BigToSmall)
+    if constexpr (std::is_floating_point_v<U> && std::is_floating_point_v<T> && sizeof(U) > sizeof(T))
     {
         // any-float -> any-float, big -> small
         return u <= -TypeTraits<T>::max ? -TypeTraits<T>::max
@@ -59,40 +57,16 @@ inline __host__ __device__ T RangeCastImpl(U u)
         constexpr T invmax = T{1} / TypeTraits<U>::max;
         return static_cast<T>(u) * invmax;
     }
-    else if constexpr (std::is_integral_v<
-                           T> && std::is_unsigned_v<T> && std::is_integral_v<U> && std::is_signed_v<U> && SmallToBig)
+    else if constexpr (std::is_integral_v<U> && std::is_integral_v<T>)
     {
-        // any-integral-signed -> any-integral-unsigned, small -> big and equal
-        return u <= 0 ? 0 : static_cast<T>(u);
+        // any-integral -> any-integral, range cast reduces to saturate cast
+        return BaseSaturateCastImpl<T, U>(u);
     }
-    else if constexpr (
-        std::is_integral_v<
-            U> && std::is_integral_v<T> && ((std::is_signed_v<U> && std::is_signed_v<T>) || (std::is_unsigned_v<U> && std::is_unsigned_v<T>))
-        && BigToSmall)
+    else
     {
-        // any-integral-signed -> any-integral-signed, big -> small
-        // any-integral-unsigned -> any-integral-unsigned, big -> small
-        return u <= TypeTraits<T>::min ? TypeTraits<T>::min
-                                       : (u >= TypeTraits<T>::max ? TypeTraits<T>::max : static_cast<T>(u));
+        // any-float -> any-float, small -> big and equal, range cast reduces to none
+        return u;
     }
-    else if constexpr (std::is_integral_v<U> && std::is_unsigned_v<U> && std::is_integral_v<T> && std::is_signed_v<T>)
-    {
-        // any-integral-unsigned -> any-integral-signed
-        return u >= TypeTraits<T>::max ? TypeTraits<T>::max : static_cast<T>(u);
-    }
-    else if constexpr (std::is_integral_v<
-                           U> && std::is_signed_v<U> && std::is_integral_v<T> && std::is_unsigned_v<T> && BigToSmall)
-    {
-        // any-integral-signed -> any-integral-unsigned, big -> small
-        return u <= static_cast<U>(TypeTraits<T>::min)
-                 ? TypeTraits<T>::min
-                 : (u >= static_cast<U>(TypeTraits<T>::max) ? TypeTraits<T>::max : static_cast<T>(u));
-    }
-
-    // any-float -> any-float, small -> big and equal
-    // any-integral-signed -> any-integral-signed, small -> big and equal
-    // any-integral-unsigned -> any-integral-unsigned, small -> big and equal
-    return static_cast<T>(u);
 }
 
 } // namespace nv::cv::cuda::detail
