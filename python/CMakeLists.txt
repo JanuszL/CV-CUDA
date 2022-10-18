@@ -51,6 +51,7 @@ pybind11_add_module(nvcv_python MODULE
     Object.cpp
     Stream.cpp
     Resource.cpp
+    Container.cpp
 )
 
 target_include_directories(nvcv_python

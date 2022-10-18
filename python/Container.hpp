@@ -11,40 +11,31 @@
  * its affiliates is strictly prohibited.
  */
 
+#ifndef NVCV_PYTHON_CONTAINER_HPP
+#define NVCV_PYTHON_CONTAINER_HPP
+
 #include "Cache.hpp"
-#include "Container.hpp"
-#include "ImageFormat.hpp"
-#include "PixelType.hpp"
 #include "Resource.hpp"
-#include "Stream.hpp"
 
-#include <nvcv/Version.h>
-#include <pybind11/pybind11.h>
+#include <memory>
 
+namespace nv::cvpy {
 namespace py = pybind11;
 
-PYBIND11_MODULE(nvcv, m)
+class Container
+    : public Resource
+    , public CacheItem
 {
-    m.doc() = R"pbdoc(
-        NVCV Python API reference
-        ========================
+public:
+    static void Export(py::module &m);
 
-        This is the Python API reference for the NVIDIA® NVCV library.
-    )pbdoc";
+    std::shared_ptr<Container>       shared_from_this();
+    std::shared_ptr<const Container> shared_from_this() const;
 
-    m.attr("__version__") = NVCV_VERSION_STRING;
+protected:
+    Container() = default;
+};
 
-    using namespace nv::cvpy;
+} // namespace nv::cvpy
 
-    Cache::Export(m);
-
-    {
-        py::module_ cuda = m.def_submodule("cuda");
-        Stream::Export(cuda);
-    }
-
-    ExportImageFormat(m);
-    ExportPixelType(m);
-    Resource::Export(m);
-    Container::Export(m);
-}
+#endif // NVCV_PYTHON_CONTAINER_HPP
