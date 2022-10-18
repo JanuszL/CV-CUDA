@@ -50,6 +50,7 @@ pybind11_add_module(nvcv_python MODULE
     PixelType.cpp
     Object.cpp
     Stream.cpp
+    Resource.cpp
 )
 
 target_include_directories(nvcv_python

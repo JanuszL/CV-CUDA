@@ -14,6 +14,7 @@
 #include "Cache.hpp"
 #include "ImageFormat.hpp"
 #include "PixelType.hpp"
+#include "Resource.hpp"
 #include "Stream.hpp"
 
 #include <nvcv/Version.h>
@@ -43,4 +44,5 @@ PYBIND11_MODULE(nvcv, m)
 
     ExportImageFormat(m);
     ExportPixelType(m);
+    Resource::Export(m);
 }
