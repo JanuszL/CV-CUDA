@@ -52,6 +52,7 @@ pybind11_add_module(nvcv_python MODULE
     Stream.cpp
     Resource.cpp
     Container.cpp
+    Tensor.cpp
 )
 
 target_include_directories(nvcv_python
