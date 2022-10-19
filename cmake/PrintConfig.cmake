@@ -19,6 +19,13 @@ else()
     message(STATUS "    BUILD_TESTS              : off")
 endif()
 
+if(BUILD_PYTHON)
+    message(STATUS "    BUILD_PYTHON             : ON")
+    message(STATUS "        Python versions : ${PYTHON_VERSIONS}")
+else()
+    message(STATUS "    BUILD_PYTHON             : off")
+endif()
+
 if(ENABLE_SANITIZER)
     message(STATUS "    ENABLE_SANITIZER         : ON")
 else()
