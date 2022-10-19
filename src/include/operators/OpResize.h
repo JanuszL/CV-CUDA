@@ -23,6 +23,7 @@
 #define NVCV_OP_RESIZE_H
 
 #include "Operator.h"
+#include "Types.h"
 #include "detail/Export.h"
 
 #include <cuda_runtime.h>
@@ -56,12 +57,14 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopResizeCreate(NVCVOperatorHandle *handle);
  *
  * @param [out] out output tensor.
  *
+ * @param [in] interpolation Interpolation method to be used, see \ref NVCVInterpolationType for more details.
+ *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
  * @retval #NVCV_ERROR_INTERNAL         Internal error in the operator, invalid types passed in.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_OP_PUBLIC NVCVStatus nvcvopResizeSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
-                                             NVCVTensorHandle out);
+                                             NVCVTensorHandle out, const NVCVInterpolationType interpolation);
 
 #ifdef __cplusplus
 }

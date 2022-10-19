@@ -39,6 +39,8 @@ cuda_op::DataFormat GetLegacyDataFormat(ImageFormat fmt, int32_t numberInBatch);
 
 cuda_op::DataFormat GetLegacyDataFormat(TensorLayout layout);
 
+cuda_op::DataShape GetLegacyDataShape(DimsNCHW dims);
+
 inline void CheckOpErrThrow(cuda_op::ErrorCode status)
 {
     // This check gets inlined easier, and it's normal code path.

@@ -25,11 +25,12 @@ namespace leg = cv::legacy;
 Resize::Resize()
 {
     leg::cuda_op::DataShape maxIn, maxOut;
-    //maxIn/maxOut not used by op.
-    // m_legacyOp = std::make_unique<leg::cuda_op::Resize>(maxIn, maxOut);
+    // maxIn/maxOut not used by op.
+    m_legacyOp = std::make_unique<leg::cuda_op::Resize>(maxIn, maxOut);
 }
 
-void Resize::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out) const
+void Resize::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
+                        const NVCVInterpolationType interpolation) const
 {
     auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
     if (inData == nullptr)
@@ -43,12 +44,12 @@ void Resize::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::IT
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be device-acessible, pitch-linear tensor");
     }
 
-    //leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, stream));
+    leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, interpolation, stream));
 }
 
 nv::cv::priv::Version Resize::doGetVersion() const
 {
-    //todo need to have a version decoupled from NVCV
+    // TODO: How to decouple NVCV version from legacy version?
     return nv::cv::priv::CURRENT_VERSION;
 }
 

@@ -37,12 +37,13 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopResizeCreate, (NVCVOperatorHandle * hand
 }
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopResizeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out))
+                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
+                 const NVCVInterpolationType interpolation))
 {
     return priv::ProtectCall(
         [&]
         {
             nv::cv::TensorWrapHandle input(in), output(out);
-            priv::ToDynamicRef<priv_op::Resize>(handle)(stream, input, output);
+            priv::ToDynamicRef<priv_op::Resize>(handle)(stream, input, output, interpolation);
         });
 }
