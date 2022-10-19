@@ -19,10 +19,20 @@
 */
 
 #include "../CvCudaLegacy.h"
+#include "../CvCudaLegacyHelpers.hpp"
 
 #include "../CvCudaUtils.cuh"
 
+#include <nvcv/IImage.hpp>
+#include <nvcv/IImageData.hpp>
+#include <nvcv/ITensorData.hpp>
+
+#include <cstdio>
+
 using namespace nv::cv::legacy::cuda_op;
+using namespace nv::cv::legacy::helpers;
+
+namespace nvcv = nv::cv;
 
 template<typename Ptr2D>
 __global__ void custom_crop_kernel(const Ptr2D src, Ptr2D dst, int start_x, int start_y)
@@ -37,16 +47,19 @@ __global__ void custom_crop_kernel(const Ptr2D src, Ptr2D dst, int start_x, int 
 }
 
 template<typename T>
-void customCrop(const void *input, void *output, int start_x, int start_y, DataShape inputShape, DataShape outputShape,
+void customCrop(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData, NVCVRectI roi,
                 cudaStream_t stream)
 {
-    Ptr2dNHWC<T> src_ptr(inputShape.N, inputShape.H, inputShape.W, inputShape.C, (T *)input);
-    Ptr2dNHWC<T> dst_ptr(outputShape.N, outputShape.H, outputShape.W, outputShape.C, (T *)output);
+    int          cols       = roi.width;
+    int          rows       = roi.height;
+    const int    batch_size = outData.dims().n;
+    Ptr2dNHWC<T> src_ptr(inData);
+    Ptr2dNHWC<T> dst_ptr(outData, cols, rows);
 
     dim3 block(16, 16);
-    dim3 grid(divUp(outputShape.W, block.x), divUp(outputShape.H, block.y), outputShape.N);
+    dim3 grid(divUp(cols, block.x), divUp(rows, block.y), batch_size);
 
-    custom_crop_kernel<Ptr2dNHWC<T>><<<grid, block, 0, stream>>>(src_ptr, dst_ptr, start_x, start_y);
+    custom_crop_kernel<Ptr2dNHWC<T>><<<grid, block, 0, stream>>>(src_ptr, dst_ptr, roi.x, roi.y);
     checkKernelErrors();
 }
 
@@ -57,27 +70,42 @@ size_t CustomCrop::calBufferSize(DataShape max_input_shape, DataShape max_output
     return 0;
 }
 
-int CustomCrop::infer(const void *const *inputs, void **outputs, void *workspace, Rect roi, const DataShape input_shape,
-                      const DataFormat format, const DataType data_type, cudaStream_t stream)
+ErrorCode CustomCrop::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, NVCVRectI roi,
+                            cudaStream_t stream)
 {
-    int batch    = input_shape.N;
-    int channels = input_shape.C;
-    int rows     = input_shape.H;
-    int cols     = input_shape.W;
+    int                 batch         = inData.dims().n;
+    int                 channels      = inData.dims().c;
+    int                 rows          = inData.dims().h;
+    int                 cols          = inData.dims().w;
+    cuda_op::DataFormat input_format  = GetLegacyDataFormat(inData.layout());
+    cuda_op::DataFormat output_format = GetLegacyDataFormat(outData.layout());
 
-    if (!(format == kNHWC || format == kHWC))
+    if (!(input_format == kNHWC || input_format == kHWC) || !(output_format == kNHWC || output_format == kHWC))
     {
-        LOG_ERROR("Invalid DataFormat " << format);
+        printf("Invliad DataFormat both Input and Output must be kHWC or kHWC\n");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    if (channels > 4)
+    if (inData.format() != outData.format())
     {
-        LOG_ERROR("Invalid channel number " << channels);
+        LOG_ERROR("Input and Output formats must be same input format =" << inData.format()
+                                                                         << " output format = " << outData.format());
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    if (channels > 4 || channels < 1)
+    {
+        LOG_ERROR("Invalid channel number ch = " << channels);
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    int data_size = DataSize(data_type);
+    if (roi.height > outData.dims().h || roi.width > outData.dims().w)
+    {
+        LOG_ERROR("ROI larger than dst buffer");
+        return ErrorCode::INVALID_DATA_SHAPE;
+    }
+
+    int data_size = DataSize(GetLegacyDataType(inData.format()));
     int start_x   = roi.x;
     int start_y   = roi.y;
     int end_x     = start_x + roi.width - 1;
@@ -85,7 +113,6 @@ int CustomCrop::infer(const void *const *inputs, void **outputs, void *workspace
 #ifdef CUDA_DEBUG_LOG
     printf("x %d, y %d, w %d, h %d\n", roi.x, roi.y, roi.width, roi.height);
 #endif
-    DataShape output_shape(batch, channels, roi.height, roi.width);
 
     if (start_x < 0 || start_y < 0 || end_x >= cols || end_y >= rows)
     {
@@ -93,8 +120,8 @@ int CustomCrop::infer(const void *const *inputs, void **outputs, void *workspace
         return ErrorCode::INVALID_PARAMETER;
     }
 
-    typedef void (*func_t)(const void *input, void *output, int start_x, int start_y, DataShape inputShape,
-                           DataShape outputShape, cudaStream_t stream);
+    typedef void (*func_t)(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData,
+                           NVCVRectI roi, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {
         {customCrop<uchar1>,  customCrop<uchar2>,  customCrop<uchar3>,  customCrop<uchar4>},
@@ -104,9 +131,9 @@ int CustomCrop::infer(const void *const *inputs, void **outputs, void *workspace
         {customCrop<double>, customCrop<double2>, customCrop<double3>, customCrop<double4>}
     };
 
-    funcs[data_size / 2][channels - 1](inputs[0], outputs[0], start_x, start_y, input_shape, output_shape, stream);
+    funcs[data_size / 2][channels - 1](inData, outData, roi, stream);
 
-    return 0;
+    return ErrorCode::SUCCESS;
 }
 
 } // namespace nv::cv::legacy::cuda_op

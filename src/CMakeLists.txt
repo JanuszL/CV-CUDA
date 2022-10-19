@@ -38,6 +38,7 @@ add_library(nvcv SHARED
     operators/Operator.cpp
     operators/OpReformat.cpp
     operators/OpResize.cpp
+    operators/OpCustomCrop.cpp
 )
 
 target_link_libraries(nvcv PRIVATE

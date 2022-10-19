@@ -22,26 +22,9 @@
 
 #include <cuda_runtime.h>
 #include <nvcv/ITensorData.hpp>
+#include <nvcv/Rect.h>
 
 namespace nv::cv::legacy::cuda_op {
-
-struct Rect
-{
-    __host__ __device__ Rect() {}
-
-    __host__ __device__ Rect(int _x, int _y, int _width, int _height)
-        : x(_x)
-        , y(_y)
-        , width(_width)
-        , height(_height)
-    {
-    }
-
-    int x;      //!< x coordinate of the top-left corner
-    int y;      //!< y coordinate of the top-left corner
-    int width;  //!< width of the rectangle
-    int height; //!< height of the rectangle
-};
 
 struct Size
 {
@@ -181,26 +164,25 @@ public:
     }
 
     /**
-     * @brief Crops the given image with input  roi
-     * @param inputs gpu pointer, inputs[0] are batched input images, whose shape is input_shape and type is data_type.
-     * @param outputs gpu pointer, outputs[0] are batched output images that have the size dsize and the same type as
-     * data_type.
-     * @param workspace gpu pointer, gpu memory used to store the temporary variables.
-     * @param roi region of interest
-     * @param input_shape shape of the input images.
-     * @param format format of the input images, e.g. kNHWC.
-     * @param data_type data type of the input images, e.g. kCV_32F.
+     * @brief Crops the a given input image into a destination image.
+     *        Destination will have the [0,0] position populated by the x,y position as
+     *        defined in the ROI x,y parameters of the input data. The operator will continue to populate the
+     *        output data until the destination image is populated with the size described by the ROI.
+     * @param [in] in intput tensor.
+     *
+     * @param [out] out output tensor.
+     * @param [in]  roi region of interest, defined in pixels
      * @param stream for the asynchronous execution.
      */
-    int infer(const void *const *inputs, void **outputs, void *workspace, const Rect roi, const DataShape input_shape,
-              const DataFormat format, const DataType data_type, cudaStream_t stream);
+    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, NVCVRectI roi,
+                    cudaStream_t stream);
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator
      * @param max_input_shape maximum input DataShape that may be used
      * @param max_output_shape maximum output DataShape that may be used
      * @param max_data_type DataType with the maximum size that may be used
      */
-    size_t calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
+    size_t    calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
 };
 
 class Reformat : public CudaBaseOp
