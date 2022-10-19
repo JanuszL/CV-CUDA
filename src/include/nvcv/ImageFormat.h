@@ -270,6 +270,30 @@ typedef uint64_t NVCVImageFormat;
 /** Planar BGRA unsigned 8-bit per channel. */
 #define NVCV_IMAGE_FORMAT_BGRA8p NVCV_DETAIL_MAKE_COLOR_FMT4(RGB, UNDEFINED, PL, UNSIGNED, ZYXW, X8, X8, X8, X8)
 
+/** Single plane with interleaved RGB float32 channel. */
+#define NVCV_IMAGE_FORMAT_RGBf32 NVCV_DETAIL_MAKE_COLOR_FMT1(RGB, UNDEFINED, PL, FLOAT, XYZ1, X8_Y8_Z8)
+
+/** Single plane with interleaved BGR float32 channel. */
+#define NVCV_IMAGE_FORMAT_BGRf32 NVCV_DETAIL_MAKE_COLOR_FMT1(RGB, UNDEFINED, PL, FLOAT, ZYX1, X8_Y8_Z8)
+
+/** Single plane with interleaved RGBA float32 channel. */
+#define NVCV_IMAGE_FORMAT_RGBAf32 NVCV_DETAIL_MAKE_COLOR_FMT1(RGB, UNDEFINED, PL, FLOAT, XYZW, X8_Y8_Z8_W8)
+
+/** Single plane with interleaved BGRA float32 channel. */
+#define NVCV_IMAGE_FORMAT_BGRAf32 NVCV_DETAIL_MAKE_COLOR_FMT1(RGB, UNDEFINED, PL, FLOAT, ZYXW, X8_Y8_Z8_W8)
+
+/** Planar RGB unsigned float32 per channel. */
+#define NVCV_IMAGE_FORMAT_RGBf32p NVCV_DETAIL_MAKE_COLOR_FMT3(RGB, UNDEFINED, PL, FLOAT, XYZ0, X8, X8, X8)
+
+/** Planar BGR unsigned float32 per channel. */
+#define NVCV_IMAGE_FORMAT_BGRf32p NVCV_DETAIL_MAKE_COLOR_FMT3(RGB, UNDEFINED, PL, FLOAT, ZYX1, X8, X8, X8)
+
+/** Planar RGBA unsigned float32 per channel. */
+#define NVCV_IMAGE_FORMAT_RGBAf32p NVCV_DETAIL_MAKE_COLOR_FMT4(RGB, UNDEFINED, PL, FLOAT, XYZW, X8, X8, X8, X8)
+
+/** Planar BGRA unsigned float32 per channel. */
+#define NVCV_IMAGE_FORMAT_BGRAf32p NVCV_DETAIL_MAKE_COLOR_FMT4(RGB, UNDEFINED, PL, FLOAT, ZYXW, X8, X8, X8, X8)
+
 /** Creates a user-defined YCbCr color image format constant.
  *
  * Example to create a YUV422R ITU-R BT.709 full-range with SMPTE240M transfer function, block-linear format.
