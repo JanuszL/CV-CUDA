@@ -354,6 +354,30 @@ constexpr ImageFormat FMT_RGBA8p{NVCV_IMAGE_FORMAT_RGBA8p};
 /** Planar BGRA unsigned 8-bit per channel. */
 constexpr ImageFormat FMT_BGRA8p{NVCV_IMAGE_FORMAT_BGRA8p};
 
+/** Single plane with interleaved RGB float32 channel. */
+constexpr ImageFormat FMT_RGBf32{NVCV_IMAGE_FORMAT_RGBf32};
+
+/** Single plane with interleaved BGR float32 channel. */
+constexpr ImageFormat FMT_BGRf32{NVCV_IMAGE_FORMAT_BGRf32};
+
+/** Single plane with interleaved RGBA float32 channel. */
+constexpr ImageFormat FMT_RGBAf32{NVCV_IMAGE_FORMAT_RGBAf32};
+
+/** Single plane with interleaved BGRA float32 channel. */
+constexpr ImageFormat FMT_BGRAf32{NVCV_IMAGE_FORMAT_BGRAf32};
+
+/** Planar RGB unsigned float32 per channel. */
+constexpr ImageFormat FMT_RGBf32p{NVCV_IMAGE_FORMAT_RGBf32p};
+
+/** Planar BGR unsigned float32 per channel. */
+constexpr ImageFormat FMT_BGRf32p{NVCV_IMAGE_FORMAT_BGRf32p};
+
+/** Planar RGBA unsigned float32 per channel. */
+constexpr ImageFormat FMT_RGBAf32p{NVCV_IMAGE_FORMAT_RGBAf32p};
+
+/** Planar BGRA unsigned float32 per channel. */
+constexpr ImageFormat FMT_BGRAf32p{NVCV_IMAGE_FORMAT_BGRAf32p};
+
 #endif
 
 inline ImageFormat::ImageFormat(ColorSpec colorSpec, ChromaSubsampling chromaSub, MemLayout memLayout,
