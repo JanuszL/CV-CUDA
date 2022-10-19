@@ -12,7 +12,11 @@
 
 import nvcv
 import pytest as t
+import numba
 import numpy as np
+from numba import cuda
+
+assert numba.cuda.is_available()
 
 
 @t.mark.parametrize(
@@ -71,4 +75,47 @@ def test_tensor_creation_shape_works(shape, dtype, layout):
     assert tensor.layout == layout
     assert tensor.dtype == dtype
     assert tensor.shape == shape
+    assert tensor.ndim == len(shape)
+
+
+@t.mark.parametrize(
+    "shape,dtype",
+    [
+        ([3, 5, 7, 1], np.uint8),
+        ([3, 5, 7, 1], np.int8),
+        ([3, 5, 7, 1], np.uint16),
+        ([3, 5, 7, 1], np.int16),
+        ([3, 5, 7, 1], np.float32),
+        ([3, 5, 7, 1], np.float64),
+        ([3, 5, 7, 2], np.float32),
+        ([3, 5, 7, 3], np.uint8),
+        ([3, 5, 7, 4], np.uint8),
+        ([3, 5, 7], np.csingle),
+    ],
+)
+def test_wrap_numba_buffer(shape, dtype):
+    tensor = nvcv.as_tensor(cuda.device_array(shape, dtype))
+    assert tensor.shape == shape
+    assert tensor.dtype == dtype
+    assert tensor.layout is None
+    assert tensor.ndim == len(shape)
+
+
+@t.mark.parametrize(
+    "shape,dtype,layout",
+    [
+        ([3, 5, 7, 1], np.uint8, "NHWC"),
+        ([3, 5, 7], np.uint8, "HWC"),
+        ([3, 5, 7, 2], np.int16, "NHWC"),
+        ([3, 5, 7, 2, 4, 2, 5], np.int16, "abcdefg"),
+        ([3, 5], np.uint8, "HW"),
+        # pybind11 has issues converting single characters to TensorLayout
+        # ([5], np.uint8,"W"),
+    ],
+)
+def test_wrap_numba_buffer_with_layout(shape, dtype, layout):
+    tensor = nvcv.as_tensor(cuda.device_array(shape, dtype), layout)
+    assert tensor.shape == shape
+    assert tensor.dtype == dtype
+    assert tensor.layout == layout
     assert tensor.ndim == len(shape)

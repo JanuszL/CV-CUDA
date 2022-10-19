@@ -25,6 +25,7 @@ namespace py = pybind11;
 
 using Shape  = std::vector<int64_t>;
 using Size2D = std::tuple<int, int>;
+class CudaBuffer;
 
 Shape CreateShape(const cv::TensorShape &tshape);
 
@@ -38,6 +39,8 @@ public:
 
     static std::shared_ptr<Tensor> CreateFromReqs(const cv::Tensor::Requirements &reqs);
 
+    static std::shared_ptr<Tensor> Wrap(CudaBuffer &buffer, std::optional<cv::TensorLayout> layout);
+
     std::shared_ptr<Tensor>       shared_from_this();
     std::shared_ptr<const Tensor> shared_from_this() const;
 
@@ -46,19 +49,18 @@ public:
     cv::PixelType                   dtype() const;
     int                             ndim() const;
 
-    cv::Tensor       &impl();
-    const cv::Tensor &impl() const;
+    cv::ITensor       &impl();
+    const cv::ITensor &impl() const;
 
     class Key final : public IKey
     {
     public:
         explicit Key(const cv::Tensor::Requirements &reqs);
-        explicit Key(Shape shape, cv::PixelType dtype, cv::TensorLayout layout);
+        explicit Key(const cv::TensorShape &shape, cv::PixelType dtype);
 
     private:
-        Shape            m_shape;
-        cv::PixelType    m_dtype;
-        cv::TensorLayout m_layout;
+        cv::TensorShape m_shape;
+        cv::PixelType   m_dtype;
 
         virtual size_t doGetHash() const override;
         virtual bool   doIsEqual(const IKey &that) const override;
@@ -68,9 +70,13 @@ public:
 
 private:
     Tensor(const cv::Tensor::Requirements &reqs);
+    Tensor(const NVCVTensorData &data, py::object wrappedObject);
 
-    cv::Tensor m_impl;
-    Key        m_key;
+    // m_impl must come before m_key
+    std::unique_ptr<cv::ITensor> m_impl;
+    Key                          m_key;
+
+    py::object m_wrappedObject; // null if not wrapping
 };
 
 std::ostream &operator<<(std::ostream &out, const Tensor &tensor);
