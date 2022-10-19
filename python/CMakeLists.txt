@@ -21,8 +21,26 @@ find_package(nvcv REQUIRED)
 
 set(CMAKE_CXX_STANDARD 20)
 
+set(imgformat_defs ${CMAKE_CURRENT_BINARY_DIR}/NVCVPythonImageFormatDefs.inc)
+set(imgformat_script ${CMAKE_CURRENT_SOURCE_DIR}/gen_imgformat_list.sh)
+
+set(imgfmt_header ${CMAKE_CURRENT_SOURCE_DIR}/../src/include/nvcv/ImageFormat.h)
+
+add_custom_command(OUTPUT ${imgformat_defs}
+    COMMAND ${imgformat_script} "${imgfmt_header}" > ${imgformat_defs}
+    DEPENDS ${imgformat_script} ${imgfmt_header}
+)
+
 pybind11_add_module(nvcv_python MODULE
+    ${imgformat_defs}
     Main.cpp
+    ImageFormat.cpp
+)
+
+target_include_directories(nvcv_python
+    PRIVATE
+        # for imgformat_defs
+        ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 set_target_properties(nvcv_python PROPERTIES
