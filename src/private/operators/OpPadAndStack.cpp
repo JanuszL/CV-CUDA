@@ -29,8 +29,8 @@ PadAndStack::PadAndStack()
     m_legacyOp = std::make_unique<leg::cuda_op::PadAndStack>(maxIn, maxOut);
 }
 
-void PadAndStack::operator()(cudaStream_t stream, cv::IImageBatch &in, cv::ITensor &out, cv::ITensor &left,
-                             cv::ITensor &top, const NVCVBorderType borderMode, const float borderValue) const
+void PadAndStack::operator()(cudaStream_t stream, cv::IImageBatch &in, cv::ITensor &out, cv::ITensor &top,
+                             cv::ITensor &left, const NVCVBorderType borderMode, const float borderValue) const
 {
     auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataDevicePitch *>(in.exportData(stream));
     if (inData == nullptr)
@@ -44,16 +44,16 @@ void PadAndStack::operator()(cudaStream_t stream, cv::IImageBatch &in, cv::ITens
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be device-accessible, pitch-linear tensor");
     }
 
-    auto *leftData = dynamic_cast<const cv::ITensorDataPitchDevice *>(left.exportData());
-    if (outData == nullptr)
-    {
-        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Left must be device-accessible, pitch-linear tensor");
-    }
-
     auto *topData = dynamic_cast<const cv::ITensorDataPitchDevice *>(top.exportData());
     if (outData == nullptr)
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Top must be device-accessible, pitch-linear tensor");
+    }
+
+    auto *leftData = dynamic_cast<const cv::ITensorDataPitchDevice *>(left.exportData());
+    if (outData == nullptr)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Left must be device-accessible, pitch-linear tensor");
     }
 
     leg::helpers::CheckOpErrThrow(

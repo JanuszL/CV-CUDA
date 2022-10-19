@@ -39,14 +39,14 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopPadAndStackCreate, (NVCVOperatorHandle *
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopPadAndStackSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVTensorHandle out,
-                 NVCVTensorHandle hleft, NVCVTensorHandle htop, const NVCVBorderType borderMode,
-                 const float borderValue))
+                 NVCVTensorHandle top, NVCVTensorHandle left, NVCVBorderType borderMode, float borderValue))
 {
     return priv::ProtectCall(
         [&]
         {
             nv::cv::ImageBatchWrapHandle input(in);
-            nv::cv::TensorWrapHandle     output(out), left(hleft), top(htop);
-            priv::ToDynamicRef<priv_op::PadAndStack>(handle)(stream, input, output, left, top, borderMode, borderValue);
+            nv::cv::TensorWrapHandle     output(out), topWrap(top), leftWrap(left);
+            priv::ToDynamicRef<priv_op::PadAndStack>(handle)(stream, input, output, topWrap, leftWrap, borderMode,
+                                                             borderValue);
         });
 }

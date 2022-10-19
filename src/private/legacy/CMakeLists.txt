@@ -14,9 +14,9 @@ add_library(cvcuda_legacy STATIC
     ./operators/custom_crop.cu
     ./operators/reformat.cu
     ./operators/resize.cu
-    ./operators/pad_and_stack.cu
     ./operators/convert_to.cu
     ./operators/normalize.cu
+    ./operators/pad_and_stack.cu
     CvCudaLegacyHelpers.cpp
 )
 
