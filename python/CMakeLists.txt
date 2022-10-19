@@ -35,6 +35,7 @@ pybind11_add_module(nvcv_python MODULE
     ${imgformat_defs}
     Assert.cpp
     PyUtil.cpp
+    String.cpp
     Main.cpp
     ImageFormat.cpp
     Object.cpp
