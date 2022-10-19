@@ -17,14 +17,12 @@
 #include <functional>
 #include <tuple>
 #include <type_traits>
+#include <vector>
 
 namespace nv::cvpy {
 
-template<class... TT>
-size_t ComputeHash(const std::tuple<TT...> &a);
-
 template<class T>
-requires(!std::is_enum_v<T>) size_t ComputeHash(const T &a)
+requires(!std::is_enum_v<T> && std::is_default_constructible_v<std::hash<T>>) size_t ComputeHash(const T &a)
 {
     return std::hash<T>{}(a);
 }
@@ -37,8 +35,11 @@ requires(std::is_enum_v<T>) size_t ComputeHash(const T &a)
     return std::hash<Base>{}(static_cast<Base>(a));
 }
 
+template<class... TT>
+size_t ComputeHash(const std::tuple<TT...> &a);
+
 template<class HEAD, class... TAIL>
-size_t ComputeHash(const HEAD &a, const TAIL &...aa)
+requires(sizeof...(TAIL) >= 1) size_t ComputeHash(const HEAD &a, const TAIL &...aa)
 {
     return ComputeHash(a) ^ (ComputeHash(aa...) << 1);
 }
