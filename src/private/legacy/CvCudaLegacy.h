@@ -281,6 +281,61 @@ public:
     size_t    calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
 };
 
+class Normalize : public CudaBaseOp
+{
+public:
+    Normalize() = delete;
+
+    Normalize(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * @brief Data normalization is done using externally provided base (typically: mean or min) and scale (typically
+     * reciprocal of standard deviation or 1/(max-min)). The normalization follows the formula:
+     * ```
+     * out[data_idx] = (in[data_idx] - base[param_idx]) * scale[param_idx] * global_scale + shift
+     * ```
+     * Where `data_idx` is a position in the data tensor (in, out) and `param_idx` is a position
+     * in the base and scale tensors (see below for details). The two additional constants,
+     * `global_scale` and `shift` can be used to adjust the result to the dynamic range and resolution
+     * of the output type.
+     *
+     * The `scale` parameter may also be interpreted as standard deviation - in that case, its
+     * reciprocal is used and optionally, a regularizing term is added to the variance.
+     * ```
+     * m = 1 / sqrt(square(stddev[param_idx]) + epsilon)
+     * out[data_idx] = (in[data_idx] - mean[param_idx]) * m * global_scale + shift
+     * ```
+     *
+     * `param_idx` is calculated as follows:
+     * ```
+     * param_idx[axis] = param_shape[axis] == 1 ? 0 : data_idx[axis]
+     * ```
+     *
+     * @param inputs gpu pointer,
+     * @param global_scale additional scaling factor, used e.g. when output is of integral type.
+     * @param shift additional bias value, used e.g. when output is of unsigned type.
+     * @param epsilon regularizing term added to variance; only used if scale_is_stddev = true
+     * @param flags if true, scale is interpreted as standard deviation and it's regularized and its
+     * reciprocal is used when scaling.
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &baseData,
+                    const ITensorDataPitchDevice &scaleData, const ITensorDataPitchDevice &outData,
+                    const float global_scale, const float shift, const float epsilon, const uint32_t flags,
+                    cudaStream_t stream);
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param max_input_shape maximum input DataShape that may be used
+     * @param max_output_shape maximum output DataShape that may be used
+     * @param max_data_type DataType with the maximum size that may be used
+     */
+    size_t    calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
+    void      checkParamShape(DataShape input_shape, DataShape param_shape);
+};
+
 class PadAndStack : public CudaBaseOp
 {
 public:

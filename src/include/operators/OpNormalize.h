@@ -34,6 +34,9 @@ extern "C"
 {
 #endif
 
+// @brief Flag to be used by normalize operation to indicate scale is standard deviation instead.
+#define NVCV_OP_NORMALIZE_SCALE_IS_STDDEV (1 << 0)
+
 /** Constructs and an instance of the normalize operator.
  *
  * @param [out] handle Where the image instance handle will be written to.
@@ -52,24 +55,31 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopNormalizeCreate(NVCVOperatorHandle *handle);
  *                    + Must not be NULL.
  * @param [in] stream Handle to a valid CUDA stream.
  *
- * @param [in] in intput tensor.
+ * @param [in] in Intput tensor.
  *
- * @param [out] out output tensor.
+ * @param [in] base Base tensor.
  *
- * @param [in] scale_is_stddev
+ * @param [in] scale Scale tensor.
  *
- * @param [in] global_scale
+ * @param [out] out Output tensor.
  *
- * @param [in] shift
+ * @param [in] global_scale Additional scale value to be used in addition to scale.
  *
- * @param [in] epsilon
+ * @param [in] shift Additional bias value to be used in additon to base.
+ *
+ * @param [in] epsilon Epsilon to use when \p NVCV_OP_NORMALIZE_SCALE_IS_STDDEV flag is set as a regularizing term to be
+ *                     added to variance.
+ *
+ * @param [in] flags Algorithm flags, use \p NVCV_OP_NORMALIZE_SCALE_IS_STDDEV if scale passed as argument
+ *                   is standard deviation instead or 0 if it is scaling.
+ *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
  * @retval #NVCV_ERROR_INTERNAL         Internal error in the operator, invalid types passed in.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_OP_PUBLIC NVCVStatus nvcvopNormalizeSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
-                                                NVCVTensorHandle out, const bool scale_is_stddev,
-                                                const float global_scale, const float shift, const float epsilon);
+                                                NVCVTensorHandle base, NVCVTensorHandle scale, NVCVTensorHandle out,
+                                                float global_scale, float shift, float epsilon, uint32_t flags);
 
 #ifdef __cplusplus
 }

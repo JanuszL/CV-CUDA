@@ -37,14 +37,15 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopNormalizeCreate, (NVCVOperatorHandle * h
 }
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopNormalizeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                 const bool scale_is_stddev, const float global_scale, const float shift, const float epsilon))
+                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle base,
+                 NVCVTensorHandle scale, NVCVTensorHandle out, float global_scale, float shift, float epsilon,
+                 uint32_t flags))
 {
     return priv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle input(in), output(out);
-            priv::ToDynamicRef<priv_op::Normalize>(handle)(stream, input, output, scale_is_stddev, global_scale, shift,
-                                                           epsilon);
+            nv::cv::TensorWrapHandle inWrap(in), baseWrap(base), scaleWrap(scale), outWrap(out);
+            priv::ToDynamicRef<priv_op::Normalize>(handle)(stream, inWrap, baseWrap, scaleWrap, outWrap, global_scale,
+                                                           shift, epsilon, flags);
         });
 }

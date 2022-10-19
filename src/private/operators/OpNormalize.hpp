@@ -42,13 +42,13 @@ class Normalize final : public IOperator
 public:
     explicit Normalize();
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, bool scale_is_stddev,
-                    float global_scale, float shift, float epsilon) const;
+    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &base, const cv::ITensor &scale,
+                    cv::ITensor &out, float global_scale, float shift, float epsilon, uint32_t flags) const;
 
     cv::priv::Version doGetVersion() const override;
 
 private:
-    //std::unique_ptr<legacy::cuda_op::Normalize> m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::Normalize> m_legacyOp;
 };
 
 } // namespace nv::cvop::priv
