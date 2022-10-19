@@ -127,9 +127,11 @@ inline int TensorWrapHandle::doGetNumDim() const
 
 inline Shape TensorWrapHandle::doGetShape() const
 {
-    Shape   shape;
-    int32_t ndim = NVCV_TENSOR_MAX_NDIM;
-    detail::CheckThrow(nvcvTensorGetShape(m_handle, &ndim, &shape[0]));
+    int32_t ndim = 0;
+    detail::CheckThrow(nvcvTensorGetShape(m_handle, &ndim, nullptr));
+
+    Shape shape(ndim);
+    detail::CheckThrow(nvcvTensorGetShape(m_handle, &ndim, shape.begin()));
     return shape;
 }
 

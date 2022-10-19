@@ -36,10 +36,11 @@ public:
 private:
     NVCVTensorData m_data;
 
-    int          doGetNumDim() const override;
-    const Shape &doGetShape() const override;
-    DimsNCHW     doGetDims() const override;
-    TensorLayout doGetLayout() const override;
+    int                    doGetNumDim() const override;
+    Shape                  doGetShape() const override;
+    Shape::const_reference doGetShapeDim(int d) const override;
+    DimsNCHW               doGetDims() const override;
+    TensorLayout           doGetLayout() const override;
 
     int32_t doGetNumPlanes() const override;
     int32_t doGetNumImages() const override;
@@ -91,14 +92,23 @@ inline int TensorDataPitchDevice::doGetNumDim() const
     return ndim;
 }
 
-inline const Shape &TensorDataPitchDevice::doGetShape() const
+inline Shape::const_reference TensorDataPitchDevice::doGetShapeDim(int d) const
 {
-    static_assert(sizeof(Shape) / sizeof(Shape::value_type)
-                  == sizeof(m_data.buffer.pitch.shape) / sizeof(m_data.buffer.pitch.shape[0]));
-    static_assert(std::is_same<Shape::value_type, std::decay<decltype(m_data.buffer.pitch.shape[0])>::type>::value);
+    return m_data.buffer.pitch.shape[d];
+}
 
-    // UB under stricter C++ rules, but fine in practice.
-    return *reinterpret_cast<const Shape *>(m_data.buffer.pitch.shape);
+inline Shape TensorDataPitchDevice::doGetShape() const
+{
+    const NVCVTensorBufferPitch &pitch = m_data.buffer.pitch;
+
+    switch (m_data.buffer.pitch.layout)
+    {
+    case NVCV_TENSOR_NCHW:
+    case NVCV_TENSOR_NHWC:
+        return Shape(pitch.shape, pitch.shape + 4);
+    }
+    assert(false && "Unknown tensor layout");
+    return {};
 }
 
 inline DimsNCHW TensorDataPitchDevice::doGetDims() const

@@ -33,8 +33,8 @@ class ITensorData
 public:
     virtual ~ITensorData() = default;
 
-    int          ndim() const;
-    const Shape &shape() const;
+    int   ndim() const;
+    Shape shape() const;
 
     const int32_t &shape(int d) const;
 
@@ -51,10 +51,11 @@ public:
 
 private:
     // NVI idiom
-    virtual int          doGetNumDim() const = 0;
-    virtual const Shape &doGetShape() const  = 0;
-    virtual DimsNCHW     doGetDims() const   = 0;
-    virtual TensorLayout doGetLayout() const = 0;
+    virtual int                    doGetNumDim() const        = 0;
+    virtual Shape                  doGetShape() const         = 0;
+    virtual Shape::const_reference doGetShapeDim(int d) const = 0;
+    virtual DimsNCHW               doGetDims() const          = 0;
+    virtual TensorLayout           doGetLayout() const        = 0;
 
     virtual int32_t doGetNumPlanes() const = 0;
     virtual int32_t doGetNumImages() const = 0;
@@ -105,14 +106,14 @@ inline int ITensorData::ndim() const
     return r;
 }
 
-inline const Shape &ITensorData::shape() const
+inline Shape ITensorData::shape() const
 {
     return doGetShape();
 }
 
 inline const int32_t &ITensorData::shape(int d) const
 {
-    return this->shape()[d];
+    return doGetShapeDim(d);
 }
 
 inline DimsNCHW ITensorData::dims() const
