@@ -16,6 +16,8 @@
 
 #include "ValueList.hpp"
 
+#include <util/HashMD5.hpp>
+
 namespace nv::cv::test {
 
 template<size_t N>
@@ -77,6 +79,12 @@ public:
 private:
     T m_value;
 };
+
+template<StringLiteral NAME, class T, T... DEFAULT>
+void Update(util::HashMD5 &hash, const Param<NAME, T, DEFAULT...> &p)
+{
+    Update(hash, static_cast<T>(p));
+}
 
 namespace detail {
 
