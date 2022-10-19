@@ -33,7 +33,7 @@ class ITensorData
 public:
     virtual ~ITensorData() = default;
 
-    int          ndims() const;
+    int          ndim() const;
     const Shape &shape() const;
 
     const int32_t &shape(int d) const;
@@ -51,7 +51,7 @@ public:
 
 private:
     // NVI idiom
-    virtual int          doGetNDims() const  = 0;
+    virtual int          doGetNumDim() const = 0;
     virtual const Shape &doGetShape() const  = 0;
     virtual DimsNCHW     doGetDims() const   = 0;
     virtual TensorLayout doGetLayout() const = 0;
@@ -98,10 +98,10 @@ class ITensorDataPitchDevice : public ITensorDataPitch
 };
 
 // Implementation - ITensorData
-inline int ITensorData::ndims() const
+inline int ITensorData::ndim() const
 {
-    int r = doGetNDims();
-    assert(1 <= r && r <= NVCV_TENSOR_MAX_NDIMS);
+    int r = doGetNumDim();
+    assert(1 <= r && r <= NVCV_TENSOR_MAX_NDIM);
     return r;
 }
 

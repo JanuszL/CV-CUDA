@@ -230,20 +230,20 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetDimsNCHW,
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetShape, (NVCVTensorHandle handle, int32_t *ndims, int32_t *shape))
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetShape, (NVCVTensorHandle handle, int32_t *ndim, int32_t *shape))
 {
     return priv::ProtectCall(
         [&]
         {
             auto &tensor = priv::ToStaticRef<const priv::ITensor>(handle);
 
-            if (ndims == nullptr)
+            if (ndim == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input pointer to ndims cannot be NULL");
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input pointer to ndim cannot be NULL");
             }
 
             // Number of shape elements to copy
-            int n = std::min(*ndims, priv::GetNDims(tensor.layout()));
+            int n = std::min(*ndim, priv::GetNumDim(tensor.layout()));
             if (n > 0)
             {
                 if (shape == nullptr)
@@ -251,11 +251,11 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetShape, (NVCVTensorHandle handle, 
                     throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to shape output cannot be NULL");
                 }
 
-                NVCV_ASSERT(*ndims - n >= 0);
-                std::fill_n(shape, *ndims - n, 1);
-                std::copy_n(tensor.shape().end() - n, n, shape + *ndims - n);
+                NVCV_ASSERT(*ndim - n >= 0);
+                std::fill_n(shape, *ndim - n, 1);
+                std::copy_n(tensor.shape().end() - n, n, shape + *ndim - n);
             }
 
-            *ndims = priv::GetNDims(tensor.layout());
+            *ndim = priv::GetNumDim(tensor.layout());
         });
 }

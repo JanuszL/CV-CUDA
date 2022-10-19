@@ -29,19 +29,19 @@ typedef enum
     NVCV_TENSOR_NHWC,
 } NVCVTensorLayout;
 
-#define NVCV_TENSOR_MAX_NDIMS (4)
+#define NVCV_TENSOR_MAX_NDIM (4)
 
 /** Stores the tensor plane contents. */
 typedef struct NVCVTensorBufferPitchRec
 {
     NVCVTensorLayout layout;
 
-    int32_t shape[NVCV_TENSOR_MAX_NDIMS];
-    int64_t pitchBytes[NVCV_TENSOR_MAX_NDIMS];
+    int32_t shape[NVCV_TENSOR_MAX_NDIM];
+    int64_t pitchBytes[NVCV_TENSOR_MAX_NDIM];
 
     /** Pointer to memory buffer with tensor contents.
      * Pixel with type T is addressed by:
-     * pixAttr = (uint8_t *)mem + shape[0]*pitchBytes[0] + ... + shape[ndims-1]*pitchBytes[ndims-1];
+     * pixAttr = (uint8_t *)mem + shape[0]*pitchBytes[0] + ... + shape[ndim-1]*pitchBytes[ndim-1];
      */
     void *mem;
 } NVCVTensorBufferPitch;
@@ -129,12 +129,12 @@ NVCV_PUBLIC NVCVStatus nvcvTensorDataPitchDeviceFillForImages(NVCVTensorData *da
  *
  * @param[in] layout Tensor layout to be queried.
  *
- * @param[out] ndims Number of dimensions of the tensor layout.
+ * @param[out] ndim Number of dimensions of the tensor layout.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvTensorLayoutGetNDims(NVCVTensorLayout layout, int32_t *ndims);
+NVCV_PUBLIC NVCVStatus nvcvTensorLayoutGetNumDim(NVCVTensorLayout layout, int32_t *ndim);
 
 #ifdef __cplusplus
 }

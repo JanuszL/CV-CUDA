@@ -21,7 +21,7 @@
 
 namespace nv::cv::priv {
 
-using Shape = std::array<int32_t, NVCV_TENSOR_MAX_NDIMS>;
+using Shape = std::array<int32_t, NVCV_TENSOR_MAX_NDIM>;
 
 using util::DimsNCHW;
 

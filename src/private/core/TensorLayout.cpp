@@ -17,7 +17,7 @@
 
 namespace nv::cv::priv {
 
-int32_t GetNDims(NVCVTensorLayout layout)
+int32_t GetNumDim(NVCVTensorLayout layout)
 {
     switch (layout)
     {

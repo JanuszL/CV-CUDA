@@ -52,10 +52,10 @@ typedef struct NVCVTensorRequirementsRec
     NVCVTensorLayout layout;
 
     /*< Shape of the tensor */
-    int32_t shape[NVCV_TENSOR_MAX_NDIMS];
+    int32_t shape[NVCV_TENSOR_MAX_NDIM];
 
     /*< Distance in bytes between each element of a given dimension. */
-    int64_t pitchBytes[NVCV_TENSOR_MAX_NDIMS];
+    int64_t pitchBytes[NVCV_TENSOR_MAX_NDIM];
 
     /*< Format of each image. */
     NVCVImageFormat format;
@@ -253,20 +253,20 @@ NVCV_PUBLIC NVCVStatus nvcvTensorGetDimsNCHW(NVCVTensorHandle handle, int32_t *b
  *                   + Must not be NULL.
  *                   + Must have been created by @ref nvcvTensorConstruct.
  *
- * @param[in,out] ndims Number of elements in output shape buffer.
+ * @param[in,out] ndim Number of elements in output shape buffer.
  *                     When function returns, it stores the actual number of dimensions in the tensor.
- *                     Set it to NVCV_TENSOR_MAX_NDIMS to return the full shape in @shape.
- *                     Set it to 0 if only tensor's ndims must be returned.
+ *                     Set it to NVCV_TENSOR_MAX_NDIM to return the full shape in @shape.
+ *                     Set it to 0 if only tensor's ndim must be returned.
  *
  * @param[out] shape Where the tensor shape will be written to.
- *                   Must point to a buffer with @p ndims elements.
+ *                   Must point to a buffer with @p ndim elements.
  *                   Elements above actual number of dimensions will be set to 1.
- *                   + If NULL, @p ndims must be 0.
+ *                   + If NULL, @p ndim must be 0.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvTensorGetShape(NVCVTensorHandle handle, int32_t *ndims, int32_t *shape);
+NVCV_PUBLIC NVCVStatus nvcvTensorGetShape(NVCVTensorHandle handle, int32_t *ndim, int32_t *shape);
 
 #ifdef __cplusplus
 }

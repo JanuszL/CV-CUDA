@@ -36,7 +36,7 @@ public:
 private:
     NVCVTensorData m_data;
 
-    int          doGetNDims() const override;
+    int          doGetNumDim() const override;
     const Shape &doGetShape() const override;
     DimsNCHW     doGetDims() const override;
     TensorLayout doGetLayout() const override;
@@ -84,11 +84,11 @@ inline TensorDataPitchDevice::TensorDataPitchDevice(ImageFormat format, int numI
         nvcvTensorDataPitchDeviceFillForImages(&m_data, format, numImages, size.w, size.h, mem, pitchBytes));
 }
 
-inline int TensorDataPitchDevice::doGetNDims() const
+inline int TensorDataPitchDevice::doGetNumDim() const
 {
-    int32_t ndims;
-    detail::CheckThrow(nvcvTensorLayoutGetNDims(m_data.buffer.pitch.layout, &ndims));
-    return ndims;
+    int32_t ndim;
+    detail::CheckThrow(nvcvTensorLayoutGetNumDim(m_data.buffer.pitch.layout, &ndim));
+    return ndim;
 }
 
 inline const Shape &TensorDataPitchDevice::doGetShape() const

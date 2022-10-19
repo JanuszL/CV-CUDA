@@ -51,14 +51,14 @@ TEST_P(TensorTests, wip_create)
     const nvcv::Shape        GOLD_SHAPE       = std::get<5>(GetParam());
     const nvcv::DimsNCHW     GOLD_DIMS
         = nvcv::DimsNCHW{PARAM_NUM_IMAGES, PARAM_FORMAT.numChannels(), PARAM_HEIGHT, PARAM_WIDTH};
-    const int GOLD_NDIMS = 4;
+    const int GOLD_NDIM = 4;
 
     nvcv::Tensor tensor(PARAM_NUM_IMAGES, {PARAM_WIDTH, PARAM_HEIGHT}, PARAM_FORMAT);
 
     EXPECT_EQ(PARAM_FORMAT, tensor.format());
     EXPECT_EQ(GOLD_DIMS, tensor.dims());
     EXPECT_EQ(GOLD_SHAPE, tensor.shape());
-    EXPECT_EQ(GOLD_NDIMS, tensor.ndims());
+    EXPECT_EQ(GOLD_NDIM, tensor.ndim());
     EXPECT_EQ(GOLD_LAYOUT, tensor.layout());
     ASSERT_NE(nullptr, tensor.handle());
 
@@ -73,7 +73,7 @@ TEST_P(TensorTests, wip_create)
         auto *devdata = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(data);
         ASSERT_NE(nullptr, devdata);
 
-        EXPECT_EQ(GOLD_NDIMS, devdata->ndims());
+        EXPECT_EQ(GOLD_NDIM, devdata->ndim());
         ASSERT_EQ(GOLD_DIMS, devdata->dims());
         ASSERT_EQ(GOLD_SHAPE, devdata->shape());
         ASSERT_EQ(GOLD_LAYOUT, devdata->layout());
@@ -139,7 +139,7 @@ TEST(TensorWrapData, wip_create)
     EXPECT_EQ(79, buf.shape()[2]);
     EXPECT_EQ(2, buf.shape()[1]);
     EXPECT_EQ(reinterpret_cast<void *>(678), buf.mem());
-    EXPECT_EQ(4, buf.ndims());
+    EXPECT_EQ(4, buf.ndim());
 
     nvcv::TensorWrapData tensor{buf};
 
@@ -150,7 +150,7 @@ TEST(TensorWrapData, wip_create)
     EXPECT_EQ(buf.dims(), tensor.dims());
     EXPECT_EQ(buf.shape(), tensor.shape());
     EXPECT_EQ(buf.layout(), tensor.layout());
-    EXPECT_EQ(buf.ndims(), tensor.ndims());
+    EXPECT_EQ(buf.ndim(), tensor.ndim());
     EXPECT_EQ(fmt, tensor.format());
 
     const nvcv::ITensorData *data = tensor.exportData();
@@ -162,7 +162,7 @@ TEST(TensorWrapData, wip_create)
     EXPECT_EQ(buf.format(), devdata->format());
     EXPECT_EQ(buf.dims(), devdata->dims());
     EXPECT_EQ(buf.shape(), devdata->shape());
-    EXPECT_EQ(buf.ndims(), devdata->ndims());
+    EXPECT_EQ(buf.ndim(), devdata->ndim());
 
     EXPECT_EQ(buf.mem(), devdata->mem());
 

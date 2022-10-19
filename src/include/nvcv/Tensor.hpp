@@ -39,7 +39,7 @@ private:
 
     mutable detail::Optional<AllocatorWrapHandle> m_alloc;
 
-    int          doGetNDims() const override;
+    int          doGetNumDim() const override;
     Shape        doGetShape() const override;
     ImageFormat  doGetFormat() const override;
     DimsNCHW     doGetDims() const override;
@@ -118,18 +118,18 @@ inline TensorLayout TensorWrapHandle::doGetLayout() const
     return static_cast<TensorLayout>(layout);
 }
 
-inline int TensorWrapHandle::doGetNDims() const
+inline int TensorWrapHandle::doGetNumDim() const
 {
-    int32_t ndims = 0;
-    detail::CheckThrow(nvcvTensorGetShape(m_handle, &ndims, nullptr));
-    return ndims;
+    int32_t ndim = 0;
+    detail::CheckThrow(nvcvTensorGetShape(m_handle, &ndim, nullptr));
+    return ndim;
 }
 
 inline Shape TensorWrapHandle::doGetShape() const
 {
     Shape   shape;
-    int32_t ndims = NVCV_TENSOR_MAX_NDIMS;
-    detail::CheckThrow(nvcvTensorGetShape(m_handle, &ndims, &shape[0]));
+    int32_t ndim = NVCV_TENSOR_MAX_NDIM;
+    detail::CheckThrow(nvcvTensorGetShape(m_handle, &ndim, &shape[0]));
     return shape;
 }
 

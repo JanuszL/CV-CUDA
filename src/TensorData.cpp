@@ -20,17 +20,17 @@
 
 namespace priv = nv::cv::priv;
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorLayoutGetNDims, (NVCVTensorLayout layout, int32_t *ndims))
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorLayoutGetNumDim, (NVCVTensorLayout layout, int32_t *ndim))
 {
     return priv::ProtectCall(
         [&]
         {
-            if (ndims == nullptr)
+            if (ndim == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "ndims output must not be NULL");
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "ndim output must not be NULL");
             }
 
-            *ndims = priv::GetNDims(layout);
+            *ndim = priv::GetNumDim(layout);
         });
 }
 
@@ -43,7 +43,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorDataPitchDeviceFillForImages,
         {
             if (data == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "ndims output must not be NULL");
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "ndim output must not be NULL");
             }
 
             priv::FillTensorData(*data, priv::ImageFormat{format}, numImages, {imgWidth, imgHeight}, mem, pitchBytes);
@@ -59,7 +59,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorDataPitchDeviceFillDimsNCHW,
         {
             if (data == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "ndims output must not be NULL");
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "ndim output must not be NULL");
             }
 
             priv::FillTensorData(*data, priv::ImageFormat{format}, priv::DimsNCHW{nbatch, channels, height, width}, mem,

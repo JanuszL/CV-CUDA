@@ -23,7 +23,7 @@ namespace nv { namespace cv {
 
 class Shape
 {
-    using Data = std::array<int32_t, NVCV_TENSOR_MAX_NDIMS>;
+    using Data = std::array<int32_t, NVCV_TENSOR_MAX_NDIM>;
 
 public:
     using value_type = Data::value_type;

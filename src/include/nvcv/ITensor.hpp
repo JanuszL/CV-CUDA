@@ -35,7 +35,7 @@ public:
 
     NVCVTensorHandle handle() const;
 
-    int   ndims() const;
+    int   ndim() const;
     Shape shape() const;
 
     TensorLayout layout() const;
@@ -50,7 +50,7 @@ public:
 private:
     virtual NVCVTensorHandle doGetHandle() const = 0;
 
-    virtual int          doGetNDims() const  = 0;
+    virtual int          doGetNumDim() const = 0;
     virtual TensorLayout doGetLayout() const = 0;
     virtual Shape        doGetShape() const  = 0;
     virtual ImageFormat  doGetFormat() const = 0;
@@ -73,9 +73,9 @@ inline Shape ITensor::shape() const
     return doGetShape();
 }
 
-inline int ITensor::ndims() const
+inline int ITensor::ndim() const
 {
-    return doGetNDims();
+    return doGetNumDim();
 }
 
 inline TensorLayout ITensor::layout() const

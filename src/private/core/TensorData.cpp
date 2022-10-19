@@ -79,13 +79,13 @@ static void DoFillTensorData(NVCVTensorData &data, ImageFormat format, NVCVTenso
     buffer.layout = layout;
     buffer.mem    = mem;
 
-    int ndims = GetNDims(buffer.layout);
+    int ndim = GetNumDim(buffer.layout);
 
-    memcpy(buffer.shape, shape, sizeof(*shape) * ndims);
+    memcpy(buffer.shape, shape, sizeof(*shape) * ndim);
 
     if (pitchBytes != nullptr)
     {
-        memcpy(buffer.pitchBytes, pitchBytes, sizeof(*pitchBytes) * ndims);
+        memcpy(buffer.pitchBytes, pitchBytes, sizeof(*pitchBytes) * ndim);
     }
     else
     {
@@ -94,16 +94,16 @@ static void DoFillTensorData(NVCVTensorData &data, ImageFormat format, NVCVTenso
         switch (buffer.layout)
         {
         case NVCV_TENSOR_NCHW:
-            buffer.pitchBytes[ndims - 1] = format.planePixelStrideBytes(0);
+            buffer.pitchBytes[ndim - 1] = format.planePixelStrideBytes(0);
             break;
         case NVCV_TENSOR_NHWC:
-            buffer.pitchBytes[ndims - 1] = format.planePixelStrideBytes(0) / format.numChannels();
+            buffer.pitchBytes[ndim - 1] = format.planePixelStrideBytes(0) / format.numChannels();
             break;
         default:
             NVCV_ASSERT(!"Invalid tensor layout");
         }
 
-        for (int dim = ndims - 2; dim >= 0; --dim)
+        for (int dim = ndim - 2; dim >= 0; --dim)
         {
             buffer.pitchBytes[dim] = buffer.pitchBytes[dim + 1] * buffer.shape[dim + 1];
         }

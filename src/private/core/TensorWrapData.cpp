@@ -34,9 +34,9 @@ static void ValidateTensorBufferPitch(ImageFormat fmt, const NVCVTensorBufferPit
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Memory buffer must not be NULL";
     }
 
-    int ndims = GetNDims(buffer.layout);
+    int ndim = GetNumDim(buffer.layout);
 
-    for (int i = 0; i < ndims; ++i)
+    for (int i = 0; i < ndim; ++i)
     {
         if (buffer.shape[i] < 1)
         {
@@ -49,11 +49,11 @@ static void ValidateTensorBufferPitch(ImageFormat fmt, const NVCVTensorBufferPit
     switch (buffer.layout)
     {
     case NVCV_TENSOR_NCHW:
-        firstPacked = ndims - 1;
+        firstPacked = ndim - 1;
         lastPitch   = fmt.planePixelStrideBytes(0);
         break;
     case NVCV_TENSOR_NHWC:
-        firstPacked = ndims - 2;
+        firstPacked = ndim - 2;
         lastPitch   = fmt.planePixelStrideBytes(0) / fmt.numChannels();
         break;
     default:
@@ -62,9 +62,9 @@ static void ValidateTensorBufferPitch(ImageFormat fmt, const NVCVTensorBufferPit
 
     // Test packed dimensions
     int dim;
-    for (dim = ndims - 1; dim >= firstPacked; --dim)
+    for (dim = ndim - 1; dim >= firstPacked; --dim)
     {
-        int correctPitch = dim == ndims - 1 ? lastPitch : buffer.pitchBytes[dim + 1] * buffer.shape[dim + 1];
+        int correctPitch = dim == ndim - 1 ? lastPitch : buffer.pitchBytes[dim + 1] * buffer.shape[dim + 1];
         if (buffer.pitchBytes[dim] != correctPitch)
         {
             throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
