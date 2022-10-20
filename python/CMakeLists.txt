@@ -23,16 +23,23 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(imgformat_defs ${CMAKE_CURRENT_BINARY_DIR}/NVCVPythonImageFormatDefs.inc)
 set(imgformat_script ${CMAKE_CURRENT_SOURCE_DIR}/gen_imgformat_list.sh)
-
-set(imgfmt_header ${CMAKE_CURRENT_SOURCE_DIR}/../src/include/nvcv/ImageFormat.h)
-
+set(imgformat_header ${CMAKE_CURRENT_SOURCE_DIR}/../src/include/nvcv/ImageFormat.h)
 add_custom_command(OUTPUT ${imgformat_defs}
-    COMMAND ${imgformat_script} "${imgfmt_header}" > ${imgformat_defs}
-    DEPENDS ${imgformat_script} ${imgfmt_header}
+    COMMAND ${imgformat_script} "${imgformat_header}" > ${imgformat_defs}
+    DEPENDS ${imgformat_script} ${imgformat_header}
+)
+
+set(pixtype_defs ${CMAKE_CURRENT_BINARY_DIR}/NVCVPythonPixelTypeDefs.inc)
+set(pixtype_script ${CMAKE_CURRENT_SOURCE_DIR}/gen_pixtype_list.sh)
+set(pixtype_header ${CMAKE_CURRENT_SOURCE_DIR}/../src/include/nvcv/PixelType.h)
+add_custom_command(OUTPUT ${pixtype_defs}
+    COMMAND ${pixtype_script} "${pixtype_header}" > ${pixtype_defs}
+    DEPENDS ${pixtype_script} ${pixtype_header}
 )
 
 pybind11_add_module(nvcv_python MODULE
     ${imgformat_defs}
+    ${pixtype_defs}
     Assert.cpp
     Cache.cpp
     CheckError.cpp
@@ -40,6 +47,7 @@ pybind11_add_module(nvcv_python MODULE
     String.cpp
     Main.cpp
     ImageFormat.cpp
+    PixelType.cpp
     Object.cpp
     Stream.cpp
 )

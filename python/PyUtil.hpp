@@ -14,6 +14,7 @@
 #ifndef NVCV_PYTHON_PYUTIL_HPP
 #define NVCV_PYTHON_PYUTIL_HPP
 
+#include <nvcv/PixelType.hpp>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 
@@ -50,6 +51,8 @@ void DefClassStaticMethod(const char *name, Func &&f, const Extra &...extra)
 void RegisterCleanup(py::module &m, std::function<void()> fn);
 
 std::string GetFullyQualifiedName(py::handle h);
+
+cv::PixelType ToPixelType(const py::dtype &dt, int nchannels = 1);
 
 } // namespace nv::cvpy
 

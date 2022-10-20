@@ -13,6 +13,9 @@
 
 #include "PyUtil.hpp"
 
+#include "Assert.hpp"
+#include "String.hpp"
+
 #include <cstdlib>
 
 namespace nv::cvpy {
@@ -34,5 +37,4 @@ std::string GetFullyQualifiedName(py::handle h)
     ss << type.attr("__module__").cast<std::string>() << '.' << type.attr("__qualname__").cast<std::string>();
     return ss.str();
 }
-
 } // namespace nv::cvpy

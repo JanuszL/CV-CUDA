@@ -11,36 +11,34 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "Cache.hpp"
-#include "ImageFormat.hpp"
-#include "PixelType.hpp"
-#include "Stream.hpp"
+#ifndef NVCV_PYTHON_PIXELTYPE_HPP
+#define NVCV_PYTHON_PIXELTYPE_HPP
 
-#include <nvcv/Version.h>
+#include <nvcv/PixelType.hpp>
 #include <pybind11/pybind11.h>
 
+namespace nv::cv {
+size_t ComputeHash(const cv::PixelType &pix);
+}
+
+namespace nv::cvpy {
 namespace py = pybind11;
 
-PYBIND11_MODULE(nvcv, m)
+void ExportPixelType(py::module &m);
+
+} // namespace nv::cvpy
+
+namespace pybind11::detail {
+
+template<>
+struct type_caster<nv::cv::PixelType>
 {
-    m.doc() = R"pbdoc(
-        NVCV Python API reference
-        ========================
+    PYBIND11_TYPE_CASTER(nv::cv::PixelType, const_name("nvcv.Type"));
 
-        This is the Python API reference for the NVIDIA® NVCV library.
-    )pbdoc";
+    bool          load(handle src, bool);
+    static handle cast(nv::cv::PixelType type, return_value_policy /* policy */, handle /*parent */);
+};
 
-    m.attr("__version__") = NVCV_VERSION_STRING;
+} // namespace pybind11::detail
 
-    using namespace nv::cvpy;
-
-    Cache::Export(m);
-
-    {
-        py::module_ cuda = m.def_submodule("cuda");
-        Stream::Export(cuda);
-    }
-
-    ExportImageFormat(m);
-    ExportPixelType(m);
-}
+#endif // NVCV_PYTHON_PIXELTYPE_HPP
