@@ -27,10 +27,10 @@ public:
     ~TensorWrapData();
 
     int32_t        ndim() const override;
-    const int32_t *shape() const override;
+    const int64_t *shape() const override;
 
-    NVCVTensorLayout layout() const override;
-    DimsNCHW         dims() const override;
+    const NVCVTensorLayout &layout() const override;
+    DimsNCHW                dims() const override;
 
     PixelType dtype() const override;
 

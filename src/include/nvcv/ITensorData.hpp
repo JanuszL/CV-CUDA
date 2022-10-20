@@ -21,12 +21,6 @@
 
 namespace nv { namespace cv {
 
-enum TensorLayout
-{
-    NCHW = NVCV_TENSOR_NCHW,
-    NHWC = NVCV_TENSOR_NHWC,
-};
-
 // Interface hierarchy of tensor contents
 class ITensorData
 {
@@ -36,15 +30,17 @@ public:
     int   ndim() const;
     Shape shape() const;
 
-    const int32_t &shape(int d) const;
+    Shape::const_reference shape(int d) const;
 
-    DimsNCHW     dims() const;
     TensorLayout layout() const;
 
     PixelType dtype() const;
 
-    int32_t numPlanes() const;
-    int32_t numImages() const;
+    // TODO: get rid of these members as they are
+    // too layout-specific.
+    DimsNCHW dims() const;
+    int32_t  numPlanes() const;
+    int32_t  numImages() const;
 
     const NVCVTensorData &cdata() const;
     NVCVTensorData       &cdata();
@@ -72,6 +68,8 @@ public:
     void          *mem() const;
     const int64_t &pitchBytes(int d) const;
 
+    // TODO: get rid of these members as they are
+    // too layout-specific.
     int64_t imgPitchBytes() const;
     int64_t rowPitchBytes() const;
     int64_t colPitchBytes() const;
@@ -111,7 +109,7 @@ inline Shape ITensorData::shape() const
     return doGetShape();
 }
 
-inline const int32_t &ITensorData::shape(int d) const
+inline auto ITensorData::shape(int d) const -> Shape::const_reference
 {
     return doGetShapeDim(d);
 }

@@ -11,25 +11,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "Dims.hpp"
+#ifndef NVCV_DETAIL_COMPILERUTILS_H
+#define NVCV_DETAIL_COMPILERUTILS_H
 
-#include "TensorLayout.hpp"
-#include "TensorShape.hpp"
+#ifdef __cplusplus
+#    define NVCV_CONSTEXPR constexpr
+#else
+#    define NVCV_CONSTEXPR
+#endif
 
-namespace nv::cv::priv {
-
-DimsNCHW ToNCHW(const int64_t *s, const NVCVTensorLayout &layout)
-{
-    int64_t nchw[4];
-    PermuteShape(layout, s, NVCV_TENSOR_NCHW, nchw);
-
-    DimsNCHW dims;
-    dims.n = nchw[0];
-    dims.c = nchw[1];
-    dims.h = nchw[2];
-    dims.w = nchw[3];
-
-    return dims;
-}
-
-} // namespace nv::cv::priv
+#endif // NVCV_DETAIL_COMPILERUTILS_H

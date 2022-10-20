@@ -15,6 +15,7 @@
 #define NVCV_SHAPE_HPP
 
 #include <nvcv/TensorData.h>
+#include <nvcv/TensorLayout.hpp>
 
 #include <algorithm>
 #include <array>
@@ -25,7 +26,7 @@ namespace nv { namespace cv {
 
 class Shape
 {
-    using Data = std::array<int32_t, NVCV_TENSOR_MAX_NDIM>;
+    using Data = std::array<int64_t, NVCV_TENSOR_MAX_NDIM>;
 
 public:
     using value_type      = Data::value_type;
@@ -37,17 +38,18 @@ public:
 
     Shape();
     Shape(const Shape &that);
-    explicit Shape(int size);
+    explicit Shape(size_type size);
 
     template<class IT>
     Shape(IT itbeg, IT itend);
-    Shape(std::initializer_list<int32_t> shape);
+    Shape(std::initializer_list<int64_t> shape);
 
     reference       operator[](int i);
     const_reference operator[](int i) const;
 
-    int32_t size() const;
-    bool    empty() const;
+    size_type ndim() const;
+    size_type size() const;
+    bool      empty() const;
 
     Data::iterator begin();
     Data::iterator end();
@@ -64,9 +66,11 @@ public:
     bool operator<(const Shape &that) const;
 
 private:
-    Data   m_data;
-    int8_t m_size;
+    Data      m_data;
+    size_type m_size;
 };
+
+Shape Permute(const Shape &src, const TensorLayout &srcLayout, const TensorLayout &dstLayout);
 
 // Implementation
 
@@ -87,7 +91,7 @@ inline Shape::Shape(const Shape &that)
     std::copy(that.begin(), that.end(), m_data.begin());
 }
 
-inline Shape::Shape(std::initializer_list<int32_t> shape)
+inline Shape::Shape(std::initializer_list<int64_t> shape)
     : Shape(shape.begin(), shape.end())
 {
 }
@@ -96,17 +100,17 @@ template<class IT>
 inline Shape::Shape(IT itbeg, IT itend)
     : m_size(std::distance(itbeg, itend))
 {
-    assert(m_size <= (int32_t)m_data.size());
+    assert(m_size <= (size_type)m_data.size());
     std::copy(itbeg, itend, m_data.begin());
 }
 
-inline int32_t &Shape::operator[](int i)
+inline auto Shape::operator[](int i) -> reference
 {
     assert(0 <= i && i < m_size);
     return m_data[i];
 }
 
-inline const int32_t &Shape::operator[](int i) const
+inline auto Shape::operator[](int i) const -> const_reference
 {
     assert(0 <= i && i < m_size);
     return m_data[i];
@@ -134,7 +138,12 @@ inline bool Shape::operator<(const Shape &that) const
     return std::lexicographical_compare(this->begin(), this->end(), that.begin(), that.end());
 }
 
-inline int32_t Shape::size() const
+inline auto Shape::ndim() const -> size_type
+{
+    return m_size;
+}
+
+inline auto Shape::size() const -> size_type
 {
     return m_size;
 }
@@ -189,6 +198,13 @@ inline std::ostream &operator<<(std::ostream &out, const Shape &shape)
         }
         return out;
     }
+}
+
+inline Shape Permute(const Shape &src, const TensorLayout &srcLayout, const TensorLayout &dstLayout)
+{
+    Shape dst(dstLayout.ndim());
+    detail::CheckThrow(nvcvTensorShapePermute(srcLayout, &src[0], dstLayout, &dst[0]));
+    return dst;
 }
 
 }} // namespace nv::cv

@@ -45,7 +45,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorCalcRequirementsForImages,
 }
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorCalcRequirements,
-                (int32_t ndim, const int32_t *shape, NVCVPixelType dtype, NVCVTensorLayout layout,
+                (int32_t ndim, const int64_t *shape, NVCVPixelType dtype, NVCVTensorLayout layout,
                  NVCVTensorRequirements *reqs))
 {
     return priv::ProtectCall(
@@ -215,7 +215,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetDimsNCHW,
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetShape, (NVCVTensorHandle handle, int32_t *ndim, int32_t *shape))
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetShape, (NVCVTensorHandle handle, int32_t *ndim, int64_t *shape))
 {
     return priv::ProtectCall(
         [&]

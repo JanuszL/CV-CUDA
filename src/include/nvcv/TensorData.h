@@ -15,23 +15,14 @@
 #define NVCV_TENSORDATA_H
 
 #include "ImageFormat.h"
+#include "TensorLayout.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-/** Tensor memory layout.
- * Describes how to interpret tensor shape's elements. */
-typedef enum
-{
-    NVCV_TENSOR_NCHW,
-    NVCV_TENSOR_NHWC,
-} NVCVTensorLayout;
-
 typedef NVCVPixelType NVCVElementType;
-
-#define NVCV_TENSOR_MAX_NDIM (4)
 
 /** Stores the tensor plane contents. */
 typedef struct NVCVTensorBufferPitchRec
@@ -40,7 +31,7 @@ typedef struct NVCVTensorBufferPitchRec
     NVCVTensorLayout layout;
 
     int32_t ndim;
-    int32_t shape[NVCV_TENSOR_MAX_NDIM];
+    int64_t shape[NVCV_TENSOR_MAX_NDIM];
     int64_t pitchBytes[NVCV_TENSOR_MAX_NDIM];
 
     /** Pointer to memory buffer with tensor contents.
@@ -85,16 +76,25 @@ typedef struct NVCVTensorDataRec
 } NVCVTensorData;
 
 /**
- * Retrieve the number of dimensions of a tensor layout.
+ * Permute the input shape with given layout to a different layout.
  *
- * @param[in] layout Tensor layout to be queried.
+ * @param[in] srcLayout The layout of the source shape.
  *
- * @param[out] ndim Number of dimensions of the tensor layout.
+ * @param[in] srcShape The shape to be permuted.
+ *                     + Must not be NULL.
+ *                     + Number of dimensions must be equal to dimensions in @p srcLayout
+ *
+ * @param[in] dstLayout The layout of the destination shape.
+ *
+ * @param[out] dstShape Where the permutation will be written to.
+ *                      + Must not be NULL.
+ *                      + Number of dimensions must be equal to dimensions in @p dstLayout
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvTensorLayoutGetNumDim(NVCVTensorLayout layout, int32_t *ndim);
+NVCV_PUBLIC NVCVStatus nvcvTensorShapePermute(NVCVTensorLayout srcLayout, const int64_t *srcShape,
+                                              NVCVTensorLayout dstLayout, int64_t *dstShape);
 
 #ifdef __cplusplus
 }

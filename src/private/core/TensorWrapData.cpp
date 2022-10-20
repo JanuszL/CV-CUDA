@@ -35,7 +35,7 @@ static void ValidateTensorBufferPitch(const NVCVTensorBufferPitch &buffer)
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Memory buffer must not be NULL";
     }
 
-    int ndim = GetNumDim(buffer.layout);
+    int ndim = buffer.layout.ndim;
 
     for (int i = 0; i < ndim; ++i)
     {
@@ -47,18 +47,7 @@ static void ValidateTensorBufferPitch(const NVCVTensorBufferPitch &buffer)
 
     PixelType dtype{buffer.dtype};
 
-    int firstPacked;
-    switch (buffer.layout)
-    {
-    case NVCV_TENSOR_NCHW:
-        firstPacked = ndim - 1;
-        break;
-    case NVCV_TENSOR_NHWC:
-        firstPacked = ndim - 2;
-        break;
-    default:
-        throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Invalid tensor layout: " << buffer.layout;
-    }
+    int firstPacked = IsChannelLast(buffer.layout) ? ndim - 2 : ndim - 1;
 
     // Test packed dimensions
     int dim;
@@ -124,7 +113,7 @@ int32_t TensorWrapData::ndim() const
     return 0;
 }
 
-const int32_t *TensorWrapData::shape() const
+const int64_t *TensorWrapData::shape() const
 {
     switch (m_data.bufferType)
     {
@@ -139,7 +128,7 @@ const int32_t *TensorWrapData::shape() const
     return nullptr;
 }
 
-NVCVTensorLayout TensorWrapData::layout() const
+const NVCVTensorLayout &TensorWrapData::layout() const
 {
     switch (m_data.bufferType)
     {

@@ -15,21 +15,12 @@
 #include <nvcv/TensorData.hpp>
 #include <private/core/Status.hpp>
 #include <private/core/SymbolVersioning.hpp>
-#include <private/core/TensorData.hpp>
-#include <private/core/TensorLayout.hpp>
+#include <private/core/TensorShape.hpp>
 
 namespace priv = nv::cv::priv;
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorLayoutGetNumDim, (NVCVTensorLayout layout, int32_t *ndim))
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorShapePermute,
+                (NVCVTensorLayout srcLayout, const int64_t *srcShape, NVCVTensorLayout dstLayout, int64_t *dstShape))
 {
-    return priv::ProtectCall(
-        [&]
-        {
-            if (ndim == nullptr)
-            {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "ndim output must not be NULL");
-            }
-
-            *ndim = priv::GetNumDim(layout);
-        });
+    return priv::ProtectCall([&] { priv::PermuteShape(srcLayout, srcShape, dstLayout, dstShape); });
 }

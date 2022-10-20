@@ -11,25 +11,17 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "Dims.hpp"
+#ifndef NVCV_PRIV_TENSORSHAPE_HPP
+#define NVCV_PRIV_TENSORSHAPE_HPP
 
-#include "TensorLayout.hpp"
-#include "TensorShape.hpp"
+#include <nvcv/TensorLayout.h>
+#include <util/StaticVector.hpp>
 
 namespace nv::cv::priv {
 
-DimsNCHW ToNCHW(const int64_t *s, const NVCVTensorLayout &layout)
-{
-    int64_t nchw[4];
-    PermuteShape(layout, s, NVCV_TENSOR_NCHW, nchw);
+void PermuteShape(const NVCVTensorLayout &srcLayout, const int64_t *srcShape, const NVCVTensorLayout &dstLayout,
+                  int64_t *dstShape);
 
-    DimsNCHW dims;
-    dims.n = nchw[0];
-    dims.c = nchw[1];
-    dims.h = nchw[2];
-    dims.w = nchw[3];
-
-    return dims;
 }
 
-} // namespace nv::cv::priv
+#endif // NVCV_PRIV_TENSORSHAPE_HPP

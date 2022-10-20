@@ -25,6 +25,7 @@ add_library(nvcv_private_core STATIC
     Dims.cpp
     TensorLayout.cpp
     TensorData.cpp
+    TensorShape.cpp
 )
 
 target_include_directories(nvcv_private_core

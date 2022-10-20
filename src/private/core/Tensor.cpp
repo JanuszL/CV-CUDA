@@ -17,6 +17,7 @@
 #include "Requirements.hpp"
 #include "TensorData.hpp"
 #include "TensorLayout.hpp"
+#include "TensorShape.hpp"
 
 #include <cuda_runtime.h>
 #include <fmt/DataLayout.hpp>
@@ -64,22 +65,10 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t numImages, Size2D imgSiz
     // Calculate the shape based on image parameters
     NVCVTensorLayout layout = GetTensorLayoutFor(fmt, numImages);
 
-    int32_t shape[4];
-    shape[0] = numImages;
-    switch (layout)
-    {
-    case NVCV_TENSOR_NCHW:
-        shape[1] = fmt.numChannels();
-        shape[2] = imgSize.h;
-        shape[3] = imgSize.w;
-        break;
+    int64_t shapeNCHW[4] = {numImages, fmt.numChannels(), imgSize.h, imgSize.w};
 
-    case NVCV_TENSOR_NHWC:
-        shape[1] = imgSize.h;
-        shape[2] = imgSize.w;
-        shape[3] = fmt.numChannels();
-        break;
-    }
+    int64_t shape[NVCV_TENSOR_MAX_NDIM];
+    PermuteShape(NVCV_TENSOR_NCHW, shapeNCHW, layout, shape);
 
     // Calculate the element type. It's the pixel type of the
     // first channel. It assumes that all channels have same packing.
@@ -94,10 +83,10 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t numImages, Size2D imgSiz
 
     PixelType dtype{fmt.dataType(), *chPacking};
 
-    return CalcRequirements(4, shape, dtype, layout);
+    return CalcRequirements(layout.ndim, shape, dtype, layout);
 }
 
-NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int32_t *shape, const PixelType &dtype,
+NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int64_t *shape, const PixelType &dtype,
                                                 NVCVTensorLayout layout)
 {
     NVCVTensorRequirements reqs;
@@ -105,7 +94,7 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int32_t *sha
     reqs.layout = layout;
     reqs.dtype  = dtype.value();
 
-    int ndimLayout = GetNumDim(layout);
+    int ndimLayout = layout.ndim;
 
     if (ndim > ndimLayout)
     {
@@ -197,12 +186,12 @@ int32_t Tensor::ndim() const
     return m_reqs.ndim;
 }
 
-const int32_t *Tensor::shape() const
+const int64_t *Tensor::shape() const
 {
     return m_reqs.shape;
 }
 
-NVCVTensorLayout Tensor::layout() const
+const NVCVTensorLayout &Tensor::layout() const
 {
     return m_reqs.layout;
 }

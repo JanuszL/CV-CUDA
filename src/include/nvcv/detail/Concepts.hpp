@@ -11,25 +11,18 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "Dims.hpp"
+#ifndef NVCV_DETAIL_CONCEPTS_HPP
+#define NVCV_DETAIL_CONCEPTS_HPP
 
-#include "TensorLayout.hpp"
-#include "TensorShape.hpp"
+#include <iterator>
+#include <type_traits>
 
-namespace nv::cv::priv {
+namespace nv { namespace cv { namespace detail {
 
-DimsNCHW ToNCHW(const int64_t *s, const NVCVTensorLayout &layout)
-{
-    int64_t nchw[4];
-    PermuteShape(layout, s, NVCV_TENSOR_NCHW, nchw);
+template<class IT>
+using IsRandomAccessIterator = typename std::enable_if<
+    std::is_same<typename std::iterator_traits<IT>::iterator_category, std::random_access_iterator_tag>::value>::type;
 
-    DimsNCHW dims;
-    dims.n = nchw[0];
-    dims.c = nchw[1];
-    dims.h = nchw[2];
-    dims.w = nchw[3];
+}}} // namespace nv::cv::detail
 
-    return dims;
-}
-
-} // namespace nv::cv::priv
+#endif // NVCV_DETAIL_CONCEPTS_HPP

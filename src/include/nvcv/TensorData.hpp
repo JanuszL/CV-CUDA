@@ -16,6 +16,7 @@
 
 #include "Dims.hpp"
 #include "ITensorData.hpp"
+#include "Shape.hpp"
 
 namespace nv { namespace cv {
 
@@ -83,31 +84,27 @@ inline Shape TensorDataPitchDevice::doGetShape() const
 
 inline DimsNCHW TensorDataPitchDevice::doGetDims() const
 {
-    const int32_t *shape = m_data.buffer.pitch.shape;
-
-    switch (m_data.buffer.pitch.layout)
-    {
-    case NVCV_TENSOR_NCHW:
-        return {shape[0], shape[1], shape[2], shape[3]};
-    case NVCV_TENSOR_NHWC:
-        return {shape[0], shape[3], shape[1], shape[2]};
-    }
-    assert(false && "Unknown tensor layout");
-    return {};
+    Shape nchw(4);
+    detail::CheckThrow(
+        nvcvTensorShapePermute(m_data.buffer.pitch.layout, m_data.buffer.pitch.shape, NVCV_TENSOR_NCHW, &nchw[0]));
+    return {static_cast<int>(nchw[0]), static_cast<int>(nchw[1]), static_cast<int>(nchw[2]), static_cast<int>(nchw[3])};
 }
 
 inline int32_t TensorDataPitchDevice::doGetNumPlanes() const
 {
-    switch (m_data.buffer.pitch.layout)
+    if (nvcvTensorLayoutCompare(m_data.buffer.pitch.layout, NVCV_TENSOR_NCHW) == 0)
     {
-    case NVCV_TENSOR_NCHW:
         return m_data.buffer.pitch.shape[1];
-    case NVCV_TENSOR_NHWC:
+    }
+    else if (nvcvTensorLayoutCompare(m_data.buffer.pitch.layout, NVCV_TENSOR_NHWC) == 0)
+    {
         return 1;
     }
-    assert(!"Invalid tensor layout");
-    // hopefully something will break real bad in release mode
-    return -1;
+    else
+    {
+        assert(!"Invalid tensor layout");
+        return -1;
+    }
 }
 
 inline int32_t TensorDataPitchDevice::doGetNumImages() const
@@ -117,7 +114,11 @@ inline int32_t TensorDataPitchDevice::doGetNumImages() const
 
 inline TensorLayout TensorDataPitchDevice::doGetLayout() const
 {
-    return static_cast<TensorLayout>(m_data.buffer.pitch.layout);
+    TensorLayout layout;
+    static_assert(sizeof(layout) == sizeof(m_data.buffer.pitch.layout));
+    // std::bitcast
+    memcpy(&layout, &m_data.buffer.pitch.layout, sizeof(layout));
+    return layout;
 }
 
 inline PixelType TensorDataPitchDevice::doGetPixelType() const
@@ -157,30 +158,34 @@ inline int64_t TensorDataPitchDevice::doGetPlanePitchBytes() const
 
 inline int64_t TensorDataPitchDevice::doGetRowPitchBytes() const
 {
-    switch (m_data.buffer.pitch.layout)
+    if (nvcvTensorLayoutCompare(m_data.buffer.pitch.layout, NVCV_TENSOR_NCHW) == 0)
     {
-    case NVCV_TENSOR_NCHW:
         return m_data.buffer.pitch.pitchBytes[2];
-    case NVCV_TENSOR_NHWC:
+    }
+    else if (nvcvTensorLayoutCompare(m_data.buffer.pitch.layout, NVCV_TENSOR_NHWC) == 0)
+    {
         return m_data.buffer.pitch.pitchBytes[1];
     }
-    assert(!"Invalid tensor layout");
-    // hopefully something will break real bad in release mode
-    return m_data.buffer.pitch.pitchBytes[0];
+    else
+    {
+        return 0;
+    }
 }
 
 inline int64_t TensorDataPitchDevice::doGetColPitchBytes() const
 {
-    switch (m_data.buffer.pitch.layout)
+    if (nvcvTensorLayoutCompare(m_data.buffer.pitch.layout, NVCV_TENSOR_NCHW) == 0)
     {
-    case NVCV_TENSOR_NCHW:
         return m_data.buffer.pitch.pitchBytes[3];
-    case NVCV_TENSOR_NHWC:
+    }
+    else if (nvcvTensorLayoutCompare(m_data.buffer.pitch.layout, NVCV_TENSOR_NHWC) == 0)
+    {
         return m_data.buffer.pitch.pitchBytes[2];
     }
-    assert(!"Invalid tensor layout");
-    // hopefully something will break real bad in release mode
-    return m_data.buffer.pitch.pitchBytes[0];
+    else
+    {
+        return 0;
+    }
 }
 
 inline void *TensorDataPitchDevice::doGetImageBuffer(int n) const

@@ -27,14 +27,14 @@ public:
     ~Tensor();
 
     static NVCVTensorRequirements CalcRequirements(int32_t numImages, Size2D imgSize, ImageFormat fmt);
-    static NVCVTensorRequirements CalcRequirements(int ndim, const int32_t *shape, const PixelType &dtype,
+    static NVCVTensorRequirements CalcRequirements(int ndim, const int64_t *shape, const PixelType &dtype,
                                                    NVCVTensorLayout layout);
 
     int32_t        ndim() const override;
-    const int32_t *shape() const override;
+    const int64_t *shape() const override;
 
-    NVCVTensorLayout layout() const override;
-    DimsNCHW         dims() const override;
+    const NVCVTensorLayout &layout() const override;
+    DimsNCHW                dims() const override;
 
     PixelType dtype() const override;
 

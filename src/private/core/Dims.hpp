@@ -23,7 +23,7 @@ namespace nv::cv::priv {
 
 using util::DimsNCHW;
 
-DimsNCHW ToNCHW(const int32_t *shape, NVCVTensorLayout layout);
+DimsNCHW ToNCHW(const int64_t *shape, const NVCVTensorLayout &layout);
 
 } // namespace nv::cv::priv
 

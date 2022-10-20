@@ -115,15 +115,16 @@ cuda_op::DataShape GetLegacyDataShape(DimsNCHW dims)
 
 cuda_op::DataFormat GetLegacyDataFormat(TensorLayout layout, int nbatch)
 {
-    switch (layout)
+    if (layout == TensorLayout::NCHW)
     {
-    case TensorLayout::NCHW:
         return nbatch > 1 ? legacy::cuda_op::DataFormat::kNCHW : legacy::cuda_op::DataFormat::kCHW;
-
-    case TensorLayout::NHWC:
+    }
+    else if (layout == TensorLayout::NHWC)
+    {
         return nbatch > 1 ? legacy::cuda_op::DataFormat::kNHWC : legacy::cuda_op::DataFormat::kHWC;
-
-    default:
+    }
+    else
+    {
         throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Tensor layout not supported");
     }
 }

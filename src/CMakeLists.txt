@@ -35,6 +35,7 @@ add_library(nvcv SHARED
     ImageBatch.cpp
     Tensor.cpp
     TensorData.cpp
+    TensorLayout.cpp
     operators/Operator.cpp
     operators/OpReformat.cpp
     operators/OpResize.cpp

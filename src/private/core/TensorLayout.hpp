@@ -18,8 +18,20 @@
 
 namespace nv::cv::priv {
 
-int32_t GetNumDim(NVCVTensorLayout layout);
+NVCVTensorLayout CreateLayout(const char *descr);
+NVCVTensorLayout CreateLayout(const char *beg, const char *end);
 
-}
+NVCVTensorLayout CreateFirst(const NVCVTensorLayout &layout, int n);
+NVCVTensorLayout CreateLast(const NVCVTensorLayout &layout, int n);
+NVCVTensorLayout CreateSubRange(const NVCVTensorLayout &layout, int beg, int end);
+
+int FindDimIndex(const NVCVTensorLayout &layout, char dimLabel);
+
+bool IsChannelLast(const NVCVTensorLayout &layout);
+
+bool operator==(const NVCVTensorLayout &a, const NVCVTensorLayout &b);
+bool operator!=(const NVCVTensorLayout &a, const NVCVTensorLayout &b);
+
+} // namespace nv::cv::priv
 
 #endif // NVCV_PRIV_TENSORLAYOUT_HPP

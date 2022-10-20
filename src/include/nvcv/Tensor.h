@@ -38,7 +38,7 @@ extern "C"
 typedef struct NVCVTensorStorageRec
 {
     /** Instance storage */
-    alignas(8) uint8_t storage[1024];
+    alignas(8) uint8_t storage[1024 + 64];
 } NVCVTensorStorage;
 
 typedef struct NVCVTensor *NVCVTensorHandle;
@@ -59,7 +59,7 @@ typedef struct NVCVTensorRequirementsRec
     int32_t ndim;
 
     /*< Shape of the tensor */
-    int32_t shape[NVCV_TENSOR_MAX_NDIM];
+    int64_t shape[NVCV_TENSOR_MAX_NDIM];
 
     /*< Distance in bytes between each element of a given dimension. */
     int64_t pitchBytes[NVCV_TENSOR_MAX_NDIM];
@@ -87,7 +87,7 @@ typedef struct NVCVTensorRequirementsRec
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvTensorCalcRequirements(int32_t ndim, const int32_t *shape, NVCVPixelType dtype,
+NVCV_PUBLIC NVCVStatus nvcvTensorCalcRequirements(int32_t ndim, const int64_t *shape, NVCVPixelType dtype,
                                                   NVCVTensorLayout layout, NVCVTensorRequirements *reqs);
 
 /** Calculates the resource requirements needed to create a tensor that holds N images.
@@ -254,7 +254,7 @@ NVCV_PUBLIC NVCVStatus nvcvTensorExportData(NVCVTensorHandle handle, NVCVTensorD
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvTensorGetShape(NVCVTensorHandle handle, int32_t *ndim, int32_t *shape);
+NVCV_PUBLIC NVCVStatus nvcvTensorGetShape(NVCVTensorHandle handle, int32_t *ndim, int64_t *shape);
 
 #ifdef __cplusplus
 }

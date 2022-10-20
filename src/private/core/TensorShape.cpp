@@ -11,34 +11,33 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "TensorData.hpp"
+#include "TensorShape.hpp"
 
 #include "Exception.hpp"
 #include "TensorLayout.hpp"
 
-#include <nvcv/TensorLayout.h>
-
 namespace nv::cv::priv {
 
-void ValidateImageFormatForTensor(ImageFormat fmt) {}
-
-NVCVTensorLayout GetTensorLayoutFor(ImageFormat fmt, int nbatches)
+void PermuteShape(const NVCVTensorLayout &srcLayout, const int64_t *srcShape, const NVCVTensorLayout &dstLayout,
+                  int64_t *dstShape)
 {
-    (void)nbatches;
-
-    int nplanes = fmt.numPlanes();
-
-    if (nplanes == 1)
+    if (srcShape == nullptr)
     {
-        return NVCV_TENSOR_NHWC;
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to source shape cannot be NULL");
     }
-    else if (nplanes == fmt.numChannels())
+
+    if (dstShape == nullptr)
     {
-        return NVCV_TENSOR_NCHW;
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to destination shape cannot be NULL");
     }
-    else
+
+    for (int i = 0; i < srcLayout.ndim; ++i)
     {
-        throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Image format cannot be semi-planar, but it is: " << fmt;
+        int dstIdx = FindDimIndex(dstLayout, srcLayout.data[i]);
+        if (dstIdx >= 0)
+        {
+            dstShape[dstIdx] = srcShape[i];
+        }
     }
 }
 
