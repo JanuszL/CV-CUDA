@@ -21,6 +21,7 @@
 #include <private/core/TensorLayout.hpp>
 #include <private/core/TensorWrapData.hpp>
 #include <private/fmt/ImageFormat.hpp>
+#include <private/fmt/PixelType.hpp>
 
 #include <algorithm>
 
@@ -43,9 +44,8 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorCalcRequirementsForImages,
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorCalcRequirementsNCHW,
-                (int32_t nbatch, int32_t channels, int32_t height, int32_t width, NVCVImageFormat format,
-                 NVCVTensorRequirements *reqs))
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorCalcRequirements,
+                (const int32_t *shape, NVCVTensorLayout layout, NVCVPixelType dtype, NVCVTensorRequirements *reqs))
 {
     return priv::ProtectCall(
         [&]
@@ -55,9 +55,9 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorCalcRequirementsNCHW,
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output requirements must not be NULL");
             }
 
-            priv::ImageFormat fmt{format};
+            priv::PixelType pix{dtype};
 
-            *reqs = priv::Tensor::CalcRequirements(priv::DimsNCHW{nbatch, channels, height, width}, fmt);
+            *reqs = priv::Tensor::CalcRequirements(shape, layout, pix);
         });
 }
 
@@ -135,22 +135,6 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorDestroy, (NVCVTensorHandle handle))
 
                 NVCV_ASSERT(priv::IsDestroyed(handle));
             }
-        });
-}
-
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetFormat, (NVCVTensorHandle handle, NVCVImageFormat *fmt))
-{
-    return priv::ProtectCall(
-        [&]
-        {
-            if (fmt == nullptr)
-            {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output image format cannot be NULL");
-            }
-
-            auto &tensor = priv::ToStaticRef<const priv::ITensor>(handle);
-
-            *fmt = tensor.format().value();
         });
 }
 
@@ -257,5 +241,20 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetShape, (NVCVTensorHandle handle, 
             }
 
             *ndim = priv::GetNumDim(tensor.layout());
+        });
+}
+
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetDataType, (NVCVTensorHandle handle, NVCVPixelType *dtype))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            if (dtype == nullptr)
+            {
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to data type output cannot be NULL");
+            }
+
+            auto &tensor = priv::ToStaticRef<const priv::ITensor>(handle);
+            *dtype       = tensor.dtype().value();
         });
 }

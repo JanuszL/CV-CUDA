@@ -32,7 +32,7 @@ public:
     virtual NVCVTensorLayout layout() const = 0;
     virtual DimsNCHW         dims() const   = 0;
 
-    virtual ImageFormat format() const = 0;
+    virtual PixelType dtype() const = 0;
 
     virtual IAllocator &alloc() const = 0;
 

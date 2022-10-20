@@ -29,11 +29,14 @@ typedef enum
     NVCV_TENSOR_NHWC,
 } NVCVTensorLayout;
 
+typedef NVCVPixelType NVCVElementType;
+
 #define NVCV_TENSOR_MAX_NDIM (4)
 
 /** Stores the tensor plane contents. */
 typedef struct NVCVTensorBufferPitchRec
 {
+    NVCVElementType  dtype;
     NVCVTensorLayout layout;
 
     int32_t shape[NVCV_TENSOR_MAX_NDIM];
@@ -71,9 +74,6 @@ typedef union NVCVTensorBufferRec
 /** Stores information about image batch characteristics and content. */
 typedef struct NVCVTensorDataRec
 {
-    /** Image format. */
-    NVCVImageFormat format;
-
     /** Type of image batch buffer.
      *  It defines which member of the \ref NVCVTensorBuffer tagged union that
      *  must be used to access the image batch buffer contents. */

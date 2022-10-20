@@ -26,15 +26,6 @@ NVCVTensorLayout GetTensorLayoutFor(ImageFormat fmt, int nbatches);
 
 void ValidateImageFormatForTensor(ImageFormat fmt);
 
-void FillTensorData(NVCVTensorData &data, ImageFormat format, const int32_t *shape, void *mem,
-                    const int64_t *pitchBytes);
-
-void FillTensorData(NVCVTensorData &data, ImageFormat format, const priv::DimsNCHW &dims, void *mem,
-                    const int64_t *pitchBytes);
-
-void FillTensorData(NVCVTensorData &data, ImageFormat format, int32_t numImages, const Size2D &imgSize, void *mem,
-                    const int64_t *pitchBytes);
-
 } // namespace nv::cv::priv
 
 #endif // NVCV_PRIV_TENSORDATA_HPP

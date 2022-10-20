@@ -224,8 +224,8 @@ ErrorCode Normalize::infer(const nv::cv::ITensorDataPitchDevice &inData, const n
                            const nv::cv::ITensorDataPitchDevice &outData, const float global_scale, const float shift,
                            const float epsilon, const uint32_t flags, cudaStream_t stream)
 {
-    DataFormat format            = GetLegacyDataFormat(inData.layout());
-    DataType   data_type         = GetLegacyDataType(inData.format());
+    DataFormat format            = GetLegacyDataFormat(inData.layout(), inData.numImages());
+    DataType   data_type         = GetLegacyDataType(inData.dtype());
     DataShape  input_shape       = GetLegacyDataShape(inData.dims());
     DataShape  base_param_shape  = GetLegacyDataShape(baseData.dims());
     DataShape  scale_param_shape = GetLegacyDataShape(scaleData.dims());

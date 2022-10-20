@@ -15,7 +15,7 @@
 #define NVCV_ITENSORDATA_HPP
 
 #include "Dims.hpp"
-#include "ImageFormat.hpp"
+#include "PixelType.hpp"
 #include "Shape.hpp"
 #include "TensorData.h"
 
@@ -41,7 +41,7 @@ public:
     DimsNCHW     dims() const;
     TensorLayout layout() const;
 
-    ImageFormat format() const;
+    PixelType dtype() const;
 
     int32_t numPlanes() const;
     int32_t numImages() const;
@@ -60,7 +60,7 @@ private:
     virtual int32_t doGetNumPlanes() const = 0;
     virtual int32_t doGetNumImages() const = 0;
 
-    virtual ImageFormat doGetFormat() const = 0;
+    virtual PixelType doGetPixelType() const = 0;
 
     virtual const NVCVTensorData &doGetConstCData() const = 0;
     virtual NVCVTensorData       &doGetCData()            = 0;
@@ -142,9 +142,9 @@ inline TensorLayout ITensorData::layout() const
     return doGetLayout();
 }
 
-inline ImageFormat ITensorData::format() const
+inline PixelType ITensorData::dtype() const
 {
-    return doGetFormat();
+    return doGetPixelType();
 }
 
 inline const NVCVTensorData &ITensorData::cdata() const

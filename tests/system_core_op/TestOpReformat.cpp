@@ -37,12 +37,13 @@ TEST(OpReformat, OpReformat_to_hwc)
     ASSERT_LT(0, inBufferSize);
 
     nvcv::TensorDataPitchDevice::Buffer bufPlanar;
+    bufPlanar.dtype  = reqsPlanar.dtype;
     bufPlanar.layout = reqsPlanar.layout;
     std::copy(reqsPlanar.shape, reqsPlanar.shape + NVCV_TENSOR_MAX_NDIM, bufPlanar.shape);
     std::copy(reqsPlanar.pitchBytes, reqsPlanar.pitchBytes + NVCV_TENSOR_MAX_NDIM, bufPlanar.pitchBytes);
     EXPECT_EQ(cudaSuccess, cudaMalloc(&bufPlanar.mem, inBufferSize));
 
-    nvcv::TensorDataPitchDevice bufIn(nvcv::FMT_RGB8p, bufPlanar);
+    nvcv::TensorDataPitchDevice bufIn(bufPlanar);
 
     ASSERT_EQ(1, bufIn.numImages());
 

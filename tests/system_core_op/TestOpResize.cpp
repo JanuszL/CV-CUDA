@@ -41,7 +41,7 @@ static void Resize(std::vector<uint8_t> &hDst, const std::vector<uint8_t> &hSrc,
     double jScale = static_cast<double>(dSrcData->dims().w) / dDstData->dims().w;
 
     EXPECT_EQ(dDstData->numImages(), dSrcData->numImages());
-    EXPECT_EQ(dDstData->format(), dSrcData->format());
+    EXPECT_EQ(dDstData->dtype(), dSrcData->dtype());
 
     int elementsPerPixel = dDstData->dims().c;
     int dstRowPitch      = dDstData->rowPitchBytes() / sizeof(uint8_t);

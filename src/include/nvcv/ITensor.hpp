@@ -35,13 +35,10 @@ public:
 
     NVCVTensorHandle handle() const;
 
-    int   ndim() const;
-    Shape shape() const;
-
+    int          ndim() const;
+    Shape        shape() const;
+    PixelType    dtype() const;
     TensorLayout layout() const;
-    DimsNCHW     dims() const;
-
-    ImageFormat format() const;
 
     IAllocator &alloc() const;
 
@@ -50,11 +47,10 @@ public:
 private:
     virtual NVCVTensorHandle doGetHandle() const = 0;
 
-    virtual int          doGetNumDim() const = 0;
-    virtual TensorLayout doGetLayout() const = 0;
-    virtual Shape        doGetShape() const  = 0;
-    virtual ImageFormat  doGetFormat() const = 0;
-    virtual DimsNCHW     doGetDims() const   = 0;
+    virtual int          doGetNumDim() const   = 0;
+    virtual TensorLayout doGetLayout() const   = 0;
+    virtual Shape        doGetShape() const    = 0;
+    virtual PixelType    doGetDataType() const = 0;
 
     virtual IAllocator &doGetAlloc() const = 0;
 
@@ -83,16 +79,9 @@ inline TensorLayout ITensor::layout() const
     return doGetLayout();
 }
 
-inline DimsNCHW ITensor::dims() const
+inline PixelType ITensor::dtype() const
 {
-    DimsNCHW d = doGetDims();
-    assert(d.n >= 0 && d.c >= 0 && d.h >= 0 && d.w >= 0 && "Post-condition failed");
-    return d;
-}
-
-inline ImageFormat ITensor::format() const
-{
-    return doGetFormat();
+    return doGetDataType();
 }
 
 inline IAllocator &ITensor::alloc() const

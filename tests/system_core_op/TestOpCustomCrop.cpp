@@ -45,14 +45,11 @@ static void dbgImage(std::vector<uint8_t> &in, int rowPitch)
 // Width is in bytes or pixels..
 static void WriteData(const nvcv::ITensorDataPitchDevice *data, uint8_t val, NVCVRectI region)
 {
-    const std::array<int32_t, 4> &bpchan = data->format().bitsPerChannel();
-    // all channels must be same size
     EXPECT_EQ(NVCV_TENSOR_NHWC, data->layout());
-    EXPECT_EQ(true, std::all_of(bpchan.cbegin(), bpchan.cend(), [bpchan](int x) { return x == bpchan[0]; }));
     EXPECT_LE(region.x + region.width, data->dims().w);
     EXPECT_LE(region.y + region.height, data->dims().h);
 
-    int      bytesPerChan  = data->format().bitsPerChannel()[0] / 8;
+    int      bytesPerChan  = data->dtype().bitsPerChannel()[0] / 8;
     int      bytesPerPixel = data->dims().c * bytesPerChan;
     uint8_t *impPtrTop     = (uint8_t *)data->mem();
     uint8_t *impPtr        = nullptr;
@@ -71,7 +68,7 @@ static void WriteData(const nvcv::ITensorDataPitchDevice *data, uint8_t val, NVC
 static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::ITensorDataPitchDevice *data, NVCVRectI region,
                           uint8_t val)
 {
-    int bytesPerChan  = data->format().bitsPerChannel()[0] / 8;
+    int bytesPerChan  = data->dtype().bitsPerChannel()[0] / 8;
     int bytesPerPixel = data->dims().c * bytesPerChan;
 
     uint8_t *ptrTop = vect.data();

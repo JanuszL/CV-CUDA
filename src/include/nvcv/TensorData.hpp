@@ -25,7 +25,7 @@ class TensorDataPitchDevice final : public ITensorDataPitchDevice
 public:
     using Buffer = NVCVTensorBufferPitch;
 
-    explicit TensorDataPitchDevice(ImageFormat format, const Buffer &data);
+    explicit TensorDataPitchDevice(const Buffer &data);
 
 private:
     NVCVTensorData m_data;
@@ -39,7 +39,7 @@ private:
     int32_t doGetNumPlanes() const override;
     int32_t doGetNumImages() const override;
 
-    ImageFormat doGetFormat() const override;
+    PixelType doGetPixelType() const override;
 
     const NVCVTensorData &doGetConstCData() const override;
     NVCVTensorData       &doGetCData() override;
@@ -58,9 +58,8 @@ private:
 };
 
 // TensorDataPitchDevice implementation -----------------------
-inline TensorDataPitchDevice::TensorDataPitchDevice(ImageFormat format, const Buffer &data)
+inline TensorDataPitchDevice::TensorDataPitchDevice(const Buffer &data)
 {
-    m_data.format       = format;
     m_data.bufferType   = NVCV_TENSOR_BUFFER_PITCH_DEVICE;
     m_data.buffer.pitch = data;
 }
@@ -130,9 +129,9 @@ inline TensorLayout TensorDataPitchDevice::doGetLayout() const
     return static_cast<TensorLayout>(m_data.buffer.pitch.layout);
 }
 
-inline ImageFormat TensorDataPitchDevice::doGetFormat() const
+inline PixelType TensorDataPitchDevice::doGetPixelType() const
 {
-    return static_cast<ImageFormat>(m_data.format);
+    return static_cast<PixelType>(m_data.buffer.pitch.dtype);
 }
 
 inline const NVCVTensorData &TensorDataPitchDevice::doGetConstCData() const

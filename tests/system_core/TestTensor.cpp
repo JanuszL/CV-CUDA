@@ -24,18 +24,19 @@ namespace t    = ::testing;
 namespace test = nv::cv::test;
 
 class TensorTests
-    : public t::TestWithParam<std::tuple<test::Param<"numImages", int>, test::Param<"width", int>,
-                                         test::Param<"height", int>, test::Param<"format", nvcv::ImageFormat>,
-                                         test::Param<"layout", nvcv::TensorLayout>, test::Param<"shape", nvcv::Shape>>>
+    : public t::TestWithParam<
+          std::tuple<test::Param<"numImages", int>, test::Param<"width", int>, test::Param<"height", int>,
+                     test::Param<"format", nvcv::ImageFormat>, test::Param<"layout", nvcv::TensorLayout>,
+                     test::Param<"shape", nvcv::Shape>, test::Param<"dtype", nvcv::PixelType>>>
 {
 };
 
 // clang-format off
 NVCV_INSTANTIATE_TEST_SUITE_P(_, TensorTests,
-    test::ValueList<int, int, int, nvcv::ImageFormat, nvcv::TensorLayout, nvcv::Shape>
+    test::ValueList<int, int, int, nvcv::ImageFormat, nvcv::TensorLayout, nvcv::Shape, nvcv::PixelType>
     {
-        {53, 32, 16, nvcv::FMT_RGBA8p, nvcv::TensorLayout::NCHW, nvcv::Shape{53, 4, 16, 32}},
-        {14, 64, 18, nvcv::FMT_RGB8, nvcv::TensorLayout::NHWC, nvcv::Shape{14, 18, 64, 3}}
+        {53, 32, 16, nvcv::FMT_RGBA8p, nvcv::TensorLayout::NCHW, nvcv::Shape{53, 4, 16, 32}, nvcv::TYPE_U8},
+        {14, 64, 18, nvcv::FMT_RGB8, nvcv::TensorLayout::NHWC, nvcv::Shape{14, 18, 64, 3}, nvcv::TYPE_U8}
     }
 );
 
@@ -49,14 +50,12 @@ TEST_P(TensorTests, wip_create)
     const nvcv::ImageFormat  PARAM_FORMAT     = std::get<3>(GetParam());
     const nvcv::TensorLayout GOLD_LAYOUT      = std::get<4>(GetParam());
     const nvcv::Shape        GOLD_SHAPE       = std::get<5>(GetParam());
-    const nvcv::DimsNCHW     GOLD_DIMS
-        = nvcv::DimsNCHW{PARAM_NUM_IMAGES, PARAM_FORMAT.numChannels(), PARAM_HEIGHT, PARAM_WIDTH};
-    const int GOLD_NDIM = 4;
+    const nvcv::PixelType    GOLD_DTYPE       = std::get<6>(GetParam());
+    const int                GOLD_NDIM        = 4;
 
     nvcv::Tensor tensor(PARAM_NUM_IMAGES, {PARAM_WIDTH, PARAM_HEIGHT}, PARAM_FORMAT);
 
-    EXPECT_EQ(PARAM_FORMAT, tensor.format());
-    EXPECT_EQ(GOLD_DIMS, tensor.dims());
+    EXPECT_EQ(GOLD_DTYPE, tensor.dtype());
     EXPECT_EQ(GOLD_SHAPE, tensor.shape());
     EXPECT_EQ(GOLD_NDIM, tensor.ndim());
     EXPECT_EQ(GOLD_LAYOUT, tensor.layout());
@@ -68,16 +67,15 @@ TEST_P(TensorTests, wip_create)
         const nvcv::ITensorData *data = tensor.exportData();
         ASSERT_NE(nullptr, data);
 
-        ASSERT_EQ(tensor.format(), data->format());
+        ASSERT_EQ(tensor.dtype(), data->dtype());
 
         auto *devdata = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(data);
         ASSERT_NE(nullptr, devdata);
 
         EXPECT_EQ(GOLD_NDIM, devdata->ndim());
-        ASSERT_EQ(GOLD_DIMS, devdata->dims());
         ASSERT_EQ(GOLD_SHAPE, devdata->shape());
         ASSERT_EQ(GOLD_LAYOUT, devdata->layout());
-        ASSERT_EQ(PARAM_FORMAT, devdata->format());
+        ASSERT_EQ(GOLD_DTYPE, devdata->dtype());
 
         EXPECT_EQ(devdata->imgPitchBytes(), devdata->pitchBytes(0));
         EXPECT_EQ(devdata->planePitchBytes(), devdata->pitchBytes(1));
@@ -125,10 +123,12 @@ TEST(TensorWrapData, wip_create)
     nvcv::ImageFormat fmt
         = nvcv::ImageFormat(nvcv::ColorModel::RGB, nvcv::CSPEC_BT601_ER, nvcv::MemLayout::PL, nvcv::DataType::FLOAT,
                             nvcv::Swizzle::S_XY00, nvcv::Packing::X16, nvcv::Packing::X16);
+    nvcv::PixelType GOLD_DTYPE = fmt.planePixelType(0);
 
     nvcv::Tensor::Requirements reqs = nvcv::Tensor::CalcRequirements(5, {173, 79}, fmt);
 
     nvcv::TensorDataPitchDevice::Buffer buf;
+    buf.dtype  = reqs.dtype;
     buf.layout = reqs.layout;
     std::copy(reqs.shape, reqs.shape + NVCV_TENSOR_MAX_NDIM, buf.shape);
     std::copy(reqs.pitchBytes, reqs.pitchBytes + NVCV_TENSOR_MAX_NDIM, buf.pitchBytes);
@@ -136,7 +136,7 @@ TEST(TensorWrapData, wip_create)
     // it'll segfault.
     buf.mem = reinterpret_cast<void *>(678);
 
-    nvcv::TensorDataPitchDevice tdata(fmt, buf);
+    nvcv::TensorDataPitchDevice tdata(buf);
 
     EXPECT_EQ(nvcv::TensorLayout::NCHW, tdata.layout());
     EXPECT_EQ(5, tdata.dims().n);
@@ -157,11 +157,10 @@ TEST(TensorWrapData, wip_create)
 
     EXPECT_NE(nullptr, dynamic_cast<nvcv::AllocatorWrapHandle *>(&tensor.alloc()));
 
-    EXPECT_EQ(tdata.dims(), tensor.dims());
     EXPECT_EQ(tdata.shape(), tensor.shape());
     EXPECT_EQ(tdata.layout(), tensor.layout());
     EXPECT_EQ(tdata.ndim(), tensor.ndim());
-    EXPECT_EQ(fmt, tensor.format());
+    EXPECT_EQ(GOLD_DTYPE, tensor.dtype());
 
     const nvcv::ITensorData *data = tensor.exportData();
     ASSERT_NE(nullptr, data);
@@ -169,8 +168,7 @@ TEST(TensorWrapData, wip_create)
     auto *devdata = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(data);
     ASSERT_NE(nullptr, devdata);
 
-    EXPECT_EQ(tdata.format(), devdata->format());
-    EXPECT_EQ(tdata.dims(), devdata->dims());
+    EXPECT_EQ(tdata.dtype(), devdata->dtype());
     EXPECT_EQ(tdata.shape(), devdata->shape());
     EXPECT_EQ(tdata.ndim(), devdata->ndim());
 

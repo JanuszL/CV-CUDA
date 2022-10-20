@@ -131,10 +131,10 @@ ErrorCode ConvertTo::infer(const ITensorDataPitchDevice &inData, const ITensorDa
     int                 channels        = inData.dims().c;
     int                 rows            = inData.dims().h;
     int                 cols            = inData.dims().w;
-    cuda_op::DataFormat input_format    = GetLegacyDataFormat(inData.layout());
-    cuda_op::DataFormat output_format   = GetLegacyDataFormat(outData.layout());
-    cuda_op::DataType   input_datatype  = GetLegacyDataType(inData.format());
-    cuda_op::DataType   output_datatype = GetLegacyDataType(outData.format());
+    cuda_op::DataFormat input_format    = GetLegacyDataFormat(inData.layout(), inData.numImages());
+    cuda_op::DataFormat output_format   = GetLegacyDataFormat(outData.layout(), outData.numImages());
+    cuda_op::DataType   input_datatype  = GetLegacyDataType(inData.dtype());
+    cuda_op::DataType   output_datatype = GetLegacyDataType(outData.dtype());
 
     if (!(input_format == kNHWC || output_format == kHWC) || !(output_format == kNHWC || output_format == kHWC))
     {

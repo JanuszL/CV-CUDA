@@ -110,8 +110,8 @@ ErrorCode PadAndStack::infer(const IImageBatchVarShapeDataDevicePitch &inData, c
                              const ITensorDataPitchDevice &top, const ITensorDataPitchDevice &left,
                              const NVCVBorderType borderMode, const float borderValue, cudaStream_t stream)
 {
-    DataFormat format    = GetLegacyDataFormat(outData.layout());
-    DataType   data_type = GetLegacyDataType(outData.format());
+    DataFormat format    = GetLegacyDataFormat(outData.layout(), outData.numImages());
+    DataType   data_type = GetLegacyDataType(outData.dtype());
 
     if (!(format == kNHWC || format == kHWC))
     {

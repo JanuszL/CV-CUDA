@@ -77,8 +77,8 @@ ErrorCode CustomCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
     int                 channels      = inData.dims().c;
     int                 rows          = inData.dims().h;
     int                 cols          = inData.dims().w;
-    cuda_op::DataFormat input_format  = GetLegacyDataFormat(inData.layout());
-    cuda_op::DataFormat output_format = GetLegacyDataFormat(outData.layout());
+    cuda_op::DataFormat input_format  = GetLegacyDataFormat(inData.layout(), batch);
+    cuda_op::DataFormat output_format = GetLegacyDataFormat(outData.layout(), batch);
 
     if (!(input_format == kNHWC || input_format == kHWC) || !(output_format == kNHWC || output_format == kHWC))
     {
@@ -86,10 +86,10 @@ ErrorCode CustomCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    if (inData.format() != outData.format())
+    if (inData.dtype() != outData.dtype())
     {
-        LOG_ERROR("Input and Output formats must be same input format =" << inData.format()
-                                                                         << " output format = " << outData.format());
+        LOG_ERROR("Input and Output formats must be same input format =" << inData.dtype()
+                                                                         << " output format = " << outData.dtype());
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -105,7 +105,7 @@ ErrorCode CustomCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    int data_size = DataSize(GetLegacyDataType(inData.format()));
+    int data_size = DataSize(GetLegacyDataType(inData.dtype()));
     int start_x   = roi.x;
     int start_y   = roi.y;
     int end_x     = start_x + roi.width - 1;

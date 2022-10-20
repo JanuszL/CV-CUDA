@@ -106,10 +106,10 @@ size_t Reformat::calBufferSize(DataShape max_input_shape, DataShape max_output_s
 ErrorCode Reformat::infer(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData,
                           cudaStream_t stream)
 {
-    cuda_op::DataFormat input_format  = GetLegacyDataFormat(inData.layout());
-    cuda_op::DataFormat output_format = GetLegacyDataFormat(outData.layout());
+    cuda_op::DataFormat input_format  = GetLegacyDataFormat(inData.layout(), inData.numImages());
+    cuda_op::DataFormat output_format = GetLegacyDataFormat(outData.layout(), inData.numImages());
 
-    if (inData.format() == outData.format())
+    if (inData.dtype() == outData.dtype() && inData.shape() == outData.shape())
     {
 #ifdef CUDA_DEBUG_LOG
         printf("input_format == output_format, copy outputs from inputs\n");
@@ -128,7 +128,7 @@ ErrorCode Reformat::infer(const nvcv::ITensorDataPitchDevice &inData, const nvcv
         return SUCCESS;
     }
 
-    cuda_op::DataType data_type = GetLegacyDataType(inData.format());
+    cuda_op::DataType data_type = GetLegacyDataType(inData.dtype());
 
     if (!(data_type == kCV_8U || data_type == kCV_8S || data_type == kCV_16U || data_type == kCV_16S
           || data_type == kCV_32S || data_type == kCV_32F || data_type == kCV_64F))

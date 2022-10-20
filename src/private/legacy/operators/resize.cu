@@ -452,8 +452,8 @@ size_t Resize::calBufferSize(DataShape max_input_shape, DataShape max_output_sha
 ErrorCode Resize::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
                         const NVCVInterpolationType interpolation, cudaStream_t stream)
 {
-    DataFormat input_format  = GetLegacyDataFormat(inData.layout());
-    DataFormat output_format = GetLegacyDataFormat(outData.layout());
+    DataFormat input_format  = GetLegacyDataFormat(inData.layout(), inData.dims().n);
+    DataFormat output_format = GetLegacyDataFormat(outData.layout(), outData.dims().n);
 
     if (input_format != output_format)
     {
@@ -469,7 +469,7 @@ ErrorCode Resize::infer(const ITensorDataPitchDevice &inData, const ITensorDataP
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    cuda_op::DataType  data_type   = GetLegacyDataType(inData.format());
+    cuda_op::DataType  data_type   = GetLegacyDataType(inData.dtype());
     cuda_op::DataShape input_shape = GetLegacyDataShape(inData.dims());
 
     int channels = input_shape.C;

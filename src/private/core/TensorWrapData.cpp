@@ -19,6 +19,7 @@
 #include "TensorLayout.hpp"
 
 #include <cuda_runtime.h>
+#include <fmt/PixelType.hpp>
 #include <util/CheckError.hpp>
 #include <util/Math.hpp>
 
@@ -27,7 +28,7 @@
 
 namespace nv::cv::priv {
 
-static void ValidateTensorBufferPitch(ImageFormat fmt, const NVCVTensorBufferPitch &buffer)
+static void ValidateTensorBufferPitch(const NVCVTensorBufferPitch &buffer)
 {
     if (buffer.mem == nullptr)
     {
@@ -44,17 +45,16 @@ static void ValidateTensorBufferPitch(ImageFormat fmt, const NVCVTensorBufferPit
         }
     }
 
-    int     firstPacked;
-    int64_t lastPitch;
+    PixelType dtype{buffer.dtype};
+
+    int firstPacked;
     switch (buffer.layout)
     {
     case NVCV_TENSOR_NCHW:
         firstPacked = ndim - 1;
-        lastPitch   = fmt.planePixelStrideBytes(0);
         break;
     case NVCV_TENSOR_NHWC:
         firstPacked = ndim - 2;
-        lastPitch   = fmt.planePixelStrideBytes(0) / fmt.numChannels();
         break;
     default:
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Invalid tensor layout: " << buffer.layout;
@@ -64,7 +64,7 @@ static void ValidateTensorBufferPitch(ImageFormat fmt, const NVCVTensorBufferPit
     int dim;
     for (dim = ndim - 1; dim >= firstPacked; --dim)
     {
-        int correctPitch = dim == ndim - 1 ? lastPitch : buffer.pitchBytes[dim + 1] * buffer.shape[dim + 1];
+        int correctPitch = dim == ndim - 1 ? dtype.strideBytes() : buffer.pitchBytes[dim + 1] * buffer.shape[dim + 1];
         if (buffer.pitchBytes[dim] != correctPitch)
         {
             throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
@@ -90,14 +90,10 @@ TensorWrapData::TensorWrapData(const NVCVTensorData &data, NVCVTensorDataCleanup
     , m_cleanup(cleanup)
     , m_ctxCleanup(ctxCleanup)
 {
-    ImageFormat fmt{data.format};
-
-    ValidateImageFormatForTensor(fmt);
-
     switch (data.bufferType)
     {
     case NVCV_TENSOR_BUFFER_PITCH_DEVICE:
-        ValidateTensorBufferPitch(fmt, data.buffer.pitch);
+        ValidateTensorBufferPitch(data.buffer.pitch);
         return;
 
     case NVCV_TENSOR_BUFFER_NONE:
@@ -153,9 +149,19 @@ DimsNCHW TensorWrapData::dims() const
     return ToNCHW(this->shape(), this->layout());
 }
 
-ImageFormat TensorWrapData::format() const
+PixelType TensorWrapData::dtype() const
 {
-    return ImageFormat{m_data.format};
+    switch (m_data.bufferType)
+    {
+    case NVCV_TENSOR_BUFFER_PITCH_DEVICE:
+        return PixelType{m_data.buffer.pitch.dtype};
+
+    case NVCV_TENSOR_BUFFER_NONE:
+        return PixelType{NVCV_PIXEL_TYPE_NONE};
+    }
+
+    NVCV_ASSERT(!"Invalid buffer type");
+    return PixelType{NVCV_PIXEL_TYPE_NONE};
 }
 
 IAllocator &TensorWrapData::alloc() const

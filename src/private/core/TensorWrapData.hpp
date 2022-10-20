@@ -31,7 +31,7 @@ public:
     NVCVTensorLayout layout() const override;
     DimsNCHW         dims() const override;
 
-    ImageFormat format() const override;
+    PixelType dtype() const override;
 
     IAllocator &alloc() const override;
 
