@@ -32,7 +32,7 @@ namespace priv = nv::cv::priv;
 namespace util = nv::cv::util;
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvMakePixelType,
-                (NVCVPixelType * outPixelType, NVCVMemLayout memLayout, NVCVDataType dataType, NVCVPacking packing))
+                (NVCVPixelType * outPixelType, NVCVDataType dataType, NVCVPacking packing))
 {
     return priv::ProtectCall(
         [&]
@@ -42,7 +42,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvMakePixelType,
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output pixel type cannot be NULL");
             }
 
-            *outPixelType = priv::PixelType{memLayout, dataType, packing}.value();
+            *outPixelType = priv::PixelType{dataType, packing}.value();
         });
 }
 
@@ -108,36 +108,6 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvPixelTypeGetDataType, (NVCVPixelType type,
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvPixelTypeGetMemLayout, (NVCVPixelType type, NVCVMemLayout *outMemLayout))
-{
-    return priv::ProtectCall(
-        [&]
-        {
-            if (outMemLayout == nullptr)
-            {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to memory layout output cannot be NULL");
-            }
-
-            priv::PixelType ptype{type};
-            *outMemLayout = ptype.memLayout();
-        });
-}
-
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvPixelTypeSetMemLayout, (NVCVPixelType * type, NVCVMemLayout newLayout))
-{
-    return priv::ProtectCall(
-        [&]
-        {
-            if (type == nullptr)
-            {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to input pixel type cannot be NULL");
-            }
-
-            priv::PixelType ptype{*type};
-            *type = ptype.memLayout(newLayout).value();
-        });
-}
-
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvPixelTypeGetNumChannels, (NVCVPixelType type, int32_t *outNumChannels))
 {
     return priv::ProtectCall(
@@ -189,7 +159,6 @@ NVCV_DEFINE_API(0, 0, const char *, nvcvPixelTypeGetName, (NVCVPixelType type))
 
         using namespace std::literals;
 
-        util::ReplaceAllInline(buffer, bufSize, "NVCV_MEM_LAYOUT_"sv, ""sv);
         util::ReplaceAllInline(buffer, bufSize, "NVCV_DATA_TYPE_"sv, ""sv);
         util::ReplaceAllInline(buffer, bufSize, "NVCV_PACKING_"sv, ""sv);
     }

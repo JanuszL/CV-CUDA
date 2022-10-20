@@ -31,8 +31,8 @@ public:
     {
     }
 
-    constexpr PixelType(NVCVMemLayout memLayout, NVCVDataType dataType, NVCVPacking packing) noexcept
-        : m_type{NVCV_MAKE_PIXEL_TYPE(memLayout, dataType, packing)}
+    constexpr PixelType(NVCVDataType dataType, NVCVPacking packing) noexcept
+        : m_type{NVCV_MAKE_PIXEL_TYPE(dataType, packing)}
     {
     }
 
@@ -60,9 +60,6 @@ public:
     {
         return ImageFormat{m_type}.dataType();
     }
-
-    PixelType     memLayout(NVCVMemLayout newMemLayout) const;
-    NVCVMemLayout memLayout() const noexcept;
 
     int                    bpp() const noexcept;
     std::array<int32_t, 4> bpc() const noexcept;

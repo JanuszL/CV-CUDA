@@ -147,19 +147,19 @@
 
 // Full arg name
 
-#define NVCV_DETAIL_MAKE_PIXEL_TYPE(MemLayout, DataType, Packing)                                          \
-    ((NVCVPixelType)NVCV_DETAIL_MAKE_FMTTYPE(                                                              \
-        NVCV_COLOR_MODEL_UNDEFINED, NVCV_COLOR_SPEC_UNDEFINED, NVCV_CSS_NONE, MemLayout, DataType,         \
-        NVCV_DETAIL_MAKE_SWIZZLE(NVCV_CHANNEL_X,                                                           \
-                                 NVCV_DETAIL_EXTRACT_PACKING_CHANNELS(Packing) >= 2 ? NVCV_CHANNEL_Y : 0,  \
-                                 NVCV_DETAIL_EXTRACT_PACKING_CHANNELS(Packing) >= 3 ? NVCV_CHANNEL_Z : 0,  \
-                                 NVCV_DETAIL_EXTRACT_PACKING_CHANNELS(Packing) >= 4 ? NVCV_CHANNEL_W : 0), \
+#define NVCV_DETAIL_MAKE_PIXEL_TYPE(DataType, Packing)                                                      \
+    ((NVCVPixelType)NVCV_DETAIL_MAKE_FMTTYPE(                                                               \
+        NVCV_COLOR_MODEL_UNDEFINED, NVCV_COLOR_SPEC_UNDEFINED, NVCV_CSS_NONE, NVCV_MEM_LAYOUT_PL, DataType, \
+        NVCV_DETAIL_MAKE_SWIZZLE(NVCV_CHANNEL_X,                                                            \
+                                 NVCV_DETAIL_EXTRACT_PACKING_CHANNELS(Packing) >= 2 ? NVCV_CHANNEL_Y : 0,   \
+                                 NVCV_DETAIL_EXTRACT_PACKING_CHANNELS(Packing) >= 3 ? NVCV_CHANNEL_Z : 0,   \
+                                 NVCV_DETAIL_EXTRACT_PACKING_CHANNELS(Packing) >= 4 ? NVCV_CHANNEL_W : 0),  \
         Packing, 0, 0, 0))
 
 // Abbreviated
 
-#define NVCV_DETAIL_MAKE_PIX_TYPE(MemLayout, DataType, Packing) \
-    NVCV_DETAIL_MAKE_PIXEL_TYPE(NVCV_MEM_LAYOUT_##MemLayout, NVCV_DATA_TYPE_##DataType, NVCV_PACKING_##Packing)
+#define NVCV_DETAIL_MAKE_PIX_TYPE(DataType, Packing) \
+    NVCV_DETAIL_MAKE_PIXEL_TYPE(NVCV_DATA_TYPE_##DataType, NVCV_PACKING_##Packing)
 
 // MAKE_NONCOLOR ==================================
 

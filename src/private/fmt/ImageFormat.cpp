@@ -416,7 +416,7 @@ ImageFormat ImageFormat::FromFourCC(uint32_t fourcc, ColorSpec colorSpec, NVCVMe
 
 bool HasSameDataLayout(ImageFormat a, ImageFormat b) noexcept
 {
-    if (a.numPlanes() == b.numPlanes() && a.css() == b.css())
+    if (a.numPlanes() == b.numPlanes() && a.css() == b.css() && a.memLayout() == b.memLayout())
     {
         for (int i = 0; i < a.numPlanes(); ++i)
         {
@@ -711,9 +711,8 @@ ImageFormat ImageFormat::planeFormat(int plane) const
 
 PixelType ImageFormat::planePixelType(int plane) const noexcept
 {
-    NVCVMemLayout memLayout = this->memLayout();
-    NVCVDataType  dataType  = this->dataType();
-    NVCVPacking   packing   = this->planePacking(plane);
+    NVCVDataType dataType = this->dataType();
+    NVCVPacking  packing  = this->planePacking(plane);
 
     switch (packing)
     {
@@ -729,7 +728,7 @@ PixelType ImageFormat::planePixelType(int plane) const noexcept
         break;
     }
 
-    return PixelType{memLayout, dataType, packing};
+    return PixelType{dataType, packing};
 }
 
 int ImageFormat::planePixelStrideBytes(int plane) const noexcept

@@ -39,14 +39,11 @@ class PixelType
 public:
     constexpr PixelType();
     explicit constexpr PixelType(NVCVPixelType type);
-    PixelType(MemLayout memLayout, DataType dataType, Packing packing);
+    PixelType(DataType dataType, Packing packing);
 
-    static constexpr PixelType ConstCreate(MemLayout memLayout, DataType dataType, Packing packing);
+    static constexpr PixelType ConstCreate(DataType dataType, Packing packing);
 
     constexpr operator NVCVPixelType() const;
-
-    PixelType memLayout(MemLayout layout) const;
-    MemLayout memLayout() const;
 
     Packing                packing() const;
     std::array<int32_t, 4> bitsPerChannel() const;
@@ -162,16 +159,15 @@ constexpr PixelType TYPE_3F64{NVCV_PIXEL_TYPE_3F64};
 constexpr PixelType TYPE_4F64{NVCV_PIXEL_TYPE_4F64};
 #endif
 
-inline PixelType::PixelType(MemLayout memLayout, DataType dataType, Packing packing)
+inline PixelType::PixelType(DataType dataType, Packing packing)
 {
-    detail::CheckThrow(nvcvMakePixelType(&m_type, static_cast<NVCVMemLayout>(memLayout),
-                                         static_cast<NVCVDataType>(dataType), static_cast<NVCVPacking>(packing)));
+    detail::CheckThrow(
+        nvcvMakePixelType(&m_type, static_cast<NVCVDataType>(dataType), static_cast<NVCVPacking>(packing)));
 }
 
-constexpr PixelType PixelType::ConstCreate(MemLayout memLayout, DataType dataType, Packing packing)
+constexpr PixelType PixelType::ConstCreate(DataType dataType, Packing packing)
 {
-    return PixelType{NVCV_MAKE_PIXEL_TYPE(static_cast<NVCVMemLayout>(memLayout), static_cast<NVCVDataType>(dataType),
-                                          static_cast<NVCVPacking>(packing))};
+    return PixelType{NVCV_MAKE_PIXEL_TYPE(static_cast<NVCVDataType>(dataType), static_cast<NVCVPacking>(packing))};
 }
 
 constexpr PixelType::operator NVCVPixelType() const
@@ -205,20 +201,6 @@ inline DataType PixelType::dataType() const
     NVCVDataType out;
     detail::CheckThrow(nvcvPixelTypeGetDataType(m_type, &out));
     return static_cast<DataType>(out);
-}
-
-inline MemLayout PixelType::memLayout() const
-{
-    NVCVMemLayout out;
-    detail::CheckThrow(nvcvPixelTypeGetMemLayout(m_type, &out));
-    return static_cast<MemLayout>(out);
-}
-
-inline PixelType PixelType::memLayout(MemLayout layout) const
-{
-    NVCVPixelType out = m_type;
-    detail::CheckThrow(nvcvPixelTypeSetMemLayout(&out, static_cast<NVCVMemLayout>(layout)));
-    return static_cast<PixelType>(out);
 }
 
 inline int32_t PixelType::numChannels() const
