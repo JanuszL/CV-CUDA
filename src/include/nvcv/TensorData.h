@@ -84,47 +84,6 @@ typedef struct NVCVTensorDataRec
 } NVCVTensorData;
 
 /**
- * Fills a tensor data with pitch-linear buffer specified by its NCHW dimensions and layout.
- *
- * Tensor layout will be NCHW or NHWC depending whether the image format is
- * is packed or planar.
- *
- * @param[out] data Where the tensor data will be written to.
- * @param[in] format Tensor image format
- * @param[in] nbatch,channels,height,width Tensor dimensions
- * @param[in] mem Pointer to memory buffer with tensor contents.
- * @param[in] pitchBytes Pitch of each dimension.
- *                       If NULL, will define a fully packed tensor.
- *
- * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
- * @retval #NVCV_SUCCESS                Operation executed successfully.
- */
-NVCV_PUBLIC NVCVStatus nvcvTensorDataPitchDeviceFillDimsNCHW(NVCVTensorData *data, NVCVImageFormat format,
-                                                             int32_t nbatch, int32_t channels, int32_t height,
-                                                             int32_t width, void *mem, const int64_t *pitchBytes);
-
-/**
- * Fills a tensor data with pitch-linear buffer specified by image attributes.
- *
- * Tensor layout will be NCHW or NHWC depending whether the image format is
- * is packed or planar.
- *
- * @param[out] data Where the tensor data will be written to.
- * @param[in] format Tensor image format
- * @param[in] numImages Number of images in the tensor.
- * @param[in] imgWidth,imgHeight Dimension of each image.
- * @param[in] mem Pointer to memory buffer with tensor contents.
- * @param[in] pitchBytes Pitch of each dimension.
- *                       If NULL, will define a fully packed tensor.
- *
- * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
- * @retval #NVCV_SUCCESS                Operation executed successfully.
- */
-NVCV_PUBLIC NVCVStatus nvcvTensorDataPitchDeviceFillForImages(NVCVTensorData *data, NVCVImageFormat format,
-                                                              int32_t numImages, int32_t imgWidth, int32_t imgHeight,
-                                                              void *mem, const int64_t *pitchBytes);
-
-/**
  * Retrieve the number of dimensions of a tensor layout.
  *
  * @param[in] layout Tensor layout to be queried.

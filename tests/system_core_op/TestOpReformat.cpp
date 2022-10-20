@@ -31,15 +31,18 @@ TEST(OpReformat, OpReformat_to_hwc)
 
     nvcv::Tensor imgOut(1, {640, 480}, nvcv::FMT_RGB8);
 
-    nvcv::Requirements reqsPlanar{nvcv::Tensor::CalcRequirements(1, {640, 480}, nvcv::FMT_RGB8p).mem};
+    nvcv::Tensor::Requirements reqsPlanar = nvcv::Tensor::CalcRequirements(1, {640, 480}, nvcv::FMT_RGB8p);
 
-    int64_t inBufferSize = CalcTotalSizeBytes(reqsPlanar.deviceMem());
+    int64_t inBufferSize = CalcTotalSizeBytes(nvcv::Requirements{reqsPlanar.mem}.deviceMem());
     ASSERT_LT(0, inBufferSize);
 
-    void *data;
-    EXPECT_EQ(cudaSuccess, cudaMalloc(&data, inBufferSize));
+    nvcv::TensorDataPitchDevice::Buffer bufPlanar;
+    bufPlanar.layout = reqsPlanar.layout;
+    std::copy(reqsPlanar.shape, reqsPlanar.shape + NVCV_TENSOR_MAX_NDIM, bufPlanar.shape);
+    std::copy(reqsPlanar.pitchBytes, reqsPlanar.pitchBytes + NVCV_TENSOR_MAX_NDIM, bufPlanar.pitchBytes);
+    EXPECT_EQ(cudaSuccess, cudaMalloc(&bufPlanar.mem, inBufferSize));
 
-    nvcv::TensorDataPitchDevice bufIn(nvcv::FMT_RGB8p, 1, {640, 480}, data);
+    nvcv::TensorDataPitchDevice bufIn(nvcv::FMT_RGB8p, bufPlanar);
 
     ASSERT_EQ(1, bufIn.numImages());
 
@@ -80,7 +83,7 @@ TEST(OpReformat, OpReformat_to_hwc)
     EXPECT_EQ(test[3], 0);
     EXPECT_EQ(test[4], 1);
 
-    EXPECT_EQ(cudaSuccess, cudaFree(data));
+    EXPECT_EQ(cudaSuccess, cudaFree(bufPlanar.mem));
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 }
 

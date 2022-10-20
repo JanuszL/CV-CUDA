@@ -126,31 +126,41 @@ TEST(TensorWrapData, wip_create)
         = nvcv::ImageFormat(nvcv::ColorModel::RGB, nvcv::CSPEC_BT601_ER, nvcv::MemLayout::PL, nvcv::DataType::FLOAT,
                             nvcv::Swizzle::S_XY00, nvcv::Packing::X16, nvcv::Packing::X16);
 
-    nvcv::TensorDataPitchDevice buf(fmt, 5, {173, 79}, reinterpret_cast<void *>(678));
+    nvcv::Tensor::Requirements reqs = nvcv::Tensor::CalcRequirements(5, {173, 79}, fmt);
 
-    EXPECT_EQ(nvcv::TensorLayout::NCHW, buf.layout());
-    EXPECT_EQ(5, buf.dims().n);
-    EXPECT_EQ(173, buf.dims().w);
-    EXPECT_EQ(79, buf.dims().h);
-    EXPECT_EQ(2, buf.dims().c);
+    nvcv::TensorDataPitchDevice::Buffer buf;
+    buf.layout = reqs.layout;
+    std::copy(reqs.shape, reqs.shape + NVCV_TENSOR_MAX_NDIM, buf.shape);
+    std::copy(reqs.pitchBytes, reqs.pitchBytes + NVCV_TENSOR_MAX_NDIM, buf.pitchBytes);
+    // dummy value, just to check if memory won't be accessed internally. If it does,
+    // it'll segfault.
+    buf.mem = reinterpret_cast<void *>(678);
 
-    EXPECT_EQ(5, buf.shape()[0]);
-    EXPECT_EQ(173, buf.shape()[3]);
-    EXPECT_EQ(79, buf.shape()[2]);
-    EXPECT_EQ(2, buf.shape()[1]);
-    EXPECT_EQ(reinterpret_cast<void *>(678), buf.mem());
-    EXPECT_EQ(4, buf.ndim());
+    nvcv::TensorDataPitchDevice tdata(fmt, buf);
 
-    nvcv::TensorWrapData tensor{buf};
+    EXPECT_EQ(nvcv::TensorLayout::NCHW, tdata.layout());
+    EXPECT_EQ(5, tdata.dims().n);
+    EXPECT_EQ(173, tdata.dims().w);
+    EXPECT_EQ(79, tdata.dims().h);
+    EXPECT_EQ(2, tdata.dims().c);
+
+    EXPECT_EQ(5, tdata.shape()[0]);
+    EXPECT_EQ(173, tdata.shape()[3]);
+    EXPECT_EQ(79, tdata.shape()[2]);
+    EXPECT_EQ(2, tdata.shape()[1]);
+    EXPECT_EQ(reinterpret_cast<void *>(678), tdata.mem());
+    EXPECT_EQ(4, tdata.ndim());
+
+    nvcv::TensorWrapData tensor{tdata};
 
     ASSERT_NE(nullptr, tensor.handle());
 
     EXPECT_NE(nullptr, dynamic_cast<nvcv::AllocatorWrapHandle *>(&tensor.alloc()));
 
-    EXPECT_EQ(buf.dims(), tensor.dims());
-    EXPECT_EQ(buf.shape(), tensor.shape());
-    EXPECT_EQ(buf.layout(), tensor.layout());
-    EXPECT_EQ(buf.ndim(), tensor.ndim());
+    EXPECT_EQ(tdata.dims(), tensor.dims());
+    EXPECT_EQ(tdata.shape(), tensor.shape());
+    EXPECT_EQ(tdata.layout(), tensor.layout());
+    EXPECT_EQ(tdata.ndim(), tensor.ndim());
     EXPECT_EQ(fmt, tensor.format());
 
     const nvcv::ITensorData *data = tensor.exportData();
@@ -159,21 +169,21 @@ TEST(TensorWrapData, wip_create)
     auto *devdata = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(data);
     ASSERT_NE(nullptr, devdata);
 
-    EXPECT_EQ(buf.format(), devdata->format());
-    EXPECT_EQ(buf.dims(), devdata->dims());
-    EXPECT_EQ(buf.shape(), devdata->shape());
-    EXPECT_EQ(buf.ndim(), devdata->ndim());
+    EXPECT_EQ(tdata.format(), devdata->format());
+    EXPECT_EQ(tdata.dims(), devdata->dims());
+    EXPECT_EQ(tdata.shape(), devdata->shape());
+    EXPECT_EQ(tdata.ndim(), devdata->ndim());
 
-    EXPECT_EQ(buf.mem(), devdata->mem());
+    EXPECT_EQ(tdata.mem(), devdata->mem());
 
-    auto *mem = reinterpret_cast<std::byte *>(buf.mem());
+    auto *mem = reinterpret_cast<std::byte *>(tdata.mem());
 
-    EXPECT_LE(mem + buf.imgPitchBytes() * 4, devdata->imgBuffer(4));
-    EXPECT_LE(mem + buf.imgPitchBytes() * 3, devdata->imgBuffer(3));
+    EXPECT_LE(mem + tdata.imgPitchBytes() * 4, devdata->imgBuffer(4));
+    EXPECT_LE(mem + tdata.imgPitchBytes() * 3, devdata->imgBuffer(3));
 
-    EXPECT_LE(mem + buf.imgPitchBytes() * 4, devdata->imgPlaneBuffer(4, 0));
-    EXPECT_LE(mem + buf.imgPitchBytes() * 4 + buf.planePitchBytes() * 1, devdata->imgPlaneBuffer(4, 1));
+    EXPECT_LE(mem + tdata.imgPitchBytes() * 4, devdata->imgPlaneBuffer(4, 0));
+    EXPECT_LE(mem + tdata.imgPitchBytes() * 4 + tdata.planePitchBytes() * 1, devdata->imgPlaneBuffer(4, 1));
 
-    EXPECT_LE(mem + buf.imgPitchBytes() * 3, devdata->imgPlaneBuffer(3, 0));
-    EXPECT_LE(mem + buf.imgPitchBytes() * 3 + buf.planePitchBytes() * 1, devdata->imgPlaneBuffer(3, 1));
+    EXPECT_LE(mem + tdata.imgPitchBytes() * 3, devdata->imgPlaneBuffer(3, 0));
+    EXPECT_LE(mem + tdata.imgPitchBytes() * 3 + tdata.planePitchBytes() * 1, devdata->imgPlaneBuffer(3, 1));
 }

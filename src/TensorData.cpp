@@ -33,36 +33,3 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorLayoutGetNumDim, (NVCVTensorLayout l
             *ndim = priv::GetNumDim(layout);
         });
 }
-
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorDataPitchDeviceFillForImages,
-                (NVCVTensorData * data, NVCVImageFormat format, int32_t numImages, int32_t imgWidth, int32_t imgHeight,
-                 void *mem, const int64_t *pitchBytes))
-{
-    return priv::ProtectCall(
-        [&]
-        {
-            if (data == nullptr)
-            {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "ndim output must not be NULL");
-            }
-
-            priv::FillTensorData(*data, priv::ImageFormat{format}, numImages, {imgWidth, imgHeight}, mem, pitchBytes);
-        });
-}
-
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorDataPitchDeviceFillDimsNCHW,
-                (NVCVTensorData * data, NVCVImageFormat format, int32_t nbatch, int32_t channels, int32_t height,
-                 int32_t width, void *mem, const int64_t *pitchBytes))
-{
-    return priv::ProtectCall(
-        [&]
-        {
-            if (data == nullptr)
-            {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "ndim output must not be NULL");
-            }
-
-            priv::FillTensorData(*data, priv::ImageFormat{format}, priv::DimsNCHW{nbatch, channels, height, width}, mem,
-                                 pitchBytes);
-        });
-}

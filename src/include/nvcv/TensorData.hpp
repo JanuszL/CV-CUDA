@@ -27,12 +27,6 @@ public:
 
     explicit TensorDataPitchDevice(ImageFormat format, const Buffer &data);
 
-    explicit TensorDataPitchDevice(ImageFormat format, const DimsNCHW &dims, void *mem,
-                                   const int64_t *pitchBytes = nullptr);
-
-    explicit TensorDataPitchDevice(ImageFormat format, int numImages, const Size2D &size, void *mem,
-                                   const int64_t *pitchBytes = nullptr);
-
 private:
     NVCVTensorData m_data;
 
@@ -69,20 +63,6 @@ inline TensorDataPitchDevice::TensorDataPitchDevice(ImageFormat format, const Bu
     m_data.format       = format;
     m_data.bufferType   = NVCV_TENSOR_BUFFER_PITCH_DEVICE;
     m_data.buffer.pitch = data;
-}
-
-inline TensorDataPitchDevice::TensorDataPitchDevice(ImageFormat format, const DimsNCHW &dims, void *mem,
-                                                    const int64_t *pitchBytes)
-{
-    detail::CheckThrow(
-        nvcvTensorDataPitchDeviceFillDimsNCHW(&m_data, format, dims.n, dims.c, dims.h, dims.w, mem, pitchBytes));
-}
-
-inline TensorDataPitchDevice::TensorDataPitchDevice(ImageFormat format, int numImages, const Size2D &size, void *mem,
-                                                    const int64_t *pitchBytes)
-{
-    detail::CheckThrow(
-        nvcvTensorDataPitchDeviceFillForImages(&m_data, format, numImages, size.w, size.h, mem, pitchBytes));
 }
 
 inline int TensorDataPitchDevice::doGetNumDim() const
