@@ -19,7 +19,7 @@
 #include <private/core/SymbolVersioning.hpp>
 #include <private/core/Tensor.hpp>
 #include <private/core/TensorLayout.hpp>
-#include <private/core/TensorWrapData.hpp>
+#include <private/core/TensorWrapDataPitch.hpp>
 #include <private/fmt/ImageFormat.hpp>
 #include <private/fmt/PixelType.hpp>
 
@@ -116,11 +116,19 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorWrapDataConstruct,
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output handle must not be NULL");
             }
 
-            static_assert(sizeof(NVCVTensorStorage) >= sizeof(priv::TensorWrapData));
-            static_assert(alignof(NVCVTensorStorage) % alignof(priv::TensorWrapData) == 0);
+            static_assert(sizeof(NVCVTensorStorage) >= sizeof(priv::TensorWrapDataPitch));
+            static_assert(alignof(NVCVTensorStorage) % alignof(priv::TensorWrapDataPitch) == 0);
 
-            *handle
-                = reinterpret_cast<NVCVTensorHandle>(new (storage) priv::TensorWrapData{*data, cleanup, ctxCleanup});
+            switch (data->bufferType)
+            {
+            case NVCV_TENSOR_BUFFER_PITCH_DEVICE:
+                *handle = reinterpret_cast<NVCVTensorHandle>(new (storage)
+                                                                 priv::TensorWrapDataPitch{*data, cleanup, ctxCleanup});
+                break;
+
+            default:
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Image buffer type not supported";
+            }
         });
 }
 

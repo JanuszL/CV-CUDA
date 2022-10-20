@@ -21,7 +21,7 @@ add_library(nvcv_private_core STATIC
     Image.cpp
     ImageBatchVarShape.cpp
     Tensor.cpp
-    TensorWrapData.cpp
+    TensorWrapDataPitch.cpp
     Dims.cpp
     TensorLayout.cpp
     TensorData.cpp

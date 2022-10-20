@@ -11,8 +11,8 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_PRIV_TENSOR_WRAPDATA_HPP
-#define NVCV_PRIV_TENSOR_WRAPDATA_HPP
+#ifndef NVCV_PRIV_TENSOR_WRAPDATAPITCH_HPP
+#define NVCV_PRIV_TENSOR_WRAPDATAPITCH_HPP
 
 #include "ITensor.hpp"
 
@@ -20,11 +20,11 @@
 
 namespace nv::cv::priv {
 
-class TensorWrapData final : public ITensor
+class TensorWrapDataPitch final : public ITensor
 {
 public:
-    explicit TensorWrapData(const NVCVTensorData &data, NVCVTensorDataCleanupFunc cleanup, void *ctxCleanup);
-    ~TensorWrapData();
+    explicit TensorWrapDataPitch(const NVCVTensorData &data, NVCVTensorDataCleanupFunc cleanup, void *ctxCleanup);
+    ~TensorWrapDataPitch();
 
     int32_t        ndim() const override;
     const int64_t *shape() const override;
@@ -49,4 +49,4 @@ private:
 
 } // namespace nv::cv::priv
 
-#endif // NVCV_PRIV_TENSOR_WRAPDATA_HPP
+#endif // NVCV_PRIV_TENSOR_WRAPDATAPITCH_HPP

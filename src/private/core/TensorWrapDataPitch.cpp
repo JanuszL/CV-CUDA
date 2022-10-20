@@ -11,7 +11,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "TensorWrapData.hpp"
+#include "TensorWrapDataPitch.hpp"
 
 #include "IAllocator.hpp"
 #include "Requirements.hpp"
@@ -74,25 +74,18 @@ static void ValidateTensorBufferPitch(const NVCVTensorBufferPitch &buffer)
     }
 }
 
-TensorWrapData::TensorWrapData(const NVCVTensorData &data, NVCVTensorDataCleanupFunc cleanup, void *ctxCleanup)
+TensorWrapDataPitch::TensorWrapDataPitch(const NVCVTensorData &data, NVCVTensorDataCleanupFunc cleanup,
+                                         void *ctxCleanup)
     : m_data(data)
     , m_cleanup(cleanup)
     , m_ctxCleanup(ctxCleanup)
 {
-    switch (data.bufferType)
-    {
-    case NVCV_TENSOR_BUFFER_PITCH_DEVICE:
-        ValidateTensorBufferPitch(data.buffer.pitch);
-        return;
+    NVCV_ASSERT(data.bufferType == NVCV_TENSOR_BUFFER_PITCH_DEVICE);
 
-    case NVCV_TENSOR_BUFFER_NONE:
-        throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Invalid wrapping of buffer type NONE";
-    }
-
-    throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Image buffer type not supported";
+    ValidateTensorBufferPitch(data.buffer.pitch);
 }
 
-TensorWrapData::~TensorWrapData()
+TensorWrapDataPitch::~TensorWrapDataPitch()
 {
     if (m_cleanup)
     {
@@ -100,80 +93,42 @@ TensorWrapData::~TensorWrapData()
     }
 }
 
-int32_t TensorWrapData::ndim() const
+int32_t TensorWrapDataPitch::ndim() const
 {
-    switch (m_data.bufferType)
-    {
-    case NVCV_TENSOR_BUFFER_PITCH_DEVICE:
-        return m_data.buffer.pitch.ndim;
-
-    case NVCV_TENSOR_BUFFER_NONE:
-        return 0;
-    }
-    return 0;
+    return m_data.buffer.pitch.ndim;
 }
 
-const int64_t *TensorWrapData::shape() const
+const int64_t *TensorWrapDataPitch::shape() const
 {
-    switch (m_data.bufferType)
-    {
-    case NVCV_TENSOR_BUFFER_PITCH_DEVICE:
-        return m_data.buffer.pitch.shape;
-
-    case NVCV_TENSOR_BUFFER_NONE:
-        return nullptr;
-    }
-
-    NVCV_ASSERT(!"Invalid buffer type");
-    return nullptr;
+    return m_data.buffer.pitch.shape;
 }
 
-const NVCVTensorLayout &TensorWrapData::layout() const
+const NVCVTensorLayout &TensorWrapDataPitch::layout() const
 {
-    switch (m_data.bufferType)
-    {
-    case NVCV_TENSOR_BUFFER_PITCH_DEVICE:
-        return m_data.buffer.pitch.layout;
-
-    case NVCV_TENSOR_BUFFER_NONE:
-        return NVCV_TENSOR_NCHW;
-    }
-
-    NVCV_ASSERT(!"Invalid buffer type");
-    return NVCV_TENSOR_NCHW;
+    return m_data.buffer.pitch.layout;
 }
 
-DimsNCHW TensorWrapData::dims() const
+DimsNCHW TensorWrapDataPitch::dims() const
 {
     return ToNCHW(this->shape(), this->layout());
 }
 
-PixelType TensorWrapData::dtype() const
+PixelType TensorWrapDataPitch::dtype() const
 {
-    switch (m_data.bufferType)
-    {
-    case NVCV_TENSOR_BUFFER_PITCH_DEVICE:
-        return PixelType{m_data.buffer.pitch.dtype};
-
-    case NVCV_TENSOR_BUFFER_NONE:
-        return PixelType{NVCV_PIXEL_TYPE_NONE};
-    }
-
-    NVCV_ASSERT(!"Invalid buffer type");
-    return PixelType{NVCV_PIXEL_TYPE_NONE};
+    return PixelType{m_data.buffer.pitch.dtype};
 }
 
-IAllocator &TensorWrapData::alloc() const
+IAllocator &TensorWrapDataPitch::alloc() const
 {
     return GetDefaultAllocator();
 }
 
-void TensorWrapData::exportData(NVCVTensorData &data) const
+void TensorWrapDataPitch::exportData(NVCVTensorData &data) const
 {
     data = m_data;
 }
 
-Version TensorWrapData::doGetVersion() const
+Version TensorWrapDataPitch::doGetVersion() const
 {
     return CURRENT_VERSION;
 }
