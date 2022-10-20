@@ -11,34 +11,25 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "Cache.hpp"
-#include "ImageFormat.hpp"
-#include "Stream.hpp"
+#ifndef NVCV_PYTHON_OBJECT_HPP
+#define NVCV_PYTHON_OBJECT_HPP
 
-#include <nvcv/Version.h>
-#include <pybind11/pybind11.h>
+#include <memory>
 
-namespace py = pybind11;
+namespace nv::cvpy {
 
-PYBIND11_MODULE(nvcv, m)
+// Parent of all VPI objects that are reference-counted
+class Object : public std::enable_shared_from_this<Object>
 {
-    m.doc() = R"pbdoc(
-        NVCV Python API reference
-        ========================
+public:
+    virtual ~Object() = 0;
 
-        This is the Python API reference for the NVIDIA® NVCV library.
-    )pbdoc";
+    Object(Object &&) = delete;
 
-    m.attr("__version__") = NVCV_VERSION_STRING;
+protected:
+    Object() = default;
+};
 
-    using namespace nv::cvpy;
+} // namespace nv::cvpy
 
-    Cache::Export(m);
-
-    {
-        py::module_ cuda = m.def_submodule("cuda");
-        Stream::Export(cuda);
-    }
-
-    ExportImageFormat(m);
-}
+#endif // NVCV_PYTHON_OBJECT_HPP

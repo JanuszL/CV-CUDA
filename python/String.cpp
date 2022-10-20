@@ -11,34 +11,25 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "Cache.hpp"
-#include "ImageFormat.hpp"
-#include "Stream.hpp"
+#include "String.hpp"
 
-#include <nvcv/Version.h>
-#include <pybind11/pybind11.h>
+#include <cstdarg>
+#include <cstdio>
 
-namespace py = pybind11;
+namespace nv::cvpy {
 
-PYBIND11_MODULE(nvcv, m)
+std::string FormatString(const char *fmt, ...)
 {
-    m.doc() = R"pbdoc(
-        NVCV Python API reference
-        ========================
+    va_list va;
+    va_start(va, fmt);
 
-        This is the Python API reference for the NVIDIA® NVCV library.
-    )pbdoc";
+    char buffer[1024];
+    vsnprintf(buffer, sizeof(buffer) - 1, fmt, va);
+    buffer[sizeof(buffer) - 1] = '\0'; // better be safe against truncation
 
-    m.attr("__version__") = NVCV_VERSION_STRING;
+    va_end(va);
 
-    using namespace nv::cvpy;
-
-    Cache::Export(m);
-
-    {
-        py::module_ cuda = m.def_submodule("cuda");
-        Stream::Export(cuda);
-    }
-
-    ExportImageFormat(m);
+    return buffer;
 }
+
+} // namespace nv::cvpy

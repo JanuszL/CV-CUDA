@@ -11,34 +11,36 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "Cache.hpp"
-#include "ImageFormat.hpp"
-#include "Stream.hpp"
+#include "CheckError.hpp"
 
-#include <nvcv/Version.h>
-#include <pybind11/pybind11.h>
+#include <iostream>
+#include <sstream>
 
-namespace py = pybind11;
+namespace nv::cvpy {
 
-PYBIND11_MODULE(nvcv, m)
+static std::string ToString(cudaError_t err)
 {
-    m.doc() = R"pbdoc(
-        NVCV Python API reference
-        ========================
-
-        This is the Python API reference for the NVIDIA® NVCV library.
-    )pbdoc";
-
-    m.attr("__version__") = NVCV_VERSION_STRING;
-
-    using namespace nv::cvpy;
-
-    Cache::Export(m);
-
-    {
-        py::module_ cuda = m.def_submodule("cuda");
-        Stream::Export(cuda);
-    }
-
-    ExportImageFormat(m);
+    std::ostringstream ss;
+    ss << cudaGetErrorName(err) << ": " << cudaGetErrorString(err);
+    return ss.str();
 }
+
+void CheckThrow(cudaError_t err)
+{
+    if (err != cudaSuccess)
+    {
+        cudaGetLastError(); // consume the error
+        throw std::runtime_error(ToString(err));
+    }
+}
+
+void CheckLog(cudaError_t err)
+{
+    if (err != cudaSuccess)
+    {
+        cudaGetLastError(); // consume the error
+        std::cerr << ToString(err) << std::endl;
+    }
+}
+
+} // namespace nv::cvpy

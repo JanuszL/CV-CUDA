@@ -11,34 +11,20 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "Cache.hpp"
-#include "ImageFormat.hpp"
-#include "Stream.hpp"
+#ifndef NVCV_PYTHON_CHECKERROR_HPP
+#define NVCV_PYTHON_CHECKERROR_HPP
 
-#include <nvcv/Version.h>
-#include <pybind11/pybind11.h>
+#include <cuda_runtime.h>
+#include <nvcv/detail/CheckError.hpp>
 
-namespace py = pybind11;
+namespace nv::cvpy {
 
-PYBIND11_MODULE(nvcv, m)
-{
-    m.doc() = R"pbdoc(
-        NVCV Python API reference
-        ========================
+using nv::cv::detail::CheckThrow;
 
-        This is the Python API reference for the NVIDIA® NVCV library.
-    )pbdoc";
+void CheckThrow(cudaError_t err);
 
-    m.attr("__version__") = NVCV_VERSION_STRING;
+void CheckLog(cudaError_t err);
 
-    using namespace nv::cvpy;
+} // namespace nv::cvpy
 
-    Cache::Export(m);
-
-    {
-        py::module_ cuda = m.def_submodule("cuda");
-        Stream::Export(cuda);
-    }
-
-    ExportImageFormat(m);
-}
+#endif // NVCV_PYTHON_CHECKERROR_HPP

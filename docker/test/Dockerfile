@@ -26,10 +26,30 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys BA6932366A755776
 # Add so that tzdata don't ask for timezone info in a noninteractive installation.
 RUN ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
 
+# For running python tests
 RUN DEBIAN_FRONTEND="noninteractive" apt-get update \
     && apt-get install -y --no-install-recommends \
-        python3.7 \
-        python3.8 \
-        python3.9 \
+        python3.7 python3.7-distutils \
+        python3.8 python3.8-distutils \
+        python3.9 python3.9-distutils \
         python3.10 \
+        python3-pip \
     && rm -rf /var/lib/apt/lists/*
+
+# It needs numba
+RUN DEBIAN_FRONTEND="noninteractive" apt-get update \
+    && apt-get install -y --no-install-recommends \
+        cuda-nvcc-$(echo $VER_CUDA | sed "s@\([0-9]\+\)\.\([0-9]\+\).*@\1-\2@") \
+    && rm -rf /var/lib/apt/lists/*
+RUN set -e \
+    && for ver in 3.7 3.8 3.9 3.10; do \
+           python$ver -m pip install numba; \
+       done \
+    && rm -rf /root/.cache/pip
+
+# and torch
+RUN set -e \
+    && for ver in 3.7 3.8 3.9 3.10; do \
+           python$ver -m pip install torch; \
+       done \
+    && rm -rf /root/.cache/pip
