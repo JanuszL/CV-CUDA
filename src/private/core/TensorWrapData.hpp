@@ -26,7 +26,8 @@ public:
     explicit TensorWrapData(const NVCVTensorData &data, NVCVTensorDataCleanupFunc cleanup, void *ctxCleanup);
     ~TensorWrapData();
 
-    const Shape &shape() const override;
+    int32_t        ndim() const override;
+    const int32_t *shape() const override;
 
     NVCVTensorLayout layout() const override;
     DimsNCHW         dims() const override;

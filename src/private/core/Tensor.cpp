@@ -94,17 +94,30 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t numImages, Size2D imgSiz
 
     PixelType dtype{fmt.dataType(), *chPacking};
 
-    return CalcRequirements(shape, layout, dtype);
+    return CalcRequirements(4, shape, dtype, layout);
 }
 
-NVCVTensorRequirements Tensor::CalcRequirements(const int32_t *shape, NVCVTensorLayout layout, const PixelType &dtype)
+NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int32_t *shape, const PixelType &dtype,
+                                                NVCVTensorLayout layout)
 {
     NVCVTensorRequirements reqs;
 
     reqs.layout = layout;
     reqs.dtype  = dtype.value();
 
-    std::copy(shape, shape + GetNumDim(layout), reqs.shape);
+    int ndimLayout = GetNumDim(layout);
+
+    if (ndim > ndimLayout)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
+            << "Number of shape dimensions " << ndim << " must be >= 1 and <= " << ndimLayout;
+    }
+
+    // Complete shape with 1s
+    std::fill_n(reqs.shape, ndimLayout - ndim, 1);
+    std::copy_n(shape, ndim, reqs.shape + ndimLayout - ndim);
+
+    reqs.ndim = ndim = ndimLayout;
 
     reqs.mem = {};
 
@@ -138,32 +151,21 @@ NVCVTensorRequirements Tensor::CalcRequirements(const int32_t *shape, NVCVTensor
         }
     }
 
-    switch (reqs.layout)
-    {
-    case NVCV_TENSOR_NCHW:
-        // chPitch
-        reqs.pitchBytes[3] = dtype.strideBytes();
-        // rowPitch = width * chPitch
-        reqs.pitchBytes[2] = util::RoundUpPowerOfTwo(reqs.shape[3] * reqs.pitchBytes[3], rowPitchAlign);
-        // planePitch = rowPitch*height
-        reqs.pitchBytes[1] = reqs.pitchBytes[2] * reqs.shape[2];
-        // imgPitch = planePitch*numPlanes
-        reqs.pitchBytes[0] = reqs.pitchBytes[1] * reqs.shape[1];
-        break;
+    int firstPacked = reqs.layout == NVCV_TENSOR_NHWC ? ndim - 2 : ndim - 1;
 
-    case NVCV_TENSOR_NHWC:
-        // chPitch
-        reqs.pitchBytes[3] = dtype.strideBytes();
-        // pixPitch = chPitch*numChannels
-        reqs.pitchBytes[2] = reqs.pitchBytes[3] * reqs.shape[3];
-        // rowPitch = pixPitch * width @ pitchAlign
-        reqs.pitchBytes[1] = util::RoundUpPowerOfTwo(reqs.shape[2] * reqs.pitchBytes[2], rowPitchAlign);
-        // imgPitch = rowPitch*height
-        reqs.pitchBytes[0] = reqs.pitchBytes[1] * reqs.shape[1];
-        break;
+    reqs.pitchBytes[ndim - 1] = dtype.strideBytes();
+    for (int d = ndim - 2; d >= 0; --d)
+    {
+        if (d == firstPacked - 1)
+        {
+            reqs.pitchBytes[d] = util::RoundUpPowerOfTwo(reqs.shape[d + 1] * reqs.pitchBytes[d + 1], rowPitchAlign);
+        }
+        else
+        {
+            reqs.pitchBytes[d] = reqs.pitchBytes[d + 1] * reqs.shape[d + 1];
+        }
     }
 
-    // imgPitch * numImages
     AddBuffer(reqs.mem.deviceMem, reqs.pitchBytes[0] * reqs.shape[0], reqs.alignBytes);
 
     return reqs;
@@ -190,11 +192,14 @@ Version Tensor::doGetVersion() const
     return CURRENT_VERSION;
 }
 
-const Shape &Tensor::shape() const
+int32_t Tensor::ndim() const
 {
-    static_assert(sizeof(Shape) == sizeof(m_reqs.shape));
-    static_assert(std::is_same_v<Shape::value_type, std::decay_t<decltype(m_reqs.shape[0])>>);
-    return *reinterpret_cast<const Shape *>(m_reqs.shape);
+    return m_reqs.ndim;
+}
+
+const int32_t *Tensor::shape() const
+{
+    return m_reqs.shape;
 }
 
 NVCVTensorLayout Tensor::layout() const
@@ -225,6 +230,7 @@ void Tensor::exportData(NVCVTensorData &data) const
     {
         buf.dtype  = m_reqs.dtype;
         buf.layout = m_reqs.layout;
+        buf.ndim   = m_reqs.ndim;
 
         memcpy(buf.shape, m_reqs.shape, sizeof(buf.shape));
 

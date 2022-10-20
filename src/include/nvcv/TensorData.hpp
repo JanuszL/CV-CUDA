@@ -66,9 +66,7 @@ inline TensorDataPitchDevice::TensorDataPitchDevice(const Buffer &data)
 
 inline int TensorDataPitchDevice::doGetNumDim() const
 {
-    int32_t ndim;
-    detail::CheckThrow(nvcvTensorLayoutGetNumDim(m_data.buffer.pitch.layout, &ndim));
-    return ndim;
+    return m_data.buffer.pitch.ndim;
 }
 
 inline Shape::const_reference TensorDataPitchDevice::doGetShapeDim(int d) const
@@ -80,14 +78,7 @@ inline Shape TensorDataPitchDevice::doGetShape() const
 {
     const NVCVTensorBufferPitch &pitch = m_data.buffer.pitch;
 
-    switch (m_data.buffer.pitch.layout)
-    {
-    case NVCV_TENSOR_NCHW:
-    case NVCV_TENSOR_NHWC:
-        return Shape(pitch.shape, pitch.shape + 4);
-    }
-    assert(false && "Unknown tensor layout");
-    return {};
+    return Shape(pitch.shape, pitch.shape + pitch.ndim);
 }
 
 inline DimsNCHW TensorDataPitchDevice::doGetDims() const

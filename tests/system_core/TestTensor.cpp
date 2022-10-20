@@ -130,6 +130,7 @@ TEST(TensorWrapData, wip_create)
     nvcv::TensorDataPitchDevice::Buffer buf;
     buf.dtype  = reqs.dtype;
     buf.layout = reqs.layout;
+    buf.ndim   = reqs.ndim;
     std::copy(reqs.shape, reqs.shape + NVCV_TENSOR_MAX_NDIM, buf.shape);
     std::copy(reqs.pitchBytes, reqs.pitchBytes + NVCV_TENSOR_MAX_NDIM, buf.pitchBytes);
     // dummy value, just to check if memory won't be accessed internally. If it does,

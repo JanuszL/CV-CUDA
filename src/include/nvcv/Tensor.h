@@ -55,6 +55,9 @@ typedef struct NVCVTensorRequirementsRec
     /*< Tensor layout. */
     NVCVTensorLayout layout;
 
+    /*< Number of dimensions */
+    int32_t ndim;
+
     /*< Shape of the tensor */
     int32_t shape[NVCV_TENSOR_MAX_NDIM];
 
@@ -84,8 +87,8 @@ typedef struct NVCVTensorRequirementsRec
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvTensorCalcRequirements(const int32_t *shape, NVCVTensorLayout layout, NVCVPixelType dtype,
-                                                  NVCVTensorRequirements *reqs);
+NVCV_PUBLIC NVCVStatus nvcvTensorCalcRequirements(int32_t ndim, const int32_t *shape, NVCVPixelType dtype,
+                                                  NVCVTensorLayout layout, NVCVTensorRequirements *reqs);
 
 /** Calculates the resource requirements needed to create a tensor that holds N images.
  *

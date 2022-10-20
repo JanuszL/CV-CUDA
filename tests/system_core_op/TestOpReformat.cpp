@@ -37,6 +37,7 @@ TEST(OpReformat, OpReformat_to_hwc)
     ASSERT_LT(0, inBufferSize);
 
     nvcv::TensorDataPitchDevice::Buffer bufPlanar;
+    bufPlanar.ndim   = reqsPlanar.ndim;
     bufPlanar.dtype  = reqsPlanar.dtype;
     bufPlanar.layout = reqsPlanar.layout;
     std::copy(reqsPlanar.shape, reqsPlanar.shape + NVCV_TENSOR_MAX_NDIM, bufPlanar.shape);

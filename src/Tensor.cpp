@@ -45,7 +45,8 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorCalcRequirementsForImages,
 }
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorCalcRequirements,
-                (const int32_t *shape, NVCVTensorLayout layout, NVCVPixelType dtype, NVCVTensorRequirements *reqs))
+                (int32_t ndim, const int32_t *shape, NVCVPixelType dtype, NVCVTensorLayout layout,
+                 NVCVTensorRequirements *reqs))
 {
     return priv::ProtectCall(
         [&]
@@ -57,7 +58,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorCalcRequirements,
 
             priv::PixelType pix{dtype};
 
-            *reqs = priv::Tensor::CalcRequirements(shape, layout, pix);
+            *reqs = priv::Tensor::CalcRequirements(ndim, shape, pix, layout);
         });
 }
 
@@ -226,21 +227,24 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetShape, (NVCVTensorHandle handle, 
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input pointer to ndim cannot be NULL");
             }
 
-            // Number of shape elements to copy
-            int n = std::min(*ndim, priv::GetNumDim(tensor.layout()));
-            if (n > 0)
+            if (shape != nullptr)
             {
-                if (shape == nullptr)
+                // Number of shape elements to copy
+                int n = std::min(*ndim, tensor.ndim());
+                if (n > 0)
                 {
-                    throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to shape output cannot be NULL");
-                }
+                    if (shape == nullptr)
+                    {
+                        throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to shape output cannot be NULL");
+                    }
 
-                NVCV_ASSERT(*ndim - n >= 0);
-                std::fill_n(shape, *ndim - n, 1);
-                std::copy_n(tensor.shape().end() - n, n, shape + *ndim - n);
+                    NVCV_ASSERT(*ndim - n >= 0);
+                    std::fill_n(shape, *ndim - n, 1);
+                    std::copy_n(tensor.shape() + tensor.ndim() - n, n, shape + *ndim - n);
+                }
             }
 
-            *ndim = priv::GetNumDim(tensor.layout());
+            *ndim = tensor.ndim();
         });
 }
 

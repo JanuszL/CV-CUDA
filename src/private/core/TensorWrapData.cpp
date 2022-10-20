@@ -111,22 +111,32 @@ TensorWrapData::~TensorWrapData()
     }
 }
 
-static const Shape g_emptyShape = {};
-
-const Shape &TensorWrapData::shape() const
+int32_t TensorWrapData::ndim() const
 {
     switch (m_data.bufferType)
     {
     case NVCV_TENSOR_BUFFER_PITCH_DEVICE:
-        // TODO: This is UB under strict C++ rules
-        return *reinterpret_cast<const Shape *>(m_data.buffer.pitch.shape);
+        return m_data.buffer.pitch.ndim;
 
     case NVCV_TENSOR_BUFFER_NONE:
-        return g_emptyShape;
+        return 0;
+    }
+    return 0;
+}
+
+const int32_t *TensorWrapData::shape() const
+{
+    switch (m_data.bufferType)
+    {
+    case NVCV_TENSOR_BUFFER_PITCH_DEVICE:
+        return m_data.buffer.pitch.shape;
+
+    case NVCV_TENSOR_BUFFER_NONE:
+        return nullptr;
     }
 
     NVCV_ASSERT(!"Invalid buffer type");
-    return g_emptyShape;
+    return nullptr;
 }
 
 NVCVTensorLayout TensorWrapData::layout() const

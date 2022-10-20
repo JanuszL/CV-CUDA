@@ -39,6 +39,7 @@ typedef struct NVCVTensorBufferPitchRec
     NVCVElementType  dtype;
     NVCVTensorLayout layout;
 
+    int32_t ndim;
     int32_t shape[NVCV_TENSOR_MAX_NDIM];
     int64_t pitchBytes[NVCV_TENSOR_MAX_NDIM];
 

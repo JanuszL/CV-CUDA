@@ -52,7 +52,7 @@ class Tensor
 {
 public:
     using Requirements = NVCVTensorRequirements;
-    static Requirements CalcRequirements(const Shape &shape, TensorLayout layout, PixelType dtype);
+    static Requirements CalcRequirements(const Shape &shape, PixelType dtype, TensorLayout layout);
     static Requirements CalcRequirements(int numImages, Size2D imgSize, ImageFormat fmt);
 
     Tensor(const Tensor &) = delete;
@@ -166,10 +166,11 @@ inline const ITensorData *TensorWrapHandle::doExportData() const
 
 // Tensor implementation -------------------------------------
 
-inline auto Tensor::CalcRequirements(const Shape &shape, TensorLayout layout, PixelType dtype) -> Requirements
+inline auto Tensor::CalcRequirements(const Shape &shape, PixelType dtype, TensorLayout layout) -> Requirements
 {
     Requirements reqs;
-    detail::CheckThrow(nvcvTensorCalcRequirements(&shape[0], static_cast<NVCVTensorLayout>(layout), dtype, &reqs));
+    detail::CheckThrow(
+        nvcvTensorCalcRequirements(shape.size(), &shape[0], dtype, static_cast<NVCVTensorLayout>(layout), &reqs));
     return reqs;
 }
 

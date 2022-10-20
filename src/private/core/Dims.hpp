@@ -21,11 +21,9 @@
 
 namespace nv::cv::priv {
 
-using Shape = std::array<int32_t, NVCV_TENSOR_MAX_NDIM>;
-
 using util::DimsNCHW;
 
-DimsNCHW ToNCHW(const Shape &shape, NVCVTensorLayout layout);
+DimsNCHW ToNCHW(const int32_t *shape, NVCVTensorLayout layout);
 
 } // namespace nv::cv::priv
 

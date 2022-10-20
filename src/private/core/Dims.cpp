@@ -17,7 +17,7 @@
 
 namespace nv::cv::priv {
 
-DimsNCHW ToNCHW(const Shape &s, NVCVTensorLayout layout)
+DimsNCHW ToNCHW(const int32_t *s, NVCVTensorLayout layout)
 {
     switch (layout)
     {

@@ -27,7 +27,8 @@ class IAllocator;
 class ITensor : public ICoreObjectHandle<ITensor, NVCVTensorHandle>
 {
 public:
-    virtual const Shape &shape() const = 0;
+    virtual int32_t        ndim() const  = 0;
+    virtual const int32_t *shape() const = 0;
 
     virtual NVCVTensorLayout layout() const = 0;
     virtual DimsNCHW         dims() const   = 0;
