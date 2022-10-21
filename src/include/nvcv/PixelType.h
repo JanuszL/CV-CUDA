@@ -47,94 +47,94 @@ typedef uint64_t NVCVPixelType;
 #define NVCV_PIXEL_TYPE_NONE ((NVCVPixelType)0)
 
 /** One channel of unsigned 8-bit value. */
-#define NVCV_PIXEL_TYPE_U8   NVCV_DETAIL_MAKE_PIX_TYPE(PL, UNSIGNED, X8)
+#define NVCV_PIXEL_TYPE_U8   NVCV_DETAIL_MAKE_PIX_TYPE(UNSIGNED, X8)
 /** Two interleaved channels of unsigned 8-bit values. */
-#define NVCV_PIXEL_TYPE_2U8  NVCV_DETAIL_MAKE_PIX_TYPE(PL, UNSIGNED, X8_Y8)
+#define NVCV_PIXEL_TYPE_2U8  NVCV_DETAIL_MAKE_PIX_TYPE(UNSIGNED, X8_Y8)
 /** Three interleaved channels of unsigned 8-bit values. */
-#define NVCV_PIXEL_TYPE_3U8  NVCV_DETAIL_MAKE_PIX_TYPE(PL, UNSIGNED, X8_Y8_Z8)
+#define NVCV_PIXEL_TYPE_3U8  NVCV_DETAIL_MAKE_PIX_TYPE(UNSIGNED, X8_Y8_Z8)
 /** Four interleaved channels of unsigned 8-bit values. */
-#define NVCV_PIXEL_TYPE_4U8  NVCV_DETAIL_MAKE_PIX_TYPE(PL, UNSIGNED, X8_Y8_Z8_W8)
+#define NVCV_PIXEL_TYPE_4U8  NVCV_DETAIL_MAKE_PIX_TYPE(UNSIGNED, X8_Y8_Z8_W8)
 
 /** One channel of signed 8-bit value. */
-#define NVCV_PIXEL_TYPE_S8   NVCV_DETAIL_MAKE_PIX_TYPE(PL, SIGNED, X8)
+#define NVCV_PIXEL_TYPE_S8   NVCV_DETAIL_MAKE_PIX_TYPE(SIGNED, X8)
 /** Two interleaved channels of signed 8-bit values. */
-#define NVCV_PIXEL_TYPE_2S8  NVCV_DETAIL_MAKE_PIX_TYPE(PL, SIGNED, X8_Y8)
+#define NVCV_PIXEL_TYPE_2S8  NVCV_DETAIL_MAKE_PIX_TYPE(SIGNED, X8_Y8)
 /** Three interleaved channels of signed 8-bit values. */
-#define NVCV_PIXEL_TYPE_3S8  NVCV_DETAIL_MAKE_PIX_TYPE(PL, SIGNED, X8_Y8_Z8)
+#define NVCV_PIXEL_TYPE_3S8  NVCV_DETAIL_MAKE_PIX_TYPE(SIGNED, X8_Y8_Z8)
 /** Four interleaved channels of signed 8-bit values. */
-#define NVCV_PIXEL_TYPE_4S8  NVCV_DETAIL_MAKE_PIX_TYPE(PL, SIGNED, X8_Y8_Z8_W8)
+#define NVCV_PIXEL_TYPE_4S8  NVCV_DETAIL_MAKE_PIX_TYPE(SIGNED, X8_Y8_Z8_W8)
 
 /** One channel of unsigned 16-bit value. */
-#define NVCV_PIXEL_TYPE_U16  NVCV_DETAIL_MAKE_PIX_TYPE(PL, UNSIGNED, X16)
+#define NVCV_PIXEL_TYPE_U16  NVCV_DETAIL_MAKE_PIX_TYPE(UNSIGNED, X16)
 /** Two interleaved channels of unsigned 16-bit values. */
-#define NVCV_PIXEL_TYPE_2U16 NVCV_DETAIL_MAKE_PIX_TYPE(PL, UNSIGNED, X16_Y16)
+#define NVCV_PIXEL_TYPE_2U16 NVCV_DETAIL_MAKE_PIX_TYPE(UNSIGNED, X16_Y16)
 /** Three interleaved channels of unsigned 16-bit values. */
-#define NVCV_PIXEL_TYPE_3U16 NVCV_DETAIL_MAKE_PIX_TYPE(PL, UNSIGNED, X16_Y16_Z16)
+#define NVCV_PIXEL_TYPE_3U16 NVCV_DETAIL_MAKE_PIX_TYPE(UNSIGNED, X16_Y16_Z16)
 /** Four interleaved channels of unsigned 16-bit values. */
-#define NVCV_PIXEL_TYPE_4U16 NVCV_DETAIL_MAKE_PIX_TYPE(PL, UNSIGNED, X16_Y16_Z16_W16)
+#define NVCV_PIXEL_TYPE_4U16 NVCV_DETAIL_MAKE_PIX_TYPE(UNSIGNED, X16_Y16_Z16_W16)
 
 /** One channel of signed 16-bit value. */
-#define NVCV_PIXEL_TYPE_S16  NVCV_DETAIL_MAKE_PIX_TYPE(PL, SIGNED, X16)
+#define NVCV_PIXEL_TYPE_S16  NVCV_DETAIL_MAKE_PIX_TYPE(SIGNED, X16)
 /** Two interleaved channels of signed 16-bit values. */
-#define NVCV_PIXEL_TYPE_2S16 NVCV_DETAIL_MAKE_PIX_TYPE(PL, SIGNED, X16_Y16)
+#define NVCV_PIXEL_TYPE_2S16 NVCV_DETAIL_MAKE_PIX_TYPE(SIGNED, X16_Y16)
 /** Three interleaved channels of signed 16-bit values. */
-#define NVCV_PIXEL_TYPE_3S16 NVCV_DETAIL_MAKE_PIX_TYPE(PL, SIGNED, X16_Y16_Z16)
+#define NVCV_PIXEL_TYPE_3S16 NVCV_DETAIL_MAKE_PIX_TYPE(SIGNED, X16_Y16_Z16)
 /** Four interleaved channels of signed 16-bit values. */
-#define NVCV_PIXEL_TYPE_4S16 NVCV_DETAIL_MAKE_PIX_TYPE(PL, SIGNED, X16_Y16_Z16_W16)
+#define NVCV_PIXEL_TYPE_4S16 NVCV_DETAIL_MAKE_PIX_TYPE(SIGNED, X16_Y16_Z16_W16)
 
 /** One channel of unsigned 32-bit value. */
-#define NVCV_PIXEL_TYPE_U32  NVCV_DETAIL_MAKE_PIX_TYPE(PL, UNSIGNED, X32)
+#define NVCV_PIXEL_TYPE_U32  NVCV_DETAIL_MAKE_PIX_TYPE(UNSIGNED, X32)
 /** Two interleaved channels of unsigned 32-bit values. */
-#define NVCV_PIXEL_TYPE_2U32 NVCV_DETAIL_MAKE_PIX_TYPE(PL, UNSIGNED, X32_Y32)
+#define NVCV_PIXEL_TYPE_2U32 NVCV_DETAIL_MAKE_PIX_TYPE(UNSIGNED, X32_Y32)
 /** Three interleaved channels of unsigned 32-bit values. */
-#define NVCV_PIXEL_TYPE_3U32 NVCV_DETAIL_MAKE_PIX_TYPE(PL, UNSIGNED, X32_Y32_Z32)
+#define NVCV_PIXEL_TYPE_3U32 NVCV_DETAIL_MAKE_PIX_TYPE(UNSIGNED, X32_Y32_Z32)
 /** Four interleaved channels of unsigned 32-bit values. */
-#define NVCV_PIXEL_TYPE_4U32 NVCV_DETAIL_MAKE_PIX_TYPE(PL, UNSIGNED, X32_Y32_Z32_W32)
+#define NVCV_PIXEL_TYPE_4U32 NVCV_DETAIL_MAKE_PIX_TYPE(UNSIGNED, X32_Y32_Z32_W32)
 
 /** One channel of signed 32-bit value. */
-#define NVCV_PIXEL_TYPE_S32  NVCV_DETAIL_MAKE_PIX_TYPE(PL, SIGNED, X32)
+#define NVCV_PIXEL_TYPE_S32  NVCV_DETAIL_MAKE_PIX_TYPE(SIGNED, X32)
 /** Two interleaved channels of signed 32-bit values. */
-#define NVCV_PIXEL_TYPE_2S32 NVCV_DETAIL_MAKE_PIX_TYPE(PL, SIGNED, X32_Y32)
+#define NVCV_PIXEL_TYPE_2S32 NVCV_DETAIL_MAKE_PIX_TYPE(SIGNED, X32_Y32)
 /** Three interleaved channels of signed 32-bit values. */
-#define NVCV_PIXEL_TYPE_3S32 NVCV_DETAIL_MAKE_PIX_TYPE(PL, SIGNED, X32_Y32_Z32)
+#define NVCV_PIXEL_TYPE_3S32 NVCV_DETAIL_MAKE_PIX_TYPE(SIGNED, X32_Y32_Z32)
 /** Four interleaved channels of signed 32-bit values. */
-#define NVCV_PIXEL_TYPE_4S32 NVCV_DETAIL_MAKE_PIX_TYPE(PL, SIGNED, X32_Y32_Z32_W32)
+#define NVCV_PIXEL_TYPE_4S32 NVCV_DETAIL_MAKE_PIX_TYPE(SIGNED, X32_Y32_Z32_W32)
 
 /** One channel of 32-bit IEEE 754 floating-point value. */
-#define NVCV_PIXEL_TYPE_F32  NVCV_DETAIL_MAKE_PIX_TYPE(PL, FLOAT, X32)
+#define NVCV_PIXEL_TYPE_F32  NVCV_DETAIL_MAKE_PIX_TYPE(FLOAT, X32)
 /** Two interleaved channels of 32-bit IEEE 754 floating-point values. */
-#define NVCV_PIXEL_TYPE_2F32 NVCV_DETAIL_MAKE_PIX_TYPE(PL, FLOAT, X32_Y32)
+#define NVCV_PIXEL_TYPE_2F32 NVCV_DETAIL_MAKE_PIX_TYPE(FLOAT, X32_Y32)
 /** Three interleaved channels of 32-bit IEEE 754 floating-point values. */
-#define NVCV_PIXEL_TYPE_3F32 NVCV_DETAIL_MAKE_PIX_TYPE(PL, FLOAT, X32_Y32_Z32)
+#define NVCV_PIXEL_TYPE_3F32 NVCV_DETAIL_MAKE_PIX_TYPE(FLOAT, X32_Y32_Z32)
 /** Four interleaved channels of 32-bit IEEE 754 floating-point values. */
-#define NVCV_PIXEL_TYPE_4F32 NVCV_DETAIL_MAKE_PIX_TYPE(PL, FLOAT, X32_Y32_Z32_W32)
+#define NVCV_PIXEL_TYPE_4F32 NVCV_DETAIL_MAKE_PIX_TYPE(FLOAT, X32_Y32_Z32_W32)
 
 /** One channel of unsigned 64-bit value. */
-#define NVCV_PIXEL_TYPE_U64  NVCV_DETAIL_MAKE_PIX_TYPE(PL, UNSIGNED, X64)
+#define NVCV_PIXEL_TYPE_U64  NVCV_DETAIL_MAKE_PIX_TYPE(UNSIGNED, X64)
 /** Two interleaved channels of unsigned 64-bit values. */
-#define NVCV_PIXEL_TYPE_2U64 NVCV_DETAIL_MAKE_PIX_TYPE(PL, UNSIGNED, X64_Y64)
+#define NVCV_PIXEL_TYPE_2U64 NVCV_DETAIL_MAKE_PIX_TYPE(UNSIGNED, X64_Y64)
 /** Three interleaved channels of unsigned 64-bit values. */
-#define NVCV_PIXEL_TYPE_3U64 NVCV_DETAIL_MAKE_PIX_TYPE(PL, UNSIGNED, X64_Y64_Z64)
+#define NVCV_PIXEL_TYPE_3U64 NVCV_DETAIL_MAKE_PIX_TYPE(UNSIGNED, X64_Y64_Z64)
 /** Four interleaved channels of unsigned 64-bit values. */
-#define NVCV_PIXEL_TYPE_4U64 NVCV_DETAIL_MAKE_PIX_TYPE(PL, UNSIGNED, X64_Y64_Z64_W64)
+#define NVCV_PIXEL_TYPE_4U64 NVCV_DETAIL_MAKE_PIX_TYPE(UNSIGNED, X64_Y64_Z64_W64)
 
 /** One channel of signed 64-bit value. */
-#define NVCV_PIXEL_TYPE_S64  NVCV_DETAIL_MAKE_PIX_TYPE(PL, SIGNED, X64)
+#define NVCV_PIXEL_TYPE_S64  NVCV_DETAIL_MAKE_PIX_TYPE(SIGNED, X64)
 /** Two interleaved channels of signed 64-bit values. */
-#define NVCV_PIXEL_TYPE_2S64 NVCV_DETAIL_MAKE_PIX_TYPE(PL, SIGNED, X64_Y64)
+#define NVCV_PIXEL_TYPE_2S64 NVCV_DETAIL_MAKE_PIX_TYPE(SIGNED, X64_Y64)
 /** Three interleaved channels of signed 64-bit values. */
-#define NVCV_PIXEL_TYPE_3S64 NVCV_DETAIL_MAKE_PIX_TYPE(PL, SIGNED, X64_Y64_Z64)
+#define NVCV_PIXEL_TYPE_3S64 NVCV_DETAIL_MAKE_PIX_TYPE(SIGNED, X64_Y64_Z64)
 /** Four interleaved channels of signed 64-bit values. */
-#define NVCV_PIXEL_TYPE_4S64 NVCV_DETAIL_MAKE_PIX_TYPE(PL, SIGNED, X64_Y64_Z64_W64)
+#define NVCV_PIXEL_TYPE_4S64 NVCV_DETAIL_MAKE_PIX_TYPE(SIGNED, X64_Y64_Z64_W64)
 
 /** One channel of 64-bit IEEE 754 floating-point value. */
-#define NVCV_PIXEL_TYPE_F64  NVCV_DETAIL_MAKE_PIX_TYPE(PL, FLOAT, X64)
+#define NVCV_PIXEL_TYPE_F64  NVCV_DETAIL_MAKE_PIX_TYPE(FLOAT, X64)
 /** Two interleaved channels of 64-bit IEEE 754 floating-point values. */
-#define NVCV_PIXEL_TYPE_2F64 NVCV_DETAIL_MAKE_PIX_TYPE(PL, FLOAT, X64_Y64)
+#define NVCV_PIXEL_TYPE_2F64 NVCV_DETAIL_MAKE_PIX_TYPE(FLOAT, X64_Y64)
 /** Three interleaved channels of 64-bit IEEE 754 floating-point values. */
-#define NVCV_PIXEL_TYPE_3F64 NVCV_DETAIL_MAKE_PIX_TYPE(PL, FLOAT, X64_Y64_Z64)
+#define NVCV_PIXEL_TYPE_3F64 NVCV_DETAIL_MAKE_PIX_TYPE(FLOAT, X64_Y64_Z64)
 /** Four interleaved channels of 64-bit IEEE 754 floating-point values. */
-#define NVCV_PIXEL_TYPE_4F64 NVCV_DETAIL_MAKE_PIX_TYPE(PL, FLOAT, X64_Y64_Z64_W64)
+#define NVCV_PIXEL_TYPE_4F64 NVCV_DETAIL_MAKE_PIX_TYPE(FLOAT, X64_Y64_Z64_W64)
 
 /* clang-format on */
 
@@ -142,17 +142,16 @@ typedef uint64_t NVCVPixelType;
  *
  * Example to create a block-linear format two interleaved 32-bit floating point channels:
  * \code{.c}
- *     NVCVPixelType type = NVCV_MAKE_PIXEL_TYPE(NVCV_MEM_LAYOUT_BL, NVCV_DATA_TYPE_FLOAT, NVCV_PACKING_X32_Y32);
+ *     NVCVPixelType type = NVCV_MAKE_PIXEL_TYPE(NVCV_DATA_TYPE_FLOAT, NVCV_PACKING_X32_Y32);
  * \endcode
  *
- * @param[in] memLayout \ref NVCVMemLayout to be used.
  * @param[in] dataType  \ref NVCVDataType to be used.
  * @param[in] packing   Format packing used, which also defines the number of channels.
  *
  * @returns The user-defined pixel type.
  */
 #ifdef DOXYGEN_SHOULD_SKIP_THIS
-#    define NVCV_MAKE_PIXEL_TYPE(memLayout, dataType, packing)
+#    define NVCV_MAKE_PIXEL_TYPE(dataType, packing)
 #else
 #    define NVCV_MAKE_PIXEL_TYPE (NVCVPixelType) NVCV_DETAIL_MAKE_PIXEL_TYPE
 #endif
@@ -163,15 +162,13 @@ typedef uint64_t NVCVPixelType;
  * @param[out] outPixType The user-defined pixel type.
  *                        + Cannot be NULL.
  *
- * @param[in] memLayout \ref NVCVMemLayout to be used.
  * @param[in] dataType \ref NVCVDataType to be used.
  * @param[in] packing Format packing used, which also defines the number of channels.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some argument is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvMakePixelType(NVCVPixelType *outPixType, NVCVMemLayout memLayout, NVCVDataType dataType,
-                                         NVCVPacking packing);
+NVCV_PUBLIC NVCVStatus nvcvMakePixelType(NVCVPixelType *outPixType, NVCVDataType dataType, NVCVPacking packing);
 
 /** Get the packing of a pixel type.
  *
@@ -221,30 +218,6 @@ NVCV_PUBLIC NVCVStatus nvcvPixelTypeGetBitsPerChannel(NVCVPixelType type, int32_
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvPixelTypeGetDataType(NVCVPixelType type, NVCVDataType *outDataType);
-
-/** Get the memory layout of a pixel type.
- *
- * @param[in] type Pixel type to be queried.
- *
- * @param[out] outMemLayout The memory layout of the pixel type.
- *                          + Cannot be NULL.
- *
- * @retval #NVCV_ERROR_INVALID_ARGUMENT Some argument is outside its valid range.
- * @retval #NVCV_SUCCESS                Operation executed successfully.
- */
-NVCV_PUBLIC NVCVStatus nvcvPixelTypeGetMemLayout(NVCVPixelType type, NVCVMemLayout *outMemLayout);
-
-/** Set the memory layout of a pixel type.
- *
- * @param[inout] type Pixel type to have its memory layout set.
- *                    + Must not be NULL.
- *
- * @param[in] layout The memory layout to be set.
- *
- * @retval #NVCV_ERROR_INVALID_ARGUMENT Some argument is outside its valid range.
- * @retval #NVCV_SUCCESS                Operation executed successfully.
- */
-NVCV_PUBLIC NVCVStatus nvcvPixelTypeSetMemLayout(NVCVPixelType *type, NVCVMemLayout layout);
 
 /** Get the number of channels of a pixel type.
  *

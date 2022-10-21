@@ -29,11 +29,6 @@ int PixelType::bpp() const noexcept
     return ImageFormat{m_type}.planeBPP(0);
 }
 
-NVCVMemLayout PixelType::memLayout() const noexcept
-{
-    return ImageFormat{m_type}.memLayout();
-}
-
 int PixelType::numChannels() const noexcept
 {
     return ImageFormat{m_type}.planeNumChannels(0);
@@ -70,17 +65,12 @@ PixelType PixelType::channelType(int ch) const
 
     if (std::optional<NVCVPacking> packing = MakeNVCVPacking(bits[ch]))
     {
-        return PixelType{this->memLayout(), this->dataType(), *packing};
+        return PixelType{this->dataType(), *packing};
     }
     else
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Channel type cannot be represented");
     }
-}
-
-PixelType PixelType::memLayout(NVCVMemLayout newMemLayout) const
-{
-    return PixelType{ImageFormat{m_type}.memLayout(newMemLayout).value()};
 }
 
 std::ostream &operator<<(std::ostream &out, PixelType type)
@@ -144,7 +134,7 @@ std::ostream &operator<<(std::ostream &out, PixelType type)
 #undef NVCV_ENUM
     }
 
-    return out << "NVCVPixelType(" << type.memLayout() << "," << type.dataType() << "," << type.packing() << ")";
+    return out << "NVCVPixelType(" << type.dataType() << "," << type.packing() << ")";
 }
 
 } // namespace nv::cv::priv
