@@ -143,7 +143,7 @@ inline int32_t IImageBatch::size() const
     return s;
 }
 
-const IImageBatchData *IImageBatch::exportData(CUstream stream) const
+inline const IImageBatchData *IImageBatch::exportData(CUstream stream) const
 {
     return doExportData(stream);
 }
@@ -227,7 +227,7 @@ inline auto IImageBatchVarShape::Iterator::operator++() -> Iterator &
     return *this;
 }
 
-bool IImageBatchVarShape::Iterator::operator==(const Iterator &that) const
+inline bool IImageBatchVarShape::Iterator::operator==(const Iterator &that) const
 {
     if (m_batch == nullptr && that.m_batch == nullptr)
     {
@@ -243,7 +243,7 @@ bool IImageBatchVarShape::Iterator::operator==(const Iterator &that) const
     }
 }
 
-bool IImageBatchVarShape::Iterator::operator!=(const Iterator &that) const
+inline bool IImageBatchVarShape::Iterator::operator!=(const Iterator &that) const
 {
     return !(*this == that);
 }
@@ -298,17 +298,17 @@ void IImageBatchVarShape::pushBack(IT itBeg, IT itEnd)
     doPushBack(std::ref(cb));
 }
 
-void IImageBatchVarShape::pushBack(const IImage &img)
+inline void IImageBatchVarShape::pushBack(const IImage &img)
 {
     doPushBack(img);
 }
 
-void IImageBatchVarShape::popBack(int32_t imgCount)
+inline void IImageBatchVarShape::popBack(int32_t imgCount)
 {
     doPopBack(imgCount);
 }
 
-void IImageBatchVarShape::clear()
+inline void IImageBatchVarShape::clear()
 {
     doClear();
 }

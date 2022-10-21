@@ -21,6 +21,7 @@
 #define CV_CUDA_LEGACY_H
 
 #include <cuda_runtime.h>
+#include <nvcv/IImageBatchData.hpp>
 #include <nvcv/ITensorData.hpp>
 #include <nvcv/Rect.h>
 #include <operators/Types.h>
@@ -237,6 +238,23 @@ public:
      * @param max_data_type DataType with the maximum size that may be used
      */
     size_t    calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
+};
+
+class PadAndStack : public CudaBaseOp
+{
+public:
+    PadAndStack() = delete;
+
+    PadAndStack(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    ErrorCode infer(const IImageBatchVarShapeDataDevicePitch &inData, const ITensorDataPitchDevice &outData,
+                    const ITensorDataPitchDevice &top, const ITensorDataPitchDevice &left,
+                    const NVCVBorderType borderMode, const float borderValue, cudaStream_t stream);
+
+    size_t calBufferSize(int batch_size);
 };
 
 } // namespace nv::cv::legacy::cuda_op

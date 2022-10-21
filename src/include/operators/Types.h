@@ -38,6 +38,16 @@ typedef enum
     NVCV_INTERP_AREA,
 } NVCVInterpolationType;
 
+// @brief Flag to choose the border mode to be used
+typedef enum
+{
+    NVCV_BORDER_CONSTANT   = 0,
+    NVCV_BORDER_REPLICATE  = 1,
+    NVCV_BORDER_REFLECT    = 2,
+    NVCV_BORDER_WRAP       = 3,
+    NVCV_BORDER_REFLECT101 = 4,
+} NVCVBorderType;
+
 #ifdef __cplusplus
 }
 #endif
