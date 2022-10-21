@@ -41,6 +41,7 @@ add_library(nvcv SHARED
     operators/OpCustomCrop.cpp
     operators/OpNormalize.cpp
     operators/OpPadAndStack.cpp
+    operators/OpConvertTo.cpp
 )
 
 target_link_libraries(nvcv PRIVATE
