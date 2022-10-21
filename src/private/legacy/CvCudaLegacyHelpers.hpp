@@ -23,6 +23,7 @@
 #include "CvCudaLegacy.h"
 
 #include <nvcv/IImage.hpp>
+#include <nvcv/TensorShapeInfo.hpp>
 #include <private/fmt/ImageFormat.hpp>
 
 namespace nv::cv::legacy::helpers {
@@ -32,9 +33,9 @@ cuda_op::DataFormat GetLegacyDataFormat(int32_t numberChannels, int32_t numberPl
 cuda_op::DataType GetLegacyDataType(int32_t bpc, cv::DataType type);
 cuda_op::DataType GetLegacyDataType(PixelType dtype);
 
-cuda_op::DataFormat GetLegacyDataFormat(TensorLayout layout, int nbatch);
+cuda_op::DataFormat GetLegacyDataFormat(const TensorLayout &layout);
 
-cuda_op::DataShape GetLegacyDataShape(DimsNCHW dims);
+cuda_op::DataShape GetLegacyDataShape(const TensorShapeInfoImage &shapeInfo);
 
 inline void CheckOpErrThrow(cuda_op::ErrorCode status)
 {

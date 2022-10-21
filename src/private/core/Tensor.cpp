@@ -191,11 +191,6 @@ const NVCVTensorLayout &Tensor::layout() const
     return m_reqs.layout;
 }
 
-DimsNCHW Tensor::dims() const
-{
-    return ToNCHW(this->shape(), this->layout());
-}
-
 PixelType Tensor::dtype() const
 {
     return PixelType{m_reqs.dtype};

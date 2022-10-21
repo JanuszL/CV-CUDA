@@ -110,11 +110,6 @@ const NVCVTensorLayout &TensorWrapDataPitch::layout() const
     return m_tdata.layout;
 }
 
-DimsNCHW TensorWrapDataPitch::dims() const
-{
-    return ToNCHW(this->shape(), this->layout());
-}
-
 PixelType TensorWrapDataPitch::dtype() const
 {
     return PixelType{m_tdata.dtype};

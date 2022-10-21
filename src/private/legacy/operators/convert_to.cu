@@ -61,12 +61,13 @@ __global__ void convertFormat(Ptr2DSrc src, Ptr2DDst dst, UnOp op)
 }
 
 template<typename DT_SOURCE, typename DT_DEST, int NC>
-void convertToScaleCN(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData,
-                      const double alpha, const double beta, cudaStream_t stream)
+void convertToScaleCN(const nvcv::TensorDataAccessPitchImagePlanar &inData,
+                      const nvcv::TensorDataAccessPitchImagePlanar &outData, const double alpha, const double beta,
+                      cudaStream_t stream)
 {
-    const int cols       = inData.dims().w;
-    const int rows       = inData.dims().h;
-    const int batch_size = inData.dims().n;
+    const int cols       = inData.numCols();
+    const int rows       = inData.numRows();
+    const int batch_size = inData.numSamples();
 
     dim3 block(32, 8);
     dim3 grid(divUp(cols, block.x), divUp(rows, block.y), batch_size);
@@ -85,10 +86,11 @@ void convertToScaleCN(const nvcv::ITensorDataPitchDevice &inData, const nvcv::IT
 }
 
 template<typename DT_SOURCE, typename DT_DEST> // <uchar, float> <float double>
-void convertToScale(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData,
-                    const double alpha, const double beta, cudaStream_t stream)
+void convertToScale(const nvcv::TensorDataAccessPitchImagePlanar &inData,
+                    const nvcv::TensorDataAccessPitchImagePlanar &outData, const double alpha, const double beta,
+                    cudaStream_t stream)
 {
-    switch (inData.dims().c)
+    switch (inData.numChannels())
     {
     case 1:
         convertToScaleCN<DT_SOURCE, DT_DEST, 1>(inData, outData, alpha, beta, stream);
@@ -127,12 +129,8 @@ size_t ConvertTo::calBufferSize(DataShape max_input_shape, DataShape max_output_
 ErrorCode ConvertTo::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
                            const double alpha, const double beta, cudaStream_t stream)
 {
-    int                 batch           = inData.dims().n;
-    int                 channels        = inData.dims().c;
-    int                 rows            = inData.dims().h;
-    int                 cols            = inData.dims().w;
-    cuda_op::DataFormat input_format    = GetLegacyDataFormat(inData.layout(), inData.numImages());
-    cuda_op::DataFormat output_format   = GetLegacyDataFormat(outData.layout(), outData.numImages());
+    cuda_op::DataFormat input_format    = GetLegacyDataFormat(inData.layout());
+    cuda_op::DataFormat output_format   = GetLegacyDataFormat(outData.layout());
     cuda_op::DataType   input_datatype  = GetLegacyDataType(inData.dtype());
     cuda_op::DataType   output_datatype = GetLegacyDataType(outData.dtype());
 
@@ -141,6 +139,17 @@ ErrorCode ConvertTo::infer(const ITensorDataPitchDevice &inData, const ITensorDa
         LOG_ERROR("Invalid DataFormat format must be kHWC/kNHWC");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
+
+    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    NVCV_ASSERT(inAccess);
+
+    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    NVCV_ASSERT(outAccess);
+
+    int batch    = inAccess->numSamples();
+    int channels = inAccess->numChannels();
+    int rows     = inAccess->numRows();
+    int cols     = inAccess->numCols();
 
     if (channels > 4)
     {
@@ -163,8 +172,9 @@ ErrorCode ConvertTo::infer(const ITensorDataPitchDevice &inData, const ITensorDa
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    typedef void (*func_t)(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData,
-                           const double alpha, const double beta, cudaStream_t stream);
+    typedef void (*func_t)(const nvcv::TensorDataAccessPitchImagePlanar &inData,
+                           const nvcv::TensorDataAccessPitchImagePlanar &outData, const double alpha, const double beta,
+                           cudaStream_t stream);
 
     // clang-format off
     static const func_t funcs[7][7] = {
@@ -179,7 +189,7 @@ ErrorCode ConvertTo::infer(const ITensorDataPitchDevice &inData, const ITensorDa
 
     // clang-format on
     const func_t func = funcs[input_datatype][output_datatype];
-    func(inData, outData, alpha, beta, stream);
+    func(*inAccess, *outAccess, alpha, beta, stream);
 
     return ErrorCode::SUCCESS;
 }

@@ -346,14 +346,14 @@ __global__ void resize_area_v2(const Filter src, Ptr2dNHWC<T> dst)
 }
 
 template<typename T>
-void resize(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData,
+void resize(const nvcv::TensorDataAccessPitchImagePlanar &inData, const nvcv::TensorDataAccessPitchImagePlanar &outData,
             NVCVInterpolationType interpolation, cudaStream_t stream)
 {
-    const int batch_size = inData.dims().n;
-    const int in_width   = inData.dims().w;
-    const int in_height  = inData.dims().h;
-    const int out_width  = outData.dims().w;
-    const int out_height = outData.dims().h;
+    const int batch_size = inData.numSamples();
+    const int in_width   = inData.numCols();
+    const int in_height  = inData.numRows();
+    const int out_width  = outData.numCols();
+    const int out_height = outData.numRows();
 
     const dim3 blockSize(BLOCK, BLOCK / 4, 1);
     const dim3 gridSize(divUp(out_width, blockSize.x), divUp(out_height, blockSize.y), batch_size);
@@ -452,8 +452,8 @@ size_t Resize::calBufferSize(DataShape max_input_shape, DataShape max_output_sha
 ErrorCode Resize::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
                         const NVCVInterpolationType interpolation, cudaStream_t stream)
 {
-    DataFormat input_format  = GetLegacyDataFormat(inData.layout(), inData.dims().n);
-    DataFormat output_format = GetLegacyDataFormat(outData.layout(), outData.dims().n);
+    DataFormat input_format  = GetLegacyDataFormat(inData.layout());
+    DataFormat output_format = GetLegacyDataFormat(outData.layout());
 
     if (input_format != output_format)
     {
@@ -469,8 +469,14 @@ ErrorCode Resize::infer(const ITensorDataPitchDevice &inData, const ITensorDataP
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
+    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    NVCV_ASSERT(inAccess);
+
+    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    NVCV_ASSERT(outAccess);
+
     cuda_op::DataType  data_type   = GetLegacyDataType(inData.dtype());
-    cuda_op::DataShape input_shape = GetLegacyDataShape(inData.dims());
+    cuda_op::DataShape input_shape = GetLegacyDataShape(inAccess->infoShape());
 
     int channels = input_shape.C;
 
@@ -486,7 +492,8 @@ ErrorCode Resize::infer(const ITensorDataPitchDevice &inData, const ITensorDataP
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    typedef void (*func_t)(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData,
+    typedef void (*func_t)(const nvcv::TensorDataAccessPitchImagePlanar &inData,
+                           const nvcv::TensorDataAccessPitchImagePlanar &outData,
                            const NVCVInterpolationType interpolation, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {
@@ -504,7 +511,7 @@ ErrorCode Resize::infer(const ITensorDataPitchDevice &inData, const ITensorDataP
         const func_t func = funcs[data_type][channels - 1];
         NVCV_ASSERT(func != 0);
 
-        func(inData, outData, interpolation, stream);
+        func(*inAccess, *outAccess, interpolation, stream);
     }
     else
     {

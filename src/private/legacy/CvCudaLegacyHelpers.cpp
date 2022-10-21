@@ -108,20 +108,29 @@ cuda_op::DataType GetLegacyDataType(PixelType dtype_)
     return GetLegacyDataType(dtype.bpc()[0], (cv::DataType)dtype.dataType());
 }
 
-cuda_op::DataShape GetLegacyDataShape(DimsNCHW dims)
+cuda_op::DataShape GetLegacyDataShape(const TensorShapeInfoImage &shapeInfo)
 {
-    return cuda_op::DataShape(dims.n, dims.c, dims.h, dims.w);
+    return cuda_op::DataShape(shapeInfo.numSamples(), shapeInfo.numChannels(), shapeInfo.numRows(),
+                              shapeInfo.numCols());
 }
 
-cuda_op::DataFormat GetLegacyDataFormat(TensorLayout layout, int nbatch)
+cuda_op::DataFormat GetLegacyDataFormat(const TensorLayout &layout)
 {
     if (layout == TensorLayout::NCHW)
     {
-        return nbatch > 1 ? legacy::cuda_op::DataFormat::kNCHW : legacy::cuda_op::DataFormat::kCHW;
+        return legacy::cuda_op::DataFormat::kNCHW;
+    }
+    else if (layout == TensorLayout::CHW)
+    {
+        return legacy::cuda_op::DataFormat::kCHW;
     }
     else if (layout == TensorLayout::NHWC)
     {
-        return nbatch > 1 ? legacy::cuda_op::DataFormat::kNHWC : legacy::cuda_op::DataFormat::kHWC;
+        return legacy::cuda_op::DataFormat::kNHWC;
+    }
+    else if (layout == TensorLayout::HWC)
+    {
+        return legacy::cuda_op::DataFormat::kHWC;
     }
     else
     {

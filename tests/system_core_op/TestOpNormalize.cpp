@@ -16,6 +16,7 @@
 #include <common/ValueTests.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
+#include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
 #include <operators/OpNormalize.hpp>
@@ -31,27 +32,24 @@ namespace nvcv = nv::cv;
 namespace test = nv::cv::test;
 
 static void Normalize(std::vector<uint8_t> &hDst, const std::vector<uint8_t> &hSrc, const std::vector<float> &hBase,
-                      const std::vector<float> &hScale, const nvcv::ITensorDataPitchDevice *dSrcData,
-                      const nvcv::ITensorDataPitchDevice *dBaseData, const nvcv::ITensorDataPitchDevice *dScaleData,
-                      const float globalScale, const float globalShift, const float epsilon, const uint32_t flags)
+                      const std::vector<float> &hScale, const nvcv::TensorDataAccessPitchImagePlanar &dSrcData,
+                      const nvcv::TensorDataAccessPitchImagePlanar &dBaseData,
+                      const nvcv::TensorDataAccessPitchImagePlanar &dScaleData, const float globalScale,
+                      const float globalShift, const float epsilon, const uint32_t flags)
 {
-    ASSERT_NE(nullptr, dSrcData);
-    ASSERT_NE(nullptr, dBaseData);
-    ASSERT_NE(nullptr, dScaleData);
-
-    int inoutImgPitch         = dSrcData->imgPitchBytes() / sizeof(uint8_t);
-    int inoutRowPitch         = dSrcData->rowPitchBytes() / sizeof(uint8_t);
-    int inoutNumImages        = dSrcData->dims().n;
-    int inoutWidth            = dSrcData->dims().w;
-    int inoutHeight           = dSrcData->dims().h;
-    int inoutChannels         = dSrcData->dims().c;
-    int inoutElementsPerPixel = dSrcData->dims().c;
-    int baseImgPitch          = dBaseData->imgPitchBytes() / sizeof(float);
-    int scaleImgPitch         = dScaleData->imgPitchBytes() / sizeof(float);
-    int baseRowPitch          = dBaseData->rowPitchBytes() / sizeof(float);
-    int scaleRowPitch         = dScaleData->rowPitchBytes() / sizeof(float);
-    int baseElementsPerPixel  = dBaseData->dims().c;
-    int scaleElementsPerPixel = dScaleData->dims().c;
+    int inoutImgPitch         = dSrcData.samplePitchBytes() / sizeof(uint8_t);
+    int inoutRowPitch         = dSrcData.rowPitchBytes() / sizeof(uint8_t);
+    int inoutNumImages        = dSrcData.numSamples();
+    int inoutWidth            = dSrcData.numCols();
+    int inoutHeight           = dSrcData.numRows();
+    int inoutChannels         = dSrcData.numChannels();
+    int inoutElementsPerPixel = dSrcData.numChannels();
+    int baseImgPitch          = dBaseData.samplePitchBytes() / sizeof(float);
+    int scaleImgPitch         = dScaleData.samplePitchBytes() / sizeof(float);
+    int baseRowPitch          = dBaseData.rowPitchBytes() / sizeof(float);
+    int scaleRowPitch         = dScaleData.rowPitchBytes() / sizeof(float);
+    int baseElementsPerPixel  = dBaseData.numChannels();
+    int scaleElementsPerPixel = dScaleData.numChannels();
 
     uint8_t       *dstPtrTop   = hDst.data();
     const uint8_t *srcPtrTop   = hSrc.data();
@@ -62,8 +60,8 @@ static void Normalize(std::vector<uint8_t> &hDst, const std::vector<uint8_t> &hS
 
     for (int img = 0; img < inoutNumImages; img++)
     {
-        const int bimg = (dBaseData->dims().n == 1 ? 0 : img);
-        const int simg = (dScaleData->dims().n == 1 ? 0 : img);
+        const int bimg = (dBaseData.numSamples() == 1 ? 0 : img);
+        const int simg = (dScaleData.numSamples() == 1 ? 0 : img);
 
         uint8_t       *dstPtr   = dstPtrTop + inoutImgPitch * img;
         const uint8_t *srcPtr   = srcPtrTop + inoutImgPitch * img;
@@ -72,18 +70,18 @@ static void Normalize(std::vector<uint8_t> &hDst, const std::vector<uint8_t> &hS
 
         for (int i = 0; i < inoutHeight; i++)
         {
-            const int bi = (dBaseData->dims().h == 1 ? 0 : i);
-            const int si = (dScaleData->dims().h == 1 ? 0 : i);
+            const int bi = (dBaseData.numRows() == 1 ? 0 : i);
+            const int si = (dScaleData.numRows() == 1 ? 0 : i);
 
             for (int j = 0; j < inoutWidth; j++)
             {
-                const int bj = (dBaseData->dims().w == 1 ? 0 : j);
-                const int sj = (dScaleData->dims().w == 1 ? 0 : j);
+                const int bj = (dBaseData.numCols() == 1 ? 0 : j);
+                const int sj = (dScaleData.numCols() == 1 ? 0 : j);
 
                 for (int k = 0; k < inoutChannels; k++)
                 {
-                    const int bk = (dBaseData->dims().c == 1 ? 0 : k);
-                    const int sk = (dScaleData->dims().c == 1 ? 0 : k);
+                    const int bk = (dBaseData.numChannels() == 1 ? 0 : k);
+                    const int sk = (dScaleData.numChannels() == 1 ? 0 : k);
 
                     FT mul;
 
@@ -171,9 +169,21 @@ TEST_P(OpNormalize, correct_output)
     ASSERT_NE(nullptr, baseData);
     ASSERT_NE(nullptr, scaleData);
 
-    int inoutBufSize = (srcData->imgPitchBytes() / sizeof(uint8_t)) * srcData->numImages();
-    int baseBufSize  = (baseData->imgPitchBytes() / sizeof(float)) * baseData->numImages();
-    int scaleBufSize = (scaleData->imgPitchBytes() / sizeof(float)) * scaleData->numImages();
+    auto srcAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*srcData);
+    ASSERT_TRUE(srcAccess);
+
+    auto dstAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*dstData);
+    ASSERT_TRUE(dstAccess);
+
+    auto baseAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*baseData);
+    ASSERT_TRUE(baseAccess);
+
+    auto scaleAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*scaleData);
+    ASSERT_TRUE(scaleAccess);
+
+    int inoutBufSize = (srcAccess->samplePitchBytes() / sizeof(uint8_t)) * srcAccess->numSamples();
+    int baseBufSize  = (baseAccess->samplePitchBytes() / sizeof(float)) * baseAccess->numSamples();
+    int scaleBufSize = (scaleAccess->samplePitchBytes() / sizeof(float)) * scaleAccess->numSamples();
 
     std::vector<uint8_t> srcVec(inoutBufSize);
     std::vector<uint8_t> testVec(inoutBufSize);
@@ -194,8 +204,8 @@ TEST_P(OpNormalize, correct_output)
                                            cudaMemcpyHostToDevice, stream));
 
     // Generate gold result
-    Normalize(goldVec, srcVec, baseVec, scaleVec, srcData, baseData, scaleData, globalScale, globalShift, epsilon,
-              flags);
+    Normalize(goldVec, srcVec, baseVec, scaleVec, *srcAccess, *baseAccess, *scaleAccess, globalScale, globalShift,
+              epsilon, flags);
 
     // Generate test result
     nv::cvop::Normalize normalizeOp;
@@ -208,17 +218,17 @@ TEST_P(OpNormalize, correct_output)
     EXPECT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), dstData->data(), inoutBufSize, cudaMemcpyDeviceToHost));
 
 #ifdef DEBUG_PRINT_IMAGE
-    test::DebugPrintImage(srcVec, srcData->rowPitchBytes() / sizeof(uint8_t));
-    test::DebugPrintImage(baseVec, baseData->rowPitchBytes() / sizeof(float));
-    test::DebugPrintImage(scaleVec, scaleData->rowPitchBytes() / sizeof(float));
-    test::DebugPrintImage(testVec, dstData->rowPitchBytes() / sizeof(uint8_t));
-    test::DebugPrintImage(goldVec, dstData->rowPitchBytes() / sizeof(uint8_t));
+    test::DebugPrintImage(srcVec, srcAccess->rowPitchBytes() / sizeof(uint8_t));
+    test::DebugPrintImage(baseVec, baseAccess->rowPitchBytes() / sizeof(float));
+    test::DebugPrintImage(scaleVec, scaleAccess->rowPitchBytes() / sizeof(float));
+    test::DebugPrintImage(testVec, dstAccess->rowPitchBytes() / sizeof(uint8_t));
+    test::DebugPrintImage(goldVec, dstAccess->rowPitchBytes() / sizeof(uint8_t));
 #endif
 #ifdef DEBUG_PRINT_DIFF
     if (goldVec != testVec)
     {
-        test::DebugPrintDiff(testVec, goldVec, dstData->rowPitchBytes() / sizeof(uint8_t),
-                             dstData->rowPitchBytes() / sizeof(uint8_t));
+        test::DebugPrintDiff(testVec, goldVec, dstAccess->rowPitchBytes() / sizeof(uint8_t),
+                             dstAccess->rowPitchBytes() / sizeof(uint8_t));
     }
 #endif
 

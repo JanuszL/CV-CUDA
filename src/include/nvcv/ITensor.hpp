@@ -14,7 +14,6 @@
 #ifndef NVCV_ITENSOR_HPP
 #define NVCV_ITENSOR_HPP
 
-#include "Dims.hpp"
 #include "ITensorData.hpp"
 #include "Image.hpp"
 #include "Tensor.h"

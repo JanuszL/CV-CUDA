@@ -14,7 +14,6 @@
 #ifndef NVCV_PRIV_TENSORDATA_HPP
 #define NVCV_PRIV_TENSORDATA_HPP
 
-#include "Dims.hpp"
 #include "Size.hpp"
 
 #include <fmt/ImageFormat.hpp>

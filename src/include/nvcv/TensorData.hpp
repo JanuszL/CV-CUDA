@@ -14,7 +14,6 @@
 #ifndef NVCV_TENSORDATA_HPP
 #define NVCV_TENSORDATA_HPP
 
-#include "Dims.hpp"
 #include "ITensorData.hpp"
 #include "TensorShape.hpp"
 
@@ -35,10 +34,6 @@ private:
     int                         doGetNumDim() const override;
     const TensorShape          &doGetShape() const override;
     const TensorShape::DimType &doGetShapeDim(int d) const override;
-    DimsNCHW                    doGetDims() const override;
-
-    int32_t doGetNumPlanes() const override;
-    int32_t doGetNumImages() const override;
 
     PixelType doGetPixelType() const override;
 
@@ -47,14 +42,6 @@ private:
     void *doGetData() const override;
 
     const int64_t &doGetPitchBytes(int d) const override;
-
-    int64_t doGetImagePitchBytes() const override;
-    int64_t doGetPlanePitchBytes() const override;
-    int64_t doGetRowPitchBytes() const override;
-    int64_t doGetColPitchBytes() const override;
-
-    void *doGetImageBuffer(int n) const override;
-    void *doGetImagePlaneBuffer(int n, int p) const override;
 };
 
 // TensorDataPitchDevice implementation -----------------------
@@ -86,35 +73,6 @@ inline const TensorShape &TensorDataPitchDevice::doGetShape() const
     return m_cacheShape;
 }
 
-inline DimsNCHW TensorDataPitchDevice::doGetDims() const
-{
-    TensorShape::ShapeType nchw(4);
-    detail::CheckThrow(nvcvTensorShapePermute(m_data.layout, m_data.shape, NVCV_TENSOR_NCHW, &nchw[0]));
-    return {static_cast<int>(nchw[0]), static_cast<int>(nchw[1]), static_cast<int>(nchw[2]), static_cast<int>(nchw[3])};
-}
-
-inline int32_t TensorDataPitchDevice::doGetNumPlanes() const
-{
-    if (nvcvTensorLayoutCompare(m_data.layout, NVCV_TENSOR_NCHW) == 0)
-    {
-        return m_data.shape[1];
-    }
-    else if (nvcvTensorLayoutCompare(m_data.layout, NVCV_TENSOR_NHWC) == 0)
-    {
-        return 1;
-    }
-    else
-    {
-        assert(!"Invalid tensor layout");
-        return -1;
-    }
-}
-
-inline int32_t TensorDataPitchDevice::doGetNumImages() const
-{
-    return m_data.shape[0];
-}
-
 inline PixelType TensorDataPitchDevice::doGetPixelType() const
 {
     return static_cast<PixelType>(m_data.dtype);
@@ -133,62 +91,6 @@ inline void *TensorDataPitchDevice::doGetData() const
 inline const int64_t &TensorDataPitchDevice::doGetPitchBytes(int d) const
 {
     return m_data.buffer.pitch.pitchBytes[d];
-}
-
-inline int64_t TensorDataPitchDevice::doGetImagePitchBytes() const
-{
-    return m_data.buffer.pitch.pitchBytes[0];
-}
-
-inline int64_t TensorDataPitchDevice::doGetPlanePitchBytes() const
-{
-    return m_data.buffer.pitch.pitchBytes[1];
-}
-
-inline int64_t TensorDataPitchDevice::doGetRowPitchBytes() const
-{
-    if (nvcvTensorLayoutCompare(m_data.layout, NVCV_TENSOR_NCHW) == 0)
-    {
-        return m_data.buffer.pitch.pitchBytes[2];
-    }
-    else if (nvcvTensorLayoutCompare(m_data.layout, NVCV_TENSOR_NHWC) == 0)
-    {
-        return m_data.buffer.pitch.pitchBytes[1];
-    }
-    else
-    {
-        return 0;
-    }
-}
-
-inline int64_t TensorDataPitchDevice::doGetColPitchBytes() const
-{
-    if (nvcvTensorLayoutCompare(m_data.layout, NVCV_TENSOR_NCHW) == 0)
-    {
-        return m_data.buffer.pitch.pitchBytes[3];
-    }
-    else if (nvcvTensorLayoutCompare(m_data.layout, NVCV_TENSOR_NHWC) == 0)
-    {
-        return m_data.buffer.pitch.pitchBytes[2];
-    }
-    else
-    {
-        return 0;
-    }
-}
-
-inline void *TensorDataPitchDevice::doGetImageBuffer(int n) const
-{
-    assert(n >= 0 && n < m_data.shape[0]);
-
-    return reinterpret_cast<std::byte *>(m_data.buffer.pitch.data) + m_data.buffer.pitch.pitchBytes[0] * n;
-}
-
-inline void *TensorDataPitchDevice::doGetImagePlaneBuffer(int n, int p) const
-{
-    assert(p >= 0 && p < m_data.shape[1]);
-
-    return reinterpret_cast<std::byte *>(doGetImageBuffer(n)) + m_data.buffer.pitch.pitchBytes[1] * p;
 }
 
 }} // namespace nv::cv

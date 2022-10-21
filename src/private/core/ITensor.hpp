@@ -14,7 +14,6 @@
 #ifndef NVCV_PRIV_ITENSOR_HPP
 #define NVCV_PRIV_ITENSOR_HPP
 
-#include "Dims.hpp"
 #include "ICoreObject.hpp"
 
 #include <fmt/ImageFormat.hpp>
@@ -31,7 +30,6 @@ public:
     virtual const int64_t *shape() const = 0;
 
     virtual const NVCVTensorLayout &layout() const = 0;
-    virtual DimsNCHW                dims() const   = 0;
 
     virtual PixelType dtype() const = 0;
 

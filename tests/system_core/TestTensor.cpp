@@ -16,6 +16,7 @@
 #include <common/HashUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <nvcv/Tensor.hpp>
+#include <nvcv/TensorDataAccess.hpp>
 
 #include <list>
 #include <random>
@@ -77,37 +78,42 @@ TEST_P(TensorTests, wip_create)
         ASSERT_EQ(GOLD_SHAPE.layout(), devdata->layout());
         ASSERT_EQ(GOLD_DTYPE, devdata->dtype());
 
-        EXPECT_EQ(devdata->imgPitchBytes(), devdata->pitchBytes(0));
-        EXPECT_EQ(devdata->planePitchBytes(), devdata->pitchBytes(1));
-        EXPECT_EQ(devdata->numImages(), devdata->shape(0));
+        auto access = nvcv::TensorDataAccessPitchImagePlanar::Create(*devdata);
+        ASSERT_TRUE(access);
+
+        EXPECT_EQ(access->samplePitchBytes(), devdata->pitchBytes(0));
+        EXPECT_EQ(access->planePitchBytes(), access->infoLayout().isChannelFirst() ? devdata->pitchBytes(1) : 0);
+        EXPECT_EQ(access->numSamples(), devdata->shape(0));
 
         // Write data to each plane
-        for (int i = 0; i < devdata->numImages(); ++i)
+        for (int i = 0; i < access->numSamples(); ++i)
         {
-            for (int p = 0; p < devdata->numPlanes(); ++p)
+            void *sampleBuffer = access->sampleData(i);
+            for (int p = 0; p < access->numPlanes(); ++p)
             {
-                void *planeBuffer = devdata->imgPlaneBuffer(i, p);
+                void *planeBuffer = access->planeData(p, sampleBuffer);
 
-                ASSERT_EQ(cudaSuccess, cudaMemset2D(planeBuffer, devdata->rowPitchBytes(), i * 3 + p * 7,
-                                                    devdata->dims().w * devdata->colPitchBytes(), devdata->dims().h))
+                ASSERT_EQ(cudaSuccess, cudaMemset2D(planeBuffer, access->rowPitchBytes(), i * 3 + p * 7,
+                                                    access->numCols() * access->colPitchBytes(), access->numRows()))
                     << "Image #" << i << ", plane #" << p;
             }
         }
 
         // Check if no overwrites
-        for (int i = 0; i < devdata->numImages(); ++i)
+        for (int i = 0; i < access->numSamples(); ++i)
         {
-            for (int p = 1; p < devdata->numPlanes(); ++p)
+            void *sampleBuffer = access->sampleData(i);
+            for (int p = 1; p < access->numPlanes(); ++p)
             {
-                void *planeBuffer = devdata->imgPlaneBuffer(i, p);
+                void *planeBuffer = access->planeData(p, sampleBuffer);
 
                 // enough for one plane
-                std::vector<uint8_t> buf(devdata->dims().w * devdata->colPitchBytes() * devdata->dims().h);
+                std::vector<uint8_t> buf(access->numCols() * access->colPitchBytes() * access->numRows());
 
                 ASSERT_EQ(cudaSuccess,
-                          cudaMemcpy2D(&buf[0], devdata->dims().w * devdata->colPitchBytes(), planeBuffer,
-                                       devdata->rowPitchBytes(), devdata->dims().w * devdata->colPitchBytes(),
-                                       devdata->dims().h, cudaMemcpyDeviceToHost))
+                          cudaMemcpy2D(&buf[0], access->numCols() * access->colPitchBytes(), planeBuffer,
+                                       access->rowPitchBytes(), access->numCols() * access->colPitchBytes(),
+                                       access->numRows(), cudaMemcpyDeviceToHost))
                     << "Image #" << i << ", plane #" << p;
 
                 ASSERT_TRUE(
@@ -136,11 +142,14 @@ TEST(TensorWrapData, wip_create)
     nvcv::TensorDataPitchDevice tdata(nvcv::TensorShape{reqs.shape, reqs.ndim, reqs.layout},
                                       nvcv::PixelType{reqs.dtype}, buf);
 
+    auto access = nvcv::TensorDataAccessPitchImagePlanar::Create(tdata);
+    ASSERT_TRUE(access);
+
     EXPECT_EQ(nvcv::TensorLayout::NCHW, tdata.layout());
-    EXPECT_EQ(5, tdata.dims().n);
-    EXPECT_EQ(173, tdata.dims().w);
-    EXPECT_EQ(79, tdata.dims().h);
-    EXPECT_EQ(2, tdata.dims().c);
+    EXPECT_EQ(5, access->numSamples());
+    EXPECT_EQ(173, access->numCols());
+    EXPECT_EQ(79, access->numRows());
+    EXPECT_EQ(2, access->numChannels());
 
     EXPECT_EQ(5, tdata.shape()[0]);
     EXPECT_EQ(173, tdata.shape()[3]);
@@ -166,6 +175,9 @@ TEST(TensorWrapData, wip_create)
     auto *devdata = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(data);
     ASSERT_NE(nullptr, devdata);
 
+    auto accessRef = nvcv::TensorDataAccessPitchImagePlanar::Create(*devdata);
+    ASSERT_TRUE(access);
+
     EXPECT_EQ(tdata.dtype(), devdata->dtype());
     EXPECT_EQ(tdata.shape(), devdata->shape());
     EXPECT_EQ(tdata.ndim(), devdata->ndim());
@@ -174,12 +186,14 @@ TEST(TensorWrapData, wip_create)
 
     auto *mem = reinterpret_cast<std::byte *>(tdata.data());
 
-    EXPECT_LE(mem + tdata.imgPitchBytes() * 4, devdata->imgBuffer(4));
-    EXPECT_LE(mem + tdata.imgPitchBytes() * 3, devdata->imgBuffer(3));
+    EXPECT_LE(mem + access->samplePitchBytes() * 4, accessRef->sampleData(4));
+    EXPECT_LE(mem + access->samplePitchBytes() * 3, accessRef->sampleData(3));
 
-    EXPECT_LE(mem + tdata.imgPitchBytes() * 4, devdata->imgPlaneBuffer(4, 0));
-    EXPECT_LE(mem + tdata.imgPitchBytes() * 4 + tdata.planePitchBytes() * 1, devdata->imgPlaneBuffer(4, 1));
+    EXPECT_LE(mem + access->samplePitchBytes() * 4, accessRef->sampleData(4, accessRef->planeData(0)));
+    EXPECT_LE(mem + access->samplePitchBytes() * 4 + access->planePitchBytes() * 1,
+              accessRef->sampleData(4, accessRef->planeData(1)));
 
-    EXPECT_LE(mem + tdata.imgPitchBytes() * 3, devdata->imgPlaneBuffer(3, 0));
-    EXPECT_LE(mem + tdata.imgPitchBytes() * 3 + tdata.planePitchBytes() * 1, devdata->imgPlaneBuffer(3, 1));
+    EXPECT_LE(mem + access->samplePitchBytes() * 3, accessRef->sampleData(3, accessRef->planeData(0)));
+    EXPECT_LE(mem + access->samplePitchBytes() * 3 + access->planePitchBytes() * 1,
+              accessRef->sampleData(3, accessRef->planeData(1)));
 }

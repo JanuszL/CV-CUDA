@@ -16,6 +16,7 @@
 #include <common/ValueTests.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
+#include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
 #include <operators/OpResize.hpp>
@@ -31,35 +32,32 @@ namespace nvcv = nv::cv;
 namespace test = nv::cv::test;
 
 static void Resize(std::vector<uint8_t> &hDst, const std::vector<uint8_t> &hSrc,
-                   const nvcv::ITensorDataPitchDevice *dDstData, const nvcv::ITensorDataPitchDevice *dSrcData,
-                   const int interpolation)
+                   const nvcv::TensorDataAccessPitchImagePlanar &dDstData,
+                   const nvcv::TensorDataAccessPitchImagePlanar &dSrcData, const int interpolation)
 {
-    ASSERT_NE(nullptr, dDstData);
-    ASSERT_NE(nullptr, dSrcData);
+    double iScale = static_cast<double>(dSrcData.numRows()) / dDstData.numRows();
+    double jScale = static_cast<double>(dSrcData.numCols()) / dDstData.numCols();
 
-    double iScale = static_cast<double>(dSrcData->dims().h) / dDstData->dims().h;
-    double jScale = static_cast<double>(dSrcData->dims().w) / dDstData->dims().w;
+    EXPECT_EQ(dDstData.numSamples(), dSrcData.numSamples());
+    EXPECT_EQ(dDstData.dtype(), dSrcData.dtype());
 
-    EXPECT_EQ(dDstData->numImages(), dSrcData->numImages());
-    EXPECT_EQ(dDstData->dtype(), dSrcData->dtype());
-
-    int elementsPerPixel = dDstData->dims().c;
-    int dstRowPitch      = dDstData->rowPitchBytes() / sizeof(uint8_t);
-    int srcRowPitch      = dSrcData->rowPitchBytes() / sizeof(uint8_t);
-    int dstImgPitch      = dDstData->imgPitchBytes() / sizeof(uint8_t);
-    int srcImgPitch      = dSrcData->imgPitchBytes() / sizeof(uint8_t);
+    int elementsPerPixel = dDstData.numChannels();
+    int dstRowPitch      = dDstData.rowPitchBytes() / sizeof(uint8_t);
+    int srcRowPitch      = dSrcData.rowPitchBytes() / sizeof(uint8_t);
+    int dstImgPitch      = dDstData.samplePitchBytes() / sizeof(uint8_t);
+    int srcImgPitch      = dSrcData.samplePitchBytes() / sizeof(uint8_t);
 
     uint8_t       *dstPtrTop = hDst.data();
     const uint8_t *srcPtrTop = hSrc.data();
 
-    for (int img = 0; img < dDstData->numImages(); img++)
+    for (int img = 0; img < dDstData.numSamples(); img++)
     {
         uint8_t       *dstPtr = dstPtrTop + dstImgPitch * img;
         const uint8_t *srcPtr = srcPtrTop + srcImgPitch * img;
 
-        for (int di = 0; di < dDstData->dims().h; di++)
+        for (int di = 0; di < dDstData.numRows(); di++)
         {
-            for (int dj = 0; dj < dDstData->dims().w; dj++)
+            for (int dj = 0; dj < dDstData.numCols(); dj++)
             {
                 if (interpolation == NVCV_INTERP_NEAREST)
                 {
@@ -69,10 +67,10 @@ static void Resize(std::vector<uint8_t> &hDst, const std::vector<uint8_t> &hSrc,
                     int si = std::floor(fi);
                     int sj = std::floor(fj);
 
-                    si = std::min(si, dSrcData->dims().h - 1);
-                    sj = std::min(sj, dSrcData->dims().w - 1);
+                    si = std::min(si, dSrcData.numRows() - 1);
+                    sj = std::min(sj, dSrcData.numCols() - 1);
 
-                    for (int k = 0; k < dDstData->dims().c; k++)
+                    for (int k = 0; k < dDstData.numChannels(); k++)
                     {
                         dstPtr[di * dstRowPitch + dj * elementsPerPixel + k]
                             = srcPtr[si * srcRowPitch + sj * elementsPerPixel + k];
@@ -89,15 +87,15 @@ static void Resize(std::vector<uint8_t> &hDst, const std::vector<uint8_t> &hSrc,
                     fi -= si;
                     fj -= sj;
 
-                    fj = (sj < 0 || sj >= dSrcData->dims().w - 1) ? 0 : fj;
+                    fj = (sj < 0 || sj >= dSrcData.numCols() - 1) ? 0 : fj;
 
-                    si = std::max(0, std::min(si, dSrcData->dims().h - 2));
-                    sj = std::max(0, std::min(sj, dSrcData->dims().w - 2));
+                    si = std::max(0, std::min(si, dSrcData.numRows() - 2));
+                    sj = std::max(0, std::min(sj, dSrcData.numCols() - 2));
 
                     double iWeights[2] = {1 - fi, fi};
                     double jWeights[2] = {1 - fj, fj};
 
-                    for (int k = 0; k < dDstData->dims().c; k++)
+                    for (int k = 0; k < dDstData.numChannels(); k++)
                     {
                         double res = std::rint(srcPtr[(si + 0) * srcRowPitch + (sj + 0) * elementsPerPixel + k]
                                                    * iWeights[0] * jWeights[0]
@@ -122,10 +120,10 @@ static void Resize(std::vector<uint8_t> &hDst, const std::vector<uint8_t> &hSrc,
                     fi -= si;
                     fj -= sj;
 
-                    fj = (sj < 1 || sj >= dSrcData->dims().w - 3) ? 0 : fj;
+                    fj = (sj < 1 || sj >= dSrcData.numCols() - 3) ? 0 : fj;
 
-                    si = std::max(1, std::min(si, dSrcData->dims().h - 3));
-                    sj = std::max(1, std::min(sj, dSrcData->dims().w - 3));
+                    si = std::max(1, std::min(si, dSrcData.numRows() - 3));
+                    sj = std::max(1, std::min(sj, dSrcData.numCols() - 3));
 
                     const double A = -0.75;
                     double       iWeights[4];
@@ -140,7 +138,7 @@ static void Resize(std::vector<uint8_t> &hDst, const std::vector<uint8_t> &hSrc,
                     jWeights[2] = ((A + 2) * (1 - fj) - (A + 3)) * (1 - fj) * (1 - fj) + 1;
                     jWeights[3] = 1 - jWeights[0] - jWeights[1] - jWeights[2];
 
-                    for (int k = 0; k < dDstData->dims().c; k++)
+                    for (int k = 0; k < dDstData.numChannels(); k++)
                     {
                         double res = std::abs(std::rint(
                             srcPtr[(si - 1) * srcRowPitch + (sj - 1) * elementsPerPixel + k] * jWeights[0] * iWeights[0]
@@ -225,8 +223,14 @@ TEST_P(OpResize, correct_output)
     ASSERT_NE(nullptr, srcData);
     ASSERT_NE(nullptr, dstData);
 
-    int srcBufSize = (srcData->imgPitchBytes() / sizeof(uint8_t)) * srcData->numImages();
-    int dstBufSize = (dstData->imgPitchBytes() / sizeof(uint8_t)) * dstData->numImages();
+    auto srcAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*srcData);
+    ASSERT_TRUE(srcAccess);
+
+    auto dstAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*dstData);
+    ASSERT_TRUE(dstAccess);
+
+    int srcBufSize = (srcAccess->samplePitchBytes() / sizeof(uint8_t)) * srcAccess->numSamples();
+    int dstBufSize = (dstAccess->samplePitchBytes() / sizeof(uint8_t)) * dstAccess->numSamples();
 
     std::vector<uint8_t> srcVec(srcBufSize);
 
@@ -240,7 +244,7 @@ TEST_P(OpResize, correct_output)
                                            cudaMemcpyHostToDevice, stream));
 
     // Generate gold result
-    Resize(goldVec, srcVec, dstData, srcData, interpolation);
+    Resize(goldVec, srcVec, *dstAccess, *srcAccess, interpolation);
 
     // Generate test result
     nv::cvop::Resize resizeOp;

@@ -90,65 +90,11 @@ private:
         return m_pitchBytes[d];
     }
 
-    nvcv::DimsNCHW doGetDims() const override
-    {
-        assert(false && !"should not be needed");
-        return {};
-    }
-
-    int32_t doGetNumPlanes() const override
-    {
-        assert(false && !"should not be needed");
-        return 0;
-    }
-
-    int32_t doGetNumImages() const override
-    {
-        assert(false && !"should not be needed");
-        return 0;
-    }
-
     const NVCVTensorData &doGetCData() const override
     {
         assert(false && !"should not be needed");
         static NVCVTensorData tdata;
         return tdata;
-    }
-
-    int64_t doGetImagePitchBytes() const override
-    {
-        assert(false && !"should not be needed");
-        return 0;
-    }
-
-    int64_t doGetPlanePitchBytes() const override
-    {
-        assert(false && !"should not be needed");
-        return 0;
-    }
-
-    int64_t doGetRowPitchBytes() const override
-    {
-        assert(false && !"should not be needed");
-        return 0;
-    }
-
-    int64_t doGetColPitchBytes() const override
-    {
-        assert(false && !"should not be needed");
-        return 0;
-    }
-
-    void *doGetImageBuffer(int n) const override
-    {
-        assert(false && !"should not be needed");
-        return 0;
-    }
-
-    void *doGetImagePlaneBuffer(int n, int p) const override
-    {
-        assert(false && !"should not be needed");
-        return 0;
     }
 };
 

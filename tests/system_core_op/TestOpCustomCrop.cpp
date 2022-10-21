@@ -16,6 +16,7 @@
 #include <common/ValueTests.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
+#include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
 #include <operators/OpCustomCrop.hpp>
@@ -43,42 +44,42 @@ static void dbgImage(std::vector<uint8_t> &in, int rowPitch)
 #endif
 
 // Width is in bytes or pixels..
-static void WriteData(const nvcv::ITensorDataPitchDevice *data, uint8_t val, NVCVRectI region)
+static void WriteData(const nvcv::TensorDataAccessPitchImagePlanar &data, uint8_t val, NVCVRectI region)
 {
-    EXPECT_EQ(NVCV_TENSOR_NHWC, data->layout());
-    EXPECT_LE(region.x + region.width, data->dims().w);
-    EXPECT_LE(region.y + region.height, data->dims().h);
+    EXPECT_EQ(NVCV_TENSOR_NHWC, data.layout());
+    EXPECT_LE(region.x + region.width, data.numCols());
+    EXPECT_LE(region.y + region.height, data.numRows());
 
-    int      bytesPerChan  = data->dtype().bitsPerChannel()[0] / 8;
-    int      bytesPerPixel = data->dims().c * bytesPerChan;
-    uint8_t *impPtrTop     = (uint8_t *)data->data();
+    int      bytesPerChan  = data.dtype().bitsPerChannel()[0] / 8;
+    int      bytesPerPixel = data.numChannels() * bytesPerChan;
+    uint8_t *impPtrTop     = (uint8_t *)data.sampleData(0);
     uint8_t *impPtr        = nullptr;
-    int      numImages     = data->numImages();
-    int      rowPitchBytes = data->rowPitchBytes();
+    int      numImages     = data.numSamples();
+    int      rowPitchBytes = data.rowPitchBytes();
 
     EXPECT_NE(nullptr, impPtrTop);
     for (int img = 0; img < numImages; img++)
     {
-        impPtr = impPtrTop + (data->imgPitchBytes() * img) + (region.x * bytesPerPixel) + (rowPitchBytes * region.y);
+        impPtr = impPtrTop + (data.samplePitchBytes() * img) + (region.x * bytesPerPixel) + (rowPitchBytes * region.y);
         EXPECT_EQ(cudaSuccess,
                   cudaMemset2D((void *)impPtr, rowPitchBytes, val, region.width * bytesPerPixel, region.height));
     }
 }
 
-static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::ITensorDataPitchDevice *data, NVCVRectI region,
-                          uint8_t val)
+static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessPitchImagePlanar &data,
+                          NVCVRectI region, uint8_t val)
 {
-    int bytesPerChan  = data->dtype().bitsPerChannel()[0] / 8;
-    int bytesPerPixel = data->dims().c * bytesPerChan;
+    int bytesPerChan  = data.dtype().bitsPerChannel()[0] / 8;
+    int bytesPerPixel = data.numChannels() * bytesPerChan;
 
     uint8_t *ptrTop = vect.data();
-    for (int img = 0; img < data->numImages(); img++)
+    for (int img = 0; img < data.numSamples(); img++)
     {
-        uint8_t *ptr = ptrTop + data->imgPitchBytes() * img;
+        uint8_t *ptr = ptrTop + data.samplePitchBytes() * img;
         for (int i = 0; i < region.height; i++)
         {
             memset(ptr, val, region.width * bytesPerPixel);
-            ptr += data->rowPitchBytes();
+            ptr += data.rowPitchBytes();
         }
     }
 }
@@ -134,21 +135,27 @@ TEST_P(OpCustomCrop, CustomCrop_packed)
     const auto *inData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgIn.exportData());
     const auto *outData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgOut.exportData());
 
-    EXPECT_NE(nullptr, inData);
-    EXPECT_NE(nullptr, outData);
+    ASSERT_NE(nullptr, inData);
+    ASSERT_NE(nullptr, outData);
 
-    int inBufSize
-        = inData->imgPitchBytes() * inData->numImages(); //img pitch bytes can be more than the image 64, 128, etc
-    int outBufSize = outData->imgPitchBytes() * outData->numImages();
+    auto inAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*inData);
+    ASSERT_TRUE(inAccess);
+
+    auto outAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*outData);
+    ASSERT_TRUE(outAccess);
+
+    int inBufSize = inAccess->samplePitchBytes()
+                  * inAccess->numSamples(); //img pitch bytes can be more than the image 64, 128, etc
+    int outBufSize = outAccess->samplePitchBytes() * outAccess->numSamples();
 
     NVCVRectI crpRect = {cropX, cropY, cropWidth, cropHeight};
 
-    EXPECT_EQ(cudaSuccess, cudaMemset(inData->data(), 0x00, inData->imgPitchBytes() * inData->numImages()));
-    EXPECT_EQ(cudaSuccess, cudaMemset(outData->data(), 0x00, outData->imgPitchBytes() * outData->numImages()));
-    WriteData(inData, cropVal, crpRect); // write data to be cropped
+    EXPECT_EQ(cudaSuccess, cudaMemset(inData->data(), 0x00, inAccess->samplePitchBytes() * inAccess->numSamples()));
+    EXPECT_EQ(cudaSuccess, cudaMemset(outData->data(), 0x00, outAccess->samplePitchBytes() * outAccess->numSamples()));
+    WriteData(*inAccess, cropVal, crpRect); // write data to be cropped
 
     std::vector<uint8_t> gold(outBufSize);
-    setGoldBuffer(gold, outData, crpRect, cropVal);
+    setGoldBuffer(gold, *outAccess, crpRect, cropVal);
 
     // run operator
     nv::cvop::CustomCrop cropOp;

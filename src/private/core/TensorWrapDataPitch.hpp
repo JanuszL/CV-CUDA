@@ -30,7 +30,6 @@ public:
     const int64_t *shape() const override;
 
     const NVCVTensorLayout &layout() const override;
-    DimsNCHW                dims() const override;
 
     PixelType dtype() const override;
 

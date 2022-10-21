@@ -17,6 +17,7 @@
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
+#include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
 #include <operators/OpPadAndStack.hpp>
@@ -48,25 +49,25 @@ static int ReflectBorderIndex(int x, int size, const NVCVBorderType borderType)
 }
 
 static void PadAndStack(std::vector<uint8_t> &hDst, const std::vector<std::vector<uint8_t>> &hBatchSrc,
-                        const nvcv::ITensorDataPitchDevice *dDstData, const int srcWidth, const int srcHeight,
+                        const nvcv::TensorDataAccessPitchImagePlanar &dDstData, const int srcWidth, const int srcHeight,
                         const int srcRowPitch, const int srcPixPitch, const std::vector<int> &topVec,
                         const std::vector<int> &leftVec, const NVCVBorderType borderType, const float borderValue)
 {
-    int dstPixPitch = dDstData->dims().c;
-    int dstRowPitch = dDstData->rowPitchBytes() / sizeof(uint8_t);
-    int dstImgPitch = dDstData->imgPitchBytes() / sizeof(uint8_t);
+    int dstPixPitch = dDstData.numChannels();
+    int dstRowPitch = dDstData.rowPitchBytes() / sizeof(uint8_t);
+    int dstImgPitch = dDstData.samplePitchBytes() / sizeof(uint8_t);
 
-    for (int db = 0; db < dDstData->dims().n; db++)
+    for (int db = 0; db < dDstData.numSamples(); db++)
     {
-        for (int di = 0; di < dDstData->dims().h; di++)
+        for (int di = 0; di < dDstData.numRows(); di++)
         {
             int si = di - topVec[db];
 
-            for (int dj = 0; dj < dDstData->dims().w; dj++)
+            for (int dj = 0; dj < dDstData.numCols(); dj++)
             {
                 int sj = dj - leftVec[db];
 
-                for (int dk = 0; dk < dDstData->dims().c; dk++)
+                for (int dk = 0; dk < dDstData.numChannels(); dk++)
                 {
                     uint8_t out = 0;
 
@@ -157,8 +158,14 @@ TEST_P(OpPadAndStack, correct_output)
     ASSERT_NE(nullptr, inTopData);
     ASSERT_NE(nullptr, inLeftData);
 
-    int inTopBufSize  = (inTopData->imgPitchBytes() / sizeof(int)) * inTopData->numImages();
-    int inLeftBufSize = (inLeftData->imgPitchBytes() / sizeof(int)) * inLeftData->numImages();
+    auto inTopAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*inTopData);
+    ASSERT_TRUE(inTopAccess);
+
+    auto inLeftAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*inLeftData);
+    ASSERT_TRUE(inLeftAccess);
+
+    int inTopBufSize  = (inTopAccess->samplePitchBytes() / sizeof(int)) * inTopAccess->numSamples();
+    int inLeftBufSize = (inLeftAccess->samplePitchBytes() / sizeof(int)) * inLeftAccess->numSamples();
 
     ASSERT_EQ(inTopBufSize, inLeftBufSize);
 
@@ -215,7 +222,10 @@ TEST_P(OpPadAndStack, correct_output)
 
     ASSERT_NE(nullptr, dstData);
 
-    int dstBufSize = (dstData->imgPitchBytes() / sizeof(uint8_t)) * dstData->numImages();
+    auto dstAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*dstData);
+    ASSERT_TRUE(dstData);
+
+    int dstBufSize = (dstAccess->samplePitchBytes() / sizeof(uint8_t)) * dstAccess->numSamples();
 
     ASSERT_EQ(cudaSuccess, cudaMemsetAsync(dstData->data(), 0, dstBufSize * sizeof(uint8_t), stream));
 
@@ -223,7 +233,7 @@ TEST_P(OpPadAndStack, correct_output)
     std::vector<uint8_t> goldVec(dstBufSize);
 
     // Generate gold result
-    PadAndStack(goldVec, batchSrcVec, dstData, srcWidth, srcHeight, srcRowPitch, srcPixPitch, topVec, leftVec,
+    PadAndStack(goldVec, batchSrcVec, *dstAccess, srcWidth, srcHeight, srcRowPitch, srcPixPitch, topVec, leftVec,
                 borderType, borderValue);
 
     // Generate test result

@@ -47,12 +47,12 @@ __global__ void custom_crop_kernel(const Ptr2D src, Ptr2D dst, int start_x, int 
 }
 
 template<typename T>
-void customCrop(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData, NVCVRectI roi,
-                cudaStream_t stream)
+void customCrop(const nvcv::TensorDataAccessPitchImagePlanar &inData,
+                const nvcv::TensorDataAccessPitchImagePlanar &outData, NVCVRectI roi, cudaStream_t stream)
 {
     int          cols       = roi.width;
     int          rows       = roi.height;
-    const int    batch_size = outData.dims().n;
+    const int    batch_size = outData.numSamples();
     Ptr2dNHWC<T> src_ptr(inData);
     Ptr2dNHWC<T> dst_ptr(outData, cols, rows);
 
@@ -73,12 +73,8 @@ size_t CustomCrop::calBufferSize(DataShape max_input_shape, DataShape max_output
 ErrorCode CustomCrop::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, NVCVRectI roi,
                             cudaStream_t stream)
 {
-    int                 batch         = inData.dims().n;
-    int                 channels      = inData.dims().c;
-    int                 rows          = inData.dims().h;
-    int                 cols          = inData.dims().w;
-    cuda_op::DataFormat input_format  = GetLegacyDataFormat(inData.layout(), batch);
-    cuda_op::DataFormat output_format = GetLegacyDataFormat(outData.layout(), batch);
+    cuda_op::DataFormat input_format  = GetLegacyDataFormat(inData.layout());
+    cuda_op::DataFormat output_format = GetLegacyDataFormat(outData.layout());
 
     if (!(input_format == kNHWC || input_format == kHWC) || !(output_format == kNHWC || output_format == kHWC))
     {
@@ -93,13 +89,30 @@ ErrorCode CustomCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
+    auto inAccess = cv::TensorDataAccessPitchImagePlanar::Create(inData);
+    if (!inAccess)
+    {
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    int batch    = inAccess->numSamples();
+    int channels = inAccess->numChannels();
+    int rows     = inAccess->numRows();
+    int cols     = inAccess->numCols();
+
     if (channels > 4 || channels < 1)
     {
         LOG_ERROR("Invalid channel number ch = " << channels);
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    if (roi.height > outData.dims().h || roi.width > outData.dims().w)
+    auto outAccess = cv::TensorDataAccessPitchImagePlanar::Create(outData);
+    if (!outAccess)
+    {
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    if (roi.height > outAccess->size().h || roi.width > outAccess->size().w)
     {
         LOG_ERROR("ROI larger than dst buffer");
         return ErrorCode::INVALID_DATA_SHAPE;
@@ -120,8 +133,8 @@ ErrorCode CustomCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
         return ErrorCode::INVALID_PARAMETER;
     }
 
-    typedef void (*func_t)(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData,
-                           NVCVRectI roi, cudaStream_t stream);
+    typedef void (*func_t)(const cv::TensorDataAccessPitchImagePlanar &inData,
+                           const cv::TensorDataAccessPitchImagePlanar &outData, NVCVRectI roi, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {
         {customCrop<uchar1>,  customCrop<uchar2>,  customCrop<uchar3>,  customCrop<uchar4>},
@@ -131,7 +144,7 @@ ErrorCode CustomCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
         {customCrop<double>, customCrop<double2>, customCrop<double3>, customCrop<double4>}
     };
 
-    funcs[data_size / 2][channels - 1](inData, outData, roi, stream);
+    funcs[data_size / 2][channels - 1](*inAccess, *outAccess, roi, stream);
 
     return ErrorCode::SUCCESS;
 }

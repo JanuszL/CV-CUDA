@@ -195,35 +195,6 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorExportData, (NVCVTensorHandle handle
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetDimsNCHW,
-                (NVCVTensorHandle handle, int32_t *batch, int32_t *channels, int32_t *height, int32_t *width))
-{
-    return priv::ProtectCall(
-        [&]
-        {
-            auto &tensor = priv::ToStaticRef<const priv::ITensor>(handle);
-
-            priv::DimsNCHW dims = tensor.dims();
-
-            if (batch)
-            {
-                *batch = dims.n;
-            }
-            if (channels)
-            {
-                *channels = dims.c;
-            }
-            if (height)
-            {
-                *height = dims.h;
-            }
-            if (width)
-            {
-                *width = dims.w;
-            }
-        });
-}
-
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetShape, (NVCVTensorHandle handle, int32_t *ndim, int64_t *shape))
 {
     return priv::ProtectCall(
