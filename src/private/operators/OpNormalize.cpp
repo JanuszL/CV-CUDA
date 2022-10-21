@@ -26,16 +26,29 @@ Normalize::Normalize()
 {
     leg::cuda_op::DataShape maxIn, maxOut;
     //maxIn/maxOut not used by op.
-    //m_legacyOp = std::make_unique<leg::cuda_op::Normalize>(maxIn, maxOut);
+    m_legacyOp = std::make_unique<leg::cuda_op::Normalize>(maxIn, maxOut);
 }
 
-void Normalize::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, bool scale_is_stddev,
-                           float global_scale, float shift, float epsilon) const
+void Normalize::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &base,
+                           const cv::ITensor &scale, cv::ITensor &out, const float global_scale, const float shift,
+                           const float epsilon, const uint32_t flags) const
 {
     auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
     if (inData == nullptr)
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be device-acessible, pitch-linear tensor");
+    }
+
+    auto *baseData = dynamic_cast<const cv::ITensorDataPitchDevice *>(base.exportData());
+    if (baseData == nullptr)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input base must be device-acessible, pitch-linear tensor");
+    }
+
+    auto *scaleData = dynamic_cast<const cv::ITensorDataPitchDevice *>(scale.exportData());
+    if (scaleData == nullptr)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input scale must be device-acessible, pitch-linear tensor");
     }
 
     auto *outData = dynamic_cast<const cv::ITensorDataPitchDevice *>(out.exportData());
@@ -44,7 +57,8 @@ void Normalize::operator()(cudaStream_t stream, const cv::ITensor &in, const cv:
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be device-acessible, pitch-linear tensor");
     }
 
-    //leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, stream));
+    leg::helpers::CheckOpErrThrow(
+        m_legacyOp->infer(*inData, *baseData, *scaleData, *outData, global_scale, shift, epsilon, flags, stream));
 }
 
 cv::priv::Version Normalize::doGetVersion() const

@@ -20,57 +20,15 @@
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
 #include <operators/OpResize.hpp>
 
-#include <cmath>
-#include <iostream>
-#include <random>
-
-namespace nvcv = nv::cv;
-namespace test = nv::cv::test;
-
 //#define DEBUG_PRINT_IMAGE
 //#define DEBUG_PRINT_DIFF
 
-#ifdef DEBUG_PRINT_IMAGE
-static void DebugPrintImage(std::vector<uint8_t> &in, int rowPitch)
-{
-    std::cout << "\nDebug print image: row pitch = " << rowPitch << " total size = " << in.size() << "\n";
-    for (size_t i = 0; i < in.size(); i++)
-    {
-        if (i % rowPitch == 0)
-        {
-            std::cout << "\n";
-        }
-        printf("%03d ", static_cast<int>(in[i]));
-    }
-    std::cout << "\n";
-}
-#endif
-#ifdef DEBUG_PRINT_DIFF
-static void DebugPrintDiff(std::vector<uint8_t> &test, std::vector<uint8_t> &gold, int testRowPitch, int goldRowPitch)
-{
-    std::cout << "\nDebug print diff:\n";
-    for (size_t i = 0; i < test.size(); i++)
-    {
-        if (test[i] != gold[i])
-        {
-            printf("[at %ld: %03d != %03d] ", i, static_cast<int>(test[i]), static_cast<int>(gold[i]));
-        }
-    }
-    std::cout << "\n";
-}
-#endif
+#include <common/Utils.hpp>
 
-static void FillRandomData(std::vector<uint8_t> &hDst, const nvcv::ITensorDataPitchDevice *dDstData)
-{
-    ASSERT_NE(nullptr, dDstData);
+#include <cmath>
 
-    std::default_random_engine    rng{0};
-    std::uniform_int_distribution rand;
-
-    std::generate(hDst.begin(), hDst.end(), [&rng, &rand] { return rand(rng); });
-
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(dDstData->mem(), hDst.data(), hDst.size(), cudaMemcpyHostToDevice));
-}
+namespace nvcv = nv::cv;
+namespace test = nv::cv::test;
 
 static void Resize(std::vector<uint8_t> &hDst, const std::vector<uint8_t> &hSrc,
                    const nvcv::ITensorDataPitchDevice *dDstData, const nvcv::ITensorDataPitchDevice *dSrcData,
@@ -85,19 +43,19 @@ static void Resize(std::vector<uint8_t> &hDst, const std::vector<uint8_t> &hSrc,
     EXPECT_EQ(dDstData->numImages(), dSrcData->numImages());
     EXPECT_EQ(dDstData->format(), dSrcData->format());
 
-    int bytesPerChannel = dDstData->format().bitsPerChannel()[0] / 8;
-    int bytesPerPixel   = dDstData->dims().c * bytesPerChannel;
-
-    int dstRowPitchBytes = dDstData->rowPitchBytes();
-    int srcRowPitchBytes = dSrcData->rowPitchBytes();
+    int elementsPerPixel = dDstData->dims().c;
+    int dstRowPitch      = dDstData->rowPitchBytes() / sizeof(uint8_t);
+    int srcRowPitch      = dSrcData->rowPitchBytes() / sizeof(uint8_t);
+    int dstImgPitch      = dDstData->imgPitchBytes() / sizeof(uint8_t);
+    int srcImgPitch      = dSrcData->imgPitchBytes() / sizeof(uint8_t);
 
     uint8_t       *dstPtrTop = hDst.data();
     const uint8_t *srcPtrTop = hSrc.data();
 
     for (int img = 0; img < dDstData->numImages(); img++)
     {
-        uint8_t       *dstPtr = dstPtrTop + dDstData->imgPitchBytes() * img;
-        const uint8_t *srcPtr = srcPtrTop + dSrcData->imgPitchBytes() * img;
+        uint8_t       *dstPtr = dstPtrTop + dstImgPitch * img;
+        const uint8_t *srcPtr = srcPtrTop + srcImgPitch * img;
 
         for (int di = 0; di < dDstData->dims().h; di++)
         {
@@ -116,8 +74,8 @@ static void Resize(std::vector<uint8_t> &hDst, const std::vector<uint8_t> &hSrc,
 
                     for (int k = 0; k < dDstData->dims().c; k++)
                     {
-                        dstPtr[di * dstRowPitchBytes + dj * bytesPerPixel + k]
-                            = srcPtr[si * srcRowPitchBytes + sj * bytesPerPixel + k];
+                        dstPtr[di * dstRowPitch + dj * elementsPerPixel + k]
+                            = srcPtr[si * srcRowPitch + sj * elementsPerPixel + k];
                     }
                 }
                 else if (interpolation == NVCV_INTERP_LINEAR)
@@ -141,16 +99,16 @@ static void Resize(std::vector<uint8_t> &hDst, const std::vector<uint8_t> &hSrc,
 
                     for (int k = 0; k < dDstData->dims().c; k++)
                     {
-                        double res = std::rint(srcPtr[(si + 0) * srcRowPitchBytes + (sj + 0) * bytesPerPixel + k]
+                        double res = std::rint(srcPtr[(si + 0) * srcRowPitch + (sj + 0) * elementsPerPixel + k]
                                                    * iWeights[0] * jWeights[0]
-                                               + srcPtr[(si + 1) * srcRowPitchBytes + (sj + 0) * bytesPerPixel + k]
+                                               + srcPtr[(si + 1) * srcRowPitch + (sj + 0) * elementsPerPixel + k]
                                                      * iWeights[1] * jWeights[0]
-                                               + srcPtr[(si + 0) * srcRowPitchBytes + (sj + 1) * bytesPerPixel + k]
+                                               + srcPtr[(si + 0) * srcRowPitch + (sj + 1) * elementsPerPixel + k]
                                                      * iWeights[0] * jWeights[1]
-                                               + srcPtr[(si + 1) * srcRowPitchBytes + (sj + 1) * bytesPerPixel + k]
+                                               + srcPtr[(si + 1) * srcRowPitch + (sj + 1) * elementsPerPixel + k]
                                                      * iWeights[1] * jWeights[1]);
 
-                        dstPtr[di * dstRowPitchBytes + dj * bytesPerPixel + k] = res < 0 ? 0 : (res > 255 ? 255 : res);
+                        dstPtr[di * dstRowPitch + dj * elementsPerPixel + k] = res < 0 ? 0 : (res > 255 ? 255 : res);
                     }
                 }
                 else if (interpolation == NVCV_INTERP_CUBIC)
@@ -184,41 +142,40 @@ static void Resize(std::vector<uint8_t> &hDst, const std::vector<uint8_t> &hSrc,
 
                     for (int k = 0; k < dDstData->dims().c; k++)
                     {
-                        double res
-                            = std::abs(std::rint(srcPtr[(si - 1) * srcRowPitchBytes + (sj - 1) * bytesPerPixel + k]
-                                                     * jWeights[0] * iWeights[0]
-                                                 + srcPtr[(si + 0) * srcRowPitchBytes + (sj - 1) * bytesPerPixel + k]
-                                                       * jWeights[0] * iWeights[1]
-                                                 + srcPtr[(si + 1) * srcRowPitchBytes + (sj - 1) * bytesPerPixel + k]
-                                                       * jWeights[0] * iWeights[2]
-                                                 + srcPtr[(si + 2) * srcRowPitchBytes + (sj - 1) * bytesPerPixel + k]
-                                                       * jWeights[0] * iWeights[3]
-                                                 + srcPtr[(si - 1) * srcRowPitchBytes + (sj + 0) * bytesPerPixel + k]
-                                                       * jWeights[1] * iWeights[0]
-                                                 + srcPtr[(si + 0) * srcRowPitchBytes + (sj + 0) * bytesPerPixel + k]
-                                                       * jWeights[1] * iWeights[1]
-                                                 + srcPtr[(si + 1) * srcRowPitchBytes + (sj + 0) * bytesPerPixel + k]
-                                                       * jWeights[1] * iWeights[2]
-                                                 + srcPtr[(si + 2) * srcRowPitchBytes + (sj + 0) * bytesPerPixel + k]
-                                                       * jWeights[1] * iWeights[3]
-                                                 + srcPtr[(si - 1) * srcRowPitchBytes + (sj + 1) * bytesPerPixel + k]
-                                                       * jWeights[2] * iWeights[0]
-                                                 + srcPtr[(si + 0) * srcRowPitchBytes + (sj + 1) * bytesPerPixel + k]
-                                                       * jWeights[2] * iWeights[1]
-                                                 + srcPtr[(si + 1) * srcRowPitchBytes + (sj + 1) * bytesPerPixel + k]
-                                                       * jWeights[2] * iWeights[2]
-                                                 + srcPtr[(si + 2) * srcRowPitchBytes + (sj + 1) * bytesPerPixel + k]
-                                                       * jWeights[2] * iWeights[3]
-                                                 + srcPtr[(si - 1) * srcRowPitchBytes + (sj + 2) * bytesPerPixel + k]
-                                                       * jWeights[3] * iWeights[0]
-                                                 + srcPtr[(si + 0) * srcRowPitchBytes + (sj + 2) * bytesPerPixel + k]
-                                                       * jWeights[3] * iWeights[1]
-                                                 + srcPtr[(si + 1) * srcRowPitchBytes + (sj + 2) * bytesPerPixel + k]
-                                                       * jWeights[3] * iWeights[2]
-                                                 + srcPtr[(si + 2) * srcRowPitchBytes + (sj + 2) * bytesPerPixel + k]
-                                                       * jWeights[3] * iWeights[3]));
+                        double res = std::abs(std::rint(
+                            srcPtr[(si - 1) * srcRowPitch + (sj - 1) * elementsPerPixel + k] * jWeights[0] * iWeights[0]
+                            + srcPtr[(si + 0) * srcRowPitch + (sj - 1) * elementsPerPixel + k] * jWeights[0]
+                                  * iWeights[1]
+                            + srcPtr[(si + 1) * srcRowPitch + (sj - 1) * elementsPerPixel + k] * jWeights[0]
+                                  * iWeights[2]
+                            + srcPtr[(si + 2) * srcRowPitch + (sj - 1) * elementsPerPixel + k] * jWeights[0]
+                                  * iWeights[3]
+                            + srcPtr[(si - 1) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * jWeights[1]
+                                  * iWeights[0]
+                            + srcPtr[(si + 0) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * jWeights[1]
+                                  * iWeights[1]
+                            + srcPtr[(si + 1) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * jWeights[1]
+                                  * iWeights[2]
+                            + srcPtr[(si + 2) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * jWeights[1]
+                                  * iWeights[3]
+                            + srcPtr[(si - 1) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * jWeights[2]
+                                  * iWeights[0]
+                            + srcPtr[(si + 0) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * jWeights[2]
+                                  * iWeights[1]
+                            + srcPtr[(si + 1) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * jWeights[2]
+                                  * iWeights[2]
+                            + srcPtr[(si + 2) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * jWeights[2]
+                                  * iWeights[3]
+                            + srcPtr[(si - 1) * srcRowPitch + (sj + 2) * elementsPerPixel + k] * jWeights[3]
+                                  * iWeights[0]
+                            + srcPtr[(si + 0) * srcRowPitch + (sj + 2) * elementsPerPixel + k] * jWeights[3]
+                                  * iWeights[1]
+                            + srcPtr[(si + 1) * srcRowPitch + (sj + 2) * elementsPerPixel + k] * jWeights[3]
+                                  * iWeights[2]
+                            + srcPtr[(si + 2) * srcRowPitch + (sj + 2) * elementsPerPixel + k] * jWeights[3]
+                                  * iWeights[3]));
 
-                        dstPtr[di * dstRowPitchBytes + dj * bytesPerPixel + k] = res < 0 ? 0 : (res > 255 ? 255 : res);
+                        dstPtr[di * dstRowPitch + dj * elementsPerPixel + k] = res < 0 ? 0 : (res > 255 ? 255 : res);
                     }
                 }
             }
@@ -268,15 +225,19 @@ TEST_P(OpResize, correct_output)
     ASSERT_NE(nullptr, srcData);
     ASSERT_NE(nullptr, dstData);
 
-    int srcBufSize = srcData->imgPitchBytes() * srcData->numImages();
-    int dstBufSize = dstData->imgPitchBytes() * dstData->numImages();
+    int srcBufSize = (srcData->imgPitchBytes() / sizeof(uint8_t)) * srcData->numImages();
+    int dstBufSize = (dstData->imgPitchBytes() / sizeof(uint8_t)) * dstData->numImages();
 
     std::vector<uint8_t> srcVec(srcBufSize);
 
     std::vector<uint8_t> testVec(dstBufSize);
     std::vector<uint8_t> goldVec(dstBufSize);
 
-    FillRandomData(srcVec, srcData);
+    test::FillRandomData(srcVec);
+
+    // Copy input data to the GPU
+    EXPECT_EQ(cudaSuccess, cudaMemcpyAsync(srcData->mem(), srcVec.data(), srcVec.size() * sizeof(uint8_t),
+                                           cudaMemcpyHostToDevice, stream));
 
     // Generate gold result
     Resize(goldVec, srcVec, dstData, srcData, interpolation);
@@ -292,14 +253,15 @@ TEST_P(OpResize, correct_output)
     EXPECT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), dstData->mem(), dstBufSize, cudaMemcpyDeviceToHost));
 
 #ifdef DEBUG_PRINT_IMAGE
-    DebugPrintImage(srcVec, srcData->rowPitchBytes());
-    DebugPrintImage(testVec, dstData->rowPitchBytes());
-    DebugPrintImage(goldVec, dstData->rowPitchBytes());
+    test::DebugPrintImage(srcVec, srcData->rowPitchBytes() / sizeof(uint8_t));
+    test::DebugPrintImage(testVec, dstData->rowPitchBytes() / sizeof(uint8_t));
+    test::DebugPrintImage(goldVec, dstData->rowPitchBytes() / sizeof(uint8_t));
 #endif
 #ifdef DEBUG_PRINT_DIFF
     if (goldVec != testVec)
     {
-        DebugPrintDiff(testVec, goldVec, dstData->rowPitchBytes(), dstData->rowPitchBytes());
+        test::DebugPrintDiff(testVec, goldVec, dstData->rowPitchBytes() / sizeof(uint8_t),
+                             dstData->rowPitchBytes() / sizeof(uint8_t));
     }
 #endif
 
