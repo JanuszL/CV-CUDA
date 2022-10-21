@@ -49,6 +49,9 @@ cd "$SDIR"
 # We use LFS
 git lfs install
 
+# We use submodules
+git submodule update --init
+
 # allow-missing-config is useful when checking out an old commit or a branch that don't have pre-config configuration.
 pre-commit install \
     --allow-missing-config \
