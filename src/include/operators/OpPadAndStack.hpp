@@ -40,8 +40,8 @@ public:
 
     ~PadAndStack();
 
-    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::ITensor &out, cv::ITensor &left,
-                    cv::ITensor &top, const NVCVBorderType borderMode, const float borderValue);
+    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::ITensor &out, cv::ITensor &top,
+                    cv::ITensor &left, NVCVBorderType borderMode, float borderValue);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -62,11 +62,10 @@ inline PadAndStack::~PadAndStack()
 }
 
 inline void PadAndStack::operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::ITensor &out,
-                                    cv::ITensor &left, cv::ITensor &top, const NVCVBorderType borderMode,
-                                    const float borderValue)
+                                    cv::ITensor &top, cv::ITensor &left, NVCVBorderType borderMode, float borderValue)
 {
-    cv::detail::CheckThrow(nvcvopPadAndStackSubmit(m_handle, stream, in.handle(), out.handle(), left.handle(),
-                                                   top.handle(), borderMode, borderValue));
+    cv::detail::CheckThrow(nvcvopPadAndStackSubmit(m_handle, stream, in.handle(), out.handle(), top.handle(),
+                                                   left.handle(), borderMode, borderValue));
 }
 
 inline NVCVOperatorHandle PadAndStack::handle() const noexcept

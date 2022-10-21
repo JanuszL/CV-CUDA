@@ -57,11 +57,11 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopPadAndStackCreate(NVCVOperatorHandle *handle);
  *
  * @param [out] out Output tensor.
  *
- * @param [in] hleft Left tensor to store amount of left padding per batch input image.
- *                   This tensor is a vector of integers, where the elements are stored in the width of the tensor
- *                   and the other dimensions are 1, i.e. n=h=c=1.
+ * @param [in] top Top tensor to store amount of top padding per batch input image.
+ *                 This tensor is a vector of integers, where the elements are stored in the width of the tensor
+ *                 and the other dimensions are 1, i.e. n=h=c=1.
  *
- * @param [in] htop Top tensor to store amount of top padding per batch input image.
+ * @param [in] left Left tensor to store amount of left padding per batch input image.
  *                  This tensor is a vector of integers, where the elements are stored in the width of the tensor
  *                  and the other dimensions are 1, i.e. n=h=c=1.
  *
@@ -74,9 +74,8 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopPadAndStackCreate(NVCVOperatorHandle *handle);
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_OP_PUBLIC NVCVStatus nvcvopPadAndStackSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
-                                                  NVCVImageBatchHandle in, NVCVTensorHandle out, NVCVTensorHandle hleft,
-                                                  NVCVTensorHandle htop, const NVCVBorderType borderMode,
-                                                  const float borderValue);
+                                                  NVCVImageBatchHandle in, NVCVTensorHandle out, NVCVTensorHandle top,
+                                                  NVCVTensorHandle left, NVCVBorderType borderMode, float borderValue);
 
 #ifdef __cplusplus
 }
