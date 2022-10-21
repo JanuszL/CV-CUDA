@@ -16,6 +16,7 @@ add_executable(nvcv_test_system_core_op
     TestOpReformat.cpp
     TestOpResize.cpp
     TestOpCustomCrop.cpp
+    TestOpNormalize.cpp
 )
 
 target_link_libraries(nvcv_test_system_core_op
