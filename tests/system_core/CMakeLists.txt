@@ -28,6 +28,7 @@ add_executable(nvcv_test_system_core
     TestTensor.cpp
     TestTensorLayout.cpp
     TestTensorLayoutInfo.cpp
+    TestTensorShapeInfo.cpp
 )
 
 target_link_libraries(nvcv_test_system_core

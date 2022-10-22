@@ -27,12 +27,12 @@ class ITensorData
 public:
     virtual ~ITensorData() = default;
 
-    int         ndim() const;
-    TensorShape shape() const;
+    int                ndim() const;
+    const TensorShape &shape() const;
 
     const TensorShape::DimType &shape(int d) const;
 
-    TensorLayout layout() const;
+    const TensorLayout &layout() const;
 
     PixelType dtype() const;
 
@@ -48,10 +48,9 @@ public:
 private:
     // NVI idiom
     virtual int                         doGetNumDim() const        = 0;
-    virtual TensorShape                 doGetShape() const         = 0;
+    virtual const TensorShape          &doGetShape() const         = 0;
     virtual const TensorShape::DimType &doGetShapeDim(int d) const = 0;
     virtual DimsNCHW                    doGetDims() const          = 0;
-    virtual TensorLayout                doGetLayout() const        = 0;
 
     virtual int32_t doGetNumPlanes() const = 0;
     virtual int32_t doGetNumImages() const = 0;
@@ -104,7 +103,7 @@ inline int ITensorData::ndim() const
     return r;
 }
 
-inline TensorShape ITensorData::shape() const
+inline const TensorShape &ITensorData::shape() const
 {
     return doGetShape();
 }
@@ -135,9 +134,9 @@ inline int32_t ITensorData::numImages() const
     return i;
 }
 
-inline TensorLayout ITensorData::layout() const
+inline const TensorLayout &ITensorData::layout() const
 {
-    return doGetLayout();
+    return doGetShape().layout();
 }
 
 inline PixelType ITensorData::dtype() const

@@ -13,6 +13,7 @@
 
 #include <nvcv/TensorData.h>
 #include <nvcv/TensorData.hpp>
+#include <nvcv/TensorShapeInfo.hpp>
 #include <private/core/Status.hpp>
 #include <private/core/SymbolVersioning.hpp>
 #include <private/core/TensorShape.hpp>

@@ -29,13 +29,13 @@ public:
     explicit TensorDataPitchDevice(const TensorShape &shape, const PixelType &dtype, const Buffer &data);
 
 private:
-    NVCVTensorData m_data;
+    NVCVTensorData      m_data;
+    mutable TensorShape m_cacheShape;
 
     int                         doGetNumDim() const override;
-    TensorShape                 doGetShape() const override;
+    const TensorShape          &doGetShape() const override;
     const TensorShape::DimType &doGetShapeDim(int d) const override;
     DimsNCHW                    doGetDims() const override;
-    TensorLayout                doGetLayout() const override;
 
     int32_t doGetNumPlanes() const override;
     int32_t doGetNumImages() const override;
@@ -61,6 +61,7 @@ private:
 // TensorDataPitchDevice implementation -----------------------
 inline TensorDataPitchDevice::TensorDataPitchDevice(const TensorShape &tshape, const PixelType &dtype,
                                                     const Buffer &data)
+    : m_cacheShape(tshape)
 {
     std::copy(tshape.shape().begin(), tshape.shape().end(), m_data.shape);
     m_data.ndim   = tshape.ndim();
@@ -81,9 +82,9 @@ inline const TensorShape::DimType &TensorDataPitchDevice::doGetShapeDim(int d) c
     return m_data.shape[d];
 }
 
-inline TensorShape TensorDataPitchDevice::doGetShape() const
+inline const TensorShape &TensorDataPitchDevice::doGetShape() const
 {
-    return TensorShape(m_data.shape, m_data.ndim, m_data.layout);
+    return m_cacheShape;
 }
 
 inline DimsNCHW TensorDataPitchDevice::doGetDims() const
@@ -113,15 +114,6 @@ inline int32_t TensorDataPitchDevice::doGetNumPlanes() const
 inline int32_t TensorDataPitchDevice::doGetNumImages() const
 {
     return m_data.shape[0];
-}
-
-inline TensorLayout TensorDataPitchDevice::doGetLayout() const
-{
-    TensorLayout layout;
-    static_assert(sizeof(layout) == sizeof(m_data.layout));
-    // std::bitcast
-    memcpy(&layout, &m_data.layout, sizeof(layout));
-    return layout;
 }
 
 inline PixelType TensorDataPitchDevice::doGetPixelType() const
