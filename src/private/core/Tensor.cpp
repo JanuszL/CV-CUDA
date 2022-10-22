@@ -94,19 +94,14 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int64_t *sha
     reqs.layout = layout;
     reqs.dtype  = dtype.value();
 
-    int ndimLayout = layout.ndim;
-
-    if (ndim > ndimLayout)
+    if (layout.ndim > 0 && ndim != layout.ndim)
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
-            << "Number of shape dimensions " << ndim << " must be >= 1 and <= " << ndimLayout;
+            << "Number of shape dimensions " << ndim << " must be equal to layout dimensions " << layout.ndim;
     }
 
-    // Complete shape with 1s
-    std::fill_n(reqs.shape, ndimLayout - ndim, 1);
-    std::copy_n(shape, ndim, reqs.shape + ndimLayout - ndim);
-
-    reqs.ndim = ndim = ndimLayout;
+    std::copy_n(shape, ndim, reqs.shape);
+    reqs.ndim = ndim;
 
     reqs.mem = {};
 

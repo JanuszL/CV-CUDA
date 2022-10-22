@@ -40,7 +40,7 @@ private:
     mutable detail::Optional<AllocatorWrapHandle> m_alloc;
 
     int          doGetNumDim() const override;
-    Shape        doGetShape() const override;
+    TensorShape  doGetShape() const override;
     PixelType    doGetDataType() const override;
     TensorLayout doGetLayout() const override;
 };
@@ -52,13 +52,13 @@ class Tensor
 {
 public:
     using Requirements = NVCVTensorRequirements;
-    static Requirements CalcRequirements(const Shape &shape, PixelType dtype, TensorLayout layout);
+    static Requirements CalcRequirements(const TensorShape &shape, PixelType dtype);
     static Requirements CalcRequirements(int numImages, Size2D imgSize, ImageFormat fmt);
 
     Tensor(const Tensor &) = delete;
 
     explicit Tensor(const Requirements &reqs, IAllocator *alloc = nullptr);
-    explicit Tensor(const Shape &shape, TensorLayout layout, PixelType dtype, IAllocator *alloc = nullptr);
+    explicit Tensor(const TensorShape &shape, PixelType dtype, IAllocator *alloc = nullptr);
     explicit Tensor(int numImages, Size2D imgSize, ImageFormat fmt, IAllocator *alloc = nullptr);
     ~Tensor();
 
@@ -124,14 +124,17 @@ inline int TensorWrapHandle::doGetNumDim() const
     return ndim;
 }
 
-inline Shape TensorWrapHandle::doGetShape() const
+inline TensorShape TensorWrapHandle::doGetShape() const
 {
     int32_t ndim = 0;
     detail::CheckThrow(nvcvTensorGetShape(m_handle, &ndim, nullptr));
 
-    Shape shape(ndim);
+    NVCVTensorLayout layout;
+    detail::CheckThrow(nvcvTensorGetLayout(m_handle, &layout));
+
+    TensorShape::ShapeType shape(ndim);
     detail::CheckThrow(nvcvTensorGetShape(m_handle, &ndim, shape.begin()));
-    return shape;
+    return {shape, layout};
 }
 
 inline PixelType TensorWrapHandle::doGetDataType() const
@@ -160,19 +163,18 @@ inline const ITensorData *TensorWrapHandle::doExportData() const
 
     assert(data.bufferType == NVCV_TENSOR_BUFFER_PITCH_DEVICE);
 
-    m_optData.emplace(Shape(data.shape, data.shape + data.ndim), PixelType{data.dtype}, TensorLayout{data.layout},
-                      data.buffer.pitch);
+    m_optData.emplace(TensorShape(data.shape, data.ndim, data.layout), PixelType{data.dtype}, data.buffer.pitch);
 
     return &*m_optData;
 }
 
 // Tensor implementation -------------------------------------
 
-inline auto Tensor::CalcRequirements(const Shape &shape, PixelType dtype, TensorLayout layout) -> Requirements
+inline auto Tensor::CalcRequirements(const TensorShape &shape, PixelType dtype) -> Requirements
 {
     Requirements reqs;
-    detail::CheckThrow(
-        nvcvTensorCalcRequirements(shape.size(), &shape[0], dtype, static_cast<NVCVTensorLayout>(layout), &reqs));
+    detail::CheckThrow(nvcvTensorCalcRequirements(shape.size(), &shape[0], dtype,
+                                                  static_cast<NVCVTensorLayout>(shape.layout()), &reqs));
     return reqs;
 }
 
@@ -197,6 +199,11 @@ inline Tensor::Tensor(const Requirements &reqs, IAllocator *alloc)
 
 inline Tensor::Tensor(int numImages, Size2D imgSize, ImageFormat fmt, IAllocator *alloc)
     : Tensor(CalcRequirements(numImages, imgSize, fmt), alloc)
+{
+}
+
+inline Tensor::Tensor(const TensorShape &shape, PixelType dtype, IAllocator *alloc)
+    : Tensor(CalcRequirements(shape, dtype), alloc)
 {
 }
 

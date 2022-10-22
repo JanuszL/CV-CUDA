@@ -14,35 +14,37 @@
 #ifndef NVCV_SHAPE_HPP
 #define NVCV_SHAPE_HPP
 
-#include <nvcv/TensorData.h>
-#include <nvcv/TensorLayout.hpp>
-
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <initializer_list>
 #include <iostream>
 
 namespace nv { namespace cv {
 
+template<class T, int N>
 class Shape
 {
-    using Data = std::array<int64_t, NVCV_TENSOR_MAX_NDIM>;
+    using Data = std::array<T, N>;
 
 public:
-    using value_type      = Data::value_type;
-    using size_type       = int32_t;
-    using reference       = Data::reference;
-    using const_reference = Data::const_reference;
-    using iterator        = Data::iterator;
-    using const_iterator  = Data::const_iterator;
+    using value_type      = typename Data::value_type;
+    using size_type       = int;
+    using reference       = typename Data::reference;
+    using const_reference = typename Data::const_reference;
+    using iterator        = typename Data::iterator;
+    using const_iterator  = typename Data::const_iterator;
+
+    constexpr static int MAX_NDIM = N;
 
     Shape();
     Shape(const Shape &that);
     explicit Shape(size_type size);
 
-    template<class IT>
-    Shape(IT itbeg, IT itend);
-    Shape(std::initializer_list<int64_t> shape);
+    // copy 'n' elements from buffer pointed by 'data'
+    Shape(const T *data, size_t n);
+
+    Shape(std::initializer_list<value_type> shape);
 
     reference       operator[](int i);
     const_reference operator[](int i) const;
@@ -51,14 +53,14 @@ public:
     size_type size() const;
     bool      empty() const;
 
-    Data::iterator begin();
-    Data::iterator end();
+    iterator begin();
+    iterator end();
 
-    Data::const_iterator begin() const;
-    Data::const_iterator end() const;
+    const_iterator begin() const;
+    const_iterator end() const;
 
-    Data::const_iterator cbegin() const;
-    Data::const_iterator cend() const;
+    const_iterator cbegin() const;
+    const_iterator cend() const;
 
     bool operator==(const Shape &that) const;
     bool operator!=(const Shape &that) const;
@@ -70,53 +72,60 @@ private:
     size_type m_size;
 };
 
-Shape Permute(const Shape &src, const TensorLayout &srcLayout, const TensorLayout &dstLayout);
-
 // Implementation
 
-inline Shape::Shape()
+template<class T, int N>
+Shape<T, N>::Shape()
     : m_size(0)
 {
 }
 
-inline Shape::Shape(int size)
+template<class T, int N>
+Shape<T, N>::Shape(int size)
     : m_size(size)
 {
     std::fill(this->begin(), this->end(), 0);
 }
 
-inline Shape::Shape(const Shape &that)
+template<class T, int N>
+Shape<T, N>::Shape(const Shape &that)
     : m_size(that.m_size)
 {
     std::copy(that.begin(), that.end(), m_data.begin());
 }
 
-inline Shape::Shape(std::initializer_list<int64_t> shape)
-    : Shape(shape.begin(), shape.end())
+template<class T, int N>
+Shape<T, N>::Shape(std::initializer_list<value_type> shape)
+    : Shape(shape.begin(), shape.size())
 {
 }
 
-template<class IT>
-inline Shape::Shape(IT itbeg, IT itend)
-    : m_size(std::distance(itbeg, itend))
+template<class T, int N>
+Shape<T, N>::Shape(const T *data, size_t n)
+    : m_size(n)
 {
+    assert(data != nullptr);
+
     assert(m_size <= (size_type)m_data.size());
-    std::copy(itbeg, itend, m_data.begin());
+    std::copy_n(data, n, m_data.begin());
 }
 
-inline auto Shape::operator[](int i) -> reference
+template<class T, int N>
+auto Shape<T, N>::operator[](int i) -> reference
 {
     assert(0 <= i && i < m_size);
     return m_data[i];
 }
 
-inline auto Shape::operator[](int i) const -> const_reference
+template<class T, int N>
+auto Shape<T, N>::operator[](int i) const -> const_reference
 {
     assert(0 <= i && i < m_size);
     return m_data[i];
 }
 
-inline bool Shape::operator==(const Shape &that) const
+template<class T, int N>
+bool Shape<T, N>::operator==(const Shape &that) const
 {
     if (m_size == that.m_size)
     {
@@ -128,83 +137,88 @@ inline bool Shape::operator==(const Shape &that) const
     }
 }
 
-inline bool Shape::operator!=(const Shape &that) const
+template<class T, int N>
+bool Shape<T, N>::operator!=(const Shape &that) const
 {
     return !operator==(that);
 }
 
-inline bool Shape::operator<(const Shape &that) const
+template<class T, int N>
+bool Shape<T, N>::operator<(const Shape &that) const
 {
     return std::lexicographical_compare(this->begin(), this->end(), that.begin(), that.end());
 }
 
-inline auto Shape::ndim() const -> size_type
+template<class T, int N>
+auto Shape<T, N>::ndim() const -> size_type
 {
     return m_size;
 }
 
-inline auto Shape::size() const -> size_type
+template<class T, int N>
+auto Shape<T, N>::size() const -> size_type
 {
     return m_size;
 }
 
-inline bool Shape::empty() const
+template<class T, int N>
+bool Shape<T, N>::empty() const
 {
     return m_size == 0;
 }
 
-inline auto Shape::begin() -> Data::iterator
+template<class T, int N>
+auto Shape<T, N>::begin() -> iterator
 {
     return m_data.begin();
 }
 
-inline auto Shape::end() -> Data::iterator
+template<class T, int N>
+auto Shape<T, N>::end() -> iterator
 {
     return m_data.begin() + m_size;
 }
 
-inline auto Shape::begin() const -> Data::const_iterator
+template<class T, int N>
+auto Shape<T, N>::begin() const -> const_iterator
 {
     return m_data.begin();
 }
 
-inline auto Shape::end() const -> Data::const_iterator
+template<class T, int N>
+auto Shape<T, N>::end() const -> const_iterator
 {
     return m_data.begin() + m_size;
 }
 
-inline auto Shape::cbegin() const -> Data::const_iterator
+template<class T, int N>
+auto Shape<T, N>::cbegin() const -> const_iterator
 {
     return m_data.cbegin();
 }
 
-inline auto Shape::cend() const -> Data::const_iterator
+template<class T, int N>
+auto Shape<T, N>::cend() const -> const_iterator
 {
     return m_data.cend() + m_size;
 }
 
-inline std::ostream &operator<<(std::ostream &out, const Shape &shape)
+template<class T, int N>
+std::ostream &operator<<(std::ostream &out, const Shape<T, N> &shape)
 {
     if (shape.empty())
     {
-        return out << "empty";
+        return out << "(empty)";
     }
     else
     {
         out << shape[0];
-        for (int i = 0; i < shape.size(); ++i)
+        for (int i = 1; i < shape.size(); ++i)
         {
             out << 'x' << shape[i];
         }
         return out;
     }
-}
-
-inline Shape Permute(const Shape &src, const TensorLayout &srcLayout, const TensorLayout &dstLayout)
-{
-    Shape dst(dstLayout.ndim());
-    detail::CheckThrow(nvcvTensorShapePermute(srcLayout, &src[0], dstLayout, &dst[0]));
-    return dst;
 }
 
 }} // namespace nv::cv

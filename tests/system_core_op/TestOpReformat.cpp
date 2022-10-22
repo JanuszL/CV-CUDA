@@ -40,9 +40,8 @@ TEST(OpReformat, OpReformat_to_hwc)
     std::copy(reqsPlanar.pitchBytes, reqsPlanar.pitchBytes + NVCV_TENSOR_MAX_NDIM, bufPlanar.pitchBytes);
     EXPECT_EQ(cudaSuccess, cudaMalloc(&bufPlanar.data, inBufferSize));
 
-    nvcv::TensorDataPitchDevice bufIn(nvcv::Shape{reqsPlanar.shape, reqsPlanar.shape + reqsPlanar.ndim},
-                                      nvcv::PixelType{reqsPlanar.dtype}, nvcv::TensorLayout{reqsPlanar.layout},
-                                      bufPlanar);
+    nvcv::TensorDataPitchDevice bufIn(nvcv::TensorShape{reqsPlanar.shape, reqsPlanar.ndim, reqsPlanar.layout},
+                                      nvcv::PixelType{reqsPlanar.dtype}, bufPlanar);
 
     ASSERT_EQ(1, bufIn.numImages());
 

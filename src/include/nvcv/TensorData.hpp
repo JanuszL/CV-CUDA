@@ -16,7 +16,7 @@
 
 #include "Dims.hpp"
 #include "ITensorData.hpp"
-#include "Shape.hpp"
+#include "TensorShape.hpp"
 
 namespace nv { namespace cv {
 
@@ -26,18 +26,16 @@ class TensorDataPitchDevice final : public ITensorDataPitchDevice
 public:
     using Buffer = NVCVTensorBufferPitch;
 
-    explicit TensorDataPitchDevice(const Shape &shape, const PixelType &dtype, const Buffer &data);
-    explicit TensorDataPitchDevice(const Shape &shape, const PixelType &dtype, const TensorLayout &layout,
-                                   const Buffer &data);
+    explicit TensorDataPitchDevice(const TensorShape &shape, const PixelType &dtype, const Buffer &data);
 
 private:
     NVCVTensorData m_data;
 
-    int                    doGetNumDim() const override;
-    Shape                  doGetShape() const override;
-    Shape::const_reference doGetShapeDim(int d) const override;
-    DimsNCHW               doGetDims() const override;
-    TensorLayout           doGetLayout() const override;
+    int                         doGetNumDim() const override;
+    TensorShape                 doGetShape() const override;
+    const TensorShape::DimType &doGetShapeDim(int d) const override;
+    DimsNCHW                    doGetDims() const override;
+    TensorLayout                doGetLayout() const override;
 
     int32_t doGetNumPlanes() const override;
     int32_t doGetNumImages() const override;
@@ -61,18 +59,13 @@ private:
 };
 
 // TensorDataPitchDevice implementation -----------------------
-inline TensorDataPitchDevice::TensorDataPitchDevice(const Shape &shape, const PixelType &dtype, const Buffer &data)
-    : TensorDataPitchDevice(shape, dtype, TensorLayout::NONE, data)
+inline TensorDataPitchDevice::TensorDataPitchDevice(const TensorShape &tshape, const PixelType &dtype,
+                                                    const Buffer &data)
 {
-}
-
-inline TensorDataPitchDevice::TensorDataPitchDevice(const Shape &shape, const PixelType &dtype,
-                                                    const TensorLayout &layout, const Buffer &data)
-{
-    std::copy(shape.begin(), shape.end(), m_data.shape);
-    m_data.ndim   = shape.ndim();
+    std::copy(tshape.shape().begin(), tshape.shape().end(), m_data.shape);
+    m_data.ndim   = tshape.ndim();
     m_data.dtype  = dtype;
-    m_data.layout = layout;
+    m_data.layout = tshape.layout();
 
     m_data.bufferType   = NVCV_TENSOR_BUFFER_PITCH_DEVICE;
     m_data.buffer.pitch = data;
@@ -83,19 +76,19 @@ inline int TensorDataPitchDevice::doGetNumDim() const
     return m_data.ndim;
 }
 
-inline Shape::const_reference TensorDataPitchDevice::doGetShapeDim(int d) const
+inline const TensorShape::DimType &TensorDataPitchDevice::doGetShapeDim(int d) const
 {
     return m_data.shape[d];
 }
 
-inline Shape TensorDataPitchDevice::doGetShape() const
+inline TensorShape TensorDataPitchDevice::doGetShape() const
 {
-    return Shape(m_data.shape, m_data.shape + m_data.ndim);
+    return TensorShape(m_data.shape, m_data.ndim, m_data.layout);
 }
 
 inline DimsNCHW TensorDataPitchDevice::doGetDims() const
 {
-    Shape nchw(4);
+    TensorShape::ShapeType nchw(4);
     detail::CheckThrow(nvcvTensorShapePermute(m_data.layout, m_data.shape, NVCV_TENSOR_NCHW, &nchw[0]));
     return {static_cast<int>(nchw[0]), static_cast<int>(nchw[1]), static_cast<int>(nchw[2]), static_cast<int>(nchw[3])};
 }

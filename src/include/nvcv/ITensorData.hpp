@@ -16,8 +16,8 @@
 
 #include "Dims.hpp"
 #include "PixelType.hpp"
-#include "Shape.hpp"
 #include "TensorData.h"
+#include "TensorShape.hpp"
 
 namespace nv { namespace cv {
 
@@ -27,10 +27,10 @@ class ITensorData
 public:
     virtual ~ITensorData() = default;
 
-    int   ndim() const;
-    Shape shape() const;
+    int         ndim() const;
+    TensorShape shape() const;
 
-    Shape::const_reference shape(int d) const;
+    const TensorShape::DimType &shape(int d) const;
 
     TensorLayout layout() const;
 
@@ -47,11 +47,11 @@ public:
 
 private:
     // NVI idiom
-    virtual int                    doGetNumDim() const        = 0;
-    virtual Shape                  doGetShape() const         = 0;
-    virtual Shape::const_reference doGetShapeDim(int d) const = 0;
-    virtual DimsNCHW               doGetDims() const          = 0;
-    virtual TensorLayout           doGetLayout() const        = 0;
+    virtual int                         doGetNumDim() const        = 0;
+    virtual TensorShape                 doGetShape() const         = 0;
+    virtual const TensorShape::DimType &doGetShapeDim(int d) const = 0;
+    virtual DimsNCHW                    doGetDims() const          = 0;
+    virtual TensorLayout                doGetLayout() const        = 0;
 
     virtual int32_t doGetNumPlanes() const = 0;
     virtual int32_t doGetNumImages() const = 0;
@@ -104,12 +104,12 @@ inline int ITensorData::ndim() const
     return r;
 }
 
-inline Shape ITensorData::shape() const
+inline TensorShape ITensorData::shape() const
 {
     return doGetShape();
 }
 
-inline auto ITensorData::shape(int d) const -> Shape::const_reference
+inline auto ITensorData::shape(int d) const -> const TensorShape::DimType &
 {
     return doGetShapeDim(d);
 }

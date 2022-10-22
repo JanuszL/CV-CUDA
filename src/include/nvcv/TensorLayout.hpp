@@ -62,7 +62,7 @@ public:
 
     TensorLayout() = default;
 
-    explicit constexpr TensorLayout(const NVCVTensorLayout &layout)
+    constexpr TensorLayout(const NVCVTensorLayout &layout)
         : m_layout(layout)
     {
     }
@@ -120,9 +120,9 @@ public:
         return out;
     }
 
-    bool operator==(const TensorLayout &that) const;
-    bool operator!=(const TensorLayout &that) const;
-    bool operator<(const TensorLayout &that) const;
+    friend bool operator==(const TensorLayout &a, const TensorLayout &b);
+    bool        operator!=(const TensorLayout &that) const;
+    bool        operator<(const TensorLayout &that) const;
 
     constexpr const_iterator begin() const;
     constexpr const_iterator end() const;
@@ -193,14 +193,14 @@ constexpr TensorLayout::operator const NVCVTensorLayout &() const
     return m_layout;
 }
 
-inline bool TensorLayout::operator==(const TensorLayout &that) const
+inline bool operator==(const TensorLayout &a, const TensorLayout &b)
 {
-    return m_layout == that.m_layout;
+    return a.m_layout == b.m_layout;
 }
 
 inline bool TensorLayout::operator!=(const TensorLayout &that) const
 {
-    return !operator==(that);
+    return !(*this == that);
 }
 
 inline bool TensorLayout::operator<(const TensorLayout &that) const
@@ -231,6 +231,22 @@ constexpr auto TensorLayout::cend() const -> const_iterator
 inline std::ostream &operator<<(std::ostream &out, const TensorLayout &that)
 {
     return out << that.m_layout;
+}
+
+// For disambiguation
+inline bool operator==(const TensorLayout &lhs, const NVCVTensorLayout &rhs)
+{
+    return nvcvTensorLayoutCompare(lhs.m_layout, rhs) == 0;
+}
+
+inline bool operator!=(const TensorLayout &lhs, const NVCVTensorLayout &rhs)
+{
+    return !operator==(lhs, rhs);
+}
+
+inline bool operator<(const TensorLayout &lhs, const NVCVTensorLayout &rhs)
+{
+    return nvcvTensorLayoutCompare(lhs.m_layout, rhs) < 0;
 }
 
 }} // namespace nv::cv
