@@ -215,14 +215,14 @@ void Tensor::exportData(NVCVTensorData &data) const
 {
     data.bufferType = NVCV_TENSOR_BUFFER_PITCH_DEVICE;
 
+    data.dtype  = m_reqs.dtype;
+    data.layout = m_reqs.layout;
+    data.ndim   = m_reqs.ndim;
+
+    memcpy(data.shape, m_reqs.shape, sizeof(data.shape));
+
     NVCVTensorBufferPitch &buf = data.buffer.pitch;
     {
-        buf.dtype  = m_reqs.dtype;
-        buf.layout = m_reqs.layout;
-        buf.ndim   = m_reqs.ndim;
-
-        memcpy(buf.shape, m_reqs.shape, sizeof(buf.shape));
-
         static_assert(sizeof(buf.pitchBytes) == sizeof(m_reqs.pitchBytes));
         static_assert(
             std::is_same_v<std::decay_t<decltype(buf.pitchBytes[0])>, std::decay_t<decltype(m_reqs.pitchBytes[0])>>);

@@ -28,32 +28,36 @@
 
 namespace nv::cv::priv {
 
-static void ValidateTensorBufferPitch(const NVCVTensorBufferPitch &buffer)
+static void ValidateTensorBufferPitch(const NVCVTensorData &data)
 {
+    NVCV_ASSERT(data.bufferType == NVCV_TENSOR_BUFFER_PITCH_DEVICE);
+
+    const NVCVTensorBufferPitch &buffer = data.buffer.pitch;
+
     if (buffer.mem == nullptr)
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Memory buffer must not be NULL";
     }
 
-    int ndim = buffer.layout.ndim;
+    int ndim = data.ndim;
 
     for (int i = 0; i < ndim; ++i)
     {
-        if (buffer.shape[i] < 1)
+        if (data.shape[i] < 1)
         {
-            throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Shape #" << i << " must be >= 1, not " << buffer.shape[i];
+            throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Shape #" << i << " must be >= 1, not " << data.shape[i];
         }
     }
 
-    PixelType dtype{buffer.dtype};
+    PixelType dtype{data.dtype};
 
-    int firstPacked = IsChannelLast(buffer.layout) ? ndim - 2 : ndim - 1;
+    int firstPacked = IsChannelLast(data.layout) ? ndim - 2 : ndim - 1;
 
     // Test packed dimensions
     int dim;
     for (dim = ndim - 1; dim >= firstPacked; --dim)
     {
-        int correctPitch = dim == ndim - 1 ? dtype.strideBytes() : buffer.pitchBytes[dim + 1] * buffer.shape[dim + 1];
+        int correctPitch = dim == ndim - 1 ? dtype.strideBytes() : buffer.pitchBytes[dim + 1] * data.shape[dim + 1];
         if (buffer.pitchBytes[dim] != correctPitch)
         {
             throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
@@ -65,7 +69,7 @@ static void ValidateTensorBufferPitch(const NVCVTensorBufferPitch &buffer)
     // Test non-packed dimensions
     for (; dim >= 0; --dim)
     {
-        int minPitch = buffer.pitchBytes[dim + 1] * buffer.shape[dim + 1];
+        int minPitch = buffer.pitchBytes[dim + 1] * data.shape[dim + 1];
         if (buffer.pitchBytes[dim] < minPitch)
         {
             throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Pitch of dimension " << dim << " must be >= " << minPitch
@@ -80,9 +84,7 @@ TensorWrapDataPitch::TensorWrapDataPitch(const NVCVTensorData &data, NVCVTensorD
     , m_cleanup(cleanup)
     , m_ctxCleanup(ctxCleanup)
 {
-    NVCV_ASSERT(data.bufferType == NVCV_TENSOR_BUFFER_PITCH_DEVICE);
-
-    ValidateTensorBufferPitch(data.buffer.pitch);
+    ValidateTensorBufferPitch(data);
 }
 
 TensorWrapDataPitch::~TensorWrapDataPitch()
@@ -95,17 +97,17 @@ TensorWrapDataPitch::~TensorWrapDataPitch()
 
 int32_t TensorWrapDataPitch::ndim() const
 {
-    return m_data.buffer.pitch.ndim;
+    return m_data.ndim;
 }
 
 const int64_t *TensorWrapDataPitch::shape() const
 {
-    return m_data.buffer.pitch.shape;
+    return m_data.shape;
 }
 
 const NVCVTensorLayout &TensorWrapDataPitch::layout() const
 {
-    return m_data.buffer.pitch.layout;
+    return m_data.layout;
 }
 
 DimsNCHW TensorWrapDataPitch::dims() const
@@ -115,7 +117,7 @@ DimsNCHW TensorWrapDataPitch::dims() const
 
 PixelType TensorWrapDataPitch::dtype() const
 {
-    return PixelType{m_data.buffer.pitch.dtype};
+    return PixelType{m_data.dtype};
 }
 
 IAllocator &TensorWrapDataPitch::alloc() const

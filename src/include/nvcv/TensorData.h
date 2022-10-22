@@ -27,11 +27,6 @@ typedef NVCVPixelType NVCVElementType;
 /** Stores the tensor plane contents. */
 typedef struct NVCVTensorBufferPitchRec
 {
-    NVCVElementType  dtype;
-    NVCVTensorLayout layout;
-
-    int32_t ndim;
-    int64_t shape[NVCV_TENSOR_MAX_NDIM];
     int64_t pitchBytes[NVCV_TENSOR_MAX_NDIM];
 
     /** Pointer to memory buffer with tensor contents.
@@ -66,6 +61,12 @@ typedef union NVCVTensorBufferRec
 /** Stores information about image batch characteristics and content. */
 typedef struct NVCVTensorDataRec
 {
+    NVCVElementType  dtype;
+    NVCVTensorLayout layout;
+
+    int32_t ndim;
+    int64_t shape[NVCV_TENSOR_MAX_NDIM];
+
     /** Type of image batch buffer.
      *  It defines which member of the \ref NVCVTensorBuffer tagged union that
      *  must be used to access the image batch buffer contents. */

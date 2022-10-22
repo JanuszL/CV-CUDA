@@ -159,7 +159,9 @@ inline const ITensorData *TensorWrapHandle::doExportData() const
     detail::CheckThrow(nvcvTensorExportData(m_handle, &data));
 
     assert(data.bufferType == NVCV_TENSOR_BUFFER_PITCH_DEVICE);
-    m_optData.emplace(data.buffer.pitch);
+
+    m_optData.emplace(Shape(data.shape, data.shape + data.ndim), PixelType{data.dtype}, TensorLayout{data.layout},
+                      data.buffer.pitch);
 
     return &*m_optData;
 }

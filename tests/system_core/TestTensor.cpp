@@ -128,16 +128,13 @@ TEST(TensorWrapData, wip_create)
     nvcv::Tensor::Requirements reqs = nvcv::Tensor::CalcRequirements(5, {173, 79}, fmt);
 
     nvcv::TensorDataPitchDevice::Buffer buf;
-    buf.dtype  = reqs.dtype;
-    buf.layout = reqs.layout;
-    buf.ndim   = reqs.ndim;
-    std::copy(reqs.shape, reqs.shape + NVCV_TENSOR_MAX_NDIM, buf.shape);
     std::copy(reqs.pitchBytes, reqs.pitchBytes + NVCV_TENSOR_MAX_NDIM, buf.pitchBytes);
     // dummy value, just to check if memory won't be accessed internally. If it does,
     // it'll segfault.
     buf.mem = reinterpret_cast<void *>(678);
 
-    nvcv::TensorDataPitchDevice tdata(buf);
+    nvcv::TensorDataPitchDevice tdata(nvcv::Shape{reqs.shape, reqs.shape + reqs.ndim}, nvcv::PixelType{reqs.dtype},
+                                      nvcv::TensorLayout{reqs.layout}, buf);
 
     EXPECT_EQ(nvcv::TensorLayout::NCHW, tdata.layout());
     EXPECT_EQ(5, tdata.dims().n);
