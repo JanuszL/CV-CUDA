@@ -69,6 +69,19 @@ NVCV_CONSTEXPR static const NVCVTensorLayout NVCV_TENSOR_NONE = NVCV_TENSOR_LAYO
 #include "TensorLayoutDef.inc"
 #undef NVCV_DETAIL_DEF_TLAYOUT
 
+// clang-format off
+NVCV_CONSTEXPR static const NVCVTensorLayout NVCV_TENSOR_IMPLICIT[7] =
+{
+    NVCV_TENSOR_NONE,
+    NVCV_TENSOR_W,
+    NVCV_TENSOR_HW,
+    NVCV_TENSOR_NHW,
+    NVCV_TENSOR_NCHW,
+    NVCV_TENSOR_NCDHW,
+    NVCV_TENSOR_NCFDHW
+};
+// clang-format on
+
 /** Makes a tensor layout from a string defining the labels of its dimensions.
  *
  * The number of dimensions is taken from the string length.

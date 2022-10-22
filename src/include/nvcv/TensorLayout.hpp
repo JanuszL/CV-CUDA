@@ -149,6 +149,30 @@ NVCV_DETAIL_DEF_TLAYOUT(NONE)
 #include "TensorLayoutDef.inc"
 #undef NVCV_DETAIL_DEF_TLAYOUT
 
+constexpr const TensorLayout &GetImplicitTensorLayout(int ndim)
+{
+    // clang-format off
+    return ndim == 1
+            ? TensorLayout::W
+            : (ndim == 2
+                ? TensorLayout::HW
+                : (ndim == 3
+                    ? TensorLayout::NHW
+                    : (ndim == 4
+                        ? TensorLayout::NCHW
+                        : (ndim == 5
+                            ? TensorLayout::NCDHW
+                            : (ndim == 6
+                                ? TensorLayout::NCFDHW
+                                : TensorLayout::NONE
+                              )
+                          )
+                      )
+                  )
+              );
+    // clang-format on
+}
+
 constexpr char TensorLayout::operator[](int idx) const
 {
     return nvcvTensorLayoutGetLabel(m_layout, idx);
