@@ -191,7 +191,7 @@ struct Ptr2dNCHW
         imgPitchBytes = tensor.pitchBytes(0);
         chPitchBytes  = tensor.pitchBytes(1);
         rowPitchBytes = tensor.pitchBytes(2);
-        data          = tensor.mem();
+        data          = tensor.data();
     }
 
     // ptr for uchar, ushort, float, typename T -> uchar etc.
@@ -297,7 +297,7 @@ struct Ptr2dNHWC
 
         imgPitchBytes = tensor.pitchBytes(0);
         rowPitchBytes = tensor.pitchBytes(1);
-        data          = reinterpret_cast<T *>(tensor.mem());
+        data          = reinterpret_cast<T *>(tensor.data());
     }
 
     __host__ __forceinline__ Ptr2dNHWC(const ITensorDataPitchDevice &tensor)
@@ -310,7 +310,7 @@ struct Ptr2dNHWC
 
         imgPitchBytes = tensor.pitchBytes(0);
         rowPitchBytes = tensor.pitchBytes(1);
-        data          = reinterpret_cast<T *>(tensor.mem());
+        data          = reinterpret_cast<T *>(tensor.data());
     }
 
     // ptr for uchar1/3/4, ushort1/3/4, float1/3/4, typename T -> uchar3 etc.

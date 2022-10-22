@@ -65,7 +65,7 @@ private:
 class ITensorDataPitch : public ITensorData
 {
 public:
-    void          *mem() const;
+    void          *data() const;
     const int64_t &pitchBytes(int d) const;
 
     // TODO: get rid of these members as they are
@@ -79,7 +79,7 @@ public:
     void *imgPlaneBuffer(int n, int p) const;
 
 private:
-    virtual void *doGetMemBuffer() const = 0;
+    virtual void *doGetData() const = 0;
 
     virtual const int64_t &doGetPitchBytes(int d) const = 0;
 
@@ -157,11 +157,11 @@ inline NVCVTensorData &ITensorData::cdata()
 
 // Implementation - ITensorDataPitch
 
-inline void *ITensorDataPitch::mem() const
+inline void *ITensorDataPitch::data() const
 {
-    void *mem = doGetMemBuffer();
-    assert(mem != nullptr);
-    return mem;
+    void *data = doGetData();
+    assert(data != nullptr);
+    return data;
 }
 
 inline const int64_t &ITensorDataPitch::pitchBytes(int d) const

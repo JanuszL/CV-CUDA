@@ -77,8 +77,8 @@ const void testConvertTo(nvcv::ImageFormat fmtIn, nvcv::ImageFormat fmtOut, int 
 
     // Copy input data to the GPU
     EXPECT_EQ(cudaSuccess,
-              cudaMemcpyAsync(inData->mem(), srcVec.data(), inBufSizeBytes, cudaMemcpyHostToDevice, stream));
-    EXPECT_EQ(cudaSuccess, cudaMemsetAsync(outData->mem(), 0x0, outBufSizeBytes, stream));
+              cudaMemcpyAsync(inData->data(), srcVec.data(), inBufSizeBytes, cudaMemcpyHostToDevice, stream));
+    EXPECT_EQ(cudaSuccess, cudaMemsetAsync(outData->data(), 0x0, outBufSizeBytes, stream));
 
     // run operator
     nv::cvop::ConvertTo convertToOp;
@@ -86,7 +86,7 @@ const void testConvertTo(nvcv::ImageFormat fmtIn, nvcv::ImageFormat fmtOut, int 
     EXPECT_NO_THROW(convertToOp(stream, imgIn, imgOut, alpha, beta));
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
 
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), outData->mem(), outBufSizeBytes, cudaMemcpyDeviceToHost));
+    EXPECT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), outData->data(), outBufSizeBytes, cudaMemcpyDeviceToHost));
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
     //dbgImage(goldVec, inData->rowPitchBytes());

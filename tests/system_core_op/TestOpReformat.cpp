@@ -38,7 +38,7 @@ TEST(OpReformat, OpReformat_to_hwc)
 
     nvcv::TensorDataPitchDevice::Buffer bufPlanar;
     std::copy(reqsPlanar.pitchBytes, reqsPlanar.pitchBytes + NVCV_TENSOR_MAX_NDIM, bufPlanar.pitchBytes);
-    EXPECT_EQ(cudaSuccess, cudaMalloc(&bufPlanar.mem, inBufferSize));
+    EXPECT_EQ(cudaSuccess, cudaMalloc(&bufPlanar.data, inBufferSize));
 
     nvcv::TensorDataPitchDevice bufIn(nvcv::Shape{reqsPlanar.shape, reqsPlanar.shape + reqsPlanar.ndim},
                                       nvcv::PixelType{reqsPlanar.dtype}, nvcv::TensorLayout{reqsPlanar.layout},
@@ -61,7 +61,7 @@ TEST(OpReformat, OpReformat_to_hwc)
     ASSERT_NE(nullptr, outData);
 
     // Set output buffer to dummy value
-    EXPECT_EQ(cudaSuccess, cudaMemset(outData->mem(), 0xFA, outData->imgPitchBytes() * outData->numImages()));
+    EXPECT_EQ(cudaSuccess, cudaMemset(outData->data(), 0xFA, outData->imgPitchBytes() * outData->numImages()));
 
     // Call operator
     nv::cvop::Reformat reformatOp;
@@ -74,7 +74,7 @@ TEST(OpReformat, OpReformat_to_hwc)
     std::vector<uint8_t> test(outBufferSize, 0xA);
 
     //Check data
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), outData->mem(), outBufferSize, cudaMemcpyDeviceToHost));
+    EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), outData->data(), outBufferSize, cudaMemcpyDeviceToHost));
 
     // plane data should be reordered in the buffer 0,1,2,3,0,1,2,3 ...
     EXPECT_EQ(test[0], 0);
@@ -83,7 +83,7 @@ TEST(OpReformat, OpReformat_to_hwc)
     EXPECT_EQ(test[3], 0);
     EXPECT_EQ(test[4], 1);
 
-    EXPECT_EQ(cudaSuccess, cudaFree(bufPlanar.mem));
+    EXPECT_EQ(cudaSuccess, cudaFree(bufPlanar.data));
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 }
 
@@ -112,7 +112,7 @@ TEST(OpReformat, wip_OpReformat_same)
 
     generate(gold.begin(), gold.end(), [&rng, &rand] { return rand(rng); });
 
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(inData->mem(), gold.data(), gold.size(), cudaMemcpyHostToDevice));
+    EXPECT_EQ(cudaSuccess, cudaMemcpy(inData->data(), gold.data(), gold.size(), cudaMemcpyHostToDevice));
 
     // run operator
     nv::cvop::Reformat reformatOp;
@@ -123,7 +123,7 @@ TEST(OpReformat, wip_OpReformat_same)
     // check cdata
     std::vector<uint8_t> test(outBufSize);
 
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), outData->mem(), outBufSize, cudaMemcpyDeviceToHost));
+    EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), outData->data(), outBufSize, cudaMemcpyDeviceToHost));
 
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 

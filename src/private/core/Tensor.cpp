@@ -228,7 +228,7 @@ void Tensor::exportData(NVCVTensorData &data) const
             std::is_same_v<std::decay_t<decltype(buf.pitchBytes[0])>, std::decay_t<decltype(m_reqs.pitchBytes[0])>>);
         memcpy(buf.pitchBytes, m_reqs.pitchBytes, sizeof(buf.pitchBytes));
 
-        buf.mem = m_buffer;
+        buf.data = m_buffer;
     }
 }
 

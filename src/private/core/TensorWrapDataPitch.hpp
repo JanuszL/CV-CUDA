@@ -23,7 +23,7 @@ namespace nv::cv::priv {
 class TensorWrapDataPitch final : public ITensor
 {
 public:
-    explicit TensorWrapDataPitch(const NVCVTensorData &data, NVCVTensorDataCleanupFunc cleanup, void *ctxCleanup);
+    explicit TensorWrapDataPitch(const NVCVTensorData &tdata, NVCVTensorDataCleanupFunc cleanup, void *ctxCleanup);
     ~TensorWrapDataPitch();
 
     int32_t        ndim() const override;
@@ -36,10 +36,10 @@ public:
 
     IAllocator &alloc() const override;
 
-    void exportData(NVCVTensorData &data) const override;
+    void exportData(NVCVTensorData &tdata) const override;
 
 private:
-    NVCVTensorData m_data;
+    NVCVTensorData m_tdata;
 
     NVCVTensorDataCleanupFunc m_cleanup;
     void                     *m_ctxCleanup;

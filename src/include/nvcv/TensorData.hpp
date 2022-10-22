@@ -47,7 +47,7 @@ private:
     const NVCVTensorData &doGetConstCData() const override;
     NVCVTensorData       &doGetCData() override;
 
-    void *doGetMemBuffer() const override;
+    void *doGetData() const override;
 
     const int64_t &doGetPitchBytes(int d) const override;
 
@@ -146,9 +146,9 @@ inline NVCVTensorData &TensorDataPitchDevice::doGetCData()
     return m_data;
 }
 
-inline void *TensorDataPitchDevice::doGetMemBuffer() const
+inline void *TensorDataPitchDevice::doGetData() const
 {
-    return m_data.buffer.pitch.mem;
+    return m_data.buffer.pitch.data;
 }
 
 inline const int64_t &TensorDataPitchDevice::doGetPitchBytes(int d) const
@@ -202,7 +202,7 @@ inline void *TensorDataPitchDevice::doGetImageBuffer(int n) const
 {
     assert(n >= 0 && n < m_data.shape[0]);
 
-    return reinterpret_cast<std::byte *>(m_data.buffer.pitch.mem) + m_data.buffer.pitch.pitchBytes[0] * n;
+    return reinterpret_cast<std::byte *>(m_data.buffer.pitch.data) + m_data.buffer.pitch.pitchBytes[0] * n;
 }
 
 inline void *TensorDataPitchDevice::doGetImagePlaneBuffer(int n, int p) const

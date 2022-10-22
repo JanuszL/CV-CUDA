@@ -51,7 +51,7 @@ static void WriteData(const nvcv::ITensorDataPitchDevice *data, uint8_t val, NVC
 
     int      bytesPerChan  = data->dtype().bitsPerChannel()[0] / 8;
     int      bytesPerPixel = data->dims().c * bytesPerChan;
-    uint8_t *impPtrTop     = (uint8_t *)data->mem();
+    uint8_t *impPtrTop     = (uint8_t *)data->data();
     uint8_t *impPtr        = nullptr;
     int      numImages     = data->numImages();
     int      rowPitchBytes = data->rowPitchBytes();
@@ -143,8 +143,8 @@ TEST_P(OpCustomCrop, CustomCrop_packed)
 
     NVCVRectI crpRect = {cropX, cropY, cropWidth, cropHeight};
 
-    EXPECT_EQ(cudaSuccess, cudaMemset(inData->mem(), 0x00, inData->imgPitchBytes() * inData->numImages()));
-    EXPECT_EQ(cudaSuccess, cudaMemset(outData->mem(), 0x00, outData->imgPitchBytes() * outData->numImages()));
+    EXPECT_EQ(cudaSuccess, cudaMemset(inData->data(), 0x00, inData->imgPitchBytes() * inData->numImages()));
+    EXPECT_EQ(cudaSuccess, cudaMemset(outData->data(), 0x00, outData->imgPitchBytes() * outData->numImages()));
     WriteData(inData, cropVal, crpRect); // write data to be cropped
 
     std::vector<uint8_t> gold(outBufSize);
@@ -160,8 +160,8 @@ TEST_P(OpCustomCrop, CustomCrop_packed)
     std::vector<uint8_t> testIn(inBufSize);
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(testIn.data(), inData->mem(), inBufSize, cudaMemcpyDeviceToHost));
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), outData->mem(), outBufSize, cudaMemcpyDeviceToHost));
+    EXPECT_EQ(cudaSuccess, cudaMemcpy(testIn.data(), inData->data(), inBufSize, cudaMemcpyDeviceToHost));
+    EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), outData->data(), outBufSize, cudaMemcpyDeviceToHost));
 
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 

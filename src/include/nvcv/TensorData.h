@@ -33,7 +33,7 @@ typedef struct NVCVTensorBufferPitchRec
      * Pixel with type T is addressed by:
      * pixAttr = (uint8_t *)mem + shape[0]*pitchBytes[0] + ... + shape[ndim-1]*pitchBytes[ndim-1];
      */
-    void *mem;
+    void *data;
 } NVCVTensorBufferPitch;
 
 /** Represents how the image buffer data is stored. */

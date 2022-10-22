@@ -172,9 +172,9 @@ TEST_P(OpPadAndStack, correct_output)
     }
 
     // Copy vectors with top and left padding to the GPU
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(inTopData->mem(), topVec.data(), topVec.size() * sizeof(int),
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(inTopData->data(), topVec.data(), topVec.size() * sizeof(int),
                                            cudaMemcpyHostToDevice, stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(inLeftData->mem(), leftVec.data(), leftVec.size() * sizeof(int),
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(inLeftData->data(), leftVec.data(), leftVec.size() * sizeof(int),
                                            cudaMemcpyHostToDevice, stream));
 
     std::vector<std::unique_ptr<nvcv::IImage>> srcImgVec;
@@ -217,7 +217,7 @@ TEST_P(OpPadAndStack, correct_output)
 
     int dstBufSize = (dstData->imgPitchBytes() / sizeof(uint8_t)) * dstData->numImages();
 
-    ASSERT_EQ(cudaSuccess, cudaMemsetAsync(dstData->mem(), 0, dstBufSize * sizeof(uint8_t), stream));
+    ASSERT_EQ(cudaSuccess, cudaMemsetAsync(dstData->data(), 0, dstBufSize * sizeof(uint8_t), stream));
 
     std::vector<uint8_t> testVec(dstBufSize);
     std::vector<uint8_t> goldVec(dstBufSize);
@@ -234,7 +234,7 @@ TEST_P(OpPadAndStack, correct_output)
     // Get test data back
     ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
     ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), dstData->mem(), dstBufSize, cudaMemcpyDeviceToHost));
+    ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), dstData->data(), dstBufSize, cudaMemcpyDeviceToHost));
 
 #ifdef DEBUG_PRINT_IMAGE
     for (int b = 0; b < numBatches; ++b) test::DebugPrintImage(batchSrcVec[b], srcPitchBytes / sizeof(uint8_t));

@@ -186,11 +186,11 @@ TEST_P(OpNormalize, correct_output)
     test::FillRandomData(scaleVec, 0.f, 1.f);
 
     // Copy input data to the GPU
-    EXPECT_EQ(cudaSuccess, cudaMemcpyAsync(srcData->mem(), srcVec.data(), srcVec.size() * sizeof(uint8_t),
+    EXPECT_EQ(cudaSuccess, cudaMemcpyAsync(srcData->data(), srcVec.data(), srcVec.size() * sizeof(uint8_t),
                                            cudaMemcpyHostToDevice, stream));
-    EXPECT_EQ(cudaSuccess, cudaMemcpyAsync(baseData->mem(), baseVec.data(), baseVec.size() * sizeof(float),
+    EXPECT_EQ(cudaSuccess, cudaMemcpyAsync(baseData->data(), baseVec.data(), baseVec.size() * sizeof(float),
                                            cudaMemcpyHostToDevice, stream));
-    EXPECT_EQ(cudaSuccess, cudaMemcpyAsync(scaleData->mem(), scaleVec.data(), scaleVec.size() * sizeof(float),
+    EXPECT_EQ(cudaSuccess, cudaMemcpyAsync(scaleData->data(), scaleVec.data(), scaleVec.size() * sizeof(float),
                                            cudaMemcpyHostToDevice, stream));
 
     // Generate gold result
@@ -205,7 +205,7 @@ TEST_P(OpNormalize, correct_output)
     // Get test data back
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), dstData->mem(), inoutBufSize, cudaMemcpyDeviceToHost));
+    EXPECT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), dstData->data(), inoutBufSize, cudaMemcpyDeviceToHost));
 
 #ifdef DEBUG_PRINT_IMAGE
     test::DebugPrintImage(srcVec, srcData->rowPitchBytes() / sizeof(uint8_t));

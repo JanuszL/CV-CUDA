@@ -131,7 +131,7 @@ TEST(TensorWrapData, wip_create)
     std::copy(reqs.pitchBytes, reqs.pitchBytes + NVCV_TENSOR_MAX_NDIM, buf.pitchBytes);
     // dummy value, just to check if memory won't be accessed internally. If it does,
     // it'll segfault.
-    buf.mem = reinterpret_cast<void *>(678);
+    buf.data = reinterpret_cast<void *>(678);
 
     nvcv::TensorDataPitchDevice tdata(nvcv::Shape{reqs.shape, reqs.shape + reqs.ndim}, nvcv::PixelType{reqs.dtype},
                                       nvcv::TensorLayout{reqs.layout}, buf);
@@ -146,7 +146,7 @@ TEST(TensorWrapData, wip_create)
     EXPECT_EQ(173, tdata.shape()[3]);
     EXPECT_EQ(79, tdata.shape()[2]);
     EXPECT_EQ(2, tdata.shape()[1]);
-    EXPECT_EQ(reinterpret_cast<void *>(678), tdata.mem());
+    EXPECT_EQ(reinterpret_cast<void *>(678), tdata.data());
     EXPECT_EQ(4, tdata.ndim());
 
     nvcv::TensorWrapData tensor{tdata};
@@ -170,9 +170,9 @@ TEST(TensorWrapData, wip_create)
     EXPECT_EQ(tdata.shape(), devdata->shape());
     EXPECT_EQ(tdata.ndim(), devdata->ndim());
 
-    EXPECT_EQ(tdata.mem(), devdata->mem());
+    EXPECT_EQ(tdata.data(), devdata->data());
 
-    auto *mem = reinterpret_cast<std::byte *>(tdata.mem());
+    auto *mem = reinterpret_cast<std::byte *>(tdata.data());
 
     EXPECT_LE(mem + tdata.imgPitchBytes() * 4, devdata->imgBuffer(4));
     EXPECT_LE(mem + tdata.imgPitchBytes() * 3, devdata->imgBuffer(3));
