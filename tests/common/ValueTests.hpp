@@ -47,23 +47,23 @@ class Param
 
 public:
     template<class U = void *>
-    requires(sizeof(U) * 0 + sizeof...(DEFAULT) == 1) Param()
+    requires(sizeof(U) * 0 + sizeof...(DEFAULT) == 1) constexpr Param()
         : m_value(DEFAULT...)
     {
     }
 
     template<class U = void *>
-    requires(std::is_default_constructible_v<T> && sizeof(U) * 0 + sizeof...(DEFAULT) == 0) Param()
+    requires(std::is_default_constructible_v<T> && sizeof(U) * 0 + sizeof...(DEFAULT) == 0) constexpr Param()
         : m_value(T{})
     {
     }
 
-    Param(T value)
+    constexpr Param(T value)
         : m_value(value)
     {
     }
 
-    operator T() const
+    constexpr operator T() const
     {
         return m_value;
     }
@@ -75,6 +75,21 @@ public:
         out << std::noboolalpha;
         return out;
     };
+
+    constexpr bool operator==(const Param &that) const
+    {
+        return m_value == that.m_value;
+    }
+
+    constexpr bool operator!=(const Param &that) const
+    {
+        return !(*this == that);
+    }
+
+    constexpr bool operator<(const Param &that) const
+    {
+        return m_value < that.m_value;
+    }
 
 private:
     T m_value;
