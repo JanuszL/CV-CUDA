@@ -79,7 +79,7 @@ public:
         new (&m_storage) T(std::forward<U>(that));
     }
 
-    template<class... AA, typename std::enable_if<std::is_constructible<T, AA...>::value, int>::Type = 0>
+    template<class... AA, typename std::enable_if<std::is_constructible<T, AA...>::value, int>::type = 0>
     Optional(InPlaceT, AA &&...args)
         : m_hasValue(true)
     {
