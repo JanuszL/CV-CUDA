@@ -43,7 +43,6 @@ public:
     int32_t  numImages() const;
 
     const NVCVTensorData &cdata() const;
-    NVCVTensorData       &cdata();
 
 private:
     // NVI idiom
@@ -57,8 +56,7 @@ private:
 
     virtual PixelType doGetPixelType() const = 0;
 
-    virtual const NVCVTensorData &doGetConstCData() const = 0;
-    virtual NVCVTensorData       &doGetCData()            = 0;
+    virtual const NVCVTensorData &doGetCData() const = 0;
 };
 
 class ITensorDataPitch : public ITensorData
@@ -145,11 +143,6 @@ inline PixelType ITensorData::dtype() const
 }
 
 inline const NVCVTensorData &ITensorData::cdata() const
-{
-    return doGetConstCData();
-}
-
-inline NVCVTensorData &ITensorData::cdata()
 {
     return doGetCData();
 }

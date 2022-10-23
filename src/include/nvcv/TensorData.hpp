@@ -42,8 +42,7 @@ private:
 
     PixelType doGetPixelType() const override;
 
-    const NVCVTensorData &doGetConstCData() const override;
-    NVCVTensorData       &doGetCData() override;
+    const NVCVTensorData &doGetCData() const override;
 
     void *doGetData() const override;
 
@@ -121,12 +120,7 @@ inline PixelType TensorDataPitchDevice::doGetPixelType() const
     return static_cast<PixelType>(m_data.dtype);
 }
 
-inline const NVCVTensorData &TensorDataPitchDevice::doGetConstCData() const
-{
-    return m_data;
-}
-
-inline NVCVTensorData &TensorDataPitchDevice::doGetCData()
+inline const NVCVTensorData &TensorDataPitchDevice::doGetCData() const
 {
     return m_data;
 }
