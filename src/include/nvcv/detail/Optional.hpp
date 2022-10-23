@@ -19,13 +19,9 @@
 #    include <new> // for std::launder
 #endif
 
+#include "InPlace.hpp"
+
 namespace nv { namespace cv { namespace detail {
-
-struct InPlaceT
-{
-};
-
-constexpr InPlaceT InPlace;
 
 struct NullOptT
 {
