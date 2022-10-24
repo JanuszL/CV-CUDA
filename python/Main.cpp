@@ -18,6 +18,7 @@
 #include "InterpolationType.hpp"
 #include "Operators.hpp"
 #include "PixelType.hpp"
+#include "Rect.hpp"
 #include "Resource.hpp"
 #include "Stream.hpp"
 #include "Tensor.hpp"
@@ -51,6 +52,7 @@ PYBIND11_MODULE(nvcv, m)
 
     ExportImageFormat(m);
     ExportPixelType(m);
+    ExportRect(m);
     Resource::Export(m);
     Container::Export(m);
     Tensor::Export(m);

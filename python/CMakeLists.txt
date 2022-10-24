@@ -55,6 +55,7 @@ pybind11_add_module(nvcv_python MODULE
     Tensor.cpp
     CudaBuffer.cpp
     InterpolationType.cpp
+    Rect.cpp
     OpReformat.cpp
     OpResize.cpp
 )
