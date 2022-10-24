@@ -11,27 +11,18 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_UTIL_DIMS_HPP
-#define NVCV_UTIL_DIMS_HPP
-#include <tuple>
+#ifndef NVCV_DETAIL_CONCEPTS_HPP
+#define NVCV_DETAIL_CONCEPTS_HPP
 
-namespace nv::cv::util {
+#include <iterator>
+#include <type_traits>
 
-struct DimsNCHW
-{
-    int n, c, h, w;
-};
+namespace nv { namespace cv { namespace detail {
 
-inline bool operator==(const DimsNCHW &a, const DimsNCHW &b)
-{
-    return std::tie(a.n, a.c, a.h, a.w) == std::tie(b.n, b.c, b.h, b.w);
-}
+template<class IT>
+using IsRandomAccessIterator = typename std::enable_if<
+    std::is_same<typename std::iterator_traits<IT>::iterator_category, std::random_access_iterator_tag>::value>::type;
 
-inline bool operator!=(const DimsNCHW &a, const DimsNCHW &b)
-{
-    return !(a == b);
-}
+}}} // namespace nv::cv::detail
 
-} // namespace nv::cv::util
-
-#endif // NVCV_UTIL_DIMS_HPP
+#endif // NVCV_DETAIL_CONCEPTS_HPP

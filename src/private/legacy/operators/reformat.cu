@@ -50,12 +50,12 @@ __global__ void transformFormat(const Ptr2DSrc src, Ptr2DDst dst)
 }
 
 template<typename data_type> // uchar float
-void nhwc_to_nchw(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData,
-                  cudaStream_t stream)
+void nhwc_to_nchw(const nvcv::TensorDataAccessPitchImagePlanar &inData,
+                  const nvcv::TensorDataAccessPitchImagePlanar &outData, cudaStream_t stream)
 {
-    const int cols       = inData.dims().w;
-    const int rows       = inData.dims().h;
-    const int batch_size = inData.dims().n;
+    const int cols       = inData.numCols();
+    const int rows       = inData.numRows();
+    const int batch_size = inData.numSamples();
 
     dim3 block(32, 8);
     dim3 grid(divUp(cols, block.x), divUp(rows, block.y), batch_size);
@@ -69,12 +69,12 @@ void nhwc_to_nchw(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITenso
 }
 
 template<typename data_type> // uchar float
-void nchw_to_nhwc(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData,
-                  cudaStream_t stream)
+void nchw_to_nhwc(const nvcv::TensorDataAccessPitchImagePlanar &inData,
+                  const nvcv::TensorDataAccessPitchImagePlanar &outData, cudaStream_t stream)
 {
-    const int cols       = inData.dims().w;
-    const int rows       = inData.dims().h;
-    const int batch_size = inData.dims().n;
+    const int cols       = inData.numCols();
+    const int rows       = inData.numRows();
+    const int batch_size = inData.numSamples();
 
     dim3 block(32, 8);
     dim3 grid(divUp(cols, block.x), divUp(rows, block.y), batch_size);
@@ -109,26 +109,38 @@ ErrorCode Reformat::infer(const nvcv::ITensorDataPitchDevice &inData, const nvcv
     cuda_op::DataFormat input_format  = GetLegacyDataFormat(inData.layout());
     cuda_op::DataFormat output_format = GetLegacyDataFormat(outData.layout());
 
-    if (inData.format() == outData.format())
+    checkDataFormat(input_format);
+    checkDataFormat(output_format);
+
+    auto inAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(inData);
+    NVCV_ASSERT(inAccess);
+
+    auto outAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(outData);
+    NVCV_ASSERT(outAccess);
+
+    if (inData.dtype() == outData.dtype() && inData.shape() == outData.shape())
     {
 #ifdef CUDA_DEBUG_LOG
         printf("input_format == output_format, copy outputs from inputs\n");
 #endif
 
-        for (uint32_t i = 0; i < inData.numImages(); ++i)
+        for (uint32_t i = 0; i < inAccess->numSamples(); ++i)
         {
-            for (uint32_t p = 0; p < inData.numPlanes(); ++p)
+            void *inSampData  = inAccess->sampleData(i);
+            void *outSampData = outAccess->sampleData(i);
+
+            for (uint32_t p = 0; p < inAccess->numPlanes(); ++p)
             {
-                checkCudaErrors(cudaMemcpy2DAsync(outData.imgPlaneBuffer(i, p), outData.rowPitchBytes(),
-                                                  inData.imgPlaneBuffer(i, p), inData.rowPitchBytes(),
-                                                  inData.dims().w * inData.colPitchBytes(), inData.dims().h,
+                checkCudaErrors(cudaMemcpy2DAsync(outAccess->planeData(p, outSampData), outAccess->rowPitchBytes(),
+                                                  inAccess->planeData(p, inSampData), inAccess->rowPitchBytes(),
+                                                  inAccess->numCols() * inAccess->colPitchBytes(), inAccess->numRows(),
                                                   cudaMemcpyDeviceToDevice, stream));
             }
         }
         return SUCCESS;
     }
 
-    cuda_op::DataType data_type = GetLegacyDataType(inData.format());
+    cuda_op::DataType data_type = GetLegacyDataType(inData.dtype());
 
     if (!(data_type == kCV_8U || data_type == kCV_8S || data_type == kCV_16U || data_type == kCV_16S
           || data_type == kCV_32S || data_type == kCV_32F || data_type == kCV_64F))
@@ -137,11 +149,8 @@ ErrorCode Reformat::infer(const nvcv::ITensorDataPitchDevice &inData, const nvcv
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    typedef void (*transform_t)(const nvcv::ITensorDataPitchDevice &input, const nvcv::ITensorDataPitchDevice &output,
-                                cudaStream_t stream);
-
-    checkDataFormat(input_format);
-    checkDataFormat(output_format);
+    typedef void (*transform_t)(const nvcv::TensorDataAccessPitchImagePlanar &input,
+                                const nvcv::TensorDataAccessPitchImagePlanar &output, cudaStream_t stream);
 
     if ((input_format == kNHWC || input_format == kHWC) && (output_format == kNCHW || output_format == kCHW))
     {
@@ -150,7 +159,7 @@ ErrorCode Reformat::infer(const nvcv::ITensorDataPitchDevice &inData, const nvcv
                nhwc_to_nchw<int>,   nhwc_to_nchw<float>, nhwc_to_nchw<double>};
 
         transform_t func = funcs[data_type];
-        func(inData, outData, stream);
+        func(*inAccess, *outAccess, stream);
         return SUCCESS;
     }
 
@@ -160,7 +169,7 @@ ErrorCode Reformat::infer(const nvcv::ITensorDataPitchDevice &inData, const nvcv
             = {nchw_to_nhwc<uchar>, nchw_to_nhwc<schar>, nchw_to_nhwc<ushort>, nchw_to_nhwc<short>,
                nchw_to_nhwc<int>,   nchw_to_nhwc<float>, nchw_to_nhwc<double>};
         transform_t func = funcs[data_type];
-        func(inData, outData, stream);
+        func(*inAccess, *outAccess, stream);
         return SUCCESS;
     }
 

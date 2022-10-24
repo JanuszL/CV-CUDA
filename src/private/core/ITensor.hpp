@@ -14,7 +14,6 @@
 #ifndef NVCV_PRIV_ITENSOR_HPP
 #define NVCV_PRIV_ITENSOR_HPP
 
-#include "Dims.hpp"
 #include "ICoreObject.hpp"
 
 #include <fmt/ImageFormat.hpp>
@@ -27,12 +26,12 @@ class IAllocator;
 class ITensor : public ICoreObjectHandle<ITensor, NVCVTensorHandle>
 {
 public:
-    virtual const Shape &shape() const = 0;
+    virtual int32_t        ndim() const  = 0;
+    virtual const int64_t *shape() const = 0;
 
-    virtual NVCVTensorLayout layout() const = 0;
-    virtual DimsNCHW         dims() const   = 0;
+    virtual const NVCVTensorLayout &layout() const = 0;
 
-    virtual ImageFormat format() const = 0;
+    virtual PixelType dtype() const = 0;
 
     virtual IAllocator &alloc() const = 0;
 

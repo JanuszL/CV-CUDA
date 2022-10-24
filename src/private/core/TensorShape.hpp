@@ -11,25 +11,17 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "Dims.hpp"
+#ifndef NVCV_PRIV_TENSORSHAPE_HPP
+#define NVCV_PRIV_TENSORSHAPE_HPP
 
-#include <util/Assert.h>
+#include <nvcv/TensorLayout.h>
+#include <util/StaticVector.hpp>
 
 namespace nv::cv::priv {
 
-DimsNCHW ToNCHW(const Shape &s, NVCVTensorLayout layout)
-{
-    switch (layout)
-    {
-    case NVCV_TENSOR_NCHW:
-        return {s[0], s[1], s[2], s[3]};
+void PermuteShape(const NVCVTensorLayout &srcLayout, const int64_t *srcShape, const NVCVTensorLayout &dstLayout,
+                  int64_t *dstShape);
 
-    case NVCV_TENSOR_NHWC:
-        return {s[0], s[3], s[1], s[2]};
-    }
-
-    NVCV_ASSERT(!"Invalid layout");
-    return {};
 }
 
-} // namespace nv::cv::priv
+#endif // NVCV_PRIV_TENSORSHAPE_HPP

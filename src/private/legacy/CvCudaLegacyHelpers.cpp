@@ -13,7 +13,9 @@
 
 #include "CvCudaLegacyHelpers.hpp"
 
+#include <nvcv/PixelType.hpp>
 #include <private/core/Exception.hpp>
+#include <private/fmt/PixelType.hpp>
 #include <private/legacy/CvCudaLegacy.h>
 
 #include <iostream>
@@ -94,52 +96,44 @@ cuda_op::DataType GetLegacyDataType(int32_t bpc, cv::DataType type)
     throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Only planar formats supported ");
 }
 
-cuda_op::DataType GetLegacyDataType(priv::ImageFormat fmt)
+cuda_op::DataType GetLegacyDataType(PixelType dtype_)
 {
-    std::array<int, 4> bpc = fmt.bpc();
-    for (int i = 1; i < fmt.numChannels(); ++i)
+    priv::PixelType dtype{dtype_}; // to avoid using public API
+
+    if (dtype.numChannels() > 1)
     {
-        if (bpc[i] != bpc[0])
-        {
-            throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT,
-                                  "Channels in image format must have the same number of bits");
-        }
+        throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Data type must have only one channel");
     }
 
-    return GetLegacyDataType(bpc[0], (cv::DataType)fmt.dataType());
+    return GetLegacyDataType(dtype.bpc()[0], (cv::DataType)dtype.dataType());
 }
 
-cuda_op::DataFormat GetLegacyDataFormat(priv::ImageFormat fmt, int32_t numberInBatch)
+cuda_op::DataShape GetLegacyDataShape(const TensorShapeInfoImage &shapeInfo)
 {
-    return GetLegacyDataFormat(fmt.numChannels(), fmt.numPlanes(), numberInBatch);
+    return cuda_op::DataShape(shapeInfo.numSamples(), shapeInfo.numChannels(), shapeInfo.numRows(),
+                              shapeInfo.numCols());
 }
 
-cuda_op::DataType GetLegacyDataType(ImageFormat fmt)
+cuda_op::DataFormat GetLegacyDataFormat(const TensorLayout &layout)
 {
-    return GetLegacyDataType(priv::ImageFormat{fmt.cvalue()});
-}
-
-cuda_op::DataFormat GetLegacyDataFormat(ImageFormat fmt, int32_t numberInBatch)
-{
-    return GetLegacyDataFormat(priv::ImageFormat(fmt.cvalue()), numberInBatch);
-}
-
-cuda_op::DataShape GetLegacyDataShape(DimsNCHW dims)
-{
-    return cuda_op::DataShape(dims.n, dims.c, dims.h, dims.w);
-}
-
-cuda_op::DataFormat GetLegacyDataFormat(TensorLayout layout)
-{
-    switch (layout)
+    if (layout == TensorLayout::NCHW)
     {
-    case TensorLayout::NCHW:
         return legacy::cuda_op::DataFormat::kNCHW;
-
-    case TensorLayout::NHWC:
+    }
+    else if (layout == TensorLayout::CHW)
+    {
+        return legacy::cuda_op::DataFormat::kCHW;
+    }
+    else if (layout == TensorLayout::NHWC)
+    {
         return legacy::cuda_op::DataFormat::kNHWC;
-
-    default:
+    }
+    else if (layout == TensorLayout::HWC)
+    {
+        return legacy::cuda_op::DataFormat::kHWC;
+    }
+    else
+    {
         throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Tensor layout not supported");
     }
 }

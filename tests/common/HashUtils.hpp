@@ -11,20 +11,19 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_PRIV_TENSORDATA_HPP
-#define NVCV_PRIV_TENSORDATA_HPP
+#ifndef NVCV_TESTS_COMMON_HASHUTILS_HPP
+#define NVCV_TESTS_COMMON_HASHUTILS_HPP
 
-#include "Size.hpp"
+#include <nvcv/TensorShape.hpp>
+#include <util/HashMD5.hpp>
 
-#include <fmt/ImageFormat.hpp>
-#include <nvcv/TensorData.h>
+namespace nv::cv {
 
-namespace nv::cv::priv {
+inline void Update(util::HashMD5 &hash, const TensorShape &ts)
+{
+    Update(hash, ts.shape(), ts.layout());
+}
 
-NVCVTensorLayout GetTensorLayoutFor(ImageFormat fmt, int nbatches);
+} // namespace nv::cv
 
-void ValidateImageFormatForTensor(ImageFormat fmt);
-
-} // namespace nv::cv::priv
-
-#endif // NVCV_PRIV_TENSORDATA_HPP
+#endif // NVCV_TESTS_COMMON_HASHUTILS_HPP

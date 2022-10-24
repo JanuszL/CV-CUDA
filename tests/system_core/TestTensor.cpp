@@ -13,8 +13,10 @@
 
 #include "Definitions.hpp"
 
+#include <common/HashUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <nvcv/Tensor.hpp>
+#include <nvcv/TensorDataAccess.hpp>
 
 #include <list>
 #include <random>
@@ -24,18 +26,19 @@ namespace t    = ::testing;
 namespace test = nv::cv::test;
 
 class TensorTests
-    : public t::TestWithParam<std::tuple<test::Param<"numImages", int>, test::Param<"width", int>,
-                                         test::Param<"height", int>, test::Param<"format", nvcv::ImageFormat>,
-                                         test::Param<"layout", nvcv::TensorLayout>, test::Param<"shape", nvcv::Shape>>>
+    : public t::TestWithParam<
+          std::tuple<test::Param<"numImages", int>, test::Param<"width", int>, test::Param<"height", int>,
+                     test::Param<"format", nvcv::ImageFormat>, test::Param<"shape", nvcv::TensorShape>,
+                     test::Param<"dtype", nvcv::PixelType>>>
 {
 };
 
 // clang-format off
 NVCV_INSTANTIATE_TEST_SUITE_P(_, TensorTests,
-    test::ValueList<int, int, int, nvcv::ImageFormat, nvcv::TensorLayout, nvcv::Shape>
+    test::ValueList<int, int, int, nvcv::ImageFormat, nvcv::TensorShape, nvcv::PixelType>
     {
-        {53, 32, 16, nvcv::FMT_RGBA8p, nvcv::TensorLayout::NCHW, nvcv::Shape{53, 4, 16, 32}},
-        {14, 64, 18, nvcv::FMT_RGB8, nvcv::TensorLayout::NHWC, nvcv::Shape{14, 18, 64, 3}}
+        {53, 32, 16, nvcv::FMT_RGBA8p, nvcv::TensorShape{{53, 4, 16, 32},nvcv::TensorLayout::NCHW} , nvcv::TYPE_U8},
+        {14, 64, 18, nvcv::FMT_RGB8, nvcv::TensorShape{{14, 18, 64, 3},nvcv::TensorLayout::NHWC}, nvcv::TYPE_U8}
     }
 );
 
@@ -43,23 +46,20 @@ NVCV_INSTANTIATE_TEST_SUITE_P(_, TensorTests,
 
 TEST_P(TensorTests, wip_create)
 {
-    const int                PARAM_NUM_IMAGES = std::get<0>(GetParam());
-    const int                PARAM_WIDTH      = std::get<1>(GetParam());
-    const int                PARAM_HEIGHT     = std::get<2>(GetParam());
-    const nvcv::ImageFormat  PARAM_FORMAT     = std::get<3>(GetParam());
-    const nvcv::TensorLayout GOLD_LAYOUT      = std::get<4>(GetParam());
-    const nvcv::Shape        GOLD_SHAPE       = std::get<5>(GetParam());
-    const nvcv::DimsNCHW     GOLD_DIMS
-        = nvcv::DimsNCHW{PARAM_NUM_IMAGES, PARAM_FORMAT.numChannels(), PARAM_HEIGHT, PARAM_WIDTH};
-    const int GOLD_NDIMS = 4;
+    const int               PARAM_NUM_IMAGES = std::get<0>(GetParam());
+    const int               PARAM_WIDTH      = std::get<1>(GetParam());
+    const int               PARAM_HEIGHT     = std::get<2>(GetParam());
+    const nvcv::ImageFormat PARAM_FORMAT     = std::get<3>(GetParam());
+    const nvcv::TensorShape GOLD_SHAPE       = std::get<4>(GetParam());
+    const nvcv::PixelType   GOLD_DTYPE       = std::get<5>(GetParam());
+    const int               GOLD_NDIM        = 4;
 
     nvcv::Tensor tensor(PARAM_NUM_IMAGES, {PARAM_WIDTH, PARAM_HEIGHT}, PARAM_FORMAT);
 
-    EXPECT_EQ(PARAM_FORMAT, tensor.format());
-    EXPECT_EQ(GOLD_DIMS, tensor.dims());
+    EXPECT_EQ(GOLD_DTYPE, tensor.dtype());
     EXPECT_EQ(GOLD_SHAPE, tensor.shape());
-    EXPECT_EQ(GOLD_NDIMS, tensor.ndims());
-    EXPECT_EQ(GOLD_LAYOUT, tensor.layout());
+    EXPECT_EQ(GOLD_NDIM, tensor.ndim());
+    EXPECT_EQ(GOLD_SHAPE.layout(), tensor.layout());
     ASSERT_NE(nullptr, tensor.handle());
 
     EXPECT_NE(nullptr, dynamic_cast<nvcv::AllocatorWrapHandle *>(&tensor.alloc()));
@@ -68,48 +68,52 @@ TEST_P(TensorTests, wip_create)
         const nvcv::ITensorData *data = tensor.exportData();
         ASSERT_NE(nullptr, data);
 
-        ASSERT_EQ(tensor.format(), data->format());
+        ASSERT_EQ(tensor.dtype(), data->dtype());
 
         auto *devdata = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(data);
         ASSERT_NE(nullptr, devdata);
 
-        EXPECT_EQ(GOLD_NDIMS, devdata->ndims());
-        ASSERT_EQ(GOLD_DIMS, devdata->dims());
+        EXPECT_EQ(GOLD_NDIM, devdata->ndim());
         ASSERT_EQ(GOLD_SHAPE, devdata->shape());
-        ASSERT_EQ(GOLD_LAYOUT, devdata->layout());
-        ASSERT_EQ(PARAM_FORMAT, devdata->format());
+        ASSERT_EQ(GOLD_SHAPE.layout(), devdata->layout());
+        ASSERT_EQ(GOLD_DTYPE, devdata->dtype());
 
-        EXPECT_EQ(devdata->imgPitchBytes(), devdata->pitchBytes(0));
-        EXPECT_EQ(devdata->planePitchBytes(), devdata->pitchBytes(1));
-        EXPECT_EQ(devdata->numImages(), devdata->shape(0));
+        auto access = nvcv::TensorDataAccessPitchImagePlanar::Create(*devdata);
+        ASSERT_TRUE(access);
+
+        EXPECT_EQ(access->samplePitchBytes(), devdata->pitchBytes(0));
+        EXPECT_EQ(access->planePitchBytes(), access->infoLayout().isChannelFirst() ? devdata->pitchBytes(1) : 0);
+        EXPECT_EQ(access->numSamples(), devdata->shape(0));
 
         // Write data to each plane
-        for (int i = 0; i < devdata->numImages(); ++i)
+        for (int i = 0; i < access->numSamples(); ++i)
         {
-            for (int p = 0; p < devdata->numPlanes(); ++p)
+            void *sampleBuffer = access->sampleData(i);
+            for (int p = 0; p < access->numPlanes(); ++p)
             {
-                void *planeBuffer = devdata->imgPlaneBuffer(i, p);
+                void *planeBuffer = access->planeData(p, sampleBuffer);
 
-                ASSERT_EQ(cudaSuccess, cudaMemset2D(planeBuffer, devdata->rowPitchBytes(), i * 3 + p * 7,
-                                                    devdata->dims().w * devdata->colPitchBytes(), devdata->dims().h))
+                ASSERT_EQ(cudaSuccess, cudaMemset2D(planeBuffer, access->rowPitchBytes(), i * 3 + p * 7,
+                                                    access->numCols() * access->colPitchBytes(), access->numRows()))
                     << "Image #" << i << ", plane #" << p;
             }
         }
 
         // Check if no overwrites
-        for (int i = 0; i < devdata->numImages(); ++i)
+        for (int i = 0; i < access->numSamples(); ++i)
         {
-            for (int p = 1; p < devdata->numPlanes(); ++p)
+            void *sampleBuffer = access->sampleData(i);
+            for (int p = 1; p < access->numPlanes(); ++p)
             {
-                void *planeBuffer = devdata->imgPlaneBuffer(i, p);
+                void *planeBuffer = access->planeData(p, sampleBuffer);
 
                 // enough for one plane
-                std::vector<uint8_t> buf(devdata->dims().w * devdata->colPitchBytes() * devdata->dims().h);
+                std::vector<uint8_t> buf(access->numCols() * access->colPitchBytes() * access->numRows());
 
                 ASSERT_EQ(cudaSuccess,
-                          cudaMemcpy2D(&buf[0], devdata->dims().w * devdata->colPitchBytes(), planeBuffer,
-                                       devdata->rowPitchBytes(), devdata->dims().w * devdata->colPitchBytes(),
-                                       devdata->dims().h, cudaMemcpyDeviceToHost))
+                          cudaMemcpy2D(&buf[0], access->numCols() * access->colPitchBytes(), planeBuffer,
+                                       access->rowPitchBytes(), access->numCols() * access->colPitchBytes(),
+                                       access->numRows(), cudaMemcpyDeviceToHost))
                     << "Image #" << i << ", plane #" << p;
 
                 ASSERT_TRUE(
@@ -125,33 +129,45 @@ TEST(TensorWrapData, wip_create)
     nvcv::ImageFormat fmt
         = nvcv::ImageFormat(nvcv::ColorModel::RGB, nvcv::CSPEC_BT601_ER, nvcv::MemLayout::PL, nvcv::DataType::FLOAT,
                             nvcv::Swizzle::S_XY00, nvcv::Packing::X16, nvcv::Packing::X16);
+    nvcv::PixelType GOLD_DTYPE = fmt.planePixelType(0);
 
-    nvcv::TensorDataPitchDevice buf(fmt, 5, {173, 79}, reinterpret_cast<void *>(678));
+    nvcv::Tensor::Requirements reqs = nvcv::Tensor::CalcRequirements(5, {173, 79}, fmt);
 
-    EXPECT_EQ(nvcv::TensorLayout::NCHW, buf.layout());
-    EXPECT_EQ(5, buf.dims().n);
-    EXPECT_EQ(173, buf.dims().w);
-    EXPECT_EQ(79, buf.dims().h);
-    EXPECT_EQ(2, buf.dims().c);
+    nvcv::TensorDataPitchDevice::Buffer buf;
+    std::copy(reqs.pitchBytes, reqs.pitchBytes + NVCV_TENSOR_MAX_NDIM, buf.pitchBytes);
+    // dummy value, just to check if memory won't be accessed internally. If it does,
+    // it'll segfault.
+    buf.data = reinterpret_cast<void *>(678);
 
-    EXPECT_EQ(5, buf.shape()[0]);
-    EXPECT_EQ(173, buf.shape()[3]);
-    EXPECT_EQ(79, buf.shape()[2]);
-    EXPECT_EQ(2, buf.shape()[1]);
-    EXPECT_EQ(reinterpret_cast<void *>(678), buf.mem());
-    EXPECT_EQ(4, buf.ndims());
+    nvcv::TensorDataPitchDevice tdata(nvcv::TensorShape{reqs.shape, reqs.ndim, reqs.layout},
+                                      nvcv::PixelType{reqs.dtype}, buf);
 
-    nvcv::TensorWrapData tensor{buf};
+    auto access = nvcv::TensorDataAccessPitchImagePlanar::Create(tdata);
+    ASSERT_TRUE(access);
+
+    EXPECT_EQ(nvcv::TensorLayout::NCHW, tdata.layout());
+    EXPECT_EQ(5, access->numSamples());
+    EXPECT_EQ(173, access->numCols());
+    EXPECT_EQ(79, access->numRows());
+    EXPECT_EQ(2, access->numChannels());
+
+    EXPECT_EQ(5, tdata.shape()[0]);
+    EXPECT_EQ(173, tdata.shape()[3]);
+    EXPECT_EQ(79, tdata.shape()[2]);
+    EXPECT_EQ(2, tdata.shape()[1]);
+    EXPECT_EQ(reinterpret_cast<void *>(678), tdata.data());
+    EXPECT_EQ(4, tdata.ndim());
+
+    nvcv::TensorWrapData tensor{tdata};
 
     ASSERT_NE(nullptr, tensor.handle());
 
     EXPECT_NE(nullptr, dynamic_cast<nvcv::AllocatorWrapHandle *>(&tensor.alloc()));
 
-    EXPECT_EQ(buf.dims(), tensor.dims());
-    EXPECT_EQ(buf.shape(), tensor.shape());
-    EXPECT_EQ(buf.layout(), tensor.layout());
-    EXPECT_EQ(buf.ndims(), tensor.ndims());
-    EXPECT_EQ(fmt, tensor.format());
+    EXPECT_EQ(tdata.shape(), tensor.shape());
+    EXPECT_EQ(tdata.layout(), tensor.layout());
+    EXPECT_EQ(tdata.ndim(), tensor.ndim());
+    EXPECT_EQ(GOLD_DTYPE, tensor.dtype());
 
     const nvcv::ITensorData *data = tensor.exportData();
     ASSERT_NE(nullptr, data);
@@ -159,21 +175,25 @@ TEST(TensorWrapData, wip_create)
     auto *devdata = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(data);
     ASSERT_NE(nullptr, devdata);
 
-    EXPECT_EQ(buf.format(), devdata->format());
-    EXPECT_EQ(buf.dims(), devdata->dims());
-    EXPECT_EQ(buf.shape(), devdata->shape());
-    EXPECT_EQ(buf.ndims(), devdata->ndims());
+    auto accessRef = nvcv::TensorDataAccessPitchImagePlanar::Create(*devdata);
+    ASSERT_TRUE(access);
 
-    EXPECT_EQ(buf.mem(), devdata->mem());
+    EXPECT_EQ(tdata.dtype(), devdata->dtype());
+    EXPECT_EQ(tdata.shape(), devdata->shape());
+    EXPECT_EQ(tdata.ndim(), devdata->ndim());
 
-    auto *mem = reinterpret_cast<std::byte *>(buf.mem());
+    EXPECT_EQ(tdata.data(), devdata->data());
 
-    EXPECT_LE(mem + buf.imgPitchBytes() * 4, devdata->imgBuffer(4));
-    EXPECT_LE(mem + buf.imgPitchBytes() * 3, devdata->imgBuffer(3));
+    auto *mem = reinterpret_cast<std::byte *>(tdata.data());
 
-    EXPECT_LE(mem + buf.imgPitchBytes() * 4, devdata->imgPlaneBuffer(4, 0));
-    EXPECT_LE(mem + buf.imgPitchBytes() * 4 + buf.planePitchBytes() * 1, devdata->imgPlaneBuffer(4, 1));
+    EXPECT_LE(mem + access->samplePitchBytes() * 4, accessRef->sampleData(4));
+    EXPECT_LE(mem + access->samplePitchBytes() * 3, accessRef->sampleData(3));
 
-    EXPECT_LE(mem + buf.imgPitchBytes() * 3, devdata->imgPlaneBuffer(3, 0));
-    EXPECT_LE(mem + buf.imgPitchBytes() * 3 + buf.planePitchBytes() * 1, devdata->imgPlaneBuffer(3, 1));
+    EXPECT_LE(mem + access->samplePitchBytes() * 4, accessRef->sampleData(4, accessRef->planeData(0)));
+    EXPECT_LE(mem + access->samplePitchBytes() * 4 + access->planePitchBytes() * 1,
+              accessRef->sampleData(4, accessRef->planeData(1)));
+
+    EXPECT_LE(mem + access->samplePitchBytes() * 3, accessRef->sampleData(3, accessRef->planeData(0)));
+    EXPECT_LE(mem + access->samplePitchBytes() * 3 + access->planePitchBytes() * 1,
+              accessRef->sampleData(3, accessRef->planeData(1)));
 }

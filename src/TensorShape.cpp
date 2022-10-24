@@ -11,20 +11,17 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_PRIV_TENSORDATA_HPP
-#define NVCV_PRIV_TENSORDATA_HPP
-
-#include "Size.hpp"
-
-#include <fmt/ImageFormat.hpp>
 #include <nvcv/TensorData.h>
+#include <nvcv/TensorData.hpp>
+#include <nvcv/TensorShapeInfo.hpp>
+#include <private/core/Status.hpp>
+#include <private/core/SymbolVersioning.hpp>
+#include <private/core/TensorShape.hpp>
 
-namespace nv::cv::priv {
+namespace priv = nv::cv::priv;
 
-NVCVTensorLayout GetTensorLayoutFor(ImageFormat fmt, int nbatches);
-
-void ValidateImageFormatForTensor(ImageFormat fmt);
-
-} // namespace nv::cv::priv
-
-#endif // NVCV_PRIV_TENSORDATA_HPP
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorShapePermute,
+                (NVCVTensorLayout srcLayout, const int64_t *srcShape, NVCVTensorLayout dstLayout, int64_t *dstShape))
+{
+    return priv::ProtectCall([&] { priv::PermuteShape(srcLayout, srcShape, dstLayout, dstShape); });
+}

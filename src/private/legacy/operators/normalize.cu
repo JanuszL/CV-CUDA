@@ -27,6 +27,7 @@
 
 using namespace nv::cv::legacy::cuda_op;
 using namespace nv::cv::legacy::helpers;
+namespace nvcv = nv::cv;
 
 // (float3 - float3) * float3 / (float3 - float) * float3 / (float3 - float3) * float / (float3 - float) * float
 template<typename input_type, typename base_type, typename scale_type>
@@ -90,8 +91,9 @@ __global__ void normalizeInvStdDevKernel(const input_type src, const base_type b
 
 template<typename base_type, typename scale_type, typename PtrInput, typename PtrOutput>
 void normalizeWrap(PtrInput src_ptr, PtrOutput dst_ptr, DataShape input_shape,
-                   const nv::cv::ITensorDataPitchDevice &baseData, const nv::cv::ITensorDataPitchDevice &scaleData,
-                   float global_scale, float shift, cudaStream_t stream)
+                   const nvcv::TensorDataAccessPitchImagePlanar &baseData,
+                   const nvcv::TensorDataAccessPitchImagePlanar &scaleData, float global_scale, float shift,
+                   cudaStream_t stream)
 {
     dim3 block(32, 8);
     dim3 grid(divUp(input_shape.W, block.x), divUp(input_shape.H, block.y), input_shape.N);
@@ -105,8 +107,8 @@ void normalizeWrap(PtrInput src_ptr, PtrOutput dst_ptr, DataShape input_shape,
 
 template<typename base_type, typename scale_type, typename PtrInput, typename PtrOutput>
 void normalizeInvStdDevWrap(PtrInput src_ptr, PtrOutput dst_ptr, DataShape input_shape,
-                            const nv::cv::ITensorDataPitchDevice &baseData,
-                            const nv::cv::ITensorDataPitchDevice &scaleData, float global_scale, float shift,
+                            const nvcv::TensorDataAccessPitchImagePlanar &baseData,
+                            const nvcv::TensorDataAccessPitchImagePlanar &scaleData, float global_scale, float shift,
                             float epsilon, cudaStream_t stream)
 {
     dim3 block(32, 8);
@@ -121,32 +123,34 @@ void normalizeInvStdDevWrap(PtrInput src_ptr, PtrOutput dst_ptr, DataShape input
 }
 
 template<typename input_type>
-void normalize(const nv::cv::ITensorDataPitchDevice &inData, const nv::cv::ITensorDataPitchDevice &baseData,
-               const nv::cv::ITensorDataPitchDevice &scaleData, const nv::cv::ITensorDataPitchDevice &outData,
-               float global_scale, float shift, cudaStream_t stream)
+void normalize(const nvcv::TensorDataAccessPitchImagePlanar &inData,
+               const nvcv::TensorDataAccessPitchImagePlanar &baseData,
+               const nvcv::TensorDataAccessPitchImagePlanar &scaleData,
+               const nvcv::TensorDataAccessPitchImagePlanar &outData, float global_scale, float shift,
+               cudaStream_t stream)
 {
     Ptr2dNHWC<input_type> src_ptr(inData);
     Ptr2dNHWC<input_type> dst_ptr(outData);
 
-    DataShape input_shape = GetLegacyDataShape(inData.dims());
+    DataShape input_shape = GetLegacyDataShape(inData.infoShape());
 
     using work_type = nv::cv::cuda::ConvertBaseTypeTo<float, input_type>;
 
-    if (baseData.dims().c != 1 && scaleData.dims().c != 1)
+    if (baseData.numChannels() != 1 && scaleData.numChannels() != 1)
     {
         using base_type  = work_type;
         using scale_type = work_type;
         normalizeWrap<base_type, scale_type>(src_ptr, dst_ptr, input_shape, baseData, scaleData, global_scale, shift,
                                              stream);
     }
-    else if (baseData.dims().c != 1)
+    else if (baseData.numChannels() != 1)
     {
         using base_type  = work_type;
         using scale_type = float;
         normalizeWrap<base_type, scale_type>(src_ptr, dst_ptr, input_shape, baseData, scaleData, global_scale, shift,
                                              stream);
     }
-    else if (scaleData.dims().c != 1)
+    else if (scaleData.numChannels() != 1)
     {
         using base_type  = float;
         using scale_type = work_type;
@@ -163,32 +167,34 @@ void normalize(const nv::cv::ITensorDataPitchDevice &inData, const nv::cv::ITens
 }
 
 template<typename input_type>
-void normalizeInvStdDev(const nv::cv::ITensorDataPitchDevice &inData, const nv::cv::ITensorDataPitchDevice &baseData,
-                        const nv::cv::ITensorDataPitchDevice &scaleData, const nv::cv::ITensorDataPitchDevice &outData,
-                        float global_scale, float shift, float epsilon, cudaStream_t stream)
+void normalizeInvStdDev(const nvcv::TensorDataAccessPitchImagePlanar &inData,
+                        const nvcv::TensorDataAccessPitchImagePlanar &baseData,
+                        const nvcv::TensorDataAccessPitchImagePlanar &scaleData,
+                        const nvcv::TensorDataAccessPitchImagePlanar &outData, float global_scale, float shift,
+                        float epsilon, cudaStream_t stream)
 {
     Ptr2dNHWC<input_type> src_ptr(inData);
     Ptr2dNHWC<input_type> dst_ptr(outData);
 
-    DataShape input_shape = GetLegacyDataShape(inData.dims());
+    DataShape input_shape = GetLegacyDataShape(inData.infoShape());
 
     using work_type = nv::cv::cuda::ConvertBaseTypeTo<float, input_type>;
 
-    if (baseData.dims().c != 1 && scaleData.dims().c != 1)
+    if (baseData.numChannels() != 1 && scaleData.numChannels() != 1)
     {
         using base_type  = work_type;
         using scale_type = work_type;
         normalizeInvStdDevWrap<base_type, scale_type>(src_ptr, dst_ptr, input_shape, baseData, scaleData, global_scale,
                                                       shift, epsilon, stream);
     }
-    else if (baseData.dims().c != 1)
+    else if (baseData.numChannels() != 1)
     {
         using base_type  = work_type;
         using scale_type = float;
         normalizeInvStdDevWrap<base_type, scale_type>(src_ptr, dst_ptr, input_shape, baseData, scaleData, global_scale,
                                                       shift, epsilon, stream);
     }
-    else if (scaleData.dims().c != 1)
+    else if (scaleData.numChannels() != 1)
     {
         using base_type  = float;
         using scale_type = work_type;
@@ -224,19 +230,48 @@ ErrorCode Normalize::infer(const nv::cv::ITensorDataPitchDevice &inData, const n
                            const nv::cv::ITensorDataPitchDevice &outData, const float global_scale, const float shift,
                            const float epsilon, const uint32_t flags, cudaStream_t stream)
 {
-    DataFormat format            = GetLegacyDataFormat(inData.layout());
-    DataType   data_type         = GetLegacyDataType(inData.format());
-    DataShape  input_shape       = GetLegacyDataShape(inData.dims());
-    DataShape  base_param_shape  = GetLegacyDataShape(baseData.dims());
-    DataShape  scale_param_shape = GetLegacyDataShape(scaleData.dims());
-
-    int channels = input_shape.C;
+    DataFormat format = GetLegacyDataFormat(inData.layout());
 
     if (!(format == kNHWC || format == kHWC))
     {
         printf("Invalid DataFormat %d\n", format);
         return ErrorCode::INVALID_DATA_FORMAT;
     }
+
+    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    if (!inAccess)
+    {
+        printf("Invalid DataFormat(in) %d\n", format);
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    auto baseAccess = TensorDataAccessPitchImagePlanar::Create(baseData);
+    if (!baseAccess)
+    {
+        printf("Invalid DataFormat(base) %d\n", format);
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    auto scaleAccess = TensorDataAccessPitchImagePlanar::Create(scaleData);
+    if (!scaleAccess)
+    {
+        printf("Invalid DataFormat(scale) %d\n", format);
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    if (!outAccess)
+    {
+        printf("Invalid DataFormat(out) %d\n", format);
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    DataType  data_type         = GetLegacyDataType(inData.dtype());
+    DataShape input_shape       = GetLegacyDataShape(inAccess->infoShape());
+    DataShape base_param_shape  = GetLegacyDataShape(baseAccess->infoShape());
+    DataShape scale_param_shape = GetLegacyDataShape(scaleAccess->infoShape());
+
+    int channels = input_shape.C;
 
     if (channels > 4)
     {
@@ -255,13 +290,13 @@ ErrorCode Normalize::infer(const nv::cv::ITensorDataPitchDevice &inData, const n
     checkParamShape(input_shape, scale_param_shape);
 
     typedef void (*normalize_t)(
-        const nv::cv::ITensorDataPitchDevice &inData, const nv::cv::ITensorDataPitchDevice &baseData,
-        const nv::cv::ITensorDataPitchDevice &scaleData, const nv::cv::ITensorDataPitchDevice &outData,
+        const TensorDataAccessPitchImagePlanar &inData, const TensorDataAccessPitchImagePlanar &baseData,
+        const TensorDataAccessPitchImagePlanar &scaleData, const TensorDataAccessPitchImagePlanar &outData,
         float global_scale, float shift, cudaStream_t stream);
 
     typedef void (*normalizeInvStdDev_t)(
-        const nv::cv::ITensorDataPitchDevice &inData, const nv::cv::ITensorDataPitchDevice &baseData,
-        const nv::cv::ITensorDataPitchDevice &scaleData, const nv::cv::ITensorDataPitchDevice &outData,
+        const TensorDataAccessPitchImagePlanar &inData, const TensorDataAccessPitchImagePlanar &baseData,
+        const TensorDataAccessPitchImagePlanar &scaleData, const TensorDataAccessPitchImagePlanar &outData,
         float global_scale, float shift, float epsilon, cudaStream_t stream);
 
     static const normalize_t funcs_normalize[6][4] = {
@@ -289,12 +324,13 @@ ErrorCode Normalize::infer(const nv::cv::ITensorDataPitchDevice &inData, const n
 
     if (flags & NVCV_OP_NORMALIZE_SCALE_IS_STDDEV)
     {
-        funcs_normalize_stddev[data_type][channels - 1](inData, baseData, scaleData, outData, global_scale, shift,
-                                                        epsilon, stream);
+        funcs_normalize_stddev[data_type][channels - 1](*inAccess, *baseAccess, *scaleAccess, *outAccess, global_scale,
+                                                        shift, epsilon, stream);
     }
     else
     {
-        funcs_normalize[data_type][channels - 1](inData, baseData, scaleData, outData, global_scale, shift, stream);
+        funcs_normalize[data_type][channels - 1](*inAccess, *baseAccess, *scaleAccess, *outAccess, global_scale, shift,
+                                                 stream);
     }
 
     return SUCCESS;

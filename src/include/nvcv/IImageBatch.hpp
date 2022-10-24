@@ -14,7 +14,6 @@
 #ifndef NVCV_IIMAGEBATCH_HPP
 #define NVCV_IIMAGEBATCH_HPP
 
-#include "Dims.hpp"
 #include "IImageBatchData.hpp"
 #include "Image.hpp"
 #include "ImageBatch.h"

@@ -38,7 +38,7 @@ extern "C"
 typedef struct NVCVTensorStorageRec
 {
     /** Instance storage */
-    alignas(8) uint8_t storage[1024];
+    alignas(8) uint8_t storage[1024 + 64];
 } NVCVTensorStorage;
 
 typedef struct NVCVTensor *NVCVTensorHandle;
@@ -49,16 +49,20 @@ typedef void (*NVCVTensorDataCleanupFunc)(void *ctx, const NVCVTensorData *data)
 /** Stores the requirements of an varshape tensor. */
 typedef struct NVCVTensorRequirementsRec
 {
+    /*< Type of each element */
+    NVCVPixelType dtype;
+
+    /*< Tensor layout. */
     NVCVTensorLayout layout;
 
+    /*< Number of dimensions */
+    int32_t ndim;
+
     /*< Shape of the tensor */
-    int32_t shape[NVCV_TENSOR_MAX_NDIMS];
+    int64_t shape[NVCV_TENSOR_MAX_NDIM];
 
     /*< Distance in bytes between each element of a given dimension. */
-    int64_t pitchBytes[NVCV_TENSOR_MAX_NDIMS];
-
-    /*< Format of each image. */
-    NVCVImageFormat format;
+    int64_t pitchBytes[NVCV_TENSOR_MAX_NDIM];
 
     /*< Alignment/block size in bytes */
     int32_t alignBytes;
@@ -66,6 +70,25 @@ typedef struct NVCVTensorRequirementsRec
     /*< Tensor resource requirements. */
     NVCVRequirements mem;
 } NVCVTensorRequirements;
+
+/** Calculates the resource requirements needed to create a tensor with given shape.
+ *
+ * @param [in] layout Tensor layout.
+ *                    The number of dimensions are defined by the layout.
+ *
+ * @param [in] shape Pointer to array with tensor shape.
+ *                   It must contain at least 'ndim' elements.
+ *
+ * @param [in] dtype Type of tensor's elements.
+ *
+ * @param [out] reqs  Where the tensor requirements will be written to.
+ *                    + Must not be NULL.
+ *
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
+ * @retval #NVCV_SUCCESS                Operation executed successfully.
+ */
+NVCV_PUBLIC NVCVStatus nvcvTensorCalcRequirements(int32_t ndim, const int64_t *shape, NVCVPixelType dtype,
+                                                  NVCVTensorLayout layout, NVCVTensorRequirements *reqs);
 
 /** Calculates the resource requirements needed to create a tensor that holds N images.
  *
@@ -89,28 +112,9 @@ typedef struct NVCVTensorRequirementsRec
 NVCV_PUBLIC NVCVStatus nvcvTensorCalcRequirementsForImages(int32_t numImages, int32_t width, int32_t height,
                                                            NVCVImageFormat format, NVCVTensorRequirements *reqs);
 
-/** Calculates the resource requirements needed to create a tensor.
- *
- * @param [in] nbatch,channels,height,width Shape of the tensor.
- *             + Must be >= 1x1x1x1
- *
- * @param [in] format Format of the images in the tensor.
- *                    + Must not be \ref NVCV_IMAGE_FORMAT_NONE.
- *                    + All planes in must have the same number of channels.
- *                    + No subsampled planes are allowed.
- *
- * @param [out] reqs  Where the tensor requirements will be written to.
- *                    + Must not be NULL.
- *
- * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
- * @retval #NVCV_SUCCESS                Operation executed successfully.
- */
-NVCV_PUBLIC NVCVStatus nvcvTensorCalcRequirementsNCHW(int32_t nbatch, int32_t channels, int32_t height, int32_t width,
-                                                      NVCVImageFormat format, NVCVTensorRequirements *reqs);
-
 /** Constructs a tensor instance with given requirements in the given storage.
  *
- * @param [in] reqs Tensor requirements. Must have been filled in by @ref nvcvTensorCalcRequirements.
+ * @param [in] reqs Tensor requirements. Must have been filled by one of the nvcvTensorCalcRequirements functions.
  *                  + Must not be NULL
  *
  * @param [in] alloc Allocator to be used to allocate needed memory buffers.
@@ -175,18 +179,18 @@ NVCV_PUBLIC NVCVStatus nvcvTensorWrapDataConstruct(const NVCVTensorData *data, N
 NVCV_PUBLIC void nvcvTensorDestroy(NVCVTensorHandle handle);
 
 /**
- * Get the format of the images the tensor can store.
+ * Get the type of the tensor elements (its data type).
  *
  * @param[in] handle Tensor to be queried.
  *                   + Must not be NULL.
  *
- * @param[out] format Where the image format will be written to.
- *                    + Must not be NULL.
+ * @param[out] type Where the type will be written to.
+ *                  + Must not be NULL.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvTensorGetFormat(NVCVTensorHandle handle, NVCVImageFormat *fmt);
+NVCV_PUBLIC NVCVStatus nvcvTensorGetDataType(NVCVTensorHandle handle, NVCVPixelType *type);
 
 /**
  * Get the tensor layout
@@ -231,42 +235,26 @@ NVCV_PUBLIC NVCVStatus nvcvTensorGetAllocator(NVCVTensorHandle handle, NVCVAlloc
 NVCV_PUBLIC NVCVStatus nvcvTensorExportData(NVCVTensorHandle handle, NVCVTensorData *data);
 
 /**
- * Retrieve the tensor dimensions in NCHW format.
- *
- * @param[in] handle Tensor to be queried.
- *                   + Must not be NULL.
- *                   + Must have been created by @ref nvcvTensorConstruct.
- *
- * @param[out] batch,channels,height,width Where the tensor dimensions will be written to.
- *                                         Output parameters set to NULL will be ignored.
- *
- * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
- * @retval #NVCV_SUCCESS                Operation executed successfully.
- */
-NVCV_PUBLIC NVCVStatus nvcvTensorGetDimsNCHW(NVCVTensorHandle handle, int32_t *batch, int32_t *channels,
-                                             int32_t *height, int32_t *width);
-
-/**
  * Retrieve the tensor shape.
  *
  * @param[in] handle Tensor to be queried.
  *                   + Must not be NULL.
  *                   + Must have been created by @ref nvcvTensorConstruct.
  *
- * @param[in,out] ndims Number of elements in output shape buffer.
+ * @param[in,out] ndim Number of elements in output shape buffer.
  *                     When function returns, it stores the actual number of dimensions in the tensor.
- *                     Set it to NVCV_TENSOR_MAX_NDIMS to return the full shape in @shape.
- *                     Set it to 0 if only tensor's ndims must be returned.
+ *                     Set it to NVCV_TENSOR_MAX_NDIM to return the full shape in @shape.
+ *                     Set it to 0 if only tensor's ndim must be returned.
  *
  * @param[out] shape Where the tensor shape will be written to.
- *                   Must point to a buffer with @p ndims elements.
+ *                   Must point to a buffer with @p ndim elements.
  *                   Elements above actual number of dimensions will be set to 1.
- *                   + If NULL, @p ndims must be 0.
+ *                   + If NULL, @p ndim must be 0.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvTensorGetShape(NVCVTensorHandle handle, int32_t *ndims, int32_t *shape);
+NVCV_PUBLIC NVCVStatus nvcvTensorGetShape(NVCVTensorHandle handle, int32_t *ndim, int64_t *shape);
 
 #ifdef __cplusplus
 }

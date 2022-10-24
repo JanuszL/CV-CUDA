@@ -14,115 +14,211 @@
 #ifndef NVCV_SHAPE_HPP
 #define NVCV_SHAPE_HPP
 
-#include <nvcv/TensorData.h>
-
+#include <algorithm>
 #include <array>
+#include <cstdint>
+#include <initializer_list>
 #include <iostream>
 
 namespace nv { namespace cv {
 
+template<class T, int N>
 class Shape
 {
-    using Data = std::array<int32_t, NVCV_TENSOR_MAX_NDIMS>;
+    using Data = std::array<T, N>;
 
 public:
-    using value_type = Data::value_type;
+    using value_type      = typename Data::value_type;
+    using size_type       = int;
+    using reference       = typename Data::reference;
+    using const_reference = typename Data::const_reference;
+    using iterator        = typename Data::iterator;
+    using const_iterator  = typename Data::const_iterator;
 
-    int32_t       &operator[](int i);
-    const int32_t &operator[](int i) const;
+    constexpr static int MAX_NDIM = N;
 
-    int32_t size() const;
+    Shape();
+    Shape(const Shape &that);
+    explicit Shape(size_type size);
 
-    Data::iterator begin();
-    Data::iterator end();
+    // copy 'n' elements from buffer pointed by 'data'
+    Shape(const T *data, size_t n);
 
-    Data::const_iterator begin() const;
-    Data::const_iterator end() const;
+    Shape(std::initializer_list<value_type> shape);
 
-    Data::const_iterator cbegin() const;
-    Data::const_iterator cend() const;
+    reference       operator[](int i);
+    const_reference operator[](int i) const;
+
+    size_type ndim() const;
+    size_type size() const;
+    bool      empty() const;
+
+    iterator begin();
+    iterator end();
+
+    const_iterator begin() const;
+    const_iterator end() const;
+
+    const_iterator cbegin() const;
+    const_iterator cend() const;
 
     bool operator==(const Shape &that) const;
     bool operator!=(const Shape &that) const;
 
     bool operator<(const Shape &that) const;
 
-    // Must be public so that we can use implicit list initializers
-    Data m_data;
+private:
+    Data      m_data;
+    size_type m_size;
 };
 
 // Implementation
 
-inline int32_t &Shape::operator[](int i)
+template<class T, int N>
+Shape<T, N>::Shape()
+    : m_size(0)
 {
-    assert(0 <= i && i < (int)m_data.size());
+}
+
+template<class T, int N>
+Shape<T, N>::Shape(int size)
+    : m_size(size)
+{
+    std::fill(this->begin(), this->end(), 0);
+}
+
+template<class T, int N>
+Shape<T, N>::Shape(const Shape &that)
+    : m_size(that.m_size)
+{
+    std::copy(that.begin(), that.end(), m_data.begin());
+}
+
+template<class T, int N>
+Shape<T, N>::Shape(std::initializer_list<value_type> shape)
+    : Shape(shape.begin(), shape.size())
+{
+}
+
+template<class T, int N>
+Shape<T, N>::Shape(const T *data, size_t n)
+    : m_size(n)
+{
+    assert(data != nullptr);
+
+    assert(m_size <= (size_type)m_data.size());
+    std::copy_n(data, n, m_data.begin());
+}
+
+template<class T, int N>
+auto Shape<T, N>::operator[](int i) -> reference
+{
+    assert(0 <= i && i < m_size);
     return m_data[i];
 }
 
-inline const int32_t &Shape::operator[](int i) const
+template<class T, int N>
+auto Shape<T, N>::operator[](int i) const -> const_reference
 {
-    assert(0 <= i && i < (int)m_data.size());
+    assert(0 <= i && i < m_size);
     return m_data[i];
 }
 
-inline bool Shape::operator==(const Shape &that) const
+template<class T, int N>
+bool Shape<T, N>::operator==(const Shape &that) const
 {
-    return m_data == that.m_data;
-}
-
-inline bool Shape::operator!=(const Shape &that) const
-{
-    return m_data != that.m_data;
-}
-
-inline bool Shape::operator<(const Shape &that) const
-{
-    return m_data < that.m_data;
-}
-
-inline int32_t Shape::size() const
-{
-    return m_data.size();
-}
-
-inline auto Shape::begin() -> Data::iterator
-{
-    return m_data.begin();
-}
-
-inline auto Shape::end() -> Data::iterator
-{
-    return m_data.begin();
-}
-
-inline auto Shape::begin() const -> Data::const_iterator
-{
-    return m_data.begin();
-}
-
-inline auto Shape::end() const -> Data::const_iterator
-{
-    return m_data.begin();
-}
-
-inline auto Shape::cbegin() const -> Data::const_iterator
-{
-    return m_data.cbegin();
-}
-
-inline auto Shape::cend() const -> Data::const_iterator
-{
-    return m_data.cbegin();
-}
-
-inline std::ostream &operator<<(std::ostream &out, const Shape &shape)
-{
-    out << shape[0];
-    for (int i = 1; i < shape.size(); ++i)
+    if (m_size == that.m_size)
     {
-        out << 'x' << shape[i];
+        return std::equal(this->begin(), this->end(), that.begin());
     }
-    return out;
+    else
+    {
+        return false;
+    }
+}
+
+template<class T, int N>
+bool Shape<T, N>::operator!=(const Shape &that) const
+{
+    return !operator==(that);
+}
+
+template<class T, int N>
+bool Shape<T, N>::operator<(const Shape &that) const
+{
+    return std::lexicographical_compare(this->begin(), this->end(), that.begin(), that.end());
+}
+
+template<class T, int N>
+auto Shape<T, N>::ndim() const -> size_type
+{
+    return m_size;
+}
+
+template<class T, int N>
+auto Shape<T, N>::size() const -> size_type
+{
+    return m_size;
+}
+
+template<class T, int N>
+bool Shape<T, N>::empty() const
+{
+    return m_size == 0;
+}
+
+template<class T, int N>
+auto Shape<T, N>::begin() -> iterator
+{
+    return m_data.begin();
+}
+
+template<class T, int N>
+auto Shape<T, N>::end() -> iterator
+{
+    return m_data.begin() + m_size;
+}
+
+template<class T, int N>
+auto Shape<T, N>::begin() const -> const_iterator
+{
+    return m_data.begin();
+}
+
+template<class T, int N>
+auto Shape<T, N>::end() const -> const_iterator
+{
+    return m_data.begin() + m_size;
+}
+
+template<class T, int N>
+auto Shape<T, N>::cbegin() const -> const_iterator
+{
+    return m_data.cbegin();
+}
+
+template<class T, int N>
+auto Shape<T, N>::cend() const -> const_iterator
+{
+    return m_data.cend() + m_size;
+}
+
+template<class T, int N>
+std::ostream &operator<<(std::ostream &out, const Shape<T, N> &shape)
+{
+    if (shape.empty())
+    {
+        return out << "(empty)";
+    }
+    else
+    {
+        out << shape[0];
+        for (int i = 1; i < shape.size(); ++i)
+        {
+            out << 'x' << shape[i];
+        }
+        return out;
+    }
 }
 
 }} // namespace nv::cv

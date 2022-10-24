@@ -14,207 +14,115 @@
 #ifndef NVCV_TENSORDATA_HPP
 #define NVCV_TENSORDATA_HPP
 
-#include "Dims.hpp"
 #include "ITensorData.hpp"
+#include "TensorShape.hpp"
+#include "detail/BaseFromMember.hpp"
 
 namespace nv { namespace cv {
 
+// TensorData definition -----------------------
+class TensorDataWrap : public virtual ITensorData
+{
+public:
+    explicit TensorDataWrap(const NVCVTensorData &data);
+
+private:
+    const NVCVTensorData &m_data;
+    mutable TensorShape   m_cacheShape;
+
+    int                         doGetNumDim() const override;
+    const TensorShape          &doGetShape() const override;
+    const TensorShape::DimType &doGetShapeDim(int d) const override;
+
+    PixelType doGetPixelType() const override;
+
+    const NVCVTensorData &doGetCData() const override;
+};
+
 // TensorDataPitchDevice definition -----------------------
-class TensorDataPitchDevice final : public ITensorDataPitchDevice
+class TensorDataPitchDevice final
+    : public ITensorDataPitchDevice
+    , private detail::BaseFromMember<NVCVTensorData>
+    , private TensorDataWrap
 {
 public:
     using Buffer = NVCVTensorBufferPitch;
 
-    explicit TensorDataPitchDevice(ImageFormat format, const Buffer &data);
-
-    explicit TensorDataPitchDevice(ImageFormat format, const DimsNCHW &dims, void *mem,
-                                   const int64_t *pitchBytes = nullptr);
-
-    explicit TensorDataPitchDevice(ImageFormat format, int numImages, const Size2D &size, void *mem,
-                                   const int64_t *pitchBytes = nullptr);
+    explicit TensorDataPitchDevice(const TensorShape &shape, const PixelType &dtype, const Buffer &data);
 
 private:
-    NVCVTensorData m_data;
+    using MemberTensorData = detail::BaseFromMember<NVCVTensorData>;
 
-    int          doGetNDims() const override;
-    const Shape &doGetShape() const override;
-    DimsNCHW     doGetDims() const override;
-    TensorLayout doGetLayout() const override;
-
-    int32_t doGetNumPlanes() const override;
-    int32_t doGetNumImages() const override;
-
-    ImageFormat doGetFormat() const override;
-
-    const NVCVTensorData &doGetConstCData() const override;
-    NVCVTensorData       &doGetCData() override;
-
-    void *doGetMemBuffer() const override;
-
+    void          *doGetData() const override;
     const int64_t &doGetPitchBytes(int d) const override;
-
-    int64_t doGetImagePitchBytes() const override;
-    int64_t doGetPlanePitchBytes() const override;
-    int64_t doGetRowPitchBytes() const override;
-    int64_t doGetColPitchBytes() const override;
-
-    void *doGetImageBuffer(int n) const override;
-    void *doGetImagePlaneBuffer(int n, int p) const override;
 };
 
+// TensorDataWrap implementation -----------------------
+
+inline TensorDataWrap::TensorDataWrap(const NVCVTensorData &data)
+    : m_data(data)
+{
+    TensorShape::ShapeType shape(data.ndim);
+
+    std::copy(m_data.shape, m_data.shape + m_data.ndim, shape.begin());
+
+    m_cacheShape = TensorShape{std::move(shape), data.layout};
+}
+
+inline int TensorDataWrap::doGetNumDim() const
+{
+    return m_data.ndim;
+}
+
+inline const TensorShape::DimType &TensorDataWrap::doGetShapeDim(int d) const
+{
+    return m_data.shape[d];
+}
+
+inline const TensorShape &TensorDataWrap::doGetShape() const
+{
+    return m_cacheShape;
+}
+
+inline PixelType TensorDataWrap::doGetPixelType() const
+{
+    return static_cast<PixelType>(m_data.dtype);
+}
+
+inline const NVCVTensorData &TensorDataWrap::doGetCData() const
+{
+    return m_data;
+}
+
 // TensorDataPitchDevice implementation -----------------------
-inline TensorDataPitchDevice::TensorDataPitchDevice(ImageFormat format, const Buffer &data)
+inline TensorDataPitchDevice::TensorDataPitchDevice(const TensorShape &tshape, const PixelType &dtype,
+                                                    const Buffer &data)
+    : MemberTensorData{[&]
+                       {
+                           NVCVTensorData tdata;
+
+                           std::copy(tshape.shape().begin(), tshape.shape().end(), tdata.shape);
+                           tdata.ndim   = tshape.ndim();
+                           tdata.dtype  = dtype;
+                           tdata.layout = tshape.layout();
+
+                           tdata.bufferType   = NVCV_TENSOR_BUFFER_PITCH_DEVICE;
+                           tdata.buffer.pitch = data;
+
+                           return tdata;
+                       }()}
+    , TensorDataWrap(MemberTensorData::member)
 {
-    m_data.format       = format;
-    m_data.bufferType   = NVCV_TENSOR_BUFFER_PITCH_DEVICE;
-    m_data.buffer.pitch = data;
 }
 
-inline TensorDataPitchDevice::TensorDataPitchDevice(ImageFormat format, const DimsNCHW &dims, void *mem,
-                                                    const int64_t *pitchBytes)
+inline void *TensorDataPitchDevice::doGetData() const
 {
-    detail::CheckThrow(
-        nvcvTensorDataPitchDeviceFillDimsNCHW(&m_data, format, dims.n, dims.c, dims.h, dims.w, mem, pitchBytes));
-}
-
-inline TensorDataPitchDevice::TensorDataPitchDevice(ImageFormat format, int numImages, const Size2D &size, void *mem,
-                                                    const int64_t *pitchBytes)
-{
-    detail::CheckThrow(
-        nvcvTensorDataPitchDeviceFillForImages(&m_data, format, numImages, size.w, size.h, mem, pitchBytes));
-}
-
-inline int TensorDataPitchDevice::doGetNDims() const
-{
-    int32_t ndims;
-    detail::CheckThrow(nvcvTensorLayoutGetNDims(m_data.buffer.pitch.layout, &ndims));
-    return ndims;
-}
-
-inline const Shape &TensorDataPitchDevice::doGetShape() const
-{
-    static_assert(sizeof(Shape) / sizeof(Shape::value_type)
-                  == sizeof(m_data.buffer.pitch.shape) / sizeof(m_data.buffer.pitch.shape[0]));
-    static_assert(std::is_same<Shape::value_type, std::decay<decltype(m_data.buffer.pitch.shape[0])>::type>::value);
-
-    // UB under stricter C++ rules, but fine in practice.
-    return *reinterpret_cast<const Shape *>(m_data.buffer.pitch.shape);
-}
-
-inline DimsNCHW TensorDataPitchDevice::doGetDims() const
-{
-    const int32_t *shape = m_data.buffer.pitch.shape;
-
-    switch (m_data.buffer.pitch.layout)
-    {
-    case NVCV_TENSOR_NCHW:
-        return {shape[0], shape[1], shape[2], shape[3]};
-    case NVCV_TENSOR_NHWC:
-        return {shape[0], shape[3], shape[1], shape[2]};
-    }
-    assert(false && "Unknown tensor layout");
-    return {};
-}
-
-inline int32_t TensorDataPitchDevice::doGetNumPlanes() const
-{
-    switch (m_data.buffer.pitch.layout)
-    {
-    case NVCV_TENSOR_NCHW:
-        return m_data.buffer.pitch.shape[1];
-    case NVCV_TENSOR_NHWC:
-        return 1;
-    }
-    assert(!"Invalid tensor layout");
-    // hopefully something will break real bad in release mode
-    return -1;
-}
-
-inline int32_t TensorDataPitchDevice::doGetNumImages() const
-{
-    return m_data.buffer.pitch.shape[0];
-}
-
-inline TensorLayout TensorDataPitchDevice::doGetLayout() const
-{
-    return static_cast<TensorLayout>(m_data.buffer.pitch.layout);
-}
-
-inline ImageFormat TensorDataPitchDevice::doGetFormat() const
-{
-    return static_cast<ImageFormat>(m_data.format);
-}
-
-inline const NVCVTensorData &TensorDataPitchDevice::doGetConstCData() const
-{
-    return m_data;
-}
-
-inline NVCVTensorData &TensorDataPitchDevice::doGetCData()
-{
-    return m_data;
-}
-
-inline void *TensorDataPitchDevice::doGetMemBuffer() const
-{
-    return m_data.buffer.pitch.mem;
+    return MemberTensorData::member.buffer.pitch.data;
 }
 
 inline const int64_t &TensorDataPitchDevice::doGetPitchBytes(int d) const
 {
-    return m_data.buffer.pitch.pitchBytes[d];
-}
-
-inline int64_t TensorDataPitchDevice::doGetImagePitchBytes() const
-{
-    return m_data.buffer.pitch.pitchBytes[0];
-}
-
-inline int64_t TensorDataPitchDevice::doGetPlanePitchBytes() const
-{
-    return m_data.buffer.pitch.pitchBytes[1];
-}
-
-inline int64_t TensorDataPitchDevice::doGetRowPitchBytes() const
-{
-    switch (m_data.buffer.pitch.layout)
-    {
-    case NVCV_TENSOR_NCHW:
-        return m_data.buffer.pitch.pitchBytes[2];
-    case NVCV_TENSOR_NHWC:
-        return m_data.buffer.pitch.pitchBytes[1];
-    }
-    assert(!"Invalid tensor layout");
-    // hopefully something will break real bad in release mode
-    return m_data.buffer.pitch.pitchBytes[0];
-}
-
-inline int64_t TensorDataPitchDevice::doGetColPitchBytes() const
-{
-    switch (m_data.buffer.pitch.layout)
-    {
-    case NVCV_TENSOR_NCHW:
-        return m_data.buffer.pitch.pitchBytes[3];
-    case NVCV_TENSOR_NHWC:
-        return m_data.buffer.pitch.pitchBytes[2];
-    }
-    assert(!"Invalid tensor layout");
-    // hopefully something will break real bad in release mode
-    return m_data.buffer.pitch.pitchBytes[0];
-}
-
-inline void *TensorDataPitchDevice::doGetImageBuffer(int n) const
-{
-    assert(n >= 0 && n < m_data.buffer.pitch.shape[0]);
-
-    return reinterpret_cast<std::byte *>(m_data.buffer.pitch.mem) + m_data.buffer.pitch.pitchBytes[0] * n;
-}
-
-inline void *TensorDataPitchDevice::doGetImagePlaneBuffer(int n, int p) const
-{
-    assert(p >= 0 && p < m_data.buffer.pitch.shape[1]);
-
-    return reinterpret_cast<std::byte *>(doGetImageBuffer(n)) + m_data.buffer.pitch.pitchBytes[1] * p;
+    return MemberTensorData::member.buffer.pitch.pitchBytes[d];
 }
 
 }} // namespace nv::cv

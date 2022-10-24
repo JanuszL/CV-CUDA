@@ -11,22 +11,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_PRIV_DIMS_HPP
-#define NVCV_PRIV_DIMS_HPP
+#ifndef NVCV_DETAIL_COMPILERUTILS_H
+#define NVCV_DETAIL_COMPILERUTILS_H
 
-#include <nvcv/Tensor.h>
-#include <util/Dims.hpp>
+#ifdef __cplusplus
+#    define NVCV_CONSTEXPR constexpr
+#else
+#    define NVCV_CONSTEXPR
+#endif
 
-#include <array>
-
-namespace nv::cv::priv {
-
-using Shape = std::array<int32_t, NVCV_TENSOR_MAX_NDIMS>;
-
-using util::DimsNCHW;
-
-DimsNCHW ToNCHW(const Shape &shape, NVCVTensorLayout layout);
-
-} // namespace nv::cv::priv
-
-#endif // NVCV_PRIV_DIMS_HPP
+#endif // NVCV_DETAIL_COMPILERUTILS_H

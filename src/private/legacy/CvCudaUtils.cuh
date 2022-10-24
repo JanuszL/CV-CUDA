@@ -22,8 +22,9 @@
 #define CV_CUDA_UTILS_CUH
 
 #include <nvcv/IImageBatchData.hpp>
-#include <nvcv/IImageData.hpp>        // for IImageDataDevicePitch, etc.
-#include <nvcv/ITensorData.hpp>       // for ITensorDataPitchDevice, etc.
+#include <nvcv/IImageData.hpp>  // for IImageDataDevicePitch, etc.
+#include <nvcv/ITensorData.hpp> // for ITensorDataPitchDevice, etc.
+#include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/cuda/MathOps.hpp>      // for math operators
 #include <nvcv/cuda/MathWrappers.hpp> // for sqrt, etc.
 #include <nvcv/cuda/SaturateCast.hpp> // for SaturateCast, etc.
@@ -180,18 +181,17 @@ struct Ptr2dNCHW
         }
     }
 
-    __host__ __forceinline__ Ptr2dNCHW(const ITensorDataPitchDevice &tensor)
+    __host__ __forceinline__ Ptr2dNCHW(const TensorDataAccessPitchImagePlanar &tensor)
     {
-        DimsNCHW dims = tensor.dims();
-        batches       = dims.n;
-        rows          = dims.h;
-        cols          = dims.w;
-        ch            = dims.c;
+        batches = tensor.numSamples();
+        rows    = tensor.numRows();
+        cols    = tensor.numCols();
+        ch      = tensor.numChannels();
 
-        imgPitchBytes = tensor.pitchBytes(0);
-        chPitchBytes  = tensor.pitchBytes(1);
-        rowPitchBytes = tensor.pitchBytes(2);
-        data          = tensor.mem();
+        imgPitchBytes = tensor.samplePitchBytes();
+        chPitchBytes  = tensor.planePitchBytes();
+        rowPitchBytes = tensor.rowPitchBytes();
+        data          = tensor.sampleData(0);
     }
 
     // ptr for uchar, ushort, float, typename T -> uchar etc.
@@ -287,30 +287,28 @@ struct Ptr2dNHWC
         data          = reinterpret_cast<T *>(inData.plane(0).buffer);
     }
 
-    __host__ __forceinline__ Ptr2dNHWC(const ITensorDataPitchDevice &tensor, int cols_, int rows_)
+    __host__ __forceinline__ Ptr2dNHWC(const TensorDataAccessPitchImagePlanar &tensor, int cols_, int rows_)
     {
-        DimsNCHW dims = tensor.dims();
-        batches       = dims.n;
-        rows          = rows_; // allow override of rows and cols with smaller crop rect
-        cols          = cols_;
-        ch            = dims.c;
+        batches = tensor.numSamples();
+        rows    = rows_; // allow override of rows and cols with smaller crop rect
+        cols    = cols_;
+        ch      = tensor.numChannels();
 
-        imgPitchBytes = tensor.pitchBytes(0);
-        rowPitchBytes = tensor.pitchBytes(1);
-        data          = reinterpret_cast<T *>(tensor.mem());
+        imgPitchBytes = tensor.samplePitchBytes();
+        rowPitchBytes = tensor.rowPitchBytes();
+        data          = reinterpret_cast<T *>(tensor.sampleData(0));
     }
 
-    __host__ __forceinline__ Ptr2dNHWC(const ITensorDataPitchDevice &tensor)
+    __host__ __forceinline__ Ptr2dNHWC(const TensorDataAccessPitchImagePlanar &tensor)
     {
-        DimsNCHW dims = tensor.dims();
-        batches       = dims.n;
-        rows          = dims.h;
-        cols          = dims.w;
-        ch            = dims.c;
+        batches = tensor.numSamples();
+        rows    = tensor.numRows();
+        cols    = tensor.numCols();
+        ch      = tensor.numChannels();
 
-        imgPitchBytes = tensor.pitchBytes(0);
-        rowPitchBytes = tensor.pitchBytes(1);
-        data          = reinterpret_cast<T *>(tensor.mem());
+        imgPitchBytes = tensor.samplePitchBytes();
+        rowPitchBytes = tensor.rowPitchBytes();
+        data          = reinterpret_cast<T *>(tensor.sampleData(0));
     }
 
     // ptr for uchar1/3/4, ushort1/3/4, float1/3/4, typename T -> uchar3 etc.

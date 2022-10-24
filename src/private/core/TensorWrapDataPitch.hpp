@@ -11,8 +11,8 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_PRIV_TENSOR_WRAPDATA_HPP
-#define NVCV_PRIV_TENSOR_WRAPDATA_HPP
+#ifndef NVCV_PRIV_TENSOR_WRAPDATAPITCH_HPP
+#define NVCV_PRIV_TENSOR_WRAPDATAPITCH_HPP
 
 #include "ITensor.hpp"
 
@@ -20,25 +20,25 @@
 
 namespace nv::cv::priv {
 
-class TensorWrapData final : public ITensor
+class TensorWrapDataPitch final : public ITensor
 {
 public:
-    explicit TensorWrapData(const NVCVTensorData &data, NVCVTensorDataCleanupFunc cleanup, void *ctxCleanup);
-    ~TensorWrapData();
+    explicit TensorWrapDataPitch(const NVCVTensorData &tdata, NVCVTensorDataCleanupFunc cleanup, void *ctxCleanup);
+    ~TensorWrapDataPitch();
 
-    const Shape &shape() const override;
+    int32_t        ndim() const override;
+    const int64_t *shape() const override;
 
-    NVCVTensorLayout layout() const override;
-    DimsNCHW         dims() const override;
+    const NVCVTensorLayout &layout() const override;
 
-    ImageFormat format() const override;
+    PixelType dtype() const override;
 
     IAllocator &alloc() const override;
 
-    void exportData(NVCVTensorData &data) const override;
+    void exportData(NVCVTensorData &tdata) const override;
 
 private:
-    NVCVTensorData m_data;
+    NVCVTensorData m_tdata;
 
     NVCVTensorDataCleanupFunc m_cleanup;
     void                     *m_ctxCleanup;
@@ -48,4 +48,4 @@ private:
 
 } // namespace nv::cv::priv
 
-#endif // NVCV_PRIV_TENSOR_WRAPDATA_HPP
+#endif // NVCV_PRIV_TENSOR_WRAPDATAPITCH_HPP

@@ -15,6 +15,7 @@
 
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
+#include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
 #include <operators/OpReformat.hpp>
@@ -31,24 +32,29 @@ TEST(OpReformat, OpReformat_to_hwc)
 
     nvcv::Tensor imgOut(1, {640, 480}, nvcv::FMT_RGB8);
 
-    nvcv::Requirements reqsPlanar{nvcv::Tensor::CalcRequirements(1, {640, 480}, nvcv::FMT_RGB8p).mem};
+    nvcv::Tensor::Requirements reqsPlanar = nvcv::Tensor::CalcRequirements(1, {640, 480}, nvcv::FMT_RGB8p);
 
-    int64_t inBufferSize = CalcTotalSizeBytes(reqsPlanar.deviceMem());
+    int64_t inBufferSize = CalcTotalSizeBytes(nvcv::Requirements{reqsPlanar.mem}.deviceMem());
     ASSERT_LT(0, inBufferSize);
 
-    void *data;
-    EXPECT_EQ(cudaSuccess, cudaMalloc(&data, inBufferSize));
+    nvcv::TensorDataPitchDevice::Buffer bufPlanar;
+    std::copy(reqsPlanar.pitchBytes, reqsPlanar.pitchBytes + NVCV_TENSOR_MAX_NDIM, bufPlanar.pitchBytes);
+    EXPECT_EQ(cudaSuccess, cudaMalloc(&bufPlanar.data, inBufferSize));
 
-    nvcv::TensorDataPitchDevice bufIn(nvcv::FMT_RGB8p, 1, {640, 480}, data);
+    nvcv::TensorDataPitchDevice bufIn(nvcv::TensorShape{reqsPlanar.shape, reqsPlanar.ndim, reqsPlanar.layout},
+                                      nvcv::PixelType{reqsPlanar.dtype}, bufPlanar);
 
-    ASSERT_EQ(1, bufIn.numImages());
+    auto inAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(bufIn);
+    ASSERT_TRUE(inAccess);
+
+    ASSERT_EQ(1, inAccess->numSamples());
 
     // setup the buffer
-    for (int p = 0; p < bufIn.numPlanes(); p++)
+    for (int p = 0; p < inAccess->numPlanes(); p++)
     {
         //Set plane 0 to 0, 1 to 1's, 2, 2's etc.
-        EXPECT_EQ(cudaSuccess, cudaMemset2D(bufIn.imgPlaneBuffer(0, p), bufIn.rowPitchBytes(), p,
-                                            bufIn.dims().w * bufIn.colPitchBytes(), bufIn.dims().h));
+        EXPECT_EQ(cudaSuccess, cudaMemset2D(inAccess->planeData(p), inAccess->rowPitchBytes(), p,
+                                            inAccess->numCols() * inAccess->colPitchBytes(), inAccess->numRows()));
     }
 
     // wrap the buffer
@@ -57,8 +63,13 @@ TEST(OpReformat, OpReformat_to_hwc)
     const auto *outData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgOut.exportData());
     ASSERT_NE(nullptr, outData);
 
+    auto outAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*outData);
+    ASSERT_TRUE(outAccess);
+
+    int64_t outBufferSize = outAccess->samplePitchBytes() * outAccess->numSamples();
+
     // Set output buffer to dummy value
-    EXPECT_EQ(cudaSuccess, cudaMemset(outData->mem(), 0xFA, outData->imgPitchBytes() * outData->numImages()));
+    EXPECT_EQ(cudaSuccess, cudaMemset(outAccess->sampleData(0), 0xFA, outBufferSize));
 
     // Call operator
     nv::cvop::Reformat reformatOp;
@@ -66,12 +77,10 @@ TEST(OpReformat, OpReformat_to_hwc)
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
 
-    int64_t outBufferSize = outData->imgPitchBytes() * outData->numImages();
-
     std::vector<uint8_t> test(outBufferSize, 0xA);
 
     //Check data
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), outData->mem(), outBufferSize, cudaMemcpyDeviceToHost));
+    EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), outData->data(), outBufferSize, cudaMemcpyDeviceToHost));
 
     // plane data should be reordered in the buffer 0,1,2,3,0,1,2,3 ...
     EXPECT_EQ(test[0], 0);
@@ -80,7 +89,7 @@ TEST(OpReformat, OpReformat_to_hwc)
     EXPECT_EQ(test[3], 0);
     EXPECT_EQ(test[4], 1);
 
-    EXPECT_EQ(cudaSuccess, cudaFree(data));
+    EXPECT_EQ(cudaSuccess, cudaFree(bufPlanar.data));
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 }
 
@@ -98,8 +107,14 @@ TEST(OpReformat, wip_OpReformat_same)
     EXPECT_NE(nullptr, inData);
     EXPECT_NE(nullptr, outData);
 
-    int inBufSize  = inData->imgPitchBytes() * inData->numImages();
-    int outBufSize = outData->imgPitchBytes() * outData->numImages();
+    auto inAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*inData);
+    ASSERT_TRUE(inAccess);
+
+    auto outAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*outData);
+    ASSERT_TRUE(outAccess);
+
+    int inBufSize  = inAccess->samplePitchBytes() * inAccess->numSamples();
+    int outBufSize = outAccess->samplePitchBytes() * outAccess->numSamples();
 
     EXPECT_EQ(inBufSize, outBufSize);
 
@@ -109,7 +124,7 @@ TEST(OpReformat, wip_OpReformat_same)
 
     generate(gold.begin(), gold.end(), [&rng, &rand] { return rand(rng); });
 
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(inData->mem(), gold.data(), gold.size(), cudaMemcpyHostToDevice));
+    EXPECT_EQ(cudaSuccess, cudaMemcpy(inData->data(), gold.data(), gold.size(), cudaMemcpyHostToDevice));
 
     // run operator
     nv::cvop::Reformat reformatOp;
@@ -120,7 +135,7 @@ TEST(OpReformat, wip_OpReformat_same)
     // check cdata
     std::vector<uint8_t> test(outBufSize);
 
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), outData->mem(), outBufSize, cudaMemcpyDeviceToHost));
+    EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), outData->data(), outBufSize, cudaMemcpyDeviceToHost));
 
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
