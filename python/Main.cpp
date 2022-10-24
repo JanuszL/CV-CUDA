@@ -15,6 +15,7 @@
 #include "Container.hpp"
 #include "CudaBuffer.hpp"
 #include "ImageFormat.hpp"
+#include "InterpolationType.hpp"
 #include "Operators.hpp"
 #include "PixelType.hpp"
 #include "Resource.hpp"
@@ -53,6 +54,9 @@ PYBIND11_MODULE(nvcv, m)
     Resource::Export(m);
     Container::Export(m);
     Tensor::Export(m);
+
+    // Operators' auxiliary entities
+    ExportInterpolationType(m);
 
     // Operators
     ExportOpReformat(m);
