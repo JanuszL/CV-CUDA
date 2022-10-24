@@ -55,7 +55,7 @@ void nhwc_to_nchw(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITenso
 {
     const int cols       = inData.dims().w;
     const int rows       = inData.dims().h;
-    const int batch_size = 1;
+    const int batch_size = inData.dims().n;
 
     dim3 block(32, 8);
     dim3 grid(divUp(cols, block.x), divUp(rows, block.y), batch_size);
@@ -74,7 +74,7 @@ void nchw_to_nhwc(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITenso
 {
     const int cols       = inData.dims().w;
     const int rows       = inData.dims().h;
-    const int batch_size = 1;
+    const int batch_size = inData.dims().n;
 
     dim3 block(32, 8);
     dim3 grid(divUp(cols, block.x), divUp(rows, block.y), batch_size);
