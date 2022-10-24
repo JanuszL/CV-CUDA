@@ -148,7 +148,7 @@ install(TARGETS nvcv
 install(DIRECTORY include/nvcv
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         COMPONENT dev
-        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.inc")
 
 install(DIRECTORY include/operators
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
