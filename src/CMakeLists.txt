@@ -150,6 +150,11 @@ install(DIRECTORY include/nvcv
         COMPONENT dev
         FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
 
+install(DIRECTORY include/operators
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        COMPONENT dev
+        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(nvcv-config-version.cmake
                                  COMPATIBILITY SameMajorVersion)
