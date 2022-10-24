@@ -346,7 +346,7 @@ public:
     {
         if (IsCompatible(data))
         {
-            return TensorDataAccessPitchImage(static_cast<const ITensorDataPitch &>(data));
+            return TensorDataAccessPitchImage(dynamic_cast<const ITensorDataPitch &>(data));
         }
         else
         {
@@ -386,7 +386,7 @@ public:
     {
         if (IsCompatible(data))
         {
-            return TensorDataAccessPitchImagePlanar(static_cast<const ITensorDataPitch &>(data));
+            return TensorDataAccessPitchImagePlanar(dynamic_cast<const ITensorDataPitch &>(data));
         }
         else
         {

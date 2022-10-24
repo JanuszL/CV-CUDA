@@ -48,7 +48,7 @@ private:
     virtual const NVCVTensorData &doGetCData() const = 0;
 };
 
-class ITensorDataPitch : public ITensorData
+class ITensorDataPitch : public virtual ITensorData
 {
 public:
     void          *data() const;
