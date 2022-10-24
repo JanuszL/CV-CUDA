@@ -65,4 +65,5 @@ PYBIND11_MODULE(nvcv, m)
     ExportOpResize(m);
     ExportOpCustomCrop(m);
     ExportOpNormalize(m);
+    ExportOpConvertTo(m);
 }
