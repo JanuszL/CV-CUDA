@@ -19,5 +19,6 @@ namespace py = ::pybind11;
 
 void ExportOpReformat(py::module &m);
 void ExportOpResize(py::module &m);
+void ExportOpCustomCrop(py::module &m);
 
 } // namespace nv::cvpy
