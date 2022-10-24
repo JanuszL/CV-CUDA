@@ -59,6 +59,7 @@ pybind11_add_module(nvcv_python MODULE
     OpReformat.cpp
     OpResize.cpp
     OpCustomCrop.cpp
+    OpNormalize.cpp
 )
 
 target_include_directories(nvcv_python
