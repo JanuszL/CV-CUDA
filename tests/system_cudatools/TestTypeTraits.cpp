@@ -43,7 +43,7 @@ using TypeTraitsSupportedBaseTypes = t::Types<unsigned char, signed char, unsign
 
 TYPED_TEST_SUITE(TypeTraitsSupportedBaseTest, TypeTraitsSupportedBaseTypes);
 
-TYPED_TEST(TypeTraitsSupportedBaseTest, CorectTypeTraits)
+TYPED_TEST(TypeTraitsSupportedBaseTest, correct_type_traits)
 {
     using TypeTraitsT = cuda::TypeTraits<typename TestFixture::Type>;
 
@@ -78,12 +78,12 @@ using UnsupportedBaseTypes = t::Types<void, long double, float5>;
 
 TYPED_TEST_SUITE(HasTypeTraitsUnsupportedTest, UnsupportedBaseTypes);
 
-TYPED_TEST(HasTypeTraitsUnsupportedTest, IsFalse)
+TYPED_TEST(HasTypeTraitsUnsupportedTest, is_false)
 {
     EXPECT_FALSE(cuda::HasTypeTraits<typename TestFixture::Type>);
 }
 
-TEST(HasTypeTraitsWithTwoUnsupportedTypesTest, IsFalse)
+TEST(HasTypeTraitsWithTwoUnsupportedTypesTest, is_false)
 {
     EXPECT_FALSE((cuda::HasTypeTraits<long double, float5>));
 }
@@ -97,19 +97,19 @@ using SupportedBaseTypes = t::Types<int, float3>;
 
 TYPED_TEST_SUITE(HasTypeTraitsSupportedTest, SupportedBaseTypes);
 
-TYPED_TEST(HasTypeTraitsSupportedTest, IsTrue)
+TYPED_TEST(HasTypeTraitsSupportedTest, is_true)
 {
     EXPECT_TRUE(cuda::HasTypeTraits<typename TestFixture::Type>);
 }
 
-TEST(HasTypeTraitsWithTwoSupportedTypesTest, IsTrue)
+TEST(HasTypeTraitsWithTwoSupportedTypesTest, is_true)
 {
     EXPECT_TRUE((cuda::HasTypeTraits<unsigned int, double4>));
 }
 
 // -------------------------- Testing IsCompound -------------------------------
 
-TEST(IsCompoundTest, IsFalse)
+TEST(IsCompoundTest, is_false)
 {
     EXPECT_FALSE((cuda::IsCompound<unsigned char>));
     EXPECT_FALSE((cuda::IsCompound<char>));
@@ -117,7 +117,7 @@ TEST(IsCompoundTest, IsFalse)
     EXPECT_FALSE((cuda::IsCompound<int>));
 }
 
-TEST(IsCompoundTest, IsTrue)
+TEST(IsCompoundTest, is_true)
 {
     EXPECT_TRUE((cuda::IsCompound<uchar1>));
     EXPECT_TRUE((cuda::IsCompound<short2>));
@@ -127,7 +127,7 @@ TEST(IsCompoundTest, IsTrue)
 
 // --------------------- Testing HasEnoughComponents ---------------------------
 
-TEST(HasEnoughComponentsTest, IsFalse)
+TEST(HasEnoughComponentsTest, is_false)
 {
     EXPECT_FALSE((cuda::HasEnoughComponents<unsigned char, 1>));
     EXPECT_FALSE((cuda::HasEnoughComponents<uchar1, 2>));
@@ -136,7 +136,7 @@ TEST(HasEnoughComponentsTest, IsFalse)
     EXPECT_FALSE((cuda::HasEnoughComponents<float4, 5>));
 }
 
-TEST(HasEnoughComponentsTest, IsTrue)
+TEST(HasEnoughComponentsTest, is_true)
 {
     EXPECT_TRUE((cuda::HasEnoughComponents<unsigned char, 0>));
     EXPECT_TRUE((cuda::HasEnoughComponents<uchar1, 1>));
@@ -157,7 +157,7 @@ using TypeTraitsSupportedVectorTypes
 
 TYPED_TEST_SUITE(TypeTraitsSupportedVectorTest, TypeTraitsSupportedVectorTypes);
 
-TYPED_TEST(TypeTraitsSupportedVectorTest, CorrectTypeTraits)
+TYPED_TEST(TypeTraitsSupportedVectorTest, correct_type_traits)
 {
     using TypeTraitsT = cuda::TypeTraits<typename TestFixture::Type>;
     using BaseType    = cuda::BaseType<typename TestFixture::Type>;
@@ -187,7 +187,7 @@ class TypeTraitsTypeQualifierTest : public t::Test
 {
 };
 
-TEST_F(TypeTraitsTypeQualifierTest, CorrectTypeTraitsAsIfNoQualifier)
+TEST_F(TypeTraitsTypeQualifierTest, correct_type_traits_as_if_no_qualifier)
 {
     using Type = char;
 
@@ -219,7 +219,7 @@ using MakeTypeSupportedVectorTypes = test::type::Combine<TypeTraitsSupportedBase
 
 NVCV_TYPED_TEST_SUITE_F(TypeTraitsMakeTypeVectorTest, MakeTypeSupportedVectorTypes);
 
-TYPED_TEST(TypeTraitsMakeTypeVectorTest, CorrectTypeTraits)
+TYPED_TEST(TypeTraitsMakeTypeVectorTest, correct_type_traits)
 {
     using CompoundType = cuda::MakeType<typename TestFixture::BaseType, TestFixture::NumComponents>;
 
@@ -246,7 +246,7 @@ using MakeTypeSomeTypesWithQualifiers
 
 NVCV_TYPED_TEST_SUITE_F(TypeTraitsMakeTypeWithQualifierTest, MakeTypeSomeTypesWithQualifiers);
 
-TYPED_TEST(TypeTraitsMakeTypeWithQualifierTest, CorrectTypeQualifiers)
+TYPED_TEST(TypeTraitsMakeTypeWithQualifierTest, correct_type_qualifiers)
 {
     using CompoundType = cuda::MakeType<typename TestFixture::BaseType, TestFixture::NumComponents>;
 
@@ -263,7 +263,7 @@ class TypeTraitsConvertBaseTypeToTest : public TypeTraitsBaseTest<T>
 
 NVCV_TYPED_TEST_SUITE_F(TypeTraitsConvertBaseTypeToTest, t::Types<char, short1, char2, uint3, double4>);
 
-TYPED_TEST(TypeTraitsConvertBaseTypeToTest, CorrectTypeTraits)
+TYPED_TEST(TypeTraitsConvertBaseTypeToTest, correct_type_traits)
 {
     using FloatType = cuda::ConvertBaseTypeTo<float, typename TestFixture::Type>;
 
@@ -286,7 +286,7 @@ class TypeTraitsConvertBaseTypeToWithQualifiersTest : public TypeTraitsBaseTest<
 NVCV_TYPED_TEST_SUITE_F(TypeTraitsConvertBaseTypeToWithQualifiersTest,
                         t::Types<const short3, volatile short3, const volatile short3>);
 
-TYPED_TEST(TypeTraitsConvertBaseTypeToWithQualifiersTest, CorrectTypeQualifiers)
+TYPED_TEST(TypeTraitsConvertBaseTypeToWithQualifiersTest, correct_type_qualifiers)
 {
     using FloatType = cuda::ConvertBaseTypeTo<float, typename TestFixture::Type>;
 
@@ -330,7 +330,7 @@ using SomeSupportedTypes = t::Types<char, ushort1, uchar2, int3, float4>;
 
 TYPED_TEST_SUITE(TypeTraitsGetElementTest, SomeSupportedTypes);
 
-TYPED_TEST(TypeTraitsGetElementTest, CorrectZeroInitializedChannels)
+TYPED_TEST(TypeTraitsGetElementTest, correct_elements)
 {
     for (int e = 0; e < this->NumElements; ++e)
     {
@@ -347,7 +347,7 @@ class TypeTraitsSetAllTest : public TypeTraitsBaseTest<T>
 
 NVCV_TYPED_TEST_SUITE_F(TypeTraitsSetAllTest, t::Types<double, short1, uchar2, int3, float4>);
 
-TYPED_TEST(TypeTraitsSetAllTest, CorrectOutputOfSetAllWithT)
+TYPED_TEST(TypeTraitsSetAllTest, correct_output_with_type)
 {
     using T = typename TestFixture::Type;
 
@@ -365,7 +365,7 @@ TYPED_TEST(TypeTraitsSetAllTest, CorrectOutputOfSetAllWithT)
     }
 }
 
-TYPED_TEST(TypeTraitsSetAllTest, CorrectOutputOfSetAllWithN)
+TYPED_TEST(TypeTraitsSetAllTest, correct_output_with_num_components)
 {
     using T         = typename TestFixture::Type;
     constexpr int N = cuda::NumComponents<T>;
@@ -413,7 +413,7 @@ NVCV_TYPED_TEST_SUITE_F(
                     test::Values<TStr("1"), TStr("double1(1)"), TStr("int2(1, 2)"), TStr("short3(1, 2, 3)"),
                                  TStr("ulong4(1, 2, 3, 4)")>>);
 
-TYPED_TEST(TypeTraitsVectorTypePrintTest, CorrectPrintOfTypeAndValues)
+TYPED_TEST(TypeTraitsVectorTypePrintTest, correct_output_stream)
 {
     EXPECT_STREQ(nv::cv::cuda::GetTypeName<typename TestFixture::Type>(), this->GoldTypeName.value);
 

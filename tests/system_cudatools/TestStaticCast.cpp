@@ -44,7 +44,7 @@ NVCV_TYPED_TEST_SUITE(
 
 // clang-format on
 
-TYPED_TEST(StaticCastTest, CorrectOutputOfStaticCast)
+TYPED_TEST(StaticCastTest, correct_output)
 {
     using TargetBaseType = ttype::GetType<TypeParam, 0>;
     constexpr auto input = ttype::GetValue<TypeParam, 1>;

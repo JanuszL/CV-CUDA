@@ -103,7 +103,7 @@ TYPED_TEST(RangeCastTest, correct_output)
 
 // -------------------------- Testing corner cases -----------------------------
 
-TEST(RangeCastCornerCasesTest, FloatToChar)
+TEST(RangeCastCornerCasesTest, float_to_char)
 {
 #if CHAR_MIN == 0 // char with no sign?
     EXPECT_EQ((unsigned char)0, cuda::RangeCast<unsigned char>(0.f));
@@ -122,7 +122,7 @@ TEST(RangeCastCornerCasesTest, FloatToChar)
 #endif
 }
 
-TEST(RangeCastCornerCasesTest, CharToFloat)
+TEST(RangeCastCornerCasesTest, char_to_float)
 {
 #if CHAR_MIN == 0 // char with no sign?
     EXPECT_EQ(0.f, cuda::RangeCast<float>((unsigned char)0));
@@ -138,7 +138,7 @@ TEST(RangeCastCornerCasesTest, CharToFloat)
 #endif
 }
 
-TEST(RangeCastCornerCasesTest, FloatToSignedChar)
+TEST(RangeCastCornerCasesTest, float_to_signed_char)
 {
     EXPECT_EQ((signed char)0, cuda::RangeCast<signed char>(0.f));
     EXPECT_EQ((signed char)64, cuda::RangeCast<signed char>(0.5f));
@@ -149,7 +149,7 @@ TEST(RangeCastCornerCasesTest, FloatToSignedChar)
     EXPECT_EQ((signed char)-127, cuda::RangeCast<signed char>(-1.1f));
 }
 
-TEST(RangeCastCornerCasesTest, SignedCharToFloat)
+TEST(RangeCastCornerCasesTest, signed_char_to_float)
 {
     EXPECT_EQ(0.f, cuda::RangeCast<float>((signed char)0));
     EXPECT_EQ(0.503937f, cuda::RangeCast<float>((signed char)64));
@@ -159,7 +159,7 @@ TEST(RangeCastCornerCasesTest, SignedCharToFloat)
     EXPECT_EQ(-1.f, cuda::RangeCast<float>((signed char)-128));
 }
 
-TEST(RangeCastCornerCasesTest, FloatToUnsignedChar)
+TEST(RangeCastCornerCasesTest, float_to_unsigned_char)
 {
     EXPECT_EQ((unsigned char)0, cuda::RangeCast<unsigned char>(0.f));
     EXPECT_EQ((unsigned char)0, cuda::RangeCast<unsigned char>(-1.f));
@@ -168,14 +168,14 @@ TEST(RangeCastCornerCasesTest, FloatToUnsignedChar)
     EXPECT_EQ((unsigned char)255, cuda::RangeCast<unsigned char>(1.1f));
 }
 
-TEST(RangeCastCornerCasesTest, UnsignedCharToFloat)
+TEST(RangeCastCornerCasesTest, unsigned_char_to_float)
 {
     EXPECT_EQ(0.f, cuda::RangeCast<float>((unsigned char)0));
     EXPECT_EQ(0.50196078431f, cuda::RangeCast<float>((unsigned char)128));
     EXPECT_EQ(1.f, cuda::RangeCast<float>((unsigned char)255));
 }
 
-TEST(RangeCastCornerCasesTest, FloatToShort)
+TEST(RangeCastCornerCasesTest, float_to_short)
 {
     EXPECT_EQ((short)0, cuda::RangeCast<short>(0.f));
     EXPECT_EQ((short)16384, cuda::RangeCast<short>(0.5f));
@@ -186,7 +186,7 @@ TEST(RangeCastCornerCasesTest, FloatToShort)
     EXPECT_EQ((short)-32767, cuda::RangeCast<short>(-1.1f));
 }
 
-TEST(RangeCastCornerCasesTest, ShortToFloat)
+TEST(RangeCastCornerCasesTest, short_to_float)
 {
     EXPECT_EQ(0.f, cuda::RangeCast<float>((short)0));
     EXPECT_EQ(0.5000152592f, cuda::RangeCast<float>((short)16384));
@@ -196,7 +196,7 @@ TEST(RangeCastCornerCasesTest, ShortToFloat)
     EXPECT_EQ(-1.f, cuda::RangeCast<float>((short)-32768));
 }
 
-TEST(RangeCastCornerCasesTest, FloatToUnsignedShort)
+TEST(RangeCastCornerCasesTest, float_to_unsigned_short)
 {
     EXPECT_EQ((unsigned short)0, cuda::RangeCast<unsigned short>(0.f));
     EXPECT_EQ((unsigned short)0, cuda::RangeCast<unsigned short>(-1.f));
@@ -205,14 +205,14 @@ TEST(RangeCastCornerCasesTest, FloatToUnsignedShort)
     EXPECT_EQ((unsigned short)65535, cuda::RangeCast<unsigned short>(1.1f));
 }
 
-TEST(RangeCastCornerCasesTest, UnsignedShortToFloat)
+TEST(RangeCastCornerCasesTest, unsigned_short_to_float)
 {
     EXPECT_EQ(0.f, cuda::RangeCast<float>((unsigned short)0));
     EXPECT_EQ(0.5000076295109f, cuda::RangeCast<float>((unsigned short)32768));
     EXPECT_EQ(1.f, cuda::RangeCast<float>((unsigned short)65535));
 }
 
-TEST(RangeCastCornerCasesTest, FloatToInt)
+TEST(RangeCastCornerCasesTest, float_to_int)
 {
     EXPECT_EQ((int)0, cuda::RangeCast<int>(0.f));
     EXPECT_EQ((int)1073741824, cuda::RangeCast<int>(0.5f));
@@ -223,7 +223,7 @@ TEST(RangeCastCornerCasesTest, FloatToInt)
     EXPECT_EQ((int)-2147483647, cuda::RangeCast<int>(-1.1f));
 }
 
-TEST(RangeCastCornerCasesTest, IntToFloat)
+TEST(RangeCastCornerCasesTest, int_to_float)
 {
     EXPECT_EQ(0.f, cuda::RangeCast<float>((int)0));
     EXPECT_EQ(0.5f, cuda::RangeCast<float>((int)1073741824));
@@ -233,7 +233,7 @@ TEST(RangeCastCornerCasesTest, IntToFloat)
     EXPECT_EQ(-1.f, cuda::RangeCast<float>((int)-2147483648));
 }
 
-TEST(RangeCastCornerCasesTest, FloatToUnsignedInt)
+TEST(RangeCastCornerCasesTest, float_to_unsigned_int)
 {
     EXPECT_EQ((unsigned int)0, cuda::RangeCast<unsigned int>(0.f));
     EXPECT_EQ((unsigned int)0, cuda::RangeCast<unsigned int>(-1.f));
@@ -242,20 +242,20 @@ TEST(RangeCastCornerCasesTest, FloatToUnsignedInt)
     EXPECT_EQ((unsigned int)4294967295, cuda::RangeCast<unsigned int>(1.1f));
 }
 
-TEST(RangeCastCornerCasesTest, UnsignedIntToFloat)
+TEST(RangeCastCornerCasesTest, unsigned_int_to_float)
 {
     EXPECT_EQ(0.f, cuda::RangeCast<float>((unsigned int)0));
     EXPECT_EQ(0.5f, cuda::RangeCast<float>((unsigned int)2147483648));
     EXPECT_EQ(1.f, cuda::RangeCast<float>((unsigned int)4294967295));
 }
 
-TEST(RangeCastCornerCasesTest, CompostType)
+TEST(RangeCastCornerCasesTest, composite_types)
 {
     EXPECT_EQ(make_char2(0, 0), cuda::RangeCast<signed char>(make_float2(0, 0)));
     EXPECT_EQ(make_char2(127, -127), cuda::RangeCast<signed char>(make_float2(1, -1)));
 }
 
-TEST(RangeCastCornerCasesTest, Identity)
+TEST(RangeCastCornerCasesTest, identity_values)
 {
     EXPECT_EQ(make_float2(142, 23), cuda::RangeCast<float>(make_float2(142, 23)));
     EXPECT_EQ(make_int2(142, 23), cuda::RangeCast<int>(make_int2(142, 23)));
