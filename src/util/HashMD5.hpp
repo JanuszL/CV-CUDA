@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
@@ -60,6 +61,26 @@ void Update(HashMD5 &hash, const T *value)
 
 void Update(HashMD5 &hash, const char *value);
 
+template<std::ranges::range R>
+void Update(nv::cv::util::HashMD5 &hash, const R &r)
+{
+    Update(hash, std::ranges::size(r));
+    if constexpr (std::ranges::contiguous_range<
+                      R> && std::has_unique_object_representations_v<std::ranges::range_value_t<R>>)
+    {
+        // It's faster to do this if range is contiguous and elements have unique object representation
+        hash(std::ranges::data(r), std::ranges::size(r) * sizeof(std::ranges::range_value_t<R>));
+    }
+    else
+    {
+        // Must go one by one
+        for (auto &v : r)
+        {
+            Update(hash, v);
+        }
+    }
+}
+
 template<class T1, class T2, class... TT>
 void Update(HashMD5 &hash, const T1 &v1, const T2 &v2, const TT &...v)
 {
@@ -92,6 +113,11 @@ void Update(nv::cv::util::HashMD5 &hash, const tuple<TT...> &t)
     apply(nv::cv::util::Update<TT...>, tuple_cat(th, t));
 };
 
+inline void Update(nv::cv::util::HashMD5 &hash, const string &s)
+{
+    return hash(s.data(), s.size());
+}
+
 inline void Update(nv::cv::util::HashMD5 &hash, const string_view &s)
 {
     return hash(s.data(), s.size());
@@ -117,16 +143,6 @@ void Update(nv::cv::util::HashMD5 &hash, const optional<T> &o)
     else
     {
         return Update(hash, std::hash<optional<int>>()(nullopt));
-    }
-}
-
-template<class T, class A>
-void Update(nv::cv::util::HashMD5 &hash, const vector<T, A> &v)
-{
-    Update(hash, v.size());
-    for (size_t i = 0; i < v.size(); ++i)
-    {
-        Update(hash, v[i]);
     }
 }
 
