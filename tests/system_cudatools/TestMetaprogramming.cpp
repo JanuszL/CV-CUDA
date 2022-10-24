@@ -31,14 +31,14 @@ public:
 NVCV_TYPED_TEST_SUITE_F(CopyConstnessTest,
                         test::type::Zip<t::Types<const float, const unsigned long long>, t::Types<int, double>>);
 
-TYPED_TEST(CopyConstnessTest, CorrectConstType)
+TYPED_TEST(CopyConstnessTest, is_const)
 {
     using ConstType = detail::CopyConstness_t<typename TestFixture::SourceType, typename TestFixture::TargetType>;
 
     EXPECT_TRUE(std::is_const_v<ConstType>);
 }
 
-TYPED_TEST(CopyConstnessTest, CorrectTargetType)
+TYPED_TEST(CopyConstnessTest, correct_type)
 {
     using ConstType = detail::CopyConstness_t<typename TestFixture::SourceType, typename TestFixture::TargetType>;
 

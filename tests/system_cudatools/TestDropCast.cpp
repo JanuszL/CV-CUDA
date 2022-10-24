@@ -49,7 +49,7 @@ NVCV_TYPED_TEST_SUITE(
 
 // clang-format on
 
-TYPED_TEST(DropCastTest, CorrectOutputOfDropCast)
+TYPED_TEST(DropCastTest, correct_output)
 {
     const int  NC    = ttype::GetValue<TypeParam, 0>;
     const auto input = ttype::GetValue<TypeParam, 1>;
