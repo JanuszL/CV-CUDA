@@ -48,6 +48,7 @@ pybind11_add_module(nvcv_python MODULE
     Main.cpp
     ImageFormat.cpp
     PixelType.cpp
+    BorderType.cpp
     Object.cpp
     Stream.cpp
     Resource.cpp
