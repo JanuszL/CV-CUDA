@@ -44,23 +44,21 @@ NVCVImageRequirements Image::CalcRequirements(Size2D size, ImageFormat fmt)
     NVCV_CHECK_THROW(cudaDeviceGetAttribute(&pitchAlign, cudaDevAttrTexturePitchAlignment, dev));
     NVCV_CHECK_THROW(cudaDeviceGetAttribute(&addrAlign, cudaDevAttrTextureAlignment, dev));
 
-    reqs.alignBytes = std::lcm(addrAlign, pitchAlign);
-
-    // Alignment must be compatible with each plane's pixel stride.
-    for (int p = 0; p < fmt.numPlanes(); ++p)
-    {
-        int pixStride = fmt.planePixelStrideBytes(p);
-
-        reqs.alignBytes = std::lcm(reqs.alignBytes, pixStride);
-    }
-    reqs.alignBytes = util::RoundUpNextPowerOfTwo(reqs.alignBytes);
-
+    reqs.alignBytes = addrAlign;
     if (reqs.alignBytes > NVCV_MAX_MEM_REQUIREMENTS_BLOCK_SIZE)
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT,
                         "Alignment requirement of %d is larger than the maximum allowed %ld", reqs.alignBytes,
                         NVCV_MAX_MEM_REQUIREMENTS_BLOCK_SIZE);
     }
+
+    // Pitch alignment must be compatible with each plane's pixel stride.
+    for (int p = 0; p < fmt.numPlanes(); ++p)
+    {
+        int pixStride = fmt.planePixelStrideBytes(p);
+        pitchAlign    = std::lcm(pitchAlign, pixStride);
+    }
+    pitchAlign = util::RoundUpNextPowerOfTwo(pitchAlign);
 
     // Calculate total device memory needed in blocks
     for (int p = 0; p < fmt.numPlanes(); ++p)
@@ -70,9 +68,9 @@ NVCVImageRequirements Image::CalcRequirements(Size2D size, ImageFormat fmt)
         NVCV_ASSERT((size_t)p < sizeof(reqs.planeRowPitchBytes) / sizeof(reqs.planeRowPitchBytes[0]));
 
         reqs.planeRowPitchBytes[p]
-            = util::RoundUpPowerOfTwo((int64_t)planeSize.w * fmt.planePixelStrideBytes(p), reqs.alignBytes);
+            = util::RoundUpPowerOfTwo((int64_t)planeSize.w * fmt.planePixelStrideBytes(p), pitchAlign);
 
-        AddBuffer(reqs.mem.deviceMem, reqs.planeRowPitchBytes[p] * planeSize.h, reqs.alignBytes);
+        AddBuffer(reqs.mem.deviceMem, reqs.planeRowPitchBytes[p] * planeSize.h, addrAlign);
     }
 
     return reqs;
@@ -149,7 +147,9 @@ void Image::exportData(NVCVImageData &data) const
         planeOffsetBytes += plane.height * plane.pitchBytes;
     }
 
-    NVCV_ASSERT(planeOffsetBytes == CalcTotalSizeBytes(m_reqs.mem.deviceMem));
+    // Due to addr alignment, the allocated buffer could be larger than what we need,
+    // but it can't be smaller.
+    NVCV_ASSERT(planeOffsetBytes <= CalcTotalSizeBytes(m_reqs.mem.deviceMem));
 }
 
 // ImageWrap implementation -------------------------------------------
