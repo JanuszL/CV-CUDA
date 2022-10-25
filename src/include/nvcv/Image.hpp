@@ -173,6 +173,7 @@ inline const IImageData *ImageWrapHandle::doExportData() const
 
     switch (imgData.bufferType)
     {
+    case NVCV_IMAGE_BUFFER_PITCH_HOST:
     case NVCV_IMAGE_BUFFER_NONE:
         break;
 

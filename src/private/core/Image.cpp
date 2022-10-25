@@ -205,6 +205,10 @@ void ImageWrapData::doValidateData(const NVCVImageData &data) const
         success = true;
         break;
 
+    case NVCV_IMAGE_BUFFER_PITCH_HOST:
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
+            << "Wrapping of host memory into an image isn't currently supported";
+
     case NVCV_IMAGE_BUFFER_CUDA_ARRAY:
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Wrapping of cudaArray into an image isn't currently supported";
 
