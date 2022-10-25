@@ -49,6 +49,49 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopResizeCreate(NVCVOperatorHandle *handle);
 /** Executes the resize operation on the given cuda stream. This operation does not
  *  wait for completion.
  *
+ *  Limitations:
+ *
+ *  Input:
+ *       Data Layout:    [kNHWC, kHWC]
+ *       Channels:       [1, 3, 4]
+ *
+ *       Data Type      | Allowed
+ *       -------------- | -------------
+ *       8bit  Unsigned | Yes
+ *       8bit  Signed   | No
+ *       16bit Unsigned | Yes
+ *       16bit Signed   | Yes
+ *       32bit Unsigned | No
+ *       32bit Signed   | No
+ *       32bit Float    | Yes
+ *       64bit Float    | No
+ *
+ *  Output:
+ *       Data Layout:    [kNHWC, kHWC]
+ *       Channels:       [1, 3, 4]
+ *
+ *       Data Type      | Allowed
+ *       -------------- | -------------
+ *       8bit  Unsigned | Yes
+ *       8bit  Signed   | No
+ *       16bit Unsigned | Yes
+ *       16bit Signed   | Yes
+ *       32bit Unsigned | No
+ *       32bit Signed   | No
+ *       32bit Float    | Yes
+ *       64bit Float    | No
+ *
+ *  Input/Output dependency
+ *
+ *       Property      |  Input == Output
+ *      -------------- | -------------
+ *       Data Layout   | Yes
+ *       Data Type     | Yes
+ *       Number        | Yes
+ *       Channels      | Yes
+ *       Width         | No
+ *       Height        | No
+ *
  * @param [in] handle Handle to the operator.
  *                    + Must not be NULL.
  * @param [in] stream Handle to a valid CUDA stream.

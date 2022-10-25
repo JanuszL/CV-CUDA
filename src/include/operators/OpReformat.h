@@ -50,6 +50,49 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopReformatCreate(NVCVOperatorHandle *handle);
 /** Executes the reformat operation on the given cuda stream. This operation does not
  *  wait for completion.
  *
+ *  Limitations:
+ *
+ *  Input:
+ *       Data Layout:    [kNHWC, kHWC, kNCHW, KCHW]
+ *       Channels:       [1, 3, 4]
+ *
+ *       Data Type      | Allowed
+ *       -------------- | -------------
+ *       8bit  Unsigned | Yes
+ *       8bit  Signed   | Yes
+ *       16bit Unsigned | Yes
+ *       16bit Signed   | Yes
+ *       32bit Unsigned | No
+ *       32bit Signed   | Yes
+ *       32bit Float    | Yes
+ *       64bit Float    | Yes
+ *
+ *  Output:
+ *       Data Layout:    [kNHWC, kHWC, kNCHW, KCHW]
+ *       Channels:       [1, 3, 4]
+ *
+ *       Data Type      | Allowed
+ *       -------------- | -------------
+ *       8bit  Unsigned | Yes
+ *       8bit  Signed   | Yes
+ *       16bit Unsigned | Yes
+ *       16bit Signed   | Yes
+ *       32bit Unsigned | No
+ *       32bit Signed   | Yes
+ *       32bit Float    | Yes
+ *       64bit Float    | Yes
+ *
+ *  Input/Output dependency
+ *
+ *       Property      |  Input == Output
+ *      -------------- | -------------
+ *       Data Layout   | No
+ *       Data Type     | Yes
+ *       Number        | Yes
+ *       Channels      | Yes
+ *       Width         | Yes
+ *       Height        | Yes
+ *
  * @param [in] handle Handle to the operator.
  *                    + Must not be NULL.
  * @param [in] stream Handle to a valid CUDA stream.

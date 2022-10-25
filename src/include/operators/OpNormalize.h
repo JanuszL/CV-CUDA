@@ -48,8 +48,79 @@ extern "C"
  */
 NVCV_OP_PUBLIC NVCVStatus nvcvopNormalizeCreate(NVCVOperatorHandle *handle);
 
-/** Executes the normalize operation on the given cuda stream. This operation does not
- *  wait for completion.
+/**
+ * Executes the normalize operation on the given cuda stream. This operation does not
+ * wait for completion.
+ *
+ * Data normalization is done using externally provided base (typically: mean or min) and scale (typically
+ * reciprocal of standard deviation or 1/(max-min)). The normalization follows the formula:
+ * ```
+ * out[data_idx] = (in[data_idx] - base[param_idx]) * scale[param_idx] * global_scale + shift
+ * ```
+ * Where `data_idx` is a position in the data tensor (in, out) and `param_idx` is a position
+ * in the base and scale tensors (see below for details). The two additional constants,
+ * `global_scale` and `shift` can be used to adjust the result to the dynamic range and resolution
+ * of the output type.
+ *
+ * The `scale` parameter may also be interpreted as standard deviation - in that case, its
+ * reciprocal is used and optionally, a regularizing term is added to the variance.
+ * ```
+ * m = 1 / sqrt(square(stddev[param_idx]) + epsilon)
+ * out[data_idx] = (in[data_idx] - mean[param_idx]) * m * global_scale + shift
+ * ```
+ *
+ * `param_idx` is calculated as follows (where axis = N,H,W,C):
+ * ```
+ * param_idx[axis] = param_shape[axis] == 1 ? 0 : data_idx[axis]
+ * ```
+ *
+ * Limitations:
+ *
+ * Input:
+ *      Data Layout:    [kNHWC, kHWC, kNCHW, KCHW]
+ *      Channels:       [1, 3, 4]
+ *
+ *      Data Type      | Allowed
+ *      -------------- | -------------
+ *      8bit  Unsigned | Yes
+ *      8bit  Signed   | Yes
+ *      16bit Unsigned | Yes
+ *      16bit Signed   | Yes
+ *      32bit Unsigned | No
+ *      32bit Signed   | Yes
+ *      32bit Float    | Yes
+ *      64bit Float    | No
+ *
+ * Output:
+ *      Data Layout:    [kNHWC, kHWC, kNCHW, KCHW]
+ *      Channels:       [1, 3, 4]
+ *
+ *      Data Type      | Allowed
+ *      -------------- | -------------
+ *      8bit  Unsigned | Yes
+ *      8bit  Signed   | Yes
+ *      16bit Unsigned | Yes
+ *      16bit Signed   | Yes
+ *      32bit Unsigned | No
+ *      32bit Signed   | Yes
+ *      32bit Float    | Yes
+ *      64bit Float    | No
+ *
+ * Input/Output dependency
+ *
+ *      Property      |  Input == Output
+ *     -------------- | -------------
+ *      Data Layout   | Yes
+ *      Data Type     | Yes
+ *      Number        | Yes
+ *      Channels      | Yes
+ *      Width         | Yes
+ *      Height        | Yes
+ *
+ * Scale/Base Tensor:
+ *
+ *      Scale and Base may be a tensor the same shape as the input/output tensors, or it can be a scalar each dimension.
+ *
  *
  * @param [in] handle Handle to the operator.
  *                    + Must not be NULL.

@@ -49,6 +49,54 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopPadAndStackCreate(NVCVOperatorHandle *handle);
 
 /** Executes the pad and stack operation on the given cuda stream. This operation does not wait for completion.
  *
+ *  Limitations:
+ *
+ *  Input:
+ *       Data Layout:    [kNHWC, kHWC]
+ *       Channels:       [1, 3, 4]
+ *
+ *       Data Type      | Allowed
+ *       -------------- | -------------
+ *       8bit  Unsigned | Yes
+ *       8bit  Signed   | No
+ *       16bit Unsigned | Yes
+ *       16bit Signed   | Yes
+ *       32bit Unsigned | No
+ *       32bit Signed   | Yes
+ *       32bit Float    | Yes
+ *       64bit Float    | No
+ *
+ *  Output:
+ *       Data Layout:    [kNHWC, kHWC]
+ *       Channels:       [1, 3, 4]
+ *
+ *       Data Type      | Allowed
+ *       -------------- | -------------
+ *       8bit  Unsigned | Yes
+ *       8bit  Signed   | No
+ *       16bit Unsigned | Yes
+ *       16bit Signed   | Yes
+ *       32bit Unsigned | No
+ *       32bit Signed   | Yes
+ *       32bit Float    | Yes
+ *       64bit Float    | No
+ *
+ *  Input/Output dependency
+ *
+ *       Property      |  Input == Output
+ *      -------------- | -------------
+ *       Data Layout   | Yes
+ *       Data Type     | Yes
+ *       Number        | Yes
+ *       Channels      | Yes
+ *       Width         | No
+ *       Height        | No
+ *
+ *  Top/left Tensors
+ *
+ *      Must be kNHWC where N=H=C=1 with W = N (N in reference to input and output tensors).
+ *      Data Type must be 32bit Signed.
+ *
  * @param [in] handle Handle to the operator.
  *                    + Must not be NULL.
  * @param [in] stream Handle to a valid CUDA stream.

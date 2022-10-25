@@ -158,9 +158,58 @@ public:
      * @brief Converts an array to another data type with scaling.
      * The method converts source pixel values to the target data type. saturate_cast<> is applied at the end to avoid
      * possible overflows:
+     *
      * ```
      * outputs(x,y) = saturate_cast<out_type>(α * inputs(x, y) + β)
      * ```
+     *
+     * Limitations:
+     *
+     * Data Layout, Number, Channels, Width, Height, of input and output must be same.
+     *
+     * Input:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1-4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | Yes
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | Yes
+     *      32bit Float    | Yes
+     *      64bit Float    | Yes
+     *
+     * Output:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1-4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | Yes
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | Yes
+     *      32bit Float    | Yes
+     *      64bit Float    | Yes
+     *
+     * Input/Output dependency
+     *
+     *      Property      |  Input == Output
+     *     -------------- | -------------
+     *      Data Layout   | Yes
+     *      Data Type     | No
+     *      Number        | Yes
+     *      Channels      | Yes
+     *      Width         | Yes
+     *      Height        | Yes
+     *
+     *
+     *
      * @param inputs gpu pointer, inputs[0] are batched input images, whose shape is input_shape and type is data_type.
      * @param outputs gpu pointer, outputs[0] are batched output images that have the same shape as input_shape and the
      * type out_type.
@@ -200,6 +249,54 @@ public:
      *        Destination will have the [0,0] position populated by the x,y position as
      *        defined in the ROI x,y parameters of the input data. The operator will continue to populate the
      *        output data until the destination image is populated with the size described by the ROI.
+     *
+     *
+     * Limitations:
+     *
+     * ROI must be smaller than output tensor.
+     *
+     * Input:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | Yes
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | Yes
+     *      32bit Signed   | Yes
+     *      32bit Float    | Yes
+     *      64bit Float    | Yes
+     *
+     * Output:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | Yes
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | Yes
+     *      32bit Signed   | Yes
+     *      32bit Float    | Yes
+     *      64bit Float    | Yes
+     *
+     * Input/Output dependency
+     *
+     *      Property      |  Input == Output
+     *     -------------- | -------------
+     *      Data Layout   | Yes
+     *      Data Type     | Yes
+     *      Number        | Yes
+     *      Channels      | Yes
+     *      Width         | No
+     *      Height        | No
+     *
+     *
      * @param [in] in intput tensor.
      *
      * @param [out] out output tensor.
@@ -230,6 +327,51 @@ public:
     /**
      * @brief Reformats the input images. Transfor the inputs from kNHWC format to kNCHW format or from kNCHW format to
      * kNHWC format.
+     *
+     * Limitations:
+     *
+     *
+     * Input:
+     *      Data Layout:    [kNHWC, kHWC, kNCHW, KCHW]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | Yes
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | Yes
+     *      32bit Float    | Yes
+     *      64bit Float    | Yes
+     *
+     * Output:
+     *      Data Layout:    [kNHWC, kHWC, kNCHW, KCHW]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | Yes
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | Yes
+     *      32bit Float    | Yes
+     *      64bit Float    | Yes
+     *
+     * Input/Output dependency
+     *
+     *      Property      |  Input == Output
+     *     -------------- | -------------
+     *      Data Layout   | No
+     *      Data Type     | Yes
+     *      Number        | Yes
+     *      Channels      | Yes
+     *      Width         | Yes
+     *      Height        | Yes
+     *
      * @param inputs gpu pointer, inputs[0] are batched input images, whose shape is input_shape and type is data_type.
      * @param outputs gpu pointer, outputs[0] are batched output images that have the same shape as input_shape and the
      * same type as data_type.
@@ -263,6 +405,51 @@ public:
 
     /**
      * @brief Resizes the input images. This class resizes the images down to or up to the specified size.
+     *
+     *
+     * Limitations:
+     *
+     *
+     * Input:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | No
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Output:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | No
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Input/Output dependency
+     *
+     *      Property      |  Input == Output
+     *     -------------- | -------------
+     *      Data Layout   | Yes
+     *      Data Type     | Yes
+     *      Number        | Yes
+     *      Channels      | Yes
+     *      Width         | No
+     *      Height        | No
      *
      * @param [in] inData Intput tensor.
      * @param [out] outData Output tensor.
@@ -309,10 +496,59 @@ public:
      * out[data_idx] = (in[data_idx] - mean[param_idx]) * m * global_scale + shift
      * ```
      *
-     * `param_idx` is calculated as follows:
+     * `param_idx` is calculated as follows (where axis = N,H,W,C):
      * ```
      * param_idx[axis] = param_shape[axis] == 1 ? 0 : data_idx[axis]
      * ```
+     *
+     * Limitations:
+     *
+     *
+     * Input:
+     *      Data Layout:    [kNHWC, kHWC, kNCHW, KCHW]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | Yes
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | Yes
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Output:
+     *      Data Layout:    [kNHWC, kHWC, kNCHW, KCHW]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | Yes
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | Yes
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Input/Output dependency
+     *
+     *      Property      |  Input == Output
+     *     -------------- | -------------
+     *      Data Layout   | Yes
+     *      Data Type     | Yes
+     *      Number        | Yes
+     *      Channels      | Yes
+     *      Width         | Yes
+     *      Height        | Yes
+     *
+     * Scale/Base Tensor:
+     *
+     * Scale and Base may be a tensor the same shape as the input/output tensors, or it can be a scalar each dimension.
+     *
      *
      * @param inputs gpu pointer,
      * @param global_scale additional scaling factor, used e.g. when output is of integral type.
@@ -345,6 +581,56 @@ public:
         : CudaBaseOp(max_input_shape, max_output_shape)
     {
     }
+
+    /**
+     * Limitations:
+     *
+     * Input:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | Yes
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Output:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | Yes
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Input/Output dependency
+     *
+     *      Property      |  Input == Output
+     *     -------------- | -------------
+     *      Data Layout   | Yes
+     *      Data Type     | Yes
+     *      Number        | Yes
+     *      Channels      | Yes
+     *      Width         | No
+     *      Height        | No
+     *
+     * Top/left Tensors
+     *
+     *     Must be kNHWC where N=H=C=1 with W = N (N in reference to input and output tensors).
+     *     Data Type must be 32bit Signed.
+     */
 
     ErrorCode infer(const IImageBatchVarShapeDataDevicePitch &inData, const ITensorDataPitchDevice &outData,
                     const ITensorDataPitchDevice &top, const ITensorDataPitchDevice &left,
