@@ -546,7 +546,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageFormatToFourCC, (NVCVImageFormat fmt,
 }
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageFormatGetPlaneSize,
-                (NVCVImageFormat fmt, int32_t plane, int32_t imgWidth, int32_t imgSize, int32_t *outPlaneWidth,
+                (NVCVImageFormat fmt, int32_t plane, int32_t imgWidth, int32_t imgHeight, int32_t *outPlaneWidth,
                  int32_t *outPlaneHeight))
 {
     return priv::ProtectCall(
@@ -558,7 +558,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageFormatGetPlaneSize,
                                       "Pointer to outPlaneWidth and outPlaneHeight cannot be both NULL");
             }
             priv::ImageFormat pfmt{fmt};
-            priv::Size2D      sz = pfmt.planeSize({imgWidth, 0}, plane);
+            priv::Size2D      sz = pfmt.planeSize({imgWidth, imgHeight}, plane);
             if (outPlaneWidth != nullptr)
             {
                 *outPlaneWidth = sz.w;
