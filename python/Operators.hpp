@@ -22,5 +22,6 @@ void ExportOpResize(py::module &m);
 void ExportOpCustomCrop(py::module &m);
 void ExportOpNormalize(py::module &m);
 void ExportOpConvertTo(py::module &m);
+void ExportOpPadAndStack(py::module &m);
 
 } // namespace nv::cvpy

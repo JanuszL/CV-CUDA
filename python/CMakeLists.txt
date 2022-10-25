@@ -64,6 +64,7 @@ pybind11_add_module(nvcv_python MODULE
     OpCustomCrop.cpp
     OpNormalize.cpp
     OpConvertTo.cpp
+    OpPadAndStack.cpp
 )
 
 target_include_directories(nvcv_python
