@@ -321,8 +321,9 @@ bool type_caster<nv::cv::PixelType>::load(handle src, bool)
     else
     {
         PyObject *ptr = nullptr;
-        if (detail::npy_api::get().PyArray_DescrConverter_(src.ptr(), &ptr) == 0)
+        if (detail::npy_api::get().PyArray_DescrConverter_(src.ptr(), &ptr) == 0 || !ptr)
         {
+            PyErr_Clear();
             return false;
         }
         dtype dt = dtype::from_args(reinterpret_steal<object>(ptr));

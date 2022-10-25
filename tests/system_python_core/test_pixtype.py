@@ -41,3 +41,9 @@ def test_pixtype_dtype(type, dt):
     t = nvcv.Type(dt)
     assert type == t
     assert dt == t
+
+
+@t.mark.parametrize("dt", [np.dtype([("f1", np.uint64), ("f2", np.int32)]), "invalid"])
+def test_pixtype_dtype_conv_error(dt):
+    with t.raises(TypeError):
+        nvcv.Type(dt)
