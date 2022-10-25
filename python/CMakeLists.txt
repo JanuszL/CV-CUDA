@@ -53,6 +53,7 @@ pybind11_add_module(nvcv_python MODULE
     Resource.cpp
     Container.cpp
     Tensor.cpp
+    Image.cpp
     CudaBuffer.cpp
     InterpolationType.cpp
     Rect.cpp
