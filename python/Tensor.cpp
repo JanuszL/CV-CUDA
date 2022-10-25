@@ -14,6 +14,7 @@
 #include "Tensor.hpp"
 
 #include "Assert.hpp"
+#include "CudaBuffer.hpp"
 #include "Hash.hpp"
 #include "ImageFormat.hpp"
 #include "PixelType.hpp"
@@ -22,6 +23,16 @@
 
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
+
+namespace nv::cv {
+
+static size_t ComputeHash(const cv::TensorShape &shape)
+{
+    using cvpy::ComputeHash;
+    return ComputeHash(shape.shape(), shape.layout());
+}
+
+} // namespace nv::cv
 
 namespace nv::cvpy {
 
@@ -67,9 +78,100 @@ std::shared_ptr<Tensor> Tensor::CreateFromReqs(const cv::Tensor::Requirements &r
     }
 }
 
+namespace {
+
+NVCVTensorData FillNVCVTensorData(const py::buffer_info &info, std::optional<cv::TensorLayout> layout,
+                                  NVCVTensorBufferType bufType)
+{
+    NVCVTensorData tensorData = {};
+
+    // dtype ------------
+    tensorData.dtype = py::cast<cv::PixelType>(ToDType(info));
+
+    // layout ------------
+    if (layout)
+    {
+        tensorData.layout = *layout;
+    }
+
+    // ndim ------------
+    {
+        int ndim = info.ndim == 0 ? 1 : info.ndim;
+        if (ndim < 1 || ndim > NVCV_TENSOR_MAX_NDIM)
+        {
+            throw std::invalid_argument(
+                FormatString("Number of dimensions must be between 1 and %d, not %d", NVCV_TENSOR_MAX_NDIM, ndim));
+        }
+        tensorData.ndim = ndim;
+    }
+
+    // shape ------------
+    if (info.ndim == 0)
+    {
+        // according to https://docs.python.org/3/c-api/buffer.html,
+        // when ndim is zero, buf points to a scalar, so its shape is [1]
+        // info.shape and info.pitchBytes are NULL.
+        tensorData.shape[0] = 1;
+    }
+    else
+    {
+        for (int d = 0; d < info.ndim; ++d)
+        {
+            tensorData.shape[d] = info.shape[d];
+        }
+    }
+
+    // buffer type ------------
+    tensorData.bufferType = bufType;
+    NVCV_ASSERT(bufType == NVCV_TENSOR_BUFFER_PITCH_DEVICE && "Only pitch-linear device buffer supported for now");
+
+    NVCVTensorBufferPitch &dataPitch = tensorData.buffer.pitch;
+
+    // pitch ------------
+    if (info.ndim == 0)
+    {
+        // tensor only holds one scalar, to pitchBytes is itemsize
+        dataPitch.pitchBytes[0] = info.itemsize;
+    }
+    else
+    {
+        for (int d = 0; d < info.ndim; ++d)
+        {
+            dataPitch.pitchBytes[d] = info.strides[d];
+        }
+    }
+
+    // data ------------
+    dataPitch.data = info.ptr;
+
+    return tensorData;
+}
+
+NVCVTensorData FillNVCVTensorDataCUDA(const py::buffer_info &info, std::optional<cv::TensorLayout> layout)
+{
+    return FillNVCVTensorData(info, std::move(layout), NVCV_TENSOR_BUFFER_PITCH_DEVICE);
+}
+
+} // namespace
+
+std::shared_ptr<Tensor> Tensor::Wrap(CudaBuffer &buffer, std::optional<cv::TensorLayout> layout)
+{
+    py::buffer_info info = buffer.request(true);
+
+    NVCVTensorData data = FillNVCVTensorDataCUDA(info, std::move(layout));
+
+    return std::shared_ptr<Tensor>(new Tensor(data, py::cast(buffer.shared_from_this())));
+}
+
 Tensor::Tensor(const cv::Tensor::Requirements &reqs)
-    : m_impl(reqs)
+    : m_impl{std::make_unique<cv::Tensor>(reqs)}
     , m_key{reqs}
+{
+}
+
+Tensor::Tensor(const NVCVTensorData &data, py::object wrappedObject)
+    : m_impl{std::make_unique<cv::TensorWrapData>(cv::TensorDataWrap{data})}
+    , m_key{m_impl->shape(), m_impl->dtype()}
 {
 }
 
@@ -83,26 +185,26 @@ std::shared_ptr<const Tensor> Tensor::shared_from_this() const
     return std::static_pointer_cast<const Tensor>(Container::shared_from_this());
 }
 
-cv::Tensor &Tensor::impl()
+cv::ITensor &Tensor::impl()
 {
-    return m_impl;
+    return *m_impl;
 }
 
-const cv::Tensor &Tensor::impl() const
+const cv::ITensor &Tensor::impl() const
 {
-    return m_impl;
+    return *m_impl;
 }
 
 Shape Tensor::shape() const
 {
-    cv::Shape ishape = m_impl.shape().shape();
+    cv::Shape ishape = m_impl->shape().shape();
 
     return Shape(ishape.begin(), ishape.end());
 }
 
 std::optional<cv::TensorLayout> Tensor::layout() const
 {
-    const cv::TensorLayout &layout = m_impl.layout();
+    const cv::TensorLayout &layout = m_impl->layout();
     if (layout != cv::TensorLayout::NONE)
     {
         return layout;
@@ -115,37 +217,35 @@ std::optional<cv::TensorLayout> Tensor::layout() const
 
 cv::PixelType Tensor::dtype() const
 {
-    return m_impl.dtype();
+    return m_impl->dtype();
 }
 
 int Tensor::ndim() const
 {
-    return m_impl.ndim();
+    return m_impl->ndim();
 }
 
 Tensor::Key::Key(const cv::Tensor::Requirements &reqs)
-    : Key(Shape(reqs.shape, reqs.shape + reqs.ndim), static_cast<cv::PixelType>(reqs.dtype),
-          static_cast<cv::TensorLayout>(reqs.layout))
+    : Key(cv::TensorShape(reqs.shape, reqs.ndim, reqs.layout), static_cast<cv::PixelType>(reqs.dtype))
 {
 }
 
-Tensor::Key::Key(Shape shape, cv::PixelType dtype, cv::TensorLayout layout)
+Tensor::Key::Key(const cv::TensorShape &shape, cv::PixelType dtype)
     : m_shape(std::move(shape))
     , m_dtype(dtype)
-    , m_layout(layout)
 {
 }
 
 size_t Tensor::Key::doGetHash() const
 {
-    return ComputeHash(m_shape, m_dtype, m_layout);
+    return ComputeHash(m_shape, m_dtype);
 }
 
 bool Tensor::Key::doIsEqual(const IKey &that_) const
 {
     const Key &that = static_cast<const Key &>(that_);
 
-    return std::tie(m_layout, m_shape, m_dtype) == std::tie(that.m_layout, that.m_shape, that.m_dtype);
+    return std::tie(m_shape, m_dtype) == std::tie(that.m_shape, that.m_dtype);
 }
 
 auto Tensor::key() const -> const Key &
@@ -188,6 +288,8 @@ void Tensor::Export(py::module &m)
         .def(py::self != py::self)
         .def("__repr__", &TensorLayoutToString);
 
+    py::implicitly_convertible<py::str, cv::TensorLayout>();
+
     py::class_<Tensor, std::shared_ptr<Tensor>, Container>(m, "Tensor")
         .def(py::init(&Tensor::CreateForImageBatch), "nimages"_a, "imgsize"_a, "format"_a)
         .def(py::init(&Tensor::Create), "shape"_a, "dtype"_a, "layout"_a = std::nullopt)
@@ -196,6 +298,8 @@ void Tensor::Export(py::module &m)
         .def_property_readonly("dtype", &Tensor::dtype)
         .def_property_readonly("ndim", &Tensor::ndim)
         .def("__repr__", &ToString<Tensor>);
+
+    m.def("as_tensor", &Tensor::Wrap, "buffer"_a, "layout"_a = std::nullopt);
 }
 
 } // namespace nv::cvpy
