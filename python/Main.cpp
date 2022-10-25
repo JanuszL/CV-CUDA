@@ -12,9 +12,12 @@
  */
 
 #include "Cache.hpp"
+#include "Container.hpp"
 #include "ImageFormat.hpp"
 #include "PixelType.hpp"
+#include "Resource.hpp"
 #include "Stream.hpp"
+#include "Tensor.hpp"
 
 #include <nvcv/Version.h>
 #include <pybind11/pybind11.h>
@@ -43,4 +46,7 @@ PYBIND11_MODULE(nvcv, m)
 
     ExportImageFormat(m);
     ExportPixelType(m);
+    Resource::Export(m);
+    Container::Export(m);
+    Tensor::Export(m);
 }

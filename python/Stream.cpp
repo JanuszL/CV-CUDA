@@ -282,6 +282,31 @@ void Stream::deactivate(py::object exc_type, py::object exc_value, py::object ex
     g_streamStack.pop();
 }
 
+void Stream::holdResources(std::vector<std::shared_ptr<const Resource>> usedResources)
+{
+    struct HostFunctionClosure
+    {
+        // Also hold the stream reference so that it isn't destroyed before the processing is done.
+        std::shared_ptr<const Stream>                stream;
+        std::vector<std::shared_ptr<const Resource>> resources;
+    };
+
+    auto closure = std::make_unique<HostFunctionClosure>();
+
+    closure->stream    = this->shared_from_this();
+    closure->resources = std::move(usedResources);
+
+    auto fn = [](cudaStream_t stream, cudaError_t error, void *userData) -> void
+    {
+        auto *pclosure = reinterpret_cast<HostFunctionClosure *>(userData);
+        delete pclosure;
+    };
+
+    CheckThrow(cudaStreamAddCallback(m_handle, fn, closure.get(), 0));
+
+    closure.release();
+}
+
 std::ostream &operator<<(std::ostream &out, const Stream &stream)
 {
     return out << "<nvcv.cuda.Stream id=" << stream.id() << " handle=" << stream.handle() << '>';

@@ -15,16 +15,15 @@
 #define NVCV_PYTHON_HASH_HPP
 
 #include <functional>
+#include <ranges>
 #include <tuple>
 #include <type_traits>
+#include <vector>
 
 namespace nv::cvpy {
 
-template<class... TT>
-size_t ComputeHash(const std::tuple<TT...> &a);
-
 template<class T>
-requires(!std::is_enum_v<T>) size_t ComputeHash(const T &a)
+requires(!std::is_enum_v<T> && std::is_default_constructible_v<std::hash<T>>) size_t ComputeHash(const T &a)
 {
     return std::hash<T>{}(a);
 }
@@ -37,10 +36,27 @@ requires(std::is_enum_v<T>) size_t ComputeHash(const T &a)
     return std::hash<Base>{}(static_cast<Base>(a));
 }
 
+template<std::ranges::range R>
+size_t ComputeHash(const R &a);
+
+template<class... TT>
+size_t ComputeHash(const std::tuple<TT...> &a);
+
 template<class HEAD, class... TAIL>
-size_t ComputeHash(const HEAD &a, const TAIL &...aa)
+requires(sizeof...(TAIL) >= 1) size_t ComputeHash(const HEAD &a, const TAIL &...aa)
 {
     return ComputeHash(a) ^ (ComputeHash(aa...) << 1);
+}
+
+template<std::ranges::range R>
+size_t ComputeHash(const R &a)
+{
+    size_t hash = ComputeHash(std::ranges::size(a));
+    for (const auto &v : a)
+    {
+        hash = ComputeHash(hash, v);
+    }
+    return hash;
 }
 
 // Hashing for tuples ---------------------

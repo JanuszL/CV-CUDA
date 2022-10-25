@@ -24,6 +24,8 @@
 
 namespace nv::cvpy {
 
+class Resource;
+
 class IExternalStream
 {
 public:
@@ -47,6 +49,8 @@ public:
 
     void activate();
     void deactivate(py::object exc_type, py::object exc_value, py::object exc_tb);
+
+    void holdResources(std::vector<std::shared_ptr<const Resource>> usedResources);
 
     void         sync();
     cudaStream_t handle() const;
