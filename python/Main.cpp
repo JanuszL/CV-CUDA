@@ -15,6 +15,7 @@
 #include "Container.hpp"
 #include "CudaBuffer.hpp"
 #include "ImageFormat.hpp"
+#include "Operators.hpp"
 #include "PixelType.hpp"
 #include "Resource.hpp"
 #include "Stream.hpp"
@@ -38,6 +39,7 @@ PYBIND11_MODULE(nvcv, m)
 
     using namespace nv::cvpy;
 
+    // Core entities
     Cache::Export(m);
 
     {
@@ -51,4 +53,7 @@ PYBIND11_MODULE(nvcv, m)
     Resource::Export(m);
     Container::Export(m);
     Tensor::Export(m);
+
+    // Operators
+    ExportOpReformat(m);
 }
