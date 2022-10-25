@@ -1,3 +1,5 @@
+#!/bin/bash -e
+
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -8,17 +10,34 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-# SC2034: 'foo' appears unused. Verify use (or export if used externally).
-#         reason: we include this file from other scripts, no need to export it
-# shellcheck disable=SC2034
+# SDIR is the directory where this script is located
+SDIR=$(dirname "$(readlink -f "$0")")
 
-IMAGE_URL_BASE='gitlab-master.nvidia.com:5005/cv/cvcuda'
+do_push=0
 
-# image versions must be upgraded whenever a breaking
-# change is done, such as removing some package, or updating
-# packaged versions that introduces incompatibilities.
-TAG_IMAGE=2
+if [[ $# == 1 && $1 == "--push" ]]; then
+    do_push=1
+    shift
+elif [[ $# != 0 ]]; then
+    echo "Usage: $(basename "$0") [--push]"
+    exit 1
+fi
 
-VER_CUDA=11.7.0
-VER_UBUNTU=22.04
-VER_TRT=22.09
+cd "$SDIR"
+
+# load up configuration variables
+. ./config
+
+cd samples
+
+image=$IMAGE_URL_BASE/samples-linux-x64:$TAG_IMAGE
+
+docker build \
+    --build-arg "VER_TRT=$VER_TRT" \
+    . -t "$image"
+
+if [[ $do_push == 1 ]]; then
+    docker push "$image"
+fi
+
+cd ../..

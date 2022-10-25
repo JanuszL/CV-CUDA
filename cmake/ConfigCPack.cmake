@@ -210,6 +210,25 @@ if(BUILD_PYTHON)
     include(InstallPython)
 endif()
 
+# Samples -------------------------------------
+if(BUILD_SAMPLES)
+    list(APPEND CPACK_COMPONENTS_ALL samples)
+
+    set(CPACK_COMPONENT_SAMPLES_DISABLED true)
+    set(CPACK_COMPONENT_SAMPLES_DISPLAY_NAME "Samples")
+    set(CPACK_COMPONENT_SAMPLES_DESCRIPTION "NVIDIA CV-CUDA Samples")
+
+    if(UNIX)
+        set(CVCUDA_SAMPLES_FILE_NAME "cvcuda-samples-${PACKAGE_FULL_VERSION}")
+        set(CPACK_DEBIAN_SAMPLES_FILE_NAME "${CVCUDA_SAMPLES_FILE_NAME}.deb")
+        set(CPACK_ARCHIVE_SAMPLES_FILE_NAME "${CVCUDA_SAMPLES_FILE_NAME}")
+
+	set(CPACK_DEBIAN_SAMPLES_PACKAGE_DEPENDS "${nvcv_PACKAGE_NAME}-dev (>= ${cvcuda_API_VERSION})")
+    else()
+        set(CPACK_COMPONENT_SAMPLES_DEPENDS dev)
+    endif()
+endif()
+
 # Finish GPack configuration =================================================
 
 include(CPack)

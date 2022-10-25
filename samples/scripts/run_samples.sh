@@ -1,3 +1,5 @@
+#!/bin/bash -e
+
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -8,17 +10,18 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-# SC2034: 'foo' appears unused. Verify use (or export if used externally).
-#         reason: we include this file from other scripts, no need to export it
-# shellcheck disable=SC2034
+# Usage: run_samples.sh
 
-IMAGE_URL_BASE='gitlab-master.nvidia.com:5005/cv/cvcuda'
+mkdir -p models
 
-# image versions must be upgraded whenever a breaking
-# change is done, such as removing some package, or updating
-# packaged versions that introduces incompatibilities.
-TAG_IMAGE=2
+# Export onnx model from torch
+python ./scripts/export_resnet.py
 
-VER_CUDA=11.7.0
-VER_UBUNTU=22.04
-VER_TRT=22.09
+# Serialize models
+./scripts/serialize_models.sh
+
+# Batch size 1
+LD_LIBRARY_PATH=./lib ./bin/nvcv_samples_classification -e ./models/resnet50.engine -i ./assets/tabby_tiger_cat.jpg -l ./models/imagenet-classes.txt -b 1
+
+# Batch size 2
+LD_LIBRARY_PATH=./lib ./bin/nvcv_samples_classification -e ./models/resnet50.engine -i ./assets/tabby_tiger_cat.jpg -l ./models/imagenet-classes.txt -b 2

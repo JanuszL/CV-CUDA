@@ -1,3 +1,5 @@
+#!/bin/bash -e
+
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -8,17 +10,17 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-# SC2034: 'foo' appears unused. Verify use (or export if used externally).
-#         reason: we include this file from other scripts, no need to export it
-# shellcheck disable=SC2034
+# Classification
+# resnet50
 
-IMAGE_URL_BASE='gitlab-master.nvidia.com:5005/cv/cvcuda'
+mkdir -p models
 
-# image versions must be upgraded whenever a breaking
-# change is done, such as removing some package, or updating
-# packaged versions that introduces incompatibilities.
-TAG_IMAGE=2
+if [ ! -f ./models/imagenet-classes.txt ]
+then
+        wget https://raw.githubusercontent.com/xmartlabs/caffeflow/master/examples/imagenet/imagenet-classes.txt -O models/imagenet-classes.txt
+fi
 
-VER_CUDA=11.7.0
-VER_UBUNTU=22.04
-VER_TRT=22.09
+if [ ! -f ./models/resnet50.engine ]
+then
+        /opt/tensorrt/bin/trtexec --onnx=models/resnet50.onnx --saveEngine=models/resnet50.engine --minShapes=input:1x3x224x224 --maxShapes=input:32x3x224x224 --optShapes=input:32x3x224x224
+fi

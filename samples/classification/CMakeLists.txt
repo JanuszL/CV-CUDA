@@ -8,17 +8,17 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-# SC2034: 'foo' appears unused. Verify use (or export if used externally).
-#         reason: we include this file from other scripts, no need to export it
-# shellcheck disable=SC2034
+find_package(CUDA REQUIRED)
 
-IMAGE_URL_BASE='gitlab-master.nvidia.com:5005/cv/cvcuda'
+add_executable(nvcv_samples_classification Main.cpp)
+set(CMAKE_CXX_FLAGS "-Wno-deprecated-enum-enum-conversion")
 
-# image versions must be upgraded whenever a breaking
-# change is done, such as removing some package, or updating
-# packaged versions that introduces incompatibilities.
-TAG_IMAGE=2
+target_link_libraries(nvcv_samples_classification nvcv CUDA::cudart_static nvcv_samples_common)
 
-VER_CUDA=11.7.0
-VER_UBUNTU=22.04
-VER_TRT=22.09
+target_include_directories(nvcv_samples_classification
+	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
+
+install(TARGETS nvcv_samples_classification
+        EXPORT nvcv_samples_classification
+        COMPONENT samples
+        DESTINATION samples/bin)
