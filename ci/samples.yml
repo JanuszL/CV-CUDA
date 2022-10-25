@@ -27,7 +27,7 @@ b:samples:
 test:samples:
     extends: .launch_rule
     stage: test
-    image: 'gitlab-master.nvidia.com:5005/cv/cvcuda/samples-linux-x64:$TAG_IMAGE'
+    image: 'nvcr.io/nvidia/tensorrt:22.09-py3'
     variables:
         CUDA_CACHE_DISABLE: 1
         GIT_STRATEGY: none
@@ -41,4 +41,5 @@ test:samples:
       - "apt-get install -y --no-install-recommends ./cvcuda-installer/nvcv-lib-${version}.deb ./cvcuda-installer/nvcv-dev-${version}.deb ./cvcuda-installer/cvcuda-samples-${version}.deb"
       - "cd /opt/nvidia/cvcuda*/samples"
       - "chmod a+x ./scripts/*.sh"
+      - "./scripts/install_dependencies.sh"
       - "./scripts/run_samples.sh"

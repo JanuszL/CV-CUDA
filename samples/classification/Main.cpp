@@ -11,10 +11,11 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "ClassificationUtils.hpp"
+
 #include <common/NvDecoder.h>
 #include <common/TRTUtils.h>
 #include <cuda_runtime_api.h>
-#include <getopt.h>
 #include <math.h>
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
@@ -31,29 +32,16 @@
 /**
  * @brief Image classification sample.
  *
+ * The image classification sample uses Resnet50 based model trained on Imagenet
+ * The sample app includes preprocessing, inference and post process stages
+ *
+ * In the preprocessing The following operations are performed
+ * Resize -> DataType COnvert -> Normalize -> Interleaved to Planar
+ * The inference pipeline is run using TensorRT
+ * The post processing involves running a softmax to normalize the scores to 0-1
+ * and sorting the scores to find the TopN classificaion results.
+ *
  */
-
-namespace {
-
-#define TOPN 5
-
-inline void CheckCudaError(cudaError_t code, const char *file, const int line)
-{
-    if (code != cudaSuccess)
-    {
-        const char       *errorMessage = cudaGetErrorString(code);
-        const std::string message      = "CUDA error returned at " + std::string(file) + ":" + std::to_string(line)
-                                  + ", Error code: " + std::to_string(code) + " (" + std::string(errorMessage) + ")";
-        throw std::runtime_error(message);
-    }
-}
-
-#define CHECK_CUDA_ERROR(val)                      \
-    {                                              \
-        CheckCudaError((val), __FILE__, __LINE__); \
-    }
-
-} // namespace
 
 void PreProcess(nv::cv::TensorWrapData &inTensor, int maxImageWidth, int maxImageHeight, uint32_t batchSize,
                 int inputLayerWidth, int inputLayerHeight, cudaStream_t m_cudaStream, nv::cv::TensorWrapData &outTensor)
@@ -108,52 +96,6 @@ void PreProcess(nv::cv::TensorWrapData &inTensor, int maxImageWidth, int maxImag
     // Interleaved to planar
     nv::cvop::Reformat reformatOp;
     reformatOp(m_cudaStream, normTensor, outTensor);
-
-#if 0
-    const auto *reformtDeviceData = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(resizedTensor.exportData());
-    const auto *inDeviceData      = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(inTensor.exportData());
-    uint8_t     reformatData[224 * 224 * 3];
-    uint8_t     inData[720 * 720 * 3];
-    cudaMemcpyAsync(reformatData, reformtDeviceData->data(), 224 * 224 * 3 * sizeof(uint8_t), cudaMemcpyDeviceToHost,
-                    m_cudaStream);
-    cudaMemcpyAsync(inData, inDeviceData->data(), 720 * 720 * 3 * sizeof(uint8_t), cudaMemcpyDeviceToHost,
-                    m_cudaStream);
-    cudaStreamSynchronize(m_cudaStream);
-    for (int i = 0; i < 720 * 720 * 3; i++) printf("%d ", inData[i]);
-    printf("****************************************\n");
-    for (int i = 0; i < 224 * 224 * 3; i++) printf("%d ", reformatData[i]);
-#endif
-}
-
-std::vector<std::string> getClassLabels(const std::string &labelsFilePath)
-{
-    std::vector<std::string> classes;
-    std::ifstream            labelsFile(labelsFilePath);
-    if (!labelsFile.good())
-    {
-        throw std::runtime_error("ERROR: Invalid Labels File Path\n");
-    }
-    std::string classLabel;
-    while (std::getline(labelsFile, classLabel))
-    {
-        classes.push_back(classLabel);
-    }
-    return classes;
-}
-
-void DisplayResults(std::vector<std::vector<float>> &sortedScores, std::vector<std::vector<int>> &sortedIndices,
-                    std::string labelPath)
-{
-    auto classes = getClassLabels(labelPath);
-    for (int i = 0; i < sortedScores.size(); i++)
-    {
-        printf("\nClassification results for batch %d \n", i);
-        for (int j = 0; j < TOPN; j++)
-        {
-            auto index = sortedIndices[i][j];
-            printf("Class : %s , Score : %f\n", classes[index].c_str(), sortedScores[i][index]);
-        }
-    }
 }
 
 void PostProcess(float *outputDeviceBuffer, std::vector<std::vector<float>> &sortedScores,
@@ -166,8 +108,10 @@ void PostProcess(float *outputDeviceBuffer, std::vector<std::vector<float>> &sor
     {
         CHECK_CUDA_ERROR(cudaMemcpyAsync(sortedScores[i].data(), outputDeviceBuffer + i * numClasses,
                                          numClasses * sizeof(float), cudaMemcpyDeviceToHost, stream));
-        CHECK_CUDA_ERROR(cudaStreamSynchronize(stream));
-
+    }
+    CHECK_CUDA_ERROR(cudaStreamSynchronize(stream));
+    for (int i = 0; i < batchSize; i++)
+    {
         std::transform(sortedScores[i].begin(), sortedScores[i].end(), sortedScores[i].begin(),
                        [](float val) { return std::exp(val); });
 
@@ -180,18 +124,11 @@ void PostProcess(float *outputDeviceBuffer, std::vector<std::vector<float>> &sor
     }
 }
 
-void showUsage()
-{
-    std::cout << "usage: ./nvcv_classification_app -e <tensorrt engine path> -i <image file path or  image directory "
-                 "path> -l <labels file path> -b <batch size>"
-              << std::endl;
-}
-
 int main(int argc, char *argv[])
 {
     // Default parameters
     std::string modelPath = "./engines/resnet50.engine";
-    std::string imagePath = "./samples/assets/test.png";
+    std::string imagePath = "./samples/assets/tabby_tiger_cat.jpg";
     std::string labelPath = "./engines/imagenet-classes.txt";
     uint32_t    batchSize = 1;
 
@@ -270,23 +207,24 @@ int main(int argc, char *argv[])
     cudaStream_t stream;
     CHECK_CUDA_ERROR(cudaStreamCreate(&stream));
 
-    // Allocate memory for input image tensor.
-    nv::cv::Tensor::Requirements reqsInput
+    // Allocating memory for input image batch
+    nv::cv::TensorDataPitchDevice::Buffer inBuf;
+    inBuf.pitchBytes[3] = sizeof(uint8_t);
+    inBuf.pitchBytes[2] = maxChannels * inBuf.pitchBytes[3];
+    inBuf.pitchBytes[1] = maxImageWidth * inBuf.pitchBytes[2];
+    inBuf.pitchBytes[0] = maxImageHeight * inBuf.pitchBytes[1];
+    CHECK_CUDA_ERROR(cudaMallocAsync(&inBuf.data, batchSize * inBuf.pitchBytes[0], stream));
+
+    nv::cv::Tensor::Requirements inReqs
         = nv::cv::Tensor::CalcRequirements(batchSize, {maxImageWidth, maxImageHeight}, nv::cv::FMT_RGB8);
-    int64_t inBufferSize = CalcTotalSizeBytes(nv::cv::Requirements{reqsInput.mem}.deviceMem());
-    if (inBufferSize == 0)
-    {
-        throw std::runtime_error("Error allocating memory\n");
-    }
-    nv::cv::TensorDataPitchDevice::Buffer bufInput;
-    std::copy(reqsInput.pitchBytes, reqsInput.pitchBytes + NVCV_TENSOR_MAX_NDIM, bufInput.pitchBytes);
-    CHECK_CUDA_ERROR(cudaMalloc(&bufInput.data, inBufferSize));
 
-    nv::cv::TensorDataPitchDevice bufIn(nv::cv::TensorShape{reqsInput.shape, reqsInput.ndim, reqsInput.layout},
-                                        nv::cv::PixelType{reqsInput.dtype}, bufInput);
-    nv::cv::TensorWrapData        inTensor(bufIn);
+    nv::cv::TensorDataPitchDevice inData(nv::cv::TensorShape{inReqs.shape, inReqs.ndim, inReqs.layout},
+                                         nv::cv::PixelType{inReqs.dtype}, inBuf);
 
-    uint8_t *gpuInput = static_cast<uint8_t *>(bufInput.data);
+    nv::cv::TensorWrapData inTensor(inData);
+
+    uint8_t *gpuInput = static_cast<uint8_t *>(inBuf.data);
+
     NvDecode(imagePath, batchSize, totalImages, outputFormat, iout, gpuInput, widths, heights);
 
     // Setup TRT Backend

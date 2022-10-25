@@ -12,6 +12,8 @@ cmake_minimum_required(VERSION 3.22)
 project(nvcv_samples LANGUAGES CXX)
 
 find_package(CUDAToolkit REQUIRED)
+find_package(nvcv)
+
 set(CMAKE_CUDA_COMPILER ${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc)
 
 set(CMAKE_FOLDER samples)

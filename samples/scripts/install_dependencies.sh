@@ -12,13 +12,15 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-# Builds samples
-# Usage: build_samples.sh [build folder]
+apt-get update && apt-get install -y --no-install-recommends build-essential \
+    build-essential software-properties-common \
+    && rm -rf /var/lib/apt/lists/*
 
-build_dir="build"
-
-mkdir -p $build_dir
-
-cd $build_dir
-
-cmake .. && make
+add-apt-repository --yes ppa:ubuntu-toolchain-r/test
+apt-get update && apt-get install -y --no-install-recommends gcc-11 g++-11 \
+   && rm -rf /var/lib/apt/lists/*
+update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 11
+update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 11
+update-alternatives --set gcc /usr/bin/gcc-11
+update-alternatives --set g++ /usr/bin/g++-11
+pip3 install torch torchvision

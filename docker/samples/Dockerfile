@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends build-essential
 
 RUN add-apt-repository ppa:ubuntu-toolchain-r/test
 RUN apt-get update && apt-get install -y --no-install-recommends gcc-11 g++-11 \
-    && rm -rf /var/lib/apt/lists/*
+    ninja-build && rm -rf /var/lib/apt/lists/*
 RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 11
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 11
 RUN update-alternatives --set gcc /usr/bin/gcc-11

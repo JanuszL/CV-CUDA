@@ -23,8 +23,5 @@ fi
 # Serialize model . ONNX->TRT
 ./samples/scripts/serialize_models.sh
 
-#batch size 1
-#./build/bin/nvcv_samples_classification -e ./models/resnet50.engine -i ./samples/assets/ -l models/imagenet-classes.txt -b 1
-
 #batch size 2
 ./build/bin/nvcv_samples_classification -e ./models/resnet50.engine -i ./samples/assets/ -l models/imagenet-classes.txt -b 2
