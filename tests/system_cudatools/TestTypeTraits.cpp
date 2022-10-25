@@ -152,8 +152,8 @@ class TypeTraitsSupportedVectorTest : public TypeTraitsBaseTest<T>
 {
 };
 
-using TypeTraitsSupportedVectorTypes
-    = t::Types<uchar1, char2, ushort3, short4, uint1, int2, ulong3, long4, ulonglong1, longlong2, float3, double4>;
+using TypeTraitsSupportedVectorTypes = t::Types<dim3, uchar1, char2, ushort3, short4, uint1, int2, ulong3, long4,
+                                                ulonglong1, longlong2, float3, double4>;
 
 TYPED_TEST_SUITE(TypeTraitsSupportedVectorTest, TypeTraitsSupportedVectorTypes);
 
@@ -326,7 +326,7 @@ public:
     }
 };
 
-using SomeSupportedTypes = t::Types<char, ushort1, uchar2, int3, float4>;
+using SomeSupportedTypes = t::Types<char, ushort1, uchar2, int3, float4, dim3>;
 
 TYPED_TEST_SUITE(TypeTraitsGetElementTest, SomeSupportedTypes);
 
