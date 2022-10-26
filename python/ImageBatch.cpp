@@ -1,0 +1,144 @@
+/* Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *
+ * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+ *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
+ */
+
+#include "ImageBatch.hpp"
+
+#include "Assert.hpp"
+#include "Image.hpp"
+
+namespace nv::cvpy {
+
+size_t ImageBatchVarShape::Key::doGetHash() const
+{
+    return ComputeHash(m_capacity, m_format);
+}
+
+bool ImageBatchVarShape::Key::doIsEqual(const IKey &ithat) const
+{
+    auto &that = static_cast<const Key &>(ithat);
+    return std::tie(m_capacity, m_format) == std::tie(that.m_capacity, that.m_format);
+}
+
+std::shared_ptr<ImageBatchVarShape> ImageBatchVarShape::Create(int capacity, cv::ImageFormat fmt)
+{
+    std::vector<std::shared_ptr<CacheItem>> vcont = Cache::Instance().fetch(Key{capacity, fmt});
+
+    // None found?
+    if (vcont.empty())
+    {
+        std::shared_ptr<ImageBatchVarShape> batch(new ImageBatchVarShape(capacity, fmt));
+        Cache::Instance().add(*batch);
+        return batch;
+    }
+    else
+    {
+        // Get the first one
+        auto batch = std::static_pointer_cast<ImageBatchVarShape>(vcont[0]);
+        batch->clear(); // make sure it's in pristine state
+        return batch;
+    }
+}
+
+ImageBatchVarShape::ImageBatchVarShape(int capacity, cv::ImageFormat fmt)
+    : m_impl(capacity, fmt)
+    , m_key(capacity, fmt)
+{
+    m_list.reserve(capacity);
+}
+
+const cv::ImageBatchVarShape &ImageBatchVarShape::impl() const
+{
+    return m_impl;
+}
+
+cv::ImageBatchVarShape &ImageBatchVarShape::impl()
+{
+    return m_impl;
+}
+
+cv::ImageFormat ImageBatchVarShape::format() const
+{
+    return m_impl.format();
+}
+
+int32_t ImageBatchVarShape::capacity() const
+{
+    return m_impl.capacity();
+}
+
+int32_t ImageBatchVarShape::size() const
+{
+    NVCV_ASSERT(m_impl.size() == m_list.size());
+    return m_impl.size();
+}
+
+void ImageBatchVarShape::pushBack(Image &img)
+{
+    m_impl.pushBack(img.impl());
+    m_list.push_back(img.shared_from_this());
+}
+
+void ImageBatchVarShape::pushBackMany(std::vector<std::shared_ptr<Image>> &imgList)
+{
+    // TODO: use an iterator that return the handle when dereferenced, this
+    // would avoid creating this vector.
+    std::vector<NVCVImageHandle> handles;
+    handles.reserve(imgList.size());
+    for (auto &img : imgList)
+    {
+        handles.push_back(img->impl().handle());
+        m_list.push_back(img);
+    }
+
+    m_impl.pushBack(handles.begin(), handles.end());
+}
+
+void ImageBatchVarShape::popBack(int imgCount)
+{
+    m_impl.popBack(imgCount);
+    m_list.erase(m_list.end() - imgCount, m_list.end());
+}
+
+void ImageBatchVarShape::clear()
+{
+    m_impl.clear();
+    m_list.clear();
+}
+
+auto ImageBatchVarShape::begin() const -> ImageList::const_iterator
+{
+    return m_list.begin();
+}
+
+auto ImageBatchVarShape::end() const -> ImageList::const_iterator
+{
+    return m_list.end();
+}
+
+void ImageBatchVarShape::Export(py::module &m)
+{
+    using namespace py::literals;
+
+    py::class_<ImageBatchVarShape, std::shared_ptr<ImageBatchVarShape>>(m, "ImageBatchVarShape")
+        .def(py::init(&ImageBatchVarShape::Create), "capacity"_a, "format"_a)
+        .def_property_readonly("format", &ImageBatchVarShape::format)
+        .def_property_readonly("capacity", &ImageBatchVarShape::capacity)
+        .def("__len__", &ImageBatchVarShape::size)
+        .def("__iter__", [](const ImageBatchVarShape &list) { return py::make_iterator(list); })
+        .def("pushback", &ImageBatchVarShape::pushBack)
+        .def("pushback", &ImageBatchVarShape::pushBackMany)
+        .def("popback", &ImageBatchVarShape::popBack, "count"_a = 1)
+        .def("clear", &ImageBatchVarShape::clear);
+}
+
+} // namespace nv::cvpy
