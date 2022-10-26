@@ -157,7 +157,7 @@ void ImageBatchVarShape::exportData(CUstream stream, NVCVImageBatchData &data) c
     NVCV_ASSERT(fmt.memLayout() == NVCV_MEM_LAYOUT_PL);
 
     data.format     = m_reqs.format;
-    data.bufferType = NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_DEVICE_PITCH;
+    data.bufferType = NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_PITCH_DEVICE;
 
     NVCVImageBatchVarShapeBufferPitch &buf = data.buffer.varShapePitch;
 
@@ -266,7 +266,7 @@ void ImageBatchVarShape::doPushImage(NVCVImageHandle imgHandle)
     NVCVImageData imgData;
     img.exportData(imgData);
 
-    if (imgData.bufferType != NVCV_IMAGE_BUFFER_DEVICE_PITCH)
+    if (imgData.bufferType != NVCV_IMAGE_BUFFER_PITCH_DEVICE)
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Data buffer of image to be added isn't gpu-accessible";
     }

@@ -50,7 +50,7 @@ private:
 
 using ImagePlanePitch = NVCVImagePlanePitch;
 
-class IImageDataDevicePitch : public IImageData
+class IImageDataPitchDevice : public IImageData
 {
 public:
     Size2D size() const;
@@ -90,8 +90,8 @@ inline cudaArray_t IImageDataCudaArray::plane(int p) const
     return doGetPlane(p);
 }
 
-// Implementation - IImageDataDevicePitch
-inline Size2D IImageDataDevicePitch::size() const
+// Implementation - IImageDataPitchDevice
+inline Size2D IImageDataPitchDevice::size() const
 {
     Size2D size = doGetSize();
     assert(size.w >= 0 && "Post-condition failed");
@@ -99,14 +99,14 @@ inline Size2D IImageDataDevicePitch::size() const
     return size;
 }
 
-inline int32_t IImageDataDevicePitch::numPlanes() const
+inline int32_t IImageDataPitchDevice::numPlanes() const
 {
     int32_t np = doGetNumPlanes();
     assert(np >= 0 && "Post-condition failed");
     return np;
 }
 
-inline const ImagePlanePitch &IImageDataDevicePitch::plane(int p) const
+inline const ImagePlanePitch &IImageDataPitchDevice::plane(int p) const
 {
     assert(0 <= p && p < this->numPlanes() && "Pre-condition failed");
     return doGetPlane(p);

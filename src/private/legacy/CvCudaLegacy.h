@@ -632,7 +632,7 @@ public:
      *     Data Type must be 32bit Signed.
      */
 
-    ErrorCode infer(const IImageBatchVarShapeDataDevicePitch &inData, const ITensorDataPitchDevice &outData,
+    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
                     const ITensorDataPitchDevice &top, const ITensorDataPitchDevice &left,
                     const NVCVBorderType borderMode, const float borderValue, cudaStream_t stream);
 

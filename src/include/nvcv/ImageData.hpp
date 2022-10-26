@@ -35,13 +35,13 @@ private:
     const NVCVImageData &doGetCData() const override;
 };
 
-// ImageDataDevicePitch definition -----------------------
-class ImageDataDevicePitch final : public IImageDataDevicePitch
+// ImageDataPitchDevice definition -----------------------
+class ImageDataPitchDevice final : public IImageDataPitchDevice
 {
 public:
     using Buffer = NVCVImageBufferPitch;
 
-    explicit ImageDataDevicePitch(ImageFormat format, const Buffer &data);
+    explicit ImageDataPitchDevice(ImageFormat format, const Buffer &data);
 
 private:
     NVCVImageData m_data;
@@ -83,15 +83,15 @@ inline const NVCVImageData &ImageDataCudaArray::doGetCData() const
     return m_data;
 }
 
-// ImageDataDevicePitch implementation -----------------------
-inline ImageDataDevicePitch::ImageDataDevicePitch(ImageFormat format, const Buffer &data)
+// ImageDataPitchDevice implementation -----------------------
+inline ImageDataPitchDevice::ImageDataPitchDevice(ImageFormat format, const Buffer &data)
 {
     m_data.format       = format;
-    m_data.bufferType   = NVCV_IMAGE_BUFFER_DEVICE_PITCH;
+    m_data.bufferType   = NVCV_IMAGE_BUFFER_PITCH_DEVICE;
     m_data.buffer.pitch = data;
 }
 
-inline Size2D ImageDataDevicePitch::doGetSize() const
+inline Size2D ImageDataPitchDevice::doGetSize() const
 {
     Size2D out;
     if (m_data.buffer.pitch.numPlanes > 0)
@@ -106,22 +106,22 @@ inline Size2D ImageDataDevicePitch::doGetSize() const
     return out;
 }
 
-inline ImageFormat ImageDataDevicePitch::doGetFormat() const
+inline ImageFormat ImageDataPitchDevice::doGetFormat() const
 {
     return ImageFormat{m_data.format};
 }
 
-inline int ImageDataDevicePitch::doGetNumPlanes() const
+inline int ImageDataPitchDevice::doGetNumPlanes() const
 {
     return m_data.buffer.pitch.numPlanes;
 }
 
-inline const ImagePlanePitch &ImageDataDevicePitch::doGetPlane(int p) const
+inline const ImagePlanePitch &ImageDataPitchDevice::doGetPlane(int p) const
 {
     return m_data.buffer.pitch.planes[p];
 }
 
-inline const NVCVImageData &ImageDataDevicePitch::doGetCData() const
+inline const NVCVImageData &ImageDataPitchDevice::doGetCData() const
 {
     return m_data;
 }

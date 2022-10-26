@@ -50,7 +50,7 @@ private:
     union Arena
     {
         ImageDataCudaArray   cudaArray;
-        ImageDataDevicePitch devPitch;
+        ImageDataPitchDevice devPitch;
     };
 
     mutable std::aligned_storage<sizeof(Arena), alignof(Arena)>::type m_dataArena;
@@ -176,8 +176,8 @@ inline const IImageData *ImageWrapHandle::doExportData() const
     case NVCV_IMAGE_BUFFER_NONE:
         break;
 
-    case NVCV_IMAGE_BUFFER_DEVICE_PITCH:
-        m_ptrData = ::new (&m_dataArena) ImageDataDevicePitch(ImageFormat{imgData.format}, imgData.buffer.pitch);
+    case NVCV_IMAGE_BUFFER_PITCH_DEVICE:
+        m_ptrData = ::new (&m_dataArena) ImageDataPitchDevice(ImageFormat{imgData.format}, imgData.buffer.pitch);
         break;
 
     case NVCV_IMAGE_BUFFER_CUDA_ARRAY:

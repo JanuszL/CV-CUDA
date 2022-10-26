@@ -127,7 +127,7 @@ void Image::exportData(NVCVImageData &data) const
     NVCV_ASSERT(fmt.memLayout() == NVCV_MEM_LAYOUT_PL);
 
     data.format     = m_reqs.format;
-    data.bufferType = NVCV_IMAGE_BUFFER_DEVICE_PITCH;
+    data.bufferType = NVCV_IMAGE_BUFFER_PITCH_DEVICE;
 
     NVCVImageBufferPitch &buf = data.buffer.pitch;
 
@@ -175,11 +175,11 @@ void ImageWrapData::doValidateData(const NVCVImageData &data) const
     bool success = false;
     switch (data.bufferType)
     {
-    case NVCV_IMAGE_BUFFER_DEVICE_PITCH:
+    case NVCV_IMAGE_BUFFER_PITCH_DEVICE:
         if (format.memLayout() != NVCV_MEM_LAYOUT_PL)
         {
             throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
-                << "Image buffer type DEVICE_PITCH not consistent with image format " << format;
+                << "Image buffer type PITCH_DEVICE not consistent with image format " << format;
         }
 
         if (data.buffer.pitch.numPlanes < 1)
@@ -225,7 +225,7 @@ IAllocator &ImageWrapData::alloc() const
 
 Size2D ImageWrapData::size() const
 {
-    if (m_data.bufferType == NVCV_IMAGE_BUFFER_DEVICE_PITCH)
+    if (m_data.bufferType == NVCV_IMAGE_BUFFER_PITCH_DEVICE)
     {
         return {m_data.buffer.pitch.planes[0].width, m_data.buffer.pitch.planes[0].height};
     }

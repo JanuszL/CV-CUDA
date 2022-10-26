@@ -18,13 +18,13 @@
 
 namespace nv { namespace cv {
 
-// ImageBatchVarShapeDataDevicePitch definition -----------------------
-class ImageBatchVarShapeDataDevicePitch final : public IImageBatchVarShapeDataDevicePitch
+// ImageBatchVarShapeDataPitchDevice definition -----------------------
+class ImageBatchVarShapeDataPitchDevice final : public IImageBatchVarShapeDataPitchDevice
 {
 public:
     using Buffer = NVCVImageBatchVarShapeBufferPitch;
 
-    explicit ImageBatchVarShapeDataDevicePitch(ImageFormat format, const Buffer &data);
+    explicit ImageBatchVarShapeDataPitchDevice(ImageFormat format, const Buffer &data);
 
 private:
     NVCVImageBatchData m_data;
@@ -37,30 +37,30 @@ private:
     const NVCVImageBatchData &doGetCData() const override;
 };
 
-// ImageBatchVarShapeDataDevicePitch implementation -----------------------
-inline ImageBatchVarShapeDataDevicePitch::ImageBatchVarShapeDataDevicePitch(ImageFormat format, const Buffer &data)
+// ImageBatchVarShapeDataPitchDevice implementation -----------------------
+inline ImageBatchVarShapeDataPitchDevice::ImageBatchVarShapeDataPitchDevice(ImageFormat format, const Buffer &data)
 {
     m_data.format               = format;
-    m_data.bufferType           = NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_DEVICE_PITCH;
+    m_data.bufferType           = NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_PITCH_DEVICE;
     m_data.buffer.varShapePitch = data;
 }
 
-inline int32_t ImageBatchVarShapeDataDevicePitch::doGetNumImages() const
+inline int32_t ImageBatchVarShapeDataPitchDevice::doGetNumImages() const
 {
     return m_data.buffer.varShapePitch.numImages;
 }
 
-inline ImageFormat ImageBatchVarShapeDataDevicePitch::doGetFormat() const
+inline ImageFormat ImageBatchVarShapeDataPitchDevice::doGetFormat() const
 {
     return ImageFormat{m_data.format};
 }
 
-inline const ImagePlanePitch *ImageBatchVarShapeDataDevicePitch::doGetImagePlanes() const
+inline const ImagePlanePitch *ImageBatchVarShapeDataPitchDevice::doGetImagePlanes() const
 {
     return m_data.buffer.varShapePitch.imgPlanes;
 }
 
-inline const NVCVImageBatchData &ImageBatchVarShapeDataDevicePitch::doGetCData() const
+inline const NVCVImageBatchData &ImageBatchVarShapeDataPitchDevice::doGetCData() const
 {
     return m_data;
 }

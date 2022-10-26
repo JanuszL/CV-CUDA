@@ -36,7 +36,7 @@ TEST(Image, wip_create)
 
     EXPECT_NE(nullptr, dynamic_cast<nvcv::AllocatorWrapHandle *>(&img.alloc()));
 
-    auto *devdata = dynamic_cast<const nvcv::IImageDataDevicePitch *>(data);
+    auto *devdata = dynamic_cast<const nvcv::IImageDataPitchDevice *>(data);
     ASSERT_NE(nullptr, devdata);
 
     ASSERT_EQ(1, devdata->numPlanes());
@@ -82,7 +82,7 @@ TEST(Image, wip_create_managed)
     const nvcv::IImageData *data = img.exportData();
     ASSERT_NE(nullptr, data);
 
-    auto *devdata = dynamic_cast<const nvcv::IImageDataDevicePitch *>(data);
+    auto *devdata = dynamic_cast<const nvcv::IImageDataPitchDevice *>(data);
     ASSERT_NE(nullptr, devdata);
 
     ASSERT_EQ(1, devdata->numPlanes());
@@ -105,7 +105,7 @@ TEST(Image, wip_create_managed)
 
 TEST(ImageWrapData, wip_create)
 {
-    nvcv::ImageDataDevicePitch::Buffer buf;
+    nvcv::ImageDataPitchDevice::Buffer buf;
     buf.numPlanes            = 1;
     buf.planes[0].width      = 173;
     buf.planes[0].height     = 79;
@@ -113,7 +113,7 @@ TEST(ImageWrapData, wip_create)
     buf.planes[0].buffer     = reinterpret_cast<void *>(678);
 
     nvcv::ImageWrapData img{
-        nvcv::ImageDataDevicePitch{nvcv::FMT_U8, buf}
+        nvcv::ImageDataPitchDevice{nvcv::FMT_U8, buf}
     };
 
     EXPECT_NE(nullptr, dynamic_cast<nvcv::AllocatorWrapHandle *>(&img.alloc()));
@@ -129,7 +129,7 @@ TEST(ImageWrapData, wip_create)
     const nvcv::IImageData *data = img.exportData();
     ASSERT_NE(nullptr, data);
 
-    auto *devdata = dynamic_cast<const nvcv::IImageDataDevicePitch *>(data);
+    auto *devdata = dynamic_cast<const nvcv::IImageDataPitchDevice *>(data);
     ASSERT_NE(nullptr, devdata);
 
     ASSERT_EQ(1, devdata->numPlanes());
@@ -154,8 +154,8 @@ TEST(Image, wip_operator)
         nvcv::FMT_RGBA8
     };
 
-    auto *inData  = dynamic_cast<const nvcv::IImageDataDevicePitch *>(in.exportData());
-    auto *outData = dynamic_cast<const nvcv::IImageDataDevicePitch *>(out.exportData());
+    auto *inData  = dynamic_cast<const nvcv::IImageDataPitchDevice *>(in.exportData());
+    auto *outData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(out.exportData());
 
     if (inData == nullptr || outData == nullptr)
     {
@@ -185,7 +185,7 @@ TEST(Image, wip_operator)
 
 TEST(ImageWrapData, wip_cleanup)
 {
-    nvcv::ImageDataDevicePitch::Buffer buf;
+    nvcv::ImageDataPitchDevice::Buffer buf;
     buf.numPlanes            = 1;
     buf.planes[0].width      = 173;
     buf.planes[0].height     = 79;
@@ -199,7 +199,7 @@ TEST(ImageWrapData, wip_cleanup)
     };
 
     {
-        nvcv::ImageWrapData img(nvcv::ImageDataDevicePitch{nvcv::FMT_U8, buf}, cleanup);
+        nvcv::ImageWrapData img(nvcv::ImageDataPitchDevice{nvcv::FMT_U8, buf}, cleanup);
         EXPECT_EQ(0, cleanupCalled);
     }
     EXPECT_EQ(1, cleanupCalled) << "Cleanup must have been called when img got destroyed";
@@ -215,7 +215,7 @@ TEST(ImageWrapData, wip_mem_reqs)
     EXPECT_EQ(256, img.size().h);
     EXPECT_EQ(nvcv::FMT_NV12, img.format());
 
-    const auto *data = dynamic_cast<const nvcv::IImageDataDevicePitch *>(img.exportData());
+    const auto *data = dynamic_cast<const nvcv::IImageDataPitchDevice *>(img.exportData());
 
     ASSERT_NE(nullptr, data);
     ASSERT_EQ(2, data->numPlanes());
