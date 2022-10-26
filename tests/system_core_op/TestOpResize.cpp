@@ -264,8 +264,7 @@ TEST_P(OpResize, correct_output)
 #ifdef DEBUG_PRINT_DIFF
     if (goldVec != testVec)
     {
-        test::DebugPrintDiff(testVec, goldVec, dstData->rowPitchBytes() / sizeof(uint8_t),
-                             dstData->rowPitchBytes() / sizeof(uint8_t));
+        test::DebugPrintDiff(testVec, goldVec);
     }
 #endif
 
