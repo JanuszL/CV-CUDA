@@ -35,13 +35,13 @@ private:
     const NVCVImageData &doGetCData() const override;
 };
 
-// ImageDataPitchDevice definition -----------------------
-class ImageDataPitchDevice final : public IImageDataPitchDevice
+// ImageDataPitch definition -----------------------
+class ImageDataPitch : public virtual IImageDataPitch
 {
 public:
     using Buffer = NVCVImageBufferPitch;
 
-    explicit ImageDataPitchDevice(ImageFormat format, const Buffer &data);
+    explicit ImageDataPitch(ImageFormat format, const Buffer &data);
 
 private:
     NVCVImageData m_data;
@@ -55,7 +55,27 @@ private:
     const NVCVImageData &doGetCData() const override;
 };
 
-// ImageDataBlock implementation -----------------------
+// ImageDataPitchDevice definition -----------------------
+class ImageDataPitchDevice final
+    : public IImageDataPitchDevice
+    , private ImageDataPitch
+{
+public:
+    using Buffer = ImageDataPitch::Buffer;
+    using ImageDataPitch::ImageDataPitch;
+};
+
+// ImageDataPitchHost definition -----------------------
+class ImageDataPitchHost final
+    : public IImageDataPitchHost
+    , private ImageDataPitch
+{
+public:
+    using Buffer = ImageDataPitch::Buffer;
+    using ImageDataPitch::ImageDataPitch;
+};
+
+// ImageDataCudaArray implementation -----------------------
 inline ImageDataCudaArray::ImageDataCudaArray(ImageFormat format, const Buffer &data)
 {
     m_data.format           = format;
@@ -83,15 +103,15 @@ inline const NVCVImageData &ImageDataCudaArray::doGetCData() const
     return m_data;
 }
 
-// ImageDataPitchDevice implementation -----------------------
-inline ImageDataPitchDevice::ImageDataPitchDevice(ImageFormat format, const Buffer &data)
+// ImageDataPitch implementation -----------------------
+inline ImageDataPitch::ImageDataPitch(ImageFormat format, const Buffer &data)
 {
     m_data.format       = format;
     m_data.bufferType   = NVCV_IMAGE_BUFFER_PITCH_DEVICE;
     m_data.buffer.pitch = data;
 }
 
-inline Size2D ImageDataPitchDevice::doGetSize() const
+inline Size2D ImageDataPitch::doGetSize() const
 {
     Size2D out;
     if (m_data.buffer.pitch.numPlanes > 0)
@@ -106,22 +126,22 @@ inline Size2D ImageDataPitchDevice::doGetSize() const
     return out;
 }
 
-inline ImageFormat ImageDataPitchDevice::doGetFormat() const
+inline ImageFormat ImageDataPitch::doGetFormat() const
 {
     return ImageFormat{m_data.format};
 }
 
-inline int ImageDataPitchDevice::doGetNumPlanes() const
+inline int ImageDataPitch::doGetNumPlanes() const
 {
     return m_data.buffer.pitch.numPlanes;
 }
 
-inline const ImagePlanePitch &ImageDataPitchDevice::doGetPlane(int p) const
+inline const ImagePlanePitch &ImageDataPitch::doGetPlane(int p) const
 {
     return m_data.buffer.pitch.planes[p];
 }
 
-inline const NVCVImageData &ImageDataPitchDevice::doGetCData() const
+inline const NVCVImageData &ImageDataPitch::doGetCData() const
 {
     return m_data;
 }

@@ -15,6 +15,7 @@
 #define NVCV_PYTHON_TENSOR_HPP
 
 #include "Container.hpp"
+#include "Size.hpp"
 
 #include <nvcv/Tensor.hpp>
 
@@ -23,8 +24,7 @@
 namespace nv::cvpy {
 namespace py = pybind11;
 
-using Shape  = std::vector<int64_t>;
-using Size2D = std::tuple<int, int>;
+using Shape = std::vector<int64_t>;
 class CudaBuffer;
 
 Shape CreateShape(const cv::TensorShape &tshape);
