@@ -45,6 +45,10 @@ inline void CheckCudaError(cudaError_t code, const char *file, const int line)
         CheckCudaError((val), __FILE__, __LINE__); \
     }
 
+/**
+ * @brief Utility to get the class names from the labels file
+ *
+ **/
 std::vector<std::string> getClassLabels(const std::string &labelsFilePath)
 {
     std::vector<std::string> classes;
@@ -61,21 +65,29 @@ std::vector<std::string> getClassLabels(const std::string &labelsFilePath)
     return classes;
 }
 
-void DisplayResults(std::vector<std::vector<float>> &sortedScores, std::vector<std::vector<int>> &sortedIndices,
+/**
+ * @brief Display the TopN classification results
+ *
+ **/
+void DisplayResults(std::vector<std::vector<float>> &scores, std::vector<std::vector<int>> &indices,
                     std::string labelPath)
 {
     auto classes = getClassLabels(labelPath);
-    for (int i = 0; i < sortedScores.size(); i++)
+    for (int i = 0; i < scores.size(); i++)
     {
         printf("\nClassification results for batch %d \n", i);
         for (int j = 0; j < TOPN; j++)
         {
-            auto index = sortedIndices[i][j];
-            printf("Class : %s , Score : %f\n", classes[index].c_str(), sortedScores[i][index]);
+            auto index = indices[i][j];
+            printf("Class : %s , Score : %f\n", classes[index].c_str(), scores[i][index]);
         }
     }
 }
 
+/**
+ * @brief Utility docs
+ *
+ **/
 void showUsage()
 {
     std::cout << "usage: ./nvcv_classification_app -e <tensorrt engine path> -i <image file path or  image directory "
@@ -83,7 +95,11 @@ void showUsage()
               << std::endl;
 }
 
-int ParseArgs(int argc, char *argv[], std::string &modelPath, std::string &labelPath, std::string &imagePath,
+/**
+ * @brief Utility to parse the command line arguments
+ *
+ **/
+int ParseArgs(int argc, char *argv[], std::string &modelPath, std::string &imagePath, std::string &labelPath,
               uint32_t &batchSize)
 {
     static struct option long_options[] = {
@@ -128,19 +144,22 @@ int ParseArgs(int argc, char *argv[], std::string &modelPath, std::string &label
     if (!modelFile.good())
     {
         showUsage();
-        throw std::runtime_error("Model path '" + modelPath + "' does not exist\n");
+        std::cerr << "Model path '" + modelPath + "' does not exist\n";
+        return -1;
     }
     std::ifstream imageFile(imagePath);
     if (!imageFile.good())
     {
         showUsage();
-        throw std::runtime_error("Image path '" + imagePath + "' does not exist\n");
+        std::cerr << "Image path '" + modelPath + "' does not exist\n";
+        return -1;
     }
     std::ifstream labelFile(labelPath);
     if (!labelFile.good())
     {
         showUsage();
-        throw std::runtime_error("Label path '" + labelPath + "' does not exist\n");
+        std::cerr << "Label path '" + modelPath + "' does not exist\n";
+        return -1;
     }
     return 0;
 }
