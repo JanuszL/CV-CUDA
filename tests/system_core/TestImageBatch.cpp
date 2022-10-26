@@ -55,7 +55,7 @@ TEST(ImageBatchVarShape, wip_create)
 
         ASSERT_EQ(batch.format(), data->format());
 
-        auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataDevicePitch *>(data);
+        auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataPitchDevice *>(data);
         ASSERT_NE(nullptr, devdata);
 
         ASSERT_EQ(0, devdata->numImages());
@@ -154,7 +154,7 @@ TEST(ImageBatchVarShape, wip_create)
 
         ASSERT_EQ(batch.format(), data->format());
 
-        auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataDevicePitch *>(data);
+        auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataPitchDevice *>(data);
         ASSERT_NE(nullptr, devdata);
 
         ASSERT_EQ(goldHandles.size(), devdata->numImages());
@@ -221,7 +221,7 @@ TEST(ImageBatchVarShape, wip_sync)
     batch.pushBack(vec0.begin(), vec0.end());
 
     // trigger host->dev async copy
-    auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataDevicePitch *>(batch.exportData(stream));
+    auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataPitchDevice *>(batch.exportData(stream));
 
     // Re-write batch contents in host-side, must have waited
     // until async copy finishes

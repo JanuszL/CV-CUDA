@@ -32,7 +32,7 @@ PadAndStack::PadAndStack()
 void PadAndStack::operator()(cudaStream_t stream, cv::IImageBatch &in, cv::ITensor &out, cv::ITensor &top,
                              cv::ITensor &left, const NVCVBorderType borderMode, const float borderValue) const
 {
-    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataDevicePitch *>(in.exportData(stream));
+    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
     if (inData == nullptr)
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be device-accessible, pitch-linear tensor");

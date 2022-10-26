@@ -37,7 +37,7 @@ private:
     virtual const NVCVImageBatchData &doGetCData() const  = 0;
 };
 
-class IImageBatchVarShapeDataDevicePitch : public IImageBatchData
+class IImageBatchVarShapeDataPitchDevice : public IImageBatchData
 {
 public:
     int32_t                numImages() const;
@@ -59,15 +59,15 @@ inline const NVCVImageBatchData &IImageBatchData::cdata() const
     return doGetCData();
 }
 
-// Implementation - IImageBatchVarShapeDataDevicePitch
-inline int32_t IImageBatchVarShapeDataDevicePitch::numImages() const
+// Implementation - IImageBatchVarShapeDataPitchDevice
+inline int32_t IImageBatchVarShapeDataPitchDevice::numImages() const
 {
     int32_t size = doGetNumImages();
     assert(size >= 0 && "Post-condition failed");
     return size;
 }
 
-inline const ImagePlanePitch *IImageBatchVarShapeDataDevicePitch::imgPlanes() const
+inline const ImagePlanePitch *IImageBatchVarShapeDataPitchDevice::imgPlanes() const
 {
     return doGetImagePlanes();
 }

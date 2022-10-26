@@ -41,7 +41,7 @@ private:
     NVCVImageBatchHandle m_handle;
 
     // Only one leaf, we can use an optional for now.
-    mutable detail::Optional<ImageBatchVarShapeDataDevicePitch> m_data;
+    mutable detail::Optional<ImageBatchVarShapeDataPitchDevice> m_data;
 
     mutable detail::Optional<AllocatorWrapHandle> m_alloc;
 
@@ -134,7 +134,7 @@ inline const IImageBatchData *ImageBatchWrapHandle::doExportData(CUstream stream
     NVCVImageBatchData batchData;
     detail::CheckThrow(nvcvImageBatchExportData(m_handle, stream, &batchData));
 
-    assert(batchData.bufferType == NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_DEVICE_PITCH);
+    assert(batchData.bufferType == NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_PITCH_DEVICE);
 
     m_data.emplace(ImageFormat{batchData.format}, batchData.buffer.varShapePitch);
 

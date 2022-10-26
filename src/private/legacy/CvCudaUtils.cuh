@@ -383,7 +383,7 @@ struct Ptr2dVarShapeNHWC
     {
     }
 
-    __host__ __forceinline__ Ptr2dVarShapeNHWC(const cv::IImageBatchVarShapeDataDevicePitch &data)
+    __host__ __forceinline__ Ptr2dVarShapeNHWC(const cv::IImageBatchVarShapeDataPitchDevice &data)
         : batches(data.numImages())
         , imgList(data.imgPlanes())
         , nch(data.format().numChannels())

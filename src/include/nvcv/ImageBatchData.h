@@ -67,7 +67,7 @@ typedef enum
     NVCV_IMAGE_BATCH_BUFFER_NONE = 0,
 
     /** GPU-accessible with variable-shape planes in pitch-linear layout. */
-    NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_DEVICE_PITCH,
+    NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_PITCH_DEVICE,
 } NVCVImageBatchBufferType;
 
 /** Represents the available methods to access image batch contents.
@@ -76,7 +76,7 @@ typedef union NVCVImageBatchBufferRec
 {
     /** Varshape image batch stored in pitch-linear layout.
      * To be used when \ref NVCVImageBatchData::bufferType is:
-     * - \ref NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_DEVICE_PITCH
+     * - \ref NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_PITCH_DEVICE
      */
     NVCVImageBatchVarShapeBufferPitch varShapePitch;
 } NVCVImageBatchBuffer;
