@@ -54,7 +54,9 @@ pybind11_add_module(nvcv_python MODULE
     Container.cpp
     Tensor.cpp
     CudaBuffer.cpp
+    InterpolationType.cpp
     OpReformat.cpp
+    OpResize.cpp
 )
 
 target_include_directories(nvcv_python

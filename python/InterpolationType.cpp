@@ -11,13 +11,19 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <pybind11/pybind11.h>
+#include "InterpolationType.hpp"
+
+#include <operators/Types.h>
 
 namespace nv::cvpy {
 
-namespace py = ::pybind11;
-
-void ExportOpReformat(py::module &m);
-void ExportOpResize(py::module &m);
+void ExportInterpolationType(py::module &m)
+{
+    py::enum_<NVCVInterpolationType>(m, "Interp")
+        .value("NEAREST", NVCV_INTERP_NEAREST)
+        .value("LINEAR", NVCV_INTERP_LINEAR)
+        .value("CUBIC", NVCV_INTERP_CUBIC)
+        .value("AREA", NVCV_INTERP_AREA);
+}
 
 } // namespace nv::cvpy
