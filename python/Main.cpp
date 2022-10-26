@@ -11,6 +11,7 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "BorderType.hpp"
 #include "Cache.hpp"
 #include "Container.hpp"
 #include "CudaBuffer.hpp"
@@ -55,6 +56,7 @@ PYBIND11_MODULE(nvcv, m)
     ExportImageFormat(m);
     ExportPixelType(m);
     ExportRect(m);
+    ExportBorderType(m);
     Resource::Export(m);
     Container::Export(m);
     Tensor::Export(m);
@@ -70,4 +72,5 @@ PYBIND11_MODULE(nvcv, m)
     ExportOpCustomCrop(m);
     ExportOpNormalize(m);
     ExportOpConvertTo(m);
+    ExportOpPadAndStack(m);
 }

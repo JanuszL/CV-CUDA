@@ -11,17 +11,20 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <pybind11/pybind11.h>
+#include "BorderType.hpp"
+
+#include <operators/Types.h>
 
 namespace nv::cvpy {
 
-namespace py = ::pybind11;
-
-void ExportOpReformat(py::module &m);
-void ExportOpResize(py::module &m);
-void ExportOpCustomCrop(py::module &m);
-void ExportOpNormalize(py::module &m);
-void ExportOpConvertTo(py::module &m);
-void ExportOpPadAndStack(py::module &m);
+void ExportBorderType(py::module &m)
+{
+    py::enum_<NVCVBorderType>(m, "Border")
+        .value("CONSTANT", NVCV_BORDER_CONSTANT)
+        .value("REPLICATE", NVCV_BORDER_REPLICATE)
+        .value("REFLECT", NVCV_BORDER_REFLECT)
+        .value("WRAP", NVCV_BORDER_WRAP)
+        .value("REFLECT101", NVCV_BORDER_REFLECT101);
+}
 
 } // namespace nv::cvpy

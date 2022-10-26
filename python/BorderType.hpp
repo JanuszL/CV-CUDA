@@ -11,17 +11,16 @@
  * its affiliates is strictly prohibited.
  */
 
+#ifndef NVCV_PYTHON_BORDER_TYPE_HPP
+#define NVCV_PYTHON_BORDER_TYPE_HPP
+
 #include <pybind11/pybind11.h>
 
 namespace nv::cvpy {
-
 namespace py = ::pybind11;
 
-void ExportOpReformat(py::module &m);
-void ExportOpResize(py::module &m);
-void ExportOpCustomCrop(py::module &m);
-void ExportOpNormalize(py::module &m);
-void ExportOpConvertTo(py::module &m);
-void ExportOpPadAndStack(py::module &m);
+void ExportBorderType(py::module &m);
 
 } // namespace nv::cvpy
+
+#endif // NVCV_PYTHON_BORDER_TYPE_HPP
