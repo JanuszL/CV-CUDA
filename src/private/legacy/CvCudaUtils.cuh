@@ -22,7 +22,7 @@
 #define CV_CUDA_UTILS_CUH
 
 #include <nvcv/IImageBatchData.hpp>
-#include <nvcv/IImageData.hpp>  // for IImageDataDevicePitch, etc.
+#include <nvcv/IImageData.hpp>  // for IImageDataPitchDevice, etc.
 #include <nvcv/ITensorData.hpp> // for ITensorDataPitchDevice, etc.
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/cuda/MathOps.hpp>      // for math operators
@@ -135,7 +135,7 @@ struct Ptr2dNCHW
         chPitchBytes = rowPitchBytes * rows_;
     }
 
-    __host__ __forceinline__ Ptr2dNCHW(const IImageDataDevicePitch &inData)
+    __host__ __forceinline__ Ptr2dNCHW(const IImageDataPitchDevice &inData)
         : batches(1)
         , rows(inData.size().h)
         , cols(inData.size().w)
@@ -269,7 +269,7 @@ struct Ptr2dNHWC
     {
     }
 
-    __host__ __forceinline__ Ptr2dNHWC(const IImageDataDevicePitch &inData)
+    __host__ __forceinline__ Ptr2dNHWC(const IImageDataPitchDevice &inData)
         : batches(1)
         , rows(inData.size().h)
         , cols(inData.size().w)

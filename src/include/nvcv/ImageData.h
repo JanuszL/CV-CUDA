@@ -80,7 +80,7 @@ typedef enum
     NVCV_IMAGE_BUFFER_NONE = 0,
 
     /** GPU-accessible with planes in pitch-linear layout. */
-    NVCV_IMAGE_BUFFER_DEVICE_PITCH,
+    NVCV_IMAGE_BUFFER_PITCH_DEVICE,
 
     /** Buffer stored in a cudaArray_t.
      * Please consult <a href="https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#cuda-arrays">cudaArray_t</a>
@@ -94,9 +94,7 @@ typedef union NVCVImageBufferRec
 {
     /** Image stored in pitch-linear layout.
      * To be used when \ref NVCVImageData::bufferType is:
-     * - \ref NVCV_IMAGE_BUFFER_HOST_PITCH
-     * - \ref NVCV_IMAGE_BUFFER_HOST_PINNED_PITCH
-     * - \ref NVCV_IMAGE_BUFFER_DEVICE_PITCH
+     * - \ref NVCV_IMAGE_BUFFER_PITCH_DEVICE
      */
     NVCVImageBufferPitch pitch;
 

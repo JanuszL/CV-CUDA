@@ -194,7 +194,7 @@ TEST_P(OpPadAndStack, correct_output)
     {
         srcImgVec.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{srcWidth, srcHeight}, nvcv::FMT_RGBA8));
 
-        auto *imgSrcData = dynamic_cast<const nvcv::IImageDataDevicePitch *>(srcImgVec.back()->exportData());
+        auto *imgSrcData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(srcImgVec.back()->exportData());
 
         srcPitchBytes  = imgSrcData->plane(0).pitchBytes;
         srcRowPitch    = srcPitchBytes / sizeof(uint8_t);

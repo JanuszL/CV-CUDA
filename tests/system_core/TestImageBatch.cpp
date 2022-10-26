@@ -67,7 +67,7 @@ TEST(ImageBatchVarShape, wip_create)
 
     auto addToGold = [&goldPlanes, &goldHandles](const nvcv::IImage &img)
     {
-        auto *imgdata = dynamic_cast<const nvcv::IImageDataDevicePitch *>(img.exportData());
+        auto *imgdata = dynamic_cast<const nvcv::IImageDataPitchDevice *>(img.exportData());
         EXPECT_NE(nullptr, imgdata);
         if (imgdata)
         {
@@ -185,7 +185,7 @@ TEST(ImageBatchVarShape, wip_sync)
 
     auto addToGold = [&goldPlanes, &goldHandles](const nvcv::IImage &img)
     {
-        auto *imgdata = dynamic_cast<const nvcv::IImageDataDevicePitch *>(img.exportData());
+        auto *imgdata = dynamic_cast<const nvcv::IImageDataPitchDevice *>(img.exportData());
         EXPECT_NE(nullptr, imgdata);
         if (imgdata)
         {
