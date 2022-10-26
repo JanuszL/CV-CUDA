@@ -47,6 +47,10 @@ Optionally Unzip the tests. ::
 
     tar -xvf cvcuda-tests-cuda11-x86_64-linux.tar.xz
 
+Optionally Unzip the tests. ::
+
+    tar -xvf cvcuda-tests-cuda11-x86_64-linux.tar.xz
+
 * Debian Local Installation
 
 Navigate to your <cvcudapath> directory containing the cvcuda Debian local installer file. ::
@@ -63,6 +67,10 @@ Optionally install the tests. ::
 
     sudo dpkg -i cvcuda-tests-x.x.x-cuda11-x86_64-linux.deb
 
+Optionally install the samples. ::
+
+    sudo dpkg -i cvcuda-samples-x.x.x-cuda11-x86_64-linux.deb
+
 * Verifying the Installation on Linux
 
 To verify that cvcuda is installed and is running properly, run the tests from the install folder for tests.
@@ -71,4 +79,10 @@ Default installation path is /opt/nvidia/cvcuda0/bin. ::
     cd /opt/nvidia/cvcuda0/bin
     ./run_tests.sh
 
-If CVCUDA is properly installed and running on your Linux system, all tests will pass.
+If CV-CUDA is properly installed and running on your Linux system, all tests will pass.
+
+* Running the samples on Linux. ::
+
+  cd /opt/nvidia/cvcuda0/samples
+  ./scripts/install_dependencies.sh
+  ./scripts/run_samples.sh

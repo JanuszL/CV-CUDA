@@ -2,7 +2,7 @@
 
 ## Description
 
-Sample applications to show how use some of CVCUDA's functionalities.
+Sample applications to show how use some of CV-CUDA's functionalities.
 
 ## Pre-requisites
 

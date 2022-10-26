@@ -85,7 +85,14 @@ to successfully build CV-CUDA.
    Example:
    `ci/build_docs.sh build
 
-7. Run tests
+7. Build Samples
+
+   Launch the docker container for the samples.
+
+   ```
+   ci/build_samples.sh [build folder]
+   ```
+8. Run tests
 
    The tests are in `<buildtree>/bin`. They can be executed from within the docker container. You can run the script
    below to run all tests at once. Here's an example when build tree is created in `build-rel`
@@ -94,7 +101,16 @@ to successfully build CV-CUDA.
    build-rel/bin/run_tests.sh
    ```
 
-8. Package installers
+9. Run Samples
+
+   The samples are installed in `<buildtree>/bin`. You can run the script below to download and serialize the model
+   and run the sample with the test data provided.
+
+   ```
+   ./ci/run_samples.sh
+   ```
+
+10. Package installers
 
    From a succesfully built project, installers can be generated using cpack:
 
