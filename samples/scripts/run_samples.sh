@@ -12,16 +12,18 @@
 
 # Usage: run_samples.sh
 
-mkdir -p models
+# Crop and Resize Sample
 
+# Batch size 2
+LD_LIBRARY_PATH=./lib ./bin/nvcv_samples_cropandresize -i ./assets/ -b 2
+
+# Classification sample
+mkdir -p models
 # Export onnx model from torch
 python ./scripts/export_resnet.py
-
 # Serialize models
 ./scripts/serialize_models.sh
-
 # Batch size 1
 LD_LIBRARY_PATH=./lib ./bin/nvcv_samples_classification -e ./models/resnet50.engine -i ./assets/tabby_tiger_cat.jpg -l ./models/imagenet-classes.txt -b 1
-
 # Batch size 2
 LD_LIBRARY_PATH=./lib ./bin/nvcv_samples_classification -e ./models/resnet50.engine -i ./assets/tabby_tiger_cat.jpg -l ./models/imagenet-classes.txt -b 2

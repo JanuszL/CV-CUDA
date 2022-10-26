@@ -58,6 +58,13 @@
 void PreProcess(nv::cv::TensorWrapData &inTensor, uint32_t batchSize, int inputLayerWidth, int inputLayerHeight,
                 cudaStream_t stream, nv::cv::TensorWrapData &outTensor)
 {
+#ifdef PROFILE_SAMPLE
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start);
+#endif
+
     // Resize to the dimensions of input layer of network
     nv::cv::Tensor   resizedTensor(batchSize, {inputLayerWidth, inputLayerHeight}, nv::cv::FMT_RGB8);
     nv::cvop::Resize resizeOp;
@@ -112,6 +119,14 @@ void PreProcess(nv::cv::TensorWrapData &inTensor, uint32_t batchSize, int inputL
     // Convert the data layout from interleaved to planar
     nv::cvop::Reformat reformatOp;
     reformatOp(stream, normTensor, outTensor);
+
+#ifdef PROFILE_SAMPLE
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    float preprocessms = 0;
+    cudaEventElapsedTime(&preprocessms, start, stop);
+    std::cout << "\nTime for Preprocess : " << preprocessms << " ms" << std::endl;
+#endif
 }
 
 /**
@@ -129,6 +144,13 @@ void PreProcess(nv::cv::TensorWrapData &inTensor, uint32_t batchSize, int inputL
 void PostProcess(float *outputDeviceBuffer, std::vector<std::vector<float>> &scores,
                  std::vector<std::vector<int>> &indices, cudaStream_t stream)
 {
+#ifdef PROFILE_SAMPLE
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start);
+#endif
+
     uint32_t batchSize  = scores.size();
     uint32_t numClasses = scores[0].size();
 
@@ -153,6 +175,13 @@ void PostProcess(float *outputDeviceBuffer, std::vector<std::vector<float>> &sco
         std::sort(indices[i].begin(), indices[i].end(),
                   [&scores, i](int i1, int i2) { return scores[i][i1] > scores[i][i2]; });
     }
+#ifdef PROFILE_SAMPLE
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    float postprocessms = 0;
+    cudaEventElapsedTime(&postprocessms, start, stop);
+    std::cout << "Time for Postprocess : " << postprocessms << " ms" << std::endl;
+#endif
 }
 
 int main(int argc, char *argv[])
@@ -206,7 +235,7 @@ int main(int argc, char *argv[])
 
     // NvJpeg is used to load the images to create a batched input device buffer.
     uint8_t *gpuInput = static_cast<uint8_t *>(inBuf.data);
-    NvDecode(imagePath, batchSize, totalImages, outputFormat, iout, gpuInput, widths, heights);
+    NvDecode(imagePath, batchSize, totalImages, outputFormat, gpuInput);
 
     // TensorRT is used for the inference which loads the serialized engine file which is generated from the onnx model.
     // Initialize TensorRT backend
@@ -280,8 +309,21 @@ int main(int argc, char *argv[])
     buffers[inputBindingIndex]  = inputData->data();
     buffers[outputBindingIndex] = outputData->data();
 
+#ifdef PROFILE_SAMPLE
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start);
+#endif
     // Inference call
     trtBackend->infer(&buffers[inputBindingIndex], batchSize, stream);
+#ifdef PROFILE_SAMPLE
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    float inferms = 0;
+    cudaEventElapsedTime(&inferms, start, stop);
+    std::cout << "Time for Inference : " << inferms << " ms" << std::endl;
+#endif
 
     // Post Process to normalize and sort the classifications scores
     uint32_t                        numClasses = outputDims.width;

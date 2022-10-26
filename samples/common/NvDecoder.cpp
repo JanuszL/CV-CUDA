@@ -13,6 +13,8 @@
 
 #include "NvDecoder.h"
 
+#include "TestUtils.h"
+
 int decode_images(const FileData &img_data, const std::vector<size_t> &img_len, std::vector<nvjpegImage_t> &out,
                   decode_params_t &params, double &time)
 {
@@ -212,9 +214,14 @@ double process_images(FileNames &image_names, decode_params_t &params, double &t
 }
 
 int NvDecode(std::string images_dir, int total_images, int batch_size, nvjpegOutputFormat_t outputFormat,
-             std::vector<nvjpegImage_t> &iout, uint8_t *gpuWorkspace, std::vector<int> &widths,
-             std::vector<int> &heights)
+             uint8_t *gpuWorkspace)
 {
+    std::vector<nvjpegImage_t> iout;
+    std::vector<int>           widths, heights;
+    iout.resize(batch_size);
+    widths.resize(batch_size);
+    heights.resize(batch_size);
+
     decode_params_t params;
     params.input_dir           = images_dir;
     params.batch_size          = batch_size;
@@ -253,7 +260,7 @@ int NvDecode(std::string images_dir, int total_images, int batch_size, nvjpegOut
     if (process_images(image_names, params, total, iout, gpuWorkspace, widths, heights))
         return EXIT_FAILURE;
 
-#if DEBUG_NVJPEG
+#ifdef PROFILE_SAMPLE
     std::cout << "Total decoding time: " << total << " (s)" << std::endl;
     std::cout << "Avg decoding time per image: " << total / params.total_images << " (s)" << std::endl;
     std::cout << "Avg images per sec: " << params.total_images / total << std::endl;

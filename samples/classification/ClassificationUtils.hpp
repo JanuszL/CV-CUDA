@@ -11,6 +11,7 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <common/TestUtils.h>
 #include <cuda_runtime_api.h>
 #include <getopt.h>
 #include <math.h>
@@ -28,22 +29,6 @@
  */
 
 #define TOPN 5
-
-inline void CheckCudaError(cudaError_t code, const char *file, const int line)
-{
-    if (code != cudaSuccess)
-    {
-        const char       *errorMessage = cudaGetErrorString(code);
-        const std::string message      = "CUDA error returned at " + std::string(file) + ":" + std::to_string(line)
-                                  + ", Error code: " + std::to_string(code) + " (" + std::string(errorMessage) + ")";
-        throw std::runtime_error(message);
-    }
-}
-
-#define CHECK_CUDA_ERROR(val)                      \
-    {                                              \
-        CheckCudaError((val), __FILE__, __LINE__); \
-    }
 
 /**
  * @brief Utility to get the class names from the labels file
