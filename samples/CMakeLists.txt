@@ -21,7 +21,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 include(ConfigTensorRT)
 
 set(SAMPLES common
-	    classification)
+	    classification
+	    cropandresize)
 
 foreach(sample ${SAMPLES})
     add_subdirectory(${sample})

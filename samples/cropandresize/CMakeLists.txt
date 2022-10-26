@@ -1,5 +1,3 @@
-#!/bin/bash -e
-
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -10,19 +8,16 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-# Usage: run_samples.sh
+find_package(CUDA REQUIRED)
 
-# Crop and Resize
-./build/bin/nvcv_samples_cropandresize -i ./samples/assets/ -b 2
+add_executable(nvcv_samples_cropandresize Main.cpp)
+set(CMAKE_CXX_FLAGS "-Wno-deprecated-enum-enum-conversion")
+target_link_libraries(nvcv_samples_cropandresize nvcv CUDA::cudart_static nvcv_samples_common)
 
-# Classification
-mkdir -p models
-# Export onnx model from torch
-if [ ! -f ./models/resnet50.onnx ]
-then
-        python ./samples/scripts/export_resnet.py
-fi
-# Serialize model . ONNX->TRT
-./samples/scripts/serialize_models.sh
-#batch size 2
-./build/bin/nvcv_samples_classification -e ./models/resnet50.engine -i ./samples/assets/ -l models/imagenet-classes.txt -b 2
+target_include_directories(nvcv_samples_cropandresize
+	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
+
+install(TARGETS nvcv_samples_cropandresize
+        EXPORT nvcv_samples_cropandresize
+        COMPONENT samples
+        DESTINATION samples/bin)

@@ -11,7 +11,15 @@
  * its affiliates is strictly prohibited.
  */
 
+#ifndef NVCV_NVDECODER_HPP
+#define NVCV_NVDECODER_HPP
+
+#include <cuda_runtime_api.h>
+#include <dirent.h>
+#include <nvjpeg.h>
 #include <string.h> // strcmpi
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include <algorithm>
 #include <fstream>
@@ -19,15 +27,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#ifndef _WIN64
-#    include <sys/time.h> // timings
-#    include <unistd.h>
-#endif
-#include <cuda_runtime_api.h>
-#include <dirent.h>
-#include <nvjpeg.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 
 #define CHECK_CUDA(call)                                                                                          \
     {                                                                                                             \
@@ -706,4 +705,6 @@ int findParamIndex(const char **argv, int argc, const char *parm)
 }
 
 int NvDecode(std::string images_dir, int total_images, int batch_size, nvjpegOutputFormat_t outputFormat,
-             std::vector<nvjpegImage_t> &iout, uint8_t *gpuInput, std::vector<int> &widths, std::vector<int> &heights);
+             uint8_t *gpuInput);
+
+#endif
