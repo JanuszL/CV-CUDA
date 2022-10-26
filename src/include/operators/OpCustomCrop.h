@@ -49,6 +49,51 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopCustomCropCreate(NVCVOperatorHandle *handle);
 /** Executes the CustomCrop operation on the given cuda stream. This operation does not
  *  wait for completion.
  *
+ *  Limitations:
+ *
+ *  ROI must be smaller than output tensor.
+ *
+ *  Input:
+ *       Data Layout:    [kNHWC, kHWC]
+ *       Channels:       [1, 3, 4]
+ *
+ *       Data Type      | Allowed
+ *       -------------- | -------------
+ *       8bit  Unsigned | Yes
+ *       8bit  Signed   | Yes
+ *       16bit Unsigned | Yes
+ *       16bit Signed   | Yes
+ *       32bit Unsigned | Yes
+ *       32bit Signed   | Yes
+ *       32bit Float    | Yes
+ *       64bit Float    | Yes
+ *
+ *  Output:
+ *       Data Layout:    [kNHWC, kHWC]
+ *       Channels:       [1, 3, 4]
+ *
+ *       Data Type      | Allowed
+ *       -------------- | -------------
+ *       8bit  Unsigned | Yes
+ *       8bit  Signed   | Yes
+ *       16bit Unsigned | Yes
+ *       16bit Signed   | Yes
+ *       32bit Unsigned | Yes
+ *       32bit Signed   | Yes
+ *       32bit Float    | Yes
+ *       64bit Float    | Yes
+ *
+ *  Input/Output dependency
+ *
+ *       Property      |  Input == Output
+ *      -------------- | -------------
+ *       Data Layout   | Yes
+ *       Data Type     | Yes
+ *       Number        | Yes
+ *       Channels      | Yes
+ *       Width         | No
+ *       Height        | No
+ *
  * @param [in] handle Handle to the operator.
  *                    + Must not be NULL.
  * @param [in] stream Handle to a valid CUDA stream.

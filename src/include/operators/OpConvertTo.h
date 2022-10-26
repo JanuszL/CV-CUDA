@@ -50,6 +50,49 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopConvertToCreate(NVCVOperatorHandle *handle);
  *
  *  outputs(x,y) = saturate_cast<out_type>(α * inputs(x, y) + β)
  *
+ *  Limitations:
+ *
+ *  Input:
+ *       Data Layout:    [kNHWC, kHWC]
+ *       Channels:       [1-4]
+ *
+ *       Data Type      | Allowed
+ *       -------------- | -------------
+ *       8bit  Unsigned | Yes
+ *       8bit  Signed   | Yes
+ *       16bit Unsigned | Yes
+ *       16bit Signed   | Yes
+ *       32bit Unsigned | No
+ *       32bit Signed   | Yes
+ *       32bit Float    | Yes
+ *       64bit Float    | Yes
+ *
+ *  Output:
+ *       Data Layout:    [kNHWC, kHWC]
+ *       Channels:       [1-4]
+ *
+ *       Data Type      | Allowed
+ *       -------------- | -------------
+ *       8bit  Unsigned | Yes
+ *       8bit  Signed   | Yes
+ *       16bit Unsigned | Yes
+ *       16bit Signed   | Yes
+ *       32bit Unsigned | No
+ *       32bit Signed   | Yes
+ *       32bit Float    | Yes
+ *       64bit Float    | Yes
+ *
+ *  Input/Output dependency
+ *
+ *       Property      |  Input == Output
+ *      -------------- | -------------
+ *       Data Layout   | Yes
+ *       Data Type     | No
+ *       Number        | Yes
+ *       Channels      | Yes
+ *       Width         | Yes
+ *       Height        | Yes
+ *
  * @param [in] handle Handle to the operator.
  *                    + Must not be NULL.
  * @param [in] stream Handle to a valid CUDA stream.
