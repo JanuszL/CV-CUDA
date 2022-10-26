@@ -197,3 +197,55 @@ TEST(TensorWrapData, wip_create)
     EXPECT_LE(mem + access->samplePitchBytes() * 3 + access->planePitchBytes() * 1,
               accessRef->sampleData(3, accessRef->planeData(1)));
 }
+
+class TensorWrapImageTests
+    : public t::TestWithParam<
+          std::tuple<test::Param<"size", nvcv::Size2D>, test::Param<"format", nvcv::ImageFormat>,
+                     test::Param<"gold_shape", nvcv::TensorShape>, test::Param<"dtype", nvcv::PixelType>>>
+{
+};
+
+// clang-format off
+NVCV_INSTANTIATE_TEST_SUITE_P(_, TensorWrapImageTests,
+    test::ValueList<nvcv::Size2D, nvcv::ImageFormat, nvcv::TensorShape, nvcv::PixelType>
+    {
+        {{61,23}, nvcv::FMT_RGBA8p, nvcv::TensorShape{{4,23,61},nvcv::TensorLayout::CHW}, nvcv::TYPE_U8},
+        {{61,23}, nvcv::FMT_RGBA8, nvcv::TensorShape{{23,61,4},nvcv::TensorLayout::HWC}, nvcv::TYPE_U8},
+        {{61,23}, nvcv::FMT_RGB8, nvcv::TensorShape{{23,61,3},nvcv::TensorLayout::HWC}, nvcv::TYPE_U8},
+        {{61,23}, nvcv::FMT_RGB8p, nvcv::TensorShape{{3,23,61},nvcv::TensorLayout::CHW}, nvcv::TYPE_U8},
+        {{61,23}, nvcv::FMT_F32, nvcv::TensorShape{{1,23,61},nvcv::TensorLayout::CHW}, nvcv::TYPE_F32},
+        {{61,23}, nvcv::FMT_2F32, nvcv::TensorShape{{23,61,2},nvcv::TensorLayout::HWC}, nvcv::TYPE_F32},
+    }
+);
+
+// clang-format on
+
+TEST_P(TensorWrapImageTests, wip_create)
+{
+    const nvcv::Size2D      PARAM_SIZE   = std::get<0>(GetParam());
+    const nvcv::ImageFormat PARAM_FORMAT = std::get<1>(GetParam());
+    const nvcv::TensorShape GOLD_SHAPE   = std::get<2>(GetParam());
+    const nvcv::PixelType   GOLD_DTYPE   = std::get<3>(GetParam());
+
+    nvcv::Image img(PARAM_SIZE, PARAM_FORMAT);
+
+    nvcv::TensorWrapImage tensor(img);
+
+    EXPECT_EQ(GOLD_SHAPE, tensor.shape());
+    EXPECT_EQ(GOLD_DTYPE, tensor.dtype());
+
+    auto *imgData    = dynamic_cast<const nvcv::IImageDataPitchDevice *>(img.exportData());
+    auto *tensorData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(tensor.exportData());
+
+    auto tensorAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*tensorData);
+    EXPECT_TRUE(tensorAccess);
+
+    EXPECT_EQ(imgData->plane(0).buffer, tensorData->data());
+
+    for (int p = 0; p < imgData->numPlanes(); ++p)
+    {
+        EXPECT_EQ(imgData->plane(p).buffer, tensorAccess->planeData(p));
+        EXPECT_EQ(imgData->plane(p).pitchBytes, tensorAccess->rowPitchBytes());
+        EXPECT_EQ(img.format().planePixelStrideBytes(p), tensorAccess->colPitchBytes());
+    }
+}

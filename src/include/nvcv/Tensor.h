@@ -167,6 +167,40 @@ NVCV_PUBLIC NVCVStatus nvcvTensorWrapDataConstruct(const NVCVTensorData *data, N
                                                    void *ctxCleanup, NVCVTensorStorage *storage,
                                                    NVCVTensorHandle *handle);
 
+/** Wraps an existing NVCV image into an NVCV tensor instance constructed in given storage
+ *
+ * Tensor layout is inferred from image characteristics.
+ *
+ * - CHW: For multi-planar images, one-channel image or single-planar images
+ *        whose channels have different bit depths.
+ * - HWC: For packed (single plane) images with channels with same bit depths
+ *
+ * When image is single-planar with channels with different bit depths, it's considered
+ * to have one channel, but with element type (type) with multiple components with the
+ * required bit depth each.
+ *
+ * @param [in] img Image to be wrapped
+ *                 + Must not be NULL.
+ *                 + Must not have subsampled planes
+ *                 + All planes must have the same pixel type.
+ *                 + Distance in memory between consecutive planes must be > 0.
+ *                 + Row pitch of all planes must be the same.
+ *                 + Image must not be destroyed while it's referenced by a tensor.
+ *                 + Image contents must be device-accessible
+ *                 + Image format must be pitch-linear.
+ *                 + All planes must have the same dimensions.
+ *
+ * @param [in,out] storage Memory storage where the tensor instance will be created in.
+ *
+ * @param [out] handle Where the tensor instance handle will be written to.
+ *                     + Must not be NULL.
+ *
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
+ * @retval #NVCV_SUCCESS                Operation executed successfully.
+ */
+NVCV_PUBLIC NVCVStatus nvcvTensorWrapImageConstruct(NVCVImageHandle img, NVCVTensorStorage *storage,
+                                                    NVCVTensorHandle *handle);
+
 /** Destroys an existing tensor instance.
  *
  * If the tensor is wrapping external data and a cleanup function has been defined, defined,
