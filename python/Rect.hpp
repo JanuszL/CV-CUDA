@@ -11,14 +11,17 @@
  * its affiliates is strictly prohibited.
  */
 
+#ifndef NVCV_PYTHON_RECT_HPP
+#define NVCV_PYTHON_RECT_HPP
+
 #include <pybind11/pybind11.h>
 
 namespace nv::cvpy {
 
 namespace py = ::pybind11;
 
-void ExportOpReformat(py::module &m);
-void ExportOpResize(py::module &m);
-void ExportOpCustomCrop(py::module &m);
+void ExportRect(py::module &m);
 
 } // namespace nv::cvpy
+
+#endif // NVCV_PYTHON_RECT_HPP
