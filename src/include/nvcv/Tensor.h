@@ -52,7 +52,8 @@ typedef struct NVCVTensorRequirementsRec
     /*< Type of each element */
     NVCVPixelType dtype;
 
-    /*< Tensor layout. */
+    /*< Tensor dimension layout.
+     * It's optional. If layout not available, set it to NVCV_TENSOR_NONE. */
     NVCVTensorLayout layout;
 
     /*< Number of dimensions */
@@ -73,13 +74,16 @@ typedef struct NVCVTensorRequirementsRec
 
 /** Calculates the resource requirements needed to create a tensor with given shape.
  *
- * @param [in] layout Tensor layout.
- *                    The number of dimensions are defined by the layout.
+ * @param [in] ndim Number of tensor dimensions.
  *
  * @param [in] shape Pointer to array with tensor shape.
  *                   It must contain at least 'ndim' elements.
  *
  * @param [in] dtype Type of tensor's elements.
+ *
+ * @param [in] layout Tensor layout.
+ *                    Pass NVCV_TENSOR_NONE is layout is not available.
+ *                    + Number of dimensions in layout must be @p ndim.
  *
  * @param [out] reqs  Where the tensor requirements will be written to.
  *                    + Must not be NULL.
@@ -140,11 +144,9 @@ NVCV_PUBLIC NVCVStatus nvcvTensorConstruct(const NVCVTensorRequirements *reqs, N
  * It allows for interoperation of external tensor representations with NVCV.
  *
  * @param [in] data Tensor contents.
- *                  Currently only NCHW (planar channels) and NHWC (packed
- *                  channels) tensor layouts are supported. The distinction
- *                  between the two is given by the image format.
  *                  + Must not be NULL.
- *                  + Buffer type must not be \ref NVCV_IMAGE_BUFFER_NONE.
+ *                  + Allowed buffer types:
+ *                    - \ref NVCV_TENSOR_BUFFER_PITCH_DEVICE
  *
  * @param [in] cleanup Cleanup function to be called when the tensor is destroyed
  *                     via @ref nvcvTensorDestroy.
@@ -167,14 +169,14 @@ NVCV_PUBLIC NVCVStatus nvcvTensorWrapDataConstruct(const NVCVTensorData *data, N
 
 /** Destroys an existing tensor instance.
  *
- * If the image has type @ref NVCV_TYPE_TENSOR_TENSOR_WRAPDATA and has a cleanup function defined,
- * cleanup will be called.
+ * If the tensor is wrapping external data and a cleanup function has been defined, defined,
+ * it will be called.
  *
  * @note The tensor object must not be in use in current and future operations.
  *
  * @param [in] handle Tensor to be destroyed.
  *                    If NULL, no operation is performed, successfully.
- *                    + The handle must have been created with any of the nvcvTensorXXXConstruct functions.
+ *                    + The handle must have been created with any of the nvcvTensorConstruct functions.
  */
 NVCV_PUBLIC void nvcvTensorDestroy(NVCVTensorHandle handle);
 
