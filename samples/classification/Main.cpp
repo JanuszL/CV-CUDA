@@ -33,30 +33,45 @@
  * @brief Image classification sample.
  *
  * The image classification sample uses Resnet50 based model trained on Imagenet
- * The sample app includes preprocessing, inference and post process stages
- *
- * In the preprocessing The following operations are performed
- * Resize -> DataType COnvert -> Normalize -> Interleaved to Planar
- * The inference pipeline is run using TensorRT
- * The post processing involves running a softmax to normalize the scores to 0-1
- * and sorting the scores to find the TopN classificaion results.
+ * The sample app pipeline includes preprocessing, inference and post process stages
+ * which takes as input a batch of images and returns the TopN classification results
+ * of each image.
  *
  */
 
-void PreProcess(nv::cv::TensorWrapData &inTensor, int maxImageWidth, int maxImageHeight, uint32_t batchSize,
-                int inputLayerWidth, int inputLayerHeight, cudaStream_t m_cudaStream, nv::cv::TensorWrapData &outTensor)
+/**
+ * @brief Preprocess function
+ *
+ * @details Preprocessing includes the following sequence of operations.
+ * Resize -> DataType COnvert(U8->F32) -> Normalize( Apply mean and std deviation) -> Interleaved to Planar
+ *
+ * @param [in] inTensor CVCUDA Tensor containing the batched input images
+ * @param [in] batchSize Batch size of the input tensor
+ * @param [in] inputLayerWidth Input Layer width of the network
+ * @param [in] inputLayerHeight Input Layer height of the network
+ * @param [in] stream Cuda stream
+ *
+ * @param [out] outTensor  CVCUDA Tensor containing the preprocessed image batch
+ *
+ */
+
+void PreProcess(nv::cv::TensorWrapData &inTensor, uint32_t batchSize, int inputLayerWidth, int inputLayerHeight,
+                cudaStream_t stream, nv::cv::TensorWrapData &outTensor)
 {
-    // Resize
+    // Resize to the dimensions of input layer of network
     nv::cv::Tensor   resizedTensor(batchSize, {inputLayerWidth, inputLayerHeight}, nv::cv::FMT_RGB8);
     nv::cvop::Resize resizeOp;
-    resizeOp(m_cudaStream, inTensor, resizedTensor, NVCV_INTERP_LINEAR);
+    resizeOp(stream, inTensor, resizedTensor, NVCV_INTERP_LINEAR);
 
-    // Convert U8 - F32. Apply scale 1/255f.
-    nv::cv::Tensor      tempTensor(batchSize, {inputLayerWidth, inputLayerHeight}, nv::cv::FMT_RGBf32);
+    // Convert to data format expected by network (F32). Apply scale 1/255f.
+    nv::cv::Tensor      floatTensor(batchSize, {inputLayerWidth, inputLayerHeight}, nv::cv::FMT_RGBf32);
     nv::cvop::ConvertTo convertOp;
-    convertOp(m_cudaStream, resizedTensor, tempTensor, 1.0f / 255.f, 0.0f);
+    convertOp(stream, resizedTensor, floatTensor, 1.0f / 255.f, 0.0f);
 
-    // Apply std deviation
+    // The input to the network needs to be normalized based on the mean and std deviation values
+    // to standardize the input data.
+
+    // Create a Tensor to store the standard deviation values for R,G,B
     nv::cv::Tensor::Requirements reqsScale       = nv::cv::Tensor::CalcRequirements(1, {1, 1}, nv::cv::FMT_RGBf32);
     int64_t                      scaleBufferSize = CalcTotalSizeBytes(nv::cv::Requirements{reqsScale.mem}.deviceMem());
     nv::cv::TensorDataPitchDevice::Buffer bufScale;
@@ -66,7 +81,7 @@ void PreProcess(nv::cv::TensorWrapData &inTensor, int maxImageWidth, int maxImag
                                           nv::cv::PixelType{reqsScale.dtype}, bufScale);
     nv::cv::TensorWrapData        scaleTensor(scaleIn);
 
-    // Apply mean shift
+    // Create a Tensor to store the mean values for R,G,B
     nv::cv::TensorDataPitchDevice::Buffer bufBase;
     nv::cv::Tensor::Requirements          reqsBase = nv::cv::Tensor::CalcRequirements(1, {1, 1}, nv::cv::FMT_RGBf32);
     int64_t baseBufferSize                         = CalcTotalSizeBytes(nv::cv::Requirements{reqsBase.mem}.deviceMem());
@@ -76,51 +91,67 @@ void PreProcess(nv::cv::TensorWrapData &inTensor, int maxImageWidth, int maxImag
                                          nv::cv::PixelType{reqsBase.dtype}, bufBase);
     nv::cv::TensorWrapData        baseTensor(baseIn);
 
+    // Copy the values from Host to Device
+    // The R,G,B scale and mean will be applied to all the pixels across the batch of input images
     const auto *baseData  = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(scaleTensor.exportData());
     const auto *scaleData = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(baseTensor.exportData());
+    float       scale[3]  = {0.229, 0.224, 0.225};
+    float       base[3]   = {0.485f, 0.456f, 0.406f};
 
-    // Preprocessing parameters
-    float    scale[3] = {0.229, 0.224, 0.225};
-    float    base[3]  = {0.485f, 0.456f, 0.406f};
-    uint32_t flags    = NVCV_OP_NORMALIZE_SCALE_IS_STDDEV;
-    CHECK_CUDA_ERROR(
-        cudaMemcpyAsync(scaleData->data(), scale, 3 * sizeof(float), cudaMemcpyHostToDevice, m_cudaStream));
-    CHECK_CUDA_ERROR(cudaMemcpyAsync(baseData->data(), base, 3 * sizeof(float), cudaMemcpyHostToDevice, m_cudaStream));
+    // Flag to set the scale value as standard deviation i.e use 1/scale
+    uint32_t flags = NVCV_OP_NORMALIZE_SCALE_IS_STDDEV;
+    CHECK_CUDA_ERROR(cudaMemcpyAsync(scaleData->data(), scale, 3 * sizeof(float), cudaMemcpyHostToDevice, stream));
+    CHECK_CUDA_ERROR(cudaMemcpyAsync(baseData->data(), base, 3 * sizeof(float), cudaMemcpyHostToDevice, stream));
 
     nv::cv::Tensor normTensor(batchSize, {inputLayerWidth, inputLayerHeight}, nv::cv::FMT_RGBf32);
 
     // Normalize
     nv::cvop::Normalize normOp;
-    normOp(m_cudaStream, tempTensor, baseTensor, scaleTensor, normTensor, 1.0f, 0.0f, 0.0f, flags);
+    normOp(stream, floatTensor, baseTensor, scaleTensor, normTensor, 1.0f, 0.0f, 0.0f, flags);
 
-    // Interleaved to planar
+    // Convert the data layout from interleaved to planar
     nv::cvop::Reformat reformatOp;
-    reformatOp(m_cudaStream, normTensor, outTensor);
+    reformatOp(stream, normTensor, outTensor);
 }
 
-void PostProcess(float *outputDeviceBuffer, std::vector<std::vector<float>> &sortedScores,
-                 std::vector<std::vector<int>> &sortedIndices, cudaStream_t stream)
+/**
+ * @brief Postprocess function
+ *
+ * @details Postprocessing function normalizes the classification score from the network and sorts
+ *           the scores to get the TopN classification scores.
+ *
+ * @param [in] outputDeviceBuffer Classification scores from the network
+ * @param [in] stream Cuda Stream
+ *
+ * @param [out] scores Vector to store the sorted scores
+ * @param [out] indices Vector to store the sorted indices
+ */
+void PostProcess(float *outputDeviceBuffer, std::vector<std::vector<float>> &scores,
+                 std::vector<std::vector<int>> &indices, cudaStream_t stream)
 {
-    uint32_t batchSize  = sortedScores.size();
-    uint32_t numClasses = sortedScores[0].size();
+    uint32_t batchSize  = scores.size();
+    uint32_t numClasses = scores[0].size();
 
+    // Copy the network classification scores from Device to Host
     for (int i = 0; i < batchSize; i++)
     {
-        CHECK_CUDA_ERROR(cudaMemcpyAsync(sortedScores[i].data(), outputDeviceBuffer + i * numClasses,
+        CHECK_CUDA_ERROR(cudaMemcpyAsync(scores[i].data(), outputDeviceBuffer + i * numClasses,
                                          numClasses * sizeof(float), cudaMemcpyDeviceToHost, stream));
     }
+
     CHECK_CUDA_ERROR(cudaStreamSynchronize(stream));
+
     for (int i = 0; i < batchSize; i++)
     {
-        std::transform(sortedScores[i].begin(), sortedScores[i].end(), sortedScores[i].begin(),
-                       [](float val) { return std::exp(val); });
+        // Apply softmax to normalize the scores in the range 0-1
+        std::transform(scores[i].begin(), scores[i].end(), scores[i].begin(), [](float val) { return std::exp(val); });
 
-        auto sum = std::accumulate(sortedScores[i].begin(), sortedScores[i].end(), 0.0);
-        std::transform(sortedScores[i].begin(), sortedScores[i].end(), sortedScores[i].begin(),
-                       [sum](float val) { return val / sum; });
-        std::iota(sortedIndices[i].begin(), sortedIndices[i].end(), 0);
-        std::sort(sortedIndices[i].begin(), sortedIndices[i].end(),
-                  [&sortedScores, i](int i1, int i2) { return sortedScores[i][i1] > sortedScores[i][i2]; });
+        auto sum = std::accumulate(scores[i].begin(), scores[i].end(), 0.0);
+        std::transform(scores[i].begin(), scores[i].end(), scores[i].begin(), [sum](float val) { return val / sum; });
+        // Sort the indices based on scores
+        std::iota(indices[i].begin(), indices[i].end(), 0);
+        std::sort(indices[i].begin(), indices[i].end(),
+                  [&scores, i](int i1, int i2) { return scores[i][i1] > scores[i][i2]; });
     }
 }
 
@@ -132,74 +163,25 @@ int main(int argc, char *argv[])
     std::string labelPath = "./engines/imagenet-classes.txt";
     uint32_t    batchSize = 1;
 
-    static struct option long_options[] = {
-        {     "help",       no_argument, 0, 'h'},
-        {   "engine", required_argument, 0, 'e'},
-        {"labelPath", required_argument, 0, 'l'},
-        {"imagePath", required_argument, 0, 'i'},
-        {    "batch", required_argument, 0, 'b'},
-        {          0,                 0, 0,   0}
-    };
-
-    int long_index = 0;
-    int opt        = 0;
-    while ((opt = getopt_long(argc, argv, "he:l:i:b:", long_options, &long_index)) != -1)
+    // Parse the command line paramaters to override the default parameters
+    int retval = ParseArgs(argc, argv, modelPath, imagePath, labelPath, batchSize);
+    if (retval != 0)
     {
-        switch (opt)
-        {
-        case 'h':
-            showUsage();
-            return -1;
-            break;
-        case 'e':
-            modelPath = optarg;
-            break;
-        case 'l':
-            labelPath = optarg;
-            break;
-        case 'i':
-            imagePath = optarg;
-            break;
-        case 'b':
-            batchSize = std::stoi(optarg);
-            break;
-        case ':':
-            showUsage();
-            return -1;
-        default:
-            break;
-        }
+        return retval;
     }
 
-    std::ifstream modelFile(modelPath);
-    if (!modelFile.good())
-    {
-        showUsage();
-        throw std::runtime_error("Model path '" + modelPath + "' does not exist\n");
-    }
-    std::ifstream imageFile(imagePath);
-    if (!imageFile.good())
-    {
-        showUsage();
-        throw std::runtime_error("Image path '" + imagePath + "' does not exist\n");
-    }
-    std::ifstream labelFile(labelPath);
-    if (!labelFile.good())
-    {
-        showUsage();
-        throw std::runtime_error("Label path '" + labelPath + "' does not exist\n");
-    }
-
-    // Setup NvJpeg to load the image file or image directory
     std::vector<nvjpegImage_t> iout;
     std::vector<int>           widths, heights;
+    // The total images is set to the batch size for testing
     uint32_t                   totalImages  = batchSize;
     nvjpegOutputFormat_t       outputFormat = NVJPEG_OUTPUT_BGRI;
     widths.resize(batchSize);
     heights.resize(batchSize);
     iout.resize(batchSize);
 
-    // Maximum dimension of images
+    // Allocate the maximum memory neeed for the input image batch
+    // Note : This needs to be changed in case of testing with different test images
+
     int maxImageWidth  = 720;
     int maxImageHeight = 720;
     int maxChannels    = 3;
@@ -220,21 +202,22 @@ int main(int argc, char *argv[])
 
     nv::cv::TensorDataPitchDevice inData(nv::cv::TensorShape{inReqs.shape, inReqs.ndim, inReqs.layout},
                                          nv::cv::PixelType{inReqs.dtype}, inBuf);
+    nv::cv::TensorWrapData        inTensor(inData);
 
-    nv::cv::TensorWrapData inTensor(inData);
-
+    // NvJpeg is used to load the images to create a batched input device buffer.
     uint8_t *gpuInput = static_cast<uint8_t *>(inBuf.data);
-
     NvDecode(imagePath, batchSize, totalImages, outputFormat, iout, gpuInput, widths, heights);
 
-    // Setup TRT Backend
+    // TensorRT is used for the inference which loads the serialized engine file which is generated from the onnx model.
+    // Initialize TensorRT backend
     std::unique_ptr<TRTBackend> trtBackend;
     trtBackend.reset(new TRTBackend(modelPath.c_str()));
 
+    // Get number of input and output Layers
     auto numBindings = trtBackend->getBlobCount();
     if (numBindings != 2)
     {
-        printf("Number of bindings should be 2\n");
+        std::cerr << "Number of bindings should be 2\n";
         return -1;
     }
 
@@ -242,7 +225,7 @@ int main(int argc, char *argv[])
     std::vector<void *> buffers;
     buffers.resize(numBindings);
 
-    // Get network dimensions
+    // Get dimensions of input and output layers
     TRTBackendBlobSize inputDims, outputDims;
     uint32_t           inputBindingIndex, outputBindingIndex;
     for (int i = 0; i < numBindings; i++)
@@ -259,19 +242,23 @@ int main(int argc, char *argv[])
         }
     }
 
-    // Allocate input layer buffer
+    // Allocate input layer buffer based on input layer dimensions and batch size
+    // Calculates the resource requirements needed to create a tensor with given shape
     nv::cv::Tensor::Requirements reqsInputLayer
         = nv::cv::Tensor::CalcRequirements(batchSize, {inputDims.width, inputDims.height}, nv::cv::FMT_RGBf32p);
+    // Calculates the total buffer size needed based on the requirements
     int64_t inputLayerSize = CalcTotalSizeBytes(nv::cv::Requirements{reqsInputLayer.mem}.deviceMem());
     nv::cv::TensorDataPitchDevice::Buffer bufInputLayer;
     std::copy(reqsInputLayer.pitchBytes, reqsInputLayer.pitchBytes + NVCV_TENSOR_MAX_NDIM, bufInputLayer.pitchBytes);
+    // Allocate buffer size needed for the tensor
     CHECK_CUDA_ERROR(cudaMalloc(&bufInputLayer.data, inputLayerSize));
+    // Wrap the tensor as a CVCUDA tensor
     nv::cv::TensorDataPitchDevice inputLayerTensorData(
         nv::cv::TensorShape{reqsInputLayer.shape, reqsInputLayer.ndim, reqsInputLayer.layout},
         nv::cv::PixelType{reqsInputLayer.dtype}, bufInputLayer);
     nv::cv::TensorWrapData inputLayerTensor(inputLayerTensorData);
 
-    // Allocate output layer buffer
+    // Allocate ouput layer buffer based on the output layer dimensions and batch size
     nv::cv::Tensor::Requirements reqsOutputLayer
         = nv::cv::Tensor::CalcRequirements(batchSize, {outputDims.width, 1}, nv::cv::FMT_RGBf32p);
     int64_t outputLayerSize = CalcTotalSizeBytes(nv::cv::Requirements{reqsOutputLayer.mem}.deviceMem());
@@ -283,27 +270,27 @@ int main(int argc, char *argv[])
         nv::cv::PixelType{reqsOutputLayer.dtype}, bufOutputLayer);
     nv::cv::TensorWrapData outputLayerTensor(outputLayerTensorData);
 
-    // Preprocess input
-    PreProcess(inTensor, maxImageWidth, maxImageHeight, batchSize, inputDims.width, inputDims.height, stream,
-               inputLayerTensor);
+    // Run preprocess on the input image batch
+    PreProcess(inTensor, batchSize, inputDims.width, inputDims.height, stream, inputLayerTensor);
 
-    // Run Inference
+    // Setup the TensortRT Buffer needed for inference
     const auto *inputData  = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(inputLayerTensor.exportData());
     const auto *outputData = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(outputLayerTensor.exportData());
 
     buffers[inputBindingIndex]  = inputData->data();
     buffers[outputBindingIndex] = outputData->data();
 
+    // Inference call
     trtBackend->infer(&buffers[inputBindingIndex], batchSize, stream);
 
-    // Post Process
+    // Post Process to normalize and sort the classifications scores
     uint32_t                        numClasses = outputDims.width;
-    std::vector<std::vector<float>> sortedScores(batchSize, std::vector<float>(numClasses));
-    std::vector<std::vector<int>>   sortedIndices(batchSize, std::vector<int>(numClasses));
-    PostProcess((float *)outputData->data(), sortedScores, sortedIndices, stream);
+    std::vector<std::vector<float>> scores(batchSize, std::vector<float>(numClasses));
+    std::vector<std::vector<int>>   indices(batchSize, std::vector<int>(numClasses));
+    PostProcess((float *)outputData->data(), scores, indices, stream);
 
     // Display Results
-    DisplayResults(sortedScores, sortedIndices, labelPath);
+    DisplayResults(scores, indices, labelPath);
 
     // Clean up
     CHECK_CUDA_ERROR(cudaStreamDestroy(stream));
