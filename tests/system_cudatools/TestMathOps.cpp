@@ -201,6 +201,7 @@ NVCV_TYPED_TEST_SUITE(
     MathOpsBinarySubtractionTest, ttype::Types<
     ttype::Types<ttype::Value<int1{-2}>, ttype::Value<short1{2}>, ttype::Value<int1{-4}>>,
     ttype::Types<ttype::Value<int2{1, 2}>, ttype::Value<ushort2{2, 3}>, ttype::Value<int2{-1, -1}>>,
+    ttype::Types<ttype::Value<uint3{1, 2, 3}>, ttype::Value<dim3{1, 1, 1}>, ttype::Value<uint3{0, 1, 2}>>,
     ttype::Types<ttype::Value<long3{-1, 0, 1}>, ttype::Value<long3{1, 2, 3}>, ttype::Value<long3{-2, -2, -2}>>,
     ttype::Types<ttype::Value<float4{0.f, -1.23f, -2.34f, -3.45f}>, ttype::Value<ulong4{0, 12, 23, 34}>,
                  ttype::Value<float4{0, -13.23f, -25.34f, -37.45f}>>
@@ -227,6 +228,7 @@ NVCV_TYPED_TEST_SUITE(
     MathOpsBinaryAdditionTest, ttype::Types<
     ttype::Types<ttype::Value<int1{-2}>, ttype::Value<short1{2}>, ttype::Value<int1{0}>>,
     ttype::Types<ttype::Value<uint2{1, 2}>, ttype::Value<ushort2{2, 3}>, ttype::Value<uint2{3, 5}>>,
+    ttype::Types<ttype::Value<uint3{1, 2, 3}>, ttype::Value<dim3{1, 1, 1}>, ttype::Value<uint3{2, 3, 4}>>,
     ttype::Types<ttype::Value<long3{-1, 0, 1}>, ttype::Value<long3{1, 2, 3}>, ttype::Value<long3{0, 2, 4}>>,
     ttype::Types<ttype::Value<float4{0.f, 1.23f, 2.34f, 3.45f}>, ttype::Value<ulong4{0, 12, 23, 34}>,
                  ttype::Value<float4{0, 13.23f, 25.34f, 37.45f}>>
@@ -253,6 +255,7 @@ NVCV_TYPED_TEST_SUITE(
     MathOpsBinaryMultiplicationTest, ttype::Types<
     ttype::Types<ttype::Value<int1{-2}>, ttype::Value<short1{2}>, ttype::Value<int1{-4}>>,
     ttype::Types<ttype::Value<uint2{1, 2}>, ttype::Value<ushort2{2, 3}>, ttype::Value<uint2{2, 6}>>,
+    ttype::Types<ttype::Value<uint3{1, 2, 3}>, ttype::Value<dim3{2, 2, 2}>, ttype::Value<uint3{2, 4, 6}>>,
     ttype::Types<ttype::Value<long3{-1, 0, 1}>, ttype::Value<long3{1, 2, 3}>, ttype::Value<long3{-1, 0, 3}>>,
     ttype::Types<ttype::Value<float4{0.f, 0.5f, 1.25f, 2.75f}>, ttype::Value<ulong4{0, 12, 20, 24}>,
                  ttype::Value<float4{0, 6.f, 25.f, 66.f}>>
@@ -279,6 +282,7 @@ NVCV_TYPED_TEST_SUITE(
     MathOpsBinaryDivisionTest, ttype::Types<
     ttype::Types<ttype::Value<int1{-2}>, ttype::Value<short1{2}>, ttype::Value<int1{-1}>>,
     ttype::Types<ttype::Value<uint2{2, 4}>, ttype::Value<ushort2{1, 2}>, ttype::Value<uint2{2, 2}>>,
+    ttype::Types<ttype::Value<uint3{2, 4, 6}>, ttype::Value<dim3{2, 2, 2}>, ttype::Value<uint3{1, 2, 3}>>,
     ttype::Types<ttype::Value<long3{-1, 0, 2}>, ttype::Value<int3{1, 2, 1}>, ttype::Value<long3{-1, 0, 2}>>,
     ttype::Types<ttype::Value<float4{0.f, 12.f, 21.f, 28.5f}>, ttype::Value<ulong4{1, 2, 3, 2}>,
                  ttype::Value<float4{0, 6.f, 7.f, 14.25f}>>
@@ -307,6 +311,7 @@ NVCV_TYPED_TEST_SUITE(
     MathOpsBinaryModuloTest, ttype::Types<
     ttype::Types<ttype::Value<int1{2}>, ttype::Value<short1{2}>, ttype::Value<int1{0}>>,
     ttype::Types<ttype::Value<uint2{2, 4}>, ttype::Value<ushort2{1, 3}>, ttype::Value<uint2{0, 1}>>,
+    ttype::Types<ttype::Value<uint3{1, 2, 3}>, ttype::Value<dim3{2, 2, 2}>, ttype::Value<uint3{1, 0, 1}>>,
     ttype::Types<ttype::Value<long3{1, 0, 5}>, ttype::Value<int3{1, 2, 3}>, ttype::Value<long3{0, 0, 2}>>,
     ttype::Types<ttype::Value<ulonglong4{0, 11, 20, 31}>, ttype::Value<ulong4{1, 2, 3, 7}>,
                  ttype::Value<ulonglong4{0, 1, 2, 3}>>

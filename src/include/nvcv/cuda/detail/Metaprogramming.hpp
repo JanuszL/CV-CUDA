@@ -57,6 +57,8 @@ struct TypeTraits;
         static constexpr base_type max        = MAX_VAL;                                        \
     }
 
+NVCV_CUDA_TYPE_TRAITS(dim3, unsigned int, 3, 3, 0, UINT_MAX);
+
 NVCV_CUDA_TYPE_TRAITS(unsigned char, unsigned char, 0, 1, 0, UCHAR_MAX);
 NVCV_CUDA_TYPE_TRAITS(signed char, signed char, 0, 1, SCHAR_MIN, SCHAR_MAX);
 #if CHAR_MIN == 0
