@@ -21,6 +21,7 @@
 
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageFormat.hpp>
+#include <nvcv/TensorLayout.hpp>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 
@@ -89,6 +90,9 @@ public:
         return m_key;
     }
 
+    py::object cpu(std::optional<cv::TensorLayout> layout) const;
+    py::object cuda(std::optional<cv::TensorLayout> layout) const;
+
 private:
     explicit Image(const Size2D &size, cv::ImageFormat fmt);
     explicit Image(std::vector<std::shared_ptr<CudaBuffer>> buf, const cv::IImageDataPitchDevice &imgData);
@@ -97,9 +101,10 @@ private:
     std::unique_ptr<cv::IImage> m_impl; // must come before m_key
     Key                         m_key;
 
-    // monostate (empty) if not wrapping
-    // It could be wrapping either host (py::buffer) or cuda (CudaBuffer)
-    std::variant<std::monostate, std::vector<py::buffer>, std::vector<std::shared_ptr<CudaBuffer>>> m_wrapped;
+    mutable py::object                      m_cacheCudaObject;
+    mutable std::optional<cv::TensorLayout> m_cacheCudaObjectLayout;
+
+    py::object m_wrapped;
 };
 
 std::ostream &operator<<(std::ostream &out, const Image &img);
