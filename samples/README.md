@@ -61,7 +61,7 @@ Sample applications to show how use some of CVCUDA's functionalities.
 
 ## License
 
-Currently CV-CUDA is for internal use only, within NVIDIA.
+Nvidia Software Evaluation License
 
 ## Attributions
 
