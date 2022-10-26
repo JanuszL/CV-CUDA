@@ -122,3 +122,31 @@ def test_wrap_numba_buffer_with_layout(shape, dtype, layout):
     assert tensor.dtype == dtype
     assert tensor.layout == layout
     assert tensor.ndim == len(shape)
+
+
+@t.mark.parametrize(
+    "size, fmt, gold_layout,gold_shape,gold_dtype",
+    [
+        (
+            (32, 16),
+            nvcv.Format.RGBA8,
+            nvcv.TensorLayout.HWC,
+            [16, 32, 4],
+            np.uint8,
+        ),
+        (
+            (38, 7),
+            nvcv.Format.RGB8p,
+            nvcv.TensorLayout.CHW,
+            [3, 7, 38],
+            np.uint8,
+        ),
+    ],
+)
+def test_tensor_wrap_image_works(size, fmt, gold_layout, gold_shape, gold_dtype):
+    img = nvcv.Image(size, fmt)
+
+    tensor = nvcv.as_tensor(img)
+    assert tensor.shape == gold_shape
+    assert tensor.layout == gold_layout
+    assert tensor.dtype == gold_dtype

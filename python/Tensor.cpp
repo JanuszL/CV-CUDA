@@ -16,6 +16,7 @@
 #include "Assert.hpp"
 #include "CudaBuffer.hpp"
 #include "Hash.hpp"
+#include "Image.hpp"
 #include "ImageFormat.hpp"
 #include "PixelType.hpp"
 #include "PyUtil.hpp"
@@ -163,6 +164,11 @@ std::shared_ptr<Tensor> Tensor::Wrap(CudaBuffer &buffer, std::optional<cv::Tenso
     return std::shared_ptr<Tensor>(new Tensor(data, py::cast(buffer.shared_from_this())));
 }
 
+std::shared_ptr<Tensor> Tensor::WrapImage(Image &img)
+{
+    return std::shared_ptr<Tensor>(new Tensor(img));
+}
+
 Tensor::Tensor(const cv::Tensor::Requirements &reqs)
     : m_impl{std::make_unique<cv::Tensor>(reqs)}
     , m_key{reqs}
@@ -172,6 +178,14 @@ Tensor::Tensor(const cv::Tensor::Requirements &reqs)
 Tensor::Tensor(const NVCVTensorData &data, py::object wrappedObject)
     : m_impl{std::make_unique<cv::TensorWrapData>(cv::TensorDataWrap{data})}
     , m_key{m_impl->shape(), m_impl->dtype()}
+    , m_wrappedObject(wrappedObject)
+{
+}
+
+Tensor::Tensor(Image &img)
+    : m_impl{std::make_unique<cv::TensorWrapImage>(img.impl())}
+    , m_key{m_impl->shape(), m_impl->dtype()}
+    , m_wrappedObject(py::cast(img))
 {
 }
 
@@ -301,6 +315,7 @@ void Tensor::Export(py::module &m)
         .def("__repr__", &ToString<Tensor>);
 
     m.def("as_tensor", &Tensor::Wrap, "buffer"_a, "layout"_a = std::nullopt);
+    m.def("as_tensor", &Tensor::WrapImage, "image"_a);
 }
 
 } // namespace nv::cvpy

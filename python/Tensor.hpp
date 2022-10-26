@@ -25,7 +25,9 @@ namespace nv::cvpy {
 namespace py = pybind11;
 
 using Shape = std::vector<int64_t>;
+
 class CudaBuffer;
+class Image;
 
 Shape CreateShape(const cv::TensorShape &tshape);
 
@@ -40,6 +42,7 @@ public:
     static std::shared_ptr<Tensor> CreateFromReqs(const cv::Tensor::Requirements &reqs);
 
     static std::shared_ptr<Tensor> Wrap(CudaBuffer &buffer, std::optional<cv::TensorLayout> layout);
+    static std::shared_ptr<Tensor> WrapImage(Image &img);
 
     std::shared_ptr<Tensor>       shared_from_this();
     std::shared_ptr<const Tensor> shared_from_this() const;
@@ -71,6 +74,7 @@ public:
 private:
     Tensor(const cv::Tensor::Requirements &reqs);
     Tensor(const NVCVTensorData &data, py::object wrappedObject);
+    Tensor(Image &img);
 
     // m_impl must come before m_key
     std::unique_ptr<cv::ITensor> m_impl;
