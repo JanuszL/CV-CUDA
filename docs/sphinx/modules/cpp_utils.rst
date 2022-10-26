@@ -14,7 +14,7 @@
 Utilities
 =========
 
-Utility components for CVCUDA.
+Utility components for CV-CUDA.
 
 .. toctree::
    :glob:

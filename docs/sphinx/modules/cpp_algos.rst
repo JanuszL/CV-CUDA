@@ -14,7 +14,7 @@
 ALGORITHMS
 ==========
 
-CVCUDA Algorithms
+CV-CUDA Algorithms
 
 .. toctree::
    :glob:
