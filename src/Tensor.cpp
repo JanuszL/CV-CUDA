@@ -16,9 +16,11 @@
 #include <nvcv/TensorDataAccess.hpp>
 #include <private/core/Exception.hpp>
 #include <private/core/IAllocator.hpp>
+#include <private/core/IImage.hpp>
 #include <private/core/Status.hpp>
 #include <private/core/SymbolVersioning.hpp>
 #include <private/core/Tensor.hpp>
+#include <private/core/TensorData.hpp>
 #include <private/core/TensorLayout.hpp>
 #include <private/core/TensorWrapDataPitch.hpp>
 #include <private/fmt/ImageFormat.hpp>
@@ -130,6 +132,37 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorWrapDataConstruct,
             default:
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Image buffer type not supported";
             }
+        });
+}
+
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorWrapImageConstruct,
+                (NVCVImageHandle himg, NVCVTensorStorage *storage, NVCVTensorHandle *handle))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            if (himg == nullptr)
+            {
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Image handle must not be NULL");
+            }
+
+            if (storage == nullptr)
+            {
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to image batch storage must not be NULL");
+            }
+
+            if (handle == nullptr)
+            {
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output handle must not be NULL");
+            }
+
+            auto &img = priv::ToStaticRef<priv::IImage>(himg);
+
+            NVCVTensorData tensorData;
+            FillTensorData(img, tensorData);
+
+            *handle = reinterpret_cast<NVCVTensorHandle>(new (storage)
+                                                             priv::TensorWrapDataPitch{tensorData, nullptr, nullptr});
         });
 }
 

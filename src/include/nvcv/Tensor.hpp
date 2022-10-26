@@ -78,7 +78,7 @@ class TensorWrapData
     , private TensorWrapHandle
 {
 public:
-    TensorWrapData(const Tensor &) = delete;
+    TensorWrapData(const TensorWrapData &) = delete;
 
     explicit TensorWrapData(const ITensorData &data, std::function<TensorDataCleanupFunc> cleanup = nullptr);
     ~TensorWrapData();
@@ -91,6 +91,22 @@ private:
     static void doCleanup(void *ctx, const NVCVTensorData *data);
 
     const ITensorData *doExportData() const override;
+};
+
+// TensorWrapImage definition -------------------------------------
+
+class TensorWrapImage
+    : public virtual ITensor
+    , private TensorWrapHandle
+{
+public:
+    TensorWrapImage(const TensorWrapImage &) = delete;
+
+    explicit TensorWrapImage(const IImage &mg);
+    ~TensorWrapImage();
+
+private:
+    NVCVTensorStorage m_storage;
 };
 
 // TensorWrapHandle implementation -------------------------------------
@@ -280,6 +296,24 @@ inline const ITensorData *TensorWrapData::doExportData() const
     {
         return TensorWrapHandle::doExportData();
     }
+}
+
+// TensorWrapImage implementation -------------------------------------
+
+inline TensorWrapImage::TensorWrapImage(const IImage &img)
+    : TensorWrapHandle(
+        [&]
+        {
+            NVCVTensorHandle handle;
+            detail::CheckThrow(nvcvTensorWrapImageConstruct(img.handle(), &m_storage, &handle));
+            return handle;
+        }())
+{
+}
+
+inline TensorWrapImage::~TensorWrapImage()
+{
+    nvcvTensorDestroy(doGetHandle());
 }
 
 }} // namespace nv::cv

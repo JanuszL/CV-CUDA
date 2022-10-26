@@ -14,6 +14,7 @@
 #ifndef NVCV_PRIV_TENSORDATA_HPP
 #define NVCV_PRIV_TENSORDATA_HPP
 
+#include "IImage.hpp"
 #include "Size.hpp"
 
 #include <fmt/ImageFormat.hpp>
@@ -23,7 +24,7 @@ namespace nv::cv::priv {
 
 NVCVTensorLayout GetTensorLayoutFor(ImageFormat fmt, int nbatches);
 
-void ValidateImageFormatForTensor(ImageFormat fmt);
+void FillTensorData(IImage &img, NVCVTensorData &data);
 
 } // namespace nv::cv::priv
 
