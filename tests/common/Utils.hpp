@@ -42,14 +42,17 @@ void DebugPrintImage(std::vector<T> &in, int rowPitch)
 }
 #endif
 #ifdef DEBUG_PRINT_DIFF
-static void DebugPrintDiff(std::vector<uint8_t> &test, std::vector<uint8_t> &gold, int testRowPitch, int goldRowPitch)
+template<typename T>
+static void DebugPrintDiff(std::vector<T> &test, std::vector<T> &gold)
 {
+    using TT = std::conditional_t<(sizeof(T) == 1), int, T>;
     std::cout << "\nDebug print diff:\n";
     for (size_t i = 0; i < test.size(); i++)
     {
         if (test[i] != gold[i])
         {
-            printf("[at %ld: %03d != %03d] ", i, static_cast<int>(test[i]), static_cast<int>(gold[i]));
+            std::cout << "[at " << i << ": test = " << static_cast<TT>(test[i])
+                      << " x gold = " << static_cast<TT>(gold[i]) << "]\n";
         }
     }
     std::cout << "\n";
