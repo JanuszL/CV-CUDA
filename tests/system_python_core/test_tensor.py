@@ -62,6 +62,9 @@ def test_tensor_creation_imagebatch_works(
         ([5, 16, 32, 4], np.float32, nvcv.TensorLayout.NHWC),
         ([7, 3, 33, 11], np.complex64, nvcv.TensorLayout.NCHW),
         ([3, 11], np.int16, None),
+        ([16, 32, 4], np.float32, nvcv.TensorLayout.HWC),
+        ([32, 4], np.float32, nvcv.TensorLayout.WC),
+        ([4, 32], np.float32, nvcv.TensorLayout.CW),
     ],
 )
 def test_tensor_creation_shape_works(shape, dtype, layout):

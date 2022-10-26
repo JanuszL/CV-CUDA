@@ -282,8 +282,9 @@ void Tensor::Export(py::module &m)
 
     py::class_<cv::TensorLayout>(m, "TensorLayout")
         .def(py::init<const char *>())
-        .def_readonly_static("NCHW", &cv::TensorLayout::NCHW)
-        .def_readonly_static("NHWC", &cv::TensorLayout::NHWC)
+#define NVCV_DETAIL_DEF_TLAYOUT(LAYOUT) .def_readonly_static(#LAYOUT, &cv::TensorLayout::LAYOUT)
+#include <nvcv/TensorLayoutDef.inc>
+#undef NVCV_DETAIL_DEF_TLAYOUT
         .def(py::self == py::self)
         .def(py::self != py::self)
         .def("__repr__", &TensorLayoutToString);
