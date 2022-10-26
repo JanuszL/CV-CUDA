@@ -138,11 +138,43 @@ ErrorCode PadAndStack::infer(const IImageBatchVarShapeDataDevicePitch &inData, c
     auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
+    DataType   left_data_type = GetLegacyDataType(left.dtype());
+    DataFormat left_format    = GetLegacyDataFormat(left.layout());
+    if (left_data_type != kCV_32S)
+    {
+        LOG_ERROR("Invalid Left DataType " << left_data_type);
+        return ErrorCode::INVALID_DATA_TYPE;
+    }
+    if (!(left_format == kNHWC || left_format == kHWC))
+    {
+        LOG_ERROR("Invalid Left DataFormat " << left_format);
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
     auto leftAccess = TensorDataAccessPitchImagePlanar::Create(left);
-    NVCV_ASSERT(leftAccess);
+    if (!leftAccess)
+    {
+        return ErrorCode::INVALID_DATA_TYPE;
+    }
+
+    DataType   top_data_type = GetLegacyDataType(top.dtype());
+    DataFormat top_format    = GetLegacyDataFormat(top.layout());
+    if (top_data_type != kCV_32S)
+    {
+        LOG_ERROR("Invalid Top DataType " << top_data_type);
+        return ErrorCode::INVALID_DATA_TYPE;
+    }
+    if (!(top_format == kNHWC || top_format == kHWC))
+    {
+        LOG_ERROR("Invalid Top DataFormat " << top_format);
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
 
     auto topAccess = TensorDataAccessPitchImagePlanar::Create(top);
-    NVCV_ASSERT(topAccess);
+    if (!topAccess)
+    {
+        return ErrorCode::INVALID_DATA_TYPE;
+    }
 
     const int channels = outAccess->numChannels();
 
