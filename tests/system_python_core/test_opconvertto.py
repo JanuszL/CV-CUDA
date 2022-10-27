@@ -16,33 +16,40 @@ import numpy as np
 
 
 @t.mark.parametrize(
-    "input,scale,offset",
+    "input,dtype,scale,offset",
     [
-        (nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"), 1.2, 10.2),
-        (nvcv.Tensor([16, 23, 2], np.uint8, "HWC"), -1.2, -5.5),
+        (nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"), np.float32, 1.2, 10.2),
+        (nvcv.Tensor([16, 23, 2], np.uint8, "HWC"), np.int32, -1.2, -5.5),
     ],
 )
-def test_op_convertto(input, scale, offset):
-    out = input.convertto(scale, offset)
+def test_op_convertto(input, dtype, scale, offset):
+    out = input.convertto(dtype)
     assert out.layout == input.layout
     assert out.shape == input.shape
-    assert out.dtype == input.dtype
+    assert out.dtype == dtype
 
-    out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = input.convertto_into(out, scale, offset)
+    out = nvcv.Tensor(input.shape, dtype, input.layout)
+    tmp = input.convertto_into(out)
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == input.shape
-    assert out.dtype == input.dtype
+    assert out.dtype == dtype
+
+    out = input.convertto(dtype, scale)
+    out = input.convertto(dtype, scale, offset)
+
+    out = nvcv.Tensor(input.shape, dtype, input.layout)
+    tmp = input.convertto_into(out, scale)
+    tmp = input.convertto_into(out, scale, offset)
 
     stream = nvcv.cuda.Stream()
-    out = input.convertto(scale=scale, offset=offset, stream=stream)
+    out = input.convertto(dtype=dtype, scale=scale, offset=offset, stream=stream)
     assert out.layout == input.layout
     assert out.shape == input.shape
-    assert out.dtype == input.dtype
+    assert out.dtype == dtype
 
     tmp = input.convertto_into(out=out, scale=scale, offset=offset, stream=stream)
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == input.shape
-    assert out.dtype == input.dtype
+    assert out.dtype == dtype
