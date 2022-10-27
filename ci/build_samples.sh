@@ -22,4 +22,4 @@ if [[ $# -ge 1 ]]; then
    build_dir=$1
 fi
 
- ./ci/build.sh $build_type $build_dir "-DBUILD_SAMPLES=ON -DBUILD_TESTS=OFF"
+ ./ci/build.sh $build_type $build_dir "-DBUILD_SAMPLES=ON -DBUILD_TESTS=OFF -DBUILD_PYTHON=1"
