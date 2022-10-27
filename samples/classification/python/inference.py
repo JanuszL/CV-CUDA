@@ -49,24 +49,18 @@ imageHeight = inputImage.shape[1]
 # A torch tensor can be wrapped into a CVCUDA Object using the "as_tensor"
 # function in the specified layout. The datatype and dimensions are derived
 # directly from the torch tensor.
-nvcvnInputTensor = nvcv.as_tensor(inputImage, "CHW")
+nvcvInputTensor = nvcv.as_tensor(inputImage, "CHW")
 
 # The input image is now ready to be used
-
-# A Tensor can also be created by using the CVCUDA memory allocator as below
-# by specifying the dimensions, datatype and layout
-nvcvInterleavedTensor = nvcv.Tensor([1, imageHeight, imageWidth, 3], np.uint8, "NHWC")
-
-# nvcvnInterleavedTensor is a CVCUDA Tensor allocated on the GPU
 
 # The Reformat operator can be used to convert CHW format to NHWC
 # for the rest of the preprocessing operations
 
-tmp = nvcvnInputTensor.reformat_into(nvcvInterleavedTensor)
+nvcvInterleavedTensor = nvcvInputTensor.reformat("NHWC")
 
 """
 Preprocessing includes the following sequence of operations.
-Resize -> DataType COnvert(U8->F32) -> Normalize(Apply mean and std deviation)
+Resize -> DataType Convert(U8->F32) -> Normalize(Apply mean and std deviation)
 -> Interleaved to Planar
 """
 
@@ -76,21 +70,14 @@ layerWidth = 224
 batchSize = 1
 
 # Resize
-# Create a tensor for the resize output based on layer dimensions
-nvcvResizeTensor = nvcv.Tensor(
-    [batchSize, layerHeight, layerWidth, 3], np.uint8, "NHWC"
-)
 # Resize to the input network dimensions
-tmp = nvcvInterleavedTensor.resize_into(nvcvResizeTensor, nvcv.Interp.CUBIC)
+nvcvResizeTensor = nvcvInterleavedTensor.resize(
+    (batchSize, layerWidth, layerHeight, 3), nvcv.Interp.CUBIC
+)
 
 # Convert to the data type and range of values needed by the input layer
 # i.e uint8->float. A Scale is applied to normalize the values in the range 0-1
-scale = 1 / 255
-offset = 0
-nvcvConvertTensor = nvcv.Tensor(
-    [batchSize, layerHeight, layerWidth, 3], np.float32, "NHWC"
-)
-tmp = nvcvResizeTensor.convertto_into(nvcvConvertTensor, scale, offset)
+nvcvConvertTensor = nvcvResizeTensor.convertto(np.float32, scale=1 / 255)
 
 """
 The input to the network needs to be normalized based on the mean and
@@ -114,20 +101,13 @@ nvcvBaseTensor = nvcv.as_tensor(stdTensor, "NHWC")
 
 # Apply the normalize operator and indicate the scale values are std deviation
 # i.e scale = 1/stddev
-nvcvNormTensor = nvcv.Tensor(
-    [batchSize, layerHeight, layerWidth, 3], np.float32, "NHWC"
-)
-tmp = nvcvConvertTensor.normalize_into(
-    nvcvNormTensor, nvcvBaseTensor, nvcvScaleTensor, nvcv.NormalizeFlags.SCALE_IS_STDDEV
+nvcvNormTensor = nvcvConvertTensor.normalize(
+    nvcvBaseTensor, nvcvScaleTensor, nvcv.NormalizeFlags.SCALE_IS_STDDEV
 )
 
 # The final stage in the preprocess pipeline includes converting the RGB buffer
 # into a planar buffer
-preprocessedTensor = torch.zeros(
-    [batchSize, 3, layerHeight, layerWidth], dtype=torch.float32, device="cuda"
-)
-nvcvPlanarTensor = nvcv.as_tensor(preprocessedTensor, "NCHW")
-tmp = nvcvNormTensor.reformat_into(nvcvPlanarTensor)
+nvcvPreprocessedTensor = nvcvNormTensor.reformat("NCHW")
 
 # Inference uses pytorch to run a resnet50 model on the preprocessed input and outputs
 # the classification scores for 1000 classes
@@ -137,7 +117,8 @@ resnet50.to("cuda")
 resnet50.eval()
 
 # Run inference on the preprocessed input
-inferOutput = resnet50(preprocessedTensor)
+torchPreprocessedTensor = torch.as_tensor(nvcvPreprocessedTensor.cuda(), device="cuda")
+inferOutput = resnet50(torchPreprocessedTensor)
 
 """
 Postprocessing function normalizes the classification score from the network and sorts
