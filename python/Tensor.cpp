@@ -345,7 +345,7 @@ static std::string TensorLayoutToString(const cv::TensorLayout &layout)
     ss << layout;
     std::string s = ss.str();
 
-    int p = s.rfind('_');
+    auto p = s.rfind('_');
     if (p != s.npos)
     {
         return s.substr(p + 1);

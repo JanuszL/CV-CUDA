@@ -17,6 +17,7 @@
 #include "Cache.hpp"
 #include "CheckError.hpp"
 #include "ImageFormat.hpp"
+#include "PixelType.hpp"
 #include "PyUtil.hpp"
 #include "Stream.hpp"
 #include "String.hpp"
@@ -62,7 +63,7 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer
     int curChannel = 0;
 
     // For each buffer,
-    for (int p = 0; p < buffers.size(); ++p)
+    for (size_t p = 0; p < buffers.size(); ++p)
     {
         const py::buffer_info &info = buffers[p];
 
@@ -261,7 +262,7 @@ cv::ImageFormat InferImageFormat(const std::vector<cv::PixelType> &planePixTypes
 
     int numChannels = 0;
 
-    for (int p = 0; p < planePixTypes.size(); ++p)
+    for (size_t p = 0; p < planePixTypes.size(); ++p)
     {
         packing[p] = planePixTypes[p].packing();
         numChannels += planePixTypes[p].numChannels();
@@ -407,8 +408,6 @@ void FillNVCVImageBufferPitch(NVCVImageData &imgData, const std::vector<py::buff
     }
 }
 
-} // namespace
-
 cv::ImageDataPitchDevice CreateNVCVImageDataDevice(const std::vector<py::buffer_info> &infos, cv::ImageFormat fmt)
 {
     NVCVImageData imgData;
@@ -425,15 +424,26 @@ cv::ImageDataPitchHost CreateNVCVImageDataHost(const std::vector<py::buffer_info
     return cv::ImageDataPitchHost(cv::ImageFormat{imgData.format}, imgData.buffer.pitch);
 }
 
+} // namespace
+
 Image::Image(const Size2D &size, cv::ImageFormat fmt)
-    : m_key{size, fmt}
-    , m_impl(std::make_unique<cv::Image>(cv::Size2D{std::get<0>(size), std::get<1>(size)}, fmt))
+    : m_impl(std::make_unique<cv::Image>(cv::Size2D{std::get<0>(size), std::get<1>(size)}, fmt))
+    , m_key{size, fmt}
 {
 }
 
 Image::Image(std::vector<std::shared_ptr<CudaBuffer>> bufs, const cv::IImageDataPitchDevice &imgData)
-    : m_wrapped{std::move(bufs)}
 {
+    if (bufs.size() == 1)
+    {
+        m_wrapped = py::cast(bufs[0]);
+    }
+    else
+    {
+        NVCV_ASSERT(bufs.size() >= 2);
+        m_wrapped = py::cast(std::move(bufs));
+    }
+
     m_impl = std::make_unique<cv::ImageWrapData>(imgData);
     m_key  = Key{
         {m_impl->size().w, m_impl->size().h},
@@ -442,7 +452,6 @@ Image::Image(std::vector<std::shared_ptr<CudaBuffer>> bufs, const cv::IImageData
 }
 
 Image::Image(std::vector<py::buffer> bufs, const cv::IImageDataPitchHost &hostData)
-    : m_wrapped{std::move(bufs)}
 {
     // Input buffer is host data.
     // We'll create a regular image and copy the host data into it.
@@ -514,8 +523,8 @@ std::shared_ptr<Image> Image::Zeros(const Size2D &size, cv::ImageFormat fmt)
     {
         const cv::ImagePlanePitch &plane = data->plane(p);
 
-        CheckThrow(cudaMemset2D(plane.buffer, plane.pitchBytes, 0, plane.width * data->format().planeBitsPerPixel(p),
-                                plane.height));
+        CheckThrow(cudaMemset2D(plane.buffer, plane.pitchBytes, 0,
+                                plane.width * data->format().planePixelStrideBytes(p), plane.height));
     }
 
     return img;
@@ -529,7 +538,7 @@ std::shared_ptr<Image> Image::WrapDevice(CudaBuffer &buffer, cv::ImageFormat fmt
 std::shared_ptr<Image> Image::WrapDeviceVector(std::vector<std::shared_ptr<CudaBuffer>> buffers, cv::ImageFormat fmt)
 {
     std::vector<py::buffer_info> bufinfos;
-    for (int i = 0; i < buffers.size(); ++i)
+    for (size_t i = 0; i < buffers.size(); ++i)
     {
         bufinfos.emplace_back(buffers[i]->request());
     }
@@ -546,7 +555,7 @@ std::shared_ptr<Image> Image::CreateHost(py::buffer buffer, cv::ImageFormat fmt)
 std::shared_ptr<Image> Image::CreateHostVector(std::vector<py::buffer> buffers, cv::ImageFormat fmt)
 {
     std::vector<py::buffer_info> bufinfos;
-    for (int i = 0; i < buffers.size(); ++i)
+    for (size_t i = 0; i < buffers.size(); ++i)
     {
         bufinfos.emplace_back(buffers[i].request());
     }
@@ -581,6 +590,360 @@ std::ostream &operator<<(std::ostream &out, const Image &img)
     return out << "<nvcv.Image " << img.impl().size() << ' ' << img.impl().format() << '>';
 }
 
+namespace {
+
+std::vector<std::pair<py::buffer_info, cv::TensorLayout>> ToPyBufferInfo(const cv::IImageDataPitch      &imgData,
+                                                                         std::optional<cv::TensorLayout> userLayout)
+{
+    if (imgData.numPlanes() < 1)
+    {
+        return {};
+    }
+
+    const cv::ImagePlanePitch &firstPlane = imgData.plane(0);
+
+    std::optional<cv::TensorLayoutInfoImage> infoLayout;
+    if (userLayout)
+    {
+        if (auto tmp = cv::TensorLayoutInfoImage::Create(*userLayout))
+        {
+            infoLayout.emplace(std::move(*tmp));
+        }
+        else
+        {
+            throw std::runtime_error("Layout can't represent the planar images needed");
+        }
+    }
+
+    bool singleBuffer = true;
+
+    // Let's check if we can return only one buffer, depending
+    // on the planes dimensions, pitch and pixel type.
+    for (int p = 1; p < imgData.numPlanes(); ++p)
+    {
+        const cv::ImagePlanePitch &plane = imgData.plane(p);
+
+        if (plane.width != firstPlane.width || plane.height != firstPlane.height
+            || plane.pitchBytes != firstPlane.pitchBytes || imgData.format().planePixelType(0).numChannels() >= 2
+            || imgData.format().planePixelType(0) != imgData.format().planePixelType(p))
+        {
+            singleBuffer = false;
+            break;
+        }
+
+        // check if using the same plane pitch
+        if (p >= 2)
+        {
+            intptr_t goldPlanePitch = reinterpret_cast<const std::byte *>(imgData.plane(1).buffer)
+                                    - reinterpret_cast<const std::byte *>(imgData.plane(0).buffer);
+            intptr_t curPlanePitch = reinterpret_cast<const std::byte *>(imgData.plane(p).buffer)
+                                   - reinterpret_cast<const std::byte *>(imgData.plane(p - 1).buffer);
+            if (curPlanePitch != goldPlanePitch)
+            {
+                singleBuffer = false;
+                break;
+            }
+        }
+    }
+
+    std::vector<std::pair<py::buffer_info, cv::TensorLayout>> out;
+
+    // If not using a single buffer, we'll forcibly use one buffer per plane.
+    int numBuffers = singleBuffer ? 1 : imgData.numPlanes();
+
+    for (int p = 0; p < numBuffers; ++p)
+    {
+        int planeWidth       = imgData.plane(p).width;
+        int planeHeight      = imgData.plane(p).height;
+        int planeNumChannels = imgData.format().planeNumChannels(p);
+        // bytes per pixel in the plane
+        int planeBPP = imgData.format().planePixelType(p).strideBytes();
+
+        switch (imgData.format().planePacking(p))
+        {
+        // These (YUYV, UYVY, ...) need some special treatment.
+        // Although it's 3 channels in the plane, it's actually
+        // two channels per pixel.
+        case cv::Packing::X8_Y8__X8_Z8:
+        case cv::Packing::Y8_X8__Z8_X8:
+            planeNumChannels = 2;
+            break;
+        default:
+            break;
+        }
+
+        // Infer the layout and shape of this buffer
+        std::vector<ssize_t> inferredShape;
+        std::vector<ssize_t> inferredStrides;
+        cv::TensorLayout     inferredLayout;
+
+        py::dtype inferredDType;
+
+        if (numBuffers == 1)
+        {
+            if (imgData.format().numChannels() == 1)
+            {
+                NVCV_ASSERT(imgData.numPlanes() == 1);
+                inferredShape   = {planeHeight, planeWidth};
+                inferredStrides = {imgData.plane(p).pitchBytes, planeBPP};
+                inferredLayout  = cv::TensorLayout{"HW"};
+                inferredDType   = py::cast(imgData.format().planePixelType(p));
+            }
+            else if (imgData.numPlanes() == 1)
+            {
+                NVCV_ASSERT(planeNumChannels >= 2);
+                inferredShape   = {planeHeight, planeWidth, planeNumChannels};
+                inferredStrides = {imgData.plane(p).pitchBytes, planeBPP, planeBPP / planeNumChannels};
+                inferredLayout  = cv::TensorLayout{"HWC"};
+                inferredDType   = py::cast(imgData.format().planePixelType(p).channelType(0));
+            }
+            else
+            {
+                NVCV_ASSERT(planeNumChannels == 1);
+
+                intptr_t planeStride = reinterpret_cast<const std::byte *>(imgData.plane(1).buffer)
+                                     - reinterpret_cast<const std::byte *>(imgData.plane(0).buffer);
+                NVCV_ASSERT(planeStride > 0);
+
+                inferredShape   = {imgData.numPlanes(), planeHeight, planeWidth};
+                inferredStrides = {planeStride, imgData.plane(p).pitchBytes, planeBPP};
+                inferredLayout  = cv::TensorLayout{"CHW"};
+                inferredDType   = py::cast(imgData.format().planePixelType(p));
+            }
+        }
+        else
+        {
+            NVCV_ASSERT(imgData.numPlanes() >= 2);
+            NVCV_ASSERT(imgData.numPlanes() == numBuffers);
+
+            inferredShape = {planeHeight, planeWidth, planeNumChannels};
+            inferredStrides
+                = {(int64_t)imgData.plane(p).pitchBytes, (int64_t)planeBPP, (int64_t)planeBPP / planeNumChannels};
+            inferredLayout = cv::TensorLayout{"HWC"};
+            inferredDType  = py::cast(imgData.format().planePixelType(p).channelType(0));
+        }
+
+        NVCV_ASSERT((ssize_t)inferredShape.size() == inferredLayout.ndim());
+        NVCV_ASSERT((ssize_t)inferredStrides.size() == inferredLayout.ndim());
+
+        std::vector<ssize_t> shape;
+        std::vector<ssize_t> strides;
+        cv::TensorLayout     layout;
+
+        // Do we have to use the layout user has specified?
+        if (userLayout)
+        {
+            layout = *userLayout;
+
+            // Check if user layout has all required dimensions
+            for (int i = 0; i < inferredLayout.ndim(); ++i)
+            {
+                if (inferredShape[i] >= 2 && userLayout->find(inferredLayout[i]) < 0)
+                {
+                    throw std::runtime_error(FormatString("Layout need dimension '%c'", inferredLayout[i]));
+                }
+            }
+
+            int idxLastInferDim = -1;
+
+            // Fill up the final shape and strides according to the user layout
+            for (int i = 0; i < userLayout->ndim(); ++i)
+            {
+                int idxInferDim = inferredLayout.find((*userLayout)[i]);
+
+                if (idxInferDim < 0)
+                {
+                    shape.push_back(1);
+                    // TODO: must do better than this
+                    strides.push_back(0);
+                }
+                else
+                {
+                    // The order of channels must be the same, despite of
+                    // user layout having some other channels in the layout
+                    // in between the channels in inferredLayout.
+                    if (idxLastInferDim >= idxInferDim)
+                    {
+                        throw std::runtime_error("Layout not compatible with image to be exported");
+                    }
+                    idxLastInferDim = idxInferDim;
+
+                    shape.push_back(inferredShape[idxInferDim]);
+                    strides.push_back(inferredStrides[idxInferDim]);
+                }
+            }
+        }
+        else
+        {
+            layout  = inferredLayout;
+            shape   = inferredShape;
+            strides = inferredStrides;
+        }
+
+        // There's no direct way to construct a py::buffer_info from data together with a py::dtype.
+        // To do that, we first construct a py::array (it accepts py::dtype), and use ".request()"
+        // to retrieve the corresponding py::buffer_info.
+        // To avoid spurious data copies in py::array ctor, we create this dummy owner.
+        py::tuple tmpOwner = py::make_tuple();
+        py::array tmp(inferredDType, shape, strides, imgData.plane(p).buffer, tmpOwner);
+        out.emplace_back(tmp.request(), layout);
+    }
+
+    return out;
+}
+
+std::vector<py::object> ToPython(const cv::IImageData &imgData, std::optional<cv::TensorLayout> userLayout,
+                                 py::object owner)
+{
+    std::vector<py::object> out;
+
+    auto *pitchData = dynamic_cast<const cv::IImageDataPitch *>(&imgData);
+    if (!pitchData)
+    {
+        throw std::runtime_error("Only images with pitch-linear formats can be exported");
+    }
+
+    for (const auto &[info, layout] : ToPyBufferInfo(*pitchData, userLayout))
+    {
+        if (dynamic_cast<const cv::IImageDataPitchDevice *>(pitchData))
+        {
+            if (owner)
+            {
+                out.emplace_back(py::cast(std::make_shared<CudaBuffer>(info, false),
+                                          py::return_value_policy::reference_internal, owner));
+            }
+            else
+            {
+                out.emplace_back(
+                    py::cast(std::make_shared<CudaBuffer>(info, true), py::return_value_policy::take_ownership));
+            }
+        }
+        else if (dynamic_cast<const cv::IImageDataPitchHost *>(pitchData))
+        {
+            // With no owner, python/pybind11 will make a copy of the data
+            out.emplace_back(py::array(info, owner));
+        }
+        else
+        {
+            throw std::runtime_error("Buffer type not supported");
+        }
+    }
+
+    return out;
+}
+
+} // namespace
+
+py::object Image::cuda(std::optional<cv::TensorLayout> layout) const
+{
+    // Do we need to redefine the cuda object?
+    // (not defined yet, or requested layout is different)
+    if (!m_cacheCudaObject || layout != m_cacheCudaObjectLayout)
+    {
+        // No layout requested and we're wrapping external data?
+        if (!layout && m_wrapped)
+        {
+            // That's what we'll return, as m_impl is wrapping it.
+            m_cacheCudaObject = m_wrapped;
+        }
+        else
+        {
+            const cv::IImageData *imgData = m_impl->exportData();
+            if (!imgData)
+            {
+                throw std::runtime_error("Image data can't be exported");
+            }
+
+            std::vector<py::object> out = ToPython(*imgData, layout, py::cast(*this));
+
+            m_cacheCudaObjectLayout = layout;
+            if (out.size() == 1)
+            {
+                m_cacheCudaObject = std::move(out[0]);
+            }
+            else
+            {
+                m_cacheCudaObject = py::cast(out);
+            }
+        }
+    }
+
+    return m_cacheCudaObject;
+}
+
+py::object Image::cpu(std::optional<cv::TensorLayout> layout) const
+{
+    const cv::IImageData *devData = m_impl->exportData();
+    if (!devData)
+    {
+        throw std::runtime_error("Image data can't be exported");
+    }
+
+    auto *devPitch = dynamic_cast<const cv::IImageDataPitchDevice *>(devData);
+    if (!devPitch)
+    {
+        throw std::runtime_error("Only images with pitch-linear formats can be exported");
+    }
+
+    std::vector<std::pair<py::buffer_info, cv::TensorLayout>> vDevBufInfo = ToPyBufferInfo(*devPitch, layout);
+
+    std::vector<py::object> out;
+
+    for (const auto &[devBufInfo, bufLayout] : vDevBufInfo)
+    {
+        std::vector<ssize_t> shape      = devBufInfo.shape;
+        std::vector<ssize_t> devStrides = devBufInfo.strides;
+
+        py::array hostData(ToDType(devBufInfo), shape);
+
+        py::buffer_info      hostBufInfo = hostData.request();
+        std::vector<ssize_t> hostStrides = hostBufInfo.strides;
+
+        auto infoShape = cv::TensorShapeInfoImagePlanar::Create(cv::TensorShape(shape.data(), shape.size(), bufLayout));
+        NVCV_ASSERT(infoShape);
+
+        int nplanes = infoShape->numPlanes();
+        int ncols   = infoShape->numCols();
+        int nrows   = infoShape->numRows();
+
+        ssize_t colStride = devStrides[infoShape->infoLayout().idxWidth()];
+        NVCV_ASSERT(colStride == hostStrides[infoShape->infoLayout().idxWidth()]); // both must be packed
+
+        ssize_t hostRowStride, devRowStride;
+        if (infoShape->infoLayout().idxHeight() >= 0)
+        {
+            devRowStride  = devStrides[infoShape->infoLayout().idxHeight()];
+            hostRowStride = hostStrides[infoShape->infoLayout().idxHeight()];
+        }
+        else
+        {
+            devRowStride  = colStride * ncols;
+            hostRowStride = colStride * ncols;
+        }
+
+        ssize_t hostPlaneStride = hostRowStride * nrows;
+        ssize_t devPlaneStride  = devRowStride * nrows;
+
+        for (int p = 0; p < nplanes; ++p)
+        {
+            CheckThrow(cudaMemcpy2D(reinterpret_cast<std::byte *>(hostBufInfo.ptr) + p * hostPlaneStride, hostRowStride,
+                                    reinterpret_cast<std::byte *>(devBufInfo.ptr) + p * devPlaneStride, devRowStride,
+                                    ncols * colStride, nrows, cudaMemcpyDeviceToHost));
+        }
+
+        out.push_back(std::move(hostData));
+    }
+
+    if (out.size() == 1)
+    {
+        return std::move(out[0]);
+    }
+    else
+    {
+        return py::cast(out);
+    }
+}
+
 void Image::Export(py::module &m)
 {
     using namespace py::literals;
@@ -591,6 +954,8 @@ void Image::Export(py::module &m)
         .def(py::init(&Image::CreateHostVector), "buffer"_a, "format"_a = cv::FMT_NONE)
         .def_static("zeros", &Image::Zeros, "size"_a, "format"_a)
         .def("__repr__", &ToString<Image>)
+        .def("cuda", &Image::cuda, "layout"_a = std::nullopt)
+        .def("cpu", &Image::cpu, "layout"_a = std::nullopt)
         .def_property_readonly("size", &Image::size)
         .def_property_readonly("width", &Image::width)
         .def_property_readonly("height", &Image::height)

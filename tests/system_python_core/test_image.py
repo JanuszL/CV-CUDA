@@ -13,6 +13,7 @@
 import pytest as t
 import nvcv
 import numpy as np
+import math
 from numba import cuda
 
 
@@ -295,3 +296,111 @@ def test_image_wrap_invalid_cuda_buffer():
 
     with t.raises(RuntimeError):
         nvcv.as_image(obj)
+
+
+@cuda.jit
+def set_value(buffer):
+    z, y, x = cuda.grid(3)
+    if z < buffer.shape[0] and y < buffer.shape[1] and x < buffer.shape[2]:
+        buffer[z, y, x] = (z * buffer.shape[1] + y) * buffer.shape[2] + x
+
+
+@t.mark.parametrize(
+    "size,format,layout,out_dtype, out_shape, simple_layout",
+    [
+        ((257, 231), nvcv.Format.U8, None, np.uint8, [231, 257], "HWC"),
+        ((257, 231), nvcv.Format.U8, "HWC", np.uint8, [231, 257, 1], "HWC"),
+        ((257, 231), nvcv.Format.U8, "CHW", np.uint8, [1, 231, 257], "CHW"),
+        (
+            (257, 231),
+            nvcv.Format.U8,
+            "xyCrodHlimaWab",
+            np.uint8,
+            [1, 1, 1, 1, 1, 1, 231, 1, 1, 1, 1, 257, 1, 1],
+            "CHW",
+        ),
+        ((257, 231), nvcv.Format.RGBAf32, None, np.float32, [231, 257, 4], "HWC"),
+        ((257, 231), nvcv.Format.RGBA8, "HWC", np.uint8, [231, 257, 4], "HWC"),
+        ((257, 231), nvcv.Format.RGBA8p, None, np.uint8, [4, 231, 257], "CHW"),
+        ((257, 231), nvcv.Format.RGBAf32p, "CHW", np.float32, [4, 231, 257], "CHW"),
+        (
+            (258, 232),
+            nvcv.Format.NV12,
+            None,
+            [np.uint8, np.uint8],
+            [[232, 258, 1], [232 // 2, 258 // 2, 2]],
+            "HWC",
+        ),
+        (
+            (258, 232),
+            nvcv.Format.NV12,
+            "HWC",
+            [np.uint8, np.uint8],
+            [[232, 258, 1], [232 // 2, 258 // 2, 2]],
+            "HWC",
+        ),
+        # For YUYV and friends things get a bit funky
+        ((258, 232), nvcv.Format.YUYV, None, np.uint8, [232, 258, 2], "HWC"),
+        ((258, 232), nvcv.Format.YUYV, "HWC", np.uint8, [232, 258, 2], "HWC"),
+    ],
+)
+def test_image_export_cuda_buffer(
+    size, format, layout, out_dtype, out_shape, simple_layout
+):
+    img = nvcv.Image(size, format)
+
+    mem = img.cuda(layout)
+    if type(mem) is list:
+        for i in range(0, len(mem)):
+            assert mem[i].dtype == out_dtype[i]
+            assert mem[i].shape == out_shape[i]
+    else:
+        assert mem.dtype == out_dtype
+        assert mem.shape == out_shape
+
+    # Make sure buffer cache works
+    assert img.cuda(layout) is mem
+    if layout is not None:
+        newmem = img.cuda()
+        assert newmem is not mem
+        assert newmem is img.cuda()
+        assert newmem is not img.cuda(layout)
+
+    cuda_buffer = img.cuda(simple_layout)
+    if type(cuda_buffer) is not list:
+        cuda_buffer = [cuda_buffer]
+
+    # Write values in it on CUDA side
+    block = (32, 4, 4)
+    for buf in cuda_buffer:
+        grid = (
+            math.ceil(buf.shape[0] / block[0]),
+            math.ceil(buf.shape[1] / block[1]),
+            math.ceil(buf.shape[2] / block[2]),
+        )
+        set_value[grid, block](buf)
+
+    cuda.synchronize()
+
+    # Get values back on cpu
+    host_buffer = img.cpu(simple_layout)
+    if type(host_buffer) is not list:
+        host_buffer = [host_buffer]
+
+    if type(out_dtype) is not list:
+        out_dtype = [out_dtype]
+
+    # compare to see if they are correct
+    for b in range(0, len(host_buffer)):
+        buf = host_buffer[b]
+        for z in range(0, buf.shape[0]):
+            for y in range(0, buf.shape[1]):
+                for x in range(0, buf.shape[2]):
+                    assert buf[z, y, x] == out_dtype[b](
+                        (z * buf.shape[1] + y) * buf.shape[2] + x
+                    )
+
+
+def test_image_zeros():
+    img = nvcv.Image.zeros((67, 34), nvcv.Format.F32)
+    assert (img.cpu() == np.zeros([34, 67], np.float32)).all()

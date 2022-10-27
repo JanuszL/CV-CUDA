@@ -50,8 +50,8 @@ std::shared_ptr<ImageBatchVarShape> ImageBatchVarShape::Create(int capacity, cv:
 }
 
 ImageBatchVarShape::ImageBatchVarShape(int capacity, cv::ImageFormat fmt)
-    : m_impl(capacity, fmt)
-    , m_key(capacity, fmt)
+    : m_key(capacity, fmt)
+    , m_impl(capacity, fmt)
 {
     m_list.reserve(capacity);
 }
@@ -78,7 +78,7 @@ int32_t ImageBatchVarShape::capacity() const
 
 int32_t ImageBatchVarShape::size() const
 {
-    NVCV_ASSERT(m_impl.size() == m_list.size());
+    NVCV_ASSERT(m_impl.size() == (int)m_list.size());
     return m_impl.size();
 }
 

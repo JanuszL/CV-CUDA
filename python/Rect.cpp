@@ -19,7 +19,7 @@
 
 namespace nv::cvpy {
 
-std::ostream &operator<<(std::ostream &out, const NVCVRectI &rc)
+static std::ostream &operator<<(std::ostream &out, const NVCVRectI &rc)
 {
     return out << "RectI(x=" << rc.x << ",y=" << rc.y << ",width=" << rc.width << ",height=" << rc.height << ')';
 }
