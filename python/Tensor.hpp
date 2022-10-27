@@ -18,6 +18,7 @@
 #include "Size.hpp"
 
 #include <nvcv/Tensor.hpp>
+#include <pybind11/numpy.h>
 
 #include <vector>
 
@@ -71,6 +72,8 @@ public:
 
     virtual const Key &key() const override;
 
+    py::object cuda() const;
+
 private:
     Tensor(const cv::Tensor::Requirements &reqs);
     Tensor(const NVCVTensorData &data, py::object wrappedObject);
@@ -79,6 +82,9 @@ private:
     // m_impl must come before m_key
     std::unique_ptr<cv::ITensor> m_impl;
     Key                          m_key;
+
+    mutable py::object                      m_cacheCudaObject;
+    mutable std::optional<cv::TensorLayout> m_cacheCudaObjectLayout;
 
     py::object m_wrappedObject; // null if not wrapping
 };

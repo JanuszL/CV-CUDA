@@ -14,6 +14,7 @@
 #include "Tensor.hpp"
 
 #include "Assert.hpp"
+#include "CheckError.hpp"
 #include "CudaBuffer.hpp"
 #include "Hash.hpp"
 #include "Image.hpp"
@@ -22,6 +23,7 @@
 #include "PyUtil.hpp"
 #include "String.hpp"
 
+#include <nvcv/TensorShapeInfo.hpp>
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
@@ -267,6 +269,70 @@ auto Tensor::key() const -> const Key &
     return m_key;
 }
 
+static py::buffer_info ToPyBufferInfo(const cv::ITensorDataPitch &tensorData)
+{
+    std::vector<ssize_t> shape(tensorData.shape().shape().begin(), tensorData.shape().shape().end());
+    std::vector<ssize_t> strides(tensorData.cdata().buffer.pitch.pitchBytes,
+                                 tensorData.cdata().buffer.pitch.pitchBytes + tensorData.ndim());
+
+    py::dtype dt = py::cast<py::dtype>(py::cast(tensorData.dtype()));
+
+    // There's no direct way to construct a py::buffer_info from data together with a py::dtype.
+    // To do that, we first construct a py::array (it accepts py::dtype), and use ".request()"
+    // to retrieve the corresponding py::buffer_info.
+    // To avoid spurious data copies in py::array ctor, we create this dummy owner.
+    py::tuple tmpOwner = py::make_tuple();
+    py::array tmp(dt, shape, strides, tensorData.data(), tmpOwner);
+
+    return tmp.request();
+}
+
+static py::object ToPython(const cv::ITensorData &imgData, py::object owner)
+{
+    py::object out;
+
+    auto *pitchData = dynamic_cast<const cv::ITensorDataPitch *>(&imgData);
+    if (!pitchData)
+    {
+        throw std::runtime_error("Only tensors with pitch-linear data can be exported");
+    }
+
+    py::buffer_info info = ToPyBufferInfo(*pitchData);
+    if (dynamic_cast<const cv::ITensorDataPitchDevice *>(pitchData))
+    {
+        if (owner)
+        {
+            return py::cast(std::make_shared<CudaBuffer>(info, false), py::return_value_policy::reference_internal,
+                            owner);
+        }
+        else
+        {
+            return py::cast(std::make_shared<CudaBuffer>(info, true), py::return_value_policy::take_ownership);
+        }
+    }
+    else
+    {
+        throw std::runtime_error("Buffer type not supported");
+    }
+}
+
+py::object Tensor::cuda() const
+{
+    // Do we need to redefine the cuda object?
+    if (!m_cacheCudaObject)
+    {
+        const cv::ITensorData *tensorData = m_impl->exportData();
+        if (!tensorData)
+        {
+            throw std::runtime_error("Tensor data can't be exported");
+        }
+
+        m_cacheCudaObject = ToPython(*tensorData, py::cast(*this));
+    }
+
+    return m_cacheCudaObject;
+}
+
 std::ostream &operator<<(std::ostream &out, const Tensor &tensor)
 {
     return out << "<nvcv.Tensor shape=" << tensor.impl().shape()
@@ -312,6 +378,7 @@ void Tensor::Export(py::module &m)
         .def_property_readonly("shape", &Tensor::shape)
         .def_property_readonly("dtype", &Tensor::dtype)
         .def_property_readonly("ndim", &Tensor::ndim)
+        .def("cuda", &Tensor::cuda)
         .def("__repr__", &ToString<Tensor>);
 
     m.def("as_tensor", &Tensor::Wrap, "buffer"_a, "layout"_a = std::nullopt);
