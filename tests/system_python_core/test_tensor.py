@@ -150,3 +150,28 @@ def test_tensor_wrap_image_works(size, fmt, gold_layout, gold_shape, gold_dtype)
     assert tensor.shape == gold_shape
     assert tensor.layout == gold_layout
     assert tensor.dtype == gold_dtype
+
+
+@t.mark.parametrize(
+    "shape,dtype",
+    [
+        ([1, 23, 65, 3], np.uint8),
+        ([5, 23, 65, 3], np.int8),
+        ([65, 3], np.int16),
+        ([243, 65, 3], np.uint16),
+        ([1, 1], np.uint16),
+    ],
+)
+def test_tensor_export_cuda_buffer(shape, dtype):
+
+    hostGold = np.random.randint(0, 127, shape, dtype)
+
+    devGold = cuda.to_device(hostGold)
+
+    tensor = nvcv.as_tensor(devGold)
+
+    devMem = tensor.cuda()
+    assert devMem.dtype == dtype
+    assert devMem.shape == shape
+
+    assert (hostGold == cuda.as_cuda_array(devMem).copy_to_host()).all()
