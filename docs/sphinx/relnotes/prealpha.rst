@@ -16,7 +16,7 @@
 PreAlpha
 ========
 
-CV-CUDA-0.0.0 is the first release of CV-CUDA. This release is for evaluation purposes only.
+CV-CUDA-0.1.0 is the first release of CV-CUDA. This release is for evaluation purposes only.
 
 Release Highlights
 ------------------
