@@ -43,7 +43,7 @@ Unzip the cvcuda developer package: ::
 
     tar -xvf nvcv-dev-x.x.x-cuda11-x86_64-linux.tar.xz
 
-Unzip the cvcuda developer package: ::
+Unzip the cvcuda python package: ::
 
     tar -xvf nvcv-python3.*-x.x.x-cuda11-x86_64-linux.tar.xz
 

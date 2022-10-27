@@ -42,30 +42,31 @@ Once the device buffer is created we will wrap the externally allocated buffer i
    :language: python
    :lines: 49-52
 
-The Tensor can also be allocated using CVCUDA. We will convert the input tensor to interleaved format for
-the rest of the preprocessing operations
+We will convert the input tensor to interleaved format for the rest of the preprocessing operations
 
 .. literalinclude:: ../../../samples/classification/python/inference.py
    :language: python
-   :lines: 56-65
+   :lines: 56-59
 
 The input buffer is now ready for the preprocessing stage
 
 .. literalinclude:: ../../../samples/classification/python/inference.py
    :language: python
-   :lines: 67-130
+   :lines: 61-110
 
-The preprocessed tensor is used as an input to the resnet model for inference
+The preprocessed tensor is used as an input to the resnet model for inference. The cvcuda tensor
+can be exported to torch using the .cuda() operator. If the device type of the torch tensor and
+cvcuda tensor are same there will be no memory copy
 
 .. literalinclude:: ../../../samples/classification/python/inference.py
    :language: python
-   :lines: 132-140
+   :lines: 112-121
 
 The final stage in the pipeline is the post processing to apply softmax to normalize the score and sort the scores to get the TopN scores
 
 .. literalinclude:: ../../../samples/classification/python/inference.py
    :language: python
-   :lines: 149-163
+   :lines: 123-144
 
 Running the Sample
 ------------------

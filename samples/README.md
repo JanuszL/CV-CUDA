@@ -28,12 +28,12 @@ Sample applications to show how use some of CV-CUDA's functionalities.
    dpkg -i nvcv-lib-0.1.0-cuda11-x86_64-linux.deb
    dpkg -i nvcv-dev-0.1.0-cuda11-x86_64-linux.deb
    dpkg -i cvcuda-samples-0.1.0-cuda11-x86_64-linux.deb
+   dpkg -i nvcv-python-3.*-0.1.0-cuda11-x86_64-linux.deb
    ```
-
 3. Copy the samples folder to the target directory
 
    ```
-   cp -rf /opt/nvidia/cvcuda0/samples ~/
+   cp -rf /opt/nvidia/cvcuda*/samples ~/
    cd ~/samples
    ```
 
