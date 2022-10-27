@@ -12,12 +12,12 @@ cmake_minimum_required(VERSION 3.22)
 
 project(cvcuda
         LANGUAGES C CXX CUDA
-        VERSION 0.1.0
+        VERSION 0.2.0
         DESCRIPTION "CUDA-accelerated Computer Vision algorithms"
 )
 
 # Used when creating special builds
-set(PROJECT_VERSION_SUFFIX "")
+set(PROJECT_VERSION_SUFFIX "-alpha")
 
 # Allow ccvcuda libraries with different major versions to be
 # installed in parallel
