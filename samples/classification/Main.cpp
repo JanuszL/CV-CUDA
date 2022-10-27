@@ -199,14 +199,9 @@ int main(int argc, char *argv[])
         return retval;
     }
 
-    std::vector<nvjpegImage_t> iout;
-    std::vector<int>           widths, heights;
     // The total images is set to the batch size for testing
-    uint32_t                   totalImages  = batchSize;
-    nvjpegOutputFormat_t       outputFormat = NVJPEG_OUTPUT_BGRI;
-    widths.resize(batchSize);
-    heights.resize(batchSize);
-    iout.resize(batchSize);
+    uint32_t             totalImages  = batchSize;
+    nvjpegOutputFormat_t outputFormat = NVJPEG_OUTPUT_BGRI;
 
     // Allocate the maximum memory neeed for the input image batch
     // Note : This needs to be changed in case of testing with different test images

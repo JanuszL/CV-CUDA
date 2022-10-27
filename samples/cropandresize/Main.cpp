@@ -103,12 +103,6 @@ int main(int argc, char *argv[])
     // preallocated based on the  maximum image dimensions and  batch size
     // for NvJpeg to write into.
 
-    // The total images is set to the same value as batch size for testing
-    uint32_t totalImages = batchSize;
-
-    // Format in which the decoded output will be saved
-    nvjpegOutputFormat_t outputFormat = NVJPEG_OUTPUT_RGBI;
-
     // Note : The maximum input image dimensions needs to be updated in case
     // of testing with different test images
 
@@ -144,7 +138,12 @@ int main(int argc, char *argv[])
     nv::cv::TensorWrapData inTensor(inData);
 
     // NvJpeg is used to load the images to create a batched input device buffer.
-    uint8_t *gpuInput = static_cast<uint8_t *>(inBuf.data);
+    uint8_t             *gpuInput = static_cast<uint8_t *>(inBuf.data);
+    // The total images is set to the same value as batch size for testing
+    uint32_t             totalImages = batchSize;
+    // Format in which the decoded output will be saved
+    nvjpegOutputFormat_t outputFormat = NVJPEG_OUTPUT_RGBI;
+
     NvDecode(imagePath, batchSize, totalImages, outputFormat, gpuInput);
 
     // The input buffer is now ready to be used by the operators

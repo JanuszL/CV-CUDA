@@ -43,6 +43,10 @@ Unzip the cvcuda developer package: ::
 
     tar -xvf nvcv-dev-x.x.x-cuda11-x86_64-linux.tar.xz
 
+Unzip the cvcuda developer package: ::
+
+    tar -xvf nvcv-python3.*-x.x.x-cuda11-x86_64-linux.tar.xz
+
 Optionally Unzip the tests. ::
 
     tar -xvf cvcuda-tests-cuda11-x86_64-linux.tar.xz
@@ -62,6 +66,10 @@ Install the runtime library. ::
 Install the developer library. ::
 
     sudo dpkg -i nvcv-dev-x.x.x-cuda11-x86_64-linux.deb
+
+Install the python bindings ::
+
+    sudo dpkg -i nvcv-python3.*-x.x.x-cuda11-x86_64-linux.deb
 
 Optionally install the tests. ::
 
@@ -83,6 +91,6 @@ If CV-CUDA is properly installed and running on your Linux system, all tests wil
 
 * Running the samples on Linux. ::
 
-  cd /opt/nvidia/cvcuda0/samples
-  ./scripts/install_dependencies.sh
-  ./scripts/run_samples.sh
+    cd /opt/nvidia/cvcuda0/samples
+    ./scripts/install_dependencies.sh
+    ./scripts/run_samples.sh
