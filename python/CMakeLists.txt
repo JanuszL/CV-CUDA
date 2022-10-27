@@ -79,6 +79,7 @@ set_target_properties(nvcv_python PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
 )
 
+
 find_package(CUDAToolkit REQUIRED)
 
 target_link_libraries(nvcv_python
@@ -92,6 +93,9 @@ target_compile_options(nvcv_python
     PRIVATE
         -Wno-deprecated-declarations
         -Wsuggest-override
+        -Wall -Werror -Wpointer-arith
+        -Wmissing-declarations -Wredundant-decls -Wmultichar
+        -Wno-unused-local-typedefs -Wunused -Wno-unknown-pragmas
 )
 
 include(GNUInstallDirs)

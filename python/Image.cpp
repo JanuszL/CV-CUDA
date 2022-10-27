@@ -17,6 +17,7 @@
 #include "Cache.hpp"
 #include "CheckError.hpp"
 #include "ImageFormat.hpp"
+#include "PixelType.hpp"
 #include "PyUtil.hpp"
 #include "Stream.hpp"
 #include "String.hpp"
@@ -62,7 +63,7 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer
     int curChannel = 0;
 
     // For each buffer,
-    for (int p = 0; p < buffers.size(); ++p)
+    for (size_t p = 0; p < buffers.size(); ++p)
     {
         const py::buffer_info &info = buffers[p];
 
@@ -261,7 +262,7 @@ cv::ImageFormat InferImageFormat(const std::vector<cv::PixelType> &planePixTypes
 
     int numChannels = 0;
 
-    for (int p = 0; p < planePixTypes.size(); ++p)
+    for (size_t p = 0; p < planePixTypes.size(); ++p)
     {
         packing[p] = planePixTypes[p].packing();
         numChannels += planePixTypes[p].numChannels();
@@ -407,8 +408,6 @@ void FillNVCVImageBufferPitch(NVCVImageData &imgData, const std::vector<py::buff
     }
 }
 
-} // namespace
-
 cv::ImageDataPitchDevice CreateNVCVImageDataDevice(const std::vector<py::buffer_info> &infos, cv::ImageFormat fmt)
 {
     NVCVImageData imgData;
@@ -425,9 +424,11 @@ cv::ImageDataPitchHost CreateNVCVImageDataHost(const std::vector<py::buffer_info
     return cv::ImageDataPitchHost(cv::ImageFormat{imgData.format}, imgData.buffer.pitch);
 }
 
+} // namespace
+
 Image::Image(const Size2D &size, cv::ImageFormat fmt)
-    : m_key{size, fmt}
-    , m_impl(std::make_unique<cv::Image>(cv::Size2D{std::get<0>(size), std::get<1>(size)}, fmt))
+    : m_impl(std::make_unique<cv::Image>(cv::Size2D{std::get<0>(size), std::get<1>(size)}, fmt))
+    , m_key{size, fmt}
 {
 }
 
@@ -529,7 +530,7 @@ std::shared_ptr<Image> Image::WrapDevice(CudaBuffer &buffer, cv::ImageFormat fmt
 std::shared_ptr<Image> Image::WrapDeviceVector(std::vector<std::shared_ptr<CudaBuffer>> buffers, cv::ImageFormat fmt)
 {
     std::vector<py::buffer_info> bufinfos;
-    for (int i = 0; i < buffers.size(); ++i)
+    for (size_t i = 0; i < buffers.size(); ++i)
     {
         bufinfos.emplace_back(buffers[i]->request());
     }
@@ -546,7 +547,7 @@ std::shared_ptr<Image> Image::CreateHost(py::buffer buffer, cv::ImageFormat fmt)
 std::shared_ptr<Image> Image::CreateHostVector(std::vector<py::buffer> buffers, cv::ImageFormat fmt)
 {
     std::vector<py::buffer_info> bufinfos;
-    for (int i = 0; i < buffers.size(); ++i)
+    for (size_t i = 0; i < buffers.size(); ++i)
     {
         bufinfos.emplace_back(buffers[i].request());
     }
