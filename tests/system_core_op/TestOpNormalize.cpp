@@ -13,7 +13,6 @@
 
 #include "Definitions.hpp"
 
-#include <common/Utils.hpp>
 #include <common/ValueTests.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
@@ -24,6 +23,7 @@
 #include <operators/OpNormalize.hpp>
 
 #include <cmath>
+#include <random>
 
 namespace nvcv = nv::cv;
 namespace test = nv::cv::test;
@@ -92,7 +92,7 @@ NVCV_TEST_SUITE_P(OpNormalize, test::ValueList<int, int, int, bool, bool, uint32
     {     63,     32,         7,      false,        true,   normalScale,        1.3f,        0.3f,     0.f, },
     {     22,     13,         9,       true,       false,   normalScale,        1.4f,        0.4f,     0.f, },
     {     55,     33,         2,       true,       false, scaleIsStdDev,        2.1f,        1.1f,   1.23f, },
-    {    444,    222,         4,       true,       false, scaleIsStdDev,        2.2f,        2.2f,   12.3f, },
+    {    444,    222,         4,       true,       false, scaleIsStdDev,        2.2f,        2.2f,   12.3f, }
 });
 
 // clang-format on

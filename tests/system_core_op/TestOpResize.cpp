@@ -13,7 +13,6 @@
 
 #include "Definitions.hpp"
 
-#include <common/Utils.hpp>
 #include <common/ValueTests.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
@@ -24,6 +23,7 @@
 #include <operators/OpResize.hpp>
 
 #include <cmath>
+#include <random>
 
 namespace nvcv = nv::cv;
 namespace test = nv::cv::test;
