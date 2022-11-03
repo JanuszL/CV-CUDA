@@ -24,7 +24,7 @@ class ImageBatchVarShapeDataPitchDevice final : public IImageBatchVarShapeDataPi
 public:
     using Buffer = NVCVImageBatchVarShapeBufferPitch;
 
-    explicit ImageBatchVarShapeDataPitchDevice(ImageFormat format, const Buffer &data);
+    explicit ImageBatchVarShapeDataPitchDevice(ImageFormat format, int32_t numImages, const Buffer &data);
 
 private:
     NVCVImageBatchData m_data;
@@ -38,16 +38,18 @@ private:
 };
 
 // ImageBatchVarShapeDataPitchDevice implementation -----------------------
-inline ImageBatchVarShapeDataPitchDevice::ImageBatchVarShapeDataPitchDevice(ImageFormat format, const Buffer &data)
+inline ImageBatchVarShapeDataPitchDevice::ImageBatchVarShapeDataPitchDevice(ImageFormat format, int32_t numImages,
+                                                                            const Buffer &data)
 {
     m_data.format               = format;
+    m_data.numImages            = numImages;
     m_data.bufferType           = NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_PITCH_DEVICE;
     m_data.buffer.varShapePitch = data;
 }
 
 inline int32_t ImageBatchVarShapeDataPitchDevice::doGetNumImages() const
 {
-    return m_data.buffer.varShapePitch.numImages;
+    return m_data.numImages;
 }
 
 inline ImageFormat ImageBatchVarShapeDataPitchDevice::doGetFormat() const

@@ -157,12 +157,11 @@ void ImageBatchVarShape::exportData(CUstream stream, NVCVImageBatchData &data) c
     NVCV_ASSERT(fmt.memLayout() == NVCV_MEM_LAYOUT_PL);
 
     data.format     = m_reqs.format;
+    data.numImages  = m_numImages;
     data.bufferType = NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_PITCH_DEVICE;
 
     NVCVImageBatchVarShapeBufferPitch &buf = data.buffer.varShapePitch;
-
-    buf.numImages = m_numImages;
-    buf.imgPlanes = m_devPlanesBuffer;
+    buf.imgPlanes                          = m_devPlanesBuffer;
 
     NVCV_ASSERT(m_dirtyStartingFromIndex <= m_numImages);
 

@@ -136,7 +136,7 @@ inline const IImageBatchData *ImageBatchWrapHandle::doExportData(CUstream stream
 
     assert(batchData.bufferType == NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_PITCH_DEVICE);
 
-    m_data.emplace(ImageFormat{batchData.format}, batchData.buffer.varShapePitch);
+    m_data.emplace(ImageFormat{batchData.format}, batchData.numImages, batchData.buffer.varShapePitch);
 
     return &*m_data;
 }
