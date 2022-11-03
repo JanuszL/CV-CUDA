@@ -87,10 +87,11 @@ to successfully build CV-CUDA.
 
 7. Build Samples
 
-   Launch the docker container for the samples.
+   Refer to the [SamplesREADME](samples/README.md) for instructions to compile samples outside cvcuda project.
+   Launch the docker container for the samples. Update the docker name to samples-linux-x64 in the docker launch script.
 
    ```
-   ci/build_samples.sh [build folder]
+   ./ci/build_samples.sh [build folder]
    ```
 8. Run tests
 
