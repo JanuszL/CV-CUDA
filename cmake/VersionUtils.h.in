@@ -11,10 +11,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_DETAIL_VERSIONUTILS_H
-#define NVCV_DETAIL_VERSIONUTILS_H
+#ifndef @LIBPREFIX@_DETAIL_VERSIONUTILS_H
+#define @LIBPREFIX@_DETAIL_VERSIONUTILS_H
 
 /** For internal use only. */
-#cmakedefine NVCV_COMMIT "@NVCV_COMMIT@"
+#define @LIBPREFIX@_COMMIT "@REPO_COMMIT@"
 
-#endif // NVCV_DETAIL_VERSIONUTILS_H
+#endif // @LIBPREFIX@_DETAIL_VERSIONUTILS_H

@@ -38,7 +38,7 @@ TEST(VersionTests, get_version_string)
 #if NVCV_VERSION_TWEAK
         "." STR(NVCV_VERSION_TWEAK)
 #endif
-            STR(NVCV_VERSION_SUFFIX);
+            "-" NVCV_VERSION_SUFFIX;
 
     EXPECT_STREQ(ver, NVCV_VERSION_STRING);
 }

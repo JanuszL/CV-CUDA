@@ -57,5 +57,5 @@ for ver in $python_versions; do
         fi
     fi
 
-    PYTHONPATH="$PYTHONPATH:@PYTHON_MODULE_DIR@" NVCV_VERSION="@cvcuda_VERSION@" python$ver -m pytest -o cache_dir="$tmpdir" "$@" "$tests_dir"
+    PYTHONPATH="$PYTHONPATH:@PYTHON_MODULE_DIR@" NVCV_VERSION="@NVCV_VERSION_FULL@" python$ver -m pytest -o cache_dir="$tmpdir" "$@" "$tests_dir"
 done

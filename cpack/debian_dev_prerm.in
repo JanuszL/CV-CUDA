@@ -14,7 +14,7 @@ case "$1" in
     remove|deconfigure)
         cmakepath=/usr/lib/@CMAKE_LIBRARY_ARCHITECTURE@/cmake/
 
-        rm -f $cmakepath/@nvcv_PACKAGE_NAME@
+        rm -f $cmakepath/@NVCV_PACKAGE_NAME@
         if [ -f $cmakepath/.cvcuda_created ]; then
             rm $cmakepath/.cvcuda_created
             rmdir -p --ignore-fail-on-non-empty $cmakepath

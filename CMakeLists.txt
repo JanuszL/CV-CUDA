@@ -32,6 +32,7 @@ option(ENABLE_SANITIZER "Enabled sanitized build" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" )
 
+include(ConfigVersion)
 include(ConfigBuildTree)
 include(ConfigCompiler)
 include(ConfigCUDA)

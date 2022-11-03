@@ -60,40 +60,13 @@ target_include_directories(nvcv
         $<INSTALL_INTERFACE:include>
 )
 
+configure_version(nvcv nvcv nvcv ${PROJECT_VERSION})
+
 # Config for semver 2.0
 set_target_properties(nvcv PROPERTIES
-    VERSION "${cvcuda_VERSION}"
-    SOVERSION "${cvcuda_VERSION_MAJOR}"
+    VERSION "${NVCV_VERSION_MAJOR}.${NVCV_VERSION_MINOR}.${NVCV_VERSION_PATCH}"
+    SOVERSION "${NVCV_VERSION_MAJOR}"
 )
-
-# configure version header --------------------------------
-if(PROJECT_VERSION_TWEAK)
-    set(NVCV_VERSION_TWEAK ${PROJECT_VERSION_TWEAK})
-else()
-    set(NVCV_VERSION_TWEAK 0)
-endif()
-
-math(EXPR NVCV_VERSION "${PROJECT_VERSION_MAJOR} * 1000000 + ${PROJECT_VERSION_MINOR} * 10000 + ${PROJECT_VERSION_PATCH} * 100 + ${NVCV_VERSION_TWEAK}")
-
-configure_file(include/nvcv/Version.h.in include/nvcv/Version.h @ONLY ESCAPE_QUOTES)
-
-include(GetGitRevisionDescription)
-get_git_head_revision(GIT_REFSPEC NVCV_COMMIT)
-
-configure_file(include/nvcv/detail/VersionUtils.h.in include/nvcv/detail/VersionUtils.h @ONLY ESCAPE_QUOTES)
-
-# So that the generated headers are found
-target_include_directories(nvcv
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-)
-
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/nvcv/Version.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nvcv
-        COMPONENT dev)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/nvcv/detail/VersionUtils.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nvcv/detail
-        COMPONENT dev)
 
 # Create exports file for symbol versioning ---------------------------------
 set(EXPORTS_OUTPUT "${cvcuda_BINARY_DIR}/exports.ldscript")

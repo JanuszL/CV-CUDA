@@ -54,12 +54,12 @@ foreach(VER ${PYTHON_VERSIONS})
     if(UNIX)
         set(CPACK_DEBIAN_${PYTHON_MODULE_NAME}_PACKAGE_NAME python${VER}-${CPACK_PACKAGE_NAME})
 
-        set(NVCV_${PYTHON_MODULE_NAME}_FILE_NAME "nvcv-python${VER}-${PACKAGE_FULL_VERSION}")
+        set(NVCV_${PYTHON_MODULE_NAME}_FILE_NAME "nvcv-python${VER}-${NVCV_VERSION_BUILD}")
         set(CPACK_DEBIAN_${PYTHON_MODULE_NAME}_FILE_NAME "${NVCV_${PYTHON_MODULE_NAME}_FILE_NAME}.deb")
         set(CPACK_ARCHIVE_${PYTHON_MODULE_NAME}_FILE_NAME "${NVCV_${PYTHON_MODULE_NAME}_FILE_NAME}")
 
         # Depend on current or any future ABI with same major version
-        set(CPACK_DEBIAN_${PYTHON_MODULE_NAME}_PACKAGE_DEPENDS "lib${nvcv_PACKAGE_NAME} (>= ${cvcuda_API_VERSION})")
+        set(CPACK_DEBIAN_${PYTHON_MODULE_NAME}_PACKAGE_DEPENDS "${CPACK_DEBIAN_LIB_PACKAGE_NAME} (>= ${NVCV_VERSION_API})")
 
         # Depend on python interpreter
         set(CPACK_DEBIAN_${PYTHON_MODULE_NAME}_PACKAGE_DEPENDS "${CPACK_DEBIAN_${PYTHON_MODULE_NAME}_PACKAGE_DEPENDS}, python${VER}")
@@ -79,7 +79,7 @@ foreach(VER ${PYTHON_VERSIONS})
     if(BUILD_TESTS)
         set(CPACK_DEBIAN_TESTS_PACKAGE_DEPENDS
                 "${CPACK_DEBIAN_TESTS_PACKAGE_DEPENDS},
-                 ${CPACK_DEBIAN_${PYTHON_MODULE_NAME}_PACKAGE_NAME} (>= ${cvcuda_API_VERSION})")
+                ${CPACK_DEBIAN_${PYTHON_MODULE_NAME}_PACKAGE_NAME} (>= ${NVCV_VERSION_API})")
 
         # For some reason these are needed with python-3.7
         if(VER VERSION_EQUAL "3.7")
