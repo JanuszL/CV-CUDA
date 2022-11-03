@@ -76,10 +76,10 @@ int32_t ImageBatchVarShape::capacity() const
     return m_impl.capacity();
 }
 
-int32_t ImageBatchVarShape::size() const
+int32_t ImageBatchVarShape::numImages() const
 {
-    NVCV_ASSERT(m_impl.size() == (int)m_list.size());
-    return m_impl.size();
+    NVCV_ASSERT(m_impl.numImages() == (int)m_list.size());
+    return m_impl.numImages();
 }
 
 void ImageBatchVarShape::pushBack(Image &img)
@@ -133,7 +133,7 @@ void ImageBatchVarShape::Export(py::module &m)
         .def(py::init(&ImageBatchVarShape::Create), "capacity"_a, "format"_a)
         .def_property_readonly("format", &ImageBatchVarShape::format)
         .def_property_readonly("capacity", &ImageBatchVarShape::capacity)
-        .def("__len__", &ImageBatchVarShape::size)
+        .def("__len__", &ImageBatchVarShape::numImages)
         .def("__iter__", [](const ImageBatchVarShape &list) { return py::make_iterator(list); })
         .def("pushback", &ImageBatchVarShape::pushBack)
         .def("pushback", &ImageBatchVarShape::pushBackMany)

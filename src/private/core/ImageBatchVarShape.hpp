@@ -30,7 +30,7 @@ public:
 
     int32_t     capacity() const override;
     ImageFormat format() const override;
-    int32_t     size() const override;
+    int32_t     numImages() const override;
 
     NVCVTypeImageBatch type() const override;
 

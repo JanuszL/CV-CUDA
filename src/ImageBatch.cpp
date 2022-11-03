@@ -84,7 +84,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchDestroy, (NVCVImageBatchHandle h
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchGetSize, (NVCVImageBatchHandle handle, int32_t *size))
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchGetNumImages, (NVCVImageBatchHandle handle, int32_t *size))
 {
     return priv::ProtectCall(
         [&]
@@ -96,7 +96,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchGetSize, (NVCVImageBatchHandle h
 
             auto &batch = priv::ToStaticRef<const priv::IImageBatch>(handle);
 
-            *size = batch.size();
+            *size = batch.numImages();
         });
 }
 

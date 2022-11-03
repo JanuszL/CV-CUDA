@@ -39,7 +39,7 @@ TEST(ImageBatchVarShape, wip_create)
 
     EXPECT_EQ(100, batch.capacity());
     EXPECT_EQ(nvcv::FMT_NV12, batch.format());
-    EXPECT_EQ(0, batch.size());
+    EXPECT_EQ(0, batch.numImages());
     ASSERT_NE(nullptr, batch.handle());
 
     NVCVTypeImageBatch type;

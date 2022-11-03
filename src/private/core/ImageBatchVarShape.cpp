@@ -135,7 +135,7 @@ int32_t ImageBatchVarShape::capacity() const
     return m_reqs.capacity;
 }
 
-int32_t ImageBatchVarShape::size() const
+int32_t ImageBatchVarShape::numImages() const
 {
     return m_numImages;
 }
