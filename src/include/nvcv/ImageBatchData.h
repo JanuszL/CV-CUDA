@@ -20,6 +20,11 @@
 /** Stores the image plane in a variable shape image batch. */
 typedef struct NVCVImageBatchVarShapeBufferPitchRec
 {
+    /** Union of all image dimensions.
+     * If 0 and number of images is >= 1, this value
+     * must not be relied upon. */
+    int32_t maxWidth, maxHeight;
+
     /** Pointer to all image planes in pitch-linear layout in the image batch.
      * It's an array of `numPlanesPerImage*numImages` planes. The number of planes
      * in the image can be fetched from the image batch's format. With that,

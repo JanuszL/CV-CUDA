@@ -56,6 +56,10 @@ private:
     NVCVImagePlanePitch *m_devPlanesBuffer;
     NVCVImageHandle     *m_imgHandleBuffer;
 
+    // Max width/height up to m_numImages.
+    // If nullopt, must be recalculated from the beginning.
+    mutable std::optional<Size2D> m_cacheMaxSize;
+
     // TODO: must be retrieved from the resource allocator;
     cudaEvent_t m_evPostFence;
 

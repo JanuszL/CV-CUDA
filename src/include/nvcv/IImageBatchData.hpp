@@ -42,9 +42,11 @@ private:
 class IImageBatchVarShapeDataPitchDevice : public IImageBatchData
 {
 public:
+    Size2D                 maxSize() const;
     const ImagePlanePitch *imgPlanes() const;
 
 private:
+    virtual Size2D                 doGetMaxSize() const     = 0;
     virtual const ImagePlanePitch *doGetImagePlanes() const = 0;
 };
 
@@ -67,6 +69,11 @@ inline const NVCVImageBatchData &IImageBatchData::cdata() const
 }
 
 // Implementation - IImageBatchVarShapeDataPitchDevice
+inline Size2D IImageBatchVarShapeDataPitchDevice::maxSize() const
+{
+    return doGetMaxSize();
+}
+
 inline const ImagePlanePitch *IImageBatchVarShapeDataPitchDevice::imgPlanes() const
 {
     return doGetImagePlanes();

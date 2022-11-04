@@ -31,6 +31,7 @@ private:
 
     int32_t     doGetNumImages() const override;
     ImageFormat doGetFormat() const override;
+    Size2D      doGetMaxSize() const override;
 
     const ImagePlanePitch *doGetImagePlanes() const override;
 
@@ -55,6 +56,11 @@ inline int32_t ImageBatchVarShapeDataPitchDevice::doGetNumImages() const
 inline ImageFormat ImageBatchVarShapeDataPitchDevice::doGetFormat() const
 {
     return ImageFormat{m_data.format};
+}
+
+inline Size2D ImageBatchVarShapeDataPitchDevice::doGetMaxSize() const
+{
+    return {m_data.buffer.varShapePitch.maxWidth, m_data.buffer.varShapePitch.maxHeight};
 }
 
 inline const ImagePlanePitch *ImageBatchVarShapeDataPitchDevice::doGetImagePlanes() const
