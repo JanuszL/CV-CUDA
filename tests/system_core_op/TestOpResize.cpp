@@ -13,6 +13,7 @@
 
 #include "Definitions.hpp"
 
+#include <common/Utils.hpp>
 #include <common/ValueTests.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
@@ -21,160 +22,126 @@
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
 #include <operators/OpResize.hpp>
 
-//#define DEBUG_PRINT_IMAGE
-//#define DEBUG_PRINT_DIFF
-
-#include <common/Utils.hpp>
-
 #include <cmath>
 
 namespace nvcv = nv::cv;
 namespace test = nv::cv::test;
 
-static void Resize(std::vector<uint8_t> &hDst, const std::vector<uint8_t> &hSrc,
-                   const nvcv::TensorDataAccessPitchImagePlanar &dDstData,
-                   const nvcv::TensorDataAccessPitchImagePlanar &dSrcData, const int interpolation)
+static void Resize(std::vector<uint8_t> &hDst, int dstRowPitch, nvcv::Size2D dstSize, const std::vector<uint8_t> &hSrc,
+                   int srcRowPitch, nvcv::Size2D srcSize, nvcv::ImageFormat fmt, NVCVInterpolationType interpolation)
 {
-    double iScale = static_cast<double>(dSrcData.numRows()) / dDstData.numRows();
-    double jScale = static_cast<double>(dSrcData.numCols()) / dDstData.numCols();
+    double iScale = static_cast<double>(srcSize.h) / dstSize.h;
+    double jScale = static_cast<double>(srcSize.w) / dstSize.w;
 
-    EXPECT_EQ(dDstData.numSamples(), dSrcData.numSamples());
-    EXPECT_EQ(dDstData.dtype(), dSrcData.dtype());
+    assert(fmt.numPlanes() == 1);
 
-    int elementsPerPixel = dDstData.numChannels();
-    int dstRowPitch      = dDstData.rowPitchBytes() / sizeof(uint8_t);
-    int srcRowPitch      = dSrcData.rowPitchBytes() / sizeof(uint8_t);
-    int dstImgPitch      = dDstData.samplePitchBytes() / sizeof(uint8_t);
-    int srcImgPitch      = dSrcData.samplePitchBytes() / sizeof(uint8_t);
+    int elementsPerPixel = fmt.numChannels();
 
-    uint8_t       *dstPtrTop = hDst.data();
-    const uint8_t *srcPtrTop = hSrc.data();
+    uint8_t       *dstPtr = hDst.data();
+    const uint8_t *srcPtr = hSrc.data();
 
-    for (int img = 0; img < dDstData.numSamples(); img++)
+    for (int di = 0; di < dstSize.h; di++)
     {
-        uint8_t       *dstPtr = dstPtrTop + dstImgPitch * img;
-        const uint8_t *srcPtr = srcPtrTop + srcImgPitch * img;
-
-        for (int di = 0; di < dDstData.numRows(); di++)
+        for (int dj = 0; dj < dstSize.w; dj++)
         {
-            for (int dj = 0; dj < dDstData.numCols(); dj++)
+            if (interpolation == NVCV_INTERP_NEAREST)
             {
-                if (interpolation == NVCV_INTERP_NEAREST)
+                double fi = iScale * di;
+                double fj = jScale * dj;
+
+                int si = std::floor(fi);
+                int sj = std::floor(fj);
+
+                si = std::min(si, srcSize.h - 1);
+                sj = std::min(sj, srcSize.w - 1);
+
+                for (int k = 0; k < elementsPerPixel; k++)
                 {
-                    double fi = iScale * di;
-                    double fj = jScale * dj;
-
-                    int si = std::floor(fi);
-                    int sj = std::floor(fj);
-
-                    si = std::min(si, dSrcData.numRows() - 1);
-                    sj = std::min(sj, dSrcData.numCols() - 1);
-
-                    for (int k = 0; k < dDstData.numChannels(); k++)
-                    {
-                        dstPtr[di * dstRowPitch + dj * elementsPerPixel + k]
-                            = srcPtr[si * srcRowPitch + sj * elementsPerPixel + k];
-                    }
+                    dstPtr[di * dstRowPitch + dj * elementsPerPixel + k]
+                        = srcPtr[si * srcRowPitch + sj * elementsPerPixel + k];
                 }
-                else if (interpolation == NVCV_INTERP_LINEAR)
+            }
+            else if (interpolation == NVCV_INTERP_LINEAR)
+            {
+                double fi = iScale * (di + 0.5) - 0.5;
+                double fj = jScale * (dj + 0.5) - 0.5;
+
+                int si = std::floor(fi);
+                int sj = std::floor(fj);
+
+                fi -= si;
+                fj -= sj;
+
+                fj = (sj < 0 || sj >= srcSize.w - 1) ? 0 : fj;
+
+                si = std::max(0, std::min(si, srcSize.h - 2));
+                sj = std::max(0, std::min(sj, srcSize.w - 2));
+
+                double iWeights[2] = {1 - fi, fi};
+                double jWeights[2] = {1 - fj, fj};
+
+                for (int k = 0; k < elementsPerPixel; k++)
                 {
-                    double fi = iScale * (di + 0.5) - 0.5;
-                    double fj = jScale * (dj + 0.5) - 0.5;
+                    double res = std::rint(
+                        srcPtr[(si + 0) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * iWeights[0] * jWeights[0]
+                        + srcPtr[(si + 1) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * iWeights[1] * jWeights[0]
+                        + srcPtr[(si + 0) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * iWeights[0] * jWeights[1]
+                        + srcPtr[(si + 1) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * iWeights[1] * jWeights[1]);
 
-                    int si = std::floor(fi);
-                    int sj = std::floor(fj);
-
-                    fi -= si;
-                    fj -= sj;
-
-                    fj = (sj < 0 || sj >= dSrcData.numCols() - 1) ? 0 : fj;
-
-                    si = std::max(0, std::min(si, dSrcData.numRows() - 2));
-                    sj = std::max(0, std::min(sj, dSrcData.numCols() - 2));
-
-                    double iWeights[2] = {1 - fi, fi};
-                    double jWeights[2] = {1 - fj, fj};
-
-                    for (int k = 0; k < dDstData.numChannels(); k++)
-                    {
-                        double res = std::rint(srcPtr[(si + 0) * srcRowPitch + (sj + 0) * elementsPerPixel + k]
-                                                   * iWeights[0] * jWeights[0]
-                                               + srcPtr[(si + 1) * srcRowPitch + (sj + 0) * elementsPerPixel + k]
-                                                     * iWeights[1] * jWeights[0]
-                                               + srcPtr[(si + 0) * srcRowPitch + (sj + 1) * elementsPerPixel + k]
-                                                     * iWeights[0] * jWeights[1]
-                                               + srcPtr[(si + 1) * srcRowPitch + (sj + 1) * elementsPerPixel + k]
-                                                     * iWeights[1] * jWeights[1]);
-
-                        dstPtr[di * dstRowPitch + dj * elementsPerPixel + k] = res < 0 ? 0 : (res > 255 ? 255 : res);
-                    }
+                    dstPtr[di * dstRowPitch + dj * elementsPerPixel + k] = res < 0 ? 0 : (res > 255 ? 255 : res);
                 }
-                else if (interpolation == NVCV_INTERP_CUBIC)
+            }
+            else if (interpolation == NVCV_INTERP_CUBIC)
+            {
+                double fi = iScale * (di + 0.5) - 0.5;
+                double fj = jScale * (dj + 0.5) - 0.5;
+
+                int si = std::floor(fi);
+                int sj = std::floor(fj);
+
+                fi -= si;
+                fj -= sj;
+
+                fj = (sj < 1 || sj >= srcSize.w - 3) ? 0 : fj;
+
+                si = std::max(1, std::min(si, srcSize.h - 3));
+                sj = std::max(1, std::min(sj, srcSize.w - 3));
+
+                const double A = -0.75;
+                double       iWeights[4];
+                iWeights[0] = ((A * (fi + 1) - 5 * A) * (fi + 1) + 8 * A) * (fi + 1) - 4 * A;
+                iWeights[1] = ((A + 2) * fi - (A + 3)) * fi * fi + 1;
+                iWeights[2] = ((A + 2) * (1 - fi) - (A + 3)) * (1 - fi) * (1 - fi) + 1;
+                iWeights[3] = 1 - iWeights[0] - iWeights[1] - iWeights[2];
+
+                double jWeights[4];
+                jWeights[0] = ((A * (fj + 1) - 5 * A) * (fj + 1) + 8 * A) * (fj + 1) - 4 * A;
+                jWeights[1] = ((A + 2) * fj - (A + 3)) * fj * fj + 1;
+                jWeights[2] = ((A + 2) * (1 - fj) - (A + 3)) * (1 - fj) * (1 - fj) + 1;
+                jWeights[3] = 1 - jWeights[0] - jWeights[1] - jWeights[2];
+
+                for (int k = 0; k < elementsPerPixel; k++)
                 {
-                    double fi = iScale * (di + 0.5) - 0.5;
-                    double fj = jScale * (dj + 0.5) - 0.5;
+                    double res = std::abs(std::rint(
+                        srcPtr[(si - 1) * srcRowPitch + (sj - 1) * elementsPerPixel + k] * jWeights[0] * iWeights[0]
+                        + srcPtr[(si + 0) * srcRowPitch + (sj - 1) * elementsPerPixel + k] * jWeights[0] * iWeights[1]
+                        + srcPtr[(si + 1) * srcRowPitch + (sj - 1) * elementsPerPixel + k] * jWeights[0] * iWeights[2]
+                        + srcPtr[(si + 2) * srcRowPitch + (sj - 1) * elementsPerPixel + k] * jWeights[0] * iWeights[3]
+                        + srcPtr[(si - 1) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * jWeights[1] * iWeights[0]
+                        + srcPtr[(si + 0) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * jWeights[1] * iWeights[1]
+                        + srcPtr[(si + 1) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * jWeights[1] * iWeights[2]
+                        + srcPtr[(si + 2) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * jWeights[1] * iWeights[3]
+                        + srcPtr[(si - 1) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * jWeights[2] * iWeights[0]
+                        + srcPtr[(si + 0) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * jWeights[2] * iWeights[1]
+                        + srcPtr[(si + 1) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * jWeights[2] * iWeights[2]
+                        + srcPtr[(si + 2) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * jWeights[2] * iWeights[3]
+                        + srcPtr[(si - 1) * srcRowPitch + (sj + 2) * elementsPerPixel + k] * jWeights[3] * iWeights[0]
+                        + srcPtr[(si + 0) * srcRowPitch + (sj + 2) * elementsPerPixel + k] * jWeights[3] * iWeights[1]
+                        + srcPtr[(si + 1) * srcRowPitch + (sj + 2) * elementsPerPixel + k] * jWeights[3] * iWeights[2]
+                        + srcPtr[(si + 2) * srcRowPitch + (sj + 2) * elementsPerPixel + k] * jWeights[3]
+                              * iWeights[3]));
 
-                    int si = std::floor(fi);
-                    int sj = std::floor(fj);
-
-                    fi -= si;
-                    fj -= sj;
-
-                    fj = (sj < 1 || sj >= dSrcData.numCols() - 3) ? 0 : fj;
-
-                    si = std::max(1, std::min(si, dSrcData.numRows() - 3));
-                    sj = std::max(1, std::min(sj, dSrcData.numCols() - 3));
-
-                    const double A = -0.75;
-                    double       iWeights[4];
-                    iWeights[0] = ((A * (fi + 1) - 5 * A) * (fi + 1) + 8 * A) * (fi + 1) - 4 * A;
-                    iWeights[1] = ((A + 2) * fi - (A + 3)) * fi * fi + 1;
-                    iWeights[2] = ((A + 2) * (1 - fi) - (A + 3)) * (1 - fi) * (1 - fi) + 1;
-                    iWeights[3] = 1 - iWeights[0] - iWeights[1] - iWeights[2];
-
-                    double jWeights[4];
-                    jWeights[0] = ((A * (fj + 1) - 5 * A) * (fj + 1) + 8 * A) * (fj + 1) - 4 * A;
-                    jWeights[1] = ((A + 2) * fj - (A + 3)) * fj * fj + 1;
-                    jWeights[2] = ((A + 2) * (1 - fj) - (A + 3)) * (1 - fj) * (1 - fj) + 1;
-                    jWeights[3] = 1 - jWeights[0] - jWeights[1] - jWeights[2];
-
-                    for (int k = 0; k < dDstData.numChannels(); k++)
-                    {
-                        double res = std::abs(std::rint(
-                            srcPtr[(si - 1) * srcRowPitch + (sj - 1) * elementsPerPixel + k] * jWeights[0] * iWeights[0]
-                            + srcPtr[(si + 0) * srcRowPitch + (sj - 1) * elementsPerPixel + k] * jWeights[0]
-                                  * iWeights[1]
-                            + srcPtr[(si + 1) * srcRowPitch + (sj - 1) * elementsPerPixel + k] * jWeights[0]
-                                  * iWeights[2]
-                            + srcPtr[(si + 2) * srcRowPitch + (sj - 1) * elementsPerPixel + k] * jWeights[0]
-                                  * iWeights[3]
-                            + srcPtr[(si - 1) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * jWeights[1]
-                                  * iWeights[0]
-                            + srcPtr[(si + 0) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * jWeights[1]
-                                  * iWeights[1]
-                            + srcPtr[(si + 1) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * jWeights[1]
-                                  * iWeights[2]
-                            + srcPtr[(si + 2) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * jWeights[1]
-                                  * iWeights[3]
-                            + srcPtr[(si - 1) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * jWeights[2]
-                                  * iWeights[0]
-                            + srcPtr[(si + 0) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * jWeights[2]
-                                  * iWeights[1]
-                            + srcPtr[(si + 1) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * jWeights[2]
-                                  * iWeights[2]
-                            + srcPtr[(si + 2) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * jWeights[2]
-                                  * iWeights[3]
-                            + srcPtr[(si - 1) * srcRowPitch + (sj + 2) * elementsPerPixel + k] * jWeights[3]
-                                  * iWeights[0]
-                            + srcPtr[(si + 0) * srcRowPitch + (sj + 2) * elementsPerPixel + k] * jWeights[3]
-                                  * iWeights[1]
-                            + srcPtr[(si + 1) * srcRowPitch + (sj + 2) * elementsPerPixel + k] * jWeights[3]
-                                  * iWeights[2]
-                            + srcPtr[(si + 2) * srcRowPitch + (sj + 2) * elementsPerPixel + k] * jWeights[3]
-                                  * iWeights[3]));
-
-                        dstPtr[di * dstRowPitch + dj * elementsPerPixel + k] = res < 0 ? 0 : (res > 255 ? 255 : res);
-                    }
+                    dstPtr[di * dstRowPitch + dj * elementsPerPixel + k] = res < 0 ? 0 : (res > 255 ? 255 : res);
                 }
             }
         }
@@ -200,7 +167,7 @@ NVCV_TEST_SUITE_P(OpResize, test::ValueList<int, int, int, int, NVCVInterpolatio
 
 // clang-format on
 
-TEST_P(OpResize, correct_output)
+TEST_P(OpResize, tensor_correct_output)
 {
     cudaStream_t stream;
     EXPECT_EQ(cudaSuccess, cudaStreamCreate(&stream));
@@ -214,59 +181,72 @@ TEST_P(OpResize, correct_output)
 
     int numberOfImages = GetParamValue<5>();
 
-    nvcv::Tensor imgSrc(numberOfImages, {srcWidth, srcHeight}, nvcv::FMT_RGBA8);
-    nvcv::Tensor imgDst(numberOfImages, {dstWidth, dstHeight}, nvcv::FMT_RGBA8);
+    const nvcv::ImageFormat fmt = nvcv::FMT_RGBA8;
+
+    // Generate input
+    nvcv::Tensor imgSrc(numberOfImages, {srcWidth, srcHeight}, fmt);
 
     const auto *srcData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgSrc.exportData());
-    const auto *dstData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgDst.exportData());
 
     ASSERT_NE(nullptr, srcData);
-    ASSERT_NE(nullptr, dstData);
 
     auto srcAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*srcData);
     ASSERT_TRUE(srcAccess);
 
+    std::vector<std::vector<uint8_t>> srcVec(numberOfImages);
+    int                               srcVecRowPitch = srcWidth * fmt.planePixelStrideBytes(0);
+
+    std::default_random_engine randEng;
+
+    for (int i = 0; i < numberOfImages; ++i)
+    {
+        std::uniform_int_distribution<uint8_t> rand(0, 255);
+
+        srcVec[i].resize(srcHeight * srcVecRowPitch);
+        std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return rand(randEng); });
+
+        // Copy input data to the GPU
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2D(srcAccess->sampleData(i), srcAccess->rowPitchBytes(), srcVec[i].data(), srcVecRowPitch,
+                               srcVecRowPitch, // vec has no padding
+                               srcHeight, cudaMemcpyHostToDevice));
+    }
+
+    // Generate test result
+    nvcv::Tensor imgDst(numberOfImages, {dstWidth, dstHeight}, nvcv::FMT_RGBA8);
+
+    nv::cvop::Resize resizeOp;
+    EXPECT_NO_THROW(resizeOp(stream, imgSrc, imgDst, interpolation));
+
+    EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
+    EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
+
+    // Check result
+    const auto *dstData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgDst.exportData());
+    ASSERT_NE(nullptr, dstData);
+
     auto dstAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*dstData);
     ASSERT_TRUE(dstAccess);
 
-    int srcBufSize = (srcAccess->samplePitchBytes() / sizeof(uint8_t)) * srcAccess->numSamples();
-    int dstBufSize = (dstAccess->samplePitchBytes() / sizeof(uint8_t)) * dstAccess->numSamples();
-
-    std::vector<uint8_t> srcVec(srcBufSize);
-
-    std::vector<uint8_t> testVec(dstBufSize);
-    std::vector<uint8_t> goldVec(dstBufSize);
-
-    test::FillRandomData(srcVec);
-
-    // Copy input data to the GPU
-    EXPECT_EQ(cudaSuccess, cudaMemcpyAsync(srcData->data(), srcVec.data(), srcVec.size() * sizeof(uint8_t),
-                                           cudaMemcpyHostToDevice, stream));
-
-    // Generate gold result
-    Resize(goldVec, srcVec, *dstAccess, *srcAccess, interpolation);
-
-    // Generate test result
-    nv::cvop::Resize resizeOp;
-
-    EXPECT_NO_THROW(resizeOp(stream, imgSrc, imgDst, interpolation));
-
-    // Get test data back
-    EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
-    EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), dstData->data(), dstBufSize, cudaMemcpyDeviceToHost));
-
-#ifdef DEBUG_PRINT_IMAGE
-    test::DebugPrintImage(srcVec, srcData->rowPitchBytes() / sizeof(uint8_t));
-    test::DebugPrintImage(testVec, dstData->rowPitchBytes() / sizeof(uint8_t));
-    test::DebugPrintImage(goldVec, dstData->rowPitchBytes() / sizeof(uint8_t));
-#endif
-#ifdef DEBUG_PRINT_DIFF
-    if (goldVec != testVec)
+    int dstVecRowPitch = dstWidth * fmt.planePixelStrideBytes(0);
+    for (int i = 0; i < numberOfImages; ++i)
     {
-        test::DebugPrintDiff(testVec, goldVec);
-    }
-#endif
+        SCOPED_TRACE(i);
 
-    EXPECT_EQ(goldVec, testVec);
+        std::vector<uint8_t> testVec(dstHeight * dstVecRowPitch);
+
+        // Copy output data to Host
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2D(testVec.data(), dstVecRowPitch, dstAccess->sampleData(i), dstAccess->rowPitchBytes(),
+                               dstVecRowPitch, // vec has no padding
+                               dstHeight, cudaMemcpyDeviceToHost));
+
+        std::vector<uint8_t> goldVec(dstHeight * dstVecRowPitch);
+
+        // Generate gold result
+        Resize(goldVec, dstVecRowPitch, {dstWidth, dstHeight}, srcVec[i], srcVecRowPitch, {srcWidth, srcHeight}, fmt,
+               interpolation);
+
+        EXPECT_EQ(goldVec, testVec);
+    }
 }
