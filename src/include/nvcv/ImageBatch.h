@@ -184,7 +184,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageBatchGetAllocator(NVCVImageBatchHandle handle, N
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvImageBatchGetSize(NVCVImageBatchHandle handle, int32_t *numImages);
+NVCV_PUBLIC NVCVStatus nvcvImageBatchGetNumImages(NVCVImageBatchHandle handle, int32_t *numImages);
 
 /**
  * Retrieve the image batch contents.

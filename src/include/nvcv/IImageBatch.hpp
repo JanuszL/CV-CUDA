@@ -36,16 +36,16 @@ public:
     IAllocator          &alloc() const;
 
     int32_t capacity() const;
-    int32_t size() const;
+    int32_t numImages() const;
 
     const IImageBatchData *exportData(CUstream stream) const;
 
 private:
     virtual NVCVImageBatchHandle doGetHandle() const = 0;
 
-    virtual ImageFormat doGetFormat() const   = 0;
-    virtual int32_t     doGetCapacity() const = 0;
-    virtual int32_t     doGetSize() const     = 0;
+    virtual ImageFormat doGetFormat() const    = 0;
+    virtual int32_t     doGetCapacity() const  = 0;
+    virtual int32_t     doGetNumImages() const = 0;
 
     virtual IAllocator &doGetAlloc() const = 0;
 
@@ -134,9 +134,9 @@ inline int32_t IImageBatch::capacity() const
     return c;
 }
 
-inline int32_t IImageBatch::size() const
+inline int32_t IImageBatch::numImages() const
 {
-    int32_t s = doGetSize();
+    int32_t s = doGetNumImages();
     assert(s >= 0);
     assert(s <= this->capacity());
     return s;
@@ -154,7 +154,7 @@ inline auto IImageBatchVarShape::begin() const -> ConstIterator
 
 inline auto IImageBatchVarShape::end() const -> ConstIterator
 {
-    return ConstIterator(*this, this->size());
+    return ConstIterator(*this, this->numImages());
 }
 
 inline auto IImageBatchVarShape::cbegin() const -> ConstIterator
@@ -198,7 +198,7 @@ inline auto IImageBatchVarShape::Iterator::operator=(const Iterator &that) -> It
 inline auto IImageBatchVarShape::Iterator::operator*() const -> reference
 {
     assert(m_batch != nullptr);
-    assert(m_curIndex < m_batch->size());
+    assert(m_curIndex < m_batch->numImages());
 
     if (!m_opImage)
     {

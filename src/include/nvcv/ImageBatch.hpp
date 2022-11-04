@@ -46,7 +46,7 @@ private:
     mutable detail::Optional<AllocatorWrapHandle> m_alloc;
 
     int32_t     doGetCapacity() const override;
-    int32_t     doGetSize() const override;
+    int32_t     doGetNumImages() const override;
     ImageFormat doGetFormat() const override;
 };
 
@@ -96,10 +96,10 @@ inline NVCVImageBatchHandle ImageBatchWrapHandle::doGetHandle() const
     return m_handle;
 }
 
-inline int32_t ImageBatchWrapHandle::doGetSize() const
+inline int32_t ImageBatchWrapHandle::doGetNumImages() const
 {
     int32_t out;
-    detail::CheckThrow(nvcvImageBatchGetSize(m_handle, &out));
+    detail::CheckThrow(nvcvImageBatchGetNumImages(m_handle, &out));
     return out;
 }
 
@@ -136,7 +136,7 @@ inline const IImageBatchData *ImageBatchWrapHandle::doExportData(CUstream stream
 
     assert(batchData.bufferType == NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_PITCH_DEVICE);
 
-    m_data.emplace(ImageFormat{batchData.format}, batchData.buffer.varShapePitch);
+    m_data.emplace(ImageFormat{batchData.format}, batchData.numImages, batchData.buffer.varShapePitch);
 
     return &*m_data;
 }

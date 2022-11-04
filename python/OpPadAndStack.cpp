@@ -71,7 +71,8 @@ std::shared_ptr<Tensor> PadAndStack(ImageBatchVarShape &input, Tensor &top, Tens
         maxHeight = std::max(maxHeight, img->height());
     }
 
-    std::shared_ptr<Tensor> output = Tensor::CreateForImageBatch(input.size(), {maxWidth, maxHeight}, input.format());
+    std::shared_ptr<Tensor> output
+        = Tensor::CreateForImageBatch(input.numImages(), {maxWidth, maxHeight}, input.format());
 
     return PadAndStackInto(input, *output, top, left, border, borderValue, pstream);
 }

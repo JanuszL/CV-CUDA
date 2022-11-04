@@ -28,23 +28,25 @@ public:
     virtual ~IImageBatchData() = default;
 
     ImageFormat format() const;
+    int32_t     numImages() const;
 
     const NVCVImageBatchData &cdata() const;
 
 private:
     // NVI idiom
-    virtual ImageFormat               doGetFormat() const = 0;
-    virtual const NVCVImageBatchData &doGetCData() const  = 0;
+    virtual ImageFormat               doGetFormat() const    = 0;
+    virtual int32_t                   doGetNumImages() const = 0;
+    virtual const NVCVImageBatchData &doGetCData() const     = 0;
 };
 
 class IImageBatchVarShapeDataPitchDevice : public IImageBatchData
 {
 public:
-    int32_t                numImages() const;
+    Size2D                 maxSize() const;
     const ImagePlanePitch *imgPlanes() const;
 
 private:
-    virtual int32_t                doGetNumImages() const   = 0;
+    virtual Size2D                 doGetMaxSize() const     = 0;
     virtual const ImagePlanePitch *doGetImagePlanes() const = 0;
 };
 
@@ -54,17 +56,22 @@ inline ImageFormat IImageBatchData::format() const
     return doGetFormat();
 }
 
+inline int32_t IImageBatchData::numImages() const
+{
+    int32_t size = doGetNumImages();
+    assert(size >= 0 && "Post-condition failed");
+    return size;
+}
+
 inline const NVCVImageBatchData &IImageBatchData::cdata() const
 {
     return doGetCData();
 }
 
 // Implementation - IImageBatchVarShapeDataPitchDevice
-inline int32_t IImageBatchVarShapeDataPitchDevice::numImages() const
+inline Size2D IImageBatchVarShapeDataPitchDevice::maxSize() const
 {
-    int32_t size = doGetNumImages();
-    assert(size >= 0 && "Post-condition failed");
-    return size;
+    return doGetMaxSize();
 }
 
 inline const ImagePlanePitch *IImageBatchVarShapeDataPitchDevice::imgPlanes() const

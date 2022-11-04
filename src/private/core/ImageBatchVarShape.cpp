@@ -60,6 +60,7 @@ ImageBatchVarShape::ImageBatchVarShape(NVCVImageBatchVarShapeRequirements reqs, 
     , m_reqs{std::move(reqs)}
     , m_dirtyStartingFromIndex(0)
     , m_numImages(0)
+    , m_cacheMaxSize{Size2D{0,0}}
 {
     ImageFormat fmt{m_reqs.format};
 
@@ -135,7 +136,7 @@ int32_t ImageBatchVarShape::capacity() const
     return m_reqs.capacity;
 }
 
-int32_t ImageBatchVarShape::size() const
+int32_t ImageBatchVarShape::numImages() const
 {
     return m_numImages;
 }
@@ -157,12 +158,11 @@ void ImageBatchVarShape::exportData(CUstream stream, NVCVImageBatchData &data) c
     NVCV_ASSERT(fmt.memLayout() == NVCV_MEM_LAYOUT_PL);
 
     data.format     = m_reqs.format;
+    data.numImages  = m_numImages;
     data.bufferType = NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_PITCH_DEVICE;
 
     NVCVImageBatchVarShapeBufferPitch &buf = data.buffer.varShapePitch;
-
-    buf.numImages = m_numImages;
-    buf.imgPlanes = m_devPlanesBuffer;
+    buf.imgPlanes                          = m_devPlanesBuffer;
 
     NVCV_ASSERT(m_dirtyStartingFromIndex <= m_numImages);
 
@@ -182,6 +182,19 @@ void ImageBatchVarShape::exportData(CUstream stream, NVCVImageBatchData &data) c
         // up to m_numImages, we're all good
         m_dirtyStartingFromIndex = m_numImages;
     }
+
+    if (!m_cacheMaxSize)
+    {
+        m_cacheMaxSize = Size2D{0, 0};
+        for (int i = 0; i < m_numImages; ++i)
+        {
+            m_cacheMaxSize->w = std::max(m_cacheMaxSize->w, m_hostPlanesBuffer[i].width);
+            m_cacheMaxSize->h = std::max(m_cacheMaxSize->h, m_hostPlanesBuffer[i].height);
+        }
+    }
+
+    buf.maxWidth  = m_cacheMaxSize->w;
+    buf.maxHeight = m_cacheMaxSize->h;
 }
 
 void ImageBatchVarShape::pushImages(const NVCVImageHandle *images, int32_t numImages)
@@ -278,6 +291,15 @@ void ImageBatchVarShape::doPushImage(NVCVImageHandle imgHandle)
 
     m_imgHandleBuffer[m_numImages] = imgHandle;
 
+    Size2D imgSize = img.size();
+
+    // Only update max size if
+    if (m_cacheMaxSize)
+    {
+        m_cacheMaxSize->w = std::max(m_cacheMaxSize->w, imgSize.w);
+        m_cacheMaxSize->h = std::max(m_cacheMaxSize->h, imgSize.h);
+    }
+
     ++m_numImages;
 }
 
@@ -296,6 +318,9 @@ void ImageBatchVarShape::popImages(int32_t numImages)
     {
         m_dirtyStartingFromIndex = m_numImages;
     }
+
+    // Removing images invalidates maxSize.
+    m_cacheMaxSize = std::nullopt;
 }
 
 void ImageBatchVarShape::getImages(int32_t begIndex, NVCVImageHandle *outImages, int32_t numImages) const
@@ -312,6 +337,7 @@ void ImageBatchVarShape::clear()
 {
     m_numImages              = 0;
     m_dirtyStartingFromIndex = 0;
+    m_cacheMaxSize           = {0, 0};
 }
 
 } // namespace nv::cv::priv

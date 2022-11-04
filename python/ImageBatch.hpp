@@ -41,7 +41,7 @@ public:
     // as we currently have only one leaf class (this one).
     cv::ImageFormat format() const;
     int32_t         capacity() const;
-    int32_t         size() const;
+    int32_t         numImages() const;
 
     void pushBack(Image &img);
     void pushBackMany(std::vector<std::shared_ptr<Image>> &imgList);
