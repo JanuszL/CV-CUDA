@@ -51,15 +51,22 @@ template<typename T, typename U, class = Require<HasTypeTraits<T, U> && !IsCompo
 __host__ __device__ auto StaticCast(U u)
 {
     using RT = ConvertBaseTypeTo<T, U>;
-    RT out{};
+    if constexpr (std::is_same_v<U, RT>)
+    {
+        return u;
+    }
+    else
+    {
+        RT out{};
 
 #pragma unroll
-    for (int e = 0; e < NumElements<RT>; ++e)
-    {
-        GetElement(out, e) = static_cast<T>(GetElement(u, e));
-    }
+        for (int e = 0; e < NumElements<RT>; ++e)
+        {
+            GetElement(out, e) = static_cast<T>(GetElement(u, e));
+        }
 
-    return out;
+        return out;
+    }
 }
 
 /**@}*/
