@@ -27,6 +27,7 @@
 #include "detail/Export.h"
 
 #include <cuda_runtime.h>
+#include <nvcv/ImageBatch.h>
 #include <nvcv/Status.h>
 #include <nvcv/Tensor.h>
 
@@ -96,9 +97,9 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopResizeCreate(NVCVOperatorHandle *handle);
  *                    + Must not be NULL.
  * @param [in] stream Handle to a valid CUDA stream.
  *
- * @param [in] in intput tensor.
+ * @param [in] in input tensor / image batch.
  *
- * @param [out] out output tensor.
+ * @param [out] out output tensor / image batch.
  *
  * @param [in] interpolation Interpolation method to be used, see \ref NVCVInterpolationType for more details.
  *
@@ -106,8 +107,14 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopResizeCreate(NVCVOperatorHandle *handle);
  * @retval #NVCV_ERROR_INTERNAL         Internal error in the operator, invalid types passed in.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
+/** @{ */
 NVCV_OP_PUBLIC NVCVStatus nvcvopResizeSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
                                              NVCVTensorHandle out, const NVCVInterpolationType interpolation);
+
+NVCV_OP_PUBLIC NVCVStatus nvcvopResizeVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
+                                                     NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                                                     const NVCVInterpolationType interpolation);
+/** @} */
 
 #ifdef __cplusplus
 }

@@ -704,6 +704,48 @@ public:
                     const float shift, const float epsilon, const uint32_t flags, cudaStream_t stream);
 };
 
+class ResizeVarShape : public CudaBaseOp
+{
+public:
+    ResizeVarShape() = delete;
+
+    ResizeVarShape(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * @brief Resizes the input images. The function resize resizes the image down to or up to the specified size.
+     * @param inputs gpu pointer, inputs[0] are batched input images, whose shape is input_shape and type is data_type.
+     * @param outputs gpu pointer, outputs[0] are batched output images that have the same type as data_type. The output
+     * sizes are derived from the dsize,fx, and fy.
+     * @param gpu_workspace gpu pointer, gpu memory used to store the temporary variables.
+     * @param cpu_workspace cpu pointer, cpu memory used to store the temporary variables.
+     * @param batch batch_size.
+     * @param buffer_size buffer size of gpu_workspace and cpu_workspace
+     * @param dsize size of the output images.if it equals zero, it is computed as:
+     * ```
+     * dsize = Size(round(fx*src.cols), round(fy*src.rows)). Either dsize or both fx and fy must be non-zero.
+     * ```
+     * @param fx scale factor along the horizontal axis; when it equals 0, it is computed as
+     * ```
+     * (double)dsize.width/src.cols
+     * ```
+     * @param fy scale factor along the vertical axis; when it equals 0, it is computed as
+     * ```
+     * (double)dsize.height/src.rows
+     * ```
+     * @param interpolation interpolation method. See cv::InterpolationFlags for more detials.
+     * @param input_shape shape of the input images.
+     * @param format format of the input images, e.g. kNHWC.
+     * @param data_type data type of the input images, e.g. kCV_32F.
+     * @param stream for the asynchronous execution.
+     *
+     */
+    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
+                    const NVCVInterpolationType interpolation, cudaStream_t stream);
+};
+
 } // namespace nv::cv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H
