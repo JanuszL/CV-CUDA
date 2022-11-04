@@ -251,7 +251,9 @@ namespace detail {
 struct GetImageHandle
 {
     // For any pointer-like type
-    template<class T, class = typename std::pointer_traits<T>::element_type>
+    template<class T,
+             class = typename std::enable_if<std::is_same<
+                 NVCVImageHandle, typename std::decay<decltype(std::declval<T>()->handle())>::type>::value>::type>
     NVCVImageHandle operator()(const T &ptr) const
     {
         assert(ptr != nullptr);
