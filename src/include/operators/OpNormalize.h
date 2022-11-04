@@ -26,6 +26,7 @@
 #include "detail/Export.h"
 
 #include <cuda_runtime.h>
+#include <nvcv/ImageBatch.h>
 #include <nvcv/Status.h>
 #include <nvcv/Tensor.h>
 
@@ -121,6 +122,8 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopNormalizeCreate(NVCVOperatorHandle *handle);
  *
  *      Scale and Base may be a tensor the same shape as the input/output tensors, or it can be a scalar each dimension.
  *
+ *      For varshape variant, scale and base may represent either a scalar with shape [1,1,1,1],
+ *      or a tensor with shape [1,1,1,C], where C is the number of channels in the input format.
  *
  * @param [in] handle Handle to the operator.
  *                    + Must not be NULL.
@@ -148,9 +151,16 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopNormalizeCreate(NVCVOperatorHandle *handle);
  * @retval #NVCV_ERROR_INTERNAL         Internal error in the operator, invalid types passed in.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
+/** @{ */
 NVCV_OP_PUBLIC NVCVStatus nvcvopNormalizeSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
                                                 NVCVTensorHandle base, NVCVTensorHandle scale, NVCVTensorHandle out,
                                                 float global_scale, float shift, float epsilon, uint32_t flags);
+
+NVCV_OP_PUBLIC NVCVStatus nvcvopNormalizeVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
+                                                        NVCVImageBatchHandle in, NVCVTensorHandle base,
+                                                        NVCVTensorHandle scale, NVCVImageBatchHandle out,
+                                                        float global_scale, float shift, float epsilon, uint32_t flags);
+/** @} */
 
 #ifdef __cplusplus
 }

@@ -16,6 +16,7 @@
 #include <common/Utils.hpp>
 #include <common/ValueTests.hpp>
 #include <nvcv/Image.hpp>
+#include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
@@ -26,6 +27,7 @@
 
 namespace nvcv = nv::cv;
 namespace test = nv::cv::test;
+namespace t    = ::testing;
 
 static void Normalize(std::vector<uint8_t> &hDst, int dstRowPitch, const std::vector<uint8_t> &hSrc, int srcRowPitch,
                       nvcv::Size2D size, nvcv::ImageFormat fmt, const std::vector<float> &hBase, int baseRowPitch,
@@ -95,7 +97,7 @@ NVCV_TEST_SUITE_P(OpNormalize, test::ValueList<int, int, int, bool, bool, uint32
 
 // clang-format on
 
-TEST_P(OpNormalize, correct_output)
+TEST_P(OpNormalize, tensor_correct_output)
 {
     cudaStream_t stream;
     EXPECT_EQ(cudaSuccess, cudaStreamCreate(&stream));
@@ -236,5 +238,159 @@ TEST_P(OpNormalize, correct_output)
                   {scaleWidth, scaleHeight}, scaleFormat, globalScale, globalShift, epsilon, flags);
 
         EXPECT_EQ(goldVec, testVec);
+    }
+}
+
+TEST_P(OpNormalize, varshape_correct_output)
+{
+    cudaStream_t stream;
+    EXPECT_EQ(cudaSuccess, cudaStreamCreate(&stream));
+
+    int      width       = GetParamValue<0>();
+    int      height      = GetParamValue<1>();
+    int      numImages   = GetParamValue<2>();
+    bool     scalarBase  = GetParamValue<3>();
+    bool     scalarScale = GetParamValue<4>();
+    uint32_t flags       = GetParamValue<5>();
+    float    globalScale = GetParamValue<6>();
+    float    globalShift = GetParamValue<7>();
+    float    epsilon     = GetParamValue<8>();
+
+    nvcv::ImageFormat baseFormat  = (scalarBase ? nvcv::FMT_F32 : nvcv::FMT_RGBAf32);
+    nvcv::ImageFormat scaleFormat = (scalarScale ? nvcv::FMT_F32 : nvcv::FMT_RGBAf32);
+
+    nvcv::ImageFormat fmt = nvcv::FMT_RGBA8;
+
+    std::default_random_engine rng;
+
+    // Create input varshape
+
+    std::uniform_int_distribution<int> udistWidth(width * 0.8, width * 1.1);
+    std::uniform_int_distribution<int> udistHeight(height * 0.8, height * 1.1);
+
+    std::vector<std::unique_ptr<nvcv::Image>> imgSrc;
+
+    std::vector<std::vector<uint8_t>> srcVec(numImages);
+    std::vector<int>                  srcVecRowPitch(numImages);
+
+    for (int i = 0; i < numImages; ++i)
+    {
+        imgSrc.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{udistWidth(rng), udistHeight(rng)}, fmt));
+
+        int srcRowPitch   = imgSrc[i]->size().w * fmt.numChannels();
+        srcVecRowPitch[i] = srcRowPitch;
+
+        std::uniform_int_distribution<uint8_t> udist(0, 255);
+
+        srcVec[i].resize(imgSrc[i]->size().h * srcRowPitch);
+        generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
+
+        auto *imgData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        assert(imgData != nullptr);
+
+        // Copy input data to the GPU
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2D(imgData->plane(0).buffer, imgData->plane(0).pitchBytes, srcVec[i].data(), srcRowPitch,
+                               srcRowPitch, // vec has no padding
+                               imgSrc[i]->size().h, cudaMemcpyHostToDevice));
+    }
+
+    nvcv::ImageBatchVarShape batchSrc(numImages, fmt);
+    batchSrc.pushBack(imgSrc.begin(), imgSrc.end());
+
+    // Create base tensor
+    nvcv::Tensor imgBase(
+        {
+            {1, 1, 1, baseFormat.numChannels()},
+            nvcv::TensorLayout::NHWC
+    },
+        baseFormat.planePixelType(0));
+    std::vector<float> baseVec(baseFormat.numChannels());
+    {
+        const auto *baseData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgBase.exportData());
+        ASSERT_NE(nullptr, baseData);
+        auto baseAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*baseData);
+        ASSERT_TRUE(baseAccess);
+
+        std::uniform_real_distribution<float> udist(0, 255.f);
+        generate(baseVec.begin(), baseVec.end(), [&]() { return udist(rng); });
+
+        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(baseAccess->sampleData(0), baseAccess->rowPitchBytes(), baseVec.data(),
+                                            baseVec.size() * sizeof(float),
+                                            baseVec.size() * sizeof(float), // vec has no padding
+                                            1, cudaMemcpyHostToDevice));
+    }
+
+    // Create scale tensor
+    nvcv::Tensor imgScale(
+        {
+            {1, 1, 1, scaleFormat.numChannels()},
+            nvcv::TensorLayout::NHWC
+    },
+        scaleFormat.planePixelType(0));
+    std::vector<float> scaleVec(scaleFormat.numChannels());
+    {
+        const auto *scaleData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgScale.exportData());
+        ASSERT_NE(nullptr, scaleData);
+        auto scaleAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*scaleData);
+        ASSERT_TRUE(scaleAccess);
+
+        std::uniform_real_distribution<float> udist(0, 1.f);
+        generate(scaleVec.begin(), scaleVec.end(), [&]() { return udist(rng); });
+
+        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(scaleAccess->sampleData(0), scaleAccess->rowPitchBytes(), scaleVec.data(),
+                                            scaleVec.size() * sizeof(float),
+                                            scaleVec.size() * sizeof(float), // vec has no padding
+                                            1, cudaMemcpyHostToDevice));
+    }
+
+    // Create output varshape
+    std::vector<std::unique_ptr<nvcv::Image>> imgDst;
+    for (int i = 0; i < numImages; ++i)
+    {
+        imgDst.emplace_back(std::make_unique<nvcv::Image>(imgSrc[i]->size(), imgSrc[i]->format()));
+    }
+    nvcv::ImageBatchVarShape batchDst(numImages, fmt);
+    batchDst.pushBack(imgDst.begin(), imgDst.end());
+
+    // Generate test result
+    nv::cvop::Normalize normalizeOp;
+    EXPECT_NO_THROW(
+        normalizeOp(stream, batchSrc, imgBase, imgScale, batchDst, globalScale, globalShift, epsilon, flags));
+
+    // Get test data back
+    EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
+    EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
+
+    // Check test data against gold
+    for (int i = 0; i < numImages; ++i)
+    {
+        SCOPED_TRACE(i);
+
+        const auto *srcData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        assert(srcData->numPlanes() == 1);
+        int width  = srcData->plane(0).width;
+        int height = srcData->plane(0).height;
+
+        const auto *dstData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgDst[i]->exportData());
+        assert(dstData->numPlanes() == 1);
+
+        int dstRowPitch = srcVecRowPitch[i];
+
+        std::vector<uint8_t> testVec(height * dstRowPitch);
+
+        // Copy output data to Host
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2D(testVec.data(), dstRowPitch, dstData->plane(0).buffer, dstData->plane(0).pitchBytes,
+                               dstRowPitch, // vec has no padding
+                               height, cudaMemcpyDeviceToHost));
+
+        std::vector<uint8_t> goldVec(height * dstRowPitch);
+
+        // Generate gold result
+        Normalize(goldVec, dstRowPitch, srcVec[i], srcVecRowPitch[i], {width, height}, fmt, baseVec, 0, {1, 1},
+                  baseFormat, scaleVec, 0, {1, 1}, scaleFormat, globalScale, globalShift, epsilon, flags);
+
+        EXPECT_THAT(testVec, t::ElementsAreArray(goldVec));
     }
 }

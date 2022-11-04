@@ -26,6 +26,7 @@
 #include "OpNormalize.h"
 
 #include <cuda_runtime.h>
+#include <nvcv/IImageBatch.hpp>
 #include <nvcv/ITensor.hpp>
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/alloc/Requirements.hpp>
@@ -41,6 +42,9 @@ public:
 
     void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &base, cv::ITensor &scale, cv::ITensor &out,
                     float global_scale, float shift, float epsilon, uint32_t flags = 0);
+
+    void operator()(cudaStream_t stream, cv::IImageBatch &in, cv::ITensor &base, cv::ITensor &scale,
+                    cv::IImageBatch &out, float global_scale, float shift, float epsilon, uint32_t flags = 0);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -65,6 +69,13 @@ inline void Normalize::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITen
 {
     cv::detail::CheckThrow(nvcvopNormalizeSubmit(m_handle, stream, in.handle(), base.handle(), scale.handle(),
                                                  out.handle(), global_scale, shift, epsilon, flags));
+}
+
+inline void Normalize::operator()(cudaStream_t stream, cv::IImageBatch &in, cv::ITensor &base, cv::ITensor &scale,
+                                  cv::IImageBatch &out, float global_scale, float shift, float epsilon, uint32_t flags)
+{
+    cv::detail::CheckThrow(nvcvopNormalizeVarShapeSubmit(m_handle, stream, in.handle(), base.handle(), scale.handle(),
+                                                         out.handle(), global_scale, shift, epsilon, flags));
 }
 
 inline NVCVOperatorHandle Normalize::handle() const noexcept
