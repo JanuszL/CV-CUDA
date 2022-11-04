@@ -13,6 +13,7 @@
 
 #include "Definitions.hpp"
 
+#include <common/Utils.hpp>
 #include <common/ValueTests.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
@@ -21,88 +22,53 @@
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
 #include <operators/OpNormalize.hpp>
 
-//#define DEBUG_PRINT_IMAGE
-//#define DEBUG_PRINT_DIFF
-
-#include <common/Utils.hpp>
-
 #include <cmath>
 
 namespace nvcv = nv::cv;
 namespace test = nv::cv::test;
 
-static void Normalize(std::vector<uint8_t> &hDst, const std::vector<uint8_t> &hSrc, const std::vector<float> &hBase,
-                      const std::vector<float> &hScale, const nvcv::TensorDataAccessPitchImagePlanar &dSrcData,
-                      const nvcv::TensorDataAccessPitchImagePlanar &dBaseData,
-                      const nvcv::TensorDataAccessPitchImagePlanar &dScaleData, const float globalScale,
+static void Normalize(std::vector<uint8_t> &hDst, int dstRowPitch, const std::vector<uint8_t> &hSrc, int srcRowPitch,
+                      nvcv::Size2D size, nvcv::ImageFormat fmt, const std::vector<float> &hBase, int baseRowPitch,
+                      nvcv::Size2D baseSize, nvcv::ImageFormat baseFormat, const std::vector<float> &hScale,
+                      int scaleRowPitch, nvcv::Size2D scaleSize, nvcv::ImageFormat scaleFormat, const float globalScale,
                       const float globalShift, const float epsilon, const uint32_t flags)
 {
-    int inoutImgPitch         = dSrcData.samplePitchBytes() / sizeof(uint8_t);
-    int inoutRowPitch         = dSrcData.rowPitchBytes() / sizeof(uint8_t);
-    int inoutNumImages        = dSrcData.numSamples();
-    int inoutWidth            = dSrcData.numCols();
-    int inoutHeight           = dSrcData.numRows();
-    int inoutChannels         = dSrcData.numChannels();
-    int inoutElementsPerPixel = dSrcData.numChannels();
-    int baseImgPitch          = dBaseData.samplePitchBytes() / sizeof(float);
-    int scaleImgPitch         = dScaleData.samplePitchBytes() / sizeof(float);
-    int baseRowPitch          = dBaseData.rowPitchBytes() / sizeof(float);
-    int scaleRowPitch         = dScaleData.rowPitchBytes() / sizeof(float);
-    int baseElementsPerPixel  = dBaseData.numChannels();
-    int scaleElementsPerPixel = dScaleData.numChannels();
-
-    uint8_t       *dstPtrTop   = hDst.data();
-    const uint8_t *srcPtrTop   = hSrc.data();
-    const float   *basePtrTop  = hBase.data();
-    const float   *scalePtrTop = hScale.data();
-
     using FT = float;
 
-    for (int img = 0; img < inoutNumImages; img++)
+    for (int i = 0; i < size.h; i++)
     {
-        const int bimg = (dBaseData.numSamples() == 1 ? 0 : img);
-        const int simg = (dScaleData.numSamples() == 1 ? 0 : img);
+        const int bi = baseSize.h == 1 ? 0 : i;
+        const int si = scaleSize.h == 1 ? 0 : i;
 
-        uint8_t       *dstPtr   = dstPtrTop + inoutImgPitch * img;
-        const uint8_t *srcPtr   = srcPtrTop + inoutImgPitch * img;
-        const float   *basePtr  = basePtrTop + baseImgPitch * bimg;
-        const float   *scalePtr = scalePtrTop + scaleImgPitch * simg;
-
-        for (int i = 0; i < inoutHeight; i++)
+        for (int j = 0; j < size.w; j++)
         {
-            const int bi = (dBaseData.numRows() == 1 ? 0 : i);
-            const int si = (dScaleData.numRows() == 1 ? 0 : i);
+            const int bj = baseSize.w == 1 ? 0 : j;
+            const int sj = scaleSize.w == 1 ? 0 : j;
 
-            for (int j = 0; j < inoutWidth; j++)
+            for (int k = 0; k < fmt.numChannels(); k++)
             {
-                const int bj = (dBaseData.numCols() == 1 ? 0 : j);
-                const int sj = (dScaleData.numCols() == 1 ? 0 : j);
+                const int bk = (baseFormat.numChannels() == 1 ? 0 : k);
+                const int sk = (scaleFormat.numChannels() == 1 ? 0 : k);
 
-                for (int k = 0; k < inoutChannels; k++)
+                FT mul;
+
+                if (flags & NVCV_OP_NORMALIZE_SCALE_IS_STDDEV)
                 {
-                    const int bk = (dBaseData.numChannels() == 1 ? 0 : k);
-                    const int sk = (dScaleData.numChannels() == 1 ? 0 : k);
-
-                    FT mul;
-
-                    if (flags & NVCV_OP_NORMALIZE_SCALE_IS_STDDEV)
-                    {
-                        FT s = scalePtr[si * scaleRowPitch + sj * scaleElementsPerPixel + sk];
-                        FT x = s * s + epsilon;
-                        mul  = FT{1} / std::sqrt(x);
-                    }
-                    else
-                    {
-                        mul = scalePtr[si * scaleRowPitch + sj * scaleElementsPerPixel + sk];
-                    }
-
-                    FT res = std::rint((srcPtr[i * inoutRowPitch + j * inoutElementsPerPixel + k]
-                                        - basePtr[bi * baseRowPitch + bj * baseElementsPerPixel + bk])
-                                           * mul * globalScale
-                                       + globalShift);
-
-                    dstPtr[i * inoutRowPitch + j * inoutElementsPerPixel + k] = res < 0 ? 0 : (res > 255 ? 255 : res);
+                    FT s = hScale.at(si * scaleRowPitch + sj * scaleFormat.numChannels() + sk);
+                    FT x = s * s + epsilon;
+                    mul  = FT{1} / std::sqrt(x);
                 }
+                else
+                {
+                    mul = hScale.at(si * scaleRowPitch + sj * scaleFormat.numChannels() + sk);
+                }
+
+                FT res = std::rint((hSrc.at(i * srcRowPitch + j * fmt.numChannels() + k)
+                                    - hBase.at(bi * baseRowPitch + bj * baseFormat.numChannels() + bk))
+                                       * mul * globalScale
+                                   + globalShift);
+
+                hDst.at(i * dstRowPitch + j * fmt.numChannels() + k) = res < 0 ? 0 : (res > 255 ? 255 : res);
             }
         }
     }
@@ -154,82 +120,121 @@ TEST_P(OpNormalize, correct_output)
     nvcv::ImageFormat baseFormat  = (scalarBase ? nvcv::FMT_F32 : nvcv::FMT_RGBAf32);
     nvcv::ImageFormat scaleFormat = (scalarScale ? nvcv::FMT_F32 : nvcv::FMT_RGBAf32);
 
-    nvcv::Tensor imgSrc(numImages, {width, height}, nvcv::FMT_RGBA8);
-    nvcv::Tensor imgDst(numImages, {width, height}, nvcv::FMT_RGBA8);
-    nvcv::Tensor imgBase(baseNumImages, {baseWidth, baseHeight}, baseFormat);
-    nvcv::Tensor imgScale(scaleNumImages, {scaleWidth, scaleHeight}, scaleFormat);
+    nvcv::ImageFormat fmt = nvcv::FMT_RGBA8;
 
-    const auto *srcData   = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgSrc.exportData());
-    const auto *dstData   = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgDst.exportData());
-    const auto *baseData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgBase.exportData());
-    const auto *scaleData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgScale.exportData());
+    std::default_random_engine rng;
 
+    // Create input tensor
+    nvcv::Tensor imgSrc(numImages, {width, height}, fmt);
+    const auto  *srcData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgSrc.exportData());
     ASSERT_NE(nullptr, srcData);
-    ASSERT_NE(nullptr, dstData);
-    ASSERT_NE(nullptr, baseData);
-    ASSERT_NE(nullptr, scaleData);
-
     auto srcAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*srcData);
     ASSERT_TRUE(srcAccess);
 
-    auto dstAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*dstData);
-    ASSERT_TRUE(dstAccess);
+    std::vector<std::vector<uint8_t>> srcVec(numImages);
+    int                               srcVecRowPitch = width * fmt.numChannels();
+    for (int i = 0; i < numImages; ++i)
+    {
+        std::uniform_int_distribution<uint8_t> udist(0, 255);
 
+        srcVec[i].resize(height * srcVecRowPitch);
+        generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
+
+        // Copy input data to the GPU
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2D(srcAccess->sampleData(i), srcAccess->rowPitchBytes(), srcVec[i].data(), srcVecRowPitch,
+                               srcVecRowPitch, // vec has no padding
+                               height, cudaMemcpyHostToDevice));
+    }
+
+    // Create base tensor
+    nvcv::Tensor imgBase(baseNumImages, {baseWidth, baseHeight}, baseFormat);
+    const auto  *baseData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgBase.exportData());
+    ASSERT_NE(nullptr, baseData);
     auto baseAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*baseData);
     ASSERT_TRUE(baseAccess);
 
+    std::vector<std::vector<float>> baseVec(baseNumImages);
+    int                             baseVecRowPitch = baseWidth * baseFormat.numChannels();
+    for (int i = 0; i < baseNumImages; ++i)
+    {
+        std::uniform_real_distribution<float> udist(0, 255.f);
+
+        baseVec[i].resize(baseHeight * baseVecRowPitch);
+        generate(baseVec[i].begin(), baseVec[i].end(), [&]() { return udist(rng); });
+
+        // Copy input data to the GPU
+        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(baseAccess->sampleData(i), baseAccess->rowPitchBytes(), baseVec[i].data(),
+                                            baseVecRowPitch * sizeof(float),
+                                            baseVecRowPitch * sizeof(float), // vec has no padding
+                                            baseHeight, cudaMemcpyHostToDevice));
+    }
+
+    // Create scale tensor
+    nvcv::Tensor imgScale(scaleNumImages, {scaleWidth, scaleHeight}, scaleFormat);
+    const auto  *scaleData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgScale.exportData());
+    ASSERT_NE(nullptr, scaleData);
     auto scaleAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*scaleData);
     ASSERT_TRUE(scaleAccess);
 
-    int inoutBufSize = (srcAccess->samplePitchBytes() / sizeof(uint8_t)) * srcAccess->numSamples();
-    int baseBufSize  = (baseAccess->samplePitchBytes() / sizeof(float)) * baseAccess->numSamples();
-    int scaleBufSize = (scaleAccess->samplePitchBytes() / sizeof(float)) * scaleAccess->numSamples();
+    std::vector<std::vector<float>> scaleVec(scaleNumImages);
+    assert(scaleFormat.numPlanes() == 1);
+    int scaleVecRowPitch = scaleWidth * scaleFormat.numChannels();
+    for (int i = 0; i < scaleNumImages; ++i)
+    {
+        std::uniform_real_distribution<float> udist(0, 1.f);
 
-    std::vector<uint8_t> srcVec(inoutBufSize);
-    std::vector<uint8_t> testVec(inoutBufSize);
-    std::vector<uint8_t> goldVec(inoutBufSize);
-    std::vector<float>   baseVec(baseBufSize);
-    std::vector<float>   scaleVec(scaleBufSize);
+        scaleVec[i].resize(scaleHeight * scaleVecRowPitch);
+        generate(scaleVec[i].begin(), scaleVec[i].end(), [&]() { return udist(rng); });
 
-    test::FillRandomData(srcVec);
-    test::FillRandomData(baseVec, 0.f, 255.f);
-    test::FillRandomData(scaleVec, 0.f, 1.f);
+        // Copy input data to the GPU
+        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(scaleAccess->sampleData(i), scaleAccess->rowPitchBytes(),
+                                            scaleVec[i].data(), scaleVecRowPitch * sizeof(float),
+                                            scaleVecRowPitch * sizeof(float), // vec has no padding
+                                            scaleHeight, cudaMemcpyHostToDevice));
+    }
 
-    // Copy input data to the GPU
-    EXPECT_EQ(cudaSuccess, cudaMemcpyAsync(srcData->data(), srcVec.data(), srcVec.size() * sizeof(uint8_t),
-                                           cudaMemcpyHostToDevice, stream));
-    EXPECT_EQ(cudaSuccess, cudaMemcpyAsync(baseData->data(), baseVec.data(), baseVec.size() * sizeof(float),
-                                           cudaMemcpyHostToDevice, stream));
-    EXPECT_EQ(cudaSuccess, cudaMemcpyAsync(scaleData->data(), scaleVec.data(), scaleVec.size() * sizeof(float),
-                                           cudaMemcpyHostToDevice, stream));
-
-    // Generate gold result
-    Normalize(goldVec, srcVec, baseVec, scaleVec, *srcAccess, *baseAccess, *scaleAccess, globalScale, globalShift,
-              epsilon, flags);
+    // Create dest tensor
+    nvcv::Tensor imgDst(numImages, {width, height}, nvcv::FMT_RGBA8);
 
     // Generate test result
     nv::cvop::Normalize normalizeOp;
-
     EXPECT_NO_THROW(normalizeOp(stream, imgSrc, imgBase, imgScale, imgDst, globalScale, globalShift, epsilon, flags));
 
     // Get test data back
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), dstData->data(), inoutBufSize, cudaMemcpyDeviceToHost));
 
-#ifdef DEBUG_PRINT_IMAGE
-    test::DebugPrintImage(srcVec, srcAccess->rowPitchBytes() / sizeof(uint8_t));
-    test::DebugPrintImage(baseVec, baseAccess->rowPitchBytes() / sizeof(float));
-    test::DebugPrintImage(scaleVec, scaleAccess->rowPitchBytes() / sizeof(float));
-    test::DebugPrintImage(testVec, dstAccess->rowPitchBytes() / sizeof(uint8_t));
-    test::DebugPrintImage(goldVec, dstAccess->rowPitchBytes() / sizeof(uint8_t));
-#endif
-#ifdef DEBUG_PRINT_DIFF
-    if (goldVec != testVec)
+    // Check result
+    const auto *dstData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgDst.exportData());
+    ASSERT_NE(nullptr, dstData);
+
+    auto dstAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*dstData);
+    ASSERT_TRUE(dstAccess);
+
+    int dstVecRowPitch = width * fmt.numChannels();
+    for (int i = 0; i < numImages; ++i)
     {
-        test::DebugPrintDiff(testVec, goldVec);
-    }
-#endif
+        SCOPED_TRACE(i);
 
-    EXPECT_EQ(goldVec, testVec);
+        std::vector<uint8_t> testVec(height * dstVecRowPitch);
+
+        // Copy output data to Host
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2D(testVec.data(), dstVecRowPitch, dstAccess->sampleData(i), dstAccess->rowPitchBytes(),
+                               dstVecRowPitch, // vec has no padding
+                               height, cudaMemcpyDeviceToHost));
+
+        std::vector<uint8_t> goldVec(height * dstVecRowPitch);
+
+        int bi = baseNumImages == 1 ? 0 : i;
+        int si = scaleNumImages == 1 ? 0 : i;
+
+        // Generate gold result
+        Normalize(goldVec, dstVecRowPitch, srcVec[i], srcVecRowPitch, {width, height}, fmt, baseVec[bi],
+                  baseVecRowPitch, {baseWidth, baseHeight}, baseFormat, scaleVec[si], scaleVecRowPitch,
+                  {scaleWidth, scaleHeight}, scaleFormat, globalScale, globalShift, epsilon, flags);
+
+        EXPECT_EQ(goldVec, testVec);
+    }
 }
