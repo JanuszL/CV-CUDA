@@ -17,7 +17,7 @@
 
 #include <type_traits>
 
-#if NVCV_SYSTEM_TESTS
+#if !defined(NVCV_UNIT_TESTS) || !NVCV_UNIT_TESTS
 // Let's hijack gtest and create an overload for NVCVStatus that
 // prints out the status message. This will end up being called by
 // ASSERT_EQ / EXPECT_EQ.
