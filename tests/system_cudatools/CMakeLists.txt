@@ -14,6 +14,8 @@ project(nvcv_test_system_cudatools)
 set(CMAKE_FOLDER tests)
 
 add_executable(nvcv_test_system_cudatools
+    TestTensorWrap.cpp
+    DeviceTensorWrap.cu
     TestSaturateCast.cpp
     DeviceSaturateCast.cu
     TestRangeCast.cpp
