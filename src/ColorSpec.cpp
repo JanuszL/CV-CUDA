@@ -18,7 +18,7 @@
 #include <private/core/Exception.hpp>
 #include <private/core/Status.hpp>
 #include <private/core/SymbolVersioning.hpp>
-#include <private/core/TLS.hpp>
+#include <private/fmt/TLS.hpp>
 #include <util/String.hpp>
 
 #include <cstring>
@@ -267,7 +267,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvColorSpecSetChromaLoc,
 
 NVCV_DEFINE_API(0, 0, const char *, nvcvColorSpecGetName, (NVCVColorSpec cspec))
 {
-    priv::TLS &tls = priv::GetTLS();
+    priv::FormatTLS &tls = priv::GetFormatTLS();
 
     char         *buffer  = tls.bufColorSpecName;
     constexpr int bufSize = sizeof(tls.bufColorSpecName);

@@ -14,19 +14,18 @@
 #ifndef NVCV_PRIV_TLS_HPP
 #define NVCV_PRIV_TLS_HPP
 
-#include <nvcv/Status.h>
-
 #include <exception>
 
 namespace nv::cv::priv {
 
-struct CoreTLS
+struct FormatTLS
 {
-    NVCVStatus lastErrorStatus;
-    char       lastErrorMessage[NVCV_MAX_STATUS_MESSAGE_LENGTH];
+    char bufColorSpecName[1024];
+    char bufPixelTypeName[1024];
+    char bufImageFormatName[1024];
 };
 
-CoreTLS &GetCoreTLS() noexcept;
+FormatTLS &GetFormatTLS() noexcept;
 
 } // namespace nv::cv::priv
 

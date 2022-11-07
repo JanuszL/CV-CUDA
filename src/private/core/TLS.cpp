@@ -16,10 +16,10 @@
 namespace nv::cv::priv {
 
 namespace {
-thread_local TLS s_TLS;
+thread_local CoreTLS s_TLS;
 }
 
-TLS &GetTLS() noexcept
+CoreTLS &GetCoreTLS() noexcept
 {
     return s_TLS;
 }

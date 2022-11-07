@@ -11,10 +11,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <core/TLS.hpp>
 #include <fmt/ImageFormat.hpp>
 #include <fmt/PixelType.hpp>
 #include <fmt/Printers.hpp>
+#include <fmt/TLS.hpp>
 #include <nvcv/ImageFormat.h>
 #include <nvcv/ImageFormat.hpp>
 #include <private/core/Exception.hpp>
@@ -572,7 +572,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageFormatGetPlaneSize,
 
 NVCV_DEFINE_API(0, 0, const char *, nvcvImageFormatGetName, (NVCVImageFormat fmt))
 {
-    priv::TLS &tls = priv::GetTLS(); // noexcept
+    priv::FormatTLS &tls = priv::GetFormatTLS(); // noexcept
 
     char         *buffer  = tls.bufImageFormatName;
     constexpr int bufSize = sizeof(tls.bufImageFormatName);

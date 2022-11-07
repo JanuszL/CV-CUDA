@@ -18,7 +18,7 @@
 #include <private/core/Exception.hpp>
 #include <private/core/Status.hpp>
 #include <private/core/SymbolVersioning.hpp>
-#include <private/core/TLS.hpp>
+#include <private/fmt/TLS.hpp>
 #include <util/Assert.h>
 #include <util/String.hpp>
 
@@ -142,7 +142,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvPixelTypeGetChannelType,
 
 NVCV_DEFINE_API(0, 0, const char *, nvcvPixelTypeGetName, (NVCVPixelType type))
 {
-    priv::TLS &tls = priv::GetTLS(); // noexcept
+    priv::FormatTLS &tls = priv::GetFormatTLS(); // noexcept
 
     char         *buffer  = tls.bufPixelTypeName;
     constexpr int bufSize = sizeof(tls.bufPixelTypeName);
