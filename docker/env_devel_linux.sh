@@ -39,11 +39,18 @@ fi
 extra_cmds="true"
 
 # Set up git user inside docker
-git_user_name=$(git config --global user.name)
-git_user_email=$(git config --global user.email)
+git_user_name=$(git config --global user.name || true)
+git_user_email=$(git config --global user.email || true)
 if [[ "$git_user_name" && "$git_user_email" ]]; then
     extra_cmds="$extra_cmds && git config --global user.name '$git_user_name'"
     extra_cmds="$extra_cmds && git config --global user.email '$git_user_email'"
+    echo "Setting up cv-cuda dev environment for: $git_user_name <$git_user_email>"
+else
+    echo "Git user.name and user.email not set up"
+    echo "Please run:"
+    echo "  git config --global user.name 'Your Name'"
+    echo "  git config --global user.email 'your_nvlogin@nvidia.com'"
+    exit 1
 fi
 
 # Run docker
