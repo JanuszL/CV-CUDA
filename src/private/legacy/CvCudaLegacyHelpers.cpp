@@ -100,18 +100,79 @@ cuda_op::DataType GetLegacyDataType(PixelType dtype_)
 {
     priv::PixelType dtype{dtype_}; // to avoid using public API
 
-    if (dtype.numChannels() > 1)
+    auto bpc = dtype.bpc();
+
+    for (int i = 1; i < dtype.numChannels(); ++i)
     {
-        throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Data type must have only one channel");
+        if (bpc[i] != bpc[0])
+        {
+            throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "All channels must have same bit-depth");
+        }
     }
 
     return GetLegacyDataType(dtype.bpc()[0], (cv::DataType)dtype.dataType());
+}
+
+cuda_op::DataType GetLegacyDataType(ImageFormat fmt_)
+{
+    priv::ImageFormat fmt{fmt_}; // to avoid using public API
+
+    for (int i = 1; i < fmt.numPlanes(); ++i)
+    {
+        if (fmt.planePixelType(i) != fmt.planePixelType(0))
+        {
+            throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "All planes must have the same pixel type");
+        }
+    }
+
+    return GetLegacyDataType(PixelType{fmt.planePixelType(0).value()});
 }
 
 cuda_op::DataShape GetLegacyDataShape(const TensorShapeInfoImage &shapeInfo)
 {
     return cuda_op::DataShape(shapeInfo.numSamples(), shapeInfo.numChannels(), shapeInfo.numRows(),
                               shapeInfo.numCols());
+}
+
+cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShapeDataPitchDevice &imgBatch)
+{
+    priv::ImageFormat fmt{imgBatch.format()}; // to avoid using public API
+
+    for (int i = 1; i < fmt.numPlanes(); ++i)
+    {
+        if (fmt.planePixelType(i) != fmt.planePixelType(0))
+        {
+            throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "All planes must have the same pixel type");
+        }
+    }
+
+    if (fmt.numPlanes() >= 2)
+    {
+        if (fmt.numPlanes() != fmt.numChannels())
+        {
+            throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Planar images must have one channel per plane");
+        }
+
+        if (imgBatch.numImages() >= 2)
+        {
+            return legacy::cuda_op::DataFormat::kNCHW;
+        }
+        else
+        {
+            return legacy::cuda_op::DataFormat::kCHW;
+        }
+    }
+    else
+    {
+        if (imgBatch.numImages() >= 2)
+        {
+            return legacy::cuda_op::DataFormat::kNHWC;
+        }
+        else
+        {
+            return legacy::cuda_op::DataFormat::kHWC;
+        }
+    }
 }
 
 cuda_op::DataFormat GetLegacyDataFormat(const TensorLayout &layout)

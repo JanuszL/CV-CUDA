@@ -32,8 +32,10 @@ cuda_op::DataFormat GetLegacyDataFormat(int32_t numberChannels, int32_t numberPl
 
 cuda_op::DataType GetLegacyDataType(int32_t bpc, cv::DataType type);
 cuda_op::DataType GetLegacyDataType(PixelType dtype);
+cuda_op::DataType GetLegacyDataType(ImageFormat fmt);
 
 cuda_op::DataFormat GetLegacyDataFormat(const TensorLayout &layout);
+cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShapeDataPitchDevice &imgBatch);
 
 cuda_op::DataShape GetLegacyDataShape(const TensorShapeInfoImage &shapeInfo);
 
