@@ -21,8 +21,9 @@
 #define NVCV_DATALAYOUT_H
 
 #include "Status.h"
-#include "detail/Export.h"
 #include "detail/FormatUtils.h"
+
+#include <nvcv/detail/Export.h>
 
 #ifdef __cplusplus
 extern "C"

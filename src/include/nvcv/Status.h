@@ -20,8 +20,7 @@
 #ifndef NVCV_STATUS_H
 #define NVCV_STATUS_H
 
-#include "detail/Export.h"
-
+#include <nvcv/detail/Export.h>
 #include <stdint.h>
 
 /**

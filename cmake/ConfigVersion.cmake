@@ -72,3 +72,55 @@ function(configure_version target libprefix incpath VERSION_FULL)
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${incpath}/detail
             COMPONENT dev)
 endfunction()
+
+function(configure_symbol_versioning target libprefix incpath version)
+    string(TOUPPER "${target}" TARGET)
+    string(TOUPPER "${libprefix}" LIBPREFIX)
+
+    string(REGEX MATCHALL "[0-9]+" version_list "${version}")
+    list(GET version_list 0 VERSION_MAJOR)
+    list(GET version_list 1 VERSION_MINOR)
+    list(GET version_list 2 VERSION_PATCH)
+
+    set_target_properties(${target} PROPERTIES
+        VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}"
+        SOVERSION "${VERSION_MAJOR}"
+    )
+
+    # Create exports file for symbol versioning ---------------------------------
+    set(EXPORTS_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/exports.ldscript")
+    target_link_libraries(${target}
+        PRIVATE
+        -Wl,--version-script ${EXPORTS_OUTPUT}
+    )
+    get_target_property(TARGET_SOURCES ${target} SOURCES)
+    set(GEN_EXPORTS_SCRIPT "${config_version_script_path}/CreateExportsFile.cmake")
+
+    add_custom_command(OUTPUT ${EXPORTS_OUTPUT}
+        COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+                                 -DSOURCES="${TARGET_SOURCES}"
+                                 -DOUTPUT=${EXPORTS_OUTPUT}
+                                 -P "${GEN_EXPORTS_SCRIPT}"
+        DEPENDS ${GEN_EXPORTS_SCRIPT} ${TARGET_SOURCES})
+
+    add_custom_target(create_${target}_exports_file DEPENDS ${EXPORTS_OUTPUT})
+    add_dependencies(${target} create_${target}_exports_file)
+
+    #   Configure symbol visibility ---------------------------------------------
+    set_target_properties(${target} PROPERTIES VISIBILITY_INLINES_HIDDEN on
+                                               C_VISIBILITY_PRESET hidden
+                                               CXX_VISIBILITY_PRESET hidden
+                                               CUDA_VISIBILITY_PRESET hidden)
+
+    configure_file(${config_version_script_path}/Export.h.in include/${incpath}/detail/Export.h @ONLY ESCAPE_QUOTES)
+    target_include_directories(${target}
+        PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+    )
+
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/${incpath}/detail/Export.h
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${incpath}/detail
+            COMPONENT dev)
+
+    target_compile_definitions(${target} PRIVATE -D${LIBPREFIX}_EXPORTING=1)
+endfunction()

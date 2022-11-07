@@ -27,7 +27,8 @@
 #include "alloc/Allocator.h"
 #include "alloc/Requirements.h"
 #include "detail/CudaFwd.h"
-#include "detail/Export.h"
+
+#include <nvcv/detail/Export.h>
 
 #ifdef __cplusplus
 extern "C"

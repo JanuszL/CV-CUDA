@@ -16,8 +16,8 @@
 
 #include "Status.h"
 #include "detail/CompilerUtils.h"
-#include "detail/Export.h"
 
+#include <nvcv/detail/Export.h>
 #include <stdint.h>
 #include <string.h>
 

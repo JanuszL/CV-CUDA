@@ -48,8 +48,8 @@
 #define NVCV_ALLOCATOR_H
 
 #include "../Status.h"
-#include "../detail/Export.h"
 
+#include <nvcv/detail/Export.h>
 #include <stdalign.h>
 
 #ifdef __cplusplus

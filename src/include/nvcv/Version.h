@@ -20,9 +20,8 @@
 #ifndef NVCV_VERSION_H
 #define NVCV_VERSION_H
 
-#include "detail/Export.h"
-
 #include <nvcv/VersionDef.h>
+#include <nvcv/detail/Export.h>
 
 #ifdef __cplusplus
 extern "C"
