@@ -28,7 +28,7 @@ inline void ThrowException(NVCVStatus status)
     // error cases, it's ok.
     char msg[NVCV_MAX_STATUS_MESSAGE_LENGTH];
 
-    NVCVStatus tmp = nvcvGetLastStatusMessage(msg, sizeof(msg));
+    NVCVStatus tmp = nvcvGetLastErrorMessage(msg, sizeof(msg));
     (void)tmp;
     assert(tmp == status);
 

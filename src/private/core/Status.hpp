@@ -21,11 +21,11 @@
 
 namespace nv::cv::priv {
 
-NVCVStatus GetLastThreadStatus(char *outMessage, int outMessageLen) noexcept;
-NVCVStatus PeekAtLastThreadStatus(char *outMessage, int outMessageLen) noexcept;
+NVCVStatus GetLastThreadError(char *outMessage, int outMessageLen) noexcept;
+NVCVStatus PeekAtLastThreadError(char *outMessage, int outMessageLen) noexcept;
 
-NVCVStatus GetLastThreadStatus() noexcept;
-NVCVStatus PeekAtLastThreadStatus() noexcept;
+NVCVStatus GetLastThreadError() noexcept;
+NVCVStatus PeekAtLastThreadError() noexcept;
 
 const char *GetName(NVCVStatus status) noexcept;
 
@@ -37,13 +37,12 @@ NVCVStatus ProtectCall(F &&fn)
     try
     {
         fn();
-        SetThreadError(std::exception_ptr{}); // clears out thread status (== success)
         return NVCV_SUCCESS;
     }
     catch (...)
     {
         SetThreadError(std::current_exception());
-        return PeekAtLastThreadStatus();
+        return PeekAtLastThreadError();
     }
 }
 

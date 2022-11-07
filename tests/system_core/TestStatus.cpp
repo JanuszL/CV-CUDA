@@ -12,6 +12,7 @@
 
 #include "Definitions.hpp"
 
+#include <nvcv/Image.h>
 #include <nvcv/Status.h>
 
 // TODO: once we have functions that generate errors, we should
@@ -51,26 +52,39 @@ TEST_P(StatusNameTest, get_name)
 
 TEST(StatusTest, main_thread_has_success_status_by_default)
 {
-    EXPECT_EQ(NVCV_SUCCESS, nvcvGetLastStatus());
-    EXPECT_EQ(NVCV_SUCCESS, nvcvPeekAtLastStatus());
+    EXPECT_EQ(NVCV_SUCCESS, nvcvGetLastError());
+    EXPECT_EQ(NVCV_SUCCESS, nvcvPeekAtLastError());
 }
 
 TEST(StatusTest, get_last_status_msg_success_has_correct_message)
 {
     // resets status
-    EXPECT_EQ(NVCV_SUCCESS, nvcvGetLastStatus());
+    EXPECT_EQ(NVCV_SUCCESS, nvcvGetLastError());
 
     char msg[NVCV_MAX_STATUS_MESSAGE_LENGTH];
-    ASSERT_EQ(NVCV_SUCCESS, nvcvGetLastStatusMessage(msg, sizeof(msg)));
+    ASSERT_EQ(NVCV_SUCCESS, nvcvGetLastErrorMessage(msg, sizeof(msg)));
     EXPECT_STREQ("success", msg);
 }
 
 TEST(StatusTest, peek_at_last_status_msg_success_has_correct_message)
 {
     // resets status
-    EXPECT_EQ(NVCV_SUCCESS, nvcvGetLastStatus());
+    EXPECT_EQ(NVCV_SUCCESS, nvcvGetLastError());
 
     char msg[NVCV_MAX_STATUS_MESSAGE_LENGTH];
-    ASSERT_EQ(NVCV_SUCCESS, nvcvPeekAtLastStatusMessage(msg, sizeof(msg)));
+    ASSERT_EQ(NVCV_SUCCESS, nvcvPeekAtLastErrorMessage(msg, sizeof(msg)));
     EXPECT_STREQ("success", msg);
+}
+
+TEST(StatusTest, function_success_doesnt_reset_status)
+{
+    // resets status
+    EXPECT_EQ(NVCV_SUCCESS, nvcvGetLastError());
+
+    ASSERT_EQ(NVCV_ERROR_INVALID_ARGUMENT, nvcvImageCalcRequirements(640, 480, NVCV_IMAGE_FORMAT_U8, nullptr));
+
+    NVCVImageRequirements reqs;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvImageCalcRequirements(640, 480, NVCV_IMAGE_FORMAT_U8, &reqs));
+
+    EXPECT_EQ(NVCV_ERROR_INVALID_ARGUMENT, nvcvGetLastError());
 }

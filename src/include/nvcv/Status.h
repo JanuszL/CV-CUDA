@@ -77,17 +77,17 @@ typedef enum
 NVCV_PUBLIC const char *nvcvStatusGetName(NVCVStatus code);
 
 /**
- * @brief Returns and resets the status of the last CV-CUDA function call in current thread.
+ * @brief Returns and resets the error status of the last CV-CUDA function call that failed in current thread.
  *
  * A new call to this function will return \ref NVCV_SUCCESS, as the thread-specific
  * status was reset. This operation doesn't affect the statuses in other threads.
  *
- * @returns The status of the last CV-CUDA function call in current thread.
+ * @returns The status of the last CV-CUDA function call that failed in current thread.
  */
-NVCV_PUBLIC NVCVStatus nvcvGetLastStatus();
+NVCV_PUBLIC NVCVStatus nvcvGetLastError();
 
 /**
- * @brief Returns and resets the status code and message of the last CV-CUDA function call in current thread.
+ * @brief Returns and resets the error status code and message of the last CV-CUDA function call that failed in current thread.
  *
  * A new call to this function will return \ref NVCV_SUCCESS, as the thread-specific
  * status was reset. This operation doesn't affect the status in other threads.
@@ -101,23 +101,23 @@ NVCV_PUBLIC NVCVStatus nvcvGetLastStatus();
  * @param[in] lenBuffer Size in bytes of msgBuffer.
  *                      + If less than zero, \p lenBuffer is assumed to be 0.
  *
- * @returns The status of the last CV-CUDA function call in current thread.
+ * @returns The status of the last CV-CUDA function call that failed in current thread.
  */
-NVCV_PUBLIC NVCVStatus nvcvGetLastStatusMessage(char *msgBuffer, int32_t lenBuffer);
+NVCV_PUBLIC NVCVStatus nvcvGetLastErrorMessage(char *msgBuffer, int32_t lenBuffer);
 
 /**
- * @brief Returns the status of the last CV-CUDA function call in current thread.
+ * @brief Returns the error status of the last CV-CUDA function call that failed in current thread.
  *
- * The status code won't be reset.
+ * The internal status code and message of current thread won't be reset.
  *
- * @returns The status of the last CV-CUDA function call in current thread.
+ * @returns The status of the last CV-CUDA function call that failed in current thread.
  */
-NVCV_PUBLIC NVCVStatus nvcvPeekAtLastStatus();
+NVCV_PUBLIC NVCVStatus nvcvPeekAtLastError();
 
 /**
- * @brief Returns and status code and message of the last CV-CUDA function call in current thread.
+ * @brief Returns the status code and message of the last CV-CUDA function call that failed in current thread.
  *
- * The status code and message won't be reset.
+ * The internal status code and message of current thread won't be reset.
  *
  * It's guaranteed that the message is never larger than
  * \ref NVCV_MAX_STATUS_MESSAGE_LENGTH bytes, including the '\0' string terminator.
@@ -128,9 +128,9 @@ NVCV_PUBLIC NVCVStatus nvcvPeekAtLastStatus();
  * @param[in] lenBuffer Size in bytes of msgBuffer.
  *                      + If less than zero, lenBuffer is assumed to be 0.
  *
- * @returns The status of the last CV-CUDA function call in current thread.
+ * @returns The status of the last CV-CUDA function call that failed in current thread.
  */
-NVCV_PUBLIC NVCVStatus nvcvPeekAtLastStatusMessage(char *msgBuffer, int32_t lenBuffer);
+NVCV_PUBLIC NVCVStatus nvcvPeekAtLastErrorMessage(char *msgBuffer, int32_t lenBuffer);
 
 /**@}*/
 
