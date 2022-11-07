@@ -26,6 +26,11 @@
 #include <cstring>
 
 namespace nv { namespace cv {
+
+namespace detail {
+void ThrowException(NVCVStatus status);
+}
+
 /**
  * @defgroup NVCV_CPP_UTIL_EXCEPTION Exception
  * @{
@@ -35,14 +40,9 @@ class Exception : public std::exception
 {
 public:
     explicit Exception(Status code, const char *msg = nullptr)
-        : m_code(code)
+        : Exception(InternalCtorTag{}, code, msg)
     {
-        // Assuming
-        snprintf(m_msgBuffer, sizeof(m_msgBuffer) - 1, "%s: %s", GetName(code), msg);
-
-        m_msg = strchr(m_msgBuffer, ':');
-        assert(m_msg != nullptr);
-        m_msg += 2; // skip ': '
+        nvcvSetThreadStatus(static_cast<NVCVStatus>(code), msg);
     }
 
     Status code() const
@@ -67,6 +67,23 @@ private:
     // 64: maximum size of string representatio of a status enum
     // 2: ': '
     char m_msgBuffer[NVCV_MAX_STATUS_MESSAGE_LENGTH + 64 + 2];
+
+    friend void detail::ThrowException(NVCVStatus status);
+
+    struct InternalCtorTag
+    {
+    };
+
+    Exception(InternalCtorTag, Status code, const char *msg = nullptr)
+        : m_code(code)
+    {
+        // Assuming
+        snprintf(m_msgBuffer, sizeof(m_msgBuffer) - 1, "%s: %s", GetName(code), msg);
+
+        m_msg = strchr(m_msgBuffer, ':');
+        assert(m_msg != nullptr);
+        m_msg += 2; // skip ': '
+    }
 };
 
 /**@}*/
