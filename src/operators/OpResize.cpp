@@ -11,6 +11,7 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <operators/OpResize.hpp>
 #include <private/core/Exception.hpp>
@@ -44,6 +45,18 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopResizeSubmit,
         [&]
         {
             nv::cv::TensorWrapHandle input(in), output(out);
+            priv::ToDynamicRef<priv_op::Resize>(handle)(stream, input, output, interpolation);
+        });
+}
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopResizeVarShapeSubmit,
+                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                 const NVCVInterpolationType interpolation))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            nv::cv::ImageBatchWrapHandle input(in), output(out);
             priv::ToDynamicRef<priv_op::Resize>(handle)(stream, input, output, interpolation);
         });
 }

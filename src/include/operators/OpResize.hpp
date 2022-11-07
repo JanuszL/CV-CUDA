@@ -26,6 +26,7 @@
 #include "OpResize.h"
 
 #include <cuda_runtime.h>
+#include <nvcv/IImageBatch.hpp>
 #include <nvcv/ITensor.hpp>
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/alloc/Requirements.hpp>
@@ -40,6 +41,8 @@ public:
     ~Resize();
 
     void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const NVCVInterpolationType interpolation);
+    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
+                    const NVCVInterpolationType interpolation);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -63,6 +66,12 @@ inline void Resize::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor
                                const NVCVInterpolationType interpolation)
 {
     cv::detail::CheckThrow(nvcvopResizeSubmit(m_handle, stream, in.handle(), out.handle(), interpolation));
+}
+
+inline void Resize::operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
+                               const NVCVInterpolationType interpolation)
+{
+    cv::detail::CheckThrow(nvcvopResizeVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), interpolation));
 }
 
 inline NVCVOperatorHandle Resize::handle() const noexcept
