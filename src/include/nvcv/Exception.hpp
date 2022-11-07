@@ -86,6 +86,56 @@ private:
     }
 };
 
+inline void SetThreadError(std::exception_ptr e)
+{
+    try
+    {
+        if (e)
+        {
+            rethrow_exception(e);
+        }
+        else
+        {
+            nvcvSetThreadStatus(NVCV_SUCCESS, nullptr);
+        }
+    }
+    catch (const Exception &e)
+    {
+        nvcvSetThreadStatus(static_cast<NVCVStatus>(e.code()), e.msg());
+    }
+    catch (const std::invalid_argument &e)
+    {
+        nvcvSetThreadStatus(NVCV_ERROR_INVALID_ARGUMENT, e.what());
+    }
+    catch (const std::bad_alloc &)
+    {
+        nvcvSetThreadStatus(NVCV_ERROR_OUT_OF_MEMORY, "Not enough space for resource allocation");
+    }
+    catch (const std::exception &e)
+    {
+        nvcvSetThreadStatus(NVCV_ERROR_INTERNAL, e.what());
+    }
+    catch (...)
+    {
+        nvcvSetThreadStatus(NVCV_ERROR_INTERNAL, "Unexpected error");
+    }
+}
+
+template<class F>
+NVCVStatus ProtectCall(F &&fn)
+{
+    try
+    {
+        fn();
+        return NVCV_SUCCESS;
+    }
+    catch (...)
+    {
+        SetThreadError(std::current_exception());
+        return nvcvPeekAtLastError();
+    }
+}
+
 /**@}*/
 
 }} // namespace nv::cv
