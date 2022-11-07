@@ -26,7 +26,54 @@ namespace nv::cv::priv {
 
 void SetThreadError(std::exception_ptr e)
 {
-    GetTLS().lastError = e;
+    TLS &tls = GetTLS();
+
+    const int errorMessageLen = sizeof(tls.lastErrorMessage) - 1;
+
+    try
+    {
+        if (e)
+        {
+            rethrow_exception(e);
+        }
+        else
+        {
+            tls.lastErrorStatus = NVCV_SUCCESS;
+            strncpy(tls.lastErrorMessage, "success", errorMessageLen);
+        }
+    }
+    catch (const ::nv::cv::Exception &e)
+    {
+        tls.lastErrorStatus = NVCV_ERROR_INTERNAL;
+        NVCV_ASSERT(!"Exception from public API cannot be originated from internal library implementation");
+    }
+    catch (const util::Exception &e)
+    {
+        tls.lastErrorStatus = e.code();
+        strncpy(tls.lastErrorMessage, e.msg(), errorMessageLen);
+    }
+    catch (const std::invalid_argument &e)
+    {
+        tls.lastErrorStatus = NVCV_ERROR_INVALID_ARGUMENT;
+        strncpy(tls.lastErrorMessage, e.what(), errorMessageLen);
+    }
+    catch (const std::bad_alloc &)
+    {
+        tls.lastErrorStatus = NVCV_ERROR_OUT_OF_MEMORY;
+        strncpy(tls.lastErrorMessage, "Not enough space for resource allocation", errorMessageLen);
+    }
+    catch (const std::exception &e)
+    {
+        tls.lastErrorStatus = NVCV_ERROR_INTERNAL;
+        strncpy(tls.lastErrorMessage, e.what(), errorMessageLen);
+    }
+    catch (...)
+    {
+        tls.lastErrorStatus = NVCV_ERROR_INTERNAL;
+        strncpy(tls.lastErrorMessage, "Unexpected error", errorMessageLen);
+    }
+
+    tls.lastErrorMessage[errorMessageLen] = '\0'; // Make sure it's null-terminated
 }
 
 NVCVStatus GetLastThreadError() noexcept
@@ -43,84 +90,22 @@ NVCVStatus GetLastThreadError(char *outMessage, int outMessageLen) noexcept
 {
     NVCVStatus status = PeekAtLastThreadError(outMessage, outMessageLen);
 
-    // Clear the thread error state
-    GetTLS().lastError = {};
+    SetThreadError(std::exception_ptr{});
 
     return status;
 }
 
 NVCVStatus PeekAtLastThreadError(char *outMessage, int outMessageLen) noexcept
 {
-    NVCVStatus status;
-    try
-    {
-        TLS &tls = GetTLS();
+    TLS &tls = GetTLS();
 
-        if (tls.lastError)
-        {
-            rethrow_exception(tls.lastError);
-        }
-        else
-        {
-            status = NVCV_SUCCESS;
-            if (outMessage != nullptr)
-            {
-                strncpy(outMessage, "success", outMessageLen);
-            }
-        }
-    }
-    catch (const ::nv::cv::Exception &e)
+    if (outMessage != nullptr && outMessageLen > 0)
     {
-        status = NVCV_ERROR_INTERNAL;
-        NVCV_ASSERT(!"Eception from public API cannot be originated from internal library implementation");
-    }
-    catch (const util::Exception &e)
-    {
-        status = e.code();
-        if (outMessage != nullptr)
-        {
-            strncpy(outMessage, e.msg(), outMessageLen);
-        }
-    }
-    catch (const std::invalid_argument &e)
-    {
-        status = NVCV_ERROR_INVALID_ARGUMENT;
-        if (outMessage != nullptr)
-        {
-            strncpy(outMessage, e.what(), outMessageLen);
-        }
-    }
-    catch (const std::bad_alloc &)
-    {
-        status = NVCV_ERROR_OUT_OF_MEMORY;
-        if (outMessage != nullptr)
-        {
-            strncpy(outMessage, "Not enough space for resource allocation", outMessageLen);
-        }
-    }
-    catch (const std::exception &e)
-    {
-        status = NVCV_ERROR_INTERNAL;
-        if (outMessage != nullptr)
-        {
-            strncpy(outMessage, e.what(), outMessageLen);
-        }
-    }
-    catch (...)
-    {
-        status = NVCV_ERROR_INTERNAL;
-        if (outMessage != nullptr)
-        {
-            strncpy(outMessage, "Unexpected error", outMessageLen);
-        }
-    }
-
-    if (outMessage && outMessageLen > 0)
-    {
+        strncpy(outMessage, tls.lastErrorMessage, outMessageLen);
         outMessage[outMessageLen - 1] = '\0'; // Make sure it's null-terminated
     }
 
-    return status;
+    return tls.lastErrorStatus;
 }
 
 const char *GetName(NVCVStatus status) noexcept
