@@ -24,7 +24,6 @@
 #include "IAllocator.hpp"
 #include "IResourceAllocator.hpp"
 
-#include <cassert>
 #include <functional>
 #include <initializer_list>
 #include <memory>

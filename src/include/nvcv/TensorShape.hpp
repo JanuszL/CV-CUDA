@@ -34,8 +34,10 @@ public:
         : m_shape(std::move(shape))
         , m_layout(std::move(layout))
     {
-        assert((m_layout == TensorLayout::NONE || m_shape.ndim() == m_layout.ndim())
-               && "Layout dimensions must match shape dimensions");
+        if (m_layout != TensorLayout::NONE && m_shape.ndim() != m_layout.ndim())
+        {
+            throw Exception(Status::ERROR_INVALID_ARGUMENT, "Layout dimensions must match shape dimensions");
+        }
     }
 
     TensorShape(int size, TensorLayout layout)

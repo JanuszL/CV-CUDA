@@ -177,7 +177,10 @@ inline const ITensorData *TensorWrapHandle::doExportData() const
     NVCVTensorData data;
     detail::CheckThrow(nvcvTensorExportData(m_handle, &data));
 
-    assert(data.bufferType == NVCV_TENSOR_BUFFER_PITCH_DEVICE);
+    if (data.bufferType != NVCV_TENSOR_BUFFER_PITCH_DEVICE)
+    {
+        throw Exception(Status::ERROR_INVALID_OPERATION, "Tensor data cannot be exported, buffer type not supported");
+    }
 
     m_optData.emplace(TensorShape(data.shape, data.ndim, data.layout), PixelType{data.dtype}, data.buffer.pitch);
 
