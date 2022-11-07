@@ -58,9 +58,6 @@ TEST(StatusTest, main_thread_has_success_status_by_default)
 
 TEST(StatusTest, get_last_status_msg_success_has_correct_message)
 {
-    // resets status
-    EXPECT_EQ(NVCV_SUCCESS, nvcvGetLastError());
-
     char msg[NVCV_MAX_STATUS_MESSAGE_LENGTH];
     ASSERT_EQ(NVCV_SUCCESS, nvcvGetLastErrorMessage(msg, sizeof(msg)));
     EXPECT_STREQ("success", msg);
@@ -68,9 +65,6 @@ TEST(StatusTest, get_last_status_msg_success_has_correct_message)
 
 TEST(StatusTest, get_last_status_resets_error_state)
 {
-    // resets status
-    EXPECT_EQ(NVCV_SUCCESS, nvcvGetLastError());
-
     nvcvSetThreadStatus(NVCV_ERROR_DEVICE, "");
     EXPECT_EQ(NVCV_ERROR_DEVICE, nvcvGetLastError());
     EXPECT_EQ(NVCV_SUCCESS, nvcvGetLastError());
@@ -78,23 +72,13 @@ TEST(StatusTest, get_last_status_resets_error_state)
 
 TEST(StatusTest, peek_last_status_doesnt_reset_error_state)
 {
-    // resets status
-    EXPECT_EQ(NVCV_SUCCESS, nvcvGetLastError());
-
     nvcvSetThreadStatus(NVCV_ERROR_DEVICE, "");
     EXPECT_EQ(NVCV_ERROR_DEVICE, nvcvPeekAtLastError());
     EXPECT_EQ(NVCV_ERROR_DEVICE, nvcvPeekAtLastError());
-
-    // Must keep status reset
-    EXPECT_EQ(NVCV_ERROR_DEVICE, nvcvGetLastError());
-    EXPECT_EQ(NVCV_SUCCESS, nvcvGetLastError()) << "Error status must have been reset";
 }
 
 TEST(StatusTest, get_last_status_msg_error_has_correct_message)
 {
-    // resets status
-    EXPECT_EQ(NVCV_SUCCESS, nvcvGetLastError());
-
     nvcvSetThreadStatus(NVCV_ERROR_INTERNAL, "test message");
 
     char msg[NVCV_MAX_STATUS_MESSAGE_LENGTH];
@@ -107,9 +91,6 @@ TEST(StatusTest, get_last_status_msg_error_has_correct_message)
 
 TEST(StatusTest, peek_at_last_status_msg_success_has_correct_message)
 {
-    // resets status
-    EXPECT_EQ(NVCV_SUCCESS, nvcvGetLastError());
-
     char msg[NVCV_MAX_STATUS_MESSAGE_LENGTH];
     ASSERT_EQ(NVCV_SUCCESS, nvcvPeekAtLastErrorMessage(msg, sizeof(msg)));
     EXPECT_STREQ("success", msg);
@@ -117,9 +98,6 @@ TEST(StatusTest, peek_at_last_status_msg_success_has_correct_message)
 
 TEST(StatusTest, function_success_doesnt_reset_status)
 {
-    // resets status
-    EXPECT_EQ(NVCV_SUCCESS, nvcvGetLastError());
-
     ASSERT_EQ(NVCV_ERROR_INVALID_ARGUMENT, nvcvImageCalcRequirements(640, 480, NVCV_IMAGE_FORMAT_U8, nullptr));
 
     NVCVImageRequirements reqs;
@@ -130,9 +108,6 @@ TEST(StatusTest, function_success_doesnt_reset_status)
 
 TEST(StatusTest, peek_at_last_status_msg_error_has_correct_message)
 {
-    // resets status
-    EXPECT_EQ(NVCV_SUCCESS, nvcvGetLastError());
-
     nvcvSetThreadStatus(NVCV_ERROR_DEVICE, "test message");
 
     char msg[NVCV_MAX_STATUS_MESSAGE_LENGTH];
@@ -142,8 +117,4 @@ TEST(StatusTest, peek_at_last_status_msg_error_has_correct_message)
     msg[0] = '\0';
     ASSERT_EQ(NVCV_ERROR_DEVICE, nvcvPeekAtLastErrorMessage(msg, sizeof(msg)));
     EXPECT_STREQ("test message", msg);
-
-    // Must keep status reset
-    EXPECT_EQ(NVCV_ERROR_DEVICE, nvcvGetLastError());
-    EXPECT_EQ(NVCV_SUCCESS, nvcvGetLastError()) << "Error status must have been reset";
 }
