@@ -20,6 +20,7 @@
 #ifndef NVCV_TENSOR_H
 #define NVCV_TENSOR_H
 
+#include "Export.h"
 #include "Image.h"
 #include "ImageFormat.h"
 #include "Status.h"
@@ -27,8 +28,6 @@
 #include "alloc/Allocator.h"
 #include "alloc/Requirements.h"
 #include "detail/CudaFwd.h"
-
-#include <nvcv/detail/Export.h>
 
 #ifdef __cplusplus
 extern "C"

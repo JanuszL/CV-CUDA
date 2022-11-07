@@ -48,3 +48,34 @@ else()
 endif()
 
 set(CVCUDA_BUILD_SUFFIX "cuda${CUDA_VERSION_MAJOR}-${CVCUDA_SYSTEM_NAME}")
+
+function(setup_dso target version)
+    string(REGEX MATCHALL "[0-9]+" version_list "${version}")
+    list(GET version_list 0 VERSION_MAJOR)
+    list(GET version_list 1 VERSION_MINOR)
+    list(GET version_list 2 VERSION_PATCH)
+
+    set_target_properties(${target} PROPERTIES
+        VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}"
+        SOVERSION "${VERSION_MAJOR}"
+    )
+
+    # Reduce executable size ==========================
+
+    # Configure the library linker to remove unused code
+    target_link_options(${target} PRIVATE -Wl,--exclude-libs,ALL -Wl,--no-undefined -Wl,--gc-sections -Wl,--as-needed)
+    # Put each function and it's data into separate linker sections
+    target_compile_options(${target} PRIVATE -ffunction-sections -fdata-sections)
+
+    # Link with static C/C++ libs ==========================
+    target_link_libraries(${target} PRIVATE
+        -static-libstdc++
+        -static-libgcc
+    )
+
+    #   Configure symbol visibility ---------------------------------------------
+    set_target_properties(${target} PROPERTIES VISIBILITY_INLINES_HIDDEN on
+                                               C_VISIBILITY_PRESET hidden
+                                               CXX_VISIBILITY_PRESET hidden
+                                               CUDA_VISIBILITY_PRESET hidden)
+endfunction()

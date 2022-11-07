@@ -17,9 +17,8 @@ get_git_head_revision(GIT_REFSPEC REPO_COMMIT)
 
 set(PROJECT_VERSION "${PROJECT_VERSION}${PROJECT_VERSION_SUFFIX}")
 
-function(configure_version target libprefix incpath VERSION_FULL)
+function(configure_version target LIBPREFIX incpath VERSION_FULL)
     string(TOUPPER "${target}" TARGET)
-    string(TOUPPER "${libprefix}" LIBPREFIX)
 
     string(REGEX MATCH "-(.*)$" version_suffix "${VERSION_FULL}")
     set(VERSION_SUFFIX ${CMAKE_MATCH_1})
@@ -43,8 +42,6 @@ function(configure_version target libprefix incpath VERSION_FULL)
 
     string(REPLACE "-" "_" tmp ${VERSION_FULL})
     set(VERSION_BUILD "${tmp}-${CVCUDA_BUILD_SUFFIX}")
-
-    set(LIBPREFIX ${LIBPREFIX})
 
     configure_file(${config_version_script_path}/VersionDef.h.in include/${incpath}/VersionDef.h @ONLY ESCAPE_QUOTES)
     configure_file(${config_version_script_path}/VersionUtils.h.in include/${incpath}/detail/VersionUtils.h @ONLY ESCAPE_QUOTES)
@@ -73,20 +70,7 @@ function(configure_version target libprefix incpath VERSION_FULL)
             COMPONENT dev)
 endfunction()
 
-function(configure_symbol_versioning target libprefix incpath version)
-    string(TOUPPER "${target}" TARGET)
-    string(TOUPPER "${libprefix}" LIBPREFIX)
-
-    string(REGEX MATCHALL "[0-9]+" version_list "${version}")
-    list(GET version_list 0 VERSION_MAJOR)
-    list(GET version_list 1 VERSION_MINOR)
-    list(GET version_list 2 VERSION_PATCH)
-
-    set_target_properties(${target} PROPERTIES
-        VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}"
-        SOVERSION "${VERSION_MAJOR}"
-    )
-
+function(configure_symbol_versioning target)
     # Create exports file for symbol versioning ---------------------------------
     set(EXPORTS_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/exports.ldscript")
     target_link_libraries(${target}
@@ -105,22 +89,4 @@ function(configure_symbol_versioning target libprefix incpath version)
 
     add_custom_target(create_${target}_exports_file DEPENDS ${EXPORTS_OUTPUT})
     add_dependencies(${target} create_${target}_exports_file)
-
-    #   Configure symbol visibility ---------------------------------------------
-    set_target_properties(${target} PROPERTIES VISIBILITY_INLINES_HIDDEN on
-                                               C_VISIBILITY_PRESET hidden
-                                               CXX_VISIBILITY_PRESET hidden
-                                               CUDA_VISIBILITY_PRESET hidden)
-
-    configure_file(${config_version_script_path}/Export.h.in include/${incpath}/detail/Export.h @ONLY ESCAPE_QUOTES)
-    target_include_directories(${target}
-        PUBLIC
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-    )
-
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/${incpath}/detail/Export.h
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${incpath}/detail
-            COMPONENT dev)
-
-    target_compile_definitions(${target} PRIVATE -D${LIBPREFIX}_EXPORTING=1)
 endfunction()

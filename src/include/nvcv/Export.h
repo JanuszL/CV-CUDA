@@ -17,23 +17,23 @@
 *
 */
 
-#ifndef @LIBPREFIX@_EXPORT_H
-#define @LIBPREFIX@_EXPORT_H
+#ifndef NVCV_EXPORT_H
+#define NVCV_EXPORT_H
 
 #if defined _WIN32 || defined __CYGWIN__
-#    ifdef @LIBPREFIX@_EXPORTING
-#        define @LIBPREFIX@_PUBLIC __declspec(dllexport)
-#    elif defined(@LIBPREFIX@_STATIC)
-#        define @LIBPREFIX@_PUBLIC
+#    ifdef NVCV_EXPORTING
+#        define NVCV_PUBLIC __declspec(dllexport)
+#    elif defined(NVCV_STATIC)
+#        define NVCV_PUBLIC
 #    else
-#        define @LIBPREFIX@_PUBLIC __declspec(dllimport)
+#        define NVCV_PUBLIC __declspec(dllimport)
 #    endif
 #else
 #    if __GNUC__ >= 4
-#        define @LIBPREFIX@_PUBLIC __attribute__((visibility("default")))
+#        define NVCV_PUBLIC __attribute__((visibility("default")))
 #    else
-#        define @LIBPREFIX@_PUBLIC
+#        define NVCV_PUBLIC
 #    endif
 #endif
 
-#endif /* @LIBPREFIX@_EXPORT_H */
+#endif /* NVCV_EXPORT_H */

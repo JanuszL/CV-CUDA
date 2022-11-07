@@ -50,8 +50,6 @@ target_link_libraries(nvcv PRIVATE
     nvcv_private_operators
     nvcv_util
     nvcv_format
-    -static-libstdc++
-    -static-libgcc
 )
 
 target_include_directories(nvcv
@@ -60,19 +58,15 @@ target_include_directories(nvcv
         $<INSTALL_INTERFACE:include>
 )
 
-configure_version(nvcv nvcv nvcv ${PROJECT_VERSION})
-configure_symbol_versioning(nvcv nvcv nvcv ${PROJECT_VERSION})
+configure_version(nvcv NVCV nvcv ${PROJECT_VERSION})
+configure_symbol_versioning(nvcv)
+setup_dso(nvcv ${PROJECT_VERSION})
+
+target_compile_definitions(nvcv PRIVATE -DNVCV_EXPORTING=1)
 
 # target used when only public headers are needed
 add_library(nvcv_headers INTERFACE)
 target_include_directories(nvcv_headers INTERFACE include ${CMAKE_CURRENT_BINARY_DIR}/include)
-
-# Reduce executable size ==========================
-
-# Configure the library linker to remove unused code
-target_link_options(nvcv PRIVATE -Wl,--exclude-libs,ALL -Wl,--no-undefined -Wl,--gc-sections -Wl,--as-needed)
-# Put each function and it's data into separate linker sections
-target_compile_options(nvcv PRIVATE -ffunction-sections -fdata-sections)
 
 # Installer
 
