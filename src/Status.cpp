@@ -13,8 +13,10 @@
 
 #include <nvcv/Status.h>
 #include <nvcv/Status.hpp>
+#include <private/core/Exception.hpp>
 #include <private/core/Status.hpp>
 #include <private/core/SymbolVersioning.hpp>
+#include <util/Assert.h>
 
 namespace priv = nv::cv::priv;
 
@@ -41,4 +43,22 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvPeekAtLastErrorMessage, (char *msgBuffer, 
 NVCV_DEFINE_API(0, 0, const char *, nvcvStatusGetName, (NVCVStatus err))
 {
     return priv::GetName(err); // noexcept
+}
+
+NVCV_DEFINE_API(0, 2, void, nvcvSetThreadStatus, (NVCVStatus status, const char *msg))
+{
+    NVCVStatus ret = priv::ProtectCall(
+        [&]
+        {
+            if (msg)
+            {
+                throw priv::Exception(status, "%s", msg);
+            }
+            else
+            {
+                throw priv::Exception(status);
+            }
+        });
+
+    NVCV_ASSERT(ret == status);
 }

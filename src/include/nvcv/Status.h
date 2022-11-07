@@ -132,6 +132,18 @@ NVCV_PUBLIC NVCVStatus nvcvPeekAtLastError();
  */
 NVCV_PUBLIC NVCVStatus nvcvPeekAtLastErrorMessage(char *msgBuffer, int32_t lenBuffer);
 
+/**
+ * @brief Sets the internal status in current thread.
+ *
+ * This is used by nvcv extensions and/or language bindings to seamlessly
+ * integrate their status handling with the C API.
+ *
+ * @param[in] status The status code to be set
+ * @param[in] msg The status message associated with the status code.
+ *                Pass NULL if no customized error message is needed
+ */
+NVCV_PUBLIC void nvcvSetThreadStatus(NVCVStatus status, const char *msg);
+
 /**@}*/
 
 #ifdef __cplusplus
