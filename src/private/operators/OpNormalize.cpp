@@ -26,7 +26,8 @@ Normalize::Normalize()
 {
     leg::cuda_op::DataShape maxIn, maxOut;
     //maxIn/maxOut not used by op.
-    m_legacyOp = std::make_unique<leg::cuda_op::Normalize>(maxIn, maxOut);
+    m_legacyOp         = std::make_unique<leg::cuda_op::Normalize>(maxIn, maxOut);
+    m_legacyOpVarShape = std::make_unique<leg::cuda_op::NormalizeVarShape>(maxIn, maxOut);
 }
 
 void Normalize::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &base,
@@ -59,6 +60,40 @@ void Normalize::operator()(cudaStream_t stream, const cv::ITensor &in, const cv:
 
     leg::helpers::CheckOpErrThrow(
         m_legacyOp->infer(*inData, *baseData, *scaleData, *outData, global_scale, shift, epsilon, flags, stream));
+}
+
+void Normalize::operator()(cudaStream_t stream, const cv::IImageBatch &in, const cv::ITensor &base,
+                           const cv::ITensor &scale, cv::IImageBatch &out, const float global_scale, const float shift,
+                           const float epsilon, const uint32_t flags) const
+{
+    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
+    if (inData == nullptr)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                        "Input must be device-acessible, varshape pitch-linear image batch");
+    }
+
+    auto *baseData = dynamic_cast<const cv::ITensorDataPitchDevice *>(base.exportData());
+    if (baseData == nullptr)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input base must be device-acessible, pitch-linear tensor");
+    }
+
+    auto *scaleData = dynamic_cast<const cv::ITensorDataPitchDevice *>(scale.exportData());
+    if (scaleData == nullptr)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input scale must be device-acessible, pitch-linear tensor");
+    }
+
+    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(out.exportData(stream));
+    if (outData == nullptr)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                        "Output must be device-acessible, varshape pitch-linear image batch");
+    }
+
+    leg::helpers::CheckOpErrThrow(m_legacyOpVarShape->infer(*inData, *baseData, *scaleData, *outData, global_scale,
+                                                            shift, epsilon, flags, stream));
 }
 
 cv::priv::Version Normalize::doGetVersion() const

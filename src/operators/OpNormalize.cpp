@@ -11,6 +11,7 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <operators/OpNormalize.hpp>
 #include <private/core/Exception.hpp>
@@ -45,6 +46,21 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopNormalizeSubmit,
         [&]
         {
             nv::cv::TensorWrapHandle inWrap(in), baseWrap(base), scaleWrap(scale), outWrap(out);
+            priv::ToDynamicRef<priv_op::Normalize>(handle)(stream, inWrap, baseWrap, scaleWrap, outWrap, global_scale,
+                                                           shift, epsilon, flags);
+        });
+}
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopNormalizeVarShapeSubmit,
+                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVTensorHandle base,
+                 NVCVTensorHandle scale, NVCVImageBatchHandle out, float global_scale, float shift, float epsilon,
+                 uint32_t flags))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            nv::cv::TensorWrapHandle     baseWrap(base), scaleWrap(scale);
+            nv::cv::ImageBatchWrapHandle inWrap(in), outWrap(out);
             priv::ToDynamicRef<priv_op::Normalize>(handle)(stream, inWrap, baseWrap, scaleWrap, outWrap, global_scale,
                                                            shift, epsilon, flags);
         });

@@ -639,6 +639,71 @@ public:
     size_t calBufferSize(int batch_size);
 };
 
+class NormalizeVarShape : public CudaBaseOp
+{
+public:
+    NormalizeVarShape() = delete;
+
+    NormalizeVarShape(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * @brief Data normalization is done using externally provided base (typically: mean or min) and scale (typically
+     * reciprocal of standard deviation or 1/(max-min)). The normalization follows the formula:
+     * ```
+     * out[data_idx] = (in[data_idx] - base[param_idx]) * scale[param_idx] * global_scale + shift
+     * ```
+     * Where `data_idx` is a position in the data tensor (in, out) and `param_idx` is a position
+     * in the base and scale tensors (see below for details). The two additional constants,
+     * `global_scale` and `shift` can be used to adjust the result to the dynamic range and resolution
+     * of the output type.
+     *
+     * The `scale` parameter may also be interpreted as standard deviation - in that case, its
+     * reciprocal is used and optionally, a regularizing term is added to the variance.
+     * ```
+     * m = 1 / sqrt(square(stddev[param_idx]) + epsilon)
+     * out[data_idx] = (in[data_idx] - mean[param_idx]) * m * global_scale + shift
+     * ```
+     *
+     * `param_idx` is calculated as follows:
+     * ```
+     * param_idx[axis] = param_shape[axis] == 1 ? 0 : data_idx[axis]
+     * ```
+     *
+     * @param inputs gpu pointer, inputs[0] to inputs[batch-1] are input images of different shape, whose shapes are
+     * input_shape and type is data_type.
+     * @param outputs gpu pointer, outputs[0] are batched output images that have the same shape as input_shape and the
+     * type out_data_type.
+     * @param gpu_workspace gpu pointer, gpu memory used to store the temporary variables.
+     * @param cpu_workspace cpu pointer, cpu memory used to store the temporary variables.
+     * @param batch batch_size
+     * @param buffer_size buffer size of gpu_workspace and cpu_workspace
+     * @param base value(s) to be subtracted from input elements.
+     * @param scale value(s) of scales (or standard deviations).
+     * @param input_shape shape of the input images.
+     * @param base_channel channels of base. base can be a scalar or a batch of tensors with the same dimensionality as
+     * the input. The extent in each dimension must match the value of the input or be equal to 1. If the extent is 1,
+     * the value will be broadcast in this dimension.
+     * @param scale_channel channels of scale. See base_param_shape argument for more information about shape
+     * constraints.
+     * @param scale_is_stddev if true, scale is interpreted as standard deviation and it's regularized and its
+     * reciprocal is used when scaling.
+     * @param global_scale additional scaling factor, used e.g. when output is of integral type.
+     * @param shift additional bias value, used e.g. when output is of unsigned type.
+     * @param epsilon regularizing term added to variance; only used if scale_is_stddev = true
+     * @param format format of the input images, e.g. kNHWC.
+     * @param data_type data type of the input images, e.g. kCV_32F.
+     * @param out_data_type data type of the output images, e.g. kCV_32F.
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const nv::cv::IImageBatchVarShapeDataPitchDevice &inData,
+                    const nv::cv::ITensorDataPitchDevice &baseData, const nv::cv::ITensorDataPitchDevice &scaleData,
+                    const nv::cv::IImageBatchVarShapeDataPitchDevice &outData, const float global_scale,
+                    const float shift, const float epsilon, const uint32_t flags, cudaStream_t stream);
+};
+
 } // namespace nv::cv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H
