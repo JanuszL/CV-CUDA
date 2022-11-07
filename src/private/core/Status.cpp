@@ -29,19 +29,19 @@ void SetThreadError(std::exception_ptr e)
     GetTLS().lastError = e;
 }
 
-NVCVStatus GetLastThreadStatus() noexcept
+NVCVStatus GetLastThreadError() noexcept
 {
-    return GetLastThreadStatus(nullptr, 0);
+    return GetLastThreadError(nullptr, 0);
 }
 
-NVCVStatus PeekAtLastThreadStatus() noexcept
+NVCVStatus PeekAtLastThreadError() noexcept
 {
-    return PeekAtLastThreadStatus(nullptr, 0);
+    return PeekAtLastThreadError(nullptr, 0);
 }
 
-NVCVStatus GetLastThreadStatus(char *outMessage, int outMessageLen) noexcept
+NVCVStatus GetLastThreadError(char *outMessage, int outMessageLen) noexcept
 {
-    NVCVStatus status = PeekAtLastThreadStatus(outMessage, outMessageLen);
+    NVCVStatus status = PeekAtLastThreadError(outMessage, outMessageLen);
 
     // Clear the thread error state
     GetTLS().lastError = {};
@@ -49,7 +49,7 @@ NVCVStatus GetLastThreadStatus(char *outMessage, int outMessageLen) noexcept
     return status;
 }
 
-NVCVStatus PeekAtLastThreadStatus(char *outMessage, int outMessageLen) noexcept
+NVCVStatus PeekAtLastThreadError(char *outMessage, int outMessageLen) noexcept
 {
     NVCVStatus status;
     try

@@ -18,24 +18,24 @@
 
 namespace priv = nv::cv::priv;
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvGetLastStatus, ())
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvGetLastError, ())
 {
-    return priv::GetLastThreadStatus(); // noexcept
+    return priv::GetLastThreadError(); // noexcept
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvGetLastStatusMessage, (char *msgBuffer, int32_t lenBuffer))
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvGetLastErrorMessage, (char *msgBuffer, int32_t lenBuffer))
 {
-    return priv::GetLastThreadStatus(msgBuffer, lenBuffer);
+    return priv::GetLastThreadError(msgBuffer, lenBuffer);
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvPeekAtLastStatus, ())
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvPeekAtLastError, ())
 {
-    return priv::PeekAtLastThreadStatus(); // noexcept
+    return priv::PeekAtLastThreadError(); // noexcept
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvPeekAtLastStatusMessage, (char *msgBuffer, int32_t lenBuffer))
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvPeekAtLastErrorMessage, (char *msgBuffer, int32_t lenBuffer))
 {
-    return priv::PeekAtLastThreadStatus(msgBuffer, lenBuffer); // noexcept
+    return priv::PeekAtLastThreadError(msgBuffer, lenBuffer); // noexcept
 }
 
 NVCV_DEFINE_API(0, 0, const char *, nvcvStatusGetName, (NVCVStatus err))

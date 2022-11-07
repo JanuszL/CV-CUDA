@@ -30,7 +30,7 @@ inline ::testing::AssertionResult CmpHelperEQFailure(const char *lhs_expression,
                          FormatForComparisonFailureMessage(rhs, lhs), false);
 
     char       detail[NVCV_MAX_STATUS_MESSAGE_LENGTH];
-    NVCVStatus last = nvcvPeekAtLastStatusMessage(detail, sizeof(detail));
+    NVCVStatus last = nvcvPeekAtLastErrorMessage(detail, sizeof(detail));
 
     if (last != NVCV_SUCCESS && (last == lhs || last == rhs))
     {
