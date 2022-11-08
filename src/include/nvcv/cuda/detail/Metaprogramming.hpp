@@ -214,6 +214,10 @@ struct HasTypeTraits_t<T, std::void_t<typename TypeTraits<T>::base_type>> : std:
 {
 };
 
+// Metavariable to check if int template arg is -1, then return 1, else return 0.
+template<int I>
+constexpr int IsMinusOne = (I == -1 ? 1 : 0);
+
 } // namespace nv::cv::cuda::detail
 
 #endif // NVCV_CUDA_DETAIL_METAPROGRAMMING_HPP
