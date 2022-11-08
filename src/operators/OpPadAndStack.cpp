@@ -20,12 +20,13 @@
 #include <private/operators/OpPadAndStack.hpp>
 #include <util/Assert.h>
 
+namespace nvcv    = nv::cv;
 namespace priv    = nv::cv::priv;
 namespace priv_op = nv::cvop::priv;
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopPadAndStackCreate, (NVCVOperatorHandle * handle))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
@@ -41,7 +42,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopPadAndStackSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVTensorHandle out,
                  NVCVTensorHandle top, NVCVTensorHandle left, NVCVBorderType borderMode, float borderValue))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
             nv::cv::ImageBatchVarShapeWrapHandle input(in);

@@ -11,20 +11,21 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <nvcv/Status.hpp>
 #include <nvcv/Tensor.hpp>
 #include <operators/OpConvertTo.hpp>
 #include <private/core/Exception.hpp>
-#include <private/core/Status.hpp>
 #include <private/core/SymbolVersioning.hpp>
 #include <private/operators/OpConvertTo.hpp>
 #include <util/Assert.h>
 
+namespace nvcv    = nv::cv;
 namespace priv    = nv::cv::priv;
 namespace priv_op = nv::cvop::priv;
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopConvertToCreate, (NVCVOperatorHandle * handle))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
@@ -40,7 +41,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopConvertToSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
                  const double alpha, const double beta))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
             nv::cv::TensorWrapHandle input(in), output(out);

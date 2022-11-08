@@ -20,12 +20,13 @@
 #include <private/operators/OpNormalize.hpp>
 #include <util/Assert.h>
 
+namespace nvcv    = nv::cv;
 namespace priv    = nv::cv::priv;
 namespace priv_op = nv::cvop::priv;
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopNormalizeCreate, (NVCVOperatorHandle * handle))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
@@ -42,7 +43,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopNormalizeSubmit,
                  NVCVTensorHandle scale, NVCVTensorHandle out, float global_scale, float shift, float epsilon,
                  uint32_t flags))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
             nv::cv::TensorWrapHandle inWrap(in), baseWrap(base), scaleWrap(scale), outWrap(out);
@@ -56,7 +57,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopNormalizeVarShapeSubmit,
                  NVCVTensorHandle scale, NVCVImageBatchHandle out, float global_scale, float shift, float epsilon,
                  uint32_t flags))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
             nv::cv::TensorWrapHandle             baseWrap(base), scaleWrap(scale);
