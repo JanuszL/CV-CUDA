@@ -32,7 +32,7 @@ inline void ThrowException(NVCVStatus status)
     (void)tmp;
     assert(tmp == status);
 
-    throw Exception(static_cast<Status>(status), msg);
+    throw Exception(Exception::InternalCtorTag{}, static_cast<Status>(status), msg);
 }
 
 inline void CheckThrow(NVCVStatus status)

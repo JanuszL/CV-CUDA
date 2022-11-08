@@ -18,6 +18,9 @@ target_link_libraries(nvcv_test_main
     PUBLIC
         GTest::gtest
         GTest::gmock
+    PRIVATE
+        nvcv
+        CUDA::cuda_driver
 )
 
 # Now we want to create a script in the output directory that will run
@@ -34,8 +37,8 @@ if(UNIX)
 
         add_test(NAME "${TESTNAME}" COMMAND "${TESTCMD}")
 
-        if("${TESTNAME}" MATCHES "^[^_]+_test_system_.*$")
-            target_compile_definitions(${TESTNAME} PRIVATE -DNVCV_SYSTEM_TESTS=1)
+        if(TARGET ${TESTNAME})
+            target_link_libraries(${TESTNAME} PRIVATE nvcv_test_main)
         endif()
 
         # Timeouts are in seconds

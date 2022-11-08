@@ -14,6 +14,9 @@
 #ifndef NVCV_SHAPE_HPP
 #define NVCV_SHAPE_HPP
 
+#include "Exception.hpp"
+#include "Status.hpp"
+
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -104,9 +107,16 @@ template<class T, int N>
 Shape<T, N>::Shape(const T *data, size_t n)
     : m_size(n)
 {
-    assert(data != nullptr);
+    if (data == nullptr)
+    {
+        throw Exception(Status::ERROR_INVALID_ARGUMENT, "Shape data must not be NULL");
+    }
 
-    assert(m_size <= (size_type)m_data.size());
+    if (n > m_data.size())
+    {
+        throw Exception(Status::ERROR_INVALID_ARGUMENT, "Shape ndims is too big");
+    }
+
     std::copy_n(data, n, m_data.begin());
 }
 

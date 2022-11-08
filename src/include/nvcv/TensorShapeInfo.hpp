@@ -122,7 +122,10 @@ public:
 
         // idxWidth
         idx = this->infoLayout().idxWidth();
-        assert(idx >= 0 && "Images must have width");
+        if (idx < 0)
+        {
+            throw Exception(Status::ERROR_INVALID_ARGUMENT, "Image shape must have a Width dimension");
+        }
         m_cacheSize.w = m_shape[idx];
 
         // idxHeight

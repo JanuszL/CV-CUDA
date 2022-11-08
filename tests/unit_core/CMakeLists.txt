@@ -11,6 +11,8 @@
 # its affiliates is strictly prohibited.
 
 add_executable(nvcv_test_unit_core
+    ../Main.cpp
+
     TestHashMD5.cpp
     TestValueList.cpp
     TestValueTests.cpp
@@ -27,10 +29,14 @@ add_executable(nvcv_test_unit_core
     TestLegacyHelpers.cpp
 )
 
+target_compile_definitions(nvcv_test_unit_core
+    PRIVATE
+        -DNVCV_UNIT_TEST=1
+)
+
 target_link_libraries(nvcv_test_unit_core
     PRIVATE
         nvcv_util
-        nvcv_test_main
         nvcv_test_common
         nvcv_private_core
         nvcv_private_operators

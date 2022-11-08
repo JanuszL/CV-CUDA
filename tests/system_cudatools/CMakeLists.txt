@@ -31,7 +31,6 @@ add_executable(nvcv_test_system_cudatools
 target_link_libraries(nvcv_test_system_cudatools
     PUBLIC
         nvcv_util
-        nvcv_test_main
         nvcv_test_common
         nvcv
 )

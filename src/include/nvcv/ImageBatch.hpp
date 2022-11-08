@@ -134,7 +134,11 @@ inline const IImageBatchData *ImageBatchWrapHandle::doExportData(CUstream stream
     NVCVImageBatchData batchData;
     detail::CheckThrow(nvcvImageBatchExportData(m_handle, stream, &batchData));
 
-    assert(batchData.bufferType == NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_PITCH_DEVICE);
+    if (batchData.bufferType != NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_PITCH_DEVICE)
+    {
+        throw Exception(Status::ERROR_INVALID_OPERATION,
+                        "Image batch data cannot be exported, buffer type not supported");
+    }
 
     m_data.emplace(ImageFormat{batchData.format}, batchData.numImages, batchData.buffer.varShapePitch);
 

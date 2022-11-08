@@ -94,7 +94,10 @@ inline int32_t IImageDataCudaArray::numPlanes() const
 
 inline cudaArray_t IImageDataCudaArray::plane(int p) const
 {
-    assert(0 <= p && p < this->numPlanes() && "Pre-condition failed");
+    if (p < 0 || p >= this->numPlanes())
+    {
+        throw Exception(Status::ERROR_INVALID_ARGUMENT, "Plane out of bounds");
+    }
     return doGetPlane(p);
 }
 
@@ -116,7 +119,10 @@ inline int32_t IImageDataPitch::numPlanes() const
 
 inline const ImagePlanePitch &IImageDataPitch::plane(int p) const
 {
-    assert(0 <= p && p < this->numPlanes() && "Pre-condition failed");
+    if (p < 0 || p >= this->numPlanes())
+    {
+        throw Exception(Status::ERROR_INVALID_ARGUMENT, "Plane out of bounds");
+    }
     return doGetPlane(p);
 }
 

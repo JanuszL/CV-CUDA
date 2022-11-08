@@ -29,11 +29,11 @@ add_executable(nvcv_test_system_core
     TestTensorLayoutInfo.cpp
     TestTensorShapeInfo.cpp
     TestTensorDataAccess.cpp
+    TestExceptions.cpp
 )
 
 target_link_libraries(nvcv_test_system_core
     PUBLIC
-        nvcv_test_main
         nvcv_test_common_system
         nvcv
 )
@@ -51,7 +51,6 @@ add_executable(nvcv_test_system_core_version_commit
 
 target_link_libraries(nvcv_test_system_core_version_commit
     PRIVATE
-        nvcv_test_main
         nvcv_test_common
         nvcv
 )

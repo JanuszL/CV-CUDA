@@ -96,27 +96,21 @@ public:
     TensorLayout subRange(int beg, int end) const
     {
         TensorLayout out;
-        NVCVStatus   st = nvcvTensorLayoutMakeSubRange(m_layout, beg, end, &out.m_layout);
-        (void)st;
-        assert(st == NVCV_SUCCESS);
+        detail::CheckThrow(nvcvTensorLayoutMakeSubRange(m_layout, beg, end, &out.m_layout));
         return out;
     }
 
     TensorLayout first(int n) const
     {
         TensorLayout out;
-        NVCVStatus   st = nvcvTensorLayoutMakeFirst(m_layout, n, &out.m_layout);
-        (void)st;
-        assert(st == NVCV_SUCCESS);
+        detail::CheckThrow(nvcvTensorLayoutMakeFirst(m_layout, n, &out.m_layout));
         return out;
     }
 
     TensorLayout last(int n) const
     {
         TensorLayout out;
-        NVCVStatus   st = nvcvTensorLayoutMakeLast(m_layout, n, &out.m_layout);
-        (void)st;
-        assert(st == NVCV_SUCCESS);
+        detail::CheckThrow(nvcvTensorLayoutMakeLast(m_layout, n, &out.m_layout));
         return out;
     }
 

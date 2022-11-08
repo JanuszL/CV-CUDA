@@ -197,8 +197,14 @@ inline auto IImageBatchVarShape::Iterator::operator=(const Iterator &that) -> It
 
 inline auto IImageBatchVarShape::Iterator::operator*() const -> reference
 {
-    assert(m_batch != nullptr);
-    assert(m_curIndex < m_batch->numImages());
+    if (m_batch == nullptr)
+    {
+        throw Exception(Status::ERROR_INVALID_OPERATION, "Iterator doesn't point to an image batch object");
+    }
+    if (m_curIndex >= m_batch->numImages())
+    {
+        throw Exception(Status::ERROR_INVALID_OPERATION, "Iterator points to an invalid image in the image batch");
+    }
 
     if (!m_opImage)
     {
@@ -256,7 +262,10 @@ struct GetImageHandle
                  NVCVImageHandle, typename std::decay<decltype(std::declval<T>()->handle())>::type>::value>::type>
     NVCVImageHandle operator()(const T &ptr) const
     {
-        assert(ptr != nullptr);
+        if (ptr == nullptr)
+        {
+            throw Exception(Status::ERROR_INVALID_ARGUMENT, "Image must not be NULL");
+        }
         return ptr->handle();
     }
 
@@ -267,7 +276,10 @@ struct GetImageHandle
 
     NVCVImageHandle operator()(NVCVImageHandle h) const
     {
-        assert(h != nullptr);
+        if (h == nullptr)
+        {
+            throw Exception(Status::ERROR_INVALID_ARGUMENT, "Image handle must not be NULL");
+        }
         return h;
     }
 

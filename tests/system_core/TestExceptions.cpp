@@ -1,5 +1,4 @@
 /* Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- *
  * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
@@ -11,27 +10,26 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_PRIV_TLS_HPP
-#define NVCV_PRIV_TLS_HPP
+#include "Definitions.hpp"
 
-#include <nvcv/Status.h>
+#include <nvcv/Exception.hpp>
 
-#include <exception>
+// TODO: once we have functions that generate errors, we should
+// extend these tests to cover more scenarios
 
-namespace nv::cv::priv {
+namespace t = ::testing;
 
-struct TLS
+TEST(ExceptionTest, exception_updates_internal_status)
 {
-    char bufColorSpecName[1024];
-    char bufPixelTypeName[1024];
-    char bufImageFormatName[1024];
+    try
+    {
+        throw nv::cv::Exception(nv::cv::Status::ERROR_DEVICE, "test error");
+    }
+    catch (...)
+    {
+    }
 
-    NVCVStatus lastErrorStatus;
-    char       lastErrorMessage[NVCV_MAX_STATUS_MESSAGE_LENGTH];
-};
-
-TLS &GetTLS() noexcept;
-
-} // namespace nv::cv::priv
-
-#endif // NVCV_PRIV_TLS_HPP
+    char msg[NVCV_MAX_STATUS_MESSAGE_LENGTH];
+    ASSERT_EQ(NVCV_ERROR_DEVICE, nvcvGetLastErrorMessage(msg, sizeof(msg)));
+    EXPECT_STREQ("test error", msg);
+}

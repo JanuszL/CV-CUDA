@@ -109,7 +109,10 @@ inline int64_t CalcTotalSizeBytes(const Requirements::ConstMemory &mem)
 
 inline int64_t Requirements::ConstMemory::numBlocks(int log2BlockSizeBytes) const
 {
-    assert(0 <= log2BlockSizeBytes && log2BlockSizeBytes < this->size());
+    if (log2BlockSizeBytes < 0 || log2BlockSizeBytes >= this->size())
+    {
+        throw Exception(Status::ERROR_INVALID_ARGUMENT, "log2 of block size is out of valid range");
+    }
     return this->cdata().numBlocks[log2BlockSizeBytes];
 }
 
