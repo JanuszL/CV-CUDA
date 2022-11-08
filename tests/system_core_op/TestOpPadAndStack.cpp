@@ -13,6 +13,7 @@
 
 #include "Definitions.hpp"
 
+#include <common/BorderUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
@@ -22,31 +23,10 @@
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
 #include <operators/OpPadAndStack.hpp>
 
-//#define DEBUG_PRINT_IMAGE
-//#define DEBUG_PRINT_DIFF
-
-#include <common/Utils.hpp>
+#include <random>
 
 namespace nvcv = nv::cv;
 namespace test = nv::cv::test;
-
-static int ReflectBorderIndex(int x, int size, const NVCVBorderType borderType)
-{
-    int delta = borderType == NVCV_BORDER_REFLECT101 ? 1 : 0;
-    do
-    {
-        if (x < 0)
-        {
-            x = -x - 1 + delta;
-        }
-        else
-        {
-            x = size - 1 - (x - size) - delta;
-        }
-    }
-    while (x < 0 || x >= size);
-    return x;
-}
 
 static void PadAndStack(std::vector<uint8_t> &hDst, const std::vector<std::vector<uint8_t>> &hBatchSrc,
                         const nvcv::TensorDataAccessPitchImagePlanar &dDstData, const int srcWidth, const int srcHeight,
@@ -57,23 +37,25 @@ static void PadAndStack(std::vector<uint8_t> &hDst, const std::vector<std::vecto
     int dstRowPitch = dDstData.rowPitchBytes() / sizeof(uint8_t);
     int dstImgPitch = dDstData.samplePitchBytes() / sizeof(uint8_t);
 
+    int2 coord, size{srcWidth, srcHeight};
+
     for (int db = 0; db < dDstData.numSamples(); db++)
     {
         for (int di = 0; di < dDstData.numRows(); di++)
         {
-            int si = di - topVec[db];
+            coord.y = di - topVec[db];
 
             for (int dj = 0; dj < dDstData.numCols(); dj++)
             {
-                int sj = dj - leftVec[db];
+                coord.x = dj - leftVec[db];
 
                 for (int dk = 0; dk < dDstData.numChannels(); dk++)
                 {
                     uint8_t out = 0;
 
-                    if (si >= 0 && si < srcHeight && sj >= 0 && sj < srcWidth)
+                    if (coord.x >= 0 && coord.x < size.x && coord.y >= 0 && coord.y < size.y)
                     {
-                        out = hBatchSrc[db][si * srcRowPitch + sj * srcPixPitch + dk];
+                        out = hBatchSrc[db][coord.y * srcRowPitch + coord.x * srcPixPitch + dk];
                     }
                     else
                     {
@@ -85,24 +67,22 @@ static void PadAndStack(std::vector<uint8_t> &hDst, const std::vector<std::vecto
                         {
                             if (borderType == NVCV_BORDER_REPLICATE)
                             {
-                                si = std::max(0, std::min(srcHeight, si));
-                                sj = std::max(0, std::min(srcWidth, sj));
+                                test::ReplicateBorderIndex(coord, size);
                             }
                             else if (borderType == NVCV_BORDER_WRAP)
                             {
-                                si = (si >= 0) ? si : (si - ((si - srcHeight + 1) / srcHeight) * srcHeight);
-                                si = (si < srcHeight) ? si : (si % srcHeight);
-
-                                sj = (sj >= 0) ? sj : (sj - ((sj - srcWidth + 1) / srcWidth) * srcWidth);
-                                sj = (sj < srcWidth) ? sj : (sj % srcWidth);
+                                test::WrapBorderIndex(coord, size);
                             }
-                            else if (borderType == NVCV_BORDER_REFLECT || borderType == NVCV_BORDER_REFLECT101)
+                            else if (borderType == NVCV_BORDER_REFLECT)
                             {
-                                si = ReflectBorderIndex(si, srcHeight, borderType);
-                                sj = ReflectBorderIndex(sj, srcWidth, borderType);
+                                test::ReflectBorderIndex(coord, size);
+                            }
+                            else if (borderType == NVCV_BORDER_REFLECT101)
+                            {
+                                test::Reflect101BorderIndex(coord, size);
                             }
 
-                            out = hBatchSrc[db][si * srcRowPitch + sj * srcPixPitch + dk];
+                            out = hBatchSrc[db][coord.y * srcRowPitch + coord.x * srcPixPitch + dk];
                         }
                     }
 
@@ -188,6 +168,8 @@ TEST_P(OpPadAndStack, correct_output)
 
     std::vector<std::vector<uint8_t>> batchSrcVec;
 
+    std::default_random_engine randEng{0};
+
     int srcPitchBytes = 0, srcRowPitch = 0, srcPixPitch = 0;
 
     for (int b = 0; b < numBatches; ++b)
@@ -203,7 +185,8 @@ TEST_P(OpPadAndStack, correct_output)
 
         std::vector<uint8_t> srcVec(srcBufSize);
 
-        test::FillRandomData(srcVec);
+        std::uniform_int_distribution<uint8_t> srcRand{0u, 255u};
+        std::generate(srcVec.begin(), srcVec.end(), [&]() { return srcRand(randEng); });
 
         // Copy each input image with random data to the GPU
         ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(imgSrcData->plane(0).buffer, srcVec.data(),
@@ -245,18 +228,6 @@ TEST_P(OpPadAndStack, correct_output)
     ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
     ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
     ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), dstData->data(), dstBufSize, cudaMemcpyDeviceToHost));
-
-#ifdef DEBUG_PRINT_IMAGE
-    for (int b = 0; b < numBatches; ++b) test::DebugPrintImage(batchSrcVec[b], srcPitchBytes / sizeof(uint8_t));
-    test::DebugPrintImage(testVec, dstData->rowPitchBytes() / sizeof(uint8_t));
-    test::DebugPrintImage(goldVec, dstData->rowPitchBytes() / sizeof(uint8_t));
-#endif
-#ifdef DEBUG_PRINT_DIFF
-    if (goldVec != testVec)
-    {
-        test::DebugPrintDiff(testVec, goldVec);
-    }
-#endif
 
     EXPECT_EQ(goldVec, testVec);
 }
