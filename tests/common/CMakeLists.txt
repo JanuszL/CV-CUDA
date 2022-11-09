@@ -19,20 +19,12 @@
 
 add_library(nvcv_test_common STATIC
     Printers.cpp
-    BorderUtils.cpp
-    ConvUtils.cpp
     TensorDataUtils.cpp
-    FlipUtils.cpp
 )
 
 target_include_directories(nvcv_test_common
     INTERFACE
         ..
-)
-
-target_link_libraries(nvcv_test_common
-    INTERFACE
-        nvcv_util
 )
 
 target_compile_definitions(nvcv_test_common
@@ -41,8 +33,11 @@ target_compile_definitions(nvcv_test_common
 )
 
 target_link_libraries(nvcv_test_common
+    INTERFACE
+        nvcv_util
     PUBLIC
         nvcv_headers
+        nvcv_format_headers
         nvcv_util
         nvcv_util_compat
 )
@@ -52,6 +47,7 @@ target_link_libraries(nvcv_test_common
 
 add_library(nvcv_test_common_system STATIC
     ObjectBag.cpp
+    BorderUtils.cpp
 )
 
 target_include_directories(nvcv_test_common_system
@@ -63,4 +59,5 @@ target_link_libraries(nvcv_test_common_system
     PUBLIC
         nvcv
         nvcv_test_common
+        nvcv_operators_headers
 )

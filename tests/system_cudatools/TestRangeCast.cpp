@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include <common/TypedTests.hpp>   // for NVCV_TYPED_TEST_SUITE, etc.
-#include <nvcv/cuda/MathOps.hpp>   // for operator == to allow EXPECT_EQ
-#include <nvcv/cuda/RangeCast.hpp> // the object of this test
+#include <common/TypedTests.hpp>      // for NVCV_TYPED_TEST_SUITE, etc.
+#include <nvcv/optools/MathOps.hpp>   // for operator == to allow EXPECT_EQ
+#include <nvcv/optools/RangeCast.hpp> // the object of this test
 
 #include <cmath>  // for std::round, etc.
 #include <limits> // for std::numeric_limits, etc.

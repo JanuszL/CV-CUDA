@@ -23,7 +23,7 @@
 #include "Stream.hpp"
 #include "Tensor.hpp"
 
-#include <operators/OpNormalize.hpp>
+#include <nvcv/operators/OpNormalize.hpp>
 #include <pybind11/stl.h>
 
 namespace nv::cvpy {

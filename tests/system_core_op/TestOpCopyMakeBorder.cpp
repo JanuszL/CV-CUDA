@@ -16,21 +16,21 @@
  */
 
 #include "Definitions.hpp"
-#include "nvcv/DataLayout.hpp"
-#include "nvcv/DataType.hpp"
-#include "nvcv/IImageData.hpp"
-#include "nvcv/ITensorData.hpp"
-#include "nvcv/ImageFormat.hpp"
 
 #include <common/BorderUtils.hpp>
 #include <common/ValueTests.hpp>
+#include <nvcv/DataLayout.hpp>
+#include <nvcv/DataType.hpp>
+#include <nvcv/IImageData.hpp>
+#include <nvcv/ITensorData.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
+#include <nvcv/ImageFormat.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <operators/OpCopyMakeBorder.hpp>
+#include <nvcv/operators/OpCopyMakeBorder.hpp>
 
 #include <random>
 

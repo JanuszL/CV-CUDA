@@ -15,16 +15,16 @@
  * limitations under the License.
  */
 
+#include "ConvUtils.hpp"
 #include "Definitions.hpp"
 
-#include <common/ConvUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
-#include <nvcv/cuda/TypeTraits.hpp>
-#include <operators/OpAverageBlur.hpp>
+#include <nvcv/operators/OpAverageBlur.hpp>
+#include <nvcv/optools/TypeTraits.hpp>
 
 #include <random>
 

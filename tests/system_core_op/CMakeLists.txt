@@ -18,6 +18,8 @@ set(CMAKE_FOLDER tests)
 
 # system core -------------------------------------------------
 add_executable(nvcv_test_system_core_op
+    FlipUtils.cpp
+    ConvUtils.cpp
     TestOpReformat.cpp
     TestOpResize.cpp
     TestOpCustomCrop.cpp
@@ -47,8 +49,9 @@ add_executable(nvcv_test_system_core_op
 
 target_link_libraries(nvcv_test_system_core_op
     PUBLIC
+        nvcv_operators
+        nvcv_optools
         nvcv_test_common_system
-        nvcv
 )
 
 nvcv_add_test(nvcv_test_system_core_op)

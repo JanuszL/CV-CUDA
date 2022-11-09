@@ -22,7 +22,7 @@
 #include "Stream.hpp"
 #include "Tensor.hpp"
 
-#include <operators/OpConvertTo.hpp>
+#include <nvcv/operators/OpConvertTo.hpp>
 
 namespace nv::cvpy {
 

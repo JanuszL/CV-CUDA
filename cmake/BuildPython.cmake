@@ -45,5 +45,5 @@ foreach(VER ${PYTHON_VERSIONS})
         TMP_DIR ${BASEDIR}/tmp
         STAMP_DIR ${BASEDIR}/stamp
         BUILD_ALWAYS true
-        DEPENDS nvcv)
+        DEPENDS nvcv nvcv_operators)
 endforeach()

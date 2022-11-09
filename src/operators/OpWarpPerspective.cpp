@@ -15,58 +15,59 @@
  * limitations under the License.
  */
 
+#include "priv/OpWarpPerspective.hpp"
+
+#include "priv/SymbolVersioning.hpp"
+
+#include <nvcv/Exception.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
-#include <operators/OpWarpPerspective.hpp>
-#include <private/core/Exception.hpp>
-#include <private/core/Status.hpp>
-#include <private/core/SymbolVersioning.hpp>
-#include <private/operators/OpWarpPerspective.hpp>
 #include <util/Assert.h>
 
-namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cvop::priv;
+namespace nvcv = nv::cv;
+namespace priv = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopWarpPerspectiveCreate,
-                (NVCVOperatorHandle * handle, const int maxVarShapeBatchSize))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopWarpPerspectiveCreate,
+                   (NVCVOperatorHandle * handle, const int maxVarShapeBatchSize))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
+                throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                                      "Pointer to NVCVOperator handle must not be NULL");
             }
 
-            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::WarpPerspective(maxVarShapeBatchSize));
+            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv::WarpPerspective(maxVarShapeBatchSize));
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopWarpPerspectiveSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                 const NVCVPerspectiveTransform transMatrix, const int flags, const NVCVBorderType borderMode,
-                 const float4 borderValue))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopWarpPerspectiveSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
+                    const NVCVPerspectiveTransform transMatrix, const int flags, const NVCVBorderType borderMode,
+                    const float4 borderValue))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle input(in), output(out);
-            priv::ToDynamicRef<priv_op::WarpPerspective>(handle)(stream, input, output, transMatrix, flags, borderMode,
-                                                                 borderValue);
+            nvcv::TensorWrapHandle input(in), output(out);
+            priv::ToDynamicRef<priv::WarpPerspective>(handle)(stream, input, output, transMatrix, flags, borderMode,
+                                                              borderValue);
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopWarpPerspectiveVarShapeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
-                 NVCVTensorHandle transMatrix, const int flags, const NVCVBorderType borderMode,
-                 const float4 borderValue))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopWarpPerspectiveVarShapeSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                    NVCVTensorHandle transMatrix, const int flags, const NVCVBorderType borderMode,
+                    const float4 borderValue))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::ImageBatchVarShapeWrapHandle input(in), output(out);
-            nv::cv::TensorWrapHandle             transMatrixWrap(transMatrix);
-            priv::ToDynamicRef<priv_op::WarpPerspective>(handle)(stream, input, output, transMatrixWrap, flags,
-                                                                 borderMode, borderValue);
+            nvcv::ImageBatchVarShapeWrapHandle input(in), output(out);
+            nvcv::TensorWrapHandle             transMatrixWrap(transMatrix);
+            priv::ToDynamicRef<priv::WarpPerspective>(handle)(stream, input, output, transMatrixWrap, flags, borderMode,
+                                                              borderValue);
         });
 }

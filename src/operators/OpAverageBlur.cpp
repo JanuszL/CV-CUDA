@@ -15,60 +15,61 @@
  * limitations under the License.
  */
 
+#include "priv/OpAverageBlur.hpp"
+
+#include "priv/SymbolVersioning.hpp"
+
+#include <nvcv/Exception.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
-#include <operators/OpAverageBlur.hpp>
-#include <private/core/Exception.hpp>
-#include <private/core/Status.hpp>
-#include <private/core/SymbolVersioning.hpp>
-#include <private/operators/OpAverageBlur.hpp>
 #include <util/Assert.h>
 
-namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cvop::priv;
+namespace priv = nv::cvop::priv;
+namespace nvcv = nv::cv;
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopAverageBlurCreate,
-                (NVCVOperatorHandle * handle, int32_t maxKernelWidth, int32_t maxKernelHeight,
-                 int32_t maxVarShapeBatchSize))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopAverageBlurCreate,
+                   (NVCVOperatorHandle * handle, int32_t maxKernelWidth, int32_t maxKernelHeight,
+                    int32_t maxVarShapeBatchSize))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
+                throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                                      "Pointer to NVCVOperator handle must not be NULL");
             }
 
             *handle = reinterpret_cast<NVCVOperatorHandle>(
-                new priv_op::AverageBlur(nv::cv::Size2D{maxKernelWidth, maxKernelHeight}, maxVarShapeBatchSize));
+                new priv::AverageBlur(nvcv::Size2D{maxKernelWidth, maxKernelHeight}, maxVarShapeBatchSize));
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopAverageBlurSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                 int32_t kernelWidth, int32_t kernelHeight, int32_t kernelAnchorX, int32_t kernelAnchorY,
-                 NVCVBorderType borderMode))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopAverageBlurSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
+                    int32_t kernelWidth, int32_t kernelHeight, int32_t kernelAnchorX, int32_t kernelAnchorY,
+                    NVCVBorderType borderMode))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle output(out), input(in);
-            priv::ToDynamicRef<priv_op::AverageBlur>(handle)(stream, input, output,
-                                                             nv::cv::Size2D{kernelWidth, kernelHeight},
-                                                             int2{kernelAnchorX, kernelAnchorY}, borderMode);
+            nvcv::TensorWrapHandle output(out), input(in);
+            priv::ToDynamicRef<priv::AverageBlur>(handle)(stream, input, output,
+                                                          nvcv::Size2D{kernelWidth, kernelHeight},
+                                                          int2{kernelAnchorX, kernelAnchorY}, borderMode);
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopAverageBlurVarShapeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
-                 NVCVTensorHandle kernelSize, NVCVTensorHandle kernelAnchor, NVCVBorderType borderMode))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopAverageBlurVarShapeSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                    NVCVTensorHandle kernelSize, NVCVTensorHandle kernelAnchor, NVCVBorderType borderMode))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::ImageBatchVarShapeWrapHandle inWrap(in), outWrap(out);
-            nv::cv::TensorWrapHandle             kernelSizeWrap(kernelSize), kernelAnchorWrap(kernelAnchor);
-            priv::ToDynamicRef<priv_op::AverageBlur>(handle)(stream, inWrap, outWrap, kernelSizeWrap, kernelAnchorWrap,
-                                                             borderMode);
+            nvcv::ImageBatchVarShapeWrapHandle inWrap(in), outWrap(out);
+            nvcv::TensorWrapHandle             kernelSizeWrap(kernelSize), kernelAnchorWrap(kernelAnchor);
+            priv::ToDynamicRef<priv::AverageBlur>(handle)(stream, inWrap, outWrap, kernelSizeWrap, kernelAnchorWrap,
+                                                          borderMode);
         });
 }

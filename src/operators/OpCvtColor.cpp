@@ -15,52 +15,53 @@
  * limitations under the License.
  */
 
+#include "priv/OpCvtColor.hpp"
+
+#include "priv/SymbolVersioning.hpp"
+
+#include <nvcv/Exception.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
-#include <operators/OpCvtColor.hpp>
-#include <private/core/Exception.hpp>
-#include <private/core/Status.hpp>
-#include <private/core/SymbolVersioning.hpp>
-#include <private/operators/OpCvtColor.hpp>
 #include <util/Assert.h>
 
-namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cvop::priv;
+namespace nvcv = nv::cv;
+namespace priv = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCvtColorCreate, (NVCVOperatorHandle * handle))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopCvtColorCreate, (NVCVOperatorHandle * handle))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
+                throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                                      "Pointer to NVCVOperator handle must not be NULL");
             }
 
-            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::CvtColor());
+            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv::CvtColor());
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCvtColorSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                 NVCVColorConversionCode code))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopCvtColorSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
+                    NVCVColorConversionCode code))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle output(out), input(in);
-            priv::ToDynamicRef<priv_op::CvtColor>(handle)(stream, input, output, code);
+            nvcv::TensorWrapHandle output(out), input(in);
+            priv::ToDynamicRef<priv::CvtColor>(handle)(stream, input, output, code);
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCvtColorVarShapeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
-                 NVCVColorConversionCode code))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopCvtColorVarShapeSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                    NVCVColorConversionCode code))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::ImageBatchVarShapeWrapHandle inWrap(in), outWrap(out);
-            priv::ToDynamicRef<priv_op::CvtColor>(handle)(stream, inWrap, outWrap, code);
+            nvcv::ImageBatchVarShapeWrapHandle inWrap(in), outWrap(out);
+            priv::ToDynamicRef<priv::CvtColor>(handle)(stream, inWrap, outWrap, code);
         });
 }

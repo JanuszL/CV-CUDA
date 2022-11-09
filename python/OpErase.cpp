@@ -24,7 +24,7 @@
 #include "String.hpp"
 #include "Tensor.hpp"
 
-#include <operators/OpErase.hpp>
+#include <nvcv/operators/OpErase.hpp>
 #include <pybind11/stl.h>
 
 namespace nv::cvpy {

@@ -23,7 +23,7 @@
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <operators/OpCustomCrop.hpp>
+#include <nvcv/operators/OpCustomCrop.hpp>
 
 #include <iostream>
 #include <random>

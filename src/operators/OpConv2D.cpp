@@ -15,43 +15,43 @@
  * limitations under the License.
  */
 
+#include "priv/OpConv2D.hpp"
+
+#include "priv/SymbolVersioning.hpp"
+
+#include <nvcv/Exception.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
-#include <operators/OpConv2D.hpp>
-#include <private/core/Exception.hpp>
-#include <private/core/Status.hpp>
-#include <private/core/SymbolVersioning.hpp>
-#include <private/operators/OpConv2D.hpp>
+#include <nvcv/operators/OpConv2D.hpp>
 #include <util/Assert.h>
 
-namespace nvcv    = nv::cv;
-namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cvop::priv;
+namespace nvcv = nv::cv;
+namespace priv = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopConv2DCreate, (NVCVOperatorHandle * handle))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopConv2DCreate, (NVCVOperatorHandle * handle))
 {
     return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
+                throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                                      "Pointer to NVCVOperator handle must not be NULL");
             }
 
-            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::Conv2D());
+            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv::Conv2D());
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopConv2DVarShapeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
-                 NVCVImageBatchHandle kernel, NVCVTensorHandle kernelAnchor, NVCVBorderType borderMode))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopConv2DVarShapeSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                    NVCVImageBatchHandle kernel, NVCVTensorHandle kernelAnchor, NVCVBorderType borderMode))
 {
     return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::ImageBatchVarShapeWrapHandle inWrap(in), outWrap(out), kernelWrap(kernel);
-            nv::cv::TensorWrapHandle             kernelAnchorWrap(kernelAnchor);
-            priv::ToDynamicRef<priv_op::Conv2D>(handle)(stream, inWrap, outWrap, kernelWrap, kernelAnchorWrap,
-                                                        borderMode);
+            nvcv::ImageBatchVarShapeWrapHandle inWrap(in), outWrap(out), kernelWrap(kernel);
+            nvcv::TensorWrapHandle             kernelAnchorWrap(kernelAnchor);
+            priv::ToDynamicRef<priv::Conv2D>(handle)(stream, inWrap, outWrap, kernelWrap, kernelAnchorWrap, borderMode);
         });
 }

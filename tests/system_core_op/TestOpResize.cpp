@@ -24,7 +24,7 @@
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <operators/OpResize.hpp>
+#include <nvcv/operators/OpResize.hpp>
 
 #include <cmath>
 #include <random>

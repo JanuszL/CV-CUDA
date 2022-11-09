@@ -15,56 +15,56 @@
  * limitations under the License.
  */
 
+#include "priv/OpMedianBlur.hpp"
+
+#include "priv/SymbolVersioning.hpp"
+
+#include <nvcv/Exception.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
-#include <operators/OpMedianBlur.hpp>
-#include <private/core/Exception.hpp>
-#include <private/core/Status.hpp>
-#include <private/core/SymbolVersioning.hpp>
-#include <private/operators/OpMedianBlur.hpp>
 #include <util/Assert.h>
 
-namespace nvcv    = nv::cv;
-namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cvop::priv;
+namespace nvcv = nv::cv;
+namespace priv = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopMedianBlurCreate,
-                (NVCVOperatorHandle * handle, const int32_t maxVarShapeBatchSize))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopMedianBlurCreate,
+                   (NVCVOperatorHandle * handle, const int32_t maxVarShapeBatchSize))
 {
     return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
+                throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                                      "Pointer to NVCVOperator handle must not be NULL");
             }
 
-            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::MedianBlur(maxVarShapeBatchSize));
+            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv::MedianBlur(maxVarShapeBatchSize));
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopMedianBlurSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                 const int32_t kernelWidth, const int32_t kernelHeight))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopMedianBlurSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
+                    const int32_t kernelWidth, const int32_t kernelHeight))
 {
     return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle input(in), output(out);
-            priv::ToDynamicRef<priv_op::MedianBlur>(handle)(stream, input, output,
-                                                            nv::cv::Size2D{kernelWidth, kernelHeight});
+            nvcv::TensorWrapHandle input(in), output(out);
+            priv::ToDynamicRef<priv::MedianBlur>(handle)(stream, input, output,
+                                                         nvcv::Size2D{kernelWidth, kernelHeight});
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopMedianBlurVarShapeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
-                 NVCVTensorHandle ksize))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopMedianBlurVarShapeSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                    NVCVTensorHandle ksize))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::ImageBatchVarShapeWrapHandle input(in), output(out);
-            nv::cv::TensorWrapHandle             ksizeWrap(ksize);
-            priv::ToDynamicRef<priv_op::MedianBlur>(handle)(stream, input, output, ksizeWrap);
+            nvcv::ImageBatchVarShapeWrapHandle input(in), output(out);
+            nvcv::TensorWrapHandle             ksizeWrap(ksize);
+            priv::ToDynamicRef<priv::MedianBlur>(handle)(stream, input, output, ksizeWrap);
         });
 }

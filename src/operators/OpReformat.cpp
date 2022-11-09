@@ -15,39 +15,39 @@
  * limitations under the License.
  */
 
+#include "priv/OpReformat.hpp"
+
+#include "priv/SymbolVersioning.hpp"
+
+#include <nvcv/Exception.hpp>
 #include <nvcv/Tensor.hpp>
-#include <operators/OpReformat.hpp>
-#include <private/core/Exception.hpp>
-#include <private/core/Status.hpp>
-#include <private/core/SymbolVersioning.hpp>
-#include <private/operators/OpReformat.hpp>
 #include <util/Assert.h>
 
-namespace nvcv    = nv::cv;
-namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cvop::priv;
+namespace nvcv = nv::cv;
+namespace priv = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopReformatCreate, (NVCVOperatorHandle * handle))
+NVCV_OP_DEFINE_API(0, 0, NVCVStatus, nvcvopReformatCreate, (NVCVOperatorHandle * handle))
 {
     return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
+                throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                                      "Pointer to NVCVOperator handle must not be NULL");
             }
 
-            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::Reformat());
+            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv::Reformat());
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopReformatSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopReformatSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out))
 {
     return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle input(in), output(out);
-            priv::ToDynamicRef<priv_op::Reformat>(handle)(stream, input, output);
+            nvcv::TensorWrapHandle input(in), output(out);
+            priv::ToDynamicRef<priv::Reformat>(handle)(stream, input, output);
         });
 }

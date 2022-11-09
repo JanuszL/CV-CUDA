@@ -23,7 +23,7 @@
 #include "Tensor.hpp"
 
 #include <nvcv/TensorLayoutInfo.hpp>
-#include <operators/OpCustomCrop.hpp>
+#include <nvcv/operators/OpCustomCrop.hpp>
 
 namespace nv::cvpy {
 

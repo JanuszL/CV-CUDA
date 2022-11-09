@@ -16,15 +16,15 @@
  */
 
 #include "Definitions.hpp"
+#include "FlipUtils.hpp"
 
-#include <common/FlipUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
-#include <nvcv/cuda/TypeTraits.hpp>
-#include <operators/OpFlip.hpp>
+#include <nvcv/operators/OpFlip.hpp>
+#include <nvcv/optools/TypeTraits.hpp>
 
 #include <random>
 

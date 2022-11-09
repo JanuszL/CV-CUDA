@@ -29,7 +29,6 @@ add_executable(nvcv_test_unit_core
     TestMath.cpp
     TestMetaprogramming.cpp
     TestOptional.cpp
-    TestLegacyHelpers.cpp
     TestLockFreeStack.cpp
     TestHandleManager.cpp
     TestTensorDataUtils.cpp
@@ -46,8 +45,7 @@ target_link_libraries(nvcv_test_unit_core
     PRIVATE
         nvcv_util
         nvcv_test_common
-        nvcv_private_core
-        nvcv_private_operators
+        nvcv_core_priv
 )
 
 nvcv_add_test(nvcv_test_unit_core)

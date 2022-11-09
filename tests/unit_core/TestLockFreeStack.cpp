@@ -17,7 +17,7 @@
 
 #include "Definitions.hpp"
 
-#include <core/LockFreeStack.hpp>
+#include <core/priv/LockFreeStack.hpp>
 
 namespace priv = nv::cv::priv;
 

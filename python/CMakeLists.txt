@@ -24,12 +24,13 @@ add_subdirectory(${PYBIND11_SOURCE_DIR} pybind11)
 
 find_package(CUDAToolkit REQUIRED)
 find_package(nvcv REQUIRED)
+find_package(nvcv_operators REQUIRED)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../src/util nvcv_util)
 
 set(imgformat_defs ${CMAKE_CURRENT_BINARY_DIR}/NVCVPythonImageFormatDefs.inc)
 set(imgformat_script ${CMAKE_CURRENT_SOURCE_DIR}/gen_imgformat_list.sh)
-set(imgformat_header ${CMAKE_CURRENT_SOURCE_DIR}/../src/include/nvcv/ImageFormat.h)
+set(imgformat_header ${CMAKE_CURRENT_SOURCE_DIR}/../src/format/include/nvcv/ImageFormat.h)
 add_custom_command(OUTPUT ${imgformat_defs}
     COMMAND ${imgformat_script} "${imgformat_header}" > ${imgformat_defs}
     DEPENDS ${imgformat_script} ${imgformat_header}
@@ -37,7 +38,7 @@ add_custom_command(OUTPUT ${imgformat_defs}
 
 set(dtype_defs ${CMAKE_CURRENT_BINARY_DIR}/NVCVPythonDataTypeDefs.inc)
 set(dtype_script ${CMAKE_CURRENT_SOURCE_DIR}/gen_dtype_list.sh)
-set(dtype_header ${CMAKE_CURRENT_SOURCE_DIR}/../src/include/nvcv/DataType.h)
+set(dtype_header ${CMAKE_CURRENT_SOURCE_DIR}/../src/format/include/nvcv/DataType.h)
 add_custom_command(OUTPUT ${dtype_defs}
     COMMAND ${dtype_script} "${dtype_header}" > ${dtype_defs}
     DEPENDS ${dtype_script} ${dtype_header}
@@ -112,6 +113,7 @@ target_link_libraries(nvcv_python
     PRIVATE
         nvcv
         nvcv_util_compat
+        nvcv_operators
         CUDA::cudart_static
         -static-libstdc++
 )

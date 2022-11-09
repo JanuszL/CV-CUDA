@@ -21,7 +21,7 @@
 #include "Stream.hpp"
 #include "Tensor.hpp"
 
-#include <operators/OpReformat.hpp>
+#include <nvcv/operators/OpReformat.hpp>
 
 namespace nv::cvpy {
 

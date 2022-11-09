@@ -15,41 +15,43 @@
  * limitations under the License.
  */
 
+#include "priv/OpChannelReorder.hpp"
+
+#include "priv/SymbolVersioning.hpp"
+
+#include <nvcv/Exception.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
-#include <operators/OpChannelReorder.hpp>
-#include <private/core/Exception.hpp>
-#include <private/core/Status.hpp>
-#include <private/core/SymbolVersioning.hpp>
-#include <private/operators/OpChannelReorder.hpp>
+#include <util/Assert.h>
 
-namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cvop::priv;
+namespace nvcv = nv::cv;
+namespace priv = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopChannelReorderCreate, (NVCVOperatorHandle * handle))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopChannelReorderCreate, (NVCVOperatorHandle * handle))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
+                throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                                      "Pointer to NVCVOperator handle must not be NULL");
             }
 
-            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::ChannelReorder());
+            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv::ChannelReorder());
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopChannelReorderVarShapeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
-                 NVCVTensorHandle orders_in))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopChannelReorderVarShapeSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                    NVCVTensorHandle orders_in))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::ImageBatchVarShapeWrapHandle output(out), input(in);
-            nv::cv::TensorWrapHandle             orders(orders_in);
+            nvcv::ImageBatchVarShapeWrapHandle output(out), input(in);
+            nvcv::TensorWrapHandle             orders(orders_in);
 
-            priv::ToDynamicRef<priv_op::ChannelReorder>(handle)(stream, input, output, orders);
+            priv::ToDynamicRef<priv::ChannelReorder>(handle)(stream, input, output, orders);
         });
 }

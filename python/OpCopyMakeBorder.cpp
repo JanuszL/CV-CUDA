@@ -23,11 +23,11 @@
 #include "Stream.hpp"
 #include "String.hpp"
 #include "Tensor.hpp"
-#include "operators/Types.h"
 
 #include <nvcv/DataType.hpp>
-#include <nvcv/cuda/TypeTraits.hpp>
-#include <operators/OpCopyMakeBorder.hpp>
+#include <nvcv/operators/OpCopyMakeBorder.hpp>
+#include <nvcv/operators/Types.h>
+#include <nvcv/optools/TypeTraits.hpp>
 #include <pybind11/stl.h>
 
 namespace nv::cvpy {

@@ -21,7 +21,7 @@
 #include "String.hpp"
 
 #include <nvcv/DataType.hpp>
-#include <nvcv/cuda/TypeTraits.hpp>
+#include <nvcv/optools/TypeTraits.hpp>
 #include <pybind11/numpy.h>
 #include <pybind11/operators.h>
 

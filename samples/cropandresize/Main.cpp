@@ -22,8 +22,8 @@
 #include <math.h>
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
-#include <operators/OpCustomCrop.hpp>
-#include <operators/OpResize.hpp>
+#include <nvcv/operators/OpCustomCrop.hpp>
+#include <nvcv/operators/OpResize.hpp>
 
 /**
  * @brief Crop and Resize sample app.

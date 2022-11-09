@@ -23,8 +23,8 @@
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/cuda/TypeTraits.hpp>
-#include <operators/OpReformat.hpp>
+#include <nvcv/operators/OpReformat.hpp>
+#include <nvcv/optools/TypeTraits.hpp>
 
 #include <iostream>
 #include <random>

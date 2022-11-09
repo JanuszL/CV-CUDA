@@ -24,7 +24,7 @@
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <operators/OpRotate.hpp>
+#include <nvcv/operators/OpRotate.hpp>
 
 #include <cmath>
 #include <random>

@@ -17,8 +17,8 @@
 
 #include "Definitions.hpp"
 
-#include <core/HandleManager.hpp>
-#include <core/HandleManagerImpl.hpp>
+#include <core/priv/HandleManager.hpp>
+#include <core/priv/HandleManagerImpl.hpp>
 
 #include <unordered_set>
 

@@ -129,14 +129,22 @@ extensions.append("sphinx.ext.todo")
 
 # -- Extension configuration -------------------------------------------------
 
-doxygen_config = """
-INPUT                = ../../src/include
-EXCLUDE             += ../../../tests
+doxygen_input_config = """
+INPUT                = ../../src/core/include
+INPUT               += ../../src/operators/include
+INPUT               += ../../src/optools/include
+INPUT               += ../../src/format/include
+"""
+doxygen_config = (
+    doxygen_input_config
+    + """
+EXCLUDE             += ../../tests
 EXCLUDE_PATTERNS     = *.md *.txt
 ENABLE_PREPROCESSING = YES
 WARN_IF_UNDOCUMENTED = NO
 USE_M
 """
+)
 
 doxygen_conf_extra = """
 INLINE_SIMPLE_STRUCTS = YES
@@ -156,7 +164,7 @@ exhale_args = {
     # These arguments are required
     "containmentFolder": "_exhale_api",
     "rootFileName": "cvcuda_api.rst",
-    "doxygenStripFromPath": "../../src/include",
+    "doxygenStripFromPath": "../../src",
     # Heavily encouraged optional argument (see docs)
     "rootFileTitle": "Library API",
     # Suggested optional arguments
@@ -167,7 +175,7 @@ exhale_args = {
     "fullToctreeMaxDepth": 1,
     "minifyTreeView": False,
     "contentsDirectives": False,
-    "exhaleDoxygenStdin": "INPUT = ../../src/include",
+    "exhaleDoxygenStdin": doxygen_input_config,
 }
 
 # Tell sphinx what the primary language being documented is.

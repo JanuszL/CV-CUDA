@@ -15,53 +15,53 @@
  * limitations under the License.
  */
 
+#include "priv/OpResize.hpp"
+
+#include "priv/SymbolVersioning.hpp"
+
+#include <nvcv/Exception.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
-#include <operators/OpResize.hpp>
-#include <private/core/Exception.hpp>
-#include <private/core/Status.hpp>
-#include <private/core/SymbolVersioning.hpp>
-#include <private/operators/OpResize.hpp>
 #include <util/Assert.h>
 
-namespace nvcv    = nv::cv;
-namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cvop::priv;
+namespace nvcv = nv::cv;
+namespace priv = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopResizeCreate, (NVCVOperatorHandle * handle))
+NVCV_OP_DEFINE_API(0, 0, NVCVStatus, nvcvopResizeCreate, (NVCVOperatorHandle * handle))
 {
     return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
+                throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                                      "Pointer to NVCVOperator handle must not be NULL");
             }
 
-            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::Resize());
+            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv::Resize());
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopResizeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                 const NVCVInterpolationType interpolation))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopResizeSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
+                    const NVCVInterpolationType interpolation))
 {
     return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle input(in), output(out);
-            priv::ToDynamicRef<priv_op::Resize>(handle)(stream, input, output, interpolation);
+            nvcv::TensorWrapHandle input(in), output(out);
+            priv::ToDynamicRef<priv::Resize>(handle)(stream, input, output, interpolation);
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopResizeVarShapeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
-                 const NVCVInterpolationType interpolation))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopResizeVarShapeSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                    const NVCVInterpolationType interpolation))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::ImageBatchVarShapeWrapHandle input(in), output(out);
-            priv::ToDynamicRef<priv_op::Resize>(handle)(stream, input, output, interpolation);
+            nvcv::ImageBatchVarShapeWrapHandle input(in), output(out);
+            priv::ToDynamicRef<priv::Resize>(handle)(stream, input, output, interpolation);
         });
 }
