@@ -1189,7 +1189,7 @@ struct NonDefaultConstructible
 TEST(StaticVector, cant_increase_size_of_non_default_constructible_type_vector)
 {
     util::StaticVector<NonDefaultConstructible, 5> v;
-    ASSERT_THROW(v.resize(1), util::Exception);
+    ASSERT_THROW(v.resize(1), std::runtime_error);
     EXPECT_EQ(0u, v.size());
 }
 

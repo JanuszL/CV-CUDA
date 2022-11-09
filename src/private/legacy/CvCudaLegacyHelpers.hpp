@@ -22,6 +22,7 @@
 
 #include "CvCudaLegacy.h"
 
+#include <nvcv/Exception.hpp>
 #include <nvcv/IImage.hpp>
 #include <nvcv/TensorShapeInfo.hpp>
 #include <private/fmt/ImageFormat.hpp>
@@ -44,7 +45,7 @@ inline void CheckOpErrThrow(cuda_op::ErrorCode status)
     // This check gets inlined easier, and it's normal code path.
     if (status != cuda_op::ErrorCode::SUCCESS)
     {
-        throw util::Exception(NVCV_ERROR_INTERNAL, "Internal Error from operator =%d", status);
+        throw Exception(Status::ERROR_INTERNAL, "Internal Error from operator =%d", status);
     }
 }
 

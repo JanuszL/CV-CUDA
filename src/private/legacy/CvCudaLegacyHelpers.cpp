@@ -35,9 +35,9 @@ cuda_op::DataFormat GetLegacyDataFormat(int32_t numberChannels, int32_t numberPl
         return ((numberInBatch > 1) ? legacy::cuda_op::DataFormat::kNCHW : legacy::cuda_op::DataFormat::kCHW);
     }
 
-    throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT,
-                          "Only planar or packed formats supported CH = %d, planes = %d, batch = %d", numberChannels,
-                          numberPlanes, numberInBatch);
+    throw Exception(Status::ERROR_INVALID_ARGUMENT,
+                    "Only planar or packed formats supported CH = %d, planes = %d, batch = %d", numberChannels,
+                    numberPlanes, numberInBatch);
 }
 
 static cuda_op::DataType GetLegacyCvFloatType(int32_t bpc)
@@ -49,7 +49,7 @@ static cuda_op::DataType GetLegacyCvFloatType(int32_t bpc)
     if (bpc == 16)
         return cuda_op::DataType::kCV_16F;
 
-    throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Invalid bpc(%d) for float cuda op type ", bpc);
+    throw Exception(Status::ERROR_INVALID_ARGUMENT, "Invalid bpc(%d) for float cuda op type ", bpc);
 }
 
 static cuda_op::DataType GetLegacyCvSignedType(int32_t bpc)
@@ -61,7 +61,7 @@ static cuda_op::DataType GetLegacyCvSignedType(int32_t bpc)
     if (bpc == 32)
         return cuda_op::DataType::kCV_32S;
 
-    throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Invalid bpc(%d) for signed cuda op type ", bpc);
+    throw Exception(Status::ERROR_INVALID_ARGUMENT, "Invalid bpc(%d) for signed cuda op type ", bpc);
 }
 
 static cuda_op::DataType GetLegacyCvUnsignedType(int32_t bpc)
@@ -71,7 +71,7 @@ static cuda_op::DataType GetLegacyCvUnsignedType(int32_t bpc)
     if (bpc == 16)
         return cuda_op::DataType::kCV_16U;
 
-    throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Invalid bpc(%d) for unsigned cuda op type ", bpc);
+    throw Exception(Status::ERROR_INVALID_ARGUMENT, "Invalid bpc(%d) for unsigned cuda op type ", bpc);
 }
 
 cuda_op::DataType GetLegacyDataType(int32_t bpc, cv::DataType type)
@@ -93,7 +93,7 @@ cuda_op::DataType GetLegacyDataType(int32_t bpc, cv::DataType type)
         return GetLegacyCvUnsignedType(bpc);
     }
     }
-    throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Only planar formats supported ");
+    throw Exception(Status::ERROR_INVALID_ARGUMENT, "Only planar formats supported ");
 }
 
 cuda_op::DataType GetLegacyDataType(PixelType dtype_)
@@ -106,7 +106,7 @@ cuda_op::DataType GetLegacyDataType(PixelType dtype_)
     {
         if (bpc[i] != bpc[0])
         {
-            throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "All channels must have same bit-depth");
+            throw Exception(Status::ERROR_INVALID_ARGUMENT, "All channels must have same bit-depth");
         }
     }
 
@@ -121,7 +121,7 @@ cuda_op::DataType GetLegacyDataType(ImageFormat fmt_)
     {
         if (fmt.planePixelType(i) != fmt.planePixelType(0))
         {
-            throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "All planes must have the same pixel type");
+            throw Exception(Status::ERROR_INVALID_ARGUMENT, "All planes must have the same pixel type");
         }
     }
 
@@ -142,7 +142,7 @@ cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShapeDataPitchDevice
     {
         if (fmt.planePixelType(i) != fmt.planePixelType(0))
         {
-            throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "All planes must have the same pixel type");
+            throw Exception(Status::ERROR_INVALID_ARGUMENT, "All planes must have the same pixel type");
         }
     }
 
@@ -150,7 +150,7 @@ cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShapeDataPitchDevice
     {
         if (fmt.numPlanes() != fmt.numChannels())
         {
-            throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Planar images must have one channel per plane");
+            throw Exception(Status::ERROR_INVALID_ARGUMENT, "Planar images must have one channel per plane");
         }
 
         if (imgBatch.numImages() >= 2)
@@ -195,7 +195,7 @@ cuda_op::DataFormat GetLegacyDataFormat(const TensorLayout &layout)
     }
     else
     {
-        throw util::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Tensor layout not supported");
+        throw Exception(Status::ERROR_INVALID_ARGUMENT, "Tensor layout not supported");
     }
 }
 

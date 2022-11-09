@@ -13,8 +13,6 @@
 
 #include "CheckError.hpp"
 
-#include "Exception.hpp"
-
 #include <cuda_runtime.h>
 
 #include <cstdarg>

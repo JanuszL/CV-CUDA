@@ -15,7 +15,6 @@
 #define NVCV_UTIL_STATICVECTOR_HPP
 
 #include "Assert.h"
-#include "Exception.hpp"
 
 #include <algorithm>
 #include <cstddef> // for std::byte
@@ -196,7 +195,7 @@ public:
             }
             else
             {
-                throw Exception(NVCV_ERROR_INTERNAL, "Can't create non-default-constructible type");
+                throw std::runtime_error("Can't create non-default-constructible type");
             };
         }
 

@@ -35,7 +35,6 @@ endif()
 add_library(nvcv_util
     Assert.cpp
     HashMD5.cpp
-    Exception.cpp
     Status.cpp
     CheckError.cpp
     String.cpp

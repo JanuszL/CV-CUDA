@@ -11,15 +11,23 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_OP_PRIV_EXCEPTION_HPP
-#define NVCV_OP_PRIV_EXCEPTION_HPP
+#ifndef NVCV_UTIL_EXCEPTION_HPP
+#define NVCV_UTIL_EXCEPTION_HPP
 
-#include <util/Exception.hpp>
+#if NVCV_EXPORTING
+#    include <private/core/Exception.hpp>
+#else
+#    include <nvcv/Exception.hpp>
+#endif
 
-namespace nv::cvop::priv {
+namespace nv::cv::util {
 
-using cv::util::Exception;
+#if NVCV_EXPORTING
+using cv::priv::Exception;
+#else
+using cv::Exception;
+#endif
 
-}
+} // namespace nv::cv::util
 
-#endif // NVCVOP_PRIV_EXCEPTION_HPP
+#endif // NVCV_UTIL_EXCEPTION_HPP

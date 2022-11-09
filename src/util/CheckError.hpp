@@ -15,7 +15,6 @@
 #define NVCV_UTIL_CHECK_ERROR_HPP
 
 #include "Assert.h"
-#include "Exception.hpp"
 
 #include <driver_types.h> // for cudaError
 #include <nvcv/Status.h>
@@ -24,6 +23,12 @@
 #include <iostream>
 #include <string>
 #include <string_view>
+
+#if NVCV_EXPORTING
+#    include <private/core/Exception.hpp>
+#else
+#    include <nvcv/Exception.hpp>
+#endif
 
 // Here we define the CHECK_ERROR macro that converts error values into exceptions
 // or log messages. It can be extended to other errors. At minimum, you need to define:
@@ -82,6 +87,12 @@ namespace detail {
 template<class T>
 void DoThrow(T error, const char *file, int line, const std::string_view &stmt, const std::string_view &errmsg)
 {
+#if NVCV_EXPORTING
+    using cv::priv::Exception;
+#else
+    using cv::Exception;
+#endif
+
     // Can we expose source file data?
     if (file != nullptr)
     {

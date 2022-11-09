@@ -13,11 +13,11 @@
 
 #include "Status.hpp"
 
+#include "Exception.hpp"
 #include "TLS.hpp"
 
 #include <nvcv/Exception.hpp>
 #include <util/Assert.h>
-#include <util/Exception.hpp>
 #include <util/Status.hpp>
 
 #include <cstring>
@@ -47,7 +47,7 @@ void SetThreadError(std::exception_ptr e)
         tls.lastErrorStatus = NVCV_ERROR_INTERNAL;
         NVCV_ASSERT(!"Exception from public API cannot be originated from internal library implementation");
     }
-    catch (const util::Exception &e)
+    catch (const Exception &e)
     {
         tls.lastErrorStatus = e.code();
         strncpy(tls.lastErrorMessage, e.msg(), errorMessageLen);
