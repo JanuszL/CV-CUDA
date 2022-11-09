@@ -12,7 +12,6 @@
  */
 
 #include <nvcv/ImageBatch.h>
-#include <nvcv/ImageBatch.hpp>
 #include <private/core/Exception.hpp>
 #include <private/core/IAllocator.hpp>
 #include <private/core/ImageBatchVarShape.hpp>

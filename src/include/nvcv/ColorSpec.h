@@ -547,6 +547,87 @@ NVCV_PUBLIC const char *nvcvColorSpecGetName(NVCVColorSpec cspec);
  */
 NVCV_PUBLIC NVCVStatus nvcvColorModelNeedsColorspec(NVCVColorModel cmodel, int8_t *outBool);
 
+/** Returns a string representation of the color model.
+ *
+ * @param[in] cmodel Color model whose name is to be returned.
+ *
+ * @returns The string representation of the color model.
+ *          Returned pointer must not be freed.
+ */
+NVCV_PUBLIC const char *nvcvColorModelGetName(NVCVColorModel cmodel);
+
+/** Returns a string representation of the color space.
+ *
+ * @param[in] cspace Color model whose name is to be returned.
+ *
+ * @returns The string representation of the color model.
+ *          Returned pointer must not be freed.
+ */
+NVCV_PUBLIC const char *nvcvColorSpaceGetName(NVCVColorSpace cspace);
+
+/** Returns a string representation of the white point.
+ *
+ * @param[in] wpoint White point whose name is to be returned.
+ *
+ * @returns The string representation of the white point.
+ *          Returned pointer must not be freed.
+ */
+NVCV_PUBLIC const char *nvcvWhitePointGetName(NVCVWhitePoint wpoint);
+
+/** Returns a string representation of the YCbCr encoding.
+ *
+ * @param[in] enc YCbCr encoding whose name is to be returned.
+ *
+ * @returns The string representation of the YCbCr encoding.
+ *          Returned pointer must not be freed.
+ */
+NVCV_PUBLIC const char *nvcvYCbCrEncodingGetName(NVCVYCbCrEncoding enc);
+
+/** Returns a string representation of the color transfer function.
+ *
+ * @param[in] xfer Color transfer function whose name is to be returned.
+ *
+ * @returns The string representation of the color transfer function.
+ *          Returned pointer must not be freed.
+ */
+NVCV_PUBLIC const char *nvcvColorTransferFunctionGetName(NVCVColorTransferFunction xfer);
+
+/** Returns a string representation of the color range.
+ *
+ * @param[in] range Color range whose name is to be returned.
+ *
+ * @returns The string representation of the color range.
+ *          Returned pointer must not be freed.
+ */
+NVCV_PUBLIC const char *nvcvColorRangeGetName(NVCVColorRange range);
+
+/** Returns a string representation of the chroma location.
+ *
+ * @param[in] loc Chroma location whose name is to be returned.
+ *
+ * @returns The string representation of the chroma location.
+ *          Returned pointer must not be freed.
+ */
+NVCV_PUBLIC const char *nvcvChromaLocationGetName(NVCVChromaLocation loc);
+
+/** Returns a string representation of the raw pattern.
+ *
+ * @param[in] raw Raw pattern whose name is to be returned.
+ *
+ * @returns The string representation of the raw pattern.
+ *          Returned pointer must not be freed.
+ */
+NVCV_PUBLIC const char *nvcvRawPatternGetName(NVCVRawPattern raw);
+
+/** Returns a string representation of the chroma subsampling.
+ *
+ * @param[in] css Chroma subsampling whose name is to be returned.
+ *
+ * @returns The string representation of the chroma subsampling.
+ *          Returned pointer must not be freed.
+ */
+NVCV_PUBLIC const char *nvcvChromaSubsamplingGetName(NVCVChromaSubsampling css);
+
 /**@}*/
 
 #ifdef __cplusplus

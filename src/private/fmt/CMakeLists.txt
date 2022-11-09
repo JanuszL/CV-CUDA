@@ -13,7 +13,6 @@
 add_library(nvcv_format STATIC
     TLS.cpp
     ColorSpec.cpp
-    Printers.cpp
     DataLayout.cpp
     ColorFormat.cpp
     PixelType.cpp

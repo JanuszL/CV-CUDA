@@ -66,7 +66,29 @@ std::pair<int, int>   GetChromaSamples(NVCVChromaSubsampling css);
 
 bool NeedsColorspec(NVCVColorModel cmodel);
 
+const char *GetName(NVCVColorModel colorModel);
+const char *GetName(NVCVColorSpec colorSpec);
+const char *GetName(NVCVChromaSubsampling chromaSub);
+const char *GetName(NVCVColorTransferFunction xferFunc);
+const char *GetName(NVCVYCbCrEncoding cstd);
+const char *GetName(NVCVColorRange range);
+const char *GetName(NVCVWhitePoint whitePoint);
+const char *GetName(NVCVColorSpace color_space);
+const char *GetName(NVCVChromaLocation loc);
+const char *GetName(NVCVRawPattern raw);
+
 } // namespace nv::cv::priv
+
+std::ostream &operator<<(std::ostream &out, NVCVColorModel colorModel);
+std::ostream &operator<<(std::ostream &out, NVCVColorSpec colorSpec);
+std::ostream &operator<<(std::ostream &out, NVCVChromaSubsampling chromaSub);
+std::ostream &operator<<(std::ostream &out, NVCVColorTransferFunction xferFunc);
+std::ostream &operator<<(std::ostream &out, NVCVYCbCrEncoding cstd);
+std::ostream &operator<<(std::ostream &out, NVCVColorRange range);
+std::ostream &operator<<(std::ostream &out, NVCVWhitePoint whitePoint);
+std::ostream &operator<<(std::ostream &out, NVCVColorSpace color_space);
+std::ostream &operator<<(std::ostream &out, NVCVChromaLocation loc);
+std::ostream &operator<<(std::ostream &out, NVCVRawPattern raw);
 
 // To be used inside gdb, as sometimes it has problems resolving the correct
 // overload based on the parameter type.

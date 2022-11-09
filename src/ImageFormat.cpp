@@ -13,10 +13,8 @@
 
 #include <fmt/ImageFormat.hpp>
 #include <fmt/PixelType.hpp>
-#include <fmt/Printers.hpp>
 #include <fmt/TLS.hpp>
 #include <nvcv/ImageFormat.h>
-#include <nvcv/ImageFormat.hpp>
 #include <private/core/Exception.hpp>
 #include <private/core/Status.hpp>
 #include <private/core/SymbolVersioning.hpp>

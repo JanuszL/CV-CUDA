@@ -21,6 +21,23 @@ namespace nv::cv::priv {
 struct FormatTLS
 {
     char bufColorSpecName[1024];
+    char bufColorModelName[128];
+    char bufChromaLocationName[128];
+    char bufRawPatternName[128];
+    char bufColorSpaceName[128];
+    char bufColorTransferFunctionName[128];
+    char bufColorRangeName[128];
+    char bufWhitePointName[128];
+    char bufYCbCrEncodingName[128];
+    char bufChromaSubsamplingName[128];
+
+    char bufDataTypeName[128];
+    char bufMemLayoutName[128];
+    char bufChannelName[128];
+    char bufSwizzleName[128];
+    char bufByteOrderName[128];
+    char bufPackingName[128];
+
     char bufPixelTypeName[1024];
     char bufImageFormatName[1024];
 };

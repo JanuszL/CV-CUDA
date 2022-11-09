@@ -14,9 +14,11 @@
 #include "DataLayout.hpp"
 
 #include "Bitfield.hpp"
+#include "TLS.hpp"
 
 #include <core/Exception.hpp>
 #include <util/Assert.h>
+#include <util/String.hpp>
 
 #include <map>
 
@@ -408,19 +410,6 @@ std::optional<NVCVPacking> MakeNVCVPacking(const NVCVPackingParams &params) noex
     }
 }
 
-const char *ToString(NVCVPacking packing)
-{
-    auto it = g_packingToData.find(packing);
-    if (it != g_packingToData.end())
-    {
-        return it->second.name;
-    }
-    else
-    {
-        return "NVCV_PACKING_INVALID";
-    }
-}
-
 NVCVSwizzle MakeNVCVSwizzle(NVCVChannel x, NVCVChannel y, NVCVChannel z, NVCVChannel w) noexcept
 {
     return NVCV_MAKE_SWIZZLE(x, y, z, w);
@@ -787,4 +776,142 @@ NVCVSwizzle FlipByteOrder(NVCVSwizzle swizzle, int off, int len) noexcept
     return NVCV_MAKE_SWIZZLE(comp[0], comp[1], comp[2], comp[3]);
 }
 
+const char *GetName(NVCVDataType dataType)
+{
+    switch (dataType)
+    {
+#define ENUM_CASE(X) \
+    case X:          \
+        return #X
+        ENUM_CASE(NVCV_DATA_TYPE_UNSIGNED);
+        ENUM_CASE(NVCV_DATA_TYPE_SIGNED);
+        ENUM_CASE(NVCV_DATA_TYPE_FLOAT);
+#undef ENUM_CASE
+    }
+    priv::FormatTLS &tls = priv::GetFormatTLS();
+    util::BufferOStream(tls.bufDataTypeName, sizeof(tls.bufDataTypeName)) << "NVCVDataType(" << (int)dataType << ")";
+    return tls.bufDataTypeName;
+}
+
+const char *GetName(NVCVMemLayout memLayout)
+{
+    switch (memLayout)
+    {
+#define ENUM_CASE(X) \
+    case X:          \
+        return #X
+        ENUM_CASE(NVCV_MEM_LAYOUT_PITCH_LINEAR);
+        ENUM_CASE(NVCV_MEM_LAYOUT_BLOCK1_LINEAR);
+        ENUM_CASE(NVCV_MEM_LAYOUT_BLOCK2_LINEAR);
+        ENUM_CASE(NVCV_MEM_LAYOUT_BLOCK4_LINEAR);
+        ENUM_CASE(NVCV_MEM_LAYOUT_BLOCK8_LINEAR);
+        ENUM_CASE(NVCV_MEM_LAYOUT_BLOCK16_LINEAR);
+        ENUM_CASE(NVCV_MEM_LAYOUT_BLOCK32_LINEAR);
+#undef ENUM_CASE
+    }
+
+    priv::FormatTLS &tls = priv::GetFormatTLS();
+    util::BufferOStream(tls.bufMemLayoutName, sizeof(tls.bufMemLayoutName))
+        << "NVCVMemLayout(" << (int)memLayout << ")";
+    return tls.bufMemLayoutName;
+}
+
+const char *GetName(NVCVChannel swizzleChannel)
+{
+    switch (swizzleChannel)
+    {
+    case NVCV_CHANNEL_0:
+        return "0";
+    case NVCV_CHANNEL_X:
+        return "X";
+    case NVCV_CHANNEL_Y:
+        return "Y";
+    case NVCV_CHANNEL_Z:
+        return "Z";
+    case NVCV_CHANNEL_W:
+        return "W";
+    case NVCV_CHANNEL_1:
+        return "1";
+    case NVCV_CHANNEL_FORCE8:
+        break;
+    }
+
+    priv::FormatTLS &tls = priv::GetFormatTLS();
+    util::BufferOStream(tls.bufChannelName, sizeof(tls.bufChannelName)) << "NVCVChannel(" << (int)swizzleChannel << ")";
+    return tls.bufChannelName;
+}
+
+const char *GetName(NVCVSwizzle swizzle)
+{
+    std::array<NVCVChannel, 4> channels = priv::GetChannels(swizzle);
+
+    priv::FormatTLS &tls = priv::GetFormatTLS();
+    util::BufferOStream(tls.bufSwizzleName, sizeof(tls.bufSwizzleName))
+        << channels[0] << channels[1] << channels[2] << channels[3];
+    return tls.bufSwizzleName;
+}
+
+const char *GetName(NVCVByteOrder byteOrder)
+{
+    switch (byteOrder)
+    {
+    case NVCV_ORDER_LSB:
+        return "LSB";
+    case NVCV_ORDER_MSB:
+        return "MSB";
+    }
+
+    priv::FormatTLS &tls = priv::GetFormatTLS();
+    util::BufferOStream(tls.bufByteOrderName, sizeof(tls.bufByteOrderName))
+        << "NVCVByteOrder(" << (int)byteOrder << ")";
+    return tls.bufByteOrderName;
+}
+
+const char *GetName(NVCVPacking packing)
+{
+    auto it = g_packingToData.find(packing);
+    if (it != g_packingToData.end())
+    {
+        return it->second.name;
+    }
+    else
+    {
+        priv::FormatTLS &tls = priv::GetFormatTLS();
+        util::BufferOStream(tls.bufPackingName, sizeof(tls.bufPackingName)) << "NVCVPacking(" << (int)packing << ")";
+        return tls.bufPackingName;
+    }
+}
+
 } // namespace nv::cv::priv
+
+namespace priv = nv::cv::priv;
+
+std::ostream &operator<<(std::ostream &out, NVCVDataType dataType)
+{
+    return out << priv::GetName(dataType);
+}
+
+std::ostream &operator<<(std::ostream &out, NVCVMemLayout memLayout)
+{
+    return out << priv::GetName(memLayout);
+}
+
+std::ostream &operator<<(std::ostream &out, NVCVChannel swizzleChannel)
+{
+    return out << priv::GetName(swizzleChannel);
+}
+
+std::ostream &operator<<(std::ostream &out, NVCVSwizzle swizzle)
+{
+    return out << priv::GetName(swizzle);
+}
+
+std::ostream &operator<<(std::ostream &out, NVCVPacking packing)
+{
+    return out << priv::GetName(packing);
+}
+
+std::ostream &operator<<(std::ostream &out, NVCVByteOrder byteOrder)
+{
+    return out << priv::GetName(byteOrder);
+}

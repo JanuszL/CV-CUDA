@@ -349,8 +349,68 @@ inline int32_t GetBitsPerPixel(Packing packing)
     return out;
 }
 
-/**@}*/
+inline std::ostream &operator<<(std::ostream &out, DataType dataType)
+{
+    return out << nvcvDataTypeGetName(static_cast<NVCVDataType>(dataType));
+}
+
+inline std::ostream &operator<<(std::ostream &out, Packing packing)
+{
+    return out << nvcvPackingGetName(static_cast<NVCVPacking>(packing));
+}
+
+inline std::ostream &operator<<(std::ostream &out, MemLayout memLayout)
+{
+    return out << nvcvMemLayoutGetName(static_cast<NVCVMemLayout>(memLayout));
+}
+
+inline std::ostream &operator<<(std::ostream &out, Channel swizzleChannel)
+{
+    return out << nvcvChannelGetName(static_cast<NVCVChannel>(swizzleChannel));
+}
+
+inline std::ostream &operator<<(std::ostream &out, Swizzle swizzle)
+{
+    return out << nvcvSwizzleGetName(static_cast<NVCVSwizzle>(swizzle));
+}
+
+inline std::ostream &operator<<(std::ostream &out, ByteOrder byteOrder)
+{
+    return out << nvcvByteOrderGetName(static_cast<NVCVByteOrder>(byteOrder));
+}
 
 }} // namespace nv::cv
+
+inline std::ostream &operator<<(std::ostream &out, NVCVDataType dataType)
+{
+    return out << nvcvDataTypeGetName(dataType);
+}
+
+inline std::ostream &operator<<(std::ostream &out, NVCVPacking packing)
+{
+    return out << nvcvPackingGetName(packing);
+}
+
+inline std::ostream &operator<<(std::ostream &out, NVCVMemLayout memLayout)
+{
+    return out << nvcvMemLayoutGetName(memLayout);
+}
+
+inline std::ostream &operator<<(std::ostream &out, NVCVChannel swizzleChannel)
+{
+    return out << nvcvChannelGetName(swizzleChannel);
+}
+
+inline std::ostream &operator<<(std::ostream &out, NVCVSwizzle swizzle)
+{
+    return out << nvcvSwizzleGetName(swizzle);
+}
+
+inline std::ostream &operator<<(std::ostream &out, NVCVByteOrder byteOrder)
+{
+    return out << nvcvByteOrderGetName(byteOrder);
+}
+
+/**@}*/
 
 #endif // NVCV_DATALAYOUT_HPP

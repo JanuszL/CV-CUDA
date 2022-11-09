@@ -14,9 +14,10 @@
 #include "ColorSpec.hpp"
 
 #include "Bitfield.hpp"
-#include "Printers.hpp"
+#include "TLS.hpp"
 
 #include <core/Exception.hpp>
+#include <util/String.hpp>
 
 #include <sstream>
 
@@ -217,7 +218,302 @@ bool NeedsColorspec(NVCVColorModel cmodel)
     throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Invalid color model: " << cmodel;
 }
 
+const char *GetName(NVCVColorSpec cspec)
+{
+    priv::FormatTLS &tls = priv::GetFormatTLS();
+
+    char         *buffer  = tls.bufColorSpecName;
+    constexpr int bufSize = sizeof(tls.bufColorSpecName);
+
+    try
+    {
+        util::BufferOStream(buffer, bufSize) << priv::ColorSpec{cspec};
+
+        using namespace std::literals;
+
+        util::ReplaceAllInline(buffer, bufSize, "NVCV_CHROMA_LOC_"sv, "LOC_"sv);
+        util::ReplaceAllInline(buffer, bufSize, "NVCV_YCbCr_"sv, ""sv);
+        util::ReplaceAllInline(buffer, bufSize, "NVCV_COLOR_XFER_"sv, "XFER_"sv);
+        util::ReplaceAllInline(buffer, bufSize, "NVCV_COLOR_RANGE_"sv, "RANGE_"sv);
+        util::ReplaceAllInline(buffer, bufSize, "NVCV_COLOR_SPACE_"sv, "SPACE_"sv);
+    }
+    catch (std::exception &e)
+    {
+        strncpy(buffer, e.what(), bufSize - 1);
+        buffer[bufSize - 1] = '\0';
+    }
+    catch (...)
+    {
+        strncpy(buffer, "Unexpected error retrieving NVCVColorSpec string representation", bufSize - 1);
+        buffer[bufSize - 1] = '\0';
+    }
+
+    return buffer;
+}
+
+const char *GetName(NVCVColorModel colorModel)
+{
+    switch (colorModel)
+    {
+#define ENUM_CASE(X) \
+    case X:          \
+        return #X
+        ENUM_CASE(NVCV_COLOR_MODEL_UNDEFINED);
+        ENUM_CASE(NVCV_COLOR_MODEL_RGB);
+        ENUM_CASE(NVCV_COLOR_MODEL_YCbCr);
+        ENUM_CASE(NVCV_COLOR_MODEL_RAW);
+        ENUM_CASE(NVCV_COLOR_MODEL_XYZ);
+#undef ENUM_CASE
+    }
+
+    priv::FormatTLS &tls = priv::GetFormatTLS();
+
+    util::BufferOStream(tls.bufColorModelName, sizeof(tls.bufColorModelName))
+        << "NVCVColorModel(" << (int)colorModel << ")";
+
+    return tls.bufColorModelName;
+}
+
+const char *GetName(NVCVChromaLocation loc)
+{
+    switch (loc)
+    {
+#define ENUM_CASE(X) \
+    case X:          \
+        return #X
+        ENUM_CASE(NVCV_CHROMA_LOC_EVEN);
+        ENUM_CASE(NVCV_CHROMA_LOC_CENTER);
+        ENUM_CASE(NVCV_CHROMA_LOC_ODD);
+        ENUM_CASE(NVCV_CHROMA_LOC_BOTH);
+#undef ENUM_CASE
+    }
+
+    priv::FormatTLS &tls = priv::GetFormatTLS();
+
+    util::BufferOStream(tls.bufChromaLocationName, sizeof(tls.bufChromaLocationName))
+        << "NVCVChromaLocation(" << (int)loc << ")";
+    return tls.bufChromaLocationName;
+}
+
+const char *GetName(NVCVRawPattern raw)
+{
+    switch (raw)
+    {
+#define ENUM_CASE(X) \
+    case X:          \
+        return #X
+        ENUM_CASE(NVCV_RAW_BAYER_RGGB);
+        ENUM_CASE(NVCV_RAW_BAYER_BGGR);
+        ENUM_CASE(NVCV_RAW_BAYER_GRBG);
+        ENUM_CASE(NVCV_RAW_BAYER_GBRG);
+        ENUM_CASE(NVCV_RAW_BAYER_RCCB);
+        ENUM_CASE(NVCV_RAW_BAYER_BCCR);
+        ENUM_CASE(NVCV_RAW_BAYER_CRBC);
+        ENUM_CASE(NVCV_RAW_BAYER_CBRC);
+        ENUM_CASE(NVCV_RAW_BAYER_RCCC);
+        ENUM_CASE(NVCV_RAW_BAYER_CRCC);
+        ENUM_CASE(NVCV_RAW_BAYER_CCRC);
+        ENUM_CASE(NVCV_RAW_BAYER_CCCR);
+        ENUM_CASE(NVCV_RAW_BAYER_CCCC);
+#undef ENUM_CASE
+
+    case NVCV_RAW_FORCE8:
+        break;
+    }
+
+    priv::FormatTLS &tls = priv::GetFormatTLS();
+    util::BufferOStream(tls.bufRawPatternName, sizeof(tls.bufRawPatternName)) << "NVCVRawPattern(" << (int)raw << ")";
+
+    return tls.bufRawPatternName;
+}
+
+const char *GetName(NVCVColorSpace color_space)
+{
+    switch (color_space)
+    {
+#define ENUM_CASE(X) \
+    case X:          \
+        return #X
+        ENUM_CASE(NVCV_COLOR_SPACE_BT601);
+        ENUM_CASE(NVCV_COLOR_SPACE_BT709);
+        ENUM_CASE(NVCV_COLOR_SPACE_BT2020);
+        ENUM_CASE(NVCV_COLOR_SPACE_DCIP3);
+#undef ENUM_CASE
+    }
+
+    priv::FormatTLS &tls = priv::GetFormatTLS();
+    util::BufferOStream(tls.bufColorSpaceName, sizeof(tls.bufColorSpaceName))
+        << "NVCVColorSpace(" << (int)color_space << ")";
+    return tls.bufColorSpaceName;
+}
+
+const char *GetName(NVCVWhitePoint whitePoint)
+{
+    switch (whitePoint)
+    {
+#define ENUM_CASE(X) \
+    case X:          \
+        return #X
+        ENUM_CASE(NVCV_WHITE_POINT_D65);
+#undef ENUM_CASE
+    case NVCV_WHITE_POINT_FORCE8:
+        break;
+    }
+
+    priv::FormatTLS &tls = priv::GetFormatTLS();
+    util::BufferOStream(tls.bufWhitePointName, sizeof(tls.bufWhitePointName))
+        << "NVCVWhitePoint(" << (int)whitePoint << ")";
+    return tls.bufWhitePointName;
+}
+
+const char *GetName(NVCVColorTransferFunction xferFunc)
+{
+    switch (xferFunc)
+    {
+#define ENUM_CASE(X) \
+    case X:          \
+        return #X
+        ENUM_CASE(NVCV_COLOR_XFER_LINEAR);
+        ENUM_CASE(NVCV_COLOR_XFER_sRGB);
+        ENUM_CASE(NVCV_COLOR_XFER_sYCC);
+        ENUM_CASE(NVCV_COLOR_XFER_PQ);
+        ENUM_CASE(NVCV_COLOR_XFER_BT709);
+        ENUM_CASE(NVCV_COLOR_XFER_BT2020);
+        ENUM_CASE(NVCV_COLOR_XFER_SMPTE240M);
+#undef ENUM_CASE
+    }
+
+    priv::FormatTLS &tls = priv::GetFormatTLS();
+    util::BufferOStream(tls.bufColorTransferFunctionName, sizeof(tls.bufColorTransferFunctionName))
+        << "NVCVColorTransferFunction(" << (int)xferFunc << ")";
+    return tls.bufColorTransferFunctionName;
+}
+
+const char *GetName(NVCVColorRange range)
+{
+    switch (range)
+    {
+#define ENUM_CASE(X) \
+    case X:          \
+        return #X
+        ENUM_CASE(NVCV_COLOR_RANGE_FULL);
+        ENUM_CASE(NVCV_COLOR_RANGE_LIMITED);
+#undef ENUM_CASE
+    }
+
+    priv::FormatTLS &tls = priv::GetFormatTLS();
+    util::BufferOStream(tls.bufColorRangeName, sizeof(tls.bufColorRangeName)) << "NVCVColorRange(" << (int)range << ")";
+    return tls.bufColorRangeName;
+}
+
+const char *GetName(NVCVYCbCrEncoding encoding)
+{
+    switch (encoding)
+    {
+#define ENUM_CASE(X) \
+    case X:          \
+        return #X
+        ENUM_CASE(NVCV_YCbCr_ENC_UNDEFINED);
+        ENUM_CASE(NVCV_YCbCr_ENC_BT601);
+        ENUM_CASE(NVCV_YCbCr_ENC_BT709);
+        ENUM_CASE(NVCV_YCbCr_ENC_BT2020);
+        ENUM_CASE(NVCV_YCbCr_ENC_BT2020c);
+        ENUM_CASE(NVCV_YCbCr_ENC_SMPTE240M);
+#undef ENUM_CASE
+    }
+
+    priv::FormatTLS &tls = priv::GetFormatTLS();
+    util::BufferOStream(tls.bufYCbCrEncodingName, sizeof(tls.bufYCbCrEncodingName))
+        << "NVCVYCbCrEncoding(" << (int)encoding << ")";
+    return tls.bufYCbCrEncodingName;
+}
+
+const char *GetName(NVCVChromaSubsampling chromaSub)
+{
+    priv::FormatTLS &tls = priv::GetFormatTLS();
+
+    {
+        util::BufferOStream ss(tls.bufChromaSubsamplingName, sizeof(tls.bufChromaSubsamplingName));
+
+        bool ok = false;
+
+        switch (chromaSub)
+        {
+#define ENUM_CASE_CSS(J, a, b, R)                 \
+    case NVCV_CSS_##J##a##b##R:                   \
+        ss << J << ':' << a << ':' << b << "" #R; \
+        ok = true;                                \
+        break
+            ENUM_CASE_CSS(4, 4, 4, );
+            ENUM_CASE_CSS(4, 2, 2, );
+            ENUM_CASE_CSS(4, 2, 2, R);
+            ENUM_CASE_CSS(4, 1, 1, );
+            ENUM_CASE_CSS(4, 1, 1, R);
+            ENUM_CASE_CSS(4, 2, 0, );
+#undef ENUM_CASE_CSS
+        }
+
+        if (!ok)
+        {
+            ss << "NVCVChromaSubsampling(" << (int)chromaSub << ")";
+        }
+    }
+    return tls.bufChromaSubsamplingName;
+}
+
 } // namespace nv::cv::priv
+
+namespace priv = nv::cv::priv;
+
+std::ostream &operator<<(std::ostream &out, NVCVColorModel colorModel)
+{
+    return out << priv::GetName(colorModel);
+}
+
+std::ostream &operator<<(std::ostream &out, NVCVChromaLocation loc)
+{
+    return out << priv::GetName(loc);
+}
+
+std::ostream &operator<<(std::ostream &out, NVCVRawPattern raw)
+{
+    return out << priv::GetName(raw);
+}
+
+std::ostream &operator<<(std::ostream &out, NVCVColorSpace color_space)
+{
+    return out << priv::GetName(color_space);
+}
+
+std::ostream &operator<<(std::ostream &out, NVCVWhitePoint whitePoint)
+{
+    return out << priv::GetName(whitePoint);
+}
+
+std::ostream &operator<<(std::ostream &out, NVCVColorTransferFunction xferFunc)
+{
+    return out << priv::GetName(xferFunc);
+}
+
+std::ostream &operator<<(std::ostream &out, NVCVColorRange range)
+{
+    return out << priv::GetName(range);
+}
+
+std::ostream &operator<<(std::ostream &out, NVCVYCbCrEncoding encoding)
+{
+    return out << priv::GetName(encoding);
+}
+
+std::ostream &operator<<(std::ostream &out, NVCVChromaSubsampling chromaSub)
+{
+    return out << priv::GetName(chromaSub);
+}
+
+std::ostream &operator<<(std::ostream &out, NVCVColorSpec cspec)
+{
+    return out << priv::GetName(cspec);
+}
 
 std::string StrNVCVColorSpec(NVCVColorSpec cspec)
 {

@@ -196,11 +196,6 @@ constexpr ColorSpec::operator NVCVColorSpec() const
     return m_cspec;
 }
 
-inline std::ostream &operator<<(std::ostream &out, ColorSpec cspec)
-{
-    return out << nvcvColorSpecGetName(cspec);
-}
-
 inline ChromaLocation ColorSpec::chromaLocHoriz() const
 {
     NVCVChromaLocation outH, outV;
@@ -307,8 +302,108 @@ inline bool NeedsColorspec(ColorModel cmodel)
     return out != 0;
 }
 
-/**@}*/
+inline std::ostream &operator<<(std::ostream &out, ColorModel colorModel)
+{
+    return out << nvcvColorModelGetName(static_cast<NVCVColorModel>(colorModel));
+}
+
+inline std::ostream &operator<<(std::ostream &out, ColorSpec cspec)
+{
+    return out << nvcvColorSpecGetName(static_cast<NVCVColorSpec>(cspec));
+}
+
+inline std::ostream &operator<<(std::ostream &out, ChromaSubsampling chromaSub)
+{
+    return out << nvcvChromaSubsamplingGetName(static_cast<NVCVChromaSubsampling>(chromaSub));
+}
+
+inline std::ostream &operator<<(std::ostream &out, ColorTransferFunction xferFunc)
+{
+    return out << nvcvColorTransferFunctionGetName(static_cast<NVCVColorTransferFunction>(xferFunc));
+}
+
+inline std::ostream &operator<<(std::ostream &out, YCbCrEncoding enc)
+{
+    return out << nvcvYCbCrEncodingGetName(static_cast<NVCVYCbCrEncoding>(enc));
+}
+
+inline std::ostream &operator<<(std::ostream &out, ColorRange range)
+{
+    return out << nvcvColorRangeGetName(static_cast<NVCVColorRange>(range));
+}
+
+inline std::ostream &operator<<(std::ostream &out, WhitePoint whitePoint)
+{
+    return out << nvcvWhitePointGetName(static_cast<NVCVWhitePoint>(whitePoint));
+}
+
+inline std::ostream &operator<<(std::ostream &out, ColorSpace color_space)
+{
+    return out << nvcvColorSpecGetName(static_cast<NVCVColorSpec>(color_space));
+}
+
+inline std::ostream &operator<<(std::ostream &out, ChromaLocation loc)
+{
+    return out << nvcvChromaLocationGetName(static_cast<NVCVChromaLocation>(loc));
+}
+
+inline std::ostream &operator<<(std::ostream &out, RawPattern raw)
+{
+    return out << nvcvRawPatternGetName(static_cast<NVCVRawPattern>(raw));
+}
 
 }} // namespace nv::cv
+
+inline std::ostream &operator<<(std::ostream &out, NVCVColorModel colorModel)
+{
+    return out << nvcvColorModelGetName(colorModel);
+}
+
+inline std::ostream &operator<<(std::ostream &out, NVCVColorSpec colorSpec)
+{
+    return out << nvcvColorSpecGetName(colorSpec);
+}
+
+inline std::ostream &operator<<(std::ostream &out, NVCVChromaSubsampling chromaSub)
+{
+    return out << nvcvChromaSubsamplingGetName(chromaSub);
+}
+
+inline std::ostream &operator<<(std::ostream &out, NVCVColorTransferFunction xferFunc)
+{
+    return out << nvcvColorTransferFunctionGetName(xferFunc);
+}
+
+inline std::ostream &operator<<(std::ostream &out, NVCVYCbCrEncoding enc)
+{
+    return out << nvcvYCbCrEncodingGetName(enc);
+}
+
+inline std::ostream &operator<<(std::ostream &out, NVCVColorRange range)
+{
+    return out << nvcvColorRangeGetName(range);
+}
+
+inline std::ostream &operator<<(std::ostream &out, NVCVWhitePoint whitePoint)
+{
+    return out << nvcvWhitePointGetName(whitePoint);
+}
+
+inline std::ostream &operator<<(std::ostream &out, NVCVColorSpace color_space)
+{
+    return out << nvcvColorSpaceGetName(color_space);
+}
+
+inline std::ostream &operator<<(std::ostream &out, NVCVChromaLocation loc)
+{
+    return out << nvcvChromaLocationGetName(loc);
+}
+
+inline std::ostream &operator<<(std::ostream &out, NVCVRawPattern raw)
+{
+    return out << nvcvRawPatternGetName(raw);
+}
+
+/**@}*/
 
 #endif // NVCV_COLORSPEC_HPP

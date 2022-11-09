@@ -29,19 +29,20 @@ TEST(ChromaSubsamplingTests, none_chroma_subsampling_must_be_0)
     EXPECT_EQ(0, (int)NVCV_CSS_NONE);
 }
 
-class ChromaSubsamplingTests : public t::TestWithParam<std::tuple<NVCVChromaSubsampling, int, int>>
+class ChromaSubsamplingTests : public t::TestWithParam<std::tuple<NVCVChromaSubsampling, int, int, const char *>>
 {
 };
 
-#define MAKE_CHROMASUB(type, samplesHoriz, samplesVert) \
-    {                                                   \
-        NVCV_CSS_##type, samplesHoriz, samplesVert      \
+#define MAKE_CHROMASUB(type, samplesHoriz, samplesVert, name) \
+    {                                                         \
+        NVCV_CSS_##type, samplesHoriz, samplesVert, name      \
     }
 
 NVCV_INSTANTIATE_TEST_SUITE_P(Predefined, ChromaSubsamplingTests,
-                              test::ValueList<NVCVChromaSubsampling, int, int>{
-                                  MAKE_CHROMASUB(444, 4, 4), MAKE_CHROMASUB(422, 2, 4), MAKE_CHROMASUB(422R, 4, 2),
-                                  MAKE_CHROMASUB(411R, 4, 1), MAKE_CHROMASUB(411, 1, 4), MAKE_CHROMASUB(420, 2, 2)});
+                              test::ValueList<NVCVChromaSubsampling, int, int, const char *>{
+                                  MAKE_CHROMASUB(444, 4, 4, "4:4:4"), MAKE_CHROMASUB(422, 2, 4, "4:2:2"),
+                                  MAKE_CHROMASUB(422R, 4, 2, "4:2:2R"), MAKE_CHROMASUB(411R, 4, 1, "4:1:1R"),
+                                  MAKE_CHROMASUB(411, 1, 4, "4:1:1"), MAKE_CHROMASUB(420, 2, 2, "4:2:0")});
 
 TEST_P(ChromaSubsamplingTests, predefined_has_correct_definition)
 {
@@ -67,6 +68,14 @@ TEST_P(ChromaSubsamplingTests, make_chroma_subsampling_function_works)
     ASSERT_EQ(NVCV_SUCCESS, nvcvMakeChromaSubsampling(&test, samplesHoriz, samplesVert));
 
     EXPECT_EQ(gold, test);
+}
+
+TEST_P(ChromaSubsamplingTests, get_name)
+{
+    NVCVChromaSubsampling css  = std::get<0>(GetParam());
+    const char           *gold = std::get<3>(GetParam());
+
+    EXPECT_STREQ(gold, nvcvChromaSubsamplingGetName(css));
 }
 
 // Colorspec ===================================================
@@ -429,9 +438,70 @@ TEST(ColorModelTests, undefined_color_model_is_zero)
     EXPECT_EQ(0, (int)NVCV_COLOR_MODEL_UNDEFINED);
 }
 
+TEST(ColorModelTests, get_name)
+{
+    EXPECT_STREQ("NVCV_COLOR_MODEL_YCbCr", nvcvColorModelGetName(NVCV_COLOR_MODEL_YCbCr));
+    EXPECT_STREQ("NVCVColorModel(-1)", nvcvColorModelGetName(static_cast<NVCVColorModel>(-1)));
+}
+
 // YCbCr Encoding ===========================
 
-TEST(ColorModelTests, undefined_ycbcr_encoding_is_zero)
+TEST(YCbCrEncodingTests, undefined_ycbcr_encoding_is_zero)
 {
     EXPECT_EQ(0, (int)NVCV_YCbCr_ENC_UNDEFINED);
+}
+
+TEST(YCbCrEncodingTests, get_name)
+{
+    EXPECT_STREQ("NVCV_YCbCr_ENC_BT601", nvcvYCbCrEncodingGetName(NVCV_YCbCr_ENC_BT601));
+    EXPECT_STREQ("NVCVYCbCrEncoding(-1)", nvcvYCbCrEncodingGetName(static_cast<NVCVYCbCrEncoding>(-1)));
+}
+
+// Chroma Location ===========================
+
+TEST(ChromaLocationTests, get_name)
+{
+    EXPECT_STREQ("NVCV_CHROMA_LOC_EVEN", nvcvChromaLocationGetName(NVCV_CHROMA_LOC_EVEN));
+    EXPECT_STREQ("NVCVChromaLocation(-1)", nvcvChromaLocationGetName(static_cast<NVCVChromaLocation>(-1)));
+}
+
+// Raw pattern ===========================
+
+TEST(RawPatternTests, get_name)
+{
+    EXPECT_STREQ("NVCV_RAW_BAYER_RGGB", nvcvRawPatternGetName(NVCV_RAW_BAYER_RGGB));
+    EXPECT_STREQ("NVCVRawPattern(-1)", nvcvRawPatternGetName(static_cast<NVCVRawPattern>(-1)));
+}
+
+// Color space ===========================
+
+TEST(ColorSpaceTests, get_name)
+{
+    EXPECT_STREQ("NVCV_COLOR_SPACE_BT709", nvcvColorSpaceGetName(NVCV_COLOR_SPACE_BT709));
+    EXPECT_STREQ("NVCVColorSpace(-1)", nvcvColorSpaceGetName(static_cast<NVCVColorSpace>(-1)));
+}
+
+// White point ===========================
+
+TEST(WhitePointTests, get_name)
+{
+    EXPECT_STREQ("NVCV_WHITE_POINT_D65", nvcvWhitePointGetName(NVCV_WHITE_POINT_D65));
+    EXPECT_STREQ("NVCVWhitePoint(-1)", nvcvWhitePointGetName(static_cast<NVCVWhitePoint>(-1)));
+}
+
+// Color transfer function ===========================
+
+TEST(ColorTransferFunctionTests, get_name)
+{
+    EXPECT_STREQ("NVCV_COLOR_XFER_PQ", nvcvColorTransferFunctionGetName(NVCV_COLOR_XFER_PQ));
+    EXPECT_STREQ("NVCVColorTransferFunction(-1)",
+                 nvcvColorTransferFunctionGetName(static_cast<NVCVColorTransferFunction>(-1)));
+}
+
+// Color range ===========================
+
+TEST(ColorRangeTests, get_name)
+{
+    EXPECT_STREQ("NVCV_COLOR_RANGE_FULL", nvcvColorRangeGetName(NVCV_COLOR_RANGE_FULL));
+    EXPECT_STREQ("NVCVColorRange(-1)", nvcvColorRangeGetName(static_cast<NVCVColorRange>(-1)));
 }

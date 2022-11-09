@@ -12,8 +12,6 @@
  */
 
 #include <nvcv/Tensor.h>
-#include <nvcv/Tensor.hpp>
-#include <nvcv/TensorDataAccess.hpp>
 #include <private/core/Exception.hpp>
 #include <private/core/IAllocator.hpp>
 #include <private/core/IImage.hpp>

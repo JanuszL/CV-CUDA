@@ -15,13 +15,16 @@
 #define NVCV_TEST_COMMON_PRINTERS_HPP
 
 #include <cuda_runtime.h>
-#include <fmt/Printers.hpp>
 
 #include <iostream>
 
 #if NVCV_EXPORTING
 #    include <core/Status.hpp>
+#    include <fmt/ColorSpec.hpp>
+#    include <fmt/DataLayout.hpp>
 #else
+#    include <nvcv/ColorSpec.hpp>
+#    include <nvcv/DataLayout.hpp>
 #    include <nvcv/Status.hpp>
 #endif
 

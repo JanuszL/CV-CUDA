@@ -12,7 +12,6 @@
  */
 
 #include <nvcv/TensorLayout.h>
-#include <nvcv/TensorLayoutInfo.hpp>
 #include <private/core/Exception.hpp>
 #include <private/core/Status.hpp>
 #include <private/core/SymbolVersioning.hpp>

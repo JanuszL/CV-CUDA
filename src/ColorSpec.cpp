@@ -12,9 +12,7 @@
  */
 
 #include <fmt/ColorSpec.hpp>
-#include <fmt/Printers.hpp>
 #include <nvcv/ColorSpec.h>
-#include <nvcv/ColorSpec.hpp>
 #include <private/core/Exception.hpp>
 #include <private/core/Status.hpp>
 #include <private/core/SymbolVersioning.hpp>
@@ -309,4 +307,49 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvColorModelNeedsColorspec, (NVCVColorModel 
 
             *outBool = priv::NeedsColorspec(cmodel) ? 1 : 0;
         });
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvColorModelGetName, (NVCVColorModel cmodel))
+{
+    return priv::GetName(cmodel);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvColorSpaceGetName, (NVCVColorSpace cspace))
+{
+    return priv::GetName(cspace);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvWhitePointGetName, (NVCVWhitePoint wpoint))
+{
+    return priv::GetName(wpoint);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvYCbCrEncodingGetName, (NVCVYCbCrEncoding enc))
+{
+    return priv::GetName(enc);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvColorTransferFunctionGetName, (NVCVColorTransferFunction xfer))
+{
+    return priv::GetName(xfer);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvColorRangeGetName, (NVCVColorRange crange))
+{
+    return priv::GetName(crange);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvChromaLocationGetName, (NVCVChromaLocation loc))
+{
+    return priv::GetName(loc);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvRawPatternGetName, (NVCVRawPattern raw))
+{
+    return priv::GetName(raw);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvChromaSubsamplingGetName, (NVCVChromaSubsampling css))
+{
+    return priv::GetName(css);
 }

@@ -12,9 +12,7 @@
  */
 
 #include <fmt/PixelType.hpp>
-#include <fmt/Printers.hpp>
 #include <nvcv/PixelType.h>
-#include <nvcv/PixelType.hpp>
 #include <private/core/Exception.hpp>
 #include <private/core/Status.hpp>
 #include <private/core/SymbolVersioning.hpp>

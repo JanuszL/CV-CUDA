@@ -17,7 +17,6 @@
 #include "ColorFormat.hpp"
 #include "DataLayout.hpp"
 #include "PixelType.hpp"
-#include "Printers.hpp"
 
 #include <core/Exception.hpp>
 #include <util/Assert.h>
