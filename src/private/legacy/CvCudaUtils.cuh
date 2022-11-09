@@ -29,6 +29,7 @@
 #include <nvcv/cuda/MathOps.hpp>      // for math operators
 #include <nvcv/cuda/MathWrappers.hpp> // for sqrt, etc.
 #include <nvcv/cuda/SaturateCast.hpp> // for SaturateCast, etc.
+#include <nvcv/cuda/TensorWrap.hpp>   // for TensorWrap, etc.
 #include <nvcv/cuda/TypeTraits.hpp>   // for BaseType, etc.
 #include <util/Assert.h>              // for Status::ASSERT, etc.
 

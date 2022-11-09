@@ -48,49 +48,49 @@ struct Convertor
 };
 
 template<typename Ptr2DSrc, typename Ptr2DDst, class UnOp>
-__global__ void convertFormat(Ptr2DSrc src, Ptr2DDst dst, UnOp op)
+__global__ void convertFormat(Ptr2DSrc src, Ptr2DDst dst, UnOp op, int2 size)
 {
     const int src_x     = blockIdx.x * blockDim.x + threadIdx.x;
     const int src_y     = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx = get_batch_idx();
 
-    if (src_x >= dst.cols || src_y >= dst.rows)
+    if (src_x >= size.x || src_y >= size.y)
         return;
 
     *dst.ptr(batch_idx, src_y, src_x) = op(*src.ptr(batch_idx, src_y, src_x));
 }
 
 template<typename DT_SOURCE, typename DT_DEST, int NC>
-void convertToScaleCN(const nvcv::TensorDataAccessPitchImagePlanar &inData,
-                      const nvcv::TensorDataAccessPitchImagePlanar &outData, const double alpha, const double beta,
-                      cudaStream_t stream)
+void convertToScaleCN(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData,
+                      const double alpha, const double beta, cudaStream_t stream)
 {
-    const int cols       = inData.numCols();
-    const int rows       = inData.numRows();
-    const int batch_size = inData.numSamples();
+    auto inAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(inData);
+    NVCV_ASSERT(inAccess);
+
+    const int2 size       = {inAccess->numCols(), inAccess->numRows()};
+    const int  batch_size = inAccess->numSamples();
 
     dim3 block(32, 8);
-    dim3 grid(divUp(cols, block.x), divUp(rows, block.y), batch_size);
+    dim3 grid(divUp(size.x, block.x), divUp(size.y, block.y), batch_size);
 
     using DT_AB          = decltype(float() * DT_SOURCE() * DT_DEST()); //pick correct scalar
     using SRC_PIXEL_TYPE = nvcv::cuda::MakeType<DT_SOURCE, NC>;
     using DST_PIXEL_TYPE = nvcv::cuda::MakeType<DT_DEST, NC>;
 
     Convertor<SRC_PIXEL_TYPE, DST_PIXEL_TYPE, DT_AB> op;
-    Ptr2dNHWC<SRC_PIXEL_TYPE>                        src(inData);
-    Ptr2dNHWC<DST_PIXEL_TYPE>                        dst(outData);
+    nvcv::cuda::Tensor3DWrap<SRC_PIXEL_TYPE>         src(inData);
+    nvcv::cuda::Tensor3DWrap<DST_PIXEL_TYPE>         dst(outData);
 
     op.alpha = nvcv::cuda::SaturateCast<DT_AB>(alpha);
     op.beta  = nvcv::cuda::SaturateCast<DT_AB>(beta);
-    convertFormat<<<grid, block, 0, stream>>>(src, dst, op);
+    convertFormat<<<grid, block, 0, stream>>>(src, dst, op, size);
 }
 
 template<typename DT_SOURCE, typename DT_DEST> // <uchar, float> <float double>
-void convertToScale(const nvcv::TensorDataAccessPitchImagePlanar &inData,
-                    const nvcv::TensorDataAccessPitchImagePlanar &outData, const double alpha, const double beta,
-                    cudaStream_t stream)
+void convertToScale(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData,
+                    int numChannels, const double alpha, const double beta, cudaStream_t stream)
 {
-    switch (inData.numChannels())
+    switch (numChannels)
     {
     case 1:
         convertToScaleCN<DT_SOURCE, DT_DEST, 1>(inData, outData, alpha, beta, stream);
@@ -143,9 +143,6 @@ ErrorCode ConvertTo::infer(const ITensorDataPitchDevice &inData, const ITensorDa
     auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
-    NVCV_ASSERT(outAccess);
-
     int batch    = inAccess->numSamples();
     int channels = inAccess->numChannels();
     int rows     = inAccess->numRows();
@@ -172,9 +169,8 @@ ErrorCode ConvertTo::infer(const ITensorDataPitchDevice &inData, const ITensorDa
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    typedef void (*func_t)(const nvcv::TensorDataAccessPitchImagePlanar &inData,
-                           const nvcv::TensorDataAccessPitchImagePlanar &outData, const double alpha, const double beta,
-                           cudaStream_t stream);
+    typedef void (*func_t)(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData,
+                           int numChannels, const double alpha, const double beta, cudaStream_t stream);
 
     // clang-format off
     static const func_t funcs[7][7] = {
@@ -189,7 +185,7 @@ ErrorCode ConvertTo::infer(const ITensorDataPitchDevice &inData, const ITensorDa
 
     // clang-format on
     const func_t func = funcs[input_datatype][output_datatype];
-    func(*inAccess, *outAccess, alpha, beta, stream);
+    func(inData, outData, channels, alpha, beta, stream);
 
     return ErrorCode::SUCCESS;
 }
