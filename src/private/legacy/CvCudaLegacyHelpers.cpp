@@ -15,7 +15,6 @@
 
 #include <nvcv/PixelType.hpp>
 #include <private/core/Exception.hpp>
-#include <private/fmt/PixelType.hpp>
 #include <private/legacy/CvCudaLegacy.h>
 
 #include <iostream>
@@ -96,11 +95,9 @@ cuda_op::DataType GetLegacyDataType(int32_t bpc, cv::DataType type)
     throw Exception(Status::ERROR_INVALID_ARGUMENT, "Only planar formats supported ");
 }
 
-cuda_op::DataType GetLegacyDataType(PixelType dtype_)
+cuda_op::DataType GetLegacyDataType(PixelType dtype)
 {
-    priv::PixelType dtype{dtype_}; // to avoid using public API
-
-    auto bpc = dtype.bpc();
+    auto bpc = dtype.bitsPerChannel();
 
     for (int i = 1; i < dtype.numChannels(); ++i)
     {
@@ -110,13 +107,11 @@ cuda_op::DataType GetLegacyDataType(PixelType dtype_)
         }
     }
 
-    return GetLegacyDataType(dtype.bpc()[0], (cv::DataType)dtype.dataType());
+    return GetLegacyDataType(bpc[0], (cv::DataType)dtype.dataType());
 }
 
-cuda_op::DataType GetLegacyDataType(ImageFormat fmt_)
+cuda_op::DataType GetLegacyDataType(ImageFormat fmt)
 {
-    priv::ImageFormat fmt{fmt_}; // to avoid using public API
-
     for (int i = 1; i < fmt.numPlanes(); ++i)
     {
         if (fmt.planePixelType(i) != fmt.planePixelType(0))
@@ -125,7 +120,7 @@ cuda_op::DataType GetLegacyDataType(ImageFormat fmt_)
         }
     }
 
-    return GetLegacyDataType(PixelType{fmt.planePixelType(0).value()});
+    return GetLegacyDataType(fmt.planePixelType(0));
 }
 
 cuda_op::DataShape GetLegacyDataShape(const TensorShapeInfoImage &shapeInfo)
@@ -136,7 +131,7 @@ cuda_op::DataShape GetLegacyDataShape(const TensorShapeInfoImage &shapeInfo)
 
 cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShapeDataPitchDevice &imgBatch)
 {
-    priv::ImageFormat fmt{imgBatch.format()}; // to avoid using public API
+    ImageFormat fmt = imgBatch.format();
 
     for (int i = 1; i < fmt.numPlanes(); ++i)
     {

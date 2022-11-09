@@ -25,7 +25,6 @@
 #include <nvcv/Exception.hpp>
 #include <nvcv/IImage.hpp>
 #include <nvcv/TensorShapeInfo.hpp>
-#include <private/fmt/ImageFormat.hpp>
 
 namespace nv::cv::legacy::helpers {
 
