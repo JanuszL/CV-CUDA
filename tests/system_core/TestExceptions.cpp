@@ -74,3 +74,15 @@ TEST(ExceptionTest, protect_call_unexpected)
     ASSERT_EQ(NVCV_ERROR_INTERNAL, nvcvGetLastErrorMessage(msg, sizeof(msg)));
     EXPECT_STREQ("Unexpected error", msg);
 }
+
+TEST(ExceptionTest, exception_format_multiple_args)
+{
+    nvcv::Exception e(nvcv::Status::ERROR_DEVICE, "test error %d %s %c", 123, "rod", 'l');
+
+    EXPECT_STREQ("NVCV_ERROR_DEVICE: test error 123 rod l", e.what());
+    EXPECT_STREQ("test error 123 rod l", e.msg());
+
+    char msg[NVCV_MAX_STATUS_MESSAGE_LENGTH];
+    ASSERT_EQ(NVCV_ERROR_DEVICE, nvcvGetLastErrorMessage(msg, sizeof(msg)));
+    EXPECT_STREQ("test error 123 rod l", msg);
+}
