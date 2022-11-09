@@ -23,10 +23,6 @@
 #include <util/String.hpp>
 
 #include <cstring>
-#ifdef __GNUC__
-#    undef __DEPRECATED
-#endif
-#include <strstream>
 
 namespace priv = nv::cv::priv;
 namespace util = nv::cv::util;
@@ -149,13 +145,7 @@ NVCV_DEFINE_API(0, 0, const char *, nvcvPixelTypeGetName, (NVCVPixelType type))
 
     try
     {
-        std::strstreambuf sbuf(buffer, bufSize, buffer);
-        std::ostream      ss(&sbuf);
-
-        priv::PixelType ptype{type};
-
-        // Must insert EOS to make 'str' a correctly delimited string
-        ss << ptype << '\0' << std::flush;
+        util::BufferOStream(buffer, bufSize) << priv::PixelType{type};
 
         using namespace std::literals;
 

@@ -22,10 +22,6 @@
 #include <util/String.hpp>
 
 #include <cstring>
-#ifdef __GNUC__
-#    undef __DEPRECATED
-#endif
-#include <strstream>
 
 namespace priv = nv::cv::priv;
 namespace util = nv::cv::util;
@@ -272,15 +268,12 @@ NVCV_DEFINE_API(0, 0, const char *, nvcvColorSpecGetName, (NVCVColorSpec cspec))
     char         *buffer  = tls.bufColorSpecName;
     constexpr int bufSize = sizeof(tls.bufColorSpecName);
 
-    std::strstreambuf sbuf(buffer, bufSize, buffer);
-    std::ostream      ss(&sbuf);
-
     try
     {
         priv::ColorSpec pcspec{cspec};
 
         // Must insert EOS to make 'str' a correctly delimited string
-        ss << pcspec << '\0' << std::flush;
+        util::BufferOStream(buffer, bufSize) << pcspec;
 
         using namespace std::literals;
 

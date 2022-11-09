@@ -68,3 +68,44 @@ TEST_P(ReplaceAllInlineTests, test)
     EXPECT_STREQ(gold, buffer);
     EXPECT_EQ('\xFF', *sentinel) << "buffer overrun";
 }
+
+TEST(BufferOStreamTests, is_zero_terminated_on_dtor)
+{
+    char buf[] = "rod";
+
+    {
+        util::BufferOStream str(buf, sizeof(buf));
+    }
+    EXPECT_EQ('\0', buf[0]);
+}
+
+TEST(BufferOStreamTests, is_flushed_on_dtor)
+{
+    char buf[] = "rod";
+
+    {
+        util::BufferOStream str(buf, sizeof(buf));
+        str << 'x';
+    }
+    EXPECT_STREQ("x", buf);
+}
+
+TEST(BufferOStreamTests, data_is_written)
+{
+    char buf[] = "rod";
+
+    util::BufferOStream str(buf, sizeof(buf));
+    str << "123" << '\0' << std::flush;
+    EXPECT_STREQ("123", buf);
+}
+
+TEST(BufferOStreamTests, overflow)
+{
+    char buf[] = "rodlima";
+
+    util::BufferOStream str(buf, sizeof(buf) - 1);
+    str << "12345678\0" << std::flush;
+    EXPECT_FALSE(str.good());
+    EXPECT_TRUE(str.fail());
+    EXPECT_STREQ("1234567", buf);
+}

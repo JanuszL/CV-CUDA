@@ -51,4 +51,16 @@ void ReplaceAllInline(char *strBuffer, int bufferSize, std::string_view what, st
     }
 }
 
+BufferOStream::BufferOStream(char *buffer, int len)
+    : m_buf(buffer, len, buffer)
+{
+    this->init(&m_buf);
+}
+
+BufferOStream::~BufferOStream()
+{
+    // Make sure the buffer is 0-terminated and flushed
+    *this << '\0' << std::flush;
+}
+
 } // namespace nv::cv::util
