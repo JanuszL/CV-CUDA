@@ -17,7 +17,6 @@ add_library(nvcv_private_core STATIC
     Context.cpp
     TLS.cpp
     Status.cpp
-    Version.cpp
     CustomAllocator.cpp
     DefaultAllocator.cpp
     IAllocator.cpp

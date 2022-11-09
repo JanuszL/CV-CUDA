@@ -159,6 +159,7 @@ add_library(nvcv_util
     HashMD5.cpp
     CheckError.cpp
     String.cpp
+    Version.cpp
 )
 
 target_include_directories(nvcv_util

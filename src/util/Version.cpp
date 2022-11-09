@@ -19,7 +19,7 @@
 
 #include <iostream>
 
-namespace nv::cv::priv {
+namespace nv::cv::util {
 
 std::ostream &operator<<(std::ostream &out, const Version &ver)
 {
@@ -31,4 +31,4 @@ std::ostream &operator<<(std::ostream &out, const Version &ver)
     return out;
 }
 
-} // namespace nv::cv::priv
+} // namespace nv::cv::util
