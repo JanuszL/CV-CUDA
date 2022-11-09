@@ -14,14 +14,24 @@
 #ifndef NVCV_TEST_COMMON_PRINTERS_HPP
 #define NVCV_TEST_COMMON_PRINTERS_HPP
 
-#include <core/Status.hpp>
 #include <cuda_runtime.h>
 #include <fmt/Printers.hpp>
-#include <nvcv/Status.h>
 
-#include <iosfwd>
+#include <iostream>
 
-std::ostream &operator<<(std::ostream &out, NVCVStatus status);
+#if NVCV_EXPORTING
+#    include <core/Status.hpp>
+#else
+#    include <nvcv/Status.hpp>
+#endif
+
+#if NVCV_EXPORTING
+inline std::ostream &operator<<(std::ostream &out, NVCVStatus status)
+{
+    return out << nv::cv::priv::GetName(status);
+}
+#endif
+
 std::ostream &operator<<(std::ostream &out, cudaError_t err);
 
 #endif // NVCV_TEST_COMMON_PRINTERS_HPP
