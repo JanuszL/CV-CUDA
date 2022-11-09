@@ -21,12 +21,11 @@
 #define NVCV_CUDA_TENSOR_WRAP_HPP
 
 #include "TypeTraits.hpp"             // for HasTypeTraits, etc.
-#include "detail/Metaprogramming.hpp" // for detail::IsMinusOne, etc.
+#include "detail/Metaprogramming.hpp" // for detail::IsAllSame, etc.
 
 #include <nvcv/IImageData.hpp>  // for IImageDataPitchDevice, etc.
 #include <nvcv/ITensorData.hpp> // for ITensorDataPitchDevice, etc.
 
-#include <array>
 #include <utility>
 
 namespace nv::cv::cuda {
@@ -72,7 +71,7 @@ public:
     using Type = T;
 
     static constexpr int kNumDimensions   = sizeof...(Pitches);
-    static constexpr int kVariablePitches = (detail::IsMinusOne<Pitches> + ...);
+    static constexpr int kVariablePitches = ((Pitches == -1) + ...);
     static constexpr int kConstantPitches = kNumDimensions - kVariablePitches;
 
     TensorWrap() = default;
@@ -88,42 +87,48 @@ public:
         : m_data(data)
         , m_pitchBytes{std::forward<int>(pitchBytes)...}
     {
-    }
-
-    __host__ __device__ TensorWrap(const IImageDataPitchDevice *image)
-    {
-        static_assert(kVariablePitches == 1 && kNumDimensions == 2);
-        assert(image != nullptr);
-
-        m_data = reinterpret_cast<const void *>(image->plane(0).buffer);
-
-        m_pitchBytes[0] = image->plane(0).pitchBytes;
+        static_assert(detail::IsAllSame<int, Args...>);
+        static_assert(sizeof...(Args) == kVariablePitches);
     }
 
     /**
-     * @brief Constructs a constant Tensor4D2PWrap by wrapping a \p tensor data argument.
+     * @brief Constructs a constant TensorWrap by wrapping an \p image argument.
      *
-     * @param[in] tensor Tensor data pointer to the tensor that will be wrapped
+     * @param[in] image Image reference to the image that will be wrapped
      */
-    __host__ __device__ TensorWrap(const ITensorDataPitchDevice *tensor)
+    __host__ TensorWrap(const IImageDataPitchDevice &image)
     {
-        assert(tensor != nullptr);
+        static_assert(kVariablePitches == 1 && kNumDimensions == 2);
 
-        m_data = reinterpret_cast<const void *>(tensor->data());
+        m_data = reinterpret_cast<const void *>(image.plane(0).buffer);
+
+        m_pitchBytes[0] = image.plane(0).pitchBytes;
+    }
+
+    /**
+     * @brief Constructs a constant TensorWrap by wrapping a \p tensor argument.
+     *
+     * @param[in] tensor Tensor reference to the tensor that will be wrapped
+     */
+    __host__ TensorWrap(const ITensorDataPitchDevice &tensor)
+    {
+        m_data = reinterpret_cast<const void *>(tensor.data());
 
 #pragma unroll
         for (int i = 0; i < kVariablePitches; ++i)
         {
-            m_pitchBytes[i] = tensor->pitchBytes(i);
+            assert(tensor.pitchBytes(i) <= TypeTraits<int>::max);
+
+            m_pitchBytes[i] = tensor.pitchBytes(i);
         }
     }
 
     /**
      * @brief Get run-time pitch in bytes.
      *
-     * @return The array containing run-time pitches in bytes.
+     * @return The const array (as a pointer) containing run-time pitches in bytes.
      */
-    std::array<int, kVariablePitches> pitchBytes() const
+    __host__ __device__ const int *pitchBytes() const
     {
         return m_pitchBytes;
     }
@@ -193,6 +198,9 @@ protected:
     template<typename... Args>
     inline const __host__ __device__ T *doGetPtr(Args... c) const
     {
+        static_assert(detail::IsAllSame<int, Args...>);
+        static_assert(sizeof...(Args) <= kNumDimensions);
+
         constexpr int kArgSize      = sizeof...(Args);
         constexpr int kVarSize      = kArgSize < kVariablePitches ? kArgSize : kVariablePitches;
         constexpr int kDimSize      = kArgSize < kNumDimensions ? kArgSize : kNumDimensions;
@@ -242,22 +250,27 @@ public:
      * @param[in] pitchBytes0..N Each run-time pitch in bytes from first to last dimension
      */
     template<typename... Args>
-    explicit __host__ __device__ TensorWrap(const void *data, Args... pitchBytes)
+    explicit __host__ __device__ TensorWrap(void *data, Args... pitchBytes)
         : Base(data, pitchBytes...)
     {
     }
 
-    __host__ __device__ TensorWrap(const IImageDataPitchDevice *image)
+    /**
+     * @brief Constructs a TensorWrap by wrapping an \p image argument.
+     *
+     * @param[in] image Image reference to the image that will be wrapped
+     */
+    __host__ TensorWrap(const IImageDataPitchDevice &image)
         : Base(image)
     {
     }
 
     /**
-     * @brief Constructs a TensorWrap by wrapping a \p tensor data argument.
+     * @brief Constructs a TensorWrap by wrapping a \p tensor argument.
      *
-     * @param[in] tensor Tensor data pointer to the tensor that will be wrapped
+     * @param[in] tensor Tensor reference to the tensor that will be wrapped
      */
-    __host__ __device__ TensorWrap(const ITensorDataPitchDevice *tensor)
+    __host__ TensorWrap(const ITensorDataPitchDevice &tensor)
         : Base(tensor)
     {
     }
@@ -291,7 +304,7 @@ public:
      *
      * @param[in] c 3D coordinates (z first, y second and x third dimension) to be accessed
      *
-     * @return Accessed const reference
+     * @return Accessed reference
      */
     inline __host__ __device__ T &operator[](int3 c) const
     {
@@ -315,7 +328,7 @@ public:
      *
      * @param[in] c0..D Each coordinate from first to last dimension
      *
-     * @return The const pointer to the beginning of the Dth dimension
+     * @return The pointer to the beginning of the Dth dimension
      */
     template<typename... Args>
     inline __host__ __device__ T *ptr(Args... c) const
@@ -341,7 +354,7 @@ protected:
  * gets a reference to the y row (first dimension) and x column (second dimension).  The ptr method used with one
  * int i gets a pointer to the beginning of the i-th row.
  *
- * @tparam T Type (it can be const) of each element inside the tensor wrapper.
+ * @tparam T Type (it can be const) of each element inside the 2D tensor wrapper.
  */
 template<typename T>
 using Tensor2DWrap = TensorWrap<T, -1, sizeof(T)>;
@@ -358,10 +371,30 @@ using Tensor2DWrap = TensorWrap<T, -1, sizeof(T)>;
  * beginning of the b-th batch.  The ptr method used with two int's b and i gets a pointer to the beginning of the
  * i-th row in the b-th batch.
  *
- * @tparam T Type (it can be const) of each element inside the tensor wrapper.
+ * @tparam T Type (it can be const) of each element inside the 3D tensor wrapper.
  */
 template<typename T>
 using Tensor3DWrap = TensorWrap<T, -1, -1, sizeof(T)>;
+
+/**
+ * @brief Tensor 4D wrapper class.
+ *
+ * @detail Tensor4DWrap is a wrapper of a 4-D tensor, e.g. a NCHW tensor as N batches, C channel planes, H height
+ * and W width, with a fixed (compile-time) pitch in bytes for the fourth dimension, columns of a tensor, as the
+ * size of type \p T.  The pitch for the first dimension, slices of a tensor, is defined at run time, and can be
+ * seen as the tensor slice pitch.  The pitch for the second dimension, planes of a tensor, is defined at run time,
+ * and can be seen as the tensor plane pitch. The pitch for the third dimension, rows of a tensor, is defined at
+ * run time, and can be seen as the tensor row pitch.  The operator [] used with int4 gets a reference to the w
+ * batch (first dimension), z plane (second dimension), y row (third dimension) and x column (fourth dimension).
+ * The ptr method used with one int b gets a pointer to the beginning of the b-th batch.  The ptr method used with
+ * two int's b and c gets a pointer to the beginning of the c-th channel plane in the b-th batch.  The ptr method
+ * used with three int's b, c and i gets a pointer to the beginning of the i-th row in the c-th channel plane in
+ * the b-th batch.
+ *
+ * @tparam T Type (it can be const) of each element inside the 4D tensor wrapper.
+ */
+template<typename T>
+using Tensor4DWrap = TensorWrap<T, -1, -1, -1, sizeof(T)>;
 
 /**@}*/
 
