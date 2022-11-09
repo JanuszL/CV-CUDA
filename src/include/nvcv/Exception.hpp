@@ -42,7 +42,7 @@ public:
     explicit Exception(Status code, const char *msg = nullptr)
         : Exception(InternalCtorTag{}, code, msg)
     {
-        nvcvSetThreadStatus(static_cast<NVCVStatus>(code), msg);
+        nvcvSetThreadStatus(static_cast<NVCVStatus>(code), "%s", msg);
     }
 
     Status code() const
@@ -101,11 +101,11 @@ inline void SetThreadError(std::exception_ptr e)
     }
     catch (const Exception &e)
     {
-        nvcvSetThreadStatus(static_cast<NVCVStatus>(e.code()), e.msg());
+        nvcvSetThreadStatus(static_cast<NVCVStatus>(e.code()), "%s", e.msg());
     }
     catch (const std::invalid_argument &e)
     {
-        nvcvSetThreadStatus(NVCV_ERROR_INVALID_ARGUMENT, e.what());
+        nvcvSetThreadStatus(NVCV_ERROR_INVALID_ARGUMENT, "%s", e.what());
     }
     catch (const std::bad_alloc &)
     {
@@ -113,7 +113,7 @@ inline void SetThreadError(std::exception_ptr e)
     }
     catch (const std::exception &e)
     {
-        nvcvSetThreadStatus(NVCV_ERROR_INTERNAL, e.what());
+        nvcvSetThreadStatus(NVCV_ERROR_INTERNAL, "%s", e.what());
     }
     catch (...)
     {

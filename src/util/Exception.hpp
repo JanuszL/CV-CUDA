@@ -16,6 +16,7 @@
 
 #include <nvcv/Status.h>
 
+#include <cstdarg>
 #include <cstring>
 
 #ifdef __GNUC__
@@ -28,6 +29,8 @@ namespace nv::cv::util {
 class Exception : public std::exception
 {
 public:
+    explicit Exception(NVCVStatus code, const char *fmt, va_list va);
+
     explicit Exception(NVCVStatus code, const char *fmt, ...)
 #if __GNUC__
         // first argument is actually 'this'

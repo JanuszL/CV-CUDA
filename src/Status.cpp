@@ -45,20 +45,43 @@ NVCV_DEFINE_API(0, 0, const char *, nvcvStatusGetName, (NVCVStatus err))
     return priv::GetName(err); // noexcept
 }
 
-NVCV_DEFINE_API(0, 2, void, nvcvSetThreadStatus, (NVCVStatus status, const char *msg))
+NVCV_DEFINE_API(0, 2, void, nvcvSetThreadStatusVarArgList, (NVCVStatus status, const char *fmt, va_list va))
 {
     NVCVStatus ret = priv::ProtectCall(
         [&]
         {
-            if (msg)
+            if (fmt)
             {
-                throw priv::Exception(status, "%s", msg);
+                throw priv::Exception(status, fmt, va);
             }
             else
             {
                 throw priv::Exception(status);
             }
         });
+
+    NVCV_ASSERT(ret == status);
+}
+
+NVCV_DEFINE_API(0, 2, void, nvcvSetThreadStatus, (NVCVStatus status, const char *fmt, ...))
+{
+    va_list va;
+    va_start(va, fmt);
+
+    NVCVStatus ret = priv::ProtectCall(
+        [&]
+        {
+            if (fmt)
+            {
+                throw priv::Exception(status, fmt, va);
+            }
+            else
+            {
+                throw priv::Exception(status);
+            }
+        });
+
+    va_end(va);
 
     NVCV_ASSERT(ret == status);
 }

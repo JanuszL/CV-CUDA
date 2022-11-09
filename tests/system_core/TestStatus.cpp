@@ -65,14 +65,14 @@ TEST(StatusTest, get_last_status_msg_success_has_correct_message)
 
 TEST(StatusTest, get_last_status_resets_error_state)
 {
-    nvcvSetThreadStatus(NVCV_ERROR_DEVICE, "");
+    nvcvSetThreadStatus(NVCV_ERROR_DEVICE, "%s", "");
     EXPECT_EQ(NVCV_ERROR_DEVICE, nvcvGetLastError());
     EXPECT_EQ(NVCV_SUCCESS, nvcvGetLastError());
 }
 
 TEST(StatusTest, peek_last_status_doesnt_reset_error_state)
 {
-    nvcvSetThreadStatus(NVCV_ERROR_DEVICE, "");
+    nvcvSetThreadStatus(NVCV_ERROR_DEVICE, "%s", "");
     EXPECT_EQ(NVCV_ERROR_DEVICE, nvcvPeekAtLastError());
     EXPECT_EQ(NVCV_ERROR_DEVICE, nvcvPeekAtLastError());
 }
@@ -117,4 +117,40 @@ TEST(StatusTest, peek_at_last_status_msg_error_has_correct_message)
     msg[0] = '\0';
     ASSERT_EQ(NVCV_ERROR_DEVICE, nvcvPeekAtLastErrorMessage(msg, sizeof(msg)));
     EXPECT_STREQ("test message", msg);
+}
+
+TEST(StatusTest, set_thread_status_var_arg)
+{
+    nvcvSetThreadStatus(NVCV_ERROR_DEVICE, "test message %d %c %s", 123, 'r', "lima");
+
+    char msg[NVCV_MAX_STATUS_MESSAGE_LENGTH];
+    ASSERT_EQ(NVCV_ERROR_DEVICE, nvcvGetLastErrorMessage(msg, sizeof(msg)));
+    EXPECT_STREQ("test message 123 r lima", msg);
+}
+
+TEST(StatusTest, set_thread_status_var_arg_list)
+{
+    auto fn = [](const char *fmt, ...)
+    {
+        va_list va;
+        va_start(va, fmt);
+
+        nvcvSetThreadStatusVarArgList(NVCV_ERROR_DEVICE, fmt, va);
+        va_end(va);
+    };
+
+    fn("test message %d %s %c", 321, "rod", 'l');
+
+    char msg[NVCV_MAX_STATUS_MESSAGE_LENGTH];
+    ASSERT_EQ(NVCV_ERROR_DEVICE, nvcvGetLastErrorMessage(msg, sizeof(msg)));
+    EXPECT_STREQ("test message 321 rod l", msg);
+}
+
+TEST(StatusTest, set_thread_status_null_message)
+{
+    nvcvSetThreadStatus(NVCV_ERROR_DEVICE, nullptr);
+
+    char msg[NVCV_MAX_STATUS_MESSAGE_LENGTH];
+    ASSERT_EQ(NVCV_ERROR_DEVICE, nvcvGetLastErrorMessage(msg, sizeof(msg)));
+    EXPECT_STREQ("", msg);
 }
