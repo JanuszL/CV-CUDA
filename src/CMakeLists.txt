@@ -121,12 +121,6 @@ set_target_properties(nvcv PROPERTIES VISIBILITY_INLINES_HIDDEN on
                                         CUDA_VISIBILITY_PRESET hidden)
 target_compile_definitions(nvcv PRIVATE -DCUPVA_EXPORTING=1)
 
-# our public function definitions have a different name than
-# what's in the headers due to the versioning scheme. This will
-# load to a lot of spurious -Wmissing-declaration warnings. Let's
-# silence them out.
-target_compile_options(nvcv PRIVATE -Wno-missing-declarations)
-
 # target used when only public headers are needed
 add_library(nvcv_headers INTERFACE)
 target_include_directories(nvcv_headers INTERFACE include ${CMAKE_CURRENT_BINARY_DIR}/include)
