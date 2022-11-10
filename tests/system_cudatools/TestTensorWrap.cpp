@@ -17,6 +17,8 @@
 #include <nvcv/Tensor.hpp>       // for Tensor, etc.
 #include <nvcv/cuda/MathOps.hpp> // for operator == to allow EXPECT_EQ
 
+#include <limits>
+
 namespace cuda  = nv::cv::cuda;
 namespace ttype = nv::cv::test::type;
 
@@ -49,6 +51,9 @@ TYPED_TEST(Tensor2DWrapTest, correct_content_and_is_const)
     using PixelType = typename InputType::value_type;
 
     cuda::Tensor2DWrap<const PixelType> wrap(input.data(), input.pitchBytes);
+
+    auto pitchBytes = wrap.pitchBytes();
+    EXPECT_EQ(pitchBytes[0], input.pitchBytes);
 
     EXPECT_TRUE(std::is_pointer_v<decltype(wrap.ptr())>);
     EXPECT_TRUE(std::is_const_v<std::remove_pointer_t<decltype(wrap.ptr())>>);
@@ -128,23 +133,6 @@ TYPED_TEST(Tensor2DWrapCopyTest, can_change_content)
     EXPECT_EQ(test, gold);
 }
 
-// The death tests below are to be run in debug mode only
-
-#ifndef NDEBUG
-
-TEST(Tensor2DWrapNullTensorDeathTest, it_dies)
-{
-    EXPECT_DEATH(
-        {
-            const nv::cv::ITensorDataPitchDevice *dev = nullptr;
-
-            cuda::Tensor2DWrap<uchar4> wrap(dev);
-        },
-        "");
-}
-
-#endif
-
 // clang-format off
 NVCV_TYPED_TEST_SUITE(
     Tensor2DWrapImageWrapTest, ttype::Types<
@@ -186,7 +174,10 @@ TYPED_TEST(Tensor2DWrapImageWrapTest, correct_with_image_wrap)
     auto *dev = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(img.exportData());
     ASSERT_NE(dev, nullptr);
 
-    cuda::Tensor2DWrap<PixelType> wrap(dev);
+    cuda::Tensor2DWrap<PixelType> wrap(*dev);
+
+    auto pitchBytes = wrap.pitchBytes();
+    EXPECT_EQ(pitchBytes[0], input.pitchBytes);
 
     for (int y = 0; y < input.height; ++y)
     {
@@ -225,7 +216,10 @@ TYPED_TEST(Tensor2DWrapImageTest, correct_with_image)
     const auto *dev = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(img.exportData());
     ASSERT_NE(dev, nullptr);
 
-    cuda::Tensor2DWrap<PixelType> wrap(dev);
+    cuda::Tensor2DWrap<PixelType> wrap(*dev);
+
+    auto pitchBytes = wrap.pitchBytes();
+    EXPECT_EQ(pitchBytes[0], dev->plane(0).pitchBytes);
 
     const PixelType *ptr0 = reinterpret_cast<const PixelType *>(dev->plane(0).buffer);
     const PixelType *ptr1 = reinterpret_cast<const PixelType *>(reinterpret_cast<const uint8_t *>(dev->plane(0).buffer)
@@ -253,7 +247,7 @@ TYPED_TEST(Tensor2DWrapImageTest, it_works_in_device)
     const auto *dev = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(img.exportData());
     ASSERT_NE(dev, nullptr);
 
-    cuda::Tensor2DWrap<PixelType> wrap(dev);
+    cuda::Tensor2DWrap<PixelType> wrap(*dev);
 
     DeviceSetOnes(wrap, {width, height}, stream);
 
@@ -314,6 +308,10 @@ TYPED_TEST(Tensor3DWrapTest, correct_content_and_is_const)
     using PixelType = typename InputType::value_type;
 
     cuda::Tensor3DWrap<const PixelType> wrap(input.data(), input.pitchBytes1, input.pitchBytes2);
+
+    auto pitchBytes = wrap.pitchBytes();
+    EXPECT_EQ(pitchBytes[0], input.pitchBytes1);
+    EXPECT_EQ(pitchBytes[1], input.pitchBytes2);
 
     EXPECT_TRUE(std::is_pointer_v<decltype(wrap.ptr())>);
     EXPECT_TRUE(std::is_const_v<std::remove_pointer_t<decltype(wrap.ptr())>>);
@@ -409,15 +407,27 @@ TYPED_TEST(Tensor3DWrapCopyTest, can_change_content)
 
 #ifndef NDEBUG
 
-TEST(Tensor3DWrapNullTensorDeathTest, it_dies)
+TEST(Tensor3DWrapBigPitchDeathTest, it_dies)
 {
-    EXPECT_DEATH(
-        {
-            const nv::cv::ITensorDataPitchDevice *dev = nullptr;
+    using DataType = uint8_t;
+    int64_t height = 2;
+    int64_t width  = std::numeric_limits<int>::max();
 
-            cuda::Tensor3DWrap<uchar4> wrap(dev);
-        },
-        "");
+    nv::cv::PixelType                     dt{NVCV_PIXEL_TYPE_U8};
+    nv::cv::TensorDataPitchDevice::Buffer buf;
+    buf.pitchBytes[2] = sizeof(DataType);
+    buf.pitchBytes[1] = width * buf.pitchBytes[2];
+    buf.pitchBytes[0] = height * buf.pitchBytes[1];
+    buf.data          = reinterpret_cast<void *>(123);
+
+    nv::cv::TensorWrapData tensor{
+        nv::cv::TensorDataPitchDevice{nv::cv::TensorShape{{1, height, width}, "NHW"}, dt, buf}
+    };
+
+    const auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(tensor.exportData());
+    ASSERT_NE(dev, nullptr);
+
+    EXPECT_DEATH({ cuda::Tensor3DWrap<DataType> wrap(*dev); }, "");
 }
 
 #endif
@@ -467,7 +477,11 @@ TYPED_TEST(Tensor3DWrapTensorWrapTest, correct_with_tensor_wrap)
     const auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(tensor.exportData());
     ASSERT_NE(dev, nullptr);
 
-    cuda::Tensor3DWrap<PixelType> wrap(dev);
+    cuda::Tensor3DWrap<PixelType> wrap(*dev);
+
+    auto pitchBytes = wrap.pitchBytes();
+    EXPECT_EQ(pitchBytes[0], input.pitchBytes1);
+    EXPECT_EQ(pitchBytes[1], input.pitchBytes2);
 
     for (int b = 0; b < input.batches; ++b)
     {
@@ -509,7 +523,11 @@ TYPED_TEST(Tensor3DWrapTensorTest, correct_with_tensor)
     const auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(tensor.exportData());
     ASSERT_NE(dev, nullptr);
 
-    cuda::Tensor3DWrap<PixelType> wrap(dev);
+    cuda::Tensor3DWrap<PixelType> wrap(*dev);
+
+    auto pitchBytes = wrap.pitchBytes();
+    EXPECT_EQ(pitchBytes[0], dev->pitchBytes(0));
+    EXPECT_EQ(pitchBytes[1], dev->pitchBytes(1));
 
     const PixelType *ptr0 = reinterpret_cast<const PixelType *>(dev->data());
     const PixelType *ptr1
@@ -541,7 +559,7 @@ TYPED_TEST(Tensor3DWrapTensorTest, it_works_in_device)
     const auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(tensor.exportData());
     ASSERT_NE(dev, nullptr);
 
-    cuda::Tensor3DWrap<PixelType> wrap(dev);
+    cuda::Tensor3DWrap<PixelType> wrap(*dev);
 
     DeviceSetOnes(wrap, {width, height, batches}, stream);
 
