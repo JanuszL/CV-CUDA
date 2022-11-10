@@ -66,8 +66,8 @@ assert(foo11 == foo11_tmp);
 
 #define NVCV_PROJ_DEFINE_API_HELPER(PROJ, VER_MAJOR, VER_MINOR, VERTYPE, RETTYPE, FUNC, ARGS)                          \
     extern "C" __attribute__((visibility("default"))) RETTYPE NVCV_PROJ_FUNCTION_API(FUNC, VER_MAJOR, VER_MINOR) ARGS; \
-    extern "C" __attribute__((__symver__(#FUNC VERTYPE #PROJ "_" #VER_MAJOR "." #VER_MINOR)))                          \
-    __attribute__((visibility("default"))) RETTYPE                                                                     \
+    extern "C" __attribute__((visibility("default")))                                                                  \
+    __attribute__((__symver__(#FUNC VERTYPE #PROJ "_" #VER_MAJOR "." #VER_MINOR))) RETTYPE                             \
         NVCV_PROJ_FUNCTION_API(FUNC, VER_MAJOR, VER_MINOR) ARGS
 
 #define NVCV_PROJ_DEFINE_API_OLD(PROJ, VER_MAJOR, VER_MINOR, RETTYPE, FUNC, ARGS) \

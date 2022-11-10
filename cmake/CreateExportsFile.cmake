@@ -18,6 +18,10 @@ if(NOT SOURCES)
     message(FATAL_ERROR "No source files specified")
 endif()
 
+if(NOT VERPREFIX)
+    message(FATAL_ERROR "No version prefix specified")
+endif()
+
 string(REPLACE " " ";" SOURCES ${SOURCES})
 
 # Create an empty file
@@ -26,10 +30,10 @@ file(WRITE ${OUTPUT} "")
 set(all_versions "")
 
 foreach(src ${SOURCES})
-    file(STRINGS ${SOURCE_DIR}/${src} funcdef_list REGEX "NVCV_DEFINE_API.*")
+    file(STRINGS ${src} funcdef_list REGEX "_DEFINE_API.*")
 
     foreach(func_def ${funcdef_list})
-        if(func_def MATCHES "^NVCV_DEFINE_API\\(+([^,]+),([^,]+),[^,]+,([^,]+).*$")
+        if(func_def MATCHES "^[A-Z_]+_DEFINE_API\\(+([^,]+),([^,]+),[^,]+,([^,]+).*$")
             string(STRIP "${CMAKE_MATCH_1}" ver_major)
             string(STRIP "${CMAKE_MATCH_2}" ver_minor)
             string(STRIP "${CMAKE_MATCH_3}" func)
@@ -51,7 +55,7 @@ if(all_versions)
             set(ver_major ${CMAKE_MATCH_1})
             set(ver_minor ${CMAKE_MATCH_2})
 
-            file(APPEND ${OUTPUT} "NVCV_${ver} {\nglobal:\n")
+            file(APPEND ${OUTPUT} "${VERPREFIX}_${ver} {\nglobal:\n")
 
             if(NOT funcs_${ver_major}_${ver_minor})
                 message(FATAL_ERROR "funcs_${ver_major}_${ver_minor} must not be empty")
@@ -64,7 +68,7 @@ if(all_versions)
             endforeach()
 
             if(prev_version)
-                file(APPEND ${OUTPUT} "} NVCV_${prev_version};\n\n")
+                file(APPEND ${OUTPUT} "} ${VERPREFIX}_${prev_version};\n\n")
             else()
                 file(APPEND ${OUTPUT} "local: *;\n};\n\n")
             endif()
@@ -75,5 +79,5 @@ if(all_versions)
         endif()
     endforeach()
 else()
-    file(APPEND ${OUTPUT} "NVCV {\nlocal: *;\n};\n")
+    file(APPEND ${OUTPUT} "${VERPREFIX} {\nlocal: *;\n};\n")
 endif()

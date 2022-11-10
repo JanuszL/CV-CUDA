@@ -70,23 +70,32 @@ function(configure_version target LIBPREFIX incpath VERSION_FULL)
             COMPONENT dev)
 endfunction()
 
-function(configure_symbol_versioning target)
+function(configure_symbol_versioning dso_target VERPREFIX input_targets)
     # Create exports file for symbol versioning ---------------------------------
     set(EXPORTS_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/exports.ldscript")
-    target_link_libraries(${target}
+    target_link_libraries(${dso_target}
         PRIVATE
         -Wl,--version-script ${EXPORTS_OUTPUT}
     )
-    get_target_property(TARGET_SOURCES ${target} SOURCES)
+    set(ALL_SOURCES "")
+    foreach(tgt ${input_targets})
+        get_target_property(tgt_sources ${tgt} SOURCES)
+        get_target_property(tgt_srcdir ${tgt} SOURCE_DIR)
+
+        foreach(src ${tgt_sources})
+            list(APPEND ALL_SOURCES ${tgt_srcdir}/${src})
+        endforeach()
+    endforeach()
+
     set(GEN_EXPORTS_SCRIPT "${config_version_script_path}/CreateExportsFile.cmake")
 
     add_custom_command(OUTPUT ${EXPORTS_OUTPUT}
-        COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
-                                 -DSOURCES="${TARGET_SOURCES}"
+        COMMAND ${CMAKE_COMMAND} -DSOURCES="${ALL_SOURCES}"
+                                 -DVERPREFIX=${VERPREFIX}
                                  -DOUTPUT=${EXPORTS_OUTPUT}
                                  -P "${GEN_EXPORTS_SCRIPT}"
-        DEPENDS ${GEN_EXPORTS_SCRIPT} ${TARGET_SOURCES})
+        DEPENDS ${GEN_EXPORTS_SCRIPT} ${ALL_SOURCES})
 
-    add_custom_target(create_${target}_exports_file DEPENDS ${EXPORTS_OUTPUT})
-    add_dependencies(${target} create_${target}_exports_file)
+    add_custom_target(create_${dso_target}_exports_file DEPENDS ${EXPORTS_OUTPUT})
+    add_dependencies(${dso_target} create_${dso_target}_exports_file)
 endfunction()

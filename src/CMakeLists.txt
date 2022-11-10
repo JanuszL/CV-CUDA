@@ -59,7 +59,7 @@ target_include_directories(nvcv
 )
 
 configure_version(nvcv NVCV nvcv ${PROJECT_VERSION})
-configure_symbol_versioning(nvcv)
+configure_symbol_versioning(nvcv NVCV nvcv)
 setup_dso(nvcv ${PROJECT_VERSION})
 
 target_compile_definitions(nvcv PRIVATE -DNVCV_EXPORTING=1)
