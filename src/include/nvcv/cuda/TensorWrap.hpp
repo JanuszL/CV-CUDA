@@ -20,8 +20,7 @@
 #ifndef NVCV_CUDA_TENSOR_WRAP_HPP
 #define NVCV_CUDA_TENSOR_WRAP_HPP
 
-#include "TypeTraits.hpp"             // for HasTypeTraits, etc.
-#include "detail/Metaprogramming.hpp" // for detail::IsAllSame, etc.
+#include "TypeTraits.hpp" // for HasTypeTraits, etc.
 
 #include <nvcv/IImageData.hpp>  // for IImageDataPitchDevice, etc.
 #include <nvcv/ITensorData.hpp> // for ITensorDataPitchDevice, etc.
@@ -87,7 +86,7 @@ public:
         : m_data(data)
         , m_pitchBytes{std::forward<int>(pitchBytes)...}
     {
-        static_assert(detail::IsAllSame<int, Args...>);
+        static_assert(std::conjunction_v<std::is_same<int, Args>...>);
         static_assert(sizeof...(Args) == kVariablePitches);
     }
 
@@ -198,7 +197,7 @@ protected:
     template<typename... Args>
     inline const __host__ __device__ T *doGetPtr(Args... c) const
     {
-        static_assert(detail::IsAllSame<int, Args...>);
+        static_assert(std::conjunction_v<std::is_same<int, Args>...>);
         static_assert(sizeof...(Args) <= kNumDimensions);
 
         constexpr int kArgSize      = sizeof...(Args);

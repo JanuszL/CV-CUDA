@@ -214,25 +214,6 @@ struct HasTypeTraits_t<T, std::void_t<typename TypeTraits<T>::base_type>> : std:
 {
 };
 
-// Metatype to check if all given types are the same.
-template<typename...>
-struct IsAllSame_t : std::true_type
-{
-};
-
-template<typename T, typename U, typename... Us>
-struct IsAllSame_t<T, U, Us...> : std::false_type
-{
-};
-
-template<typename T, typename... Ts>
-struct IsAllSame_t<T, T, Ts...> : IsAllSame_t<T, Ts...>
-{
-};
-
-template<typename... Ts>
-constexpr bool IsAllSame = IsAllSame_t<Ts...>::value;
-
 } // namespace nv::cv::cuda::detail
 
 #endif // NVCV_CUDA_DETAIL_METAPROGRAMMING_HPP
