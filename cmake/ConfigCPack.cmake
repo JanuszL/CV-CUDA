@@ -76,163 +76,26 @@ if(UNIX)
     set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
 endif()
 
+# Configure installer components ================================================
+
 set(CPACK_COMPONENTS_ALL "")
 
-# Runtime libraries =========================================
+include(InstallNVCVLib)
+include(InstallNVCVDev)
 
-list(APPEND CPACK_COMPONENTS_ALL lib)
-set(CPACK_COMPONENT_LIB_DISPLAY_NAME "Runtime libraries")
-set(CPACK_COMPONENT_LIB_DESCRIPTION "NVIDIA NVCV library")
-set(CPACK_COMPONENT_LIB_REQUIRED true)
-
-set(NVCV_PACKAGE_NAME "nvcv${NVCV_VERSION_MAJOR}")
-set(CVCUDA_PACKAGE_NAME "cvcuda${PROJECT_VERSION_MAJOR}")
-
-if(UNIX)
-    set(NVCV_LIB_FILE_NAME "nvcv-lib-${NVCV_VERSION_BUILD}")
-
-    set(CPACK_DEBIAN_LIB_FILE_NAME "${NVCV_LIB_FILE_NAME}.deb")
-    set(CPACK_ARCHIVE_LIB_FILE_NAME "${NVCV_LIB_FILE_NAME}")
-
-    configure_file(cpack/debian_lib_postinst.in cpack/lib/postinst @ONLY)
-    configure_file(cpack/debian_lib_prerm.in cpack/lib/prerm @ONLY)
-
-    set(CPACK_DEBIAN_LIB_PACKAGE_CONTROL_EXTRA
-        "${CMAKE_CURRENT_BINARY_DIR}/cpack/lib/postinst"
-        "${CMAKE_CURRENT_BINARY_DIR}/cpack/lib/prerm")
-
-    # as per debian convention, use the library file name
-    set(CPACK_DEBIAN_LIB_PACKAGE_NAME "lib${NVCV_PACKAGE_NAME}")
-
-    set(CPACK_DEBIAN_LIB_PACKAGE_DEPENDS "libstdc++6, libc6")
-
-    if(ENABLE_SANITIZER)
-        set(CPACK_DEBIAN_LIB_PACKAGE_DEPENDS "${CPACK_DEBIAN_LIB_PACKAGE_DEPENDS}, libasan6")
-    endif()
-
-    configure_file(cpack/ld.so.conf.in cpack/ld.so.conf @ONLY)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cpack/ld.so.conf
-        DESTINATION "etc/ld.so.conf.d"
-        RENAME ${CPACK_PACKAGE_NAME}.conf
-        COMPONENT lib)
-endif()
-
-# Handle licenses, they go together with the library
-install(FILES ${CPACK_RESOURCE_FILE_LICENSE}
-    DESTINATION doc
-    RENAME CVCUDA_EULA.txt
-    COMPONENT lib)
-
-math(EXPR CVCUDA_NEXT_VERSION_MINOR "${cvcuda_VERSION_MINOR}+1")
-set(CVCUDA_NEXT_API_VERSION "${cvcuda_VERSION_MAJOR}.${CVCUDA_NEXT_VERSION_MINOR}")
-
-# Development =================================================
-list(APPEND CPACK_COMPONENTS_ALL dev)
-
-set(CPACK_COMPONENT_DEV_DISPLAY_NAME "Development")
-set(CPACK_COMPONENT_DEV_DESCRIPTION "NVIDIA CV-CUDA C/C++ development library and headers")
-
-if(UNIX)
-    set(NVCV_DEV_FILE_NAME "nvcv-dev-${NVCV_VERSION_BUILD}")
-
-    set(CPACK_DEBIAN_DEV_FILE_NAME "${NVCV_DEV_FILE_NAME}.deb")
-    set(CPACK_ARCHIVE_DEV_FILE_NAME "${NVCV_DEV_FILE_NAME}")
-
-    # dev package works with any current and futures ABIs, provided major version
-    # is the same
-    set(CPACK_DEBIAN_DEV_PACKAGE_DEPENDS "${CPACK_DEBIAN_LIB_PACKAGE_NAME} (>= ${NVCV_VERSION_API})")
-
-    set(CPACK_DEBIAN_DEV_PACKAGE_NAME "${NVCV_PACKAGE_NAME}-dev")
-
-    # We're not adding compiler and cmake as dependencies, users can choose
-    # whatever toolchain they want.
-
-    # Set up control files
-    set(CVCUDA_USR_LIB_DIR /usr/lib)
-
-    set(args -DCVCUDA_SOURCE_DIR=${CMAKE_SOURCE_DIR}
-             -DCVCUDA_BINARY_DIR=${CMAKE_BINARY_DIR}
-             -DNVCV_LIB_LINKER_FILE_NAME=$<TARGET_LINKER_FILE_NAME:nvcv>)
-
-    foreach(var CMAKE_INSTALL_PREFIX
-                CMAKE_INSTALL_INCLUDEDIR
-                CMAKE_INSTALL_LIBDIR
-                NVCV_PACKAGE_NAME
-                CMAKE_LIBRARY_ARCHITECTURE
-                NVCV_VERSION_API_CODE
-                CVCUDA_USR_LIB_DIR)
-
-        list(APPEND args "-D${var}=${${var}}")
-    endforeach()
-
-    add_custom_target(nvcv_dev_control_extra ALL
-        COMMAND cmake ${args} -DSOURCE=${CMAKE_SOURCE_DIR}/cpack/debian_dev_prerm.in -DDEST=cpack/dev/prerm -P ${CMAKE_SOURCE_DIR}/cpack/ConfigureFile.cmake
-        COMMAND cmake ${args} -DSOURCE=${CMAKE_SOURCE_DIR}/cpack/debian_dev_postinst.in -DDEST=cpack/dev/postinst -P ${CMAKE_SOURCE_DIR}/cpack/ConfigureFile.cmake
-        BYPRODUCTS cpack/dev/prerm cpack/dev/postinst
-        DEPENDS cpack/debian_dev_prerm.in cpack/debian_dev_postinst.in
-        VERBATIM)
-
-    set(CPACK_DEBIAN_DEV_PACKAGE_CONTROL_EXTRA
-        "${CMAKE_CURRENT_BINARY_DIR}/cpack/dev/postinst"
-        "${CMAKE_CURRENT_BINARY_DIR}/cpack/dev/prerm")
-else()
-    set(CPACK_COMPONENT_DEV_DEPENDS lib)
-endif()
-
-# Test suite =================================================
 if(BUILD_TESTS)
-    list(APPEND CPACK_COMPONENTS_ALL tests)
-
-    set(CPACK_COMPONENT_TESTS_DISABLED true)
-    set(CPACK_COMPONENT_TESTS_DISPLAY_NAME "Tests")
-    set(CPACK_COMPONENT_TESTS_DESCRIPTION "NVIDIA CV-CUDA test suite (internal use only)")
-    set(CPACK_COMPONENT_TESTS_GROUP internal)
-
-    if(UNIX)
-        # Depend on current or any future ABI with same major version
-        set(CPACK_DEBIAN_TESTS_PACKAGE_DEPENDS "${CPACK_DEBIAN_LIB_PACKAGE_NAME} (>= ${NVCV_VERSION_API})")
-        # External dependencies
-        set(CPACK_DEBIAN_TESTS_PACKAGE_DEPENDS "${CPACK_DEBIAN_TESTS_PACKAGE_DEPENDS},libssl3")
-
-        set(CPACK_DEBIAN_TESTS_PACKAGE_NAME "${CVCUDA_PACKAGE_NAME}-tests")
-
-        set(CVCUDA_TESTS_FILE_NAME "cvcuda-tests-${CVCUDA_VERSION_BUILD}")
-
-        set(CPACK_DEBIAN_TESTS_FILE_NAME "${CVCUDA_TESTS_FILE_NAME}.deb")
-        set(CPACK_ARCHIVE_TESTS_FILE_NAME "${CVCUDA_TESTS_FILE_NAME}")
-
-    else()
-        set(CPACK_COMPONENT_TESTS_DEPENDS lib)
-    endif()
+    include(InstallTests)
 endif()
 
-# Python =================================================
 if(BUILD_PYTHON)
     include(InstallPython)
 endif()
 
-# Samples -------------------------------------
 if(BUILD_SAMPLES)
-    list(APPEND CPACK_COMPONENTS_ALL samples)
-
-    set(CPACK_COMPONENT_SAMPLES_DISABLED true)
-    set(CPACK_COMPONENT_SAMPLES_DISPLAY_NAME "Samples")
-    set(CPACK_COMPONENT_SAMPLES_DESCRIPTION "NVIDIA CV-CUDA Samples")
-
-    if(UNIX)
-        set(CVCUDA_SAMPLES_FILE_NAME "cvcuda-samples-${CVCUDA_VERSION_BUILD}")
-        set(CPACK_DEBIAN_SAMPLES_FILE_NAME "${CVCUDA_SAMPLES_FILE_NAME}.deb")
-        set(CPACK_ARCHIVE_SAMPLES_FILE_NAME "${CVCUDA_SAMPLES_FILE_NAME}")
-
-        set(CPACK_DEBIAN_SAMPLES_PACKAGE_NAME "${CVCUDA_PACKAGE_NAME}-samples")
-
-        set(CPACK_DEBIAN_SAMPLES_PACKAGE_DEPENDS "${CPACK_DEBIAN_DEV_PACKAGE_NAME} (>= ${NVCV_VERSION_API})")
-    else()
-        set(CPACK_COMPONENT_SAMPLES_DEPENDS dev)
-    endif()
+    include(InstallSamples)
 endif()
 
-# Finish GPack configuration =================================================
+# Finish up GPack configuration =================================================
 
 include(CPack)
 
