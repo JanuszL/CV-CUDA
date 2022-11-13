@@ -17,7 +17,11 @@
 
 case "$1" in
     remove|deconfigure)
-        dst="@DST_PYTHON_MODULE@"
-        rm -f "$dst"
+        dst_path="@DST_PYTHON_MODULE_PATH@"
+        # shellcheck disable=SC2043
+        for mod in @PYTHON_MODULE_FILENAME_LIST@; do
+            dst="$dst_path/$mod"
+            rm -f "$dst"
+        done
         ;;
 esac

@@ -17,9 +17,14 @@
 
 case "$1" in
     configure)
-        src="@SRC_PYTHON_MODULE@"
-        dst="@DST_PYTHON_MODULE@"
-        mkdir -p "$(dirname "$dst")"
-        ln -sf "$src" "$dst"
+        src_path="@SRC_PYTHON_MODULE_PATH@"
+        dst_path="@DST_PYTHON_MODULE_PATH@"
+        mkdir -p "$dst_path"
+        # shellcheck disable=SC2043
+        for mod in @PYTHON_MODULE_FILENAME_LIST@; do
+            src="$src_path/$mod"
+            dst="$dst_path/$mod"
+            ln -sf "$src" "$dst"
+        done
         ;;
 esac

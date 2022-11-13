@@ -35,6 +35,7 @@ import torchvision.transforms.functional as F
 from torchvision.models import segmentation as segmentation_models
 import numpy as np
 import nvcv
+import nvcv_operators  # noqa: F401
 import tensorrt as trt
 
 # Bring the commons folder from the samples directory into our path so that

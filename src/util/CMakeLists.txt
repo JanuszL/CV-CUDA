@@ -21,6 +21,8 @@ find_package(OpenSSL COMPONENTS Crypto REQUIRED)
 set(ZLIB_USE_STATIC_LIBS TRUE)
 find_package(ZLIB REQUIRED)
 
+find_package(CUDAToolkit REQUIRED)
+
 set(CMAKE_POSITION_INDEPENDENT_CODE on)
 
 # nvcv_util_sanitizer ---------------------------------

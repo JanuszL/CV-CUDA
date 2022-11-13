@@ -18,36 +18,10 @@
 foreach(VER ${PYTHON_VERSIONS})
     string(REPLACE "." "" VERNAME ${VER})
 
-    # Let's get the python module file name for current python version
-    if(USE_DEFAULT_PYTHON)
-        set(PYTHON${VERNAME}_EXEC ${Python_EXECUTABLE})
-    else()
-        find_program(PYTHON${VERNAME}_EXEC python${VER} REQUIRED)
-    endif()
-    set(PYTHON_EXEC ${PYTHON${VERNAME}_EXEC})
-    message("${VER}: ${PYTHON_EXEC}")
-    execute_process(COMMAND ${PYTHON_EXEC} -c "from distutils import sysconfig as s;print(s.get_config_var('EXT_SUFFIX') or s.get_config_var('SO'))"
-                    OUTPUT_VARIABLE module_suffix
-                    OUTPUT_STRIP_TRAILING_WHITESPACE
-                    COMMAND_ERROR_IS_FATAL ANY)
-
-    set(module_filename nvcv${module_suffix})
-
     set(python_module_name python${VER})
     # NSIS doesn't like the dot
     string(REPLACE "." "" python_module_name "${python_module_name}")
     string(TOUPPER ${python_module_name} PYTHON_MODULE_NAME)
-
-    # Issue the install command for the python module
-    install(FILES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${module_filename}
-            DESTINATION ${CMAKE_INSTALL_LIBDIR}/python
-            COMPONENT ${python_module_name})
-
-    # Sets python module's RPATH to point to where nvcv library is.
-    set(modpath
-        "\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/python/${module_filename}")
-    install(CODE "execute_process(COMMAND patchelf --set-rpath \"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}\" \"${modpath}\" ERROR_VARIABLE error_patch)\nif(error_path)\n    message(FATAL_ERROR \"Error setting rpath of ${modpath}: ${error_path}\")\nendif()"
-        COMPONENT ${python_module_name})
 
     set(CPACK_COMPONENT_${PYTHON_MODULE_NAME}_DISABLED true)
     set(CPACK_COMPONENT_${PYTHON_MODULE_NAME}_DISPLAY_NAME "Python ${VER}")
@@ -66,18 +40,55 @@ foreach(VER ${PYTHON_VERSIONS})
 
         # Depend on python interpreter
         set(CPACK_DEBIAN_${PYTHON_MODULE_NAME}_PACKAGE_DEPENDS "${CPACK_DEBIAN_${PYTHON_MODULE_NAME}_PACKAGE_DEPENDS}, python${VER}")
-
-        # Set up debian control files
-        set(SRC_PYTHON_MODULE ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/python/${module_filename})
-        set(DST_PYTHON_MODULE /usr/lib/python3/dist-packages/${module_filename})
-
-        configure_file(${cvcuda_SOURCE_DIR}/cpack/debian_python_postinst.in ${cvcuda_BINARY_DIR}/cpack/python${VER}/postinst @ONLY)
-        configure_file(${cvcuda_SOURCE_DIR}/cpack/debian_python_prerm.in ${cvcuda_BINARY_DIR}/cpack/python${VER}/prerm @ONLY)
-
-        set(CPACK_DEBIAN_${PYTHON_MODULE_NAME}_PACKAGE_CONTROL_EXTRA
-            "${cvcuda_BINARY_DIR}/cpack/python${VER}/postinst"
-            "${cvcuda_BINARY_DIR}/cpack/python${VER}/prerm")
     endif()
+
+
+    # Let's get the python module file name for current python version
+    if(USE_DEFAULT_PYTHON)
+        set(PYTHON${VERNAME}_EXEC ${Python_EXECUTABLE})
+    else()
+        find_program(PYTHON${VERNAME}_EXEC python${VER} REQUIRED)
+    endif()
+    set(PYTHON_EXEC ${PYTHON${VERNAME}_EXEC})
+    message("${VER}: ${PYTHON_EXEC}")
+    execute_process(COMMAND ${PYTHON_EXEC} -c "from distutils import sysconfig as s;print(s.get_config_var('EXT_SUFFIX') or s.get_config_var('SO'))"
+                    OUTPUT_VARIABLE module_suffix
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                    COMMAND_ERROR_IS_FATAL ANY)
+
+    set(module_filename_list "")
+
+    # process each one of the modules we've built
+    foreach(module_name nvcv nvcv_operators)
+        set(module_filename ${module_name}${module_suffix})
+
+        list(APPEND module_filename_list ${module_filename})
+
+        # Issue the install command for the python module
+        install(FILES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${module_filename}
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}/python
+                COMPONENT ${python_module_name})
+
+        # Sets python module's RPATH to point to where nvcv library is.
+        set(modpath
+            "\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/python/${module_filename}")
+
+        install(CODE "execute_process(COMMAND patchelf --set-rpath \"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}\" \"${modpath}\" ERROR_VARIABLE error_patch)\nif(error_path)\n    message(FATAL_ERROR \"Error setting rpath of ${modpath}: ${error_path}\")\nendif()"
+            COMPONENT ${python_module_name})
+    endforeach()
+
+    # Set up debian control files
+    set(SRC_PYTHON_MODULE_PATH ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/python)
+    set(DST_PYTHON_MODULE_PATH /usr/lib/python3/dist-packages)
+    set(PYTHON_MODULE_FILENAME_LIST "${module_filename_list}")
+    string(JOIN " " PYTHON_MODULE_FILENAME_LIST ${PYTHON_MODULE_FILENAME_LIST})
+
+    configure_file(${cvcuda_SOURCE_DIR}/cpack/debian_python_postinst.in ${cvcuda_BINARY_DIR}/cpack/python${VER}/postinst @ONLY)
+    configure_file(${cvcuda_SOURCE_DIR}/cpack/debian_python_prerm.in ${cvcuda_BINARY_DIR}/cpack/python${VER}/prerm @ONLY)
+
+    set(CPACK_DEBIAN_${PYTHON_MODULE_NAME}_PACKAGE_CONTROL_EXTRA
+        "${cvcuda_BINARY_DIR}/cpack/python${VER}/postinst"
+        "${cvcuda_BINARY_DIR}/cpack/python${VER}/prerm")
 
     if(BUILD_TESTS)
         set(CPACK_DEBIAN_TESTS_PACKAGE_DEPENDS
