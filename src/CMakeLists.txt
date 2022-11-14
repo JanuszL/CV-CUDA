@@ -45,6 +45,7 @@ add_library(nvcv SHARED
     operators/OpConvertTo.cpp
     operators/OpCopyMakeBorder.cpp
     operators/OpCenterCrop.cpp
+    operators/OpRotate.cpp
 )
 
 target_link_libraries(nvcv PRIVATE

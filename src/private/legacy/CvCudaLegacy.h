@@ -643,7 +643,10 @@ class Rotate : public CudaBaseOp
 {
 public:
     Rotate() = delete;
-    Rotate(DataShape max_input_shape, DataShape max_output_shape) : CudaBaseOp(max_input_shape, max_output_shape) {}
+    Rotate(DataShape max_input_shape, DataShape max_output_shape);
+
+    ~Rotate();
+
     /**
      * @brief Rotates input images around the origin (0,0) and then shifts it.
      * @param inputs gpu pointer, inputs[0] are batched input images, whose shape is input_shape and type is data_type.
@@ -660,17 +663,18 @@ public:
      * @param data_type data type of the input images, e.g. kCV_32F.
      * @param stream for the asynchronous execution.
      */
-    int infer(
-                    const void *const *inputs, void **outputs, void *workspace, const cv::Size dsize, const double angle,
-                    const double xShift, const double yShift, const int interpolation, DataShape input_shape, DataFormat format,
-                    DataType data_type, cudaStream_t stream);
+    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, const double angleDeg,
+                    const double2 shift, const NVCVInterpolationType interpolation, cudaStream_t stream);
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator
      * @param max_input_shape maximum input DataShape that may be used
      * @param max_output_shape maximum output DataShape that may be used
      * @param max_data_type DataType with the maximum size that may be used
      */
-    size_t calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
+    size_t    calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
+
+protected:
+    double *d_aCoeffs;
 };
 
 class NormalizeVarShape : public CudaBaseOp
