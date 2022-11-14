@@ -31,24 +31,27 @@ add_custom_command(OUTPUT ${dtype_defs}
     DEPENDS ${dtype_script} ${dtype_header}
 )
 
-pybind11_add_module(nvcv_python SHARED
-    ${imgformat_defs}
-    ${dtype_defs}
-    Main.cpp
-    ImageFormat.cpp
-    DataType.cpp
-    Stream.cpp
-    StreamStack.cpp
-    Cache.cpp
-    Object.cpp
-    Resource.cpp
-    ResourceGuard.cpp
-    Container.cpp
-    Tensor.cpp
-    Image.cpp
-    ImageBatch.cpp
-    CudaBuffer.cpp
-    Rect.cpp
+nvcv_python_add_module(
+    TARGET nvcv_python SHARED
+    OUTPUT_NAME nvcv
+    SOURCES
+        ${imgformat_defs}
+        ${dtype_defs}
+        Main.cpp
+        ImageFormat.cpp
+        DataType.cpp
+        Stream.cpp
+        StreamStack.cpp
+        Cache.cpp
+        Object.cpp
+        Resource.cpp
+        ResourceGuard.cpp
+        Container.cpp
+        Tensor.cpp
+        Image.cpp
+        ImageBatch.cpp
+        CudaBuffer.cpp
+        Rect.cpp
 )
 
 target_include_directories(nvcv_python
@@ -56,13 +59,6 @@ target_include_directories(nvcv_python
         # for imgformat_defs
         ${CMAKE_CURRENT_BINARY_DIR}
 )
-
-set_target_properties(nvcv_python PROPERTIES
-    OUTPUT_NAME nvcv
-    DEBUG_POSTFIX ""
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
-)
-
 
 find_package(CUDAToolkit REQUIRED)
 
@@ -72,11 +68,6 @@ target_link_libraries(nvcv_python
         nvcv_util_compat
         nvcv_python_common
         CUDA::cudart_static
-        -static-libstdc++
 )
 
-include(GNUInstallDirs)
-
-install(TARGETS nvcv_python
-    LIBRARY DESTINATION lib
-)
+set_target_properties(nvcv_python PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/python)

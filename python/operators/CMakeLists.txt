@@ -15,43 +15,40 @@
 
 find_package(nvcv_operators REQUIRED)
 
-pybind11_add_module(nvcv_operators_python MODULE
-    Main.cpp
-    InterpolationType.cpp
-    BorderType.cpp
-    ColorConversionCode.cpp
-    MorphologyType.cpp
-    OpReformat.cpp
-    OpResize.cpp
-    OpCustomCrop.cpp
-    OpNormalize.cpp
-    OpConvertTo.cpp
-    OpPadAndStack.cpp
-    OpCopyMakeBorder.cpp
-    OpRotate.cpp
-    OpErase.cpp
-    OpGaussian.cpp
-    OpMedianBlur.cpp
-    OpLaplacian.cpp
-    OpAverageBlur.cpp
-    OpConv2D.cpp
-    OpBilateralFilter.cpp
-    OpCenterCrop.cpp
-    OpWarpAffine.cpp
-    OpWarpPerspective.cpp
-    OpChannelReorder.cpp
-    OpMorphology.cpp
-    OpFlip.cpp
-    OpCvtColor.cpp
-    OpComposite.cpp
-    OpGammaContrast.cpp
-    OpPillowResize.cpp
-)
-
-set_target_properties(nvcv_operators_python PROPERTIES
+nvcv_python_add_module(
+    TARGET nvcv_operators_python MODULE
     OUTPUT_NAME nvcv_operators
-    DEBUG_POSTFIX ""
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
+    SOURCES
+        Main.cpp
+        InterpolationType.cpp
+        BorderType.cpp
+        ColorConversionCode.cpp
+        MorphologyType.cpp
+        OpReformat.cpp
+        OpResize.cpp
+        OpCustomCrop.cpp
+        OpNormalize.cpp
+        OpConvertTo.cpp
+        OpPadAndStack.cpp
+        OpCopyMakeBorder.cpp
+        OpRotate.cpp
+        OpErase.cpp
+        OpGaussian.cpp
+        OpMedianBlur.cpp
+        OpLaplacian.cpp
+        OpAverageBlur.cpp
+        OpConv2D.cpp
+        OpBilateralFilter.cpp
+        OpCenterCrop.cpp
+        OpWarpAffine.cpp
+        OpWarpPerspective.cpp
+        OpChannelReorder.cpp
+        OpMorphology.cpp
+        OpFlip.cpp
+        OpCvtColor.cpp
+        OpComposite.cpp
+        OpGammaContrast.cpp
+        OpPillowResize.cpp
 )
 
 target_link_libraries(nvcv_operators_python
@@ -60,11 +57,6 @@ target_link_libraries(nvcv_operators_python
         nvcv_python
         nvcv_operators
         nvcv_python_common
-        -static-libstdc++
 )
 
-include(GNUInstallDirs)
-
-install(TARGETS nvcv_operators_python
-    LIBRARY DESTINATION lib
-)
+set_target_properties(nvcv_operators_python PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/python)
