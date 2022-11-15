@@ -62,9 +62,9 @@ void Normalize::operator()(cudaStream_t stream, const cv::ITensor &in, const cv:
         m_legacyOp->infer(*inData, *baseData, *scaleData, *outData, global_scale, shift, epsilon, flags, stream));
 }
 
-void Normalize::operator()(cudaStream_t stream, const cv::IImageBatch &in, const cv::ITensor &base,
-                           const cv::ITensor &scale, cv::IImageBatch &out, const float global_scale, const float shift,
-                           const float epsilon, const uint32_t flags) const
+void Normalize::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::ITensor &base,
+                           const cv::ITensor &scale, cv::IImageBatchVarShape &out, const float global_scale,
+                           const float shift, const float epsilon, const uint32_t flags) const
 {
     auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
     if (inData == nullptr)

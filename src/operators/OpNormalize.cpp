@@ -59,8 +59,8 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopNormalizeVarShapeSubmit,
     return priv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle     baseWrap(base), scaleWrap(scale);
-            nv::cv::ImageBatchWrapHandle inWrap(in), outWrap(out);
+            nv::cv::TensorWrapHandle             baseWrap(base), scaleWrap(scale);
+            nv::cv::ImageBatchVarShapeWrapHandle inWrap(in), outWrap(out);
             priv::ToDynamicRef<priv_op::Normalize>(handle)(stream, inWrap, baseWrap, scaleWrap, outWrap, global_scale,
                                                            shift, epsilon, flags);
         });

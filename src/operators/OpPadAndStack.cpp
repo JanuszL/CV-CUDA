@@ -44,8 +44,8 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopPadAndStackSubmit,
     return priv::ProtectCall(
         [&]
         {
-            nv::cv::ImageBatchWrapHandle input(in);
-            nv::cv::TensorWrapHandle     output(out), topWrap(top), leftWrap(left);
+            nv::cv::ImageBatchVarShapeWrapHandle input(in);
+            nv::cv::TensorWrapHandle             output(out), topWrap(top), leftWrap(left);
             priv::ToDynamicRef<priv_op::PadAndStack>(handle)(stream, input, output, topWrap, leftWrap, borderMode,
                                                              borderValue);
         });

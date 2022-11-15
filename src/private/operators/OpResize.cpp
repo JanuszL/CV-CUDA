@@ -48,7 +48,7 @@ void Resize::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::IT
     leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, interpolation, stream));
 }
 
-void Resize::operator()(cudaStream_t stream, const cv::IImageBatch &in, const cv::IImageBatch &out,
+void Resize::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
                         const NVCVInterpolationType interpolation) const
 {
     auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
