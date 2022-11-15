@@ -196,6 +196,21 @@ TEST(ImageBatchVarShape, wip_create)
         }
     }
 
+    {
+        nvcv::ImageBatchVarShapeWrapHandle wrap(batch.handle());
+        EXPECT_EQ(batch.capacity(), wrap.capacity());
+        EXPECT_EQ(batch.format(), wrap.format());
+        ASSERT_EQ(batch.numImages(), wrap.numImages());
+        EXPECT_EQ(batch.handle(), wrap.handle());
+
+        int  cur    = 0;
+        auto itwrap = wrap.begin();
+        for (auto itgold = batch.begin(); itgold != batch.end(); ++itgold, ++itwrap, ++cur)
+        {
+            EXPECT_EQ(itgold->handle(), itwrap->handle()) << "Image #" << cur;
+        }
+    }
+
     ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 }
 
