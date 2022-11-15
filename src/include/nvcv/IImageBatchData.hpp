@@ -39,7 +39,7 @@ private:
     virtual const NVCVImageBatchData &doGetCData() const     = 0;
 };
 
-class IImageBatchVarShapeDataPitchDevice : public IImageBatchData
+class IImageBatchVarShapeDataPitch : public IImageBatchData
 {
 public:
     Size2D                 maxSize() const;
@@ -48,6 +48,10 @@ public:
 private:
     virtual Size2D                 doGetMaxSize() const     = 0;
     virtual const ImagePlanePitch *doGetImagePlanes() const = 0;
+};
+
+class IImageBatchVarShapeDataPitchDevice : public IImageBatchVarShapeDataPitch
+{
 };
 
 // Implementation - IImageBatchData
@@ -68,13 +72,13 @@ inline const NVCVImageBatchData &IImageBatchData::cdata() const
     return doGetCData();
 }
 
-// Implementation - IImageBatchVarShapeDataPitchDevice
-inline Size2D IImageBatchVarShapeDataPitchDevice::maxSize() const
+// Implementation - IImageBatchVarShapeDataPitch
+inline Size2D IImageBatchVarShapeDataPitch::maxSize() const
 {
     return doGetMaxSize();
 }
 
-inline const ImagePlanePitch *IImageBatchVarShapeDataPitchDevice::imgPlanes() const
+inline const ImagePlanePitch *IImageBatchVarShapeDataPitch::imgPlanes() const
 {
     return doGetImagePlanes();
 }
