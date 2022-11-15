@@ -16,7 +16,7 @@
 find_package(nvcv_operators REQUIRED)
 
 nvcv_python_add_module(
-    TARGET nvcv_operators_module_python SHARED
+    TARGET nvcv_operators_module_python MODULE
     OUTPUT_NAME nvcv_operators
     SOURCES
         Main.cpp

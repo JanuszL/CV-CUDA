@@ -34,18 +34,18 @@ import util
 )
 def test_op_resize(input, out_shape, interp):
     if interp is None:
-        out = input.resize(out_shape)
+        out = nvcv.resize(input, out_shape)
     else:
-        out = input.resize(out_shape, interp)
+        out = nvcv.resize(input, out_shape, interp)
     assert out.layout == input.layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
     out = nvcv.Tensor(out_shape, input.dtype, input.layout)
     if interp is None:
-        tmp = input.resize_into(out)
+        tmp = nvcv.resize_into(out, input)
     else:
-        tmp = input.resize_into(out, interp)
+        tmp = nvcv.resize_into(out, input, interp)
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == out_shape
@@ -53,17 +53,17 @@ def test_op_resize(input, out_shape, interp):
 
     stream = nvcv.cuda.Stream()
     if interp is None:
-        out = input.resize(shape=out_shape, stream=stream)
+        out = nvcv.resize(src=input, shape=out_shape, stream=stream)
     else:
-        out = input.resize(shape=out_shape, interp=interp, stream=stream)
+        out = nvcv.resize(src=input, shape=out_shape, interp=interp, stream=stream)
     assert out.layout == input.layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
     if interp is None:
-        tmp = input.resize_into(out=out, stream=stream)
+        tmp = nvcv.resize_into(src=input, dst=out, stream=stream)
     else:
-        tmp = input.resize_into(out=out, interp=interp, stream=stream)
+        tmp = nvcv.resize_into(src=input, dst=out, interp=interp, stream=stream)
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == out_shape
@@ -91,9 +91,9 @@ def test_op_resizevarshape(inSize, outSize, interp):
         sizes.append([image.width, image.height])
 
     if interp is None:
-        out = input.resize(sizes)
+        out = nvcv.resize(input, sizes)
     else:
-        out = input.resize(sizes=sizes, interp=interp)
+        out = nvcv.resize(src=input, sizes=sizes, interp=interp)
 
     assert len(out) == len(input)
     assert out.capacity == input.capacity
@@ -102,9 +102,9 @@ def test_op_resizevarshape(inSize, outSize, interp):
 
     stream = nvcv.cuda.Stream()
     if interp is None:
-        tmp = input.resize_into(out=base_output, stream=stream)
+        tmp = nvcv.resize_into(src=input, dst=base_output, stream=stream)
     else:
-        tmp = input.resize_into(out=base_output, interp=interp, stream=stream)
+        tmp = nvcv.resize_into(src=input, dst=base_output, interp=interp, stream=stream)
     assert tmp is base_output
     assert len(base_output) == len(input)
     assert out.capacity == input.capacity

@@ -33,7 +33,7 @@ namespace nv::cvpy {
 
 namespace {
 
-ImageBatchVarShape Conv2DVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output, ImageBatchVarShape &kernel,
+ImageBatchVarShape Conv2DVarShapeInto(ImageBatchVarShape &output, ImageBatchVarShape &input, ImageBatchVarShape &kernel,
                                       Tensor &kernel_anchor, NVCVBorderType border, std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -66,7 +66,7 @@ ImageBatchVarShape Conv2DVarShape(ImageBatchVarShape &input, ImageBatchVarShape 
         output.pushBack(image);
     }
 
-    return Conv2DVarShapeInto(input, output, kernel, kernel_anchor, border, pstream);
+    return Conv2DVarShapeInto(output, input, kernel, kernel_anchor, border, pstream);
 }
 
 } // namespace
@@ -75,12 +75,10 @@ void ExportOpConv2D(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::ImageBatchVarShape>("conv2d", &Conv2DVarShape, "kernel"_a, "kernel_anchor"_a,
-                                                   "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                                   "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("conv2d_into", &Conv2DVarShapeInto, "output"_a, "kernel"_a,
-                                                   "kernel_anchor"_a, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                                                   py::kw_only(), "stream"_a     = nullptr);
+    m.def("conv2d", &Conv2DVarShape, "src"_a, "kernel"_a, "kernel_anchor"_a,
+          "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
+    m.def("conv2d_into", &Conv2DVarShapeInto, "dst"_a, "src"_a, "kernel"_a, "kernel_anchor"_a,
+          "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

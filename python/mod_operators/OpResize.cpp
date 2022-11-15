@@ -29,7 +29,7 @@
 namespace nv::cvpy {
 
 namespace {
-Tensor ResizeInto(Tensor &input, Tensor &output, NVCVInterpolationType interp, std::optional<Stream> pstream)
+Tensor ResizeInto(Tensor &output, Tensor &input, NVCVInterpolationType interp, std::optional<Stream> pstream)
 {
     if (!pstream)
     {
@@ -53,10 +53,10 @@ Tensor Resize(Tensor &input, const Shape &out_shape, NVCVInterpolationType inter
     Tensor output
         = Tensor::Create(cv::TensorShape(out_shape.data(), out_shape.size(), input.shape().layout()), input.dtype());
 
-    return ResizeInto(input, output, interp, pstream);
+    return ResizeInto(output, input, interp, pstream);
 }
 
-ImageBatchVarShape ResizeVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
+ImageBatchVarShape ResizeVarShapeInto(ImageBatchVarShape &output, ImageBatchVarShape &input,
                                       NVCVInterpolationType interp, std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -94,7 +94,7 @@ ImageBatchVarShape ResizeVarShape(ImageBatchVarShape &input, const std::vector<s
         output.pushBack(image);
     }
 
-    return ResizeVarShapeInto(input, output, interp, pstream);
+    return ResizeVarShapeInto(output, input, interp, pstream);
 }
 
 } // namespace
@@ -103,16 +103,14 @@ void ExportOpResize(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::Tensor>("resize", &Resize, "shape"_a, "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(),
-                                       "stream"_a = nullptr);
-    util::DefClassMethod<priv::Tensor>("resize_into", &ResizeInto, "out"_a, "interp"_a = NVCV_INTERP_LINEAR,
-                                       py::kw_only(), "stream"_a = nullptr);
+    m.def("resize", &Resize, "src"_a, "shape"_a, "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(), "stream"_a = nullptr);
+    m.def("resize_into", &ResizeInto, "dst"_a, "src"_a, "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(),
+          "stream"_a = nullptr);
 
-    util::DefClassMethod<priv::ImageBatchVarShape>(
-        "resize", &ResizeVarShape, "sizes"_a, "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("resize_into", &ResizeVarShapeInto, "out"_a,
-                                                   "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(),
-                                                   "stream"_a = nullptr);
+    m.def("resize", &ResizeVarShape, "src"_a, "sizes"_a, "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(),
+          "stream"_a = nullptr);
+    m.def("resize_into", &ResizeVarShapeInto, "dst"_a, "src"_a, "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(),
+          "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

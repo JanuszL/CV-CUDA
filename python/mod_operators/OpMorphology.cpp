@@ -31,7 +31,7 @@
 namespace nv::cvpy {
 
 namespace {
-Tensor MorphologyInto(Tensor &input, Tensor &output, NVCVMorphologyType morph_type,
+Tensor MorphologyInto(Tensor &output, Tensor &input, NVCVMorphologyType morph_type,
                       const std::tuple<int, int> &maskSize, const std::tuple<int, int> &anchor, int32_t iteration,
                       NVCVBorderType border, std::optional<Stream> pstream)
 {
@@ -63,10 +63,10 @@ Tensor Morphology(Tensor &input, NVCVMorphologyType morph_type, const std::tuple
 {
     Tensor output = Tensor::Create(input.shape(), input.dtype());
 
-    return MorphologyInto(input, output, morph_type, maskSize, anchor, iteration, border, pstream);
+    return MorphologyInto(output, input, morph_type, maskSize, anchor, iteration, border, pstream);
 }
 
-ImageBatchVarShape MorphologyVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
+ImageBatchVarShape MorphologyVarShapeInto(ImageBatchVarShape &output, ImageBatchVarShape &input,
                                           NVCVMorphologyType morph_type, Tensor &masks, Tensor &anchors,
                                           const int32_t iteration, const NVCVBorderType borderMode,
                                           std::optional<Stream> pstream)
@@ -101,7 +101,7 @@ ImageBatchVarShape MorphologyVarShape(ImageBatchVarShape &input, NVCVMorphologyT
         output.pushBack(image);
     }
 
-    return MorphologyVarShapeInto(input, output, morph_type, masks, anchors, iteration, borderMode, pstream);
+    return MorphologyVarShapeInto(output, input, morph_type, masks, anchors, iteration, borderMode, pstream);
 }
 
 } // namespace
@@ -110,20 +110,16 @@ void ExportOpMorphology(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::Tensor>("morphology", &Morphology, "morphologyType"_a, "maskSize"_a, "anchor"_a,
-                                       py::kw_only(), "iteration"_a = 1,
-                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
+    m.def("morphology", &Morphology, "src"_a, "morphologyType"_a, "maskSize"_a, "anchor"_a, py::kw_only(),
+          "iteration"_a = 1, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
 
-    util::DefClassMethod<priv::Tensor>("morphology_into", &MorphologyInto, "output"_a, "morphologyType"_a, "maskSize"_a,
-                                       "anchor"_a, py::kw_only(), "iteration"_a = 1,
-                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
+    m.def("morphology_into", &MorphologyInto, "dst"_a, "src"_a, "morphologyType"_a, "maskSize"_a, "anchor"_a,
+          py::kw_only(), "iteration"_a = 1, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
 
-    util::DefClassMethod<priv::ImageBatchVarShape>(
-        "morphology", &MorphologyVarShape, "morphologyType"_a, "masks"_a, "anchors"_a, py::kw_only(), "iteration"_a = 1,
-        "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
+    m.def("morphology", &MorphologyVarShape, "src"_a, "morphologyType"_a, "masks"_a, "anchors"_a, py::kw_only(),
+          "iteration"_a = 1, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
 
-    util::DefClassMethod<priv::ImageBatchVarShape>(
-        "morphology_into", &MorphologyVarShapeInto, "output"_a, "morphologyType"_a, "masks"_a, "anchors"_a,
-        py::kw_only(), "iteration"_a = 1, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
+    m.def("morphology_into", &MorphologyVarShapeInto, "dst"_a, "src"_a, "morphologyType"_a, "masks"_a, "anchors"_a,
+          py::kw_only(), "iteration"_a = 1, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
 }
 } // namespace nv::cvpy

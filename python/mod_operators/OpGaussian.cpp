@@ -31,7 +31,7 @@
 namespace nv::cvpy {
 
 namespace {
-Tensor GaussianInto(Tensor &input, Tensor &output, const std::tuple<int, int> &kernel_size,
+Tensor GaussianInto(Tensor &output, Tensor &input, const std::tuple<int, int> &kernel_size,
                     const std::tuple<double, double> &sigma, NVCVBorderType border, std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -60,10 +60,10 @@ Tensor Gaussian(Tensor &input, const std::tuple<int, int> &kernel_size, const st
 {
     Tensor output = Tensor::Create(input.shape(), input.dtype());
 
-    return GaussianInto(input, output, kernel_size, sigma, border, pstream);
+    return GaussianInto(output, input, kernel_size, sigma, border, pstream);
 }
 
-ImageBatchVarShape VarShapeGaussianInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
+ImageBatchVarShape VarShapeGaussianInto(ImageBatchVarShape &output, ImageBatchVarShape &input,
                                         const std::tuple<int, int> &max_kernel_size, Tensor &ksize, Tensor &sigma,
                                         NVCVBorderType border, std::optional<Stream> pstream)
 {
@@ -96,7 +96,7 @@ ImageBatchVarShape VarShapeGaussian(ImageBatchVarShape &input, const std::tuple<
         output.pushBack(Image::Create(input[i].size(), input[i].format()));
     }
 
-    return VarShapeGaussianInto(input, output, max_kernel_size, ksize, sigma, border, pstream);
+    return VarShapeGaussianInto(output, input, max_kernel_size, ksize, sigma, border, pstream);
 }
 
 } // namespace
@@ -105,19 +105,15 @@ void ExportOpGaussian(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::Tensor>("gaussian", &Gaussian, "kernel_size"_a, "sigma"_a,
-                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                       "stream"_a = nullptr);
-    util::DefClassMethod<priv::Tensor>("gaussian_into", &GaussianInto, "output"_a, "kernel_size"_a, "sigma"_a,
-                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                       "stream"_a = nullptr);
+    m.def("gaussian", &Gaussian, "src"_a, "kernel_size"_a, "sigma"_a, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
+          py::kw_only(), "stream"_a = nullptr);
+    m.def("gaussian_into", &GaussianInto, "dst"_a, "src"_a, "kernel_size"_a, "sigma"_a,
+          "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
 
-    util::DefClassMethod<priv::ImageBatchVarShape>("gaussian", &VarShapeGaussian, "max_kernel_size"_a, "kernel_size"_a,
-                                                   "sigma"_a, "border"_a     = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                                                   py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>(
-        "gaussian_into", &VarShapeGaussianInto, "output"_a, "max_kernel_size"_a, "kernel_size"_a, "sigma"_a,
-        "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
+    m.def("gaussian", &VarShapeGaussian, "src"_a, "max_kernel_size"_a, "kernel_size"_a, "sigma"_a,
+          "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
+    m.def("gaussian_into", &VarShapeGaussianInto, "dst"_a, "src"_a, "max_kernel_size"_a, "kernel_size"_a, "sigma"_a,
+          "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

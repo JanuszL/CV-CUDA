@@ -71,7 +71,8 @@ RNG = np.random.default_rng(0)
     ],
 )
 def test_op_conv2dvarshape(input, kernel, kernel_anchor, border):
-    out = input.conv2d(
+    out = nvcv.conv2d(
+        input,
         kernel,
         kernel_anchor,
         border,
@@ -83,8 +84,9 @@ def test_op_conv2dvarshape(input, kernel, kernel_anchor, border):
 
     stream = nvcv.cuda.Stream()
     out = util.clone_image_batch(input)
-    tmp = input.conv2d_into(
-        output=out,
+    tmp = nvcv.conv2d_into(
+        src=input,
+        dst=out,
         kernel=kernel,
         kernel_anchor=kernel_anchor,
         border=border,

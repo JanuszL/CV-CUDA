@@ -285,7 +285,7 @@ cv::ImageFormat GetOutputFormat(cv::DataType in, NVCVColorConversionCode code)
     return outFormat;
 }
 
-Tensor CvtColorInto(Tensor &input, Tensor &output, NVCVColorConversionCode code, std::optional<Stream> pstream)
+Tensor CvtColorInto(Tensor &output, Tensor &input, NVCVColorConversionCode code, std::optional<Stream> pstream)
 {
     if (!pstream)
     {
@@ -317,10 +317,10 @@ Tensor CvtColor(Tensor &input, NVCVColorConversionCode code, std::optional<Strea
 
     Tensor output = Tensor::CreateForImageBatch(numImgs, size, outFormat);
 
-    return CvtColorInto(input, output, code, pstream);
+    return CvtColorInto(output, input, code, pstream);
 }
 
-ImageBatchVarShape CvtColorVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
+ImageBatchVarShape CvtColorVarShapeInto(ImageBatchVarShape &output, ImageBatchVarShape &input,
                                         NVCVColorConversionCode code, std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -360,7 +360,7 @@ ImageBatchVarShape CvtColorVarShape(ImageBatchVarShape &input, NVCVColorConversi
         output.pushBack(img);
     }
 
-    return CvtColorVarShapeInto(input, output, code, pstream);
+    return CvtColorVarShapeInto(output, input, code, pstream);
 }
 
 } // namespace
@@ -369,14 +369,11 @@ void ExportOpCvtColor(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::Tensor>("cvtcolor", &CvtColor, "code"_a, py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<priv::Tensor>("cvtcolor_into", &CvtColorInto, "output"_a, "code"_a, py::kw_only(),
-                                       "stream"_a = nullptr);
+    m.def("cvtcolor", &CvtColor, "src"_a, "code"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("cvtcolor_into", &CvtColorInto, "dst"_a, "src"_a, "code"_a, py::kw_only(), "stream"_a = nullptr);
 
-    util::DefClassMethod<priv::ImageBatchVarShape>("cvtcolor", &CvtColorVarShape, "code"_a, py::kw_only(),
-                                                   "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("cvtcolor_into", &CvtColorVarShapeInto, "output"_a, "code"_a,
-                                                   py::kw_only(), "stream"_a = nullptr);
+    m.def("cvtcolor", &CvtColorVarShape, "src"_a, "code"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("cvtcolor_into", &CvtColorVarShapeInto, "dst"_a, "src"_a, "code"_a, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

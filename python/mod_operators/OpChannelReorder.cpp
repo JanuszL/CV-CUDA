@@ -33,7 +33,7 @@ namespace nv::cvpy {
 
 namespace {
 
-ImageBatchVarShape ChannelReorderVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output, Tensor &orders,
+ImageBatchVarShape ChannelReorderVarShapeInto(ImageBatchVarShape &output, ImageBatchVarShape &input, Tensor &orders,
                                               std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -66,7 +66,7 @@ ImageBatchVarShape ChannelReorderVarShape(ImageBatchVarShape &input, Tensor &ord
         output.pushBack(image);
     }
 
-    return ChannelReorderVarShapeInto(input, output, orders, pstream);
+    return ChannelReorderVarShapeInto(output, input, orders, pstream);
 }
 
 } // namespace
@@ -75,10 +75,10 @@ void ExportOpChannelReorder(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::ImageBatchVarShape>("channelreorder", &ChannelReorderVarShape, "order"_a, py::kw_only(),
-                                                   "format"_a = nullptr, "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("channelreorder_into", &ChannelReorderVarShapeInto, "output"_a,
-                                                   "orders"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("channelreorder", &ChannelReorderVarShape, "src"_a, "order"_a, py::kw_only(), "format"_a = nullptr,
+          "stream"_a = nullptr);
+    m.def("channelreorder_into", &ChannelReorderVarShapeInto, "dst"_a, "src"_a, "orders"_a, py::kw_only(),
+          "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

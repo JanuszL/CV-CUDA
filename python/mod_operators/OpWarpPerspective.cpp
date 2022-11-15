@@ -34,7 +34,7 @@ namespace {
 
 using pyarray = py::array_t<float, py::array::c_style | py::array::forcecast>;
 
-Tensor WarpPerspectiveInto(Tensor &input, Tensor &output, const pyarray &xform, const int32_t flags,
+Tensor WarpPerspectiveInto(Tensor &output, Tensor &input, const pyarray &xform, const int32_t flags,
                            const NVCVBorderType borderMode, const pyarray &borderValue, std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -91,10 +91,10 @@ Tensor WarpPerspective(Tensor &input, const pyarray &xform, const int32_t flags,
 {
     Tensor output = Tensor::Create(input.shape(), input.dtype());
 
-    return WarpPerspectiveInto(input, output, xform, flags, borderMode, borderValue, pstream);
+    return WarpPerspectiveInto(output, input, xform, flags, borderMode, borderValue, pstream);
 }
 
-ImageBatchVarShape WarpPerspectiveVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output, Tensor &xform,
+ImageBatchVarShape WarpPerspectiveVarShapeInto(ImageBatchVarShape &output, ImageBatchVarShape &input, Tensor &xform,
                                                const int32_t flags, const NVCVBorderType borderMode,
                                                const pyarray &borderValue, std::optional<Stream> pstream)
 {
@@ -143,7 +143,7 @@ ImageBatchVarShape WarpPerspectiveVarShape(ImageBatchVarShape &input, Tensor &xf
         output.pushBack(image);
     }
 
-    return WarpPerspectiveVarShapeInto(input, output, xform, flags, borderMode, borderValue, pstream);
+    return WarpPerspectiveVarShapeInto(output, input, xform, flags, borderMode, borderValue, pstream);
 }
 
 } // namespace
@@ -152,19 +152,17 @@ void ExportOpWarpPerspective(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::Tensor>("warp_perspective", &WarpPerspective, "xform"_a, "flags"_a, py::kw_only(),
-                                       "border_mode"_a, "border_value"_a, "stream"_a = nullptr);
+    m.def("warp_perspective", &WarpPerspective, "src"_a, "xform"_a, "flags"_a, py::kw_only(), "border_mode"_a,
+          "border_value"_a, "stream"_a = nullptr);
 
-    util::DefClassMethod<priv::Tensor>("warp_perspective_into", &WarpPerspectiveInto, "output"_a, "xform"_a, "flags"_a,
-                                       py::kw_only(), "border_mode"_a, "border_value"_a, "stream"_a = nullptr);
+    m.def("warp_perspective_into", &WarpPerspectiveInto, "dst"_a, "src"_a, "xform"_a, "flags"_a, py::kw_only(),
+          "border_mode"_a, "border_value"_a, "stream"_a = nullptr);
 
-    util::DefClassMethod<priv::ImageBatchVarShape>("warp_perspective", &WarpPerspectiveVarShape, "xform"_a, "flags"_a,
-                                                   py::kw_only(), "border_mode"_a, "border_value"_a,
-                                                   "stream"_a = nullptr);
+    m.def("warp_perspective", &WarpPerspectiveVarShape, "src"_a, "xform"_a, "flags"_a, py::kw_only(), "border_mode"_a,
+          "border_value"_a, "stream"_a = nullptr);
 
-    util::DefClassMethod<priv::ImageBatchVarShape>("warp_perspective_into", &WarpPerspectiveVarShapeInto, "output"_a,
-                                                   "xform"_a, "flags"_a, py::kw_only(), "border_mode"_a,
-                                                   "border_value"_a, "stream"_a = nullptr);
+    m.def("warp_perspective_into", &WarpPerspectiveVarShapeInto, "dst"_a, "src"_a, "xform"_a, "flags"_a, py::kw_only(),
+          "border_mode"_a, "border_value"_a, "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

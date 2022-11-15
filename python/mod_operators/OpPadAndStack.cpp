@@ -27,7 +27,7 @@
 namespace nv::cvpy {
 
 namespace {
-Tensor PadAndStackInto(ImageBatchVarShape &input, Tensor &output, Tensor &top, Tensor &left, NVCVBorderType border,
+Tensor PadAndStackInto(Tensor &output, ImageBatchVarShape &input, Tensor &top, Tensor &left, NVCVBorderType border,
                        float borderValue, std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -58,7 +58,7 @@ Tensor PadAndStack(ImageBatchVarShape &input, Tensor &top, Tensor &left, NVCVBor
 
     Tensor output = Tensor::CreateForImageBatch(input.numImages(), input.maxSize(), fmt);
 
-    return PadAndStackInto(input, output, top, left, border, borderValue, pstream);
+    return PadAndStackInto(output, input, top, left, border, borderValue, pstream);
 }
 
 } // namespace
@@ -67,12 +67,10 @@ void ExportOpPadAndStack(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::ImageBatchVarShape>("padandstack", &PadAndStack, "top"_a, "left"_a,
-                                                   "border"_a = NVCV_BORDER_CONSTANT, "bvalue"_a = 0, py::kw_only(),
-                                                   "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("padandstack_into", &PadAndStackInto, "out"_a, "top"_a, "left"_a,
-                                                   "border"_a = NVCV_BORDER_CONSTANT, "bvalue"_a = 0, py::kw_only(),
-                                                   "stream"_a = nullptr);
+    m.def("padandstack", &PadAndStack, "src"_a, "top"_a, "left"_a, "border"_a = NVCV_BORDER_CONSTANT, "bvalue"_a = 0,
+          py::kw_only(), "stream"_a = nullptr);
+    m.def("padandstack_into", &PadAndStackInto, "dst"_a, "src"_a, "top"_a, "left"_a, "border"_a = NVCV_BORDER_CONSTANT,
+          "bvalue"_a = 0, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

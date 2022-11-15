@@ -31,7 +31,7 @@
 namespace nv::cvpy {
 
 namespace {
-ImageBatchVarShape VarShapeGammaContrastInto(ImageBatchVarShape &input, ImageBatchVarShape &output, Tensor &gamma,
+ImageBatchVarShape VarShapeGammaContrastInto(ImageBatchVarShape &output, ImageBatchVarShape &input, Tensor &gamma,
                                              std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -63,7 +63,7 @@ ImageBatchVarShape VarShapeGammaContrast(ImageBatchVarShape &input, Tensor &gamm
         output.pushBack(image);
     }
 
-    return VarShapeGammaContrastInto(input, output, gamma, pstream);
+    return VarShapeGammaContrastInto(output, input, gamma, pstream);
 }
 
 } // namespace
@@ -72,10 +72,9 @@ void ExportOpGammaContrast(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::ImageBatchVarShape>("gamma_contrast", &VarShapeGammaContrast, "gamma"_a, py::kw_only(),
-                                                   "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("gamma_contrast_into", &VarShapeGammaContrastInto, "output"_a,
-                                                   "gamma"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("gamma_contrast", &VarShapeGammaContrast, "src"_a, "gamma"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("gamma_contrast_into", &VarShapeGammaContrastInto, "dst"_a, "src"_a, "gamma"_a, py::kw_only(),
+          "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

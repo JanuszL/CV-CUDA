@@ -26,7 +26,7 @@
 namespace nv::cvpy {
 
 namespace {
-Tensor ReformatInto(Tensor &input, Tensor &output, std::optional<Stream> pstream)
+Tensor ReformatInto(Tensor &output, Tensor &input, std::optional<Stream> pstream)
 {
     if (!pstream)
     {
@@ -51,7 +51,7 @@ Tensor Reformat(Tensor &input, const cv::TensorLayout &out_layout, std::optional
 
     Tensor output = Tensor::Create(out_shape, input.dtype());
 
-    return ReformatInto(input, output, pstream);
+    return ReformatInto(output, input, pstream);
 }
 
 } // namespace
@@ -60,8 +60,8 @@ void ExportOpReformat(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::Tensor>("reformat", &Reformat, "layout"_a, py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<priv::Tensor>("reformat_into", &ReformatInto, "out"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("reformat", &Reformat, "src"_a, "layout"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("reformat_into", &ReformatInto, "dst"_a, "src"_a, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

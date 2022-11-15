@@ -52,13 +52,6 @@ private:
     }
 };
 
-namespace priv {
-
-class Stream
-{
-};
-} // namespace priv
-
 } // namespace nv::cvpy
 
 namespace pybind11::detail {

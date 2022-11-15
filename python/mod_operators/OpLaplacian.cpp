@@ -32,7 +32,7 @@
 namespace nv::cvpy {
 
 namespace {
-Tensor LaplacianInto(Tensor &input, Tensor &output, const int &ksize, const float &scale, NVCVBorderType border,
+Tensor LaplacianInto(Tensor &output, Tensor &input, const int &ksize, const float &scale, NVCVBorderType border,
                      std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -57,10 +57,10 @@ Tensor Laplacian(Tensor &input, const int &ksize, const float &scale, NVCVBorder
 {
     Tensor output = Tensor::Create(input.shape(), input.dtype());
 
-    return LaplacianInto(input, output, ksize, scale, border, pstream);
+    return LaplacianInto(output, input, ksize, scale, border, pstream);
 }
 
-ImageBatchVarShape LaplacianVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output, Tensor &ksize,
+ImageBatchVarShape LaplacianVarShapeInto(ImageBatchVarShape &output, ImageBatchVarShape &input, Tensor &ksize,
                                          Tensor &scale, NVCVBorderType border, std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -93,7 +93,7 @@ ImageBatchVarShape LaplacianVarShape(ImageBatchVarShape &input, Tensor &ksize, T
         output.pushBack(image);
     }
 
-    return LaplacianVarShapeInto(input, output, ksize, scale, border, pstream);
+    return LaplacianVarShapeInto(output, input, ksize, scale, border, pstream);
 }
 
 } // namespace
@@ -102,19 +102,15 @@ void ExportOpLaplacian(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::Tensor>("laplacian", &Laplacian, "ksize"_a, "scale"_a = 1.f,
-                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                       "stream"_a = nullptr);
-    util::DefClassMethod<priv::Tensor>("laplacian_into", &LaplacianInto, "output"_a, "ksize"_a, "scale"_a = 1.f,
-                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                       "stream"_a = nullptr);
+    m.def("laplacian", &Laplacian, "src"_a, "ksize"_a, "scale"_a = 1.f,
+          "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
+    m.def("laplacian_into", &LaplacianInto, "dst"_a, "src"_a, "ksize"_a, "scale"_a = 1.f,
+          "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
 
-    util::DefClassMethod<priv::ImageBatchVarShape>("laplacian", &LaplacianVarShape, "ksize"_a, "scale"_a,
-                                                   "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                                   "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("laplacian_into", &LaplacianVarShapeInto, "output"_a, "ksize"_a,
-                                                   "scale"_a, "border"_a     = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                                                   py::kw_only(), "stream"_a = nullptr);
+    m.def("laplacian", &LaplacianVarShape, "src"_a, "ksize"_a, "scale"_a,
+          "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
+    m.def("laplacian_into", &LaplacianVarShapeInto, "dst"_a, "src"_a, "ksize"_a, "scale"_a,
+          "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

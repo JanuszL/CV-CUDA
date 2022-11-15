@@ -54,13 +54,14 @@ RNG = np.random.default_rng(0)
     ],
 )
 def test_op_cvtcolor(input, code, output):
-    out = input.cvtcolor(code)
+    out = nvcv.cvtcolor(input, code)
     assert out.shape == output.shape
     assert out.dtype == output.dtype
 
     stream = nvcv.cuda.Stream()
-    tmp = input.cvtcolor_into(
-        output=output,
+    tmp = nvcv.cvtcolor_into(
+        src=input,
+        dst=output,
         code=code,
         stream=stream,
     )
@@ -122,14 +123,15 @@ def test_op_cvtcolorvarshape(
     output = util.create_image_batch(
         num_images, out_format, size=img_size, max_random=max_pixel, rng=RNG
     )
-    out = input.cvtcolor(code)
+    out = nvcv.cvtcolor(input, code)
     assert len(out) == len(output)
     assert out.capacity == output.capacity
     assert out.maxsize == output.maxsize
 
     stream = nvcv.cuda.Stream()
-    tmp = input.cvtcolor_into(
-        output=output,
+    tmp = nvcv.cvtcolor_into(
+        src=input,
+        dst=output,
         code=code,
         stream=stream,
     )

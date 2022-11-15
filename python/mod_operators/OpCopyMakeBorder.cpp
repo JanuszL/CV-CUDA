@@ -32,7 +32,7 @@
 namespace nv::cvpy {
 
 namespace {
-Tensor CopyMakeBorderInto(Tensor &input, Tensor &output, NVCVBorderType borderMode,
+Tensor CopyMakeBorderInto(Tensor &output, Tensor &input, NVCVBorderType borderMode,
                           const std::vector<float> &borderValue, int top, int left, std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -75,10 +75,10 @@ Tensor CopyMakeBorder(Tensor &input, NVCVBorderType borderMode, const std::vecto
 
     Tensor output = Tensor::Create(cv::TensorShape(out_shape.data(), out_shape.size(), input.layout()), input.dtype());
 
-    return CopyMakeBorderInto(input, output, borderMode, borderValue, top, left, pstream);
+    return CopyMakeBorderInto(output, input, borderMode, borderValue, top, left, pstream);
 }
 
-Tensor VarShapeCopyMakeBorderStackInto(ImageBatchVarShape &input, Tensor &output, NVCVBorderType borderMode,
+Tensor VarShapeCopyMakeBorderStackInto(Tensor &output, ImageBatchVarShape &input, NVCVBorderType borderMode,
                                        const std::vector<float> &borderValue, Tensor &top, Tensor &left,
                                        std::optional<Stream> pstream)
 {
@@ -123,10 +123,10 @@ Tensor VarShapeCopyMakeBorderStack(ImageBatchVarShape &input, NVCVBorderType bor
 
     Tensor output = Tensor::CreateForImageBatch(input.numImages(), {out_width, out_height}, format);
 
-    return VarShapeCopyMakeBorderStackInto(input, output, borderMode, borderValue, top, left, pstream);
+    return VarShapeCopyMakeBorderStackInto(output, input, borderMode, borderValue, top, left, pstream);
 }
 
-ImageBatchVarShape VarShapeCopyMakeBorderInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
+ImageBatchVarShape VarShapeCopyMakeBorderInto(ImageBatchVarShape &output, ImageBatchVarShape &input,
                                               NVCVBorderType borderMode, const std::vector<float> &borderValue,
                                               Tensor &top, Tensor &left, std::optional<Stream> pstream)
 {
@@ -189,7 +189,7 @@ ImageBatchVarShape VarShapeCopyMakeBorder(ImageBatchVarShape &input, NVCVBorderT
         auto       img  = Image::Create(size, format);
         output.pushBack(img);
     }
-    return VarShapeCopyMakeBorderInto(input, output, borderMode, borderValue, top, left, pstream);
+    return VarShapeCopyMakeBorderInto(output, input, borderMode, borderValue, top, left, pstream);
 }
 
 } // namespace
@@ -198,29 +198,24 @@ void ExportOpCopyMakeBorder(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::Tensor>("copymakeborder", &CopyMakeBorder,
-                                       "border_mode"_a  = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                                       "border_value"_a = std::vector<float>(), py::kw_only(), "top"_a, "bottom"_a,
-                                       "left"_a, "right"_a, "stream"_a = nullptr);
-    util::DefClassMethod<priv::Tensor>(
-        "copymakeborder_into", &CopyMakeBorderInto, "output"_a, "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
-        "border_value"_a = std::vector<float>(), py::kw_only(), "top"_a, "left"_a, "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("copymakeborderstack", &VarShapeCopyMakeBorderStack,
-                                                   "border_mode"_a  = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                                                   "border_value"_a = std::vector<float>(), py::kw_only(), "top"_a,
-                                                   "left"_a, "out_height"_a, "out_width"_a, "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("copymakeborderstack_into", &VarShapeCopyMakeBorderStackInto,
-                                                   "output"_a, "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                                                   "border_value"_a = std::vector<float>(), py::kw_only(), "top"_a,
-                                                   "left"_a, "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("copymakeborder", &VarShapeCopyMakeBorder,
-                                                   "border_mode"_a  = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                                                   "border_value"_a = std::vector<float>(), py::kw_only(), "top"_a,
-                                                   "left"_a, "out_heights"_a, "out_widths"_a, "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("copymakeborder_into", &VarShapeCopyMakeBorderInto, "output"_a,
-                                                   "border_mode"_a  = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                                                   "border_value"_a = std::vector<float>(), py::kw_only(), "top"_a,
-                                                   "left"_a, "stream"_a = nullptr);
+    m.def("copymakeborder", &CopyMakeBorder, "src"_a, "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
+          "border_value"_a = std::vector<float>(), py::kw_only(), "top"_a, "bottom"_a, "left"_a, "right"_a,
+          "stream"_a       = nullptr);
+    m.def("copymakeborder_into", &CopyMakeBorderInto, "dst"_a, "src"_a,
+          "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "border_value"_a = std::vector<float>(),
+          py::kw_only(), "top"_a, "left"_a, "stream"_a = nullptr);
+    m.def("copymakeborderstack", &VarShapeCopyMakeBorderStack, "src"_a,
+          "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "border_value"_a = std::vector<float>(),
+          py::kw_only(), "top"_a, "left"_a, "out_height"_a, "out_width"_a, "stream"_a = nullptr);
+    m.def("copymakeborderstack_into", &VarShapeCopyMakeBorderStackInto, "dst"_a, "src"_a,
+          "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "border_value"_a = std::vector<float>(),
+          py::kw_only(), "top"_a, "left"_a, "stream"_a = nullptr);
+    m.def("copymakeborder", &VarShapeCopyMakeBorder, "src"_a, "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
+          "border_value"_a = std::vector<float>(), py::kw_only(), "top"_a, "left"_a, "out_heights"_a, "out_widths"_a,
+          "stream"_a       = nullptr);
+    m.def("copymakeborder_into", &VarShapeCopyMakeBorderInto, "dst"_a, "src"_a,
+          "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "border_value"_a = std::vector<float>(),
+          py::kw_only(), "top"_a, "left"_a, "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

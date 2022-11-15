@@ -29,15 +29,16 @@ import numpy as np
     ],
 )
 def test_op_center_crop(input, crop_size, gold_shape):
-    out = input.center_crop(crop_size)
+    out = nvcv.center_crop(input, crop_size)
     assert out.layout == input.layout
     assert out.shape == gold_shape
     assert out.dtype == input.dtype
 
     stream = nvcv.cuda.Stream()
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = input.center_crop_into(
-        output=out,
+    tmp = nvcv.center_crop_into(
+        src=input,
+        dst=out,
         crop_size=crop_size,
         stream=stream,
     )

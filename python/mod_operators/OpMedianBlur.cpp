@@ -32,7 +32,7 @@
 namespace nv::cvpy {
 
 namespace {
-Tensor MedianBlurInto(Tensor &input, Tensor &output, const std::tuple<int, int> &ksize, std::optional<Stream> pstream)
+Tensor MedianBlurInto(Tensor &output, Tensor &input, const std::tuple<int, int> &ksize, std::optional<Stream> pstream)
 {
     if (!pstream)
     {
@@ -57,10 +57,10 @@ Tensor MedianBlur(Tensor &input, const std::tuple<int, int> &ksize, std::optiona
 {
     Tensor output = Tensor::Create(input.shape(), input.dtype());
 
-    return MedianBlurInto(input, output, ksize, pstream);
+    return MedianBlurInto(output, input, ksize, pstream);
 }
 
-ImageBatchVarShape VarShapeMedianBlurInto(ImageBatchVarShape &input, ImageBatchVarShape &output, Tensor &ksize,
+ImageBatchVarShape VarShapeMedianBlurInto(ImageBatchVarShape &output, ImageBatchVarShape &input, Tensor &ksize,
                                           std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -92,7 +92,7 @@ ImageBatchVarShape VarShapeMedianBlur(ImageBatchVarShape &input, Tensor &ksize, 
         output.pushBack(image);
     }
 
-    return VarShapeMedianBlurInto(input, output, ksize, pstream);
+    return VarShapeMedianBlurInto(output, input, ksize, pstream);
 }
 
 } // namespace
@@ -101,13 +101,11 @@ void ExportOpMedianBlur(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::Tensor>("median_blur", &MedianBlur, "ksize"_a, py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<priv::Tensor>("median_blur_into", &MedianBlurInto, "output"_a, "ksize"_a, py::kw_only(),
-                                       "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("median_blur", &VarShapeMedianBlur, "ksize"_a, py::kw_only(),
-                                                   "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("median_blur_into", &VarShapeMedianBlurInto, "output"_a, "ksize"_a,
-                                                   py::kw_only(), "stream"_a = nullptr);
+    m.def("median_blur", &MedianBlur, "src"_a, "ksize"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("median_blur_into", &MedianBlurInto, "dst"_a, "src"_a, "ksize"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("median_blur", &VarShapeMedianBlur, "src"_a, "ksize"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("median_blur_into", &VarShapeMedianBlurInto, "dst"_a, "src"_a, "ksize"_a, py::kw_only(),
+          "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

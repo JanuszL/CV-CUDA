@@ -69,8 +69,8 @@ RNG = np.random.default_rng(0)
     ],
 )
 def test_op_morphology(input, morphologyType, maskSize, anchor, iteration, border):
-    out = input.morphology(
-        morphologyType, maskSize, anchor, iteration=iteration, border=border
+    out = nvcv.morphology(
+        input, morphologyType, maskSize, anchor, iteration=iteration, border=border
     )
     assert out.layout == input.layout
     assert out.shape == input.shape
@@ -78,8 +78,9 @@ def test_op_morphology(input, morphologyType, maskSize, anchor, iteration, borde
 
     stream = nvcv.cuda.Stream()
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = input.morphology_into(
-        output=out,
+    tmp = nvcv.morphology_into(
+        src=input,
+        dst=out,
         morphologyType=morphologyType,
         maskSize=maskSize,
         anchor=anchor,
@@ -178,8 +179,8 @@ def test_op_morphology_varshape(
         (num_images, 2), np.int32, "NC", max_random=max_anchor, rng=RNG
     )
 
-    out = input.morphology(
-        morphologyType, masks, anchors, iteration=iteration, border=border
+    out = nvcv.morphology(
+        input, morphologyType, masks, anchors, iteration=iteration, border=border
     )
 
     assert len(out) == len(input)
@@ -190,8 +191,9 @@ def test_op_morphology_varshape(
     stream = nvcv.cuda.Stream()
 
     out = util.clone_image_batch(input)
-    tmp = input.morphology_into(
-        output=out,
+    tmp = nvcv.morphology_into(
+        src=input,
+        dst=out,
         morphologyType=morphologyType,
         masks=masks,
         anchors=anchors,

@@ -59,15 +59,16 @@ RNG = np.random.default_rng(0)
     ],
 )
 def test_op_laplacian(input, ksize, scale, border):
-    out = input.laplacian(ksize, scale, border)
+    out = nvcv.laplacian(input, ksize, scale, border)
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
     stream = nvcv.cuda.Stream()
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = input.laplacian_into(
-        output=out,
+    tmp = nvcv.laplacian_into(
+        src=input,
+        dst=out,
         ksize=ksize,
         scale=scale,
         border=border,
@@ -154,7 +155,8 @@ def test_op_laplacianvarshape(
         "N",
     )
 
-    out = input.laplacian(
+    out = nvcv.laplacian(
+        input,
         ksize,
         scale,
         border,
@@ -166,8 +168,9 @@ def test_op_laplacianvarshape(
 
     stream = nvcv.cuda.Stream()
     out = util.clone_image_batch(input)
-    tmp = input.laplacian_into(
-        output=out,
+    tmp = nvcv.laplacian_into(
+        src=input,
+        dst=out,
         ksize=ksize,
         scale=scale,
         border=border,

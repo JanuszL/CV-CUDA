@@ -40,26 +40,26 @@ import numpy as np
     ],
 )
 def test_op_customcrop(input, rc, out_shape):
-    out = input.customcrop(rc)
+    out = nvcv.customcrop(input, rc)
     assert out.layout == input.layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = input.customcrop_into(out, rc)
+    tmp = nvcv.customcrop_into(out, input, rc)
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
     stream = nvcv.cuda.Stream()
-    out = input.customcrop(rect=rc, stream=stream)
+    out = nvcv.customcrop(input, rect=rc, stream=stream)
     assert out.layout == input.layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = input.customcrop_into(out=out, rect=rc, stream=stream)
+    tmp = nvcv.customcrop_into(dst=out, src=input, rect=rc, stream=stream)
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == input.shape

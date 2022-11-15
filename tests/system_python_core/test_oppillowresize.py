@@ -64,21 +64,22 @@ RNG = np.random.default_rng(0)
 )
 def test_op_pillowresize(input, out_shape, interp, fmt):
 
-    out = input.pillowresize(out_shape, fmt)
+    out = nvcv.pillowresize(input, out_shape, fmt, interp)
     assert out.layout == input.layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
     out = nvcv.Tensor(out_shape, input.dtype, input.layout)
-    tmp = input.pillowresize_into(out, fmt, interp)
+    tmp = nvcv.pillowresize_into(out, input, fmt, interp)
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
     stream = nvcv.cuda.Stream()
-    tmp = input.pillowresize_into(
-        output=out,
+    tmp = nvcv.pillowresize_into(
+        src=input,
+        dst=out,
         format=fmt,
         interp=interp,
         stream=stream,
@@ -135,13 +136,14 @@ def test_op_pillowresizevarshape(
     for image in base_output:
         sizes.append([image.width, image.height])
 
-    out = input.pillowresize(sizes)
+    out = nvcv.pillowresize(input, sizes)
     assert len(out) == len(input)
     assert out.capacity == input.capacity
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == base_output.maxsize
 
-    out = input.pillowresize(
+    out = nvcv.pillowresize(
+        input,
         sizes,
         interp,
     )
@@ -153,8 +155,9 @@ def test_op_pillowresizevarshape(
     nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
     stream = nvcv.cuda.Stream()
 
-    tmp = input.pillowresize_into(
-        output=base_output,
+    tmp = nvcv.pillowresize_into(
+        src=input,
+        dst=base_output,
         interp=interp,
         stream=stream,
     )

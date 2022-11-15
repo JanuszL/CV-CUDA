@@ -120,8 +120,8 @@ RNG = np.random.default_rng(0)
     ],
 )
 def test_op_warp_perspective(input, xform, flags, border_mode, border_value):
-    out = input.warp_perspective(
-        xform, flags, border_mode=border_mode, border_value=border_value
+    out = nvcv.warp_perspective(
+        input, xform, flags, border_mode=border_mode, border_value=border_value
     )
     assert out.layout == input.layout
     assert out.shape == input.shape
@@ -129,8 +129,9 @@ def test_op_warp_perspective(input, xform, flags, border_mode, border_value):
 
     stream = nvcv.cuda.Stream()
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = input.warp_perspective_into(
-        output=out,
+    tmp = nvcv.warp_perspective_into(
+        src=input,
+        dst=out,
         xform=xform,
         flags=flags,
         border_mode=border_mode,
@@ -200,8 +201,8 @@ def test_op_warp_perspectivevarshape(
         (nimages, 9), np.float32, "NC", max_random=max_xval, rng=RNG
     )
 
-    out = input.warp_perspective(
-        xform, flags, border_mode=bmode, border_value=border_value
+    out = nvcv.warp_perspective(
+        input, xform, flags, border_mode=bmode, border_value=border_value
     )
     assert len(out) == len(input)
     assert out.capacity == input.capacity
@@ -211,8 +212,9 @@ def test_op_warp_perspectivevarshape(
     stream = nvcv.cuda.Stream()
 
     out = util.clone_image_batch(input)
-    tmp = input.warp_perspective_into(
-        output=out,
+    tmp = nvcv.warp_perspective_into(
+        src=input,
+        dst=out,
         xform=xform,
         flags=flags,
         border_mode=bmode,

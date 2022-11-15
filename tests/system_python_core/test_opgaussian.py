@@ -59,15 +59,16 @@ RNG = np.random.default_rng(0)
     ],
 )
 def test_op_gaussian(input, kernel_size, sigma, border):
-    out = input.gaussian(kernel_size, sigma, border)
+    out = nvcv.gaussian(input, kernel_size, sigma, border)
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
     stream = nvcv.cuda.Stream()
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = input.gaussian_into(
-        output=out,
+    tmp = nvcv.gaussian_into(
+        src=input,
+        dst=out,
         kernel_size=kernel_size,
         sigma=sigma,
         border=border,
@@ -150,7 +151,8 @@ def test_op_gaussianvarshape(
         (num_images, 2), np.float64, "NC", max_random=max_kernel_size, rng=RNG
     )
 
-    out = input.gaussian(
+    out = nvcv.gaussian(
+        input,
         max_kernel_size,
         kernel_size,
         sigma,
@@ -163,8 +165,9 @@ def test_op_gaussianvarshape(
 
     stream = nvcv.cuda.Stream()
     out = util.clone_image_batch(input)
-    tmp = input.gaussian_into(
-        output=out,
+    tmp = nvcv.gaussian_into(
+        src=input,
+        dst=out,
         max_kernel_size=max_kernel_size,
         kernel_size=kernel_size,
         sigma=sigma,

@@ -75,15 +75,16 @@ def test_op_copymakeborder(input, top, bottom, left, right, border_mode, border_
     cdim = len(out_shape) - 1
     out_shape[cdim - 2] += top + bottom
     out_shape[cdim - 1] += left + right
-    out = input.copymakeborder(top=top, bottom=bottom, left=left, right=right)
+    out = nvcv.copymakeborder(input, top=top, bottom=bottom, left=left, right=right)
     assert out.layout == input.layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
     stream = nvcv.cuda.Stream()
     out = nvcv.Tensor(out_shape, input.dtype, input.layout)
-    tmp = input.copymakeborder_into(
-        output=out,
+    tmp = nvcv.copymakeborder_into(
+        src=input,
+        dst=out,
         top=top,
         left=left,
         border_mode=border_mode,

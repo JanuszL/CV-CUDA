@@ -150,7 +150,8 @@ class ClassificationSample:
 
             # Resize
             # Resize to the input network dimensions
-            nvcv_resize_tensor = nvcv_input_tensor.resize(
+            nvcv_resize_tensor = nvcv.resize(
+                nvcv_input_tensor,
                 (
                     effective_batch_size,
                     self.target_img_height,
@@ -163,8 +164,8 @@ class ClassificationSample:
             # Convert to the data type and range of values needed by the input layer
             # i.e uint8->float. A Scale is applied to normalize the values in the
             # range 0-1
-            nvcv_convert_tensor = nvcv_resize_tensor.convertto(
-                np.float32, scale=1 / 255
+            nvcv_convert_tensor = nvcv.convertto(
+                nvcv_resize_tensor, np.float32, scale=1 / 255
             )
 
             """
@@ -190,7 +191,8 @@ class ClassificationSample:
 
             # Apply the normalize operator and indicate the scale values are
             # std deviation i.e scale = 1/stddev
-            nvcv_norm_tensor = nvcv_convert_tensor.normalize(
+            nvcv_norm_tensor = nvcv.normalize(
+                nvcv_convert_tensor,
                 base=nvcv_base_tensor,
                 scale=nvcv_scale_tensor,
                 flags=nvcv.NormalizeFlags.SCALE_IS_STDDEV,
@@ -198,7 +200,7 @@ class ClassificationSample:
 
             # The final stage in the preprocess pipeline includes converting the RGB
             # buffer into a planar buffer
-            nvcv_preprocessed_tensor = nvcv_norm_tensor.reformat("NCHW")
+            nvcv_preprocessed_tensor = nvcv.reformat(nvcv_norm_tensor, "NCHW")
 
             # tag: Inference
             # Inference uses pytorch to run a resnet50 model on the preprocessed

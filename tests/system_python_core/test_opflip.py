@@ -49,15 +49,16 @@ RNG = np.random.default_rng(0)
     ],
 )
 def test_op_flip(input, flip_code):
-    out = input.flip(flip_code)
+    out = nvcv.flip(input, flip_code)
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
     stream = nvcv.cuda.Stream()
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = input.flip_into(
-        output=out,
+    tmp = nvcv.flip_into(
+        src=input,
+        dst=out,
         flipCode=flip_code,
         stream=stream,
     )
@@ -117,7 +118,7 @@ def test_op_flipvarshape(num_images, img_format, img_size, max_pixel, flip_code)
         (num_images, 1), np.int32, "NC", max_random=flip_code, rng=RNG
     )
 
-    out = input.flip(flipCode)
+    out = nvcv.flip(input, flipCode)
     assert len(out) == len(input)
     assert out.capacity == input.capacity
     assert out.uniqueformat == input.uniqueformat
@@ -125,8 +126,9 @@ def test_op_flipvarshape(num_images, img_format, img_size, max_pixel, flip_code)
 
     stream = nvcv.cuda.Stream()
     out = util.clone_image_batch(input)
-    tmp = input.flip_into(
-        output=out,
+    tmp = nvcv.flip_into(
+        src=input,
+        dst=out,
         flipCode=flipCode,
         stream=stream,
     )

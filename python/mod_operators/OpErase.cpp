@@ -29,7 +29,7 @@
 namespace nv::cvpy {
 
 namespace {
-Tensor EraseInto(Tensor &input, Tensor &output, Tensor &anchor, Tensor &erasing, Tensor &values, Tensor &imgIdx,
+Tensor EraseInto(Tensor &output, Tensor &input, Tensor &anchor, Tensor &erasing, Tensor &values, Tensor &imgIdx,
                  bool random, unsigned int seed, std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -61,10 +61,10 @@ Tensor Erase(Tensor &input, Tensor &anchor, Tensor &erasing, Tensor &values, Ten
 {
     Tensor output = Tensor::Create(input.shape(), input.dtype());
 
-    return EraseInto(input, output, anchor, erasing, values, imgIdx, random, seed, pstream);
+    return EraseInto(output, input, anchor, erasing, values, imgIdx, random, seed, pstream);
 }
 
-ImageBatchVarShape EraseVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output, Tensor &anchor,
+ImageBatchVarShape EraseVarShapeInto(ImageBatchVarShape &output, ImageBatchVarShape &input, Tensor &anchor,
                                      Tensor &erasing, Tensor &values, Tensor &imgIdx, bool random, unsigned int seed,
                                      std::optional<Stream> pstream)
 {
@@ -109,7 +109,7 @@ ImageBatchVarShape EraseVarShape(ImageBatchVarShape &input, Tensor &anchor, Tens
         output.pushBack(newimg);
     }
 
-    return EraseVarShapeInto(input, output, anchor, erasing, values, imgIdx, random, seed, pstream);
+    return EraseVarShapeInto(output, input, anchor, erasing, values, imgIdx, random, seed, pstream);
 }
 
 } // namespace
@@ -118,17 +118,14 @@ void ExportOpErase(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::Tensor>("erase", &Erase, "anchor"_a, "erasing"_a, "values"_a, "imgIdx"_a, py::kw_only(),
-                                       "random"_a = false, "seed"_a = 0, "stream"_a = nullptr);
-    util::DefClassMethod<priv::Tensor>("erase_into", &EraseInto, "out"_a, "anchor"_a, "erasing"_a, "values"_a,
-                                       "imgIdx"_a, py::kw_only(), "random"_a = false, "seed"_a = 0,
-                                       "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("erase", &EraseVarShape, "anchor"_a, "erasing"_a, "values"_a,
-                                                   "imgIdx"_a, py::kw_only(), "random"_a = false, "seed"_a = 0,
-                                                   "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("erase_into", &EraseVarShapeInto, "out"_a, "anchor"_a, "erasing"_a,
-                                                   "values"_a, "imgIdx"_a, py::kw_only(), "random"_a = false,
-                                                   "seed"_a = 0, "stream"_a = nullptr);
+    m.def("erase", &Erase, "src"_a, "anchor"_a, "erasing"_a, "values"_a, "imgIdx"_a, py::kw_only(), "random"_a = false,
+          "seed"_a = 0, "stream"_a = nullptr);
+    m.def("erase_into", &EraseInto, "dst"_a, "src"_a, "anchor"_a, "erasing"_a, "values"_a, "imgIdx"_a, py::kw_only(),
+          "random"_a = false, "seed"_a = 0, "stream"_a = nullptr);
+    m.def("erase", &EraseVarShape, "src"_a, "anchor"_a, "erasing"_a, "values"_a, "imgIdx"_a, py::kw_only(),
+          "random"_a = false, "seed"_a = 0, "stream"_a = nullptr);
+    m.def("erase_into", &EraseVarShapeInto, "dst"_a, "src"_a, "anchor"_a, "erasing"_a, "values"_a, "imgIdx"_a,
+          py::kw_only(), "random"_a = false, "seed"_a = 0, "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

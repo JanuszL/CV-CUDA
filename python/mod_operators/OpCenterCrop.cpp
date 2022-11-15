@@ -33,7 +33,7 @@
 namespace nv::cvpy {
 
 namespace {
-Tensor CenterCropInto(Tensor &input, Tensor &output, const std::tuple<int, int> &cropSize,
+Tensor CenterCropInto(Tensor &output, Tensor &input, const std::tuple<int, int> &cropSize,
                       std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -77,7 +77,7 @@ Tensor CenterCrop(Tensor &input, const std::tuple<int, int> &cropSize, std::opti
 
     Tensor output = Tensor::Create(cv::TensorShape(out_shape.data(), out_shape.size(), input.layout()), input.dtype());
 
-    return CenterCropInto(input, output, cropSize, pstream);
+    return CenterCropInto(output, input, cropSize, pstream);
 }
 
 } // namespace
@@ -86,9 +86,8 @@ void ExportOpCenterCrop(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::Tensor>("center_crop", &CenterCrop, "crop_size"_a, py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<priv::Tensor>("center_crop_into", &CenterCropInto, "output"_a, "crop_size"_a, py::kw_only(),
-                                       "stream"_a = nullptr);
+    m.def("center_crop", &CenterCrop, "src"_a, "crop_size"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("center_crop_into", &CenterCropInto, "dst"_a, "src"_a, "crop_size"_a, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

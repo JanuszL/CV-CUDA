@@ -30,19 +30,11 @@ namespace nv::cvpy {
 
 namespace py = pybind11;
 
-namespace priv {
-class ImageBatchVarShape
-{
-};
-} // namespace priv
-
 class ImageBatchVarShape
     : public Resource
     , public cv::IImageBatchVarShape
 {
 public:
-    using PrivateImpl = priv::ImageBatchVarShape;
-
     static ImageBatchVarShape Create(int capacity)
     {
         PyObject *ovarshape = capi().ImageBatchVarShape_Create(capacity);

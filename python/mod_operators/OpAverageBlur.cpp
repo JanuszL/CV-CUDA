@@ -31,7 +31,7 @@
 namespace nv::cvpy {
 
 namespace {
-Tensor AverageBlurInto(Tensor &input, Tensor &output, const std::tuple<int, int> &kernel_size,
+Tensor AverageBlurInto(Tensor &output, Tensor &input, const std::tuple<int, int> &kernel_size,
                        const std::tuple<int, int> &kernel_anchor, NVCVBorderType border, std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -59,10 +59,10 @@ Tensor AverageBlur(Tensor &input, const std::tuple<int, int> &kernel_size, const
 {
     Tensor output = Tensor::Create(input.shape(), input.dtype());
 
-    return AverageBlurInto(input, output, kernel_size, kernel_anchor, border, pstream);
+    return AverageBlurInto(output, input, kernel_size, kernel_anchor, border, pstream);
 }
 
-ImageBatchVarShape AverageBlurVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
+ImageBatchVarShape AverageBlurVarShapeInto(ImageBatchVarShape &output, ImageBatchVarShape &input,
                                            const std::tuple<int, int> &max_kernel_size, Tensor &kernel_size,
                                            Tensor &kernel_anchor, NVCVBorderType border, std::optional<Stream> pstream)
 {
@@ -99,7 +99,7 @@ ImageBatchVarShape AverageBlurVarShape(ImageBatchVarShape &input, const std::tup
         output.pushBack(image);
     }
 
-    return AverageBlurVarShapeInto(input, output, max_kernel_size, kernel_size, kernel_anchor, border, pstream);
+    return AverageBlurVarShapeInto(output, input, max_kernel_size, kernel_size, kernel_anchor, border, pstream);
 }
 
 } // namespace
@@ -110,19 +110,15 @@ void ExportOpAverageBlur(py::module &m)
 
     const std::tuple<int, int> def_anchor{-1, -1};
 
-    util::DefClassMethod<priv::Tensor>("averageblur", &AverageBlur, "kernel_size"_a, "kernel_anchor"_a = def_anchor,
-                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                       "stream"_a = nullptr);
-    util::DefClassMethod<priv::Tensor>(
-        "averageblur_into", &AverageBlurInto, "output"_a, "kernel_size"_a, "kernel_anchor"_a = def_anchor,
-        "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
+    m.def("averageblur", &AverageBlur, "src"_a, "kernel_size"_a, "kernel_anchor"_a = def_anchor,
+          "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
+    m.def("averageblur_into", &AverageBlurInto, "dst"_a, "src"_a, "kernel_size"_a, "kernel_anchor"_a = def_anchor,
+          "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
 
-    util::DefClassMethod<priv::ImageBatchVarShape>(
-        "averageblur", &AverageBlurVarShape, "max_kernel_size"_a, "kernel_size"_a, "kernel_anchor"_a,
-        "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>(
-        "averageblur_into", &AverageBlurVarShapeInto, "output"_a, "max_kernel_size"_a, "kernel_size"_a,
-        "kernel_anchor"_a, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
+    m.def("averageblur", &AverageBlurVarShape, "src"_a, "max_kernel_size"_a, "kernel_size"_a, "kernel_anchor"_a,
+          "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
+    m.def("averageblur_into", &AverageBlurVarShapeInto, "dst"_a, "src"_a, "max_kernel_size"_a, "kernel_size"_a,
+          "kernel_anchor"_a, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

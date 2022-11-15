@@ -31,12 +31,6 @@
 
 namespace nv::cvpy {
 
-namespace priv {
-class Tensor
-{
-};
-} // namespace priv
-
 namespace py = pybind11;
 
 using Shape = std::vector<int64_t>;
@@ -46,8 +40,6 @@ class Tensor
     , public cv::ITensor
 {
 public:
-    using PrivateImpl = priv::Tensor;
-
     static Tensor Create(const cv::TensorShape &tshape, cv::DataType dtype)
     {
         PyObject *otensor = capi().Tensor_Create(tshape.size(), &tshape[0], static_cast<NVCVDataType>(dtype),

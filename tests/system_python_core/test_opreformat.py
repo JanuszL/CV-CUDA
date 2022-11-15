@@ -28,25 +28,25 @@ import numpy as np
     ],
 )
 def test_op_reformat(input, out_shape, out_layout):
-    out = input.reformat(out_layout)
+    out = nvcv.reformat(input, out_layout)
     assert out.layout == out_layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
     out = nvcv.Tensor(out_shape, input.dtype, out_layout)
-    tmp = input.reformat_into(out)
+    tmp = nvcv.reformat_into(out, input)
     assert tmp is out
     assert out.layout == out_layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
     stream = nvcv.cuda.Stream()
-    out = input.reformat(layout=out_layout, stream=stream)
+    out = nvcv.reformat(src=input, layout=out_layout, stream=stream)
     assert out.layout == out_layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
-    tmp = input.reformat_into(out=out, stream=stream)
+    tmp = nvcv.reformat_into(src=input, dst=out, stream=stream)
     assert tmp is out
     assert out.layout == out_layout
     assert out.shape == out_shape

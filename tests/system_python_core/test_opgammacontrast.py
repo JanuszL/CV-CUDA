@@ -68,7 +68,7 @@ def test_op_gamma_contrastvarshape(
 
     gamma = util.create_tensor((nimages), np.float32, "N", max_gamma, rng=RNG)
 
-    out = input.gamma_contrast(gamma)
+    out = nvcv.gamma_contrast(input, gamma)
 
     assert len(out) == len(input)
     assert out.capacity == input.capacity
@@ -79,8 +79,9 @@ def test_op_gamma_contrastvarshape(
 
     out = util.clone_image_batch(input)
 
-    tmp = input.gamma_contrast_into(
-        output=out,
+    tmp = nvcv.gamma_contrast_into(
+        src=input,
+        dst=out,
         gamma=gamma,
         stream=stream,
     )

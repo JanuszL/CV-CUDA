@@ -28,7 +28,7 @@
 namespace nv::cvpy {
 
 namespace {
-Tensor CustomCropInto(Tensor &input, Tensor &output, const NVCVRectI &rcCrop, std::optional<Stream> pstream)
+Tensor CustomCropInto(Tensor &output, Tensor &input, const NVCVRectI &rcCrop, std::optional<Stream> pstream)
 {
     if (!pstream)
     {
@@ -79,7 +79,7 @@ Tensor CustomCrop(Tensor &input, const NVCVRectI &rcCrop, std::optional<Stream> 
     Tensor output
         = Tensor::Create({out_shape.data(), static_cast<int32_t>(out_shape.size()), input.layout()}, input.dtype());
 
-    return CustomCropInto(input, output, rcCrop, pstream);
+    return CustomCropInto(output, input, rcCrop, pstream);
 }
 
 } // namespace
@@ -88,9 +88,8 @@ void ExportOpCustomCrop(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::Tensor>("customcrop", &CustomCrop, "rect"_a, py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<priv::Tensor>("customcrop_into", &CustomCropInto, "out"_a, "rect"_a, py::kw_only(),
-                                       "stream"_a = nullptr);
+    m.def("customcrop", &CustomCrop, "src"_a, "rect"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("customcrop_into", &CustomCropInto, "dst"_a, "src"_a, "rect"_a, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

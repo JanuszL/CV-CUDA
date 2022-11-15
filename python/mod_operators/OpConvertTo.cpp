@@ -26,7 +26,7 @@
 namespace nv::cvpy {
 
 namespace {
-Tensor ConvertToInto(Tensor &input, Tensor &output, float scale, float offset, std::optional<Stream> pstream)
+Tensor ConvertToInto(Tensor &output, Tensor &input, float scale, float offset, std::optional<Stream> pstream)
 {
     if (!pstream)
     {
@@ -49,7 +49,7 @@ Tensor ConvertTo(Tensor &input, cv::DataType dtype, float scale, float offset, s
 {
     Tensor output = Tensor::Create(input.shape(), dtype);
 
-    return ConvertToInto(input, output, scale, offset, pstream);
+    return ConvertToInto(output, input, scale, offset, pstream);
 }
 
 } // namespace
@@ -58,10 +58,10 @@ void ExportOpConvertTo(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::Tensor>("convertto", &ConvertTo, "dtype"_a, "scale"_a = 1, "offset"_a = 0, py::kw_only(),
-                                       "stream"_a = nullptr);
-    util::DefClassMethod<priv::Tensor>("convertto_into", &ConvertToInto, "out"_a, "scale"_a = 1, "offset"_a = 0,
-                                       py::kw_only(), "stream"_a = nullptr);
+    m.def("convertto", &ConvertTo, "src"_a, "dtype"_a, "scale"_a = 1, "offset"_a = 0, py::kw_only(),
+          "stream"_a = nullptr);
+    m.def("convertto_into", &ConvertToInto, "dst"_a, "src"_a, "scale"_a = 1, "offset"_a = 0, py::kw_only(),
+          "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

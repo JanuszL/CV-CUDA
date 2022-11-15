@@ -45,7 +45,7 @@ RNG = np.random.default_rng(0)
     ],
 )
 def test_op_composite(foreground, background, fgMask, outChannels):
-    out = foreground.composite(background, fgMask, outChannels)
+    out = nvcv.composite(foreground, background, fgMask, outChannels)
     assert out.layout == foreground.layout
     assert out.shape[-1] == outChannels
     if out.layout == "NHWC":
@@ -59,8 +59,9 @@ def test_op_composite(foreground, background, fgMask, outChannels):
     out_shape = foreground.shape
     out_shape[-1] = outChannels
     out = nvcv.Tensor(out_shape, foreground.dtype, foreground.layout)
-    tmp = foreground.composite_into(
-        output=out,
+    tmp = nvcv.composite_into(
+        foreground=foreground,
+        dst=out,
         background=background,
         fgmask=fgMask,
         stream=stream,
@@ -98,7 +99,7 @@ def test_op_compositevarshape(nimages, max_size, outChannels):
     background = util.clone_image_batch(foreground)
     fgMask = util.clone_image_batch(foreground, img_format=nvcv.Format.U8)
 
-    out = foreground.composite(background, fgMask)
+    out = nvcv.composite(foreground, background, fgMask)
     assert len(out) == len(foreground)
     assert out.capacity == foreground.capacity
 
@@ -108,8 +109,9 @@ def test_op_compositevarshape(nimages, max_size, outChannels):
         out = util.clone_image_batch(foreground)
     if outChannels == 4:
         out = util.clone_image_batch(foreground, img_format=nvcv.Format.RGBA8)
-    tmp = foreground.composite_into(
-        output=out,
+    tmp = nvcv.composite_into(
+        foreground=foreground,
+        dst=out,
         background=background,
         fgmask=fgMask,
         stream=stream,

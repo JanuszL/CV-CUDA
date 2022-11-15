@@ -27,32 +27,36 @@ import numpy as np
     ],
 )
 def test_op_convertto(input, dtype, scale, offset):
-    out = input.convertto(dtype)
+    out = nvcv.convertto(input, dtype)
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == dtype
 
     out = nvcv.Tensor(input.shape, dtype, input.layout)
-    tmp = input.convertto_into(out)
+    tmp = nvcv.convertto_into(out, input)
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == dtype
 
-    out = input.convertto(dtype, scale)
-    out = input.convertto(dtype, scale, offset)
+    out = nvcv.convertto(input, dtype, scale)
+    out = nvcv.convertto(input, dtype, scale, offset)
 
     out = nvcv.Tensor(input.shape, dtype, input.layout)
-    tmp = input.convertto_into(out, scale)
-    tmp = input.convertto_into(out, scale, offset)
+    tmp = nvcv.convertto_into(out, input, scale)
+    tmp = nvcv.convertto_into(out, input, scale, offset)
 
     stream = nvcv.cuda.Stream()
-    out = input.convertto(dtype=dtype, scale=scale, offset=offset, stream=stream)
+    out = nvcv.convertto(
+        src=input, dtype=dtype, scale=scale, offset=offset, stream=stream
+    )
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == dtype
 
-    tmp = input.convertto_into(out=out, scale=scale, offset=offset, stream=stream)
+    tmp = nvcv.convertto_into(
+        dst=out, src=input, scale=scale, offset=offset, stream=stream
+    )
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == input.shape

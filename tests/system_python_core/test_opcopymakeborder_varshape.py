@@ -99,16 +99,21 @@ def test_op_copymakeborder(
 
     tensor_out = nvcv.Tensor(num_images, [max_out_w, max_out_h], format)
 
-    out = input.copymakeborderstack(
-        top=top_tensor, left=left_tensor, out_height=max_out_h, out_width=max_out_w
+    out = nvcv.copymakeborderstack(
+        input,
+        top=top_tensor,
+        left=left_tensor,
+        out_height=max_out_h,
+        out_width=max_out_w,
     )
     assert out.layout == tensor_out.layout
     assert out.shape == tensor_out.shape
     assert out.dtype == tensor_out.dtype
 
     stream = nvcv.cuda.Stream()
-    tmp = input.copymakeborderstack_into(
-        tensor_out,
+    tmp = nvcv.copymakeborderstack_into(
+        src=input,
+        dst=tensor_out,
         top=top_tensor,
         left=left_tensor,
         border_mode=border_mode,
@@ -117,7 +122,8 @@ def test_op_copymakeborder(
     )
     assert tmp is tensor_out
 
-    out = input.copymakeborder(
+    out = nvcv.copymakeborder(
+        src=input,
         top=top_tensor,
         left=left_tensor,
         out_heights=out_heights,
@@ -130,8 +136,9 @@ def test_op_copymakeborder(
         assert res.size == ref.size
         assert res.format == ref.format
 
-    tmp = input.copymakeborder_into(
-        varshape_out,
+    tmp = nvcv.copymakeborder_into(
+        src=input,
+        dst=varshape_out,
         top=top_tensor,
         left=left_tensor,
         border_mode=border_mode,

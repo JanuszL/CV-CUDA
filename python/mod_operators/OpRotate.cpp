@@ -31,7 +31,7 @@
 namespace nv::cvpy {
 
 namespace {
-Tensor RotateInto(Tensor &input, Tensor &output, double angleDeg, const std::tuple<double, double> &shift,
+Tensor RotateInto(Tensor &output, Tensor &input, double angleDeg, const std::tuple<double, double> &shift,
                   NVCVInterpolationType interpolation, std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -58,10 +58,10 @@ Tensor Rotate(Tensor &input, double angleDeg, const std::tuple<double, double> &
 {
     Tensor output = Tensor::Create(input.shape(), input.dtype());
 
-    return RotateInto(input, output, angleDeg, shift, interpolation, pstream);
+    return RotateInto(output, input, angleDeg, shift, interpolation, pstream);
 }
 
-ImageBatchVarShape VarShapeRotateInto(ImageBatchVarShape &input, ImageBatchVarShape &output, Tensor &angleDeg,
+ImageBatchVarShape VarShapeRotateInto(ImageBatchVarShape &output, ImageBatchVarShape &input, Tensor &angleDeg,
                                       Tensor &shift, NVCVInterpolationType interpolation, std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -94,7 +94,7 @@ ImageBatchVarShape VarShapeRotate(ImageBatchVarShape &input, Tensor &angleDeg, T
         output.pushBack(image);
     }
 
-    return VarShapeRotateInto(input, output, angleDeg, shift, interpolation, pstream);
+    return VarShapeRotateInto(output, input, angleDeg, shift, interpolation, pstream);
 }
 
 } // namespace
@@ -103,14 +103,13 @@ void ExportOpRotate(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::Tensor>("rotate", &Rotate, "angle_deg"_a, "shift"_a, "interpolation"_a, py::kw_only(),
-                                       "stream"_a = nullptr);
-    util::DefClassMethod<priv::Tensor>("rotate_into", &RotateInto, "output"_a, "angle_deg"_a, "shift"_a,
-                                       "interpolation"_a, py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("rotate", &VarShapeRotate, "angle_deg"_a, "shift"_a,
-                                                   "interpolation"_a, py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("rotate_into", &VarShapeRotateInto, "output"_a, "angle_deg"_a,
-                                                   "shift"_a, "interpolation"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("rotate", &Rotate, "src"_a, "angle_deg"_a, "shift"_a, "interpolation"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("rotate_into", &RotateInto, "dst"_a, "src"_a, "angle_deg"_a, "shift"_a, "interpolation"_a, py::kw_only(),
+          "stream"_a = nullptr);
+    m.def("rotate", &VarShapeRotate, "src"_a, "angle_deg"_a, "shift"_a, "interpolation"_a, py::kw_only(),
+          "stream"_a = nullptr);
+    m.def("rotate_into", &VarShapeRotateInto, "dst"_a, "src"_a, "angle_deg"_a, "shift"_a, "interpolation"_a,
+          py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

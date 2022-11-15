@@ -65,24 +65,30 @@ def test_op_padandstack(
     left = nvcv.Tensor([1, 1, num_images, 1], np.int32, "NHWC")
     top = nvcv.Tensor([1, 1, num_images, 1], np.int32, "NHWC")
 
-    out = input.padandstack(top, left)
+    out = nvcv.padandstack(input, top, left)
     assert out.layout == out_layout
     assert out.shape == out_shape
     assert out.dtype == out_dtype
 
     out = nvcv.Tensor(out_shape, out_dtype, out_layout)
-    tmp = input.padandstack_into(out, top, left)
+    tmp = nvcv.padandstack_into(out, input, top, left)
     assert tmp is out
 
     stream = nvcv.cuda.Stream()
-    out = input.padandstack(
-        left=left, top=top, border=border, bvalue=bvalue, stream=stream
+    out = nvcv.padandstack(
+        src=input, left=left, top=top, border=border, bvalue=bvalue, stream=stream
     )
     assert out.layout == out_layout
     assert out.shape == out_shape
     assert out.dtype == out_dtype
 
-    tmp = input.padandstack_into(
-        out=out, left=left, top=top, border=border, bvalue=bvalue, stream=stream
+    tmp = nvcv.padandstack_into(
+        src=input,
+        dst=out,
+        left=left,
+        top=top,
+        border=border,
+        bvalue=bvalue,
+        stream=stream,
     )
     assert tmp is out

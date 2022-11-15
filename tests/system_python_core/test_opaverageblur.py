@@ -59,15 +59,16 @@ RNG = np.random.default_rng(0)
     ],
 )
 def test_op_averageblur(input, kernel_size, kernel_anchor, border):
-    out = input.averageblur(kernel_size, kernel_anchor, border)
+    out = nvcv.averageblur(input, kernel_size, kernel_anchor, border)
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
     stream = nvcv.cuda.Stream()
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = input.averageblur_into(
-        output=out,
+    tmp = nvcv.averageblur_into(
+        src=input,
+        dst=out,
         kernel_size=kernel_size,
         kernel_anchor=kernel_anchor,
         border=border,
@@ -145,7 +146,8 @@ def test_op_averageblurvarshape(
         (num_images, 2), np.int32, "NC", max_random=max_kernel_size, rng=RNG
     )
 
-    out = input.averageblur(
+    out = nvcv.averageblur(
+        input,
         max_kernel_size,
         kernel_size,
         kernel_anchor,
@@ -158,8 +160,9 @@ def test_op_averageblurvarshape(
 
     stream = nvcv.cuda.Stream()
     out = util.clone_image_batch(input)
-    tmp = input.averageblur_into(
-        output=out,
+    tmp = nvcv.averageblur_into(
+        src=input,
+        dst=out,
         max_kernel_size=max_kernel_size,
         kernel_size=kernel_size,
         kernel_anchor=kernel_anchor,

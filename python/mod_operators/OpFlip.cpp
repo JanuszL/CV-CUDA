@@ -31,7 +31,7 @@
 namespace nv::cvpy {
 
 namespace {
-Tensor FlipInto(Tensor &input, Tensor &output, int32_t flipCode, std::optional<Stream> pstream)
+Tensor FlipInto(Tensor &output, Tensor &input, int32_t flipCode, std::optional<Stream> pstream)
 {
     if (!pstream)
     {
@@ -54,10 +54,10 @@ Tensor Flip(Tensor &input, int32_t flipCode, std::optional<Stream> pstream)
 {
     Tensor output = Tensor::Create(input.shape(), input.dtype());
 
-    return FlipInto(input, output, flipCode, pstream);
+    return FlipInto(output, input, flipCode, pstream);
 }
 
-ImageBatchVarShape FlipVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output, Tensor &flipCode,
+ImageBatchVarShape FlipVarShapeInto(ImageBatchVarShape &output, ImageBatchVarShape &input, Tensor &flipCode,
                                     std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -89,7 +89,7 @@ ImageBatchVarShape FlipVarShape(ImageBatchVarShape &input, Tensor &flipCode, std
         output.pushBack(image);
     }
 
-    return FlipVarShapeInto(input, output, flipCode, pstream);
+    return FlipVarShapeInto(output, input, flipCode, pstream);
 }
 
 } // namespace
@@ -98,14 +98,11 @@ void ExportOpFlip(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::Tensor>("flip", &Flip, "flipCode"_a, py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<priv::Tensor>("flip_into", &FlipInto, "output"_a, "flipCode"_a, py::kw_only(),
-                                       "stream"_a = nullptr);
+    m.def("flip", &Flip, "src"_a, "flipCode"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("flip_into", &FlipInto, "dst"_a, "src"_a, "flipCode"_a, py::kw_only(), "stream"_a = nullptr);
 
-    util::DefClassMethod<priv::ImageBatchVarShape>("flip", &FlipVarShape, "flipCode"_a, py::kw_only(),
-                                                   "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("flip_into", &FlipVarShapeInto, "output"_a, "flipCode"_a,
-                                                   py::kw_only(), "stream"_a = nullptr);
+    m.def("flip", &FlipVarShape, "src"_a, "flipCode"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("flip_into", &FlipVarShapeInto, "dst"_a, "src"_a, "flipCode"_a, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

@@ -65,7 +65,7 @@ RNG = np.random.default_rng(0)
     ],
 )
 def test_op_rotate(input, angle_deg, shift, interpolation):
-    out = input.rotate(angle_deg, shift, interpolation)
+    out = nvcv.rotate(input, angle_deg, shift, interpolation)
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
@@ -73,8 +73,9 @@ def test_op_rotate(input, angle_deg, shift, interpolation):
     stream = nvcv.cuda.Stream()
 
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = input.rotate_into(
-        output=out,
+    tmp = nvcv.rotate_into(
+        src=input,
+        dst=out,
         angle_deg=angle_deg,
         shift=shift,
         interpolation=interpolation,
@@ -140,7 +141,8 @@ def test_op_rotatevarshape(
         (nimages, 2), np.float64, "NC", max_random=max_shift, rng=RNG
     )
 
-    out = input.rotate(
+    out = nvcv.rotate(
+        input,
         angle_deg,
         shift,
         interpolation,
@@ -153,8 +155,9 @@ def test_op_rotatevarshape(
     stream = nvcv.cuda.Stream()
 
     out = util.clone_image_batch(input)
-    tmp = input.rotate_into(
-        output=out,
+    tmp = nvcv.rotate_into(
+        src=input,
+        dst=out,
         angle_deg=angle_deg,
         shift=shift,
         interpolation=interpolation,

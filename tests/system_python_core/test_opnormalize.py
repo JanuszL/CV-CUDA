@@ -65,20 +65,21 @@ RNG = np.random.default_rng(0)
     ],
 )
 def test_op_normalize(input, base, scale, globalscale, globalshift, epsilon, flags):
-    out = input.normalize(base, scale)
+    out = nvcv.normalize(input, base, scale)
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = input.normalize_into(out, base, scale)
+    tmp = nvcv.normalize_into(out, input, base, scale)
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
     stream = nvcv.cuda.Stream()
-    out = input.normalize(
+    out = nvcv.normalize(
+        src=input,
         base=base,
         scale=scale,
         flags=flags,
@@ -91,8 +92,9 @@ def test_op_normalize(input, base, scale, globalscale, globalshift, epsilon, fla
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
-    tmp = input.normalize_into(
-        out=out,
+    tmp = nvcv.normalize_into(
+        src=input,
+        dst=out,
         base=base,
         scale=scale,
         flags=flags,
@@ -152,14 +154,14 @@ def test_op_rotatevarshape(
         nimages, format, max_size=max_size, max_random=max_pixel, rng=RNG
     )
 
-    out = input.normalize(base, scale)
+    out = nvcv.normalize(input, base, scale)
     assert len(out) == len(input)
     assert out.capacity == input.capacity
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == input.maxsize
 
     out = util.clone_image_batch(input)
-    tmp = input.normalize_into(out, base, scale)
+    tmp = nvcv.normalize_into(out, input, base, scale)
     assert tmp is out
     assert len(out) == len(input)
     assert out.capacity == input.capacity
@@ -167,7 +169,8 @@ def test_op_rotatevarshape(
     assert out.maxsize == input.maxsize
 
     stream = nvcv.cuda.Stream()
-    out = input.normalize(
+    out = nvcv.normalize(
+        src=input,
         base=base,
         scale=scale,
         flags=flags,
@@ -181,8 +184,9 @@ def test_op_rotatevarshape(
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == input.maxsize
 
-    tmp = input.normalize_into(
-        out=out,
+    tmp = nvcv.normalize_into(
+        src=input,
+        dst=out,
         base=base,
         scale=scale,
         flags=flags,

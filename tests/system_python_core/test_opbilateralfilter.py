@@ -56,15 +56,18 @@ RNG = np.random.default_rng(0)
     ],
 )
 def test_op_bilateral_filter(input, diameter, sigma_color, sigma_space, border):
-    out = input.bilateral_filter(diameter, sigma_color, sigma_space, border=border)
+    out = nvcv.bilateral_filter(
+        input, diameter, sigma_color, sigma_space, border=border
+    )
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
     stream = nvcv.cuda.Stream()
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = input.bilateral_filter_into(
-        output=out,
+    tmp = nvcv.bilateral_filter_into(
+        src=input,
+        dst=out,
         diameter=diameter,
         sigma_color=sigma_color,
         sigma_space=sigma_space,
@@ -148,7 +151,9 @@ def test_op_bilateral_filtervarshape(
     sigma_space = util.create_tensor(
         (nimages), np.float32, "N", max_random=max_ss, rng=RNG
     )
-    out = input.bilateral_filter(diameter, sigma_color, sigma_space, border=border)
+    out = nvcv.bilateral_filter(
+        input, diameter, sigma_color, sigma_space, border=border
+    )
 
     assert len(out) == len(input)
     assert out.capacity == input.capacity
@@ -159,8 +164,9 @@ def test_op_bilateral_filtervarshape(
 
     out = util.clone_image_batch(input)
 
-    tmp = input.bilateral_filter_into(
-        output=out,
+    tmp = nvcv.bilateral_filter_into(
+        src=input,
+        dst=out,
         diameter=diameter,
         sigma_color=sigma_color,
         sigma_space=sigma_space,

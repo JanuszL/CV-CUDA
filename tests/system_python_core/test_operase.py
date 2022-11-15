@@ -33,17 +33,18 @@ def test_op_erase(input, erasing_area_num, random, seed):
     imgIdx = nvcv.Tensor(parameter_shape, nvcv.Type.S32, "N")
     values = nvcv.Tensor(parameter_shape, nvcv.Type.F32, "N")
 
-    out = input.erase(anchor, erasing, values, imgIdx)
+    out = nvcv.erase(input, anchor, erasing, values, imgIdx)
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = input.erase_into(out, anchor, erasing, values, imgIdx)
+    tmp = nvcv.erase_into(out, input, anchor, erasing, values, imgIdx)
     assert tmp is out
 
     stream = nvcv.cuda.Stream()
-    out = input.erase(
+    out = nvcv.erase(
+        src=input,
         anchor=anchor,
         erasing=erasing,
         values=values,
@@ -56,8 +57,9 @@ def test_op_erase(input, erasing_area_num, random, seed):
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
-    tmp = input.erase_into(
-        out=out,
+    tmp = nvcv.erase_into(
+        src=input,
+        dst=out,
         anchor=anchor,
         erasing=erasing,
         values=values,

@@ -31,7 +31,7 @@
 namespace nv::cvpy {
 
 namespace {
-Tensor CompositeInto(Tensor &foreground, Tensor &output, Tensor &background, Tensor &fgMask,
+Tensor CompositeInto(Tensor &output, Tensor &foreground, Tensor &background, Tensor &fgMask,
                      std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -61,10 +61,10 @@ Tensor Composite(Tensor &foreground, Tensor &background, Tensor &fgMask, int out
     Tensor output
         = Tensor::Create(cv::TensorShape(out_shape.data(), out_shape.size(), foreground.layout()), foreground.dtype());
 
-    return CompositeInto(foreground, output, background, fgMask, pstream);
+    return CompositeInto(output, foreground, background, fgMask, pstream);
 }
 
-ImageBatchVarShape CompositeVarShapeInto(ImageBatchVarShape &foreground, ImageBatchVarShape &output,
+ImageBatchVarShape CompositeVarShapeInto(ImageBatchVarShape &output, ImageBatchVarShape &foreground,
                                          ImageBatchVarShape &background, ImageBatchVarShape &fgMask,
                                          std::optional<Stream> pstream)
 {
@@ -98,7 +98,7 @@ ImageBatchVarShape CompositeVarShape(ImageBatchVarShape &foreground, ImageBatchV
         output.pushBack(newimg);
     }
 
-    return CompositeVarShapeInto(foreground, output, background, fgMask, pstream);
+    return CompositeVarShapeInto(output, foreground, background, fgMask, pstream);
 }
 
 } // namespace
@@ -107,14 +107,14 @@ void ExportOpComposite(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<priv::Tensor>("composite", &Composite, "background"_a, "fgmask"_a, "outchannels"_a,
-                                       py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<priv::Tensor>("composite_into", &CompositeInto, "output"_a, "background"_a, "fgmask"_a,
-                                       py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("composite", &CompositeVarShape, "background"_a, "fgmask"_a,
-                                                   py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<priv::ImageBatchVarShape>("composite_into", &CompositeVarShapeInto, "output"_a, "background"_a,
-                                                   "fgmask"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("composite", &Composite, "foreground"_a, "background"_a, "fgmask"_a, "outchannels"_a, py::kw_only(),
+          "stream"_a = nullptr);
+    m.def("composite_into", &CompositeInto, "dst"_a, "foreground"_a, "background"_a, "fgmask"_a, py::kw_only(),
+          "stream"_a = nullptr);
+    m.def("composite", &CompositeVarShape, "foreground"_a, "background"_a, "fgmask"_a, py::kw_only(),
+          "stream"_a = nullptr);
+    m.def("composite_into", &CompositeVarShapeInto, "dst"_a, "foreground"_a, "background"_a, "fgmask"_a, py::kw_only(),
+          "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy
