@@ -32,24 +32,25 @@ namespace nvcv = nv::cv;
 // (float3 - float3) * float3 / (float3 - float) * float3 / (float3 - float3) * float / (float3 - float) * float
 template<typename input_type, typename base_type, typename scale_type>
 __global__ void normalizeKernel(const input_type src, const base_type base, const scale_type scale, input_type dst,
-                                float global_scale, float global_shift)
+                                int2 inout_size, int3 base_size, int3 scale_size, float global_scale,
+                                float global_shift)
 {
     const int src_x     = blockIdx.x * blockDim.x + threadIdx.x;
     const int src_y     = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx = get_batch_idx();
 
-    if (src_x >= dst.cols || src_y >= dst.rows)
+    if (src_x >= inout_size.x || src_y >= inout_size.y)
         return;
 
-    const int base_x         = base.cols == 1 ? 0 : src_x;
-    const int base_y         = base.rows == 1 ? 0 : src_y;
-    const int base_batch_idx = base.batches == 1 ? 0 : batch_idx;
+    const int base_x         = base_size.x == 1 ? 0 : src_x;
+    const int base_y         = base_size.y == 1 ? 0 : src_y;
+    const int base_batch_idx = base_size.z == 1 ? 0 : batch_idx;
 
-    const int scale_x         = scale.cols == 1 ? 0 : src_x;
-    const int scale_y         = scale.rows == 1 ? 0 : src_y;
-    const int scale_batch_idx = scale.batches == 1 ? 0 : batch_idx;
+    const int scale_x         = scale_size.x == 1 ? 0 : src_x;
+    const int scale_y         = scale_size.y == 1 ? 0 : src_y;
+    const int scale_batch_idx = scale_size.z == 1 ? 0 : batch_idx;
 
-    typedef typename input_type::value_type input_value_type;
+    typedef typename input_type::Type input_value_type;
 
     *dst.ptr(batch_idx, src_y, src_x) = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<input_value_type>>(
         (*src.ptr(batch_idx, src_y, src_x) - *base.ptr(base_batch_idx, base_y, base_x))
@@ -60,25 +61,26 @@ __global__ void normalizeKernel(const input_type src, const base_type base, cons
 // (float3 - float3) * float3 / (float3 - float) * float3 / (float3 - float3) * float / (float3 - float) * float
 template<typename input_type, typename base_type, typename scale_type>
 __global__ void normalizeInvStdDevKernel(const input_type src, const base_type base, const scale_type scale,
-                                         input_type dst, float global_scale, float global_shift, float epsilon)
+                                         input_type dst, int2 inout_size, int3 base_size, int3 scale_size,
+                                         float global_scale, float global_shift, float epsilon)
 {
     const int src_x     = blockIdx.x * blockDim.x + threadIdx.x;
     const int src_y     = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx = get_batch_idx();
 
-    if (src_x >= dst.cols || src_y >= dst.rows)
+    if (src_x >= inout_size.x || src_y >= inout_size.y)
         return;
 
-    const int base_x         = base.cols == 1 ? 0 : src_x;
-    const int base_y         = base.rows == 1 ? 0 : src_y;
-    const int base_batch_idx = base.batches == 1 ? 0 : batch_idx;
+    const int base_x         = base_size.x == 1 ? 0 : src_x;
+    const int base_y         = base_size.y == 1 ? 0 : src_y;
+    const int base_batch_idx = base_size.z == 1 ? 0 : batch_idx;
 
-    const int scale_x         = scale.cols == 1 ? 0 : src_x;
-    const int scale_y         = scale.rows == 1 ? 0 : src_y;
-    const int scale_batch_idx = scale.batches == 1 ? 0 : batch_idx;
+    const int scale_x         = scale_size.x == 1 ? 0 : src_x;
+    const int scale_y         = scale_size.y == 1 ? 0 : src_y;
+    const int scale_batch_idx = scale_size.z == 1 ? 0 : batch_idx;
 
-    typedef typename input_type::value_type input_value_type;
-    typedef typename scale_type::value_type scale_value_type;
+    typedef typename input_type::Type input_value_type;
+    typedef typename scale_type::Type scale_value_type;
 
     scale_value_type s   = *scale.ptr(scale_batch_idx, scale_y, scale_x);
     scale_value_type x   = s * s + epsilon;
@@ -91,66 +93,96 @@ __global__ void normalizeInvStdDevKernel(const input_type src, const base_type b
 
 template<typename base_type, typename scale_type, typename PtrInput, typename PtrOutput>
 void normalizeWrap(PtrInput src_ptr, PtrOutput dst_ptr, DataShape input_shape,
-                   const nvcv::TensorDataAccessPitchImagePlanar &baseData,
-                   const nvcv::TensorDataAccessPitchImagePlanar &scaleData, float global_scale, float shift,
-                   cudaStream_t stream)
+                   const nvcv::ITensorDataPitchDevice &baseData, const nvcv::ITensorDataPitchDevice &scaleData,
+                   float global_scale, float shift, cudaStream_t stream)
 {
     dim3 block(32, 8);
     dim3 grid(divUp(input_shape.W, block.x), divUp(input_shape.H, block.y), input_shape.N);
 
-    Ptr2dNHWC<base_type>  base_ptr(baseData);
-    Ptr2dNHWC<scale_type> scale_ptr(scaleData);
+    nvcv::cuda::Tensor3DWrap<base_type>  base_ptr(baseData);
+    nvcv::cuda::Tensor3DWrap<scale_type> scale_ptr(scaleData);
 
-    normalizeKernel<<<grid, block, 0, stream>>>(src_ptr, base_ptr, scale_ptr, dst_ptr, global_scale, shift);
+    auto baseAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(baseData);
+    NVCV_ASSERT(baseAccess);
+
+    auto scaleAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(scaleData);
+    NVCV_ASSERT(scaleAccess);
+
+    int2 inout_size = {input_shape.W, input_shape.H};
+    int3 base_size  = {static_cast<int>(baseAccess->numCols()), static_cast<int>(baseAccess->numRows()),
+                       static_cast<int>(baseAccess->numSamples())};
+    int3 scale_size = {static_cast<int>(scaleAccess->numCols()), static_cast<int>(scaleAccess->numRows()),
+                       static_cast<int>(scaleAccess->numSamples())};
+
+    normalizeKernel<<<grid, block, 0, stream>>>(src_ptr, base_ptr, scale_ptr, dst_ptr, inout_size, base_size,
+                                                scale_size, global_scale, shift);
     checkKernelErrors();
 }
 
 template<typename base_type, typename scale_type, typename PtrInput, typename PtrOutput>
 void normalizeInvStdDevWrap(PtrInput src_ptr, PtrOutput dst_ptr, DataShape input_shape,
-                            const nvcv::TensorDataAccessPitchImagePlanar &baseData,
-                            const nvcv::TensorDataAccessPitchImagePlanar &scaleData, float global_scale, float shift,
-                            float epsilon, cudaStream_t stream)
+                            const nvcv::ITensorDataPitchDevice &baseData, const nvcv::ITensorDataPitchDevice &scaleData,
+                            float global_scale, float shift, float epsilon, cudaStream_t stream)
 {
     dim3 block(32, 8);
     dim3 grid(divUp(input_shape.W, block.x), divUp(input_shape.H, block.y), input_shape.N);
 
-    Ptr2dNHWC<base_type>  base_ptr(baseData);
-    Ptr2dNHWC<scale_type> scale_ptr(scaleData);
+    nvcv::cuda::Tensor3DWrap<base_type>  base_ptr(baseData);
+    nvcv::cuda::Tensor3DWrap<scale_type> scale_ptr(scaleData);
 
-    normalizeInvStdDevKernel<<<grid, block, 0, stream>>>(src_ptr, base_ptr, scale_ptr, dst_ptr, global_scale, shift,
-                                                         epsilon);
+    auto baseAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(baseData);
+    NVCV_ASSERT(baseAccess);
+
+    auto scaleAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(scaleData);
+    NVCV_ASSERT(scaleAccess);
+
+    int2 inout_size = {input_shape.W, input_shape.H};
+    int3 base_size  = {static_cast<int>(baseAccess->numCols()), static_cast<int>(baseAccess->numRows()),
+                       static_cast<int>(baseAccess->numSamples())};
+    int3 scale_size = {static_cast<int>(scaleAccess->numCols()), static_cast<int>(scaleAccess->numRows()),
+                       static_cast<int>(scaleAccess->numSamples())};
+
+    normalizeInvStdDevKernel<<<grid, block, 0, stream>>>(src_ptr, base_ptr, scale_ptr, dst_ptr, inout_size, base_size,
+                                                         scale_size, global_scale, shift, epsilon);
     checkKernelErrors();
 }
 
 template<typename input_type>
-void normalize(const nvcv::TensorDataAccessPitchImagePlanar &inData,
-               const nvcv::TensorDataAccessPitchImagePlanar &baseData,
-               const nvcv::TensorDataAccessPitchImagePlanar &scaleData,
-               const nvcv::TensorDataAccessPitchImagePlanar &outData, float global_scale, float shift,
-               cudaStream_t stream)
+void normalize(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &baseData,
+               const nvcv::ITensorDataPitchDevice &scaleData, const nvcv::ITensorDataPitchDevice &outData,
+               float global_scale, float shift, cudaStream_t stream)
 {
-    Ptr2dNHWC<input_type> src_ptr(inData);
-    Ptr2dNHWC<input_type> dst_ptr(outData);
+    nvcv::cuda::Tensor3DWrap<input_type> src_ptr(inData);
+    nvcv::cuda::Tensor3DWrap<input_type> dst_ptr(outData);
 
-    DataShape input_shape = GetLegacyDataShape(inData.infoShape());
+    auto inAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(inData);
+    NVCV_ASSERT(inAccess);
+
+    auto baseAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(baseData);
+    NVCV_ASSERT(baseAccess);
+
+    auto scaleAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(scaleData);
+    NVCV_ASSERT(scaleAccess);
+
+    DataShape input_shape = GetLegacyDataShape(inAccess->infoShape());
 
     using work_type = nv::cv::cuda::ConvertBaseTypeTo<float, input_type>;
 
-    if (baseData.numChannels() != 1 && scaleData.numChannels() != 1)
+    if (baseAccess->numChannels() != 1 && scaleAccess->numChannels() != 1)
     {
         using base_type  = work_type;
         using scale_type = work_type;
         normalizeWrap<base_type, scale_type>(src_ptr, dst_ptr, input_shape, baseData, scaleData, global_scale, shift,
                                              stream);
     }
-    else if (baseData.numChannels() != 1)
+    else if (baseAccess->numChannels() != 1)
     {
         using base_type  = work_type;
         using scale_type = float;
         normalizeWrap<base_type, scale_type>(src_ptr, dst_ptr, input_shape, baseData, scaleData, global_scale, shift,
                                              stream);
     }
-    else if (scaleData.numChannels() != 1)
+    else if (scaleAccess->numChannels() != 1)
     {
         using base_type  = float;
         using scale_type = work_type;
@@ -167,34 +199,41 @@ void normalize(const nvcv::TensorDataAccessPitchImagePlanar &inData,
 }
 
 template<typename input_type>
-void normalizeInvStdDev(const nvcv::TensorDataAccessPitchImagePlanar &inData,
-                        const nvcv::TensorDataAccessPitchImagePlanar &baseData,
-                        const nvcv::TensorDataAccessPitchImagePlanar &scaleData,
-                        const nvcv::TensorDataAccessPitchImagePlanar &outData, float global_scale, float shift,
-                        float epsilon, cudaStream_t stream)
+void normalizeInvStdDev(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &baseData,
+                        const nvcv::ITensorDataPitchDevice &scaleData, const nvcv::ITensorDataPitchDevice &outData,
+                        float global_scale, float shift, float epsilon, cudaStream_t stream)
 {
-    Ptr2dNHWC<input_type> src_ptr(inData);
-    Ptr2dNHWC<input_type> dst_ptr(outData);
+    nvcv::cuda::Tensor3DWrap<input_type> src_ptr(inData);
+    nvcv::cuda::Tensor3DWrap<input_type> dst_ptr(outData);
 
-    DataShape input_shape = GetLegacyDataShape(inData.infoShape());
+    auto inAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(inData);
+    NVCV_ASSERT(inAccess);
+
+    auto baseAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(baseData);
+    NVCV_ASSERT(baseAccess);
+
+    auto scaleAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(scaleData);
+    NVCV_ASSERT(scaleAccess);
+
+    DataShape input_shape = GetLegacyDataShape(inAccess->infoShape());
 
     using work_type = nv::cv::cuda::ConvertBaseTypeTo<float, input_type>;
 
-    if (baseData.numChannels() != 1 && scaleData.numChannels() != 1)
+    if (baseAccess->numChannels() != 1 && scaleAccess->numChannels() != 1)
     {
         using base_type  = work_type;
         using scale_type = work_type;
         normalizeInvStdDevWrap<base_type, scale_type>(src_ptr, dst_ptr, input_shape, baseData, scaleData, global_scale,
                                                       shift, epsilon, stream);
     }
-    else if (baseData.numChannels() != 1)
+    else if (baseAccess->numChannels() != 1)
     {
         using base_type  = work_type;
         using scale_type = float;
         normalizeInvStdDevWrap<base_type, scale_type>(src_ptr, dst_ptr, input_shape, baseData, scaleData, global_scale,
                                                       shift, epsilon, stream);
     }
-    else if (scaleData.numChannels() != 1)
+    else if (scaleAccess->numChannels() != 1)
     {
         using base_type  = float;
         using scale_type = work_type;
@@ -289,15 +328,13 @@ ErrorCode Normalize::infer(const nv::cv::ITensorDataPitchDevice &inData, const n
     checkParamShape(input_shape, base_param_shape);
     checkParamShape(input_shape, scale_param_shape);
 
-    typedef void (*normalize_t)(
-        const TensorDataAccessPitchImagePlanar &inData, const TensorDataAccessPitchImagePlanar &baseData,
-        const TensorDataAccessPitchImagePlanar &scaleData, const TensorDataAccessPitchImagePlanar &outData,
-        float global_scale, float shift, cudaStream_t stream);
+    typedef void (*normalize_t)(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &baseData,
+                                const ITensorDataPitchDevice &scaleData, const ITensorDataPitchDevice &outData,
+                                float global_scale, float shift, cudaStream_t stream);
 
-    typedef void (*normalizeInvStdDev_t)(
-        const TensorDataAccessPitchImagePlanar &inData, const TensorDataAccessPitchImagePlanar &baseData,
-        const TensorDataAccessPitchImagePlanar &scaleData, const TensorDataAccessPitchImagePlanar &outData,
-        float global_scale, float shift, float epsilon, cudaStream_t stream);
+    typedef void (*normalizeInvStdDev_t)(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &baseData,
+                                         const ITensorDataPitchDevice &scaleData, const ITensorDataPitchDevice &outData,
+                                         float global_scale, float shift, float epsilon, cudaStream_t stream);
 
     static const normalize_t funcs_normalize[6][4] = {
         { normalize<uchar>,  0 /*normalize<uchar2>*/,  normalize<uchar3>,  normalize<uchar4>},
@@ -324,13 +361,12 @@ ErrorCode Normalize::infer(const nv::cv::ITensorDataPitchDevice &inData, const n
 
     if (flags & NVCV_OP_NORMALIZE_SCALE_IS_STDDEV)
     {
-        funcs_normalize_stddev[data_type][channels - 1](*inAccess, *baseAccess, *scaleAccess, *outAccess, global_scale,
-                                                        shift, epsilon, stream);
+        funcs_normalize_stddev[data_type][channels - 1](inData, baseData, scaleData, outData, global_scale, shift,
+                                                        epsilon, stream);
     }
     else
     {
-        funcs_normalize[data_type][channels - 1](*inAccess, *baseAccess, *scaleAccess, *outAccess, global_scale, shift,
-                                                 stream);
+        funcs_normalize[data_type][channels - 1](inData, baseData, scaleData, outData, global_scale, shift, stream);
     }
 
     return SUCCESS;
