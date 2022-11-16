@@ -17,13 +17,6 @@ endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-set(PROJECT_VERSION "${PROJECT_VERSION}${PROJECT_VERSION_SUFFIX}")
-set(cvcuda_VERSION_SUFFIX "${PROJECT_VERSION_SUFFIX}")
-set(cvcuda_VERSION "${PROJECT_VERSION}")
-
-set(cvcuda_API_VERSION "${cvcuda_VERSION_MAJOR}.${cvcuda_VERSION_MINOR}")
-math(EXPR cvcuda_API_CODE "${cvcuda_VERSION_MAJOR}*100 + ${cvcuda_VERSION_MINOR}")
-
 include(GNUInstallDirs)
 
 set(CMAKE_INSTALL_LIBDIR "lib/${CMAKE_LIBRARY_ARCHITECTURE}")
@@ -47,3 +40,42 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/.git AND EXISTS ${CMAKE_SOURCE_DIR}/.gitmodules)
         message(FATAL_ERROR "git submodules not initialized. Did you forget to run 'git submodule update --init'?")
     endif()
 endif()
+
+if(UNIX)
+    set(CVCUDA_SYSTEM_NAME "x86_64-linux")
+else()
+    message(FATAL_ERROR "Architecture not supported")
+endif()
+
+set(CVCUDA_BUILD_SUFFIX "cuda${CUDA_VERSION_MAJOR}-${CVCUDA_SYSTEM_NAME}")
+
+function(setup_dso target version)
+    string(REGEX MATCHALL "[0-9]+" version_list "${version}")
+    list(GET version_list 0 VERSION_MAJOR)
+    list(GET version_list 1 VERSION_MINOR)
+    list(GET version_list 2 VERSION_PATCH)
+
+    set_target_properties(${target} PROPERTIES
+        VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}"
+        SOVERSION "${VERSION_MAJOR}"
+    )
+
+    # Reduce executable size ==========================
+
+    # Configure the library linker to remove unused code
+    target_link_options(${target} PRIVATE -Wl,--exclude-libs,ALL -Wl,--no-undefined -Wl,--gc-sections -Wl,--as-needed)
+    # Put each function and it's data into separate linker sections
+    target_compile_options(${target} PRIVATE -ffunction-sections -fdata-sections)
+
+    # Link with static C/C++ libs ==========================
+    target_link_libraries(${target} PRIVATE
+        -static-libstdc++
+        -static-libgcc
+    )
+
+    #   Configure symbol visibility ---------------------------------------------
+    set_target_properties(${target} PROPERTIES VISIBILITY_INLINES_HIDDEN on
+                                               C_VISIBILITY_PRESET hidden
+                                               CXX_VISIBILITY_PRESET hidden
+                                               CUDA_VISIBILITY_PRESET hidden)
+endfunction()

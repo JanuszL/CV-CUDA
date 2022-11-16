@@ -20,8 +20,8 @@
 #ifndef NVCV_DATALAYOUT_H
 #define NVCV_DATALAYOUT_H
 
+#include "Export.h"
 #include "Status.h"
-#include "detail/Export.h"
 #include "detail/FormatUtils.h"
 
 #ifdef __cplusplus

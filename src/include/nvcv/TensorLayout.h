@@ -14,9 +14,9 @@
 #ifndef NVCV_TENSORLAYOUT_H
 #define NVCV_TENSORLAYOUT_H
 
+#include "Export.h"
 #include "Status.h"
 #include "detail/CompilerUtils.h"
-#include "detail/Export.h"
 
 #include <stdint.h>
 #include <string.h>

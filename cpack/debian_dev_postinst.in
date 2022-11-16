@@ -12,8 +12,8 @@
 
 case "$1" in
     configure)
-        update-alternatives --install /usr/include/nvcv nvcv-dev @CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@/nvcv @cvcuda_API_CODE@\
-                            --slave @CVCUDA_USR_LIB_DIR@/@nvcv_LIB_LINKER_FILE_NAME@ @nvcv_LIB_LINKER_FILE_NAME@ @CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@/@nvcv_LIB_LINKER_FILE_NAME@
+        update-alternatives --install /usr/include/nvcv nvcv-dev @CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@/nvcv @NVCV_VERSION_API_CODE@ \
+                            --slave @CVCUDA_USR_LIB_DIR@/@NVCV_LIB_LINKER_FILE_NAME@ @NVCV_LIB_LINKER_FILE_NAME@ @CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@/@NVCV_LIB_LINKER_FILE_NAME@
 
         cmakepath=/usr/lib/@CMAKE_LIBRARY_ARCHITECTURE@/cmake/
         if [ ! -d $cmakepath ]; then
@@ -21,8 +21,8 @@ case "$1" in
             touch $cmakepath/.cvcuda_created
         fi
 
-        rm -rf $cmakepath/@nvcv_PACKAGE_NAME@
-        ln -sf @CMAKE_INSTALL_PREFIX@/lib/@CMAKE_LIBRARY_ARCHITECTURE@/cmake/nvcv $cmakepath/@nvcv_PACKAGE_NAME@
+        rm -rf $cmakepath/@NVCV_PACKAGE_NAME@
+        ln -sf @CMAKE_INSTALL_PREFIX@/lib/@CMAKE_LIBRARY_ARCHITECTURE@/cmake/nvcv $cmakepath/@NVCV_PACKAGE_NAME@
 
         ;;
 esac

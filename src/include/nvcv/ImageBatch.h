@@ -20,6 +20,7 @@
 #ifndef NVCV_IMAGEBATCH_H
 #define NVCV_IMAGEBATCH_H
 
+#include "Export.h"
 #include "Image.h"
 #include "ImageBatchData.h"
 #include "ImageFormat.h"
@@ -27,7 +28,6 @@
 #include "alloc/Allocator.h"
 #include "alloc/Requirements.h"
 #include "detail/CudaFwd.h"
-#include "detail/Export.h"
 
 #ifdef __cplusplus
 extern "C"

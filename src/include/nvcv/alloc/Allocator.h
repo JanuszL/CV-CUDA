@@ -47,8 +47,8 @@
 #ifndef NVCV_ALLOCATOR_H
 #define NVCV_ALLOCATOR_H
 
+#include "../Export.h"
 #include "../Status.h"
-#include "../detail/Export.h"
 
 #include <stdalign.h>
 

@@ -10,11 +10,30 @@
  * without an express license agreement from NVIDIA CORPORATION or
  * its affiliates is strictly prohibited.
  */
+/**
+* @file Export.h
+*
+* @brief Export : Defines macros used for exporting symbols from DSO
+*
+*/
 
-#ifndef NVCV_DETAIL_VERSIONUTILS_H
-#define NVCV_DETAIL_VERSIONUTILS_H
+#ifndef NVCV_EXPORT_H
+#define NVCV_EXPORT_H
 
-/** For internal use only. */
-#cmakedefine NVCV_COMMIT "@NVCV_COMMIT@"
+#if defined _WIN32 || defined __CYGWIN__
+#    ifdef NVCV_EXPORTING
+#        define NVCV_PUBLIC __declspec(dllexport)
+#    elif defined(NVCV_STATIC)
+#        define NVCV_PUBLIC
+#    else
+#        define NVCV_PUBLIC __declspec(dllimport)
+#    endif
+#else
+#    if __GNUC__ >= 4
+#        define NVCV_PUBLIC __attribute__((visibility("default")))
+#    else
+#        define NVCV_PUBLIC
+#    endif
+#endif
 
-#endif // NVCV_DETAIL_VERSIONUTILS_H
+#endif /* NVCV_EXPORT_H */

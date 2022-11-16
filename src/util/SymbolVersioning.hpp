@@ -15,8 +15,6 @@
 #ifndef NVCV_UTIL_SYMBOLVERSIONING_HPP
 #define NVCV_UTIL_SYMBOLVERSIONING_HPP
 
-#include <nvcv/detail/Export.h>
-
 /* Tools to help defining versioned APIs.
  *
 At first, all public functions are defined like this:
@@ -66,8 +64,10 @@ assert(foo11 == foo11_tmp);
 
 #define NVCV_PROJ_FUNCTION_API(FUNC, VER_MAJOR, VER_MINOR) FUNC##_v##VER_MAJOR##_##VER_MINOR
 
-#define NVCV_PROJ_DEFINE_API_HELPER(PROJ, VER_MAJOR, VER_MINOR, VERTYPE, RETTYPE, FUNC, ARGS)                     \
-    extern "C" __attribute__((__symver__(#FUNC VERTYPE #PROJ "_" #VER_MAJOR "." #VER_MINOR))) NVCV_PUBLIC RETTYPE \
+#define NVCV_PROJ_DEFINE_API_HELPER(PROJ, VER_MAJOR, VER_MINOR, VERTYPE, RETTYPE, FUNC, ARGS)                          \
+    extern "C" __attribute__((visibility("default"))) RETTYPE NVCV_PROJ_FUNCTION_API(FUNC, VER_MAJOR, VER_MINOR) ARGS; \
+    extern "C" __attribute__((visibility("default")))                                                                  \
+    __attribute__((__symver__(#FUNC VERTYPE #PROJ "_" #VER_MAJOR "." #VER_MINOR))) RETTYPE                             \
         NVCV_PROJ_FUNCTION_API(FUNC, VER_MAJOR, VER_MINOR) ARGS
 
 #define NVCV_PROJ_DEFINE_API_OLD(PROJ, VER_MAJOR, VER_MINOR, RETTYPE, FUNC, ARGS) \

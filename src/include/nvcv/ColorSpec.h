@@ -20,8 +20,8 @@
 #ifndef NVCV_COLORSPEC_H
 #define NVCV_COLORSPEC_H
 
+#include "Export.h"
 #include "Status.h"
-#include "detail/Export.h"
 #include "detail/FormatUtils.h"
 
 #ifdef __cplusplus

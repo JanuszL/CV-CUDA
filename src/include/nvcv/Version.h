@@ -10,30 +10,36 @@
  * without an express license agreement from NVIDIA CORPORATION or
  * its affiliates is strictly prohibited.
  */
+
 /**
-* @file Export.h
-*
-* @brief Export : Defines all macros used
-*
-*/
+ * @file Version.h
+ *
+ * Functions and structures for handling NVCV library version.
+ */
 
-#ifndef NVCV_EXPORT_H
-#define NVCV_EXPORT_H
+#ifndef NVCV_VERSION_H
+#define NVCV_VERSION_H
 
-#if defined _WIN32 || defined __CYGWIN__
-#    ifdef NVCV_EXPORTING
-#        define NVCV_PUBLIC __declspec(dllexport)
-#    elif defined(NVCV_STATIC)
-#        define NVCV_PUBLIC
-#    else
-#        define NVCV_PUBLIC __declspec(dllimport)
-#    endif
-#else
-#    if __GNUC__ >= 4
-#        define NVCV_PUBLIC __attribute__((visibility("default")))
-#    else
-#        define NVCV_PUBLIC
-#    endif
+#include "Export.h"
+
+#include <nvcv/VersionDef.h>
+
+#ifdef __cplusplus
+extern "C"
+{
 #endif
 
-#endif /* NVCV_EXPORT_H */
+/** Retrieves the library's version number.
+ * The number is represented as a integer. It may differ from \ref NVCV_VERSION if
+ * header doesn't correspond to NVCV binary. This can be used by user's program
+ * to handle semantic differences between library versions.
+ */
+NVCV_PUBLIC uint32_t nvcvGetVersion(void);
+
+/** @} */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // NVCV_VERSION_H
