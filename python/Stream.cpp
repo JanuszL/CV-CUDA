@@ -17,11 +17,10 @@
 #include "Cache.hpp"
 #include "CheckError.hpp"
 #include "PyUtil.hpp"
+#include "StreamStack.hpp"
 #include "String.hpp"
 
 #include <pybind11/operators.h>
-
-#include <stack>
 
 namespace nv::cvpy {
 
@@ -261,25 +260,21 @@ void Stream::sync()
     CheckThrow(cudaStreamSynchronize(m_handle));
 }
 
-static std::stack<std::weak_ptr<Stream>> g_streamStack;
-static std::weak_ptr<Stream>             g_stream;
-
 Stream &Stream::Current()
 {
-    NVCV_ASSERT(!g_streamStack.empty());
-    auto defStream = g_streamStack.top().lock();
+    auto defStream = StreamStack::Instance().top();
     NVCV_ASSERT(defStream);
     return *defStream;
 }
 
 void Stream::activate()
 {
-    g_streamStack.push(this->shared_from_this());
+    StreamStack::Instance().push(*this);
 }
 
 void Stream::deactivate(py::object exc_type, py::object exc_value, py::object exc_tb)
 {
-    g_streamStack.pop();
+    StreamStack::Instance().pop();
 }
 
 void Stream::holdResources(std::vector<std::shared_ptr<const Resource>> usedResources)
@@ -331,10 +326,8 @@ void Stream::Export(py::module &m)
     // Create the global stream object. It'll be destroyed when
     // python module is deinitialized.
     auto globalStream = Stream::Create();
-    g_streamStack.push(globalStream);
-    g_stream = globalStream;
-
-    stream.attr("default") = g_stream.lock();
+    StreamStack::Instance().push(*globalStream);
+    stream.attr("default") = globalStream;
 
     // Order from most specific to less specific
     ExportExternalStream<TORCH>(m);
