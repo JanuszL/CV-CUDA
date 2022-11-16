@@ -25,7 +25,7 @@ namespace nv::cv::priv {
 
 void SetThreadError(std::exception_ptr e)
 {
-    TLS &tls = GetTLS();
+    CoreTLS &tls = GetCoreTLS();
 
     const int errorMessageLen = sizeof(tls.lastErrorMessage) - 1;
 
@@ -96,7 +96,7 @@ NVCVStatus GetLastThreadError(char *outMessage, int outMessageLen) noexcept
 
 NVCVStatus PeekAtLastThreadError(char *outMessage, int outMessageLen) noexcept
 {
-    TLS &tls = GetTLS();
+    CoreTLS &tls = GetCoreTLS();
 
     if (outMessage != nullptr && outMessageLen > 0)
     {

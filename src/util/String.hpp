@@ -13,8 +13,23 @@
 
 #include <string_view>
 
+#ifdef __GNUC__
+#    undef __DEPRECATED
+#endif
+#include <strstream>
+
 namespace nv::cv::util {
 
 void ReplaceAllInline(char *strBuffer, int bufferSize, std::string_view what, std::string_view replace) noexcept;
 
-}
+class BufferOStream : public std::ostream
+{
+public:
+    BufferOStream(char *buffer, int len);
+    ~BufferOStream();
+
+private:
+    std::strstreambuf m_buf;
+};
+
+} // namespace nv::cv::util

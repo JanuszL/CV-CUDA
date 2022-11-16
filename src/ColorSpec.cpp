@@ -12,20 +12,14 @@
  */
 
 #include <fmt/ColorSpec.hpp>
-#include <fmt/Printers.hpp>
 #include <nvcv/ColorSpec.h>
-#include <nvcv/ColorSpec.hpp>
 #include <private/core/Exception.hpp>
 #include <private/core/Status.hpp>
 #include <private/core/SymbolVersioning.hpp>
-#include <private/core/TLS.hpp>
+#include <private/fmt/TLS.hpp>
 #include <util/String.hpp>
 
 #include <cstring>
-#ifdef __GNUC__
-#    undef __DEPRECATED
-#endif
-#include <strstream>
 
 namespace priv = nv::cv::priv;
 namespace util = nv::cv::util;
@@ -267,20 +261,17 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvColorSpecSetChromaLoc,
 
 NVCV_DEFINE_API(0, 0, const char *, nvcvColorSpecGetName, (NVCVColorSpec cspec))
 {
-    priv::TLS &tls = priv::GetTLS();
+    priv::FormatTLS &tls = priv::GetFormatTLS();
 
     char         *buffer  = tls.bufColorSpecName;
     constexpr int bufSize = sizeof(tls.bufColorSpecName);
-
-    std::strstreambuf sbuf(buffer, bufSize, buffer);
-    std::ostream      ss(&sbuf);
 
     try
     {
         priv::ColorSpec pcspec{cspec};
 
         // Must insert EOS to make 'str' a correctly delimited string
-        ss << pcspec << '\0' << std::flush;
+        util::BufferOStream(buffer, bufSize) << pcspec;
 
         using namespace std::literals;
 
@@ -316,4 +307,49 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvColorModelNeedsColorspec, (NVCVColorModel 
 
             *outBool = priv::NeedsColorspec(cmodel) ? 1 : 0;
         });
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvColorModelGetName, (NVCVColorModel cmodel))
+{
+    return priv::GetName(cmodel);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvColorSpaceGetName, (NVCVColorSpace cspace))
+{
+    return priv::GetName(cspace);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvWhitePointGetName, (NVCVWhitePoint wpoint))
+{
+    return priv::GetName(wpoint);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvYCbCrEncodingGetName, (NVCVYCbCrEncoding enc))
+{
+    return priv::GetName(enc);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvColorTransferFunctionGetName, (NVCVColorTransferFunction xfer))
+{
+    return priv::GetName(xfer);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvColorRangeGetName, (NVCVColorRange crange))
+{
+    return priv::GetName(crange);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvChromaLocationGetName, (NVCVChromaLocation loc))
+{
+    return priv::GetName(loc);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvRawPatternGetName, (NVCVRawPattern raw))
+{
+    return priv::GetName(raw);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvChromaSubsamplingGetName, (NVCVChromaSubsampling css))
+{
+    return priv::GetName(css);
 }

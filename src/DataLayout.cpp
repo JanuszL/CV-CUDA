@@ -13,7 +13,6 @@
 
 #include <fmt/DataLayout.hpp>
 #include <nvcv/DataLayout.h>
-#include <nvcv/DataLayout.hpp>
 #include <nvcv/Status.h>
 #include <private/core/Exception.hpp>
 #include <private/core/Status.hpp>
@@ -156,4 +155,34 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvPackingGetBitsPerPixel, (NVCVPacking packi
 
             *outBPP = priv::GetBitsPerPixel(packing);
         });
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvPackingGetName, (NVCVPacking packing))
+{
+    return priv::GetName(packing);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvDataTypeGetName, (NVCVDataType dtype))
+{
+    return priv::GetName(dtype);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvMemLayoutGetName, (NVCVMemLayout memLayout))
+{
+    return priv::GetName(memLayout);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvChannelGetName, (NVCVChannel channel))
+{
+    return priv::GetName(channel);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvSwizzleGetName, (NVCVSwizzle swizzle))
+{
+    return priv::GetName(swizzle);
+}
+
+NVCV_DEFINE_API(0, 2, const char *, nvcvByteOrderGetName, (NVCVByteOrder byteOrder))
+{
+    return priv::GetName(byteOrder);
 }

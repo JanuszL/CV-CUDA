@@ -12,21 +12,15 @@
  */
 
 #include <fmt/PixelType.hpp>
-#include <fmt/Printers.hpp>
 #include <nvcv/PixelType.h>
-#include <nvcv/PixelType.hpp>
 #include <private/core/Exception.hpp>
 #include <private/core/Status.hpp>
 #include <private/core/SymbolVersioning.hpp>
-#include <private/core/TLS.hpp>
+#include <private/fmt/TLS.hpp>
 #include <util/Assert.h>
 #include <util/String.hpp>
 
 #include <cstring>
-#ifdef __GNUC__
-#    undef __DEPRECATED
-#endif
-#include <strstream>
 
 namespace priv = nv::cv::priv;
 namespace util = nv::cv::util;
@@ -142,20 +136,14 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvPixelTypeGetChannelType,
 
 NVCV_DEFINE_API(0, 0, const char *, nvcvPixelTypeGetName, (NVCVPixelType type))
 {
-    priv::TLS &tls = priv::GetTLS(); // noexcept
+    priv::FormatTLS &tls = priv::GetFormatTLS(); // noexcept
 
     char         *buffer  = tls.bufPixelTypeName;
     constexpr int bufSize = sizeof(tls.bufPixelTypeName);
 
     try
     {
-        std::strstreambuf sbuf(buffer, bufSize, buffer);
-        std::ostream      ss(&sbuf);
-
-        priv::PixelType ptype{type};
-
-        // Must insert EOS to make 'str' a correctly delimited string
-        ss << ptype << '\0' << std::flush;
+        util::BufferOStream(buffer, bufSize) << priv::PixelType{type};
 
         using namespace std::literals;
 

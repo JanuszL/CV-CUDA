@@ -15,7 +15,6 @@
 
 #include "DataLayout.hpp"
 #include "ImageFormat.hpp"
-#include "Printers.hpp"
 
 #include <core/Exception.hpp>
 #include <util/Assert.h>

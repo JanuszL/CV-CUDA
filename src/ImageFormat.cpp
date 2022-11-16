@@ -11,12 +11,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <core/TLS.hpp>
 #include <fmt/ImageFormat.hpp>
 #include <fmt/PixelType.hpp>
-#include <fmt/Printers.hpp>
+#include <fmt/TLS.hpp>
 #include <nvcv/ImageFormat.h>
-#include <nvcv/ImageFormat.hpp>
 #include <private/core/Exception.hpp>
 #include <private/core/Status.hpp>
 #include <private/core/SymbolVersioning.hpp>
@@ -24,11 +22,6 @@
 #include <util/String.hpp>
 
 #include <cstring>
-
-#ifdef __GNUC__
-#    undef __DEPRECATED
-#endif
-#include <strstream>
 
 namespace priv = nv::cv::priv;
 namespace util = nv::cv::util;
@@ -572,18 +565,14 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageFormatGetPlaneSize,
 
 NVCV_DEFINE_API(0, 0, const char *, nvcvImageFormatGetName, (NVCVImageFormat fmt))
 {
-    priv::TLS &tls = priv::GetTLS(); // noexcept
+    priv::FormatTLS &tls = priv::GetFormatTLS(); // noexcept
 
     char         *buffer  = tls.bufImageFormatName;
     constexpr int bufSize = sizeof(tls.bufImageFormatName);
 
     try
     {
-        std::strstreambuf sbuf(buffer, bufSize, buffer);
-        std::ostream      ss(&sbuf);
-
-        // Must insert EOS to make 'str' a correctly delimited string
-        ss << priv::ImageFormat{fmt} << '\0' << std::flush;
+        util::BufferOStream(buffer, bufSize) << priv::ImageFormat{fmt};
 
         using namespace std::literals;
 

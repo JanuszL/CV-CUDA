@@ -12,7 +12,6 @@
  */
 
 #include <nvcv/Status.h>
-#include <nvcv/Status.hpp>
 #include <private/core/Exception.hpp>
 #include <private/core/Status.hpp>
 #include <private/core/SymbolVersioning.hpp>

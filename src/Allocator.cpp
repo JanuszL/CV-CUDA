@@ -12,7 +12,6 @@
  */
 
 #include <nvcv/alloc/Allocator.h>
-#include <nvcv/alloc/CustomAllocator.hpp>
 #include <private/core/CustomAllocator.hpp>
 #include <private/core/DefaultAllocator.hpp>
 #include <private/core/Exception.hpp>

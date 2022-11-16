@@ -646,3 +646,40 @@ TEST(PackingTests, valid_values)
         }
     }
 }
+
+TEST(PackingTests, get_name)
+{
+    EXPECT_STREQ("NVCV_PACKING_X16", nvcvPackingGetName(NVCV_PACKING_X16));
+    EXPECT_STREQ("NVCVPacking(2147483647)", nvcvPackingGetName(NVCV_PACKING_LIMIT32));
+}
+
+TEST(ByteOrderTests, get_name)
+{
+    EXPECT_STREQ("LSB", nvcvByteOrderGetName(NVCV_ORDER_LSB));
+    EXPECT_STREQ("NVCVByteOrder(-1)", nvcvByteOrderGetName(static_cast<NVCVByteOrder>(-1)));
+}
+
+TEST(SwizzleTests, get_name)
+{
+    EXPECT_STREQ("XYZ1", nvcvSwizzleGetName(NVCV_SWIZZLE_XYZ1));
+    EXPECT_STREQ("110X",
+                 nvcvSwizzleGetName(NVCV_MAKE_SWIZZLE(NVCV_CHANNEL_1, NVCV_CHANNEL_1, NVCV_CHANNEL_0, NVCV_CHANNEL_X)));
+}
+
+TEST(SwizzleChannelTests, get_name)
+{
+    EXPECT_STREQ("Y", nvcvChannelGetName(NVCV_CHANNEL_Y));
+    EXPECT_STREQ("NVCVChannel(7)", nvcvChannelGetName(static_cast<NVCVChannel>(7)));
+}
+
+TEST(MemLayoutTests, get_name)
+{
+    EXPECT_STREQ("NVCV_MEM_LAYOUT_BLOCK2_LINEAR", nvcvMemLayoutGetName(NVCV_MEM_LAYOUT_BLOCK2_LINEAR));
+    EXPECT_STREQ("NVCVMemLayout(-1)", nvcvMemLayoutGetName(static_cast<NVCVMemLayout>(-1)));
+}
+
+TEST(DataTypeTests, get_name)
+{
+    EXPECT_STREQ("NVCV_DATA_TYPE_FLOAT", nvcvDataTypeGetName(NVCV_DATA_TYPE_FLOAT));
+    EXPECT_STREQ("NVCVDataType(-1)", nvcvDataTypeGetName(static_cast<NVCVDataType>(-1)));
+}

@@ -11,23 +11,17 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_PRIV_TLS_HPP
-#define NVCV_PRIV_TLS_HPP
-
-#include <nvcv/Status.h>
-
-#include <exception>
+#include "TLS.hpp"
 
 namespace nv::cv::priv {
 
-struct CoreTLS
-{
-    NVCVStatus lastErrorStatus;
-    char       lastErrorMessage[NVCV_MAX_STATUS_MESSAGE_LENGTH];
-};
+namespace {
+thread_local FormatTLS s_TLS;
+}
 
-CoreTLS &GetCoreTLS() noexcept;
+FormatTLS &GetFormatTLS() noexcept
+{
+    return s_TLS;
+}
 
 } // namespace nv::cv::priv
-
-#endif // NVCV_PRIV_TLS_HPP

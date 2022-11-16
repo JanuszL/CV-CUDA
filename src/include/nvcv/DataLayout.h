@@ -537,6 +537,62 @@ NVCV_PUBLIC NVCVStatus nvcvPackingGetBitsPerComponent(NVCVPacking packing, int32
  */
 NVCV_PUBLIC NVCVStatus nvcvPackingGetBitsPerPixel(NVCVPacking packing, int32_t *outBPP);
 
+/** Returns a string representation of a packing.
+ *
+ * @param[in] packing Packing whose name is to be returned.
+ *
+ * @returns The string representation of the packing.
+ *          Returned pointer must not be freed.
+ */
+NVCV_PUBLIC const char *nvcvPackingGetName(NVCVPacking fmt);
+
+/** Returns a string representation of a data type.
+ *
+ * @param[in] dtype Data type whose name is to be returned.
+ *
+ * @returns The string representation of the data type.
+ *          Returned pointer must not be freed.
+ */
+NVCV_PUBLIC const char *nvcvDataTypeGetName(NVCVDataType dtype);
+
+/** Returns a string representation of a memory layout.
+ *
+ * @param[in] memlayout Memory layout whose name is to be returned.
+ *
+ * @returns The string representation of the memory layout.
+ *          Returned pointer must not be freed.
+ */
+NVCV_PUBLIC const char *nvcvMemLayoutGetName(NVCVMemLayout memlayout);
+
+/** Returns a string representation of a channel.
+ *
+ * @param[in] channel Channel whose name is to be returned.
+ *
+ * @returns The string representation of the channel.
+ *          Returned pointer must not be freed.
+ */
+NVCV_PUBLIC const char *nvcvChannelGetName(NVCVChannel channel);
+
+/** Returns a string representation of a swizzle.
+ *
+ * @param[in] swizzle Swizzle whose name is to be returned.
+ *
+ * @returns The string representation of the swizzle.
+ *          Returned string is valid until next call of this function from the same calling thread.
+ *          Returned pointer must not be freed.
+ */
+NVCV_PUBLIC const char *nvcvSwizzleGetName(NVCVSwizzle swizzle);
+
+/** Returns a string representation of a byte order.
+ *
+ * @param[in] byteOrder Byte order whose name is to be returned.
+ *
+ * @returns The string representation of the byte order.
+ *          Returned string is valid until next call of this function from the same calling thread.
+ *          Returned pointer must not be freed.
+ */
+NVCV_PUBLIC const char *nvcvByteOrderGetName(NVCVByteOrder byteOrder);
+
 /**@}*/
 
 #ifdef __cplusplus

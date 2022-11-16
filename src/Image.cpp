@@ -12,7 +12,6 @@
  */
 
 #include <nvcv/Image.h>
-#include <nvcv/Image.hpp>
 #include <private/core/Exception.hpp>
 #include <private/core/IAllocator.hpp>
 #include <private/core/Image.hpp>
