@@ -46,8 +46,9 @@ public:
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &base, const cv::ITensor &scale,
                     cv::ITensor &out, float global_scale, float shift, float epsilon, uint32_t flags) const;
 
-    void operator()(cudaStream_t stream, const cv::IImageBatch &in, const cv::ITensor &base, const cv::ITensor &scale,
-                    cv::IImageBatch &out, float global_scale, float shift, float epsilon, uint32_t flags) const;
+    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::ITensor &base,
+                    const cv::ITensor &scale, cv::IImageBatchVarShape &out, float global_scale, float shift,
+                    float epsilon, uint32_t flags) const;
 
     cv::priv::Version doGetVersion() const override;
 

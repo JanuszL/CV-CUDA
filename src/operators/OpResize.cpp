@@ -56,7 +56,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopResizeVarShapeSubmit,
     return priv::ProtectCall(
         [&]
         {
-            nv::cv::ImageBatchWrapHandle input(in), output(out);
+            nv::cv::ImageBatchVarShapeWrapHandle input(in), output(out);
             priv::ToDynamicRef<priv_op::Resize>(handle)(stream, input, output, interpolation);
         });
 }

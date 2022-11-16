@@ -42,8 +42,8 @@ class PadAndStack final : public IOperator
 public:
     explicit PadAndStack();
 
-    void operator()(cudaStream_t stream, cv::IImageBatch &in, cv::ITensor &out, cv::ITensor &top, cv::ITensor &left,
-                    const NVCVBorderType borderMode, const float borderValue) const;
+    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::ITensor &out, cv::ITensor &top,
+                    cv::ITensor &left, const NVCVBorderType borderMode, const float borderValue) const;
 
     cv::priv::Version doGetVersion() const override;
 

@@ -46,7 +46,7 @@ public:
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
                     const NVCVInterpolationType interpolation) const;
 
-    void operator()(cudaStream_t stream, const cv::IImageBatch &in, const cv::IImageBatch &out,
+    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
                     const NVCVInterpolationType interpolation) const;
 
     cv::priv::Version doGetVersion() const override;

@@ -50,10 +50,35 @@ private:
     ImageFormat doGetFormat() const override;
 };
 
-// ImageBatch varshape definition -------------------------------------
-class ImageBatchVarShape
-    : public IImageBatchVarShape
+// ImageBatchVarShapeWrapHandle definition -------------------------------------
+// Refers to an external varshape NVCVImageBatch handle. It doesn't own it.
+class ImageBatchVarShapeWrapHandle
+    : public virtual IImageBatchVarShape
     , private ImageBatchWrapHandle
+{
+public:
+    ImageBatchVarShapeWrapHandle(const ImageBatchVarShapeWrapHandle &that);
+
+    explicit ImageBatchVarShapeWrapHandle(NVCVImageBatchHandle handle);
+
+    const IImageBatchVarShapeData *exportData(CUstream stream) const;
+
+protected:
+    using ImageBatchWrapHandle::doGetAlloc;
+
+private:
+    void doPushBack(std::function<NVCVImageHandle()> &&cb) override;
+    void doPushBack(const IImage &img) override;
+    void doPopBack(int32_t imgCount) override;
+    void doClear() override;
+
+    NVCVImageHandle doGetImage(int32_t idx) const override;
+};
+
+// ImageBatch varshape definition -------------------------------------
+class ImageBatchVarShape final
+    : public virtual IImageBatchVarShape
+    , private ImageBatchVarShapeWrapHandle
 {
 public:
     using Requirements = NVCVImageBatchVarShapeRequirements;
@@ -65,18 +90,13 @@ public:
     explicit ImageBatchVarShape(int32_t capacity, ImageFormat fmt, IAllocator *alloc = nullptr);
     ~ImageBatchVarShape();
 
+    using IImageBatch::exportData;
+
 private:
     NVCVImageBatchStorage m_storage;
     IAllocator           *m_alloc;
 
     IAllocator &doGetAlloc() const override;
-
-    void doPushBack(std::function<NVCVImageHandle()> &&cb) override;
-    void doPushBack(const IImage &img) override;
-    void doPopBack(int32_t imgCount) override;
-    void doClear() override;
-
-    NVCVImageHandle doGetImage(int32_t idx) const override;
 };
 
 // ImageBatchWrapHandle implementation -------------------------------------
@@ -145,6 +165,65 @@ inline const IImageBatchData *ImageBatchWrapHandle::doExportData(CUstream stream
     return &*m_data;
 }
 
+// ImageBatchVarShapeWrapHandle implementation -------------------------------------
+
+inline ImageBatchVarShapeWrapHandle::ImageBatchVarShapeWrapHandle(const ImageBatchVarShapeWrapHandle &that)
+    : ImageBatchWrapHandle(that.handle())
+{
+}
+
+inline ImageBatchVarShapeWrapHandle::ImageBatchVarShapeWrapHandle(NVCVImageBatchHandle handle)
+    : ImageBatchWrapHandle(handle)
+{
+    NVCVTypeImageBatch type;
+    detail::CheckThrow(nvcvImageBatchGetType(handle, &type));
+    if (type != NVCV_TYPE_IMAGEBATCH_VARSHAPE)
+    {
+        throw Exception(Status::ERROR_INVALID_ARGUMENT, "Image batch handle doesn't correspond to a varshape object");
+    }
+}
+
+inline const IImageBatchVarShapeData *ImageBatchVarShapeWrapHandle::exportData(CUstream stream) const
+{
+    return static_cast<const IImageBatchVarShapeData *>(ImageBatchVarShapeWrapHandle::doExportData(stream));
+}
+
+inline void ImageBatchVarShapeWrapHandle::doPushBack(std::function<NVCVImageHandle()> &&cb)
+{
+    static auto cbpriv = [](void *ctx) -> NVCVImageHandle
+    {
+        auto *cb = reinterpret_cast<std::function<NVCVImageHandle()> *>(ctx);
+        assert(cb != nullptr);
+
+        return (*cb)();
+    };
+
+    detail::CheckThrow(nvcvImageBatchVarShapePushImagesCallback(ImageBatchWrapHandle::doGetHandle(), cbpriv, &cb));
+}
+
+inline void ImageBatchVarShapeWrapHandle::doPushBack(const IImage &img)
+{
+    NVCVImageHandle himg = img.handle();
+    detail::CheckThrow(nvcvImageBatchVarShapePushImages(ImageBatchWrapHandle::doGetHandle(), &himg, 1));
+}
+
+inline void ImageBatchVarShapeWrapHandle::doPopBack(int32_t imgCount)
+{
+    detail::CheckThrow(nvcvImageBatchVarShapePopImages(ImageBatchWrapHandle::doGetHandle(), imgCount));
+}
+
+inline void ImageBatchVarShapeWrapHandle::doClear()
+{
+    detail::CheckThrow(nvcvImageBatchVarShapeClear(ImageBatchWrapHandle::doGetHandle()));
+}
+
+inline NVCVImageHandle ImageBatchVarShapeWrapHandle::doGetImage(int32_t idx) const
+{
+    NVCVImageHandle himg;
+    detail::CheckThrow(nvcvImageBatchVarShapeGetImages(ImageBatchWrapHandle::doGetHandle(), idx, &himg, 1));
+    return himg;
+}
+
 // ImageBatchVarShape implementation -------------------------------------
 
 inline auto ImageBatchVarShape::CalcRequirements(int32_t capacity, ImageFormat fmt) -> Requirements
@@ -155,7 +234,7 @@ inline auto ImageBatchVarShape::CalcRequirements(int32_t capacity, ImageFormat f
 }
 
 inline ImageBatchVarShape::ImageBatchVarShape(const Requirements &reqs, IAllocator *alloc)
-    : ImageBatchWrapHandle(
+    : ImageBatchVarShapeWrapHandle(
         [&]
         {
             NVCVImageBatchHandle handle;
@@ -178,7 +257,7 @@ inline ImageBatchVarShape::~ImageBatchVarShape()
     // destroyed, which isn't advisable. But since we know its destructor won't
     // touch the handle, it's ok, or else we'd have to use some sort of
     // base-from-member idiom to get the destruction order right.
-    nvcvImageBatchDestroy(ImageBatchWrapHandle::doGetHandle());
+    nvcvImageBatchDestroy(this->handle());
 }
 
 inline IAllocator &ImageBatchVarShape::doGetAlloc() const
@@ -189,44 +268,8 @@ inline IAllocator &ImageBatchVarShape::doGetAlloc() const
     }
     else
     {
-        return ImageBatchWrapHandle::doGetAlloc();
+        return ImageBatchVarShapeWrapHandle::doGetAlloc();
     }
-}
-
-inline void ImageBatchVarShape::doPushBack(std::function<NVCVImageHandle()> &&cb)
-{
-    static auto cbpriv = [](void *ctx) -> NVCVImageHandle
-    {
-        auto *cb = reinterpret_cast<std::function<NVCVImageHandle()> *>(ctx);
-        assert(cb != nullptr);
-
-        return (*cb)();
-    };
-
-    detail::CheckThrow(nvcvImageBatchVarShapePushImagesCallback(ImageBatchWrapHandle::doGetHandle(), cbpriv, &cb));
-}
-
-inline void ImageBatchVarShape::doPushBack(const IImage &img)
-{
-    NVCVImageHandle himg = img.handle();
-    detail::CheckThrow(nvcvImageBatchVarShapePushImages(ImageBatchWrapHandle::doGetHandle(), &himg, 1));
-}
-
-inline void ImageBatchVarShape::doPopBack(int32_t imgCount)
-{
-    detail::CheckThrow(nvcvImageBatchVarShapePopImages(ImageBatchWrapHandle::doGetHandle(), imgCount));
-}
-
-inline void ImageBatchVarShape::doClear()
-{
-    detail::CheckThrow(nvcvImageBatchVarShapeClear(ImageBatchWrapHandle::doGetHandle()));
-}
-
-inline NVCVImageHandle ImageBatchVarShape::doGetImage(int32_t idx) const
-{
-    NVCVImageHandle himg;
-    detail::CheckThrow(nvcvImageBatchVarShapeGetImages(ImageBatchWrapHandle::doGetHandle(), idx, &himg, 1));
-    return himg;
 }
 
 }} // namespace nv::cv
