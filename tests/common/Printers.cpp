@@ -14,14 +14,8 @@
 #include "Printers.hpp"
 
 #include <util/CheckError.hpp>
-#include <util/Status.hpp>
 
 #include <iostream>
-
-std::ostream &operator<<(std::ostream &out, NVCVStatus status)
-{
-    return out << nv::cv::util::ToString(status);
-}
 
 std::ostream &operator<<(std::ostream &out, cudaError_t err)
 {

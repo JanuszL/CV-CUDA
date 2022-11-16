@@ -13,8 +13,7 @@
 
 #include "OpResize.hpp"
 
-#include "Exception.hpp"
-
+#include <nvcv/Exception.hpp>
 #include <private/legacy/CvCudaLegacy.h>
 #include <private/legacy/CvCudaLegacyHelpers.hpp>
 
@@ -36,13 +35,13 @@ void Resize::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::IT
     auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
     if (inData == nullptr)
     {
-        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be device-acessible, pitch-linear tensor");
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be device-acessible, pitch-linear tensor");
     }
 
     auto *outData = dynamic_cast<const cv::ITensorDataPitchDevice *>(out.exportData());
     if (outData == nullptr)
     {
-        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be device-acessible, pitch-linear tensor");
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be device-acessible, pitch-linear tensor");
     }
 
     leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, interpolation, stream));
@@ -54,13 +53,13 @@ void Resize::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, 
     auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
     if (inData == nullptr)
     {
-        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be varshape image batch");
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be varshape image batch");
     }
 
     auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(out.exportData(stream));
     if (outData == nullptr)
     {
-        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be varshape image batch");
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be varshape image batch");
     }
 
     leg::helpers::CheckOpErrThrow(m_legacyOpVarShape->infer(*inData, *outData, interpolation, stream));

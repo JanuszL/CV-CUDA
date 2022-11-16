@@ -15,11 +15,10 @@
 
 #include <common/ValueTests.hpp>
 #include <util/CheckError.hpp>
-#include <util/Exception.hpp>
 
 namespace gt   = ::testing;
 namespace test = nv::cv::test;
-namespace util = nv::cv::util;
+namespace priv = nv::cv::priv;
 
 // clang-format off
 NVCV_TEST_SUITE_P(CheckErrorCudaConversionTests, test::ValueList<cudaError_t, NVCVStatus>
@@ -63,8 +62,8 @@ TEST_P(CheckStatusMacroTests, throw_return_void)
 
     int a = 0; // so that we have a colon in the macro
 
-    NVCV_EXPECT_STATUS(status, [a, status] { throw nv::cv::util::Exception(status, "."); })
-    NVCV_ASSERT_STATUS(status, [a, status] { throw nv::cv::util::Exception(status, "."); })
+    NVCV_EXPECT_STATUS(status, [a, status] { throw priv::Exception(status, "."); })
+    NVCV_ASSERT_STATUS(status, [a, status] { throw priv::Exception(status, "."); })
 }
 
 TEST_P(CheckStatusMacroTests, throw_return_something_else)
@@ -76,13 +75,13 @@ TEST_P(CheckStatusMacroTests, throw_return_something_else)
     NVCV_EXPECT_STATUS(status,
                        [a, status]
                        {
-                           throw util::Exception(status, ".");
+                           throw priv::Exception(status, ".");
                            return a;
                        })
     NVCV_ASSERT_STATUS(status,
                        [a, status]
                        {
-                           throw util::Exception(status, ".");
+                           throw priv::Exception(status, ".");
                            return a;
                        })
 }

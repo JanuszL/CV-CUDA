@@ -18,6 +18,7 @@ add_library(nvcv_private_core STATIC
     DefaultAllocator.cpp
     IAllocator.cpp
     Requirements.cpp
+    Exception.cpp
     Image.cpp
     ImageBatchVarShape.cpp
     Tensor.cpp
@@ -31,6 +32,8 @@ target_include_directories(nvcv_private_core
     PUBLIC
         ../..
 )
+
+target_compile_definitions(nvcv_private_core PUBLIC -DNVCV_EXPORTING=1)
 
 target_link_libraries(nvcv_private_core
     PUBLIC

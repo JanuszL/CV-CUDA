@@ -13,12 +13,11 @@
 
 #include "Status.hpp"
 
+#include "Exception.hpp"
 #include "TLS.hpp"
 
 #include <nvcv/Exception.hpp>
 #include <util/Assert.h>
-#include <util/Exception.hpp>
-#include <util/Status.hpp>
 
 #include <cstring>
 
@@ -47,7 +46,7 @@ void SetThreadError(std::exception_ptr e)
         tls.lastErrorStatus = NVCV_ERROR_INTERNAL;
         NVCV_ASSERT(!"Exception from public API cannot be originated from internal library implementation");
     }
-    catch (const util::Exception &e)
+    catch (const Exception &e)
     {
         tls.lastErrorStatus = e.code();
         strncpy(tls.lastErrorMessage, e.msg(), errorMessageLen);
@@ -110,7 +109,31 @@ NVCVStatus PeekAtLastThreadError(char *outMessage, int outMessageLen) noexcept
 
 const char *GetName(NVCVStatus status) noexcept
 {
-    return util::ToString(status);
+#define CASE(ERR) \
+    case ERR:     \
+        return #ERR
+
+    // written this way, without a default case,
+    // the compiler can warn us if we forgot to add a new error here.
+    switch (status)
+    {
+        CASE(NVCV_SUCCESS);
+        CASE(NVCV_ERROR_NOT_IMPLEMENTED);
+        CASE(NVCV_ERROR_INVALID_ARGUMENT);
+        CASE(NVCV_ERROR_INVALID_IMAGE_FORMAT);
+        CASE(NVCV_ERROR_INVALID_OPERATION);
+        CASE(NVCV_ERROR_DEVICE);
+        CASE(NVCV_ERROR_NOT_READY);
+        CASE(NVCV_ERROR_OUT_OF_MEMORY);
+        CASE(NVCV_ERROR_INTERNAL);
+        CASE(NVCV_ERROR_NOT_COMPATIBLE);
+        CASE(NVCV_ERROR_OVERFLOW);
+        CASE(NVCV_ERROR_UNDERFLOW);
+    }
+
+    // Status not found?
+    return "Unknown error";
+#undef CASE
 }
 
 } // namespace nv::cv::priv

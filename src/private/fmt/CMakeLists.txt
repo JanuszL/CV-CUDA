@@ -28,4 +28,5 @@ target_link_libraries(nvcv_format
     PUBLIC
         nvcv_headers
         nvcv_util
+        nvcv_private_core
 )

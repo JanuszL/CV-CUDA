@@ -19,10 +19,11 @@
 #include <private/operators/IOperator.hpp>
 #include <util/Assert.h>
 
+namespace nvcv    = nv::cv;
 namespace priv    = nv::cv::priv;
 namespace priv_op = nv::cvop::priv;
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvOperatorDestroy, (NVCVOperatorHandle handle))
 {
-    return priv::ProtectCall([&] { delete priv::ToStaticPtr<priv_op::IOperator>(handle); });
+    return nvcv::ProtectCall([&] { delete priv::ToStaticPtr<priv_op::IOperator>(handle); });
 }

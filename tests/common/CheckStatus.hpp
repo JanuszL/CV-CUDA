@@ -13,7 +13,12 @@
 
 #include <common/Printers.hpp>
 #include <gtest/gtest.h>
-#include <util/Exception.hpp>
+
+#if NVCV_EXPORTING
+#    include <private/core/Exception.hpp>
+#else
+#    include <nvcv/Exception.hpp>
+#endif
 
 #include <type_traits>
 
@@ -40,6 +45,14 @@ inline ::testing::AssertionResult CmpHelperEQFailure(const char *lhs_expression,
     return res;
 }
 #endif
+
+namespace nv::cv::test {
+#if NVCV_EXPORTING
+using nv::cv::priv::Exception;
+#else
+using nv::cv::Exception;
+#endif
+} // namespace nv::cv::test
 
 #define NVCV_DETAIL_CHECK_STATUS(FAIL_KIND, STATUS, ...)                                                     \
     try                                                                                                      \
@@ -71,9 +84,9 @@ inline ::testing::AssertionResult CmpHelperEQFailure(const char *lhs_expression,
             }                                                                                                \
         }                                                                                                    \
     }                                                                                                        \
-    catch (::nv::cv::util::Exception & e)                                                                    \
+    catch (::nv::cv::test::Exception & e)                                                                    \
     {                                                                                                        \
-        if ((STATUS) == e.code())                                                                            \
+        if ((STATUS) == static_cast<NVCVStatus>(e.code()))                                                   \
         {                                                                                                    \
             SUCCEED();                                                                                       \
         }                                                                                                    \

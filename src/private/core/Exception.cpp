@@ -13,16 +13,30 @@
 
 #include "Exception.hpp"
 
-#include "Assert.h"
 #include "Status.hpp"
+
+#include <util/Assert.h>
 
 #include <cstdarg>
 
-namespace nv::cv::util {
+namespace nv::cv::priv {
 
 Exception::Exception(NVCVStatus code)
     : Exception(code, "%s", "")
 {
+}
+
+Exception::Exception(NVCVStatus code, const char *fmt, va_list va)
+    : m_code(code)
+    , m_strbuf{m_buffer, sizeof(m_buffer), m_buffer}
+{
+    snprintf(m_buffer, sizeof(m_buffer) - 1, "%s: ", GetName(code));
+
+    size_t len = strlen(m_buffer);
+    vsnprintf(m_buffer + len, sizeof(m_buffer) - len - 1, fmt, va);
+
+    // Next character written will be appended to m_buffer
+    m_strbuf.seekpos(strlen(m_buffer), std::ios_base::out);
 }
 
 Exception::Exception(NVCVStatus code, const char *fmt, ...)
@@ -32,7 +46,7 @@ Exception::Exception(NVCVStatus code, const char *fmt, ...)
     va_list va;
     va_start(va, fmt);
 
-    snprintf(m_buffer, sizeof(m_buffer) - 1, "%s: ", ToString(code));
+    snprintf(m_buffer, sizeof(m_buffer) - 1, "%s: ", GetName(code));
 
     size_t len = strlen(m_buffer);
     vsnprintf(m_buffer + len, sizeof(m_buffer) - len - 1, fmt, va);
@@ -62,4 +76,4 @@ const char *Exception::what() const noexcept
     return m_buffer;
 }
 
-} // namespace nv::cv::util
+} // namespace nv::cv::priv

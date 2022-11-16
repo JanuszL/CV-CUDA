@@ -58,7 +58,12 @@ inline const char *GetName(Status status)
 
 inline std::ostream &operator<<(std::ostream &out, Status status)
 {
-    return out << GetName(status);
+    return out << static_cast<NVCVStatus>(status);
+}
+
+inline std::ostream &operator<<(std::ostream &out, NVCVStatus status)
+{
+    return out << nvcvStatusGetName(status);
 }
 
 /**@}*/

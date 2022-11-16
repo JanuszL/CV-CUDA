@@ -19,12 +19,13 @@
 #include <private/operators/OpCustomCrop.hpp>
 #include <util/Assert.h>
 
+namespace nvcv    = nv::cv;
 namespace priv    = nv::cv::priv;
 namespace priv_op = nv::cvop::priv;
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopCustomCropCreate, (NVCVOperatorHandle * handle))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
@@ -40,7 +41,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopCustomCropSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
                  const NVCVRectI cropRect))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
             nv::cv::TensorWrapHandle input(in), output(out);

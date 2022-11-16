@@ -39,10 +39,20 @@ void ThrowException(NVCVStatus status);
 class Exception : public std::exception
 {
 public:
-    explicit Exception(Status code, const char *msg = nullptr)
-        : Exception(InternalCtorTag{}, code, msg)
+    explicit Exception(Status code, const char *fmt = nullptr, ...)
+#if __GNUC__
+        __attribute__((format(printf, 3, 4)))
+#endif
+        : m_code(code)
     {
-        nvcvSetThreadStatus(static_cast<NVCVStatus>(code), msg);
+        va_list va;
+        va_start(va, fmt);
+        nvcvSetThreadStatusVarArgList(static_cast<NVCVStatus>(code), fmt, va);
+        va_end(va);
+
+        va_start(va, fmt);
+        doSetMessage(fmt, va);
+        va_end(va);
     }
 
     Status code() const
@@ -64,7 +74,7 @@ private:
     Status      m_code;
     const char *m_msg;
 
-    // 64: maximum size of string representatio of a status enum
+    // 64: maximum size of string representation of a status enum
     // 2: ': '
     char m_msgBuffer[NVCV_MAX_STATUS_MESSAGE_LENGTH + 64 + 2];
 
@@ -74,17 +84,88 @@ private:
     {
     };
 
-    Exception(InternalCtorTag, Status code, const char *msg = nullptr)
+    // Constructor that doesn't set the C thread status.
+    // Used when converting C statuses to C++.
+    Exception(InternalCtorTag, Status code, const char *fmt = nullptr, ...)
+#if __GNUC__
+        __attribute__((format(printf, 4, 5)))
+#endif
         : m_code(code)
     {
-        // Assuming
-        snprintf(m_msgBuffer, sizeof(m_msgBuffer) - 1, "%s: %s", GetName(code), msg);
+        va_list va;
+        va_start(va, fmt);
 
-        m_msg = strchr(m_msgBuffer, ':');
-        assert(m_msg != nullptr);
-        m_msg += 2; // skip ': '
+        doSetMessage(fmt, va);
+
+        va_end(va);
+    }
+
+    void doSetMessage(const char *fmt, va_list va)
+    {
+        int buflen   = sizeof(m_msgBuffer);
+        int nwritten = snprintf(m_msgBuffer, buflen, "%s: ", GetName(m_code));
+
+        // no truncation?
+        if (nwritten < buflen)
+        {
+            buflen -= nwritten;
+            m_msg = m_msgBuffer + nwritten;
+            vsnprintf(m_msgBuffer + nwritten, buflen, fmt, va);
+        }
+
+        m_msgBuffer[sizeof(m_msgBuffer) - 1] = '\0';
     }
 };
+
+inline void SetThreadError(std::exception_ptr e)
+{
+    try
+    {
+        if (e)
+        {
+            rethrow_exception(e);
+        }
+        else
+        {
+            nvcvSetThreadStatus(NVCV_SUCCESS, nullptr);
+        }
+    }
+    catch (const Exception &e)
+    {
+        nvcvSetThreadStatus(static_cast<NVCVStatus>(e.code()), "%s", e.msg());
+    }
+    catch (const std::invalid_argument &e)
+    {
+        nvcvSetThreadStatus(NVCV_ERROR_INVALID_ARGUMENT, "%s", e.what());
+    }
+    catch (const std::bad_alloc &)
+    {
+        nvcvSetThreadStatus(NVCV_ERROR_OUT_OF_MEMORY, "Not enough space for resource allocation");
+    }
+    catch (const std::exception &e)
+    {
+        nvcvSetThreadStatus(NVCV_ERROR_INTERNAL, "%s", e.what());
+    }
+    catch (...)
+    {
+        nvcvSetThreadStatus(NVCV_ERROR_INTERNAL, "Unexpected error");
+    }
+}
+
+template<class F>
+NVCVStatus ProtectCall(F &&fn)
+{
+    try
+    {
+        fn();
+        return NVCV_SUCCESS;
+    }
+    catch (...)
+    {
+        SetThreadError(std::current_exception());
+        return nvcvPeekAtLastError();
+    }
+}
 
 /**@}*/
 

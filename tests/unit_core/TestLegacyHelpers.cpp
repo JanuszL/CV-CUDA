@@ -70,7 +70,7 @@ TEST_P(CheckLegacyFormatHelpersInvalid, check_conversion_to_legacy_data_format_i
     int32_t numCh     = GetParamValue<1>();
     int32_t numPlanes = GetParamValue<2>();
     int32_t numBatch  = GetParamValue<3>();
-    EXPECT_THROW(helpers::GetLegacyDataFormat(numCh, numPlanes, numBatch), nv::cv::util::Exception);
+    EXPECT_THROW(helpers::GetLegacyDataFormat(numCh, numPlanes, numBatch), nv::cv::Exception);
 }
 
 // clang-format off
