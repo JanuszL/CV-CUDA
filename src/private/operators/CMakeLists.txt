@@ -18,6 +18,7 @@ add_library(nvcv_private_operators STATIC
     OpPadAndStack.cpp
     OpConvertTo.cpp
     OpCopyMakeBorder.cpp
+    OpCenterCrop.cpp
 )
 
 target_include_directories(nvcv_private_operators
