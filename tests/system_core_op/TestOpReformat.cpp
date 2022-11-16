@@ -13,131 +13,132 @@
 
 #include "Definitions.hpp"
 
+#include <common/ValueTests.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
+#include <nvcv/cuda/TypeTraits.hpp>
 #include <operators/OpReformat.hpp>
 
 #include <iostream>
 #include <random>
 
 namespace nvcv = nv::cv;
+namespace test = nv::cv::test;
+namespace cuda = nv::cv::cuda;
 
-TEST(OpReformat, OpReformat_to_hwc)
+static void ReformatNHWC(std::vector<uint8_t> &hDst, long4 dstPitches, long4 dstShape,
+                         const nvcv::TensorLayout &dstLayout, const std::vector<uint8_t> &hSrc, long4 srcPitches,
+                         long4 srcShape, const nvcv::TensorLayout &srcLayout)
 {
-    cudaStream_t stream;
-    EXPECT_EQ(cudaSuccess, cudaStreamCreate(&stream));
+    long srcN = cuda::GetElement(srcShape, srcLayout.find('N'));
+    long srcH = cuda::GetElement(srcShape, srcLayout.find('H'));
+    long srcW = cuda::GetElement(srcShape, srcLayout.find('W'));
+    long srcC = cuda::GetElement(srcShape, srcLayout.find('C'));
+    long dstN = cuda::GetElement(dstShape, dstLayout.find('N'));
+    long dstH = cuda::GetElement(dstShape, dstLayout.find('H'));
+    long dstW = cuda::GetElement(dstShape, dstLayout.find('W'));
+    long dstC = cuda::GetElement(dstShape, dstLayout.find('C'));
 
-    nvcv::Tensor imgOut(1, {640, 480}, nvcv::FMT_RGB8);
+    EXPECT_EQ(srcN, dstN);
+    EXPECT_EQ(srcH, dstH);
+    EXPECT_EQ(srcW, dstW);
+    EXPECT_EQ(srcC, dstC);
 
-    nvcv::Tensor::Requirements reqsPlanar = nvcv::Tensor::CalcRequirements(1, {640, 480}, nvcv::FMT_RGB8p);
+    long srcPbN = cuda::GetElement(srcPitches, srcLayout.find('N'));
+    long srcPbH = cuda::GetElement(srcPitches, srcLayout.find('H'));
+    long srcPbW = cuda::GetElement(srcPitches, srcLayout.find('W'));
+    long srcPbC = cuda::GetElement(srcPitches, srcLayout.find('C'));
+    long dstPbN = cuda::GetElement(dstPitches, dstLayout.find('N'));
+    long dstPbH = cuda::GetElement(dstPitches, dstLayout.find('H'));
+    long dstPbW = cuda::GetElement(dstPitches, dstLayout.find('W'));
+    long dstPbC = cuda::GetElement(dstPitches, dstLayout.find('C'));
 
-    int64_t inBufferSize = CalcTotalSizeBytes(nvcv::Requirements{reqsPlanar.mem}.deviceMem());
-    ASSERT_LT(0, inBufferSize);
-
-    nvcv::TensorDataPitchDevice::Buffer bufPlanar;
-    std::copy(reqsPlanar.pitchBytes, reqsPlanar.pitchBytes + NVCV_TENSOR_MAX_NDIM, bufPlanar.pitchBytes);
-    EXPECT_EQ(cudaSuccess, cudaMalloc(&bufPlanar.data, inBufferSize));
-
-    nvcv::TensorDataPitchDevice bufIn(nvcv::TensorShape{reqsPlanar.shape, reqsPlanar.ndim, reqsPlanar.layout},
-                                      nvcv::PixelType{reqsPlanar.dtype}, bufPlanar);
-
-    auto inAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(bufIn);
-    ASSERT_TRUE(inAccess);
-
-    ASSERT_EQ(1, inAccess->numSamples());
-
-    // setup the buffer
-    for (int p = 0; p < inAccess->numPlanes(); p++)
+    for (long b = 0; b < dstN; ++b)
     {
-        //Set plane 0 to 0, 1 to 1's, 2, 2's etc.
-        EXPECT_EQ(cudaSuccess, cudaMemset2D(inAccess->planeData(p), inAccess->rowPitchBytes(), p,
-                                            inAccess->numCols() * inAccess->colPitchBytes(), inAccess->numRows()));
+        for (long y = 0; y < dstH; ++y)
+        {
+            for (long x = 0; x < dstW; ++x)
+            {
+                for (long c = 0; c < dstC; ++c)
+                {
+                    hDst[b * dstPbN + y * dstPbH + x * dstPbW + c * dstPbC]
+                        = hSrc[b * srcPbN + y * srcPbH + x * srcPbW + c * srcPbC];
+                }
+            }
+        }
     }
-
-    // wrap the buffer
-    nvcv::TensorWrapData imgIn{bufIn};
-
-    const auto *outData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgOut.exportData());
-    ASSERT_NE(nullptr, outData);
-
-    auto outAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*outData);
-    ASSERT_TRUE(outAccess);
-
-    int64_t outBufferSize = outAccess->samplePitchBytes() * outAccess->numSamples();
-
-    // Set output buffer to dummy value
-    EXPECT_EQ(cudaSuccess, cudaMemset(outAccess->sampleData(0), 0xFA, outBufferSize));
-
-    // Call operator
-    nv::cvop::Reformat reformatOp;
-    EXPECT_NO_THROW(reformatOp(stream, imgIn, imgOut));
-
-    EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
-
-    std::vector<uint8_t> test(outBufferSize, 0xA);
-
-    //Check data
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), outData->data(), outBufferSize, cudaMemcpyDeviceToHost));
-
-    // plane data should be reordered in the buffer 0,1,2,3,0,1,2,3 ...
-    EXPECT_EQ(test[0], 0);
-    EXPECT_EQ(test[1], 1);
-    EXPECT_EQ(test[2], 2);
-    EXPECT_EQ(test[3], 0);
-    EXPECT_EQ(test[4], 1);
-
-    EXPECT_EQ(cudaSuccess, cudaFree(bufPlanar.data));
-    EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 }
 
-TEST(OpReformat, wip_OpReformat_same)
+// Parameters are: width, height, batches, inFormat, outFormat
+
+NVCV_TEST_SUITE_P(OpReformat, test::ValueList<int, int, int, nvcv::ImageFormat, nvcv::ImageFormat>{
+                                  {176, 113, 1,  nvcv::FMT_RGBA8,  nvcv::FMT_RGBA8},
+                                  {156, 149, 1,   nvcv::FMT_RGB8,  nvcv::FMT_RGB8p},
+                                  {222, 133, 1,  nvcv::FMT_RGB8p,   nvcv::FMT_RGB8},
+                                  { 76,  13, 2,   nvcv::FMT_RGB8,   nvcv::FMT_RGB8},
+                                  { 56,  49, 3,  nvcv::FMT_RGBA8, nvcv::FMT_RGBA8p},
+                                  { 22,  33, 4, nvcv::FMT_RGBA8p,  nvcv::FMT_RGBA8}
+});
+
+TEST_P(OpReformat, correct_output)
 {
     cudaStream_t stream;
-    EXPECT_EQ(cudaSuccess, cudaStreamCreate(&stream));
+    ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
 
-    nvcv::Tensor imgOut(1, {640, 480}, nvcv::FMT_RGBA8);
-    nvcv::Tensor imgIn(1, {640, 480}, nvcv::FMT_RGBA8);
+    int width   = GetParamValue<0>();
+    int height  = GetParamValue<1>();
+    int batches = GetParamValue<2>();
 
-    const auto *inData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgIn.exportData());
-    const auto *outData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgOut.exportData());
+    nvcv::ImageFormat inFormat  = GetParamValue<3>();
+    nvcv::ImageFormat outFormat = GetParamValue<4>();
 
-    EXPECT_NE(nullptr, inData);
-    EXPECT_NE(nullptr, outData);
+    nvcv::Tensor inTensor(batches, {width, height}, inFormat);
+    nvcv::Tensor outTensor(batches, {width, height}, outFormat);
 
-    auto inAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*inData);
-    ASSERT_TRUE(inAccess);
+    const auto *inData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(inTensor.exportData());
+    const auto *outData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(outTensor.exportData());
 
-    auto outAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*outData);
-    ASSERT_TRUE(outAccess);
+    ASSERT_NE(inData, nullptr);
+    ASSERT_NE(outData, nullptr);
 
-    int inBufSize  = inAccess->samplePitchBytes() * inAccess->numSamples();
-    int outBufSize = outAccess->samplePitchBytes() * outAccess->numSamples();
+    long4 inPitches{inData->pitchBytes(0), inData->pitchBytes(1), inData->pitchBytes(2), inData->pitchBytes(3)};
+    long4 outPitches{outData->pitchBytes(0), outData->pitchBytes(1), outData->pitchBytes(2), outData->pitchBytes(3)};
 
-    EXPECT_EQ(inBufSize, outBufSize);
+    long4 inShape{inData->shape(0), inData->shape(1), inData->shape(2), inData->shape(3)};
+    long4 outShape{outData->shape(0), outData->shape(1), outData->shape(2), outData->shape(3)};
 
-    std::vector<uint8_t>          gold(outBufSize);
-    std::default_random_engine    rng;
-    std::uniform_int_distribution rand;
+    long inBufSize  = inPitches.x * inShape.x;
+    long outBufSize = outPitches.x * outShape.x;
 
-    generate(gold.begin(), gold.end(), [&rng, &rand] { return rand(rng); });
+    std::vector<uint8_t> inVec(inBufSize);
 
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(inData->data(), gold.data(), gold.size(), cudaMemcpyHostToDevice));
+    std::default_random_engine    randEng(0);
+    std::uniform_int_distribution rand(0u, 255u);
+
+    std::generate(inVec.begin(), inVec.end(), [&]() { return rand(randEng); });
+
+    // copy random input to device
+    ASSERT_EQ(cudaSuccess, cudaMemcpy(inData->data(), inVec.data(), inBufSize, cudaMemcpyHostToDevice));
 
     // run operator
     nv::cvop::Reformat reformatOp;
 
-    EXPECT_NO_THROW(reformatOp(stream, imgIn, imgOut));
-    EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
+    EXPECT_NO_THROW(reformatOp(stream, inTensor, outTensor));
 
-    // check cdata
-    std::vector<uint8_t> test(outBufSize);
+    ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
+    ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), outData->data(), outBufSize, cudaMemcpyDeviceToHost));
+    std::vector<uint8_t> goldVec(outBufSize);
+    std::vector<uint8_t> testVec(outBufSize);
 
-    EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
+    // copy output back to host
+    ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), outData->data(), outBufSize, cudaMemcpyDeviceToHost));
 
-    EXPECT_EQ(gold, test);
+    // generate gold result
+    ReformatNHWC(goldVec, outPitches, outShape, outData->layout(), inVec, inPitches, inShape, inData->layout());
+
+    EXPECT_EQ(testVec, goldVec);
 }
