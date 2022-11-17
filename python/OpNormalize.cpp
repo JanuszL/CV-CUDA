@@ -13,6 +13,7 @@
 
 #include "Operators.hpp"
 #include "PyUtil.hpp"
+#include "ResourceGuard.hpp"
 #include "Stream.hpp"
 #include "Tensor.hpp"
 
@@ -40,36 +41,18 @@ std::shared_ptr<Tensor> NormalizeInto(Tensor &input, Tensor &output, Tensor &bas
         pstream = Stream::Current().shared_from_this();
     }
 
-    std::vector<std::shared_ptr<const Resource>> usedResources = {input.shared_from_this(), output.shared_from_this()};
-
-    base.submitSync(*pstream, LOCK_READ);
-    scale.submitSync(*pstream, LOCK_READ);
-    input.submitSync(*pstream, LOCK_READ);
-    output.submitSync(*pstream, LOCK_WRITE);
-
     if (!flags)
     {
         flags = 0;
     }
 
+    ResourceGuard roGuard(*pstream, LOCK_READ, {input, base, scale});
+    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+
     cvop::Normalize normalize;
 
     normalize(pstream->handle(), input.impl(), base.impl(), scale.impl(), output.impl(), globalScale, globalShift,
               epsilon, *flags);
-
-    try
-    {
-        base.submitSignal(*pstream, LOCK_READ);
-        scale.submitSignal(*pstream, LOCK_READ);
-        input.submitSignal(*pstream, LOCK_READ);
-        output.submitSignal(*pstream, LOCK_WRITE);
-        pstream->holdResources(std::move(usedResources));
-    }
-    catch (...)
-    {
-        pstream->holdResources(std::move(usedResources));
-        throw;
-    }
 
     return output.shared_from_this();
 }
