@@ -13,6 +13,8 @@
 
 #include "Definitions.hpp"
 #include "nvcv/DataLayout.hpp"
+#include "nvcv/IImageData.hpp"
+#include "nvcv/ITensorData.hpp"
 #include "nvcv/ImageFormat.hpp"
 #include "nvcv/PixelType.hpp"
 
@@ -91,6 +93,137 @@ static void CopyMakeBorder(std::vector<T> &hDst, const std::vector<T> &hSrc,
     }
 }
 
+template<typename T>
+static void CopyMakeBorder(std::vector<std::vector<T>> &hBatchDst, const std::vector<std::vector<T>> &hBatchSrc,
+                           const std::vector<std::unique_ptr<nvcv::Image>> &dBatchDstData,
+                           const std::vector<std::unique_ptr<nvcv::Image>> &dBatchSrcData, const std::vector<int> &top,
+                           const std::vector<int> &left, const NVCVBorderType borderType, const float4 borderValue)
+{
+    int2 coords;
+    for (size_t db = 0; db < dBatchDstData.size(); db++)
+    {
+        auto &hDst        = hBatchDst[db];
+        auto &dDst        = dBatchDstData[db];
+        auto *imgDstData  = dynamic_cast<const nvcv::IImageDataPitchDevice *>(dDst->exportData());
+        int   dstRowPitch = imgDstData->plane(0).pitchBytes / sizeof(T);
+        int   dstPixPitch = dDst->format().numChannels();
+
+        auto &hSrc       = hBatchSrc[db];
+        auto &dSrc       = dBatchSrcData[db];
+        auto *imgSrcData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(dSrc->exportData());
+        int   rowPitch   = imgSrcData->plane(0).pitchBytes / sizeof(T);
+        int   pixPitch   = imgSrcData->format().numChannels();
+
+        auto imgSize = dBatchSrcData[db]->size();
+        int2 size{imgSize.w, imgSize.h};
+        for (int di = 0; di < imgDstData->plane(0).height; di++) //for rows
+        {
+            coords.y = di - top[db];
+
+            for (int dj = 0; dj < imgDstData->plane(0).width; dj++) // for columns
+            {
+                coords.x = dj - left[db];
+
+                for (int dk = 0; dk < dstPixPitch; dk++)
+                {
+                    T out = 0;
+
+                    if (coords.x >= 0 && coords.x < size.x && coords.y >= 0 && coords.y < size.y)
+                    {
+                        out = hSrc[coords.y * rowPitch + coords.x * pixPitch + dk];
+                    }
+                    else
+                    {
+                        if (borderType == NVCV_BORDER_CONSTANT)
+                        {
+                            out = static_cast<T>(reinterpret_cast<const float *>(&borderValue)[dk]);
+                        }
+                        else
+                        {
+                            if (borderType == NVCV_BORDER_REPLICATE)
+                                test::ReplicateBorderIndex(coords, size);
+                            else if (borderType == NVCV_BORDER_WRAP)
+                                test::WrapBorderIndex(coords, size);
+                            else if (borderType == NVCV_BORDER_REFLECT)
+                                test::ReflectBorderIndex(coords, size);
+                            else if (borderType == NVCV_BORDER_REFLECT101)
+                                test::Reflect101BorderIndex(coords, size);
+
+                            out = hSrc[coords.y * rowPitch + coords.x * pixPitch + dk];
+                        }
+                    }
+
+                    hDst[di * dstRowPitch + dj * dstPixPitch + dk] = out;
+                }
+            }
+        }
+    }
+}
+
+template<typename T>
+static void CopyMakeBorder(std::vector<T> &hDst, const std::vector<std::vector<T>> &hBatchSrc,
+                           const nvcv::TensorDataAccessPitchImagePlanar    &dDstData,
+                           const std::vector<std::unique_ptr<nvcv::Image>> &dBatchSrcData, const std::vector<int> &top,
+                           const std::vector<int> &left, const NVCVBorderType borderType, const float4 borderValue)
+{
+    int dstPixPitch = dDstData.numChannels();
+    int dstRowPitch = dDstData.rowPitchBytes() / sizeof(T);
+    int dstImgPitch = dDstData.samplePitchBytes() / sizeof(T);
+
+    int2 coords;
+    for (int db = 0; db < dDstData.numSamples(); db++)
+    {
+        auto &hSrc       = hBatchSrc[db];
+        auto *imgSrcData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(dBatchSrcData[db]->exportData());
+        int   rowPitch   = imgSrcData->plane(0).pitchBytes / sizeof(T);
+        int   pixPitch   = imgSrcData->format().numChannels();
+
+        auto imgSize = dBatchSrcData[db]->size();
+        int2 size{imgSize.w, imgSize.h};
+        for (int di = 0; di < dDstData.numRows(); di++)
+        {
+            coords.y = di - top[db];
+
+            for (int dj = 0; dj < dDstData.numCols(); dj++)
+            {
+                coords.x = dj - left[db];
+
+                for (int dk = 0; dk < dDstData.numChannels(); dk++)
+                {
+                    T out = 0;
+
+                    if (coords.x >= 0 && coords.x < size.x && coords.y >= 0 && coords.y < size.y)
+                    {
+                        out = hSrc[coords.y * rowPitch + coords.x * pixPitch + dk];
+                    }
+                    else
+                    {
+                        if (borderType == NVCV_BORDER_CONSTANT)
+                        {
+                            out = static_cast<T>(reinterpret_cast<const float *>(&borderValue)[dk]);
+                        }
+                        else
+                        {
+                            if (borderType == NVCV_BORDER_REPLICATE)
+                                test::ReplicateBorderIndex(coords, size);
+                            else if (borderType == NVCV_BORDER_WRAP)
+                                test::WrapBorderIndex(coords, size);
+                            else if (borderType == NVCV_BORDER_REFLECT)
+                                test::ReflectBorderIndex(coords, size);
+                            else if (borderType == NVCV_BORDER_REFLECT101)
+                                test::Reflect101BorderIndex(coords, size);
+
+                            out = hSrc[coords.y * rowPitch + coords.x * pixPitch + dk];
+                        }
+                    }
+
+                    hDst[db * dstImgPitch + di * dstRowPitch + dj * dstPixPitch + dk] = out;
+                }
+            }
+        }
+    }
+}
+
 // clang-format off
 
 NVCV_TEST_SUITE_P(OpCopyMakeBorder, test::ValueList<int, int, int, int, int, int, int, NVCVBorderType, float, float, float, float, nvcv::ImageFormat>
@@ -118,7 +251,7 @@ void StartTest(int srcWidth, int srcHeight, int numBatches, int topPad, int butt
     ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
 
     int dstWidth  = srcWidth + leftPad + rightPad;
-    int dstHeight = srcHeight + topPad + leftPad;
+    int dstHeight = srcHeight + topPad + buttomPad;
 
     std::vector<T> srcVec;
 
@@ -185,7 +318,7 @@ void StartTest(int srcWidth, int srcHeight, int numBatches, int topPad, int butt
     EXPECT_EQ(goldVec, testVec);
 }
 
-TEST_P(OpCopyMakeBorder, correct_output)
+TEST_P(OpCopyMakeBorder, tensor_correct_output)
 {
     int srcWidth   = GetParamValue<0>();
     int srcHeight  = GetParamValue<1>();
@@ -210,4 +343,306 @@ TEST_P(OpCopyMakeBorder, correct_output)
     else if (nvcv::FMT_RGBf32 == format || nvcv::FMT_RGBAf32 == format)
         StartTest<float>(srcWidth, srcHeight, numBatches, topPad, buttomPad, leftPad, rightPad, borderType, borderValue,
                          format);
+}
+
+template<typename T>
+void StartTestVarShape(int srcWidthBase, int srcHeightBase, int numBatches, int topPad, int buttomPad, int leftPad,
+                       int rightPad, NVCVBorderType borderType, float4 borderValue, nvcv::ImageFormat format)
+{
+    cudaStream_t stream;
+    ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
+
+    std::default_random_engine         randEng{0};
+    std::uniform_int_distribution<int> rndSrcWidth(srcWidthBase * 0.8, srcWidthBase * 1.2);
+    std::uniform_int_distribution<int> rndSrcHeight(srcHeightBase * 0.8, srcHeightBase * 1.2);
+
+    std::uniform_int_distribution<int> rndTop(topPad * 0.8, topPad * 1.2);
+    std::uniform_int_distribution<int> rndButtom(buttomPad * 0.8, buttomPad * 1.2);
+
+    std::uniform_int_distribution<int> rndLeft(leftPad * 0.8, leftPad * 1.2);
+    std::uniform_int_distribution<int> rndRight(rightPad * 0.8, rightPad * 1.2);
+
+    //Prepare input and output buffer
+    std::vector<std::unique_ptr<nvcv::Image>> imgSrcVec, imgDstVec;
+    std::vector<std::vector<T>>               hImgSrcVec, hImgDstVec, batchGoldVec;
+    std::vector<int>                          topVec(numBatches);
+    std::vector<int>                          leftVec(numBatches);
+    for (int i = 0; i < numBatches; ++i)
+    {
+        int srcWidth  = rndSrcWidth(randEng);
+        int srcHeight = rndSrcHeight(randEng);
+        int top       = rndTop(randEng);
+        int left      = rndLeft(randEng);
+        int buttom    = rndButtom(randEng);
+        int right     = rndRight(randEng);
+
+        int dstWidth  = srcWidth + left + right;
+        int dstHeight = srcHeight + top + buttom;
+        topVec[i]     = top;
+        leftVec[i]    = left;
+        //prepare input buffers
+        imgSrcVec.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{srcWidth, srcHeight}, format));
+
+        auto *imgSrcData    = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrcVec.back()->exportData());
+        int   srcPitchBytes = imgSrcData->plane(0).pitchBytes;
+        int   srcRowPitch   = srcPitchBytes / sizeof(T);
+        int   srcBufSize    = srcRowPitch * imgSrcData->plane(0).height;
+
+        std::vector<T>                         srcVec(srcBufSize);
+        std::uniform_int_distribution<uint8_t> srcRand{0u, 255u};
+        if (std::is_same<T, float>::value)
+            std::generate(srcVec.begin(), srcVec.end(), [&]() { return srcRand(randEng) / 255.0f; });
+        else
+            std::generate(srcVec.begin(), srcVec.end(), [&]() { return srcRand(randEng); });
+
+        // Copy each input image with random data to the GPU
+        ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(imgSrcData->plane(0).buffer, srcVec.data(), srcBufSize * sizeof(T),
+                                               cudaMemcpyHostToDevice, stream));
+        hImgSrcVec.push_back(std::move(srcVec));
+
+        //prepare output Buffers
+        imgDstVec.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{dstWidth, dstHeight}, format));
+        auto *imgDstData    = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgDstVec.back()->exportData());
+        int   dstPitchBytes = imgDstData->plane(0).pitchBytes;
+        int   dstRowPitch   = dstPitchBytes / sizeof(T);
+        int   dstBufSize    = dstRowPitch * imgDstData->plane(0).height;
+
+        std::vector<T> dstVec(dstBufSize);
+        std::vector<T> goldVec(dstBufSize);
+        hImgDstVec.push_back(std::move(dstVec));
+        batchGoldVec.push_back(std::move(goldVec));
+    }
+    nvcv::ImageBatchVarShape imgBatchSrc(numBatches);
+    imgBatchSrc.pushBack(imgSrcVec.begin(), imgSrcVec.end());
+    nvcv::ImageBatchVarShape imgBatchDst(numBatches);
+    imgBatchDst.pushBack(imgDstVec.begin(), imgDstVec.end());
+
+    // Prepare top and left inputs
+    nvcv::Tensor inTop(1, {numBatches, 1}, nvcv::FMT_S32);
+    nvcv::Tensor inLeft(1, {numBatches, 1}, nvcv::FMT_S32);
+
+    const auto *inTopData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(inTop.exportData());
+    const auto *inLeftData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(inLeft.exportData());
+
+    ASSERT_NE(nullptr, inTopData);
+    ASSERT_NE(nullptr, inLeftData);
+
+    auto inTopAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*inTopData);
+    ASSERT_TRUE(inTopAccess);
+
+    auto inLeftAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*inLeftData);
+    ASSERT_TRUE(inLeftAccess);
+
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(inTopData->data(), topVec.data(), topVec.size() * sizeof(int),
+                                           cudaMemcpyHostToDevice, stream));
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(inLeftData->data(), leftVec.data(), leftVec.size() * sizeof(int),
+                                           cudaMemcpyHostToDevice, stream));
+
+    // Generate gold result
+    CopyMakeBorder(batchGoldVec, hImgSrcVec, imgDstVec, imgSrcVec, topVec, leftVec, borderType, borderValue);
+
+    // Generate test result
+    nv::cvop::CopyMakeBorder cpyMakeBorderOp;
+
+    EXPECT_NO_THROW(cpyMakeBorderOp(stream, imgBatchSrc, imgBatchDst, inTop, inLeft, borderType, borderValue));
+
+    // Get test data back
+    ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
+    ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
+
+    int idx = 0;
+    for (auto &img : imgBatchDst)
+    {
+        auto &testVec   = hImgDstVec[idx];
+        auto &goldVec   = batchGoldVec[idx];
+        auto  imgAccess = dynamic_cast<const nvcv::IImageDataPitchDevice *>(img.exportData());
+
+        ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), imgAccess->plane(0).buffer, testVec.size() * sizeof(T),
+                                          cudaMemcpyDeviceToHost));
+
+#ifdef DEBUG_PRINT_IMAGE
+        for (int b = 0; b < numBatches; ++b) test::DebugPrintImage(batchSrcVec[b], srcPitchBytes / sizeof(uint8_t));
+        test::DebugPrintImage(testVec, dstData->rowPitchBytes() / sizeof(uint8_t));
+        test::DebugPrintImage(goldVec, dstData->rowPitchBytes() / sizeof(uint8_t));
+#endif
+#ifdef DEBUG_PRINT_DIFF
+        if (goldVec != testVec)
+        {
+            test::DebugPrintDiff(testVec, goldVec);
+        }
+#endif
+
+        EXPECT_EQ(goldVec, testVec);
+        idx++;
+    }
+}
+
+TEST_P(OpCopyMakeBorder, varshape_correct_output)
+{
+    int srcWidth   = GetParamValue<0>();
+    int srcHeight  = GetParamValue<1>();
+    int numBatches = GetParamValue<2>();
+    int topPad     = GetParamValue<3>();
+    int buttomPad  = GetParamValue<4>();
+    int leftPad    = GetParamValue<5>();
+    int rightPad   = GetParamValue<6>();
+
+    NVCVBorderType borderType = GetParamValue<7>();
+    float4         borderValue;
+    borderValue.x = GetParamValue<8>();
+    borderValue.y = GetParamValue<9>();
+    borderValue.z = GetParamValue<10>();
+    borderValue.w = GetParamValue<11>();
+
+    nvcv::ImageFormat format = GetParamValue<12>();
+
+    if (nvcv::FMT_RGB8 == format || nvcv::FMT_RGBA8 == format)
+        StartTestVarShape<uint8_t>(srcWidth, srcHeight, numBatches, topPad, buttomPad, leftPad, rightPad, borderType,
+                                   borderValue, format);
+    else if (nvcv::FMT_RGBf32 == format || nvcv::FMT_RGBAf32 == format)
+        StartTestVarShape<float>(srcWidth, srcHeight, numBatches, topPad, buttomPad, leftPad, rightPad, borderType,
+                                 borderValue, format);
+}
+
+template<typename T>
+void StartTestStack(int srcWidthBase, int srcHeightBase, int numBatches, int topPad, int buttomPad, int leftPad,
+                    int rightPad, NVCVBorderType borderType, float4 borderValue, nvcv::ImageFormat format)
+{
+    cudaStream_t stream;
+    ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
+
+    //make sure the random pad settings did not exceed the limit.
+    int dstWidth  = (srcWidthBase + leftPad + rightPad) * 1.2;
+    int dstHeight = (srcHeightBase + topPad + buttomPad) * 1.2;
+
+    std::default_random_engine         randEng{0};
+    std::uniform_int_distribution<int> rndSrcWidth(srcWidthBase * 0.8, srcWidthBase * 1.2);
+    std::uniform_int_distribution<int> rndSrcHeight(srcHeightBase * 0.8, srcHeightBase * 1.2);
+
+    std::uniform_int_distribution<int> rndTop(topPad * 0.8, topPad * 1.2);
+    std::uniform_int_distribution<int> rndLeft(leftPad * 0.8, leftPad * 1.2);
+
+    //Prepare input and output buffer
+    std::vector<std::unique_ptr<nvcv::Image>> imgSrcVec, imgDstVec;
+    std::vector<std::vector<T>>               hImgSrcVec;
+    std::vector<int>                          topVec(numBatches);
+    std::vector<int>                          leftVec(numBatches);
+    for (int i = 0; i < numBatches; ++i)
+    {
+        int srcWidth  = rndSrcWidth(randEng);
+        int srcHeight = rndSrcHeight(randEng);
+        int top       = rndTop(randEng);
+        int left      = rndLeft(randEng);
+
+        topVec[i]  = top;
+        leftVec[i] = left;
+        //prepare input buffers
+        imgSrcVec.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{srcWidth, srcHeight}, format));
+
+        auto *imgSrcData    = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrcVec.back()->exportData());
+        int   srcPitchBytes = imgSrcData->plane(0).pitchBytes;
+        int   srcRowPitch   = srcPitchBytes / sizeof(T);
+        int   srcBufSize    = srcRowPitch * imgSrcData->plane(0).height;
+
+        std::vector<T>                         srcVec(srcBufSize);
+        std::uniform_int_distribution<uint8_t> srcRand{0u, 255u};
+        if (std::is_same<T, float>::value)
+            std::generate(srcVec.begin(), srcVec.end(), [&]() { return srcRand(randEng) / 255.0f; });
+        else
+            std::generate(srcVec.begin(), srcVec.end(), [&]() { return srcRand(randEng); });
+
+        // Copy each input image with random data to the GPU
+        ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(imgSrcData->plane(0).buffer, srcVec.data(), srcBufSize * sizeof(T),
+                                               cudaMemcpyHostToDevice, stream));
+        hImgSrcVec.push_back(std::move(srcVec));
+    }
+    nvcv::ImageBatchVarShape imgBatchSrc(numBatches);
+    imgBatchSrc.pushBack(imgSrcVec.begin(), imgSrcVec.end());
+
+    //prepare output buffer
+    nvcv::Tensor imgDst(numBatches, {dstWidth, dstHeight}, format);
+    const auto  *dstData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgDst.exportData());
+    ASSERT_NE(nullptr, dstData);
+    auto dstAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*dstData);
+    ASSERT_TRUE(dstData);
+    int dstBufSize = (dstAccess->samplePitchBytes() / sizeof(T)) * dstAccess->numSamples();
+    ASSERT_EQ(cudaSuccess, cudaMemsetAsync(dstData->data(), 0, dstBufSize * sizeof(T), stream));
+
+    std::vector<T> testVec(dstBufSize);
+    std::vector<T> goldVec(dstBufSize);
+
+    // Prepare top and left inputs
+    nvcv::Tensor inTop(1, {numBatches, 1}, nvcv::FMT_S32);
+    nvcv::Tensor inLeft(1, {numBatches, 1}, nvcv::FMT_S32);
+
+    const auto *inTopData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(inTop.exportData());
+    const auto *inLeftData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(inLeft.exportData());
+
+    ASSERT_NE(nullptr, inTopData);
+    ASSERT_NE(nullptr, inLeftData);
+
+    auto inTopAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*inTopData);
+    ASSERT_TRUE(inTopAccess);
+
+    auto inLeftAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*inLeftData);
+    ASSERT_TRUE(inLeftAccess);
+
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(inTopData->data(), topVec.data(), topVec.size() * sizeof(int),
+                                           cudaMemcpyHostToDevice, stream));
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(inLeftData->data(), leftVec.data(), leftVec.size() * sizeof(int),
+                                           cudaMemcpyHostToDevice, stream));
+
+    // Generate gold result
+    CopyMakeBorder(goldVec, hImgSrcVec, *dstAccess, imgSrcVec, topVec, leftVec, borderType, borderValue);
+
+    // Generate test result
+    nv::cvop::CopyMakeBorder cpyMakeBorderOp;
+
+    EXPECT_NO_THROW(cpyMakeBorderOp(stream, imgBatchSrc, imgDst, inTop, inLeft, borderType, borderValue));
+
+    // Get test data back
+    ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
+    ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
+    ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), dstData->data(), dstBufSize * sizeof(T), cudaMemcpyDeviceToHost));
+
+#ifdef DEBUG_PRINT_IMAGE
+    for (int b = 0; b < numBatches; ++b) test::DebugPrintImage(batchSrcVec[b], srcPitchBytes / sizeof(uint8_t));
+    test::DebugPrintImage(testVec, dstData->rowPitchBytes() / sizeof(uint8_t));
+    test::DebugPrintImage(goldVec, dstData->rowPitchBytes() / sizeof(uint8_t));
+#endif
+#ifdef DEBUG_PRINT_DIFF
+    if (goldVec != testVec)
+    {
+        test::DebugPrintDiff(testVec, goldVec);
+    }
+#endif
+
+    EXPECT_EQ(goldVec, testVec);
+}
+
+TEST_P(OpCopyMakeBorder, stack_correct_output)
+{
+    int srcWidth   = GetParamValue<0>();
+    int srcHeight  = GetParamValue<1>();
+    int numBatches = GetParamValue<2>();
+    int topPad     = GetParamValue<3>();
+    int buttomPad  = GetParamValue<4>();
+    int leftPad    = GetParamValue<5>();
+    int rightPad   = GetParamValue<6>();
+
+    NVCVBorderType borderType = GetParamValue<7>();
+    float4         borderValue;
+    borderValue.x = GetParamValue<8>();
+    borderValue.y = GetParamValue<9>();
+    borderValue.z = GetParamValue<10>();
+    borderValue.w = GetParamValue<11>();
+
+    nvcv::ImageFormat format = GetParamValue<12>();
+
+    if (nvcv::FMT_RGB8 == format || nvcv::FMT_RGBA8 == format)
+        StartTestStack<uint8_t>(srcWidth, srcHeight, numBatches, topPad, buttomPad, leftPad, rightPad, borderType,
+                                borderValue, format);
+    else if (nvcv::FMT_RGBf32 == format || nvcv::FMT_RGBAf32 == format)
+        StartTestStack<float>(srcWidth, srcHeight, numBatches, topPad, buttomPad, leftPad, rightPad, borderType,
+                              borderValue, format);
 }

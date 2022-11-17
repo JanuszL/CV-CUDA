@@ -123,6 +123,16 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopCopyMakeBorderSubmit(NVCVOperatorHandle handle, 
                                                      NVCVTensorHandle in, NVCVTensorHandle out, int top, int left,
                                                      NVCVBorderType borderMode, const float4 borderValue);
 
+NVCV_OP_PUBLIC NVCVStatus nvcvopCopyMakeBorderVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
+                                                             NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                                                             NVCVTensorHandle top, NVCVTensorHandle left,
+                                                             NVCVBorderType borderMode, const float4 borderValue);
+
+NVCV_OP_PUBLIC NVCVStatus nvcvopCopyMakeBorderVarShapeStackSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
+                                                                  NVCVImageBatchHandle in, NVCVTensorHandle out,
+                                                                  NVCVTensorHandle top, NVCVTensorHandle left,
+                                                                  NVCVBorderType borderMode, const float4 borderValue);
+
 #ifdef __cplusplus
 }
 #endif

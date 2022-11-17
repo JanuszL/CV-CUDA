@@ -13,6 +13,8 @@
 
 #include "CvCudaLegacyHelpers.hpp"
 
+#include "nvcv/TensorDataAccess.hpp"
+
 #include <nvcv/PixelType.hpp>
 #include <private/core/Exception.hpp>
 #include <private/legacy/CvCudaLegacy.h>
@@ -197,6 +199,29 @@ cuda_op::DataFormat GetLegacyDataFormat(const TensorLayout &layout)
     {
         throw Exception(Status::ERROR_INVALID_ARGUMENT, "Tensor layout not supported");
     }
+}
+
+cuda_op::DataFormat GetLegacyDataFormat(const ITensorDataPitchDevice &container)
+{
+    return GetLegacyDataFormat(container.layout());
+}
+
+Size2D GetMaxImageSize(const ITensorDataPitchDevice &tensor)
+{
+    //tensor must be NHWC or HWC
+    if (auto access = TensorDataAccessPitchImagePlanar::Create(tensor))
+    {
+        return access->size();
+    }
+    else
+    {
+        throw Exception(Status::ERROR_INVALID_ARGUMENT, "Get size failed.");
+    }
+}
+
+Size2D GetMaxImageSize(const IImageBatchVarShapeDataPitchDevice &imageBatch)
+{
+    return imageBatch.maxSize();
 }
 
 } // namespace nv::cv::legacy::helpers

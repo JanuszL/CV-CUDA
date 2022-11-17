@@ -18,27 +18,32 @@
  * limitations under the License.
  */
 
-#include "cv_cuda.h"
+#include "../CvCudaLegacy.h"
+#include "../CvCudaLegacyHelpers.hpp"
 
-#include "border.cuh"
-#include "cuda_utils.cuh"
+#include "../CvCudaUtils.cuh"
 
 #define BLOCK 32
-using namespace cv::cudev;
+
+using namespace nv::cv;
+using namespace nv::cv::legacy::cuda_op;
+using namespace nv::cv::legacy::helpers;
+
+namespace nv::cv::legacy::cuda_op {
+namespace {
 
 template<typename BrdRd, typename T>
-__global__ void copyMakeBorderStackKernel(const BrdRd src, cuda_op::Ptr2dNHWC<T> dst, const int *left_, const int *top_)
+__global__ void copyMakeBorderKernel(const BrdRd src, cuda::Tensor3DWrap<T> dst, const cuda::Tensor3DWrap<int> left_,
+                                     const cuda::Tensor3DWrap<int> top_, int out_height, int out_width)
 {
     const int x         = blockIdx.x * blockDim.x + threadIdx.x;
     const int y         = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx = get_batch_idx();
 
-    int       left    = left_[batch_idx];
-    int       top     = top_[batch_idx];
+    int       left    = *left_.ptr(0, 0, batch_idx);
+    int       top     = *top_.ptr(0, 0, batch_idx);
     const int x_shift = x - left;
     const int y_shift = y - top;
-
-    int out_height = dst.rows, out_width = dst.cols;
 
     if (x < out_width && y < out_height)
     {
@@ -47,19 +52,19 @@ __global__ void copyMakeBorderStackKernel(const BrdRd src, cuda_op::Ptr2dNHWC<T>
 }
 
 template<typename BrdRd, typename T>
-__global__ void copyMakeBorderKernel(const BrdRd src, cuda_op::Ptr2dVarShapeNHWC<T> dst, const int *left_,
-                                     const int *top_)
+__global__ void copyMakeBorderKernel(const BrdRd src, Ptr2dVarShapeNHWC<T> dst, const cuda::Tensor3DWrap<int> left_,
+                                     const cuda::Tensor3DWrap<int> top_)
 {
     const int x         = blockIdx.x * blockDim.x + threadIdx.x;
     const int y         = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx = get_batch_idx();
 
-    int       left    = left_[batch_idx];
-    int       top     = top_[batch_idx];
+    const int left    = *left_.ptr(0, 0, batch_idx);
+    const int top     = *top_.ptr(0, 0, batch_idx);
     const int x_shift = x - left;
     const int y_shift = y - top;
 
-    int out_height = dst.rows[batch_idx], out_width = dst.cols[batch_idx];
+    int out_height = dst.at_rows(batch_idx), out_width = dst.at_cols(batch_idx);
 
     if (x < out_width && y < out_height)
     {
@@ -70,14 +75,34 @@ __global__ void copyMakeBorderKernel(const BrdRd src, cuda_op::Ptr2dVarShapeNHWC
 template<template<typename> class B, typename T>
 struct copyMakeBorderDispatcher
 {
-    static void call(const cuda_op::Ptr2dVarShapeNHWC<T> src, cuda_op::Ptr2dVarShapeNHWC<T> dst, const T &borderValue,
-                     const int *left, const int *top, int max_input_height, int max_input_width, cudaStream_t stream)
+    static void call(const Ptr2dVarShapeNHWC<T> &src, cuda::Tensor3DWrap<T> dst, const T &borderValue,
+                     const cuda::Tensor3DWrap<int> &left, const cuda::Tensor3DWrap<int> &top, int max_height,
+                     int max_width, cudaStream_t stream)
     {
         dim3 blockSize(BLOCK, BLOCK / 4, 1);
-        dim3 gridSize(divUp(max_input_width, blockSize.x), divUp(max_input_height, blockSize.y), dst.batches);
+        dim3 gridSize(divUp(max_width, blockSize.x), divUp(max_height, blockSize.y), src.batches);
 
-        B<T>                                                       brd(0, 0, borderValue);
-        cuda_op::BorderReader<cuda_op::Ptr2dVarShapeNHWC<T>, B<T>> brdSrc(src, brd);
+        B<T>                                     brd(0, 0, borderValue);
+        BorderReader<Ptr2dVarShapeNHWC<T>, B<T>> brdSrc(src, brd);
+
+        copyMakeBorderKernel<<<gridSize, blockSize, 0, stream>>>(brdSrc, dst, left, top, max_height, max_width);
+        checkKernelErrors();
+
+#ifdef CUDA_DEBUG_LOG
+        checkCudaErrors(cudaStreamSynchronize(stream));
+        checkCudaErrors(cudaGetLastError());
+#endif
+    }
+
+    static void call(const Ptr2dVarShapeNHWC<T> &src, Ptr2dVarShapeNHWC<T> dst, const T &borderValue,
+                     const cuda::Tensor3DWrap<int> &left, const cuda::Tensor3DWrap<int> &top, int max_height,
+                     int max_width, cudaStream_t stream)
+    {
+        dim3 blockSize(BLOCK, BLOCK / 4, 1);
+        dim3 gridSize(divUp(max_width, blockSize.x), divUp(max_height, blockSize.y), src.batches);
+
+        B<T>                                     brd(0, 0, borderValue);
+        BorderReader<Ptr2dVarShapeNHWC<T>, B<T>> brdSrc(src, brd);
 
         copyMakeBorderKernel<<<gridSize, blockSize, 0, stream>>>(brdSrc, dst, left, top);
         checkKernelErrors();
@@ -87,193 +112,149 @@ struct copyMakeBorderDispatcher
         checkCudaErrors(cudaGetLastError());
 #endif
     }
-
-    static void callStack(const cuda_op::Ptr2dVarShapeNHWC<T> src, cuda_op::Ptr2dNHWC<T> dst, const T &borderValue,
-                          const int *left, const int *top, int max_height, int max_width, cudaStream_t stream)
-    {
-        dim3 blockSize(BLOCK, BLOCK / 4, 1);
-        dim3 gridSize(divUp(max_width, blockSize.x), divUp(max_height, blockSize.y), dst.batches);
-
-        B<T>                                                       brd(0, 0, borderValue);
-        cuda_op::BorderReader<cuda_op::Ptr2dVarShapeNHWC<T>, B<T>> brdSrc(src, brd);
-
-        copyMakeBorderStackKernel<<<gridSize, blockSize, 0, stream>>>(brdSrc, dst, left, top);
-        checkKernelErrors();
-
-#ifdef CUDA_DEBUG_LOG
-        checkCudaErrors(cudaStreamSynchronize(stream));
-        checkCudaErrors(cudaGetLastError());
-#endif
-    }
 };
 
-template<typename T, int cn> // uchar3 float3 uchar float
-void copyMakeBorder(const void **d_in, void **d_out, const int batch_size, const int *height, const int *width,
-                    const int *top, const int *left, const int *out_height, const int *out_width, int max_out_height,
-                    int max_out_width, bool stack, const int borderType, const cv::Scalar value, cudaStream_t stream)
+template<typename T, int cn, typename OutType> // uchar3 float3 uchar float
+void copyMakeBorder(const IImageBatchVarShapeDataPitchDevice &inData, const OutType &outData,
+                    const ITensorDataPitchDevice &top, const ITensorDataPitchDevice &left,
+                    const NVCVBorderType borderType, const float4 value, cudaStream_t stream)
 {
-    typedef typename MakeVec<T, cn>::type src_type;
-    cv::Scalar_<T>                        value_ = value;
-    const src_type                        brdVal = VecTraits<src_type>::make(value_.val);
+    typedef cuda::MakeType<T, cn> src_type;
+    src_type                      brdVal;
+#pragma unroll
+    for (int i = 0; i < cn; i++) cuda::GetElement(brdVal, i) = cuda::GetElement(value, i);
 
-    cuda_op::Ptr2dVarShapeNHWC<src_type> src_ptr(batch_size, height, width, cn, (src_type **)d_in);
+    Ptr2dVarShapeNHWC<src_type> srcWrap(inData);
+    cuda::Tensor3DWrap<int>     topVec(top);
+    cuda::Tensor3DWrap<int>     leftVec(left);
 
-    if (stack)
-    {
-        cuda_op::Ptr2dNHWC<src_type> dst_ptr(batch_size, max_out_height, max_out_width, cn, (src_type *)d_out[0]);
-        typedef void (*func_t)(const cuda_op::Ptr2dVarShapeNHWC<src_type> src, cuda_op::Ptr2dNHWC<src_type> dst,
-                               const src_type &borderValue, const int *left, const int *top, int max_height,
-                               int max_width, cudaStream_t stream);
+    auto outSize = GetMaxImageSize(outData);
 
-        static const func_t funcs[] = {copyMakeBorderDispatcher<cuda_op::BrdConstant, src_type>::callStack,
-                                       copyMakeBorderDispatcher<cuda_op::BrdReplicate, src_type>::callStack,
-                                       copyMakeBorderDispatcher<cuda_op::BrdReflect, src_type>::callStack,
-                                       copyMakeBorderDispatcher<cuda_op::BrdWrap, src_type>::callStack,
-                                       copyMakeBorderDispatcher<cuda_op::BrdReflect101, src_type>::callStack};
+    using out_type = typename std::conditional<std::is_same<OutType, ITensorDataPitchDevice>::value,
+                                               cuda::Tensor3DWrap<src_type>, Ptr2dVarShapeNHWC<src_type>>::type;
 
-        funcs[borderType](src_ptr, dst_ptr, brdVal, left, top, max_out_height, max_out_width, stream);
-    }
-    else
-    {
-        cuda_op::Ptr2dVarShapeNHWC<src_type> dst_ptr(batch_size, out_height, out_width, cn, (src_type **)d_out);
-        typedef void (*func_t)(const cuda_op::Ptr2dVarShapeNHWC<src_type> src, cuda_op::Ptr2dVarShapeNHWC<src_type> dst,
-                               const src_type &borderValue, const int *left, const int *top, int max_height,
-                               int max_width, cudaStream_t stream);
+    out_type dstWrap(outData);
 
-        static const func_t funcs[] = {copyMakeBorderDispatcher<cuda_op::BrdConstant, src_type>::call,
-                                       copyMakeBorderDispatcher<cuda_op::BrdReplicate, src_type>::call,
-                                       copyMakeBorderDispatcher<cuda_op::BrdReflect, src_type>::call,
-                                       copyMakeBorderDispatcher<cuda_op::BrdWrap, src_type>::call,
-                                       copyMakeBorderDispatcher<cuda_op::BrdReflect101, src_type>::call};
+    typedef void (*func_t)(const Ptr2dVarShapeNHWC<src_type> &src, out_type dst, const src_type &borderValue,
+                           const cuda::Tensor3DWrap<int> &left, const cuda::Tensor3DWrap<int> &top, int max_height,
+                           int max_width, cudaStream_t stream);
 
-        funcs[borderType](src_ptr, dst_ptr, brdVal, left, top, max_out_height, max_out_width, stream);
-    }
+    static const func_t funcs[]
+        = {copyMakeBorderDispatcher<BrdConstant, src_type>::call,
+           copyMakeBorderDispatcher<BrdReplicate, src_type>::call, copyMakeBorderDispatcher<BrdReflect, src_type>::call,
+           copyMakeBorderDispatcher<BrdWrap, src_type>::call, copyMakeBorderDispatcher<BrdReflect101, src_type>::call};
+
+    funcs[borderType](srcWrap, dstWrap, brdVal, leftVec, topVec, outSize.h, outSize.w, stream);
 }
+} // namespace
 
-namespace cuda_op {
-
-size_t CopyMakeBorderVarShape::calBufferSize(int batch_size)
+template<class OutType>
+ErrorCode CopyMakeBorderVarShape::inferWarp(const IImageBatchVarShapeDataPitchDevice &data_in, const OutType &data_out,
+                                            const ITensorDataPitchDevice &top, const ITensorDataPitchDevice &left,
+                                            const NVCVBorderType borderType, const float4 value, cudaStream_t stream)
 {
-    // calculate the cpu buffer size for batch of gpu_ptr, height, width, out_height, out_width, top and left
-    return (sizeof(void *) * 2 + sizeof(int) * 6) * batch_size;
-}
+    DataFormat input_format  = GetLegacyDataFormat(data_in);
+    DataFormat output_format = GetLegacyDataFormat(data_out);
+    if (std::is_same<decltype(data_in), decltype(data_out)>::value)
+    {
+        if (input_format != output_format)
+        {
+            LOG_ERROR("Invalid DataFormat between input (" << input_format << ") and output (" << output_format << ")");
+            return ErrorCode::INVALID_DATA_FORMAT;
+        }
+    }
 
-int CopyMakeBorderVarShape::infer(const void **data_in, void **data_out, void *gpu_workspace, void *cpu_workspace,
-                                  const int batch, const size_t buffer_size, const int *top, const int *bottom,
-                                  const int *left, const int *right, bool stack, const int borderType,
-                                  const cv::Scalar value, DataShape *input_shape, DataFormat format, DataType data_type,
-                                  cudaStream_t stream)
-{
+    auto format = input_format;
     if (!(format == kNHWC || format == kHWC))
     {
         LOG_ERROR("Invalid DataFormat " << format);
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    int channels = input_shape[0].C;
+    int channels = data_in.uniqueFormat().numChannels();
     if (channels > 4)
     {
         LOG_ERROR("Invalid channel number " << channels);
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
+    DataType data_type = GetLegacyDataType(data_in.uniqueFormat());
     if (!(data_type == kCV_8U || data_type == kCV_16U || data_type == kCV_16S || data_type == kCV_32F))
     {
         LOG_ERROR("Invalid DataType " << data_type);
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    if (!(borderType == cv::BORDER_CONSTANT || borderType == cv::BORDER_REPLICATE || borderType == cv::BORDER_REFLECT
-          || borderType == cv::BORDER_REFLECT_101 || borderType == cv::BORDER_WRAP))
+    if (!(borderType == NVCV_BORDER_CONSTANT || borderType == NVCV_BORDER_REPLICATE || borderType == NVCV_BORDER_REFLECT
+          || borderType == NVCV_BORDER_REFLECT101 || borderType == NVCV_BORDER_WRAP))
     {
         LOG_ERROR("Invalid borderType " << borderType);
         return ErrorCode::INVALID_PARAMETER;
     }
 
-    size_t data_size = DataSize(data_type);
-
-    const void **inputs_cpu     = (const void **)cpu_workspace;
-    void       **outputs_cpu    = (void **)((char *)inputs_cpu + sizeof(void *) * batch);
-    int         *top_cpu        = (int *)((char *)outputs_cpu + sizeof(void *) * batch);
-    int         *left_cpu       = (int *)((char *)top_cpu + sizeof(int) * batch);
-    int         *rows_cpu       = (int *)((char *)left_cpu + sizeof(int) * batch);
-    int         *cols_cpu       = (int *)((char *)rows_cpu + sizeof(int) * batch);
-    int         *out_rows_cpu   = (int *)((char *)cols_cpu + sizeof(int) * batch);
-    int         *out_cols_cpu   = (int *)((char *)out_rows_cpu + sizeof(int) * batch);
-    int          max_out_height = 0, max_out_width = 0;
-
-    for (int i = 0; i < batch; i++)
+    DataType   left_data_type = GetLegacyDataType(left.dtype());
+    DataFormat left_format    = GetLegacyDataFormat(left.layout());
+    if (left_data_type != kCV_32S)
     {
-        inputs_cpu[i] = data_in[i];
-        if (!stack)
-        {
-            outputs_cpu[i] = data_out[i];
-        }
-        else
-        {
-            outputs_cpu[i] = data_out[0];
-        }
-        top_cpu[i]      = top[i];
-        left_cpu[i]     = left[i];
-        rows_cpu[i]     = input_shape[i].H;
-        cols_cpu[i]     = input_shape[i].W;
-        out_rows_cpu[i] = top[i] + bottom[i] + input_shape[i].H;
-        out_cols_cpu[i] = left[i] + right[i] + input_shape[i].W;
-        if (stack && (out_rows_cpu[i] != out_rows_cpu[0] || out_cols_cpu[i] != out_cols_cpu[0]))
-        {
-            LOG_ERROR("Invalid DataShape");
-            return ErrorCode::INVALID_DATA_SHAPE;
-        }
-        if (out_cols_cpu[i] > max_out_width)
-            max_out_width = out_cols_cpu[i];
-        if (out_rows_cpu[i] > max_out_height)
-            max_out_height = out_rows_cpu[i];
+        LOG_ERROR("Invalid Left DataType " << left_data_type);
+        return ErrorCode::INVALID_DATA_TYPE;
+    }
+    if (!(left_format == kNHWC || left_format == kHWC))
+    {
+        LOG_ERROR("Invalid Left DataFormat " << left_format);
+        return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    const void **inputs_gpu   = (const void **)gpu_workspace;
-    void       **outputs_gpu  = (void **)((char *)inputs_gpu + sizeof(void *) * batch);
-    int         *top_gpu      = (int *)((char *)outputs_gpu + sizeof(void *) * batch);
-    int         *left_gpu     = (int *)((char *)top_gpu + sizeof(int) * batch);
-    int         *rows_gpu     = (int *)((char *)left_gpu + sizeof(int) * batch);
-    int         *cols_gpu     = (int *)((char *)rows_gpu + sizeof(int) * batch);
-    int         *out_rows_gpu = (int *)((char *)cols_gpu + sizeof(int) * batch);
-    int         *out_cols_gpu = (int *)((char *)out_rows_gpu + sizeof(int) * batch);
+    DataType   top_data_type = GetLegacyDataType(top.dtype());
+    DataFormat top_format    = GetLegacyDataFormat(top.layout());
+    if (top_data_type != kCV_32S)
+    {
+        LOG_ERROR("Invalid Top DataType " << top_data_type);
+        return ErrorCode::INVALID_DATA_TYPE;
+    }
+    if (!(top_format == kNHWC || top_format == kHWC))
+    {
+        LOG_ERROR("Invalid Top DataFormat " << top_format);
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
 
-    checkCudaErrors(
-        cudaMemcpyAsync((void *)gpu_workspace, (void *)cpu_workspace, buffer_size, cudaMemcpyHostToDevice, stream));
-
-    cv::cuda::Stream cv_stream = cv::cuda::StreamAccessor::wrapStream(stream);
-
-    typedef void (*func_t)(const void **d_in, void **d_out, const int batch_size, const int *height, const int *width,
-                           const int *top, const int *left, const int *out_height, const int *out_width,
-                           int max_out_height, int max_out_width, bool stack, const int borderType,
-                           const cv::Scalar value, cudaStream_t stream);
+    typedef void (*func_t)(const IImageBatchVarShapeDataPitchDevice &d_in, const OutType &d_out,
+                           const ITensorDataPitchDevice &top, const ITensorDataPitchDevice &left,
+                           const NVCVBorderType borderType, const float4 value, cudaStream_t stream);
 
     // clang-format off
-    static const func_t funcs[6][4] =
-    {
-        {copyMakeBorder<uchar, 1>, copyMakeBorder<uchar, 2>, copyMakeBorder<uchar, 3>, copyMakeBorder<uchar, 4>  },
+    static const func_t funcs[6][4] = {
+        {copyMakeBorder<uchar, 1>,        copyMakeBorder<uchar, 2>,        copyMakeBorder<uchar, 3>,        copyMakeBorder<uchar, 4>       },
         {0 /*copyMakeBorder<schar , 1>*/, 0 /*copyMakeBorder<schar , 2>*/, 0 /*copyMakeBorder<schar , 3>*/, 0 /*copyMakeBorder<schar , 4>*/},
-        {copyMakeBorder<ushort, 1>, 0 /*copyMakeBorder<ushort, 2>*/, copyMakeBorder<ushort, 3>, copyMakeBorder<ushort, 4>  },
-        {copyMakeBorder<short, 1>, 0 /*copyMakeBorder<short , 2>*/, copyMakeBorder<short, 3>, copyMakeBorder<short, 4>  },
+        {copyMakeBorder<ushort, 1>,       0 /*copyMakeBorder<ushort, 2>*/, copyMakeBorder<ushort, 3>,       copyMakeBorder<ushort, 4>      },
+        {copyMakeBorder<short, 1>,        0 /*copyMakeBorder<short , 2>*/, copyMakeBorder<short, 3>,        copyMakeBorder<short, 4>       },
         {0 /*copyMakeBorder<int   , 1>*/, 0 /*copyMakeBorder<int   , 2>*/, 0 /*copyMakeBorder<int   , 3>*/, 0 /*copyMakeBorder<int   , 4>*/},
-        {copyMakeBorder<float, 1>, 0 /*copyMakeBorder<float , 2>*/, copyMakeBorder<float, 3>, copyMakeBorder<float, 4>  }
+        {copyMakeBorder<float, 1>,        0 /*copyMakeBorder<float , 2>*/, copyMakeBorder<float, 3>,        copyMakeBorder<float, 4>       }
     };
     // clang-format on
 
     const func_t func = funcs[data_type][channels - 1];
+    NVCV_ASSERT(func != 0);
 
-    if (stack)
-    {
-        func(inputs_gpu, outputs_cpu, batch, rows_gpu, cols_gpu, top_gpu, left_gpu, out_rows_gpu, out_cols_gpu,
-             max_out_height, max_out_width, stack, borderType, value, stream);
-    }
-    else
-    {
-        func(inputs_gpu, outputs_gpu, batch, rows_gpu, cols_gpu, top_gpu, left_gpu, out_rows_gpu, out_cols_gpu,
-             max_out_height, max_out_width, stack, borderType, value, stream);
-    }
-    return 0;
+    func(data_in, data_out, top, left, borderType, value, stream);
+
+    return SUCCESS;
 }
 
-} // namespace cuda_op
+ErrorCode CopyMakeBorderVarShape::infer(const IImageBatchVarShapeDataPitchDevice &data_in,
+                                        const IImageBatchVarShapeDataPitchDevice &data_out,
+                                        const ITensorDataPitchDevice &top, const ITensorDataPitchDevice &left,
+                                        const NVCVBorderType borderType, const float4 value, cudaStream_t stream)
+{
+    return inferWarp(data_in, data_out, top, left, borderType, value, stream);
+}
+
+ErrorCode CopyMakeBorderVarShape::infer(const IImageBatchVarShapeDataPitchDevice &data_in,
+                                        const ITensorDataPitchDevice &data_out, const ITensorDataPitchDevice &top,
+                                        const ITensorDataPitchDevice &left, const NVCVBorderType borderType,
+                                        const float4 value, cudaStream_t stream)
+{
+    return inferWarp(data_in, data_out, top, left, borderType, value, stream);
+}
+
+} // namespace nv::cv::legacy::cuda_op
