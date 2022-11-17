@@ -24,7 +24,7 @@
 
 #include <iostream>
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 Resource::Resource()
 {
@@ -132,4 +132,4 @@ void Resource::Export(py::module &m)
     resource.def_property_readonly("id", &Resource::id, "Unique resource instance identifier");
 }
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv

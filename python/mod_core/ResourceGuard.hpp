@@ -15,18 +15,16 @@
  * limitations under the License.
  */
 
-#ifndef CVCUDA_PYTHON_RESOURCE_GUARD_HPP
-#define CVCUDA_PYTHON_RESOURCE_GUARD_HPP
+#ifndef NVCV_PYTHON_PRIV_RESOURCE_GUARD_HPP
+#define NVCV_PYTHON_PRIV_RESOURCE_GUARD_HPP
 
 #include "Resource.hpp"
 #include "Stream.hpp"
 
+#include <functional>
 #include <initializer_list>
-#include <memory>
-#include <unordered_map>
-#include <vector>
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 class Resource;
 
@@ -46,6 +44,6 @@ private:
     LockResources m_resourcesPerLockMode;
 };
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv
 
-#endif // CVCUDA_PYTHON_RESOURCE_GUARD_HPP
+#endif // NVCV_PYTHON_PRIV_RESOURCE_GUARD_HPP

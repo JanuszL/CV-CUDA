@@ -15,17 +15,17 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_PYTHON_RECT_HPP
-#define NVCV_PYTHON_RECT_HPP
+#ifndef NVCV_PYTHON_PRIV_RECT_HPP
+#define NVCV_PYTHON_PRIV_RECT_HPP
 
 #include <pybind11/pybind11.h>
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 namespace py = ::pybind11;
 
 void ExportRect(py::module &m);
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv
 
-#endif // NVCV_PYTHON_RECT_HPP
+#endif // NVCV_PYTHON_PRIV_RECT_HPP

@@ -19,7 +19,7 @@
 
 #include "Resource.hpp"
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 ResourceGuard::ResourceGuard(Stream &stream)
     : m_stream(stream)
@@ -59,4 +59,4 @@ ResourceGuard::~ResourceGuard()
     this->commit();
 }
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv

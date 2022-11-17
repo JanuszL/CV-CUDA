@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_PYTHON_IMAGEFORMAT_HPP
-#define NVCV_PYTHON_IMAGEFORMAT_HPP
+#ifndef NVCV_PYTHON_PRIV_IMAGEFORMAT_HPP
+#define NVCV_PYTHON_PRIV_IMAGEFORMAT_HPP
 
 #include <nvcv/ImageFormat.hpp>
 #include <pybind11/pybind11.h>
@@ -25,11 +25,11 @@ namespace nv::cv {
 size_t PYBIND11_EXPORT ComputeHash(const cv::ImageFormat &fmt);
 }
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 namespace py = pybind11;
 
 void ExportImageFormat(py::module &m);
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv
 
-#endif // NVCV_PYTHON_IMAGEFORMAT_HPP
+#endif // NVCV_PYTHON_PRIV_IMAGEFORMAT_HPP

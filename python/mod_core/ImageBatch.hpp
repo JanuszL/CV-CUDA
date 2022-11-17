@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_PYTHON_IMAGEBATCH_HPP
-#define NVCV_PYTHON_IMAGEBATCH_HPP
+#ifndef NVCV_PYTHON_PRIV_IMAGEBATCH_HPP
+#define NVCV_PYTHON_PRIV_IMAGEBATCH_HPP
 
 #include "Container.hpp"
 #include "Size.hpp"
@@ -25,7 +25,7 @@
 
 #include <vector>
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 namespace py = pybind11;
 
 class Image;
@@ -87,6 +87,6 @@ private:
     cv::ImageBatchVarShape m_impl;
 };
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv
 
-#endif // NVCV_PYTHON_IMAGEBATCH_HPP
+#endif // NVCV_PYTHON_PRIV_IMAGEBATCH_HPP

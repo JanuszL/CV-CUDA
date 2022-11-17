@@ -20,12 +20,12 @@
 #include <common/String.hpp>
 #include <nvcv/Rect.h>
 
-namespace nv::cvpy {
-
 static std::ostream &operator<<(std::ostream &out, const NVCVRectI &rc)
 {
     return out << "RectI(x=" << rc.x << ",y=" << rc.y << ",width=" << rc.width << ",height=" << rc.height << ')';
 }
+
+namespace nv::cvpy::priv {
 
 void ExportRect(py::module &m)
 {
@@ -51,4 +51,4 @@ void ExportRect(py::module &m)
         .def("__repr__", &util::ToString<NVCVRectI>);
 }
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv

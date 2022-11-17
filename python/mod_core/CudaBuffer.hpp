@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_PYTHON_CUDA_BUFFER_HPP
-#define NVCV_PYTHON_CUDA_BUFFER_HPP
+#ifndef NVCV_PYTHON_PRIV_CUDA_BUFFER_HPP
+#define NVCV_PYTHON_PRIV_CUDA_BUFFER_HPP
 
 #include <cuda_runtime.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 namespace py = pybind11;
 
@@ -58,14 +58,16 @@ private:
     bool       m_owns;
 };
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv
 
 namespace PYBIND11_NAMESPACE { namespace detail {
 
+namespace priv = nv::cvpy::priv;
+
 template<>
-struct type_caster<nv::cvpy::CudaBuffer> : public type_caster_base<nv::cvpy::CudaBuffer>
+struct type_caster<priv::CudaBuffer> : public type_caster_base<priv::CudaBuffer>
 {
-    using type = nv::cvpy::CudaBuffer;
+    using type = priv::CudaBuffer;
     using Base = type_caster_base<type>;
 
 public:
@@ -86,4 +88,4 @@ public:
 
 }} // namespace PYBIND11_NAMESPACE::detail
 
-#endif // NVCV_PYTHON_CUDA_BUFFER_HPP
+#endif // NVCV_PYTHON_PRIV_CUDA_BUFFER_HPP

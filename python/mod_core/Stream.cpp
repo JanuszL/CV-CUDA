@@ -26,7 +26,7 @@
 #include <common/String.hpp>
 #include <pybind11/operators.h>
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 // Here we define the representation of external cuda streams.
 // It defines pybind11's type casters from the python object
@@ -66,18 +66,18 @@ private:
     py::object   m_wrappedObj;
 };
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv
 
 namespace PYBIND11_NAMESPACE { namespace detail {
 
 using namespace std::literals;
-namespace cvpy = nv::cvpy;
 namespace util = nv::cvpy::util;
+namespace priv = nv::cvpy::priv;
 
 template<>
-struct type_caster<cvpy::ExternalStream<cvpy::VOIDP>>
+struct type_caster<priv::ExternalStream<priv::VOIDP>>
 {
-    PYBIND11_TYPE_CASTER(cvpy::ExternalStream<cvpy::VOIDP>, const_name("ctypes.c_void_p"));
+    PYBIND11_TYPE_CASTER(priv::ExternalStream<priv::VOIDP>, const_name("ctypes.c_void_p"));
 
     bool load(handle src, bool)
     {
@@ -100,9 +100,9 @@ struct type_caster<cvpy::ExternalStream<cvpy::VOIDP>>
 };
 
 template<>
-struct type_caster<cvpy::ExternalStream<cvpy::INT>>
+struct type_caster<priv::ExternalStream<priv::INT>>
 {
-    PYBIND11_TYPE_CASTER(cvpy::ExternalStream<cvpy::INT>, const_name("int"));
+    PYBIND11_TYPE_CASTER(priv::ExternalStream<priv::INT>, const_name("int"));
 
     bool load(handle src, bool)
     {
@@ -122,9 +122,9 @@ struct type_caster<cvpy::ExternalStream<cvpy::INT>>
 };
 
 template<>
-struct type_caster<cvpy::ExternalStream<cvpy::TORCH>>
+struct type_caster<priv::ExternalStream<priv::TORCH>>
 {
-    PYBIND11_TYPE_CASTER(cvpy::ExternalStream<cvpy::TORCH>, const_name("torch.cuda.Stream"));
+    PYBIND11_TYPE_CASTER(priv::ExternalStream<priv::TORCH>, const_name("torch.cuda.Stream"));
 
     bool load(handle src, bool)
     {
@@ -151,9 +151,9 @@ struct type_caster<cvpy::ExternalStream<cvpy::TORCH>>
 };
 
 template<>
-struct type_caster<cvpy::ExternalStream<cvpy::NUMBA>>
+struct type_caster<priv::ExternalStream<priv::NUMBA>>
 {
-    PYBIND11_TYPE_CASTER(cvpy::ExternalStream<cvpy::NUMBA>, const_name("numba.cuda.Stream"));
+    PYBIND11_TYPE_CASTER(priv::ExternalStream<priv::NUMBA>, const_name("numba.cuda.Stream"));
 
     bool load(handle src, bool)
     {
@@ -180,7 +180,7 @@ struct type_caster<cvpy::ExternalStream<cvpy::NUMBA>>
 
 }} // namespace PYBIND11_NAMESPACE::detail
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 // In terms of caching, all streams are the same.
 // Any stream in the cache can be fetched and used.
@@ -376,4 +376,4 @@ void Stream::Export(py::module &m)
                           });
 }
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv

@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_PYTHON_CONTAINER_HPP
-#define NVCV_PYTHON_CONTAINER_HPP
+#ifndef NVCV_PYTHON_PRIV_CONTAINER_HPP
+#define NVCV_PYTHON_PRIV_CONTAINER_HPP
 
 #include "Cache.hpp"
 #include "Resource.hpp"
 
 #include <memory>
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 namespace py = pybind11;
 
 class PYBIND11_EXPORT Container
@@ -40,6 +40,6 @@ protected:
     Container() = default;
 };
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv
 
-#endif // NVCV_PYTHON_CONTAINER_HPP
+#endif // NVCV_PYTHON_PRIV_CONTAINER_HPP

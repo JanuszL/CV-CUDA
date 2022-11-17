@@ -38,7 +38,7 @@ size_t ComputeHash(const cv::DataType &dtype)
 
 } // namespace nv::cv
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 namespace {
 
@@ -308,9 +308,11 @@ void ExportDataType(py::module &m)
     py::implicitly_convertible<py::dtype, cv::DataType>();
 }
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv
 
 namespace pybind11::detail {
+
+namespace priv = nv::cvpy::priv;
 
 bool type_caster<nv::cv::DataType>::load(handle src, bool)
 {
@@ -331,7 +333,7 @@ bool type_caster<nv::cv::DataType>::load(handle src, bool)
         }
         dtype dt = dtype::from_args(reinterpret_steal<object>(ptr));
 
-        if (std::optional<nv::cv::DataType> _dt = nv::cvpy::ToDataType(dt))
+        if (std::optional<nv::cv::DataType> _dt = priv::ToDataType(dt))
         {
             value = *_dt;
             return true;
@@ -345,7 +347,7 @@ bool type_caster<nv::cv::DataType>::load(handle src, bool)
 
 handle type_caster<nv::cv::DataType>::cast(nv::cv::DataType type, return_value_policy /* policy */, handle /*parent */)
 {
-    dtype dt = nv::cvpy::ToDType(type);
+    dtype dt = priv::ToDType(type);
 
     // without the increfs, we get 6 of these...
     // *** Reference count error detected: an attempt was made to deallocate the dtype 6 (I) ***

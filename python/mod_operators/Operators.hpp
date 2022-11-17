@@ -20,6 +20,8 @@
 
 namespace nv::cvpy {
 
+using namespace nv::cvpy::priv;
+
 namespace py = ::pybind11;
 
 void ExportOpReformat(py::module &m);

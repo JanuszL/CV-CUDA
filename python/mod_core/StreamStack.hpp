@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_PYTHON_STREAMSTACK_HPP
-#define NVCV_PYTHON_STREAMSTACK_HPP
+#ifndef NVCV_PYTHON_PRIV_STREAMSTACK_HPP
+#define NVCV_PYTHON_PRIV_STREAMSTACK_HPP
 
 #include <memory>
 #include <mutex>
 #include <stack>
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 class Stream;
 
@@ -41,6 +41,6 @@ private:
     std::mutex                        m_mtx;
 };
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv
 
-#endif // NVCV_PYTHON_STREAMSTACK_HPP
+#endif // NVCV_PYTHON_PRIV_STREAMSTACK_HPP

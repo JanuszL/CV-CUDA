@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_PYTHON_RESOURCE_HPP
-#define NVCV_PYTHON_RESOURCE_HPP
+#ifndef NVCV_PYTHON_PRIV_RESOURCE_HPP
+#define NVCV_PYTHON_PRIV_RESOURCE_HPP
 
 #include "LockMode.hpp"
 #include "Object.hpp"
@@ -29,7 +29,7 @@
 // fwd declaration from driver_types.h
 typedef struct CUevent_st *cudaEvent_t;
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 namespace py = pybind11;
 
 class Stream;
@@ -70,6 +70,6 @@ private:
     cudaEvent_t m_readEvent, m_writeEvent;
 };
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv
 
-#endif // NVCV_PYTHON_RESOURCE_HPP
+#endif // NVCV_PYTHON_PRIV_RESOURCE_HPP

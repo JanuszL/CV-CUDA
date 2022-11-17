@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_PYTHON_IMAGE_HPP
-#define NVCV_PYTHON_IMAGE_HPP
+#ifndef NVCV_PYTHON_PRIV_IMAGE_HPP
+#define NVCV_PYTHON_PRIV_IMAGE_HPP
 
 #include "Container.hpp"
 #include "CudaBuffer.hpp"
@@ -33,7 +33,7 @@
 #include <optional>
 #include <variant>
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 namespace py = pybind11;
 
 class PYBIND11_EXPORT Image final : public Container
@@ -117,6 +117,6 @@ private:
 
 std::ostream &operator<<(std::ostream &out, const Image &img);
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv
 
-#endif // NVCV_PYTHON_IMAGE_HPP
+#endif // NVCV_PYTHON_PRIV_IMAGE_HPP

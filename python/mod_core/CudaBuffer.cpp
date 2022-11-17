@@ -22,7 +22,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 using namespace py::literals;
 
@@ -264,18 +264,20 @@ void CudaBuffer::Export(py::module &m)
 
 namespace pybind11::detail {
 
+namespace priv = nv::cvpy::priv;
+
 // Python -> C++
-bool type_caster<nv::cvpy::CudaBuffer>::load(handle src, bool implicit_conv)
+bool type_caster<priv::CudaBuffer>::load(handle src, bool implicit_conv)
 {
     PyTypeObject *srctype = Py_TYPE(src.ptr());
-    const type_info *cuda_buffer_type = get_type_info(typeid(nv::cvpy::CudaBuffer));
+    const type_info *cuda_buffer_type = get_type_info(typeid(priv::CudaBuffer));
 
     // src's type is CudaBuffer?
     if(srctype == cuda_buffer_type->type)
     {
         // We know it's managed by a shared pointer (holder), let's use it
         value_and_holder vh = reinterpret_cast<instance *>(src.ptr())->get_value_and_holder();
-        value = vh.template holder<std::shared_ptr<nv::cvpy::CudaBuffer>>();
+        value = vh.template holder<std::shared_ptr<priv::CudaBuffer>>();
         NVCV_ASSERT(value != nullptr);
         src.inc_ref();
         return true;
@@ -284,7 +286,7 @@ bool type_caster<nv::cvpy::CudaBuffer>::load(handle src, bool implicit_conv)
     // create a CudaBuffer out of it.
     else
     {
-        value.reset(new nv::cvpy::CudaBuffer);
+        value.reset(new priv::CudaBuffer);
         return value->load(src.ptr());
     }
 }

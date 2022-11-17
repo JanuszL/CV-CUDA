@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_PYTHON_LOCKMODE_HPP
-#define NVCV_PYTHON_LOCKMODE_HPP
+#ifndef NVCV_PYTHON_PRIV_LOCKMODE_HPP
+#define NVCV_PYTHON_PRIV_LOCKMODE_HPP
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 enum LockMode
 {
@@ -28,6 +28,6 @@ enum LockMode
     LOCK_READWRITE = LOCK_READ | LOCK_WRITE
 };
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv
 
-#endif // NVCV_PYTHON_LOCKMODE_HPP
+#endif // NVCV_PYTHON_PRIV_LOCKMODE_HPP

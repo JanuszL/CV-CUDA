@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_PYTHON_OBJECT_HPP
-#define NVCV_PYTHON_OBJECT_HPP
+#ifndef NVCV_PYTHON_PRIV_OBJECT_HPP
+#define NVCV_PYTHON_PRIV_OBJECT_HPP
 
 #include <pybind11/pybind11.h>
 
 #include <memory>
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 // Parent of all NVCV objects that are reference-counted
 class PYBIND11_EXPORT Object : public std::enable_shared_from_this<Object>
@@ -36,6 +36,6 @@ protected:
     Object() = default;
 };
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv
 
-#endif // NVCV_PYTHON_OBJECT_HPP
+#endif // NVCV_PYTHON_PRIV_OBJECT_HPP

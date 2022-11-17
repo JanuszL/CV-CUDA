@@ -23,7 +23,7 @@
 #include <mutex>
 #include <unordered_map>
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 struct HashKey
 {
@@ -188,4 +188,4 @@ void Cache::Export(py::module &m)
     Cache::Instance().fetchAll<Cache>();
 }
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv

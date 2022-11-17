@@ -21,7 +21,7 @@
 
 #include <common/Assert.hpp>
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 size_t ImageBatchVarShape::Key::doGetHash() const
 {
@@ -172,4 +172,4 @@ void ImageBatchVarShape::Export(py::module &m)
         .def("clear", &ImageBatchVarShape::clear);
 }
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv

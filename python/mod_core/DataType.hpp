@@ -25,12 +25,12 @@ namespace nv::cv {
 size_t ComputeHash(const cv::DataType &dtype);
 }
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 namespace py = pybind11;
 
 void ExportDataType(py::module &m);
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv
 
 namespace pybind11::detail {
 

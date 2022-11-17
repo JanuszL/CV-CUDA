@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_PYTHON_SIZE_HPP
-#define NVCV_PYTHON_SIZE_HPP
+#ifndef NVCV_PYTHON_PRIV_SIZE_HPP
+#define NVCV_PYTHON_PRIV_SIZE_HPP
 
 #include <tuple>
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 using Size2D = std::tuple<int, int>;
 
 }
 
-#endif // NVCV_PYTHON_SIZE_HPP
+#endif // NVCV_PYTHON_PRIV_SIZE_HPP

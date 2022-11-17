@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_PYTHON_CACHE_HPP
-#define NVCV_PYTHON_CACHE_HPP
+#ifndef NVCV_PYTHON_PRIV_CACHE_HPP
+#define NVCV_PYTHON_PRIV_CACHE_HPP
 
 #include "Object.hpp"
 
@@ -25,7 +25,7 @@
 
 #include <vector>
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 namespace py = pybind11;
 
@@ -100,6 +100,6 @@ private:
     void doIterateThroughItems(const std::function<void(CacheItem &item)> &fn) const;
 };
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv
 
-#endif // NVCV_PYTHON_CACHE_HPP
+#endif // NVCV_PYTHON_PRIV_CACHE_HPP

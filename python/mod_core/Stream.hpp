@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_PYTHON_STREAM_HPP
-#define NVCV_PYTHON_STREAM_HPP
+#ifndef NVCV_PYTHON_PRIV_STREAM_HPP
+#define NVCV_PYTHON_PRIV_STREAM_HPP
 
 #include "Cache.hpp"
 #include "LockMode.hpp"
@@ -29,7 +29,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 class Resource;
 
@@ -93,6 +93,6 @@ private:
     py::object   m_wrappedObj;
 };
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv
 
-#endif // NVCV_PYTHON_STREAM_HPP
+#endif // NVCV_PYTHON_PRIV_STREAM_HPP

@@ -38,7 +38,7 @@ size_t ComputeHash(const cv::ImageFormat &fmt)
 
 } // namespace nv::cv
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 static std::string ImageFormatToString(cv::ImageFormat fmt)
 {
@@ -93,4 +93,4 @@ void ExportImageFormat(py::module &m)
                                             "String representation of the image format.");
 }
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv

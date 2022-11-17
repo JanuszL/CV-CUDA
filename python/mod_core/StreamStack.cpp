@@ -19,7 +19,7 @@
 
 #include "Stream.hpp"
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 void StreamStack::push(Stream &stream)
 {
@@ -52,4 +52,4 @@ StreamStack &StreamStack::Instance()
     return stack;
 }
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv

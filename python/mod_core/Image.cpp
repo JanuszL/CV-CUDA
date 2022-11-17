@@ -32,7 +32,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 bool Image::Key::doIsEqual(const IKey &ithat) const
 {
@@ -1008,4 +1008,4 @@ void Image::Export(py::module &m)
     m.def("as_image", &Image::WrapCudaVector, "buffer"_a, "format"_a = cv::FMT_NONE, py::keep_alive<0, 1>());
 }
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv

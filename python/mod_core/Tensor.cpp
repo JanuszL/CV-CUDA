@@ -41,7 +41,7 @@ static size_t ComputeHash(const cv::TensorShape &shape)
 
 } // namespace nv::cv
 
-namespace nv::cvpy {
+namespace nv::cvpy::priv {
 
 Shape CreateShape(const cv::TensorShape &tshape)
 {
@@ -436,4 +436,4 @@ void Tensor::Export(py::module &m)
     m.def("as_tensor", &Tensor::WrapImage, "image"_a);
 }
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::priv
