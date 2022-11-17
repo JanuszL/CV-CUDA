@@ -22,7 +22,7 @@
 
 #include <functional>
 
-namespace nv::cvpy {
+namespace nv::cvpy::util {
 
 #ifdef _MSC_VER
 #    define NVCV_NORETURN __declspec(noreturn)
@@ -49,14 +49,15 @@ NVCV_NORETURN void DoAssert(const char *file, int line, const char *cond);
 // allows overriding of NVCV_ASSERT definition
 #if !defined(NVCV_ASSERT)
 #    if NVCV_DEBUG
-#        define NVCV_ASSERT(x)                                                                                      \
-            do                                                                                                      \
-            {                                                                                                       \
-                if (!(x))                                                                                           \
-                {                                                                                                   \
-                    nv::cvpy::DoAssert(NVCV_SOURCE_FILE_NAME, NVCV_SOURCE_FILE_LINENO, NVCV_OPTIONAL_STRINGIFY(x)); \
-                }                                                                                                   \
-            }                                                                                                       \
+#        define NVCV_ASSERT(x)                                                               \
+            do                                                                               \
+            {                                                                                \
+                if (!(x))                                                                    \
+                {                                                                            \
+                    nv::cvpy::util::DoAssert(NVCV_SOURCE_FILE_NAME, NVCV_SOURCE_FILE_LINENO, \
+                                             NVCV_OPTIONAL_STRINGIFY(x));                    \
+                }                                                                            \
+            }                                                                                \
             while (1 == 0)
 #    else
 #        define NVCV_ASSERT(x) \
@@ -67,6 +68,6 @@ NVCV_NORETURN void DoAssert(const char *file, int line, const char *cond);
 #    endif
 #endif // !defined(NVCV_ASSERT)
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::util
 
 #endif // NVCV_PYTHON_ASSERT_HPP

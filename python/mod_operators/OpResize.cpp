@@ -103,15 +103,15 @@ void ExportOpResize(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<Tensor>("resize", &Resize, "shape"_a, "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(),
-                           "stream"_a = nullptr);
-    DefClassMethod<Tensor>("resize_into", &ResizeInto, "out"_a, "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(),
-                           "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("resize", &Resize, "shape"_a, "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(),
+                                 "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("resize_into", &ResizeInto, "out"_a, "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(),
+                                 "stream"_a = nullptr);
 
-    DefClassMethod<ImageBatchVarShape>("resize", &ResizeVarShape, "sizes"_a, "interp"_a = NVCV_INTERP_LINEAR,
-                                       py::kw_only(), "stream"_a = nullptr);
-    DefClassMethod<ImageBatchVarShape>("resize_into", &ResizeVarShapeInto, "out"_a, "interp"_a = NVCV_INTERP_LINEAR,
-                                       py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("resize", &ResizeVarShape, "sizes"_a, "interp"_a = NVCV_INTERP_LINEAR,
+                                             py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("resize_into", &ResizeVarShapeInto, "out"_a,
+                                             "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

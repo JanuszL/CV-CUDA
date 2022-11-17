@@ -26,7 +26,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace nv::cvpy {
+namespace nv::cvpy::util {
 
 template<class T>
 requires(!std::is_enum_v<T> && std::is_default_constructible_v<std::hash<T>>) size_t ComputeHash(const T &a)
@@ -85,13 +85,13 @@ inline size_t ComputeHash()
     return ComputeHash(612 /* any value works */);
 }
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::util
 
 namespace nv::cv {
 
 inline size_t ComputeHash(const Size2D &s)
 {
-    using cvpy::ComputeHash;
+    using cvpy::util::ComputeHash;
     return ComputeHash(s.w, s.h);
 }
 

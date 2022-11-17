@@ -21,7 +21,7 @@
 #include <cuda_runtime.h>
 #include <nvcv/detail/CheckError.hpp>
 
-namespace nv::cvpy {
+namespace nv::cvpy::util {
 
 using nv::cv::detail::CheckThrow;
 
@@ -29,6 +29,6 @@ void CheckThrow(cudaError_t err);
 
 void CheckLog(cudaError_t err);
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::util
 
 #endif // NVCV_PYTHON_CHECKERROR_HPP

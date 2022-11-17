@@ -123,15 +123,15 @@ void ExportOpErase(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<Tensor>("erase", &Erase, "anchor"_a, "erasing"_a, "values"_a, "imgIdx"_a, py::kw_only(),
-                           "random"_a = false, "seed"_a = 0, "stream"_a = nullptr);
-    DefClassMethod<Tensor>("erase_into", &EraseInto, "out"_a, "anchor"_a, "erasing"_a, "values"_a, "imgIdx"_a,
-                           py::kw_only(), "random"_a = false, "seed"_a = 0, "stream"_a = nullptr);
-    DefClassMethod<ImageBatchVarShape>("erase", &EraseVarShape, "anchor"_a, "erasing"_a, "values"_a, "imgIdx"_a,
-                                       py::kw_only(), "random"_a = false, "seed"_a = 0, "stream"_a = nullptr);
-    DefClassMethod<ImageBatchVarShape>("erase_into", &EraseVarShapeInto, "out"_a, "anchor"_a, "erasing"_a, "values"_a,
-                                       "imgIdx"_a, py::kw_only(), "random"_a = false, "seed"_a = 0,
-                                       "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("erase", &Erase, "anchor"_a, "erasing"_a, "values"_a, "imgIdx"_a, py::kw_only(),
+                                 "random"_a = false, "seed"_a = 0, "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("erase_into", &EraseInto, "out"_a, "anchor"_a, "erasing"_a, "values"_a, "imgIdx"_a,
+                                 py::kw_only(), "random"_a = false, "seed"_a = 0, "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("erase", &EraseVarShape, "anchor"_a, "erasing"_a, "values"_a, "imgIdx"_a,
+                                             py::kw_only(), "random"_a = false, "seed"_a = 0, "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("erase_into", &EraseVarShapeInto, "out"_a, "anchor"_a, "erasing"_a,
+                                             "values"_a, "imgIdx"_a, py::kw_only(), "random"_a = false, "seed"_a = 0,
+                                             "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

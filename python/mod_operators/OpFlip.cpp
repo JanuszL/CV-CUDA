@@ -100,12 +100,12 @@ void ExportOpFlip(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<Tensor>("flip", &Flip, "flipCode"_a, py::kw_only(), "stream"_a = nullptr);
-    DefClassMethod<Tensor>("flip_into", &FlipInto, "output"_a, "flipCode"_a, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("flip", &Flip, "flipCode"_a, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("flip_into", &FlipInto, "output"_a, "flipCode"_a, py::kw_only(), "stream"_a = nullptr);
 
-    DefClassMethod<ImageBatchVarShape>("flip", &FlipVarShape, "flipCode"_a, py::kw_only(), "stream"_a = nullptr);
-    DefClassMethod<ImageBatchVarShape>("flip_into", &FlipVarShapeInto, "output"_a, "flipCode"_a, py::kw_only(),
-                                       "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("flip", &FlipVarShape, "flipCode"_a, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("flip_into", &FlipVarShapeInto, "output"_a, "flipCode"_a, py::kw_only(),
+                                             "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

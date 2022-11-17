@@ -108,18 +108,19 @@ void ExportOpBilateralFilter(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<Tensor>("bilateral_filter", &BilateralFilter, "diameter"_a, "sigma_color"_a, "sigma_space"_a,
-                           py::kw_only(), "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
-    DefClassMethod<Tensor>("bilateral_filter_into", &BilateralFilterInto, "output"_a, "diameter"_a, "sigma_color"_a,
-                           "sigma_space"_a, py::kw_only(), "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                           "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("bilateral_filter", &BilateralFilter, "diameter"_a, "sigma_color"_a, "sigma_space"_a,
+                                 py::kw_only(), "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
+                                 "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("bilateral_filter_into", &BilateralFilterInto, "output"_a, "diameter"_a,
+                                 "sigma_color"_a, "sigma_space"_a, py::kw_only(),
+                                 "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
 
-    DefClassMethod<ImageBatchVarShape>("bilateral_filter", &VarShapeBilateralFilter, "diameter"_a, "sigma_color"_a,
-                                       "sigma_space"_a, py::kw_only(),
-                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
-    DefClassMethod<ImageBatchVarShape>("bilateral_filter_into", &VarShapeBilateralFilterInto, "output"_a, "diameter"_a,
-                                       "sigma_color"_a, "sigma_space"_a, py::kw_only(),
-                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("bilateral_filter", &VarShapeBilateralFilter, "diameter"_a,
+                                             "sigma_color"_a, "sigma_space"_a, py::kw_only(),
+                                             "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("bilateral_filter_into", &VarShapeBilateralFilterInto, "output"_a,
+                                             "diameter"_a, "sigma_color"_a, "sigma_space"_a, py::kw_only(),
+                                             "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

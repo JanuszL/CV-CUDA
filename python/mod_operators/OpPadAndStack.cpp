@@ -68,12 +68,12 @@ void ExportOpPadAndStack(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<ImageBatchVarShape>("padandstack", &PadAndStack, "top"_a, "left"_a,
-                                       "border"_a = NVCV_BORDER_CONSTANT, "bvalue"_a = 0, py::kw_only(),
-                                       "stream"_a = nullptr);
-    DefClassMethod<ImageBatchVarShape>("padandstack_into", &PadAndStackInto, "out"_a, "top"_a, "left"_a,
-                                       "border"_a = NVCV_BORDER_CONSTANT, "bvalue"_a = 0, py::kw_only(),
-                                       "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("padandstack", &PadAndStack, "top"_a, "left"_a,
+                                             "border"_a = NVCV_BORDER_CONSTANT, "bvalue"_a = 0, py::kw_only(),
+                                             "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("padandstack_into", &PadAndStackInto, "out"_a, "top"_a, "left"_a,
+                                             "border"_a = NVCV_BORDER_CONSTANT, "bvalue"_a = 0, py::kw_only(),
+                                             "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

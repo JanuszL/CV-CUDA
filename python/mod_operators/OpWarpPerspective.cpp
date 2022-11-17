@@ -48,7 +48,7 @@ std::shared_ptr<Tensor> WarpPerspectiveInto(Tensor &input, Tensor &output, const
     size_t bValueDims = borderValue.ndim();
     if (bValueSize > 4 || bValueDims != 1)
     {
-        throw std::runtime_error(FormatString(
+        throw std::runtime_error(util::FormatString(
             "Channels of borderValue should <= 4 and dimension should be 2, current is '%lu', '%lu' respectively",
             bValueSize, bValueDims));
     }
@@ -62,9 +62,9 @@ std::shared_ptr<Tensor> WarpPerspectiveInto(Tensor &input, Tensor &output, const
     if (!(xformDims == 2 && xform.shape(0) == 3 && xform.shape(1) == 3))
     {
         throw std::runtime_error(
-            FormatString("Details of transformation matrix: nDim == 2, shape == (3, 3) but current is "
-                         "'%lu', ('%lu', '%lu') respectively",
-                         xformDims, xform.shape(0), xform.shape(1)));
+            util::FormatString("Details of transformation matrix: nDim == 2, shape == (3, 3) but current is "
+                               "'%lu', ('%lu', '%lu') respectively",
+                               xformDims, xform.shape(0), xform.shape(1)));
     }
 
     NVCVPerspectiveTransform xformOutput;
@@ -112,7 +112,7 @@ std::shared_ptr<ImageBatchVarShape> WarpPerspectiveVarShapeInto(ImageBatchVarSha
     size_t bValueDims = borderValue.ndim();
     if (bValueSize > 4 || bValueDims != 1)
     {
-        throw std::runtime_error(FormatString(
+        throw std::runtime_error(util::FormatString(
             "Channels of borderValue should <= 4 and dimension should be 2, current is '%lu', '%lu' respectively",
             bValueSize, bValueDims));
     }
@@ -157,18 +157,18 @@ void ExportOpWarpPerspective(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<Tensor>("warp_perspective", &WarpPerspective, "xform"_a, "flags"_a, py::kw_only(), "border_mode"_a,
-                           "border_value"_a, "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("warp_perspective", &WarpPerspective, "xform"_a, "flags"_a, py::kw_only(),
+                                 "border_mode"_a, "border_value"_a, "stream"_a = nullptr);
 
-    DefClassMethod<Tensor>("warp_perspective_into", &WarpPerspectiveInto, "output"_a, "xform"_a, "flags"_a,
-                           py::kw_only(), "border_mode"_a, "border_value"_a, "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("warp_perspective_into", &WarpPerspectiveInto, "output"_a, "xform"_a, "flags"_a,
+                                 py::kw_only(), "border_mode"_a, "border_value"_a, "stream"_a = nullptr);
 
-    DefClassMethod<ImageBatchVarShape>("warp_perspective", &WarpPerspectiveVarShape, "xform"_a, "flags"_a,
-                                       py::kw_only(), "border_mode"_a, "border_value"_a, "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("warp_perspective", &WarpPerspectiveVarShape, "xform"_a, "flags"_a,
+                                             py::kw_only(), "border_mode"_a, "border_value"_a, "stream"_a = nullptr);
 
-    DefClassMethod<ImageBatchVarShape>("warp_perspective_into", &WarpPerspectiveVarShapeInto, "output"_a, "xform"_a,
-                                       "flags"_a, py::kw_only(), "border_mode"_a, "border_value"_a,
-                                       "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("warp_perspective_into", &WarpPerspectiveVarShapeInto, "output"_a,
+                                             "xform"_a, "flags"_a, py::kw_only(), "border_mode"_a, "border_value"_a,
+                                             "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

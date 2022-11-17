@@ -114,17 +114,19 @@ void ExportOpGaussian(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<Tensor>("gaussian", &Gaussian, "kernel_size"_a, "sigma"_a,
-                           "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
-    DefClassMethod<Tensor>("gaussian_into", &GaussianInto, "output"_a, "kernel_size"_a, "sigma"_a,
-                           "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("gaussian", &Gaussian, "kernel_size"_a, "sigma"_a,
+                                 "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
+                                 "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("gaussian_into", &GaussianInto, "output"_a, "kernel_size"_a, "sigma"_a,
+                                 "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
+                                 "stream"_a = nullptr);
 
-    DefClassMethod<ImageBatchVarShape>("gaussian", &VarShapeGaussian, "max_kernel_size"_a, "kernel_size"_a, "sigma"_a,
-                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                       "stream"_a = nullptr);
-    DefClassMethod<ImageBatchVarShape>("gaussian_into", &VarShapeGaussianInto, "output"_a, "max_kernel_size"_a,
-                                       "kernel_size"_a, "sigma"_a, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                                       py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("gaussian", &VarShapeGaussian, "max_kernel_size"_a, "kernel_size"_a,
+                                             "sigma"_a, "border"_a     = NVCVBorderType::NVCV_BORDER_CONSTANT,
+                                             py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>(
+        "gaussian_into", &VarShapeGaussianInto, "output"_a, "max_kernel_size"_a, "kernel_size"_a, "sigma"_a,
+        "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

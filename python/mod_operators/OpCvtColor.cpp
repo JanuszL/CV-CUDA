@@ -371,12 +371,14 @@ void ExportOpCvtColor(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<Tensor>("cvtcolor", &CvtColor, "code"_a, py::kw_only(), "stream"_a = nullptr);
-    DefClassMethod<Tensor>("cvtcolor_into", &CvtColorInto, "output"_a, "code"_a, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("cvtcolor", &CvtColor, "code"_a, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("cvtcolor_into", &CvtColorInto, "output"_a, "code"_a, py::kw_only(),
+                                 "stream"_a = nullptr);
 
-    DefClassMethod<ImageBatchVarShape>("cvtcolor", &CvtColorVarShape, "code"_a, py::kw_only(), "stream"_a = nullptr);
-    DefClassMethod<ImageBatchVarShape>("cvtcolor_into", &CvtColorVarShapeInto, "output"_a, "code"_a, py::kw_only(),
-                                       "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("cvtcolor", &CvtColorVarShape, "code"_a, py::kw_only(),
+                                             "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("cvtcolor_into", &CvtColorVarShapeInto, "output"_a, "code"_a,
+                                             py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

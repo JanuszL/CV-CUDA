@@ -35,8 +35,8 @@ Resource::Resource()
     m_readEvent = m_writeEvent = nullptr;
     try
     {
-        CheckThrow(cudaEventCreateWithFlags(&m_readEvent, cudaEventDisableTiming));
-        CheckThrow(cudaEventCreateWithFlags(&m_writeEvent, cudaEventDisableTiming));
+        util::CheckThrow(cudaEventCreateWithFlags(&m_readEvent, cudaEventDisableTiming));
+        util::CheckThrow(cudaEventCreateWithFlags(&m_writeEvent, cudaEventDisableTiming));
     }
     catch (...)
     {
@@ -63,11 +63,11 @@ void Resource::submitSignal(Stream &stream, LockMode mode) const
 
     if (mode & LOCK_READ)
     {
-        CheckThrow(cudaEventRecord(m_readEvent, stream.handle()));
+        util::CheckThrow(cudaEventRecord(m_readEvent, stream.handle()));
     }
     if (mode & LOCK_WRITE)
     {
-        CheckThrow(cudaEventRecord(m_writeEvent, stream.handle()));
+        util::CheckThrow(cudaEventRecord(m_writeEvent, stream.handle()));
     }
 }
 
@@ -82,12 +82,12 @@ void Resource::doSubmitSync(Stream &stream, LockMode mode) const
 {
     if (mode & LOCK_READ)
     {
-        CheckThrow(cudaStreamWaitEvent(stream.handle(), m_writeEvent));
+        util::CheckThrow(cudaStreamWaitEvent(stream.handle(), m_writeEvent));
     }
     if (mode & LOCK_WRITE)
     {
-        CheckThrow(cudaStreamWaitEvent(stream.handle(), m_writeEvent));
-        CheckThrow(cudaStreamWaitEvent(stream.handle(), m_readEvent));
+        util::CheckThrow(cudaStreamWaitEvent(stream.handle(), m_writeEvent));
+        util::CheckThrow(cudaStreamWaitEvent(stream.handle(), m_readEvent));
     }
 }
 
@@ -106,12 +106,12 @@ void Resource::doSync(LockMode mode) const
 
     if (mode & LOCK_READ)
     {
-        CheckThrow(cudaEventSynchronize(m_writeEvent));
+        util::CheckThrow(cudaEventSynchronize(m_writeEvent));
     }
     if (mode & LOCK_WRITE)
     {
-        CheckThrow(cudaEventSynchronize(m_writeEvent));
-        CheckThrow(cudaEventSynchronize(m_readEvent));
+        util::CheckThrow(cudaEventSynchronize(m_writeEvent));
+        util::CheckThrow(cudaEventSynchronize(m_readEvent));
     }
 }
 

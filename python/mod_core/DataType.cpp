@@ -206,7 +206,7 @@ bool FindDType(T *, const cv::DataType &dtype, py::dtype *dt)
         if (cv::cuda::NumElements<T> != nchannels)
         {
             // Create a dtype with multiple components too, with shape argument
-            *dt = py::dtype(FormatString("%d%c", nchannels, dt->char_()));
+            *dt = py::dtype(util::FormatString("%d%c", nchannels, dt->char_()));
         }
         return true;
     }

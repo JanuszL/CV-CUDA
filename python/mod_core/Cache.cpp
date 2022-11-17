@@ -175,12 +175,12 @@ Cache &Cache::Instance()
 
 void Cache::Export(py::module &m)
 {
-    RegisterCleanup(m,
-                    []
-                    {
-                        // Make sure cache is cleared up when script ends.
-                        Cache::Instance().clear();
-                    });
+    util::RegisterCleanup(m,
+                          []
+                          {
+                              // Make sure cache is cleared up when script ends.
+                              Cache::Instance().clear();
+                          });
 
     m.def("clear_cache", [] { Cache::Instance().clear(); });
 

@@ -61,10 +61,10 @@ void ExportOpConvertTo(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<Tensor>("convertto", &ConvertTo, "dtype"_a, "scale"_a = 1, "offset"_a = 0, py::kw_only(),
-                           "stream"_a = nullptr);
-    DefClassMethod<Tensor>("convertto_into", &ConvertToInto, "out"_a, "scale"_a = 1, "offset"_a = 0, py::kw_only(),
-                           "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("convertto", &ConvertTo, "dtype"_a, "scale"_a = 1, "offset"_a = 0, py::kw_only(),
+                                 "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("convertto_into", &ConvertToInto, "out"_a, "scale"_a = 1, "offset"_a = 0,
+                                 py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

@@ -20,7 +20,7 @@
 #include <cstdarg>
 #include <cstdio>
 
-namespace nv::cvpy {
+namespace nv::cvpy::util {
 
 std::string FormatString(const char *fmt, ...)
 {
@@ -36,4 +36,4 @@ std::string FormatString(const char *fmt, ...)
     return buffer;
 }
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::util

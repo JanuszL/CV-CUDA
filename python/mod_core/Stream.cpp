@@ -72,6 +72,7 @@ namespace PYBIND11_NAMESPACE { namespace detail {
 
 using namespace std::literals;
 namespace cvpy = nv::cvpy;
+namespace util = nv::cvpy::util;
 
 template<>
 struct type_caster<cvpy::ExternalStream<cvpy::VOIDP>>
@@ -80,7 +81,7 @@ struct type_caster<cvpy::ExternalStream<cvpy::VOIDP>>
 
     bool load(handle src, bool)
     {
-        std::string strType = cvpy::GetFullyQualifiedName(src);
+        std::string strType = util::GetFullyQualifiedName(src);
 
         if (strType != "ctypes.c_void_p")
         {
@@ -127,7 +128,7 @@ struct type_caster<cvpy::ExternalStream<cvpy::TORCH>>
 
     bool load(handle src, bool)
     {
-        std::string strType = cvpy::GetFullyQualifiedName(src);
+        std::string strType = util::GetFullyQualifiedName(src);
 
         if (strType != "torch.cuda.streams.Stream" && strType != "torch.cuda.streams.ExternalStream")
         {
@@ -156,7 +157,7 @@ struct type_caster<cvpy::ExternalStream<cvpy::NUMBA>>
 
     bool load(handle src, bool)
     {
-        std::string strType = cvpy::GetFullyQualifiedName(src);
+        std::string strType = util::GetFullyQualifiedName(src);
 
         if (strType != "numba.cuda.cudadrv.driver.Stream")
         {
@@ -214,7 +215,7 @@ std::shared_ptr<Stream> Stream::Create()
 Stream::Stream()
     : m_owns(true)
 {
-    CheckThrow(cudaStreamCreate(&m_handle));
+    util::CheckThrow(cudaStreamCreate(&m_handle));
 }
 
 Stream::Stream(IExternalStream &extStream)
@@ -233,8 +234,8 @@ Stream::~Stream()
 {
     if (m_owns)
     {
-        CheckLog(cudaStreamSynchronize(m_handle));
-        CheckLog(cudaStreamDestroy(m_handle));
+        util::CheckLog(cudaStreamSynchronize(m_handle));
+        util::CheckLog(cudaStreamDestroy(m_handle));
     }
 }
 
@@ -262,7 +263,7 @@ void Stream::sync()
 {
     py::gil_scoped_release release;
 
-    CheckThrow(cudaStreamSynchronize(m_handle));
+    util::CheckThrow(cudaStreamSynchronize(m_handle));
 }
 
 Stream &Stream::Current()
@@ -304,7 +305,7 @@ void Stream::holdResources(LockResources usedResources)
             delete pclosure;
         };
 
-        CheckThrow(cudaStreamAddCallback(m_handle, fn, closure.get(), 0));
+        util::CheckThrow(cudaStreamAddCallback(m_handle, fn, closure.get(), 0));
 
         closure.release();
     }
@@ -344,35 +345,35 @@ void Stream::Export(py::module &m)
         .def("__exit__", &Stream::deactivate)
         .def("sync", &Stream::sync)
         .def("__int__", &Stream::pyhandle)
-        .def("__repr__", &ToString<Stream>)
+        .def("__repr__", &util::ToString<Stream>)
         .def_property_readonly("handle", &Stream::pyhandle)
         .def_property_readonly("id", &Stream::id);
 
     // Make sure all streams we've created are synced when script ends.
     // Also make cleanup hold the globalStream reference during script execution.
-    RegisterCleanup(m,
-                    [globalStream]()
-                    {
-                        for (std::shared_ptr<Stream> stream : Cache::Instance().fetchAll<Stream>())
-                        {
-                            stream->sync();
-                        }
-                        globalStream->sync();
+    util::RegisterCleanup(m,
+                          [globalStream]()
+                          {
+                              for (std::shared_ptr<Stream> stream : Cache::Instance().fetchAll<Stream>())
+                              {
+                                  stream->sync();
+                              }
+                              globalStream->sync();
 
-                        // There should only be 1 stream in the stack, namely the
-                        // global stream.
-                        auto s = StreamStack::Instance().top();
-                        if (s != globalStream)
-                        {
-                            std::cerr << "Stream stack leak detected" << std::endl;
-                        }
+                              // There should only be 1 stream in the stack, namely the
+                              // global stream.
+                              auto s = StreamStack::Instance().top();
+                              if (s != globalStream)
+                              {
+                                  std::cerr << "Stream stack leak detected" << std::endl;
+                              }
 
-                        // Make sure stream stack is empty
-                        while (auto s = StreamStack::Instance().top())
-                        {
-                            StreamStack::Instance().pop();
-                        }
-                    });
+                              // Make sure stream stack is empty
+                              while (auto s = StreamStack::Instance().top())
+                              {
+                                  StreamStack::Instance().pop();
+                              }
+                          });
 }
 
 } // namespace nv::cvpy

@@ -128,16 +128,16 @@ void ExportOpPillowResize(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<Tensor>("pillowresize", &PillowResize, "shape"_a, "format"_a, "interp"_a = NVCV_INTERP_LINEAR,
-                           py::kw_only(), "stream"_a = nullptr);
-    DefClassMethod<Tensor>("pillowresize_into", &PillowResizeInto, "output"_a, "format"_a,
-                           "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("pillowresize", &PillowResize, "shape"_a, "format"_a, "interp"_a = NVCV_INTERP_LINEAR,
+                                 py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("pillowresize_into", &PillowResizeInto, "output"_a, "format"_a,
+                                 "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(), "stream"_a = nullptr);
 
-    DefClassMethod<ImageBatchVarShape>("pillowresize", &VarShapePillowResize, "sizes"_a,
-                                       "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("pillowresize", &VarShapePillowResize, "sizes"_a,
+                                             "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(), "stream"_a = nullptr);
 
-    DefClassMethod<ImageBatchVarShape>("pillowresize_into", &VarShapePillowResizeInto, "output"_a,
-                                       "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("pillowresize_into", &VarShapePillowResizeInto, "output"_a,
+                                             "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

@@ -103,17 +103,19 @@ void ExportOpLaplacian(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<Tensor>("laplacian", &Laplacian, "ksize"_a, "scale"_a = 1.f,
-                           "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
-    DefClassMethod<Tensor>("laplacian_into", &LaplacianInto, "output"_a, "ksize"_a, "scale"_a = 1.f,
-                           "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("laplacian", &Laplacian, "ksize"_a, "scale"_a = 1.f,
+                                 "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
+                                 "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("laplacian_into", &LaplacianInto, "output"_a, "ksize"_a, "scale"_a = 1.f,
+                                 "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
+                                 "stream"_a = nullptr);
 
-    DefClassMethod<ImageBatchVarShape>("laplacian", &LaplacianVarShape, "ksize"_a, "scale"_a,
-                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                       "stream"_a = nullptr);
-    DefClassMethod<ImageBatchVarShape>("laplacian_into", &LaplacianVarShapeInto, "output"_a, "ksize"_a, "scale"_a,
-                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                       "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("laplacian", &LaplacianVarShape, "ksize"_a, "scale"_a,
+                                             "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
+                                             "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("laplacian_into", &LaplacianVarShapeInto, "output"_a, "ksize"_a, "scale"_a,
+                                             "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
+                                             "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

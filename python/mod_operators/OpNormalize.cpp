@@ -130,23 +130,23 @@ void ExportOpNormalize(py::module &m)
     float defGlobalShift = 0;
     float defEpsilon     = 0;
 
-    DefClassMethod<Tensor>("normalize", &Normalize, "base"_a, "scale"_a, "flags"_a = std::nullopt, py::kw_only(),
-                           "globalscale"_a = defGlobalScale, "globalshift"_a = defGlobalShift, "epsilon"_a = defEpsilon,
-                           "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("normalize", &Normalize, "base"_a, "scale"_a, "flags"_a = std::nullopt, py::kw_only(),
+                                 "globalscale"_a = defGlobalScale, "globalshift"_a = defGlobalShift,
+                                 "epsilon"_a = defEpsilon, "stream"_a = nullptr);
 
-    DefClassMethod<Tensor>("normalize_into", &NormalizeInto, "out"_a, "base"_a, "scale"_a, "flags"_a = std::nullopt,
-                           py::kw_only(), "globalscale"_a = defGlobalScale, "globalshift"_a = defGlobalShift,
-                           "epsilon"_a = defEpsilon, "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("normalize_into", &NormalizeInto, "out"_a, "base"_a, "scale"_a,
+                                 "flags"_a = std::nullopt, py::kw_only(), "globalscale"_a = defGlobalScale,
+                                 "globalshift"_a = defGlobalShift, "epsilon"_a = defEpsilon, "stream"_a = nullptr);
 
-    DefClassMethod<ImageBatchVarShape>("normalize", &VarShapeNormalize, "base"_a, "scale"_a, "flags"_a = std::nullopt,
-                                       py::kw_only(), "globalscale"_a = defGlobalScale,
-                                       "globalshift"_a = defGlobalShift, "epsilon"_a = defEpsilon,
-                                       "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("normalize", &VarShapeNormalize, "base"_a, "scale"_a,
+                                             "flags"_a = std::nullopt, py::kw_only(), "globalscale"_a = defGlobalScale,
+                                             "globalshift"_a = defGlobalShift, "epsilon"_a = defEpsilon,
+                                             "stream"_a = nullptr);
 
-    DefClassMethod<ImageBatchVarShape>("normalize_into", &VarShapeNormalizeInto, "out"_a, "base"_a, "scale"_a,
-                                       "flags"_a = std::nullopt, py::kw_only(), "globalscale"_a = defGlobalScale,
-                                       "globalshift"_a = defGlobalShift, "epsilon"_a = defEpsilon,
-                                       "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("normalize_into", &VarShapeNormalizeInto, "out"_a, "base"_a, "scale"_a,
+                                             "flags"_a = std::nullopt, py::kw_only(), "globalscale"_a = defGlobalScale,
+                                             "globalshift"_a = defGlobalShift, "epsilon"_a = defEpsilon,
+                                             "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

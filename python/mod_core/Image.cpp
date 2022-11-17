@@ -63,6 +63,7 @@ size_t Image::Key::doGetHash() const
     }
     else
     {
+        using util::ComputeHash;
         return ComputeHash(m_size, m_format);
     }
 }
@@ -176,7 +177,7 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer
 
         default:
             throw std::invalid_argument(
-                FormatString("Number of buffer dimensions must be between 1 and 4, not %ld", info.ndim));
+                util::FormatString("Number of buffer dimensions must be between 1 and 4, not %ld", info.ndim));
         }
 
         // Validate strides -----------------------
@@ -195,7 +196,7 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer
 
         if (strides[3] != info.itemsize)
         {
-            throw std::invalid_argument(FormatString(
+            throw std::invalid_argument(util::FormatString(
                 "Fastest changing dimension must be packed, i.e., have stride equal to %ld byte(s), not %ld",
                 info.itemsize, strides[2]));
         }
@@ -204,7 +205,7 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer
         ssize_t rowStride       = strides[infoLayout->idxHeight()];
         if (!infoLayout->isChannelLast() && rowStride != packedRowStride)
         {
-            throw std::invalid_argument(FormatString(
+            throw std::invalid_argument(util::FormatString(
                 "Image row must packed, i.e., have stride equal to %ld byte(s), not %ld", packedRowStride, rowStride));
         }
 
@@ -218,7 +219,7 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer
         bufInfo.planeStride      = strides[infoLayout->idxSample()];
         bufInfo.rowStride        = strides[infoLayout->idxHeight()];
         bufInfo.data             = info.ptr;
-        bufInfo.dtype            = py::cast<cv::DataType>(ToDType(info));
+        bufInfo.dtype            = py::cast<cv::DataType>(util::ToDType(info));
 
         curChannel += bufInfo.numPlanes * bufInfo.numChannels;
         if (curChannel > 4)
@@ -403,8 +404,8 @@ void FillNVCVImageBufferStrided(NVCVImageData &imgData, const std::vector<py::bu
         if (!HasSameDataLayout(fmt, inferredFormat))
         {
             throw std::invalid_argument(
-                FormatString("Format inferred from buffers %s isn't compatible with given image format %s",
-                             ToString(inferredFormat).c_str(), ToString(fmt).c_str()));
+                util::FormatString("Format inferred from buffers %s isn't compatible with given image format %s",
+                                   util::ToString(inferredFormat).c_str(), util::ToString(fmt).c_str()));
         }
         finalFormat = fmt;
     }
@@ -425,10 +426,10 @@ void FillNVCVImageBufferStrided(NVCVImageData &imgData, const std::vector<py::bu
 
         if (plSize.w != goldSize.w || plSize.h != goldSize.h)
         {
-            throw std::invalid_argument(FormatString(
+            throw std::invalid_argument(util::FormatString(
                 "Plane %d's size %dx%d doesn't correspond to what's expected by %s format %s of image with size %dx%d",
-                p, plSize.w, plSize.h, (fmt == cv::FMT_NONE ? "inferred" : "given"), ToString(finalFormat).c_str(),
-                imgSize.w, imgSize.h));
+                p, plSize.w, plSize.h, (fmt == cv::FMT_NONE ? "inferred" : "given"),
+                util::ToString(finalFormat).c_str(), imgSize.w, imgSize.h));
         }
     }
 }
@@ -495,9 +496,9 @@ Image::Image(std::vector<py::buffer> bufs, const cv::IImageDataStridedHost &host
         NVCV_ASSERT(devPlane.width == hostPlane.width);
         NVCV_ASSERT(devPlane.height == hostPlane.height);
 
-        CheckThrow(cudaMemcpy2D(devPlane.basePtr, devPlane.rowStride, hostPlane.basePtr, hostPlane.rowStride,
-                                hostPlane.width * hostData.format().planePixelStrideBytes(p), hostPlane.height,
-                                cudaMemcpyHostToDevice));
+        util::CheckThrow(cudaMemcpy2D(devPlane.basePtr, devPlane.rowStride, hostPlane.basePtr, hostPlane.rowStride,
+                                      hostPlane.width * hostData.format().planePixelStrideBytes(p), hostPlane.height,
+                                      cudaMemcpyHostToDevice));
     }
 
     m_key = Key{
@@ -545,8 +546,8 @@ std::shared_ptr<Image> Image::Zeros(const Size2D &size, cv::ImageFormat fmt)
     {
         const cv::ImagePlaneStrided &plane = data->plane(p);
 
-        CheckThrow(cudaMemset2D(plane.basePtr, plane.rowStride, 0,
-                                plane.width * data->format().planePixelStrideBytes(p), plane.height));
+        util::CheckThrow(cudaMemset2D(plane.basePtr, plane.rowStride, 0,
+                                      plane.width * data->format().planePixelStrideBytes(p), plane.height));
     }
 
     return img;
@@ -780,7 +781,7 @@ std::vector<std::pair<py::buffer_info, cv::TensorLayout>> ToPyBufferInfo(const c
             {
                 if (inferredShape[i] >= 2 && userLayout->find(inferredLayout[i]) < 0)
                 {
-                    throw std::runtime_error(FormatString("Layout need dimension '%c'", inferredLayout[i]));
+                    throw std::runtime_error(util::FormatString("Layout need dimension '%c'", inferredLayout[i]));
                 }
             }
 
@@ -934,7 +935,7 @@ py::object Image::cpu(std::optional<cv::TensorLayout> layout) const
         std::vector<ssize_t> shape      = devBufInfo.shape;
         std::vector<ssize_t> devStrides = devBufInfo.strides;
 
-        py::array hostData(ToDType(devBufInfo), shape);
+        py::array hostData(util::ToDType(devBufInfo), shape);
 
         py::buffer_info      hostBufInfo = hostData.request();
         std::vector<ssize_t> hostStrides = hostBufInfo.strides;
@@ -966,9 +967,10 @@ py::object Image::cpu(std::optional<cv::TensorLayout> layout) const
 
         for (int p = 0; p < nplanes; ++p)
         {
-            CheckThrow(cudaMemcpy2D(reinterpret_cast<std::byte *>(hostBufInfo.ptr) + p * hostPlaneStride, hostRowStride,
-                                    reinterpret_cast<std::byte *>(devBufInfo.ptr) + p * devPlaneStride, devRowStride,
-                                    ncols * colStride, nrows, cudaMemcpyDeviceToHost));
+            util::CheckThrow(cudaMemcpy2D(reinterpret_cast<std::byte *>(hostBufInfo.ptr) + p * hostPlaneStride,
+                                          hostRowStride,
+                                          reinterpret_cast<std::byte *>(devBufInfo.ptr) + p * devPlaneStride,
+                                          devRowStride, ncols * colStride, nrows, cudaMemcpyDeviceToHost));
         }
 
         out.push_back(std::move(hostData));
@@ -993,7 +995,7 @@ void Image::Export(py::module &m)
         .def(py::init(&Image::CreateHost), "buffer"_a, "format"_a = cv::FMT_NONE)
         .def(py::init(&Image::CreateHostVector), "buffer"_a, "format"_a = cv::FMT_NONE)
         .def_static("zeros", &Image::Zeros, "size"_a, "format"_a)
-        .def("__repr__", &ToString<Image>)
+        .def("__repr__", &util::ToString<Image>)
         .def("cuda", &Image::cuda, "layout"_a = std::nullopt)
         .def("cpu", &Image::cpu, "layout"_a = std::nullopt)
         .def_property_readonly("size", &Image::size)

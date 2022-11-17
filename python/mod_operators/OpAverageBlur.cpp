@@ -116,16 +116,17 @@ void ExportOpAverageBlur(py::module &m)
 
     const std::tuple<int, int> def_anchor{-1, -1};
 
-    DefClassMethod<Tensor>("averageblur", &AverageBlur, "kernel_size"_a, "kernel_anchor"_a = def_anchor,
-                           "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
-    DefClassMethod<Tensor>("averageblur_into", &AverageBlurInto, "output"_a, "kernel_size"_a,
-                           "kernel_anchor"_a = def_anchor, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                           py::kw_only(), "stream"_a                  = nullptr);
+    util::DefClassMethod<Tensor>("averageblur", &AverageBlur, "kernel_size"_a, "kernel_anchor"_a = def_anchor,
+                                 "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
+                                 "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("averageblur_into", &AverageBlurInto, "output"_a, "kernel_size"_a,
+                                 "kernel_anchor"_a = def_anchor, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
+                                 py::kw_only(), "stream"_a                  = nullptr);
 
-    DefClassMethod<ImageBatchVarShape>("averageblur", &AverageBlurVarShape, "max_kernel_size"_a, "kernel_size"_a,
-                                       "kernel_anchor"_a, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                                       py::kw_only(), "stream"_a     = nullptr);
-    DefClassMethod<ImageBatchVarShape>(
+    util::DefClassMethod<ImageBatchVarShape>("averageblur", &AverageBlurVarShape, "max_kernel_size"_a, "kernel_size"_a,
+                                             "kernel_anchor"_a, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
+                                             py::kw_only(), "stream"_a     = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>(
         "averageblur_into", &AverageBlurVarShapeInto, "output"_a, "max_kernel_size"_a, "kernel_size"_a,
         "kernel_anchor"_a, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
 }

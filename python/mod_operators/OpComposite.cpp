@@ -109,14 +109,14 @@ void ExportOpComposite(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<Tensor>("composite", &Composite, "background"_a, "fgmask"_a, "outchannels"_a, py::kw_only(),
-                           "stream"_a = nullptr);
-    DefClassMethod<Tensor>("composite_into", &CompositeInto, "output"_a, "background"_a, "fgmask"_a, py::kw_only(),
-                           "stream"_a = nullptr);
-    DefClassMethod<ImageBatchVarShape>("composite", &CompositeVarShape, "background"_a, "fgmask"_a, py::kw_only(),
-                                       "stream"_a = nullptr);
-    DefClassMethod<ImageBatchVarShape>("composite_into", &CompositeVarShapeInto, "output"_a, "background"_a, "fgmask"_a,
-                                       py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("composite", &Composite, "background"_a, "fgmask"_a, "outchannels"_a, py::kw_only(),
+                                 "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("composite_into", &CompositeInto, "output"_a, "background"_a, "fgmask"_a,
+                                 py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("composite", &CompositeVarShape, "background"_a, "fgmask"_a, py::kw_only(),
+                                             "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("composite_into", &CompositeVarShapeInto, "output"_a, "background"_a,
+                                             "fgmask"_a, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

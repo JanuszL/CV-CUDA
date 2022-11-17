@@ -86,9 +86,9 @@ void ExportOpCenterCrop(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<Tensor>("center_crop", &CenterCrop, "crop_size"_a, py::kw_only(), "stream"_a = nullptr);
-    DefClassMethod<Tensor>("center_crop_into", &CenterCropInto, "output"_a, "crop_size"_a, py::kw_only(),
-                           "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("center_crop", &CenterCrop, "crop_size"_a, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("center_crop_into", &CenterCropInto, "output"_a, "crop_size"_a, py::kw_only(),
+                                 "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

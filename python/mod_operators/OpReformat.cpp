@@ -60,8 +60,8 @@ void ExportOpReformat(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<Tensor>("reformat", &Reformat, "layout"_a, py::kw_only(), "stream"_a = nullptr);
-    DefClassMethod<Tensor>("reformat_into", &ReformatInto, "out"_a, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("reformat", &Reformat, "layout"_a, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("reformat_into", &ReformatInto, "out"_a, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

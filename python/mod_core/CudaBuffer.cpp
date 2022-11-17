@@ -142,7 +142,7 @@ py::object CudaBuffer::shape() const
 
 py::object CudaBuffer::dtype() const
 {
-    return ToDType(this->request());
+    return util::ToDType(this->request());
 }
 
 void *CudaBuffer::data() const

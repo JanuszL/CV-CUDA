@@ -35,7 +35,7 @@ namespace nv::cv {
 
 static size_t ComputeHash(const cv::TensorShape &shape)
 {
-    using cvpy::ComputeHash;
+    using cvpy::util::ComputeHash;
     return ComputeHash(shape.shape(), shape.layout());
 }
 
@@ -95,7 +95,7 @@ NVCVTensorData FillNVCVTensorData(const py::buffer_info &info, std::optional<cv:
     NVCVTensorData tensorData = {};
 
     // dtype ------------
-    tensorData.dtype = py::cast<cv::DataType>(ToDType(info));
+    tensorData.dtype = py::cast<cv::DataType>(util::ToDType(info));
 
     // layout ------------
     if (layout)
@@ -108,8 +108,8 @@ NVCVTensorData FillNVCVTensorData(const py::buffer_info &info, std::optional<cv:
         int rank = info.ndim == 0 ? 1 : info.ndim;
         if (rank < 1 || rank > NVCV_TENSOR_MAX_RANK)
         {
-            throw std::invalid_argument(
-                FormatString("Number of dimensions must be between 1 and %d, not %d", NVCV_TENSOR_MAX_RANK, rank));
+            throw std::invalid_argument(util::FormatString("Number of dimensions must be between 1 and %d, not %d",
+                                                           NVCV_TENSOR_MAX_RANK, rank));
         }
         tensorData.rank = rank;
     }
@@ -286,6 +286,7 @@ size_t Tensor::Key::doGetHash() const
     }
     else
     {
+        using util::ComputeHash;
         return ComputeHash(m_shape, m_dtype);
     }
 }
@@ -429,7 +430,7 @@ void Tensor::Export(py::module &m)
         // Each language use whatever is appropriate (and expected) in their environment.
         .def_property_readonly("ndim", &Tensor::rank)
         .def("cuda", &Tensor::cuda)
-        .def("__repr__", &ToString<Tensor>);
+        .def("__repr__", &util::ToString<Tensor>);
 
     m.def("as_tensor", &Tensor::Wrap, "buffer"_a, "layout"_a = std::nullopt);
     m.def("as_tensor", &Tensor::WrapImage, "image"_a);

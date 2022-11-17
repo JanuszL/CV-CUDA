@@ -103,13 +103,13 @@ void ExportOpMedianBlur(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<Tensor>("median_blur", &MedianBlur, "ksize"_a, py::kw_only(), "stream"_a = nullptr);
-    DefClassMethod<Tensor>("median_blur_into", &MedianBlurInto, "output"_a, "ksize"_a, py::kw_only(),
-                           "stream"_a = nullptr);
-    DefClassMethod<ImageBatchVarShape>("median_blur", &VarShapeMedianBlur, "ksize"_a, py::kw_only(),
-                                       "stream"_a = nullptr);
-    DefClassMethod<ImageBatchVarShape>("median_blur_into", &VarShapeMedianBlurInto, "output"_a, "ksize"_a,
-                                       py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("median_blur", &MedianBlur, "ksize"_a, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("median_blur_into", &MedianBlurInto, "output"_a, "ksize"_a, py::kw_only(),
+                                 "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("median_blur", &VarShapeMedianBlur, "ksize"_a, py::kw_only(),
+                                             "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("median_blur_into", &VarShapeMedianBlurInto, "output"_a, "ksize"_a,
+                                             py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

@@ -25,6 +25,7 @@ namespace nv::cvpy {
 
 size_t ImageBatchVarShape::Key::doGetHash() const
 {
+    using util::ComputeHash;
     return ComputeHash(m_capacity);
 }
 

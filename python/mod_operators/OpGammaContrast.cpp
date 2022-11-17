@@ -75,10 +75,10 @@ void ExportOpGammaContrast(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<ImageBatchVarShape>("gamma_contrast", &VarShapeGammaContrast, "gamma"_a, py::kw_only(),
-                                       "stream"_a = nullptr);
-    DefClassMethod<ImageBatchVarShape>("gamma_contrast_into", &VarShapeGammaContrastInto, "output"_a, "gamma"_a,
-                                       py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("gamma_contrast", &VarShapeGammaContrast, "gamma"_a, py::kw_only(),
+                                             "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("gamma_contrast_into", &VarShapeGammaContrastInto, "output"_a, "gamma"_a,
+                                             py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

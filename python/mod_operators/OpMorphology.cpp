@@ -114,19 +114,20 @@ void ExportOpMorphology(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<Tensor>("morphology", &Morphology, "morphologyType"_a, "maskSize"_a, "anchor"_a, py::kw_only(),
-                           "iteration"_a = 1, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("morphology", &Morphology, "morphologyType"_a, "maskSize"_a, "anchor"_a, py::kw_only(),
+                                 "iteration"_a = 1, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
+                                 "stream"_a = nullptr);
 
-    DefClassMethod<Tensor>("morphology_into", &MorphologyInto, "output"_a, "morphologyType"_a, "maskSize"_a, "anchor"_a,
-                           py::kw_only(), "iteration"_a = 1, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                           "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("morphology_into", &MorphologyInto, "output"_a, "morphologyType"_a, "maskSize"_a,
+                                 "anchor"_a, py::kw_only(), "iteration"_a = 1,
+                                 "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
 
-    DefClassMethod<ImageBatchVarShape>("morphology", &MorphologyVarShape, "morphologyType"_a, "masks"_a, "anchors"_a,
-                                       py::kw_only(), "iteration"_a = 1,
-                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("morphology", &MorphologyVarShape, "morphologyType"_a, "masks"_a,
+                                             "anchors"_a, py::kw_only(), "iteration"_a = 1,
+                                             "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
 
-    DefClassMethod<ImageBatchVarShape>("morphology_into", &MorphologyVarShapeInto, "output"_a, "morphologyType"_a,
-                                       "masks"_a, "anchors"_a, py::kw_only(), "iteration"_a = 1,
-                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("morphology_into", &MorphologyVarShapeInto, "output"_a, "morphologyType"_a,
+                                             "masks"_a, "anchors"_a, py::kw_only(), "iteration"_a = 1,
+                                             "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
 }
 } // namespace nv::cvpy

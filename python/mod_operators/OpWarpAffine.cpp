@@ -49,7 +49,7 @@ std::shared_ptr<Tensor> WarpAffineInto(Tensor &input, Tensor &output, const pyar
     size_t bValueDims = borderValue.ndim();
     if (bValueSize > 4 || bValueDims != 1)
     {
-        throw std::runtime_error(FormatString(
+        throw std::runtime_error(util::FormatString(
             "Channels of borderValue should <= 4 and dimension should be 2, current is '%lu', '%lu' respectively",
             bValueSize, bValueDims));
     }
@@ -63,9 +63,9 @@ std::shared_ptr<Tensor> WarpAffineInto(Tensor &input, Tensor &output, const pyar
     if (!(xformDims == 2 && xform.shape(0) == 2 && xform.shape(1) == 3))
     {
         throw std::runtime_error(
-            FormatString("Details of transformation matrix: nDim == 2, shape == (2, 3) but current is "
-                         "'%lu', ('%lu', '%lu') respectively",
-                         xformDims, xform.shape(0), xform.shape(1)));
+            util::FormatString("Details of transformation matrix: nDim == 2, shape == (2, 3) but current is "
+                               "'%lu', ('%lu', '%lu') respectively",
+                               xformDims, xform.shape(0), xform.shape(1)));
     }
 
     NVCVAffineTransform xformOutput;
@@ -112,7 +112,7 @@ std::shared_ptr<ImageBatchVarShape> WarpAffineVarShapeInto(ImageBatchVarShape &i
     size_t bValueDims = borderValue.ndim();
     if (bValueSize > 4 || bValueDims != 1)
     {
-        throw std::runtime_error(FormatString(
+        throw std::runtime_error(util::FormatString(
             "Channels of borderValue should <= 4 and dimension should be 2, current is '%lu', '%lu' respectively",
             bValueSize, bValueDims));
     }
@@ -157,21 +157,21 @@ void ExportOpWarpAffine(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<Tensor>("warp_affine", &WarpAffine, "xform"_a, "flags"_a, py::kw_only(),
-                           "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "border_value"_a = 0,
-                           "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("warp_affine", &WarpAffine, "xform"_a, "flags"_a, py::kw_only(),
+                                 "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "border_value"_a = 0,
+                                 "stream"_a = nullptr);
 
-    DefClassMethod<Tensor>("warp_affine_into", &WarpAffineInto, "output"_a, "xform"_a, "flags"_a, py::kw_only(),
-                           "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "border_value"_a = 0,
-                           "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("warp_affine_into", &WarpAffineInto, "output"_a, "xform"_a, "flags"_a, py::kw_only(),
+                                 "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "border_value"_a = 0,
+                                 "stream"_a = nullptr);
 
-    DefClassMethod<ImageBatchVarShape>("warp_affine", &WarpAffineVarShape, "xform"_a, "flags"_a, py::kw_only(),
-                                       "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "border_value"_a = 0,
-                                       "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("warp_affine", &WarpAffineVarShape, "xform"_a, "flags"_a, py::kw_only(),
+                                             "border_mode"_a  = NVCVBorderType::NVCV_BORDER_CONSTANT,
+                                             "border_value"_a = 0, "stream"_a = nullptr);
 
-    DefClassMethod<ImageBatchVarShape>("warp_affine_into", &WarpAffineVarShapeInto, "output"_a, "xform"_a, "flags"_a,
-                                       py::kw_only(), "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                                       "border_value"_a = 0, "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>(
+        "warp_affine_into", &WarpAffineVarShapeInto, "output"_a, "xform"_a, "flags"_a, py::kw_only(),
+        "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "border_value"_a = 0, "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

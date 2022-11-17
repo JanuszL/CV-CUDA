@@ -77,12 +77,12 @@ void ExportOpConv2D(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<ImageBatchVarShape>("conv2d", &Conv2DVarShape, "kernel"_a, "kernel_anchor"_a,
-                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                       "stream"_a = nullptr);
-    DefClassMethod<ImageBatchVarShape>("conv2d_into", &Conv2DVarShapeInto, "output"_a, "kernel"_a, "kernel_anchor"_a,
-                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                       "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("conv2d", &Conv2DVarShape, "kernel"_a, "kernel_anchor"_a,
+                                             "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
+                                             "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("conv2d_into", &Conv2DVarShapeInto, "output"_a, "kernel"_a,
+                                             "kernel_anchor"_a, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
+                                             py::kw_only(), "stream"_a     = nullptr);
 }
 
 } // namespace nv::cvpy

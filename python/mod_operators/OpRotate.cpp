@@ -107,14 +107,14 @@ void ExportOpRotate(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<Tensor>("rotate", &Rotate, "angle_deg"_a, "shift"_a, "interpolation"_a, py::kw_only(),
-                           "stream"_a = nullptr);
-    DefClassMethod<Tensor>("rotate_into", &RotateInto, "output"_a, "angle_deg"_a, "shift"_a, "interpolation"_a,
-                           py::kw_only(), "stream"_a = nullptr);
-    DefClassMethod<ImageBatchVarShape>("rotate", &VarShapeRotate, "angle_deg"_a, "shift"_a, "interpolation"_a,
-                                       py::kw_only(), "stream"_a = nullptr);
-    DefClassMethod<ImageBatchVarShape>("rotate_into", &VarShapeRotateInto, "output"_a, "angle_deg"_a, "shift"_a,
-                                       "interpolation"_a, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("rotate", &Rotate, "angle_deg"_a, "shift"_a, "interpolation"_a, py::kw_only(),
+                                 "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("rotate_into", &RotateInto, "output"_a, "angle_deg"_a, "shift"_a, "interpolation"_a,
+                                 py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("rotate", &VarShapeRotate, "angle_deg"_a, "shift"_a, "interpolation"_a,
+                                             py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("rotate_into", &VarShapeRotateInto, "output"_a, "angle_deg"_a, "shift"_a,
+                                             "interpolation"_a, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

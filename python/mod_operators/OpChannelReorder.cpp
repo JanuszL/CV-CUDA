@@ -76,10 +76,10 @@ void ExportOpChannelReorder(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<ImageBatchVarShape>("channelreorder", &ChannelReorderVarShape, "order"_a, py::kw_only(),
-                                       "format"_a = nullptr, "stream"_a = nullptr);
-    DefClassMethod<ImageBatchVarShape>("channelreorder_into", &ChannelReorderVarShapeInto, "output"_a, "orders"_a,
-                                       py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("channelreorder", &ChannelReorderVarShape, "order"_a, py::kw_only(),
+                                             "format"_a = nullptr, "stream"_a = nullptr);
+    util::DefClassMethod<ImageBatchVarShape>("channelreorder_into", &ChannelReorderVarShapeInto, "output"_a, "orders"_a,
+                                             py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

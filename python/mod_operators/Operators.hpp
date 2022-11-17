@@ -90,7 +90,13 @@ private:
     private:
         size_t doGetHash() const override
         {
-            return apply([](auto... args) { return ComputeHash(args...); }, m_args);
+            return apply(
+                [](auto... args)
+                {
+                    using util::ComputeHash;
+                    return ComputeHash(args...);
+                },
+                m_args);
         }
 
         bool doIsEqual(const IKey &ithat) const override

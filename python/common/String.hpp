@@ -21,7 +21,7 @@
 #include <sstream>
 #include <string>
 
-namespace nv::cvpy {
+namespace nv::cvpy::util {
 
 std::string FormatString(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 
@@ -34,6 +34,6 @@ std::string ToString(const T &v)
     return ss.str();
 }
 
-} // namespace nv::cvpy
+} // namespace nv::cvpy::util
 
 #endif // NVCV_PYTHON_STRING_HPP

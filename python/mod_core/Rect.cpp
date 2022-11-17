@@ -48,7 +48,7 @@ void ExportRect(py::module &m)
         .def_readwrite("y", &NVCVRectI::y)
         .def_readwrite("width", &NVCVRectI::width)
         .def_readwrite("height", &NVCVRectI::height)
-        .def("__repr__", &ToString<NVCVRectI>);
+        .def("__repr__", &util::ToString<NVCVRectI>);
 }
 
 } // namespace nv::cvpy

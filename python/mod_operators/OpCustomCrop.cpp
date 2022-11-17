@@ -87,8 +87,9 @@ void ExportOpCustomCrop(py::module &m)
 {
     using namespace pybind11::literals;
 
-    DefClassMethod<Tensor>("customcrop", &CustomCrop, "rect"_a, py::kw_only(), "stream"_a = nullptr);
-    DefClassMethod<Tensor>("customcrop_into", &CustomCropInto, "out"_a, "rect"_a, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("customcrop", &CustomCrop, "rect"_a, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<Tensor>("customcrop_into", &CustomCropInto, "out"_a, "rect"_a, py::kw_only(),
+                                 "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy
