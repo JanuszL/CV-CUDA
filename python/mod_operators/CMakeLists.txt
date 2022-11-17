@@ -16,7 +16,7 @@
 find_package(nvcv_operators REQUIRED)
 
 nvcv_python_add_module(
-    TARGET nvcv_operators_python MODULE
+    TARGET nvcv_operators_module_python SHARED
     OUTPUT_NAME nvcv_operators
     SOURCES
         Main.cpp
@@ -51,12 +51,12 @@ nvcv_python_add_module(
         OpPillowResize.cpp
 )
 
-target_link_libraries(nvcv_operators_python
+target_link_libraries(nvcv_operators_module_python
     PRIVATE
         nvcv_util_compat
-        nvcv_python
+        nvcv_module_python
         nvcv_operators
         nvcv_python_common
 )
 
-set_target_properties(nvcv_operators_python PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/python)
+set_target_properties(nvcv_operators_module_python PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/python)

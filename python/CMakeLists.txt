@@ -84,8 +84,8 @@ function(nvcv_python_add_module)
 endfunction()
 
 add_subdirectory(common)
-add_subdirectory(core)
-add_subdirectory(operators)
+add_subdirectory(mod_core)
+add_subdirectory(mod_operators)
 
 # Set up debian control files
 set(SRC_PYTHON_MODULE_PATH ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/python)

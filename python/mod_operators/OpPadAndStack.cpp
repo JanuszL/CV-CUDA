@@ -18,11 +18,11 @@
 #include "Operators.hpp"
 
 #include <common/PyUtil.hpp>
-#include <core/Image.hpp>
-#include <core/ImageBatch.hpp>
-#include <core/ResourceGuard.hpp>
-#include <core/Stream.hpp>
-#include <core/Tensor.hpp>
+#include <mod_core/Image.hpp>
+#include <mod_core/ImageBatch.hpp>
+#include <mod_core/ResourceGuard.hpp>
+#include <mod_core/Stream.hpp>
+#include <mod_core/Tensor.hpp>
 #include <nvcv/operators/OpPadAndStack.hpp>
 
 namespace nv::cvpy {

@@ -18,9 +18,9 @@
 #include "Operators.hpp"
 
 #include <common/PyUtil.hpp>
-#include <core/ResourceGuard.hpp>
-#include <core/Stream.hpp>
-#include <core/Tensor.hpp>
+#include <mod_core/ResourceGuard.hpp>
+#include <mod_core/Stream.hpp>
+#include <mod_core/Tensor.hpp>
 #include <nvcv/operators/OpReformat.hpp>
 
 namespace nv::cvpy {

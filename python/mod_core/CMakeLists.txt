@@ -32,7 +32,7 @@ add_custom_command(OUTPUT ${dtype_defs}
 )
 
 nvcv_python_add_module(
-    TARGET nvcv_python SHARED
+    TARGET nvcv_module_python SHARED
     OUTPUT_NAME nvcv
     SOURCES
         ${imgformat_defs}
@@ -54,7 +54,7 @@ nvcv_python_add_module(
         Rect.cpp
 )
 
-target_include_directories(nvcv_python
+target_include_directories(nvcv_module_python
     PRIVATE
         # for imgformat_defs
         ${CMAKE_CURRENT_BINARY_DIR}
@@ -62,7 +62,7 @@ target_include_directories(nvcv_python
 
 find_package(CUDAToolkit REQUIRED)
 
-target_link_libraries(nvcv_python
+target_link_libraries(nvcv_module_python
     PRIVATE
         nvcv
         nvcv_util_compat
@@ -70,4 +70,4 @@ target_link_libraries(nvcv_python
         CUDA::cudart_static
 )
 
-set_target_properties(nvcv_python PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/python)
+set_target_properties(nvcv_module_python PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/python)

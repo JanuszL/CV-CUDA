@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <core/Container.hpp>
+#include <mod_core/Container.hpp>
 #include <pybind11/pybind11.h>
 
 namespace nv::cvpy {
@@ -136,5 +136,4 @@ std::shared_ptr<PyOperator<OP, void(AA...)>> CreateOperator(AA &&...args)
         return std::static_pointer_cast<PyOP>(vcont[0]);
     }
 }
-
 } // namespace nv::cvpy

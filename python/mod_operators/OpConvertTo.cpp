@@ -18,10 +18,10 @@
 #include "Operators.hpp"
 
 #include <common/PyUtil.hpp>
-#include <core/DataType.hpp>
-#include <core/ResourceGuard.hpp>
-#include <core/Stream.hpp>
-#include <core/Tensor.hpp>
+#include <mod_core/DataType.hpp>
+#include <mod_core/ResourceGuard.hpp>
+#include <mod_core/Stream.hpp>
+#include <mod_core/Tensor.hpp>
 #include <nvcv/operators/OpConvertTo.hpp>
 
 namespace nv::cvpy {

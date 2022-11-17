@@ -19,12 +19,12 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <core/Image.hpp>
-#include <core/ImageBatch.hpp>
-#include <core/ImageFormat.hpp>
-#include <core/ResourceGuard.hpp>
-#include <core/Stream.hpp>
-#include <core/Tensor.hpp>
+#include <mod_core/Image.hpp>
+#include <mod_core/ImageBatch.hpp>
+#include <mod_core/ImageFormat.hpp>
+#include <mod_core/ResourceGuard.hpp>
+#include <mod_core/Stream.hpp>
+#include <mod_core/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/operators/OpPillowResize.hpp>
 #include <nvcv/operators/Types.h>
