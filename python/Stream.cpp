@@ -323,8 +323,15 @@ void Stream::Export(py::module &m)
     py::class_<Stream, std::shared_ptr<Stream>> stream(m, "Stream");
 
     stream.def_property_readonly_static("current", [](py::object) { return Current().shared_from_this(); })
-        .def_property_readonly_static("default", [](py::object) { return g_stream.lock(); })
         .def(py::init(&Stream::Create));
+
+    // Create the global stream object. It'll be destroyed when
+    // python module is deinitialized.
+    auto globalStream = Stream::Create();
+    g_streamStack.push(globalStream);
+    g_stream = globalStream;
+
+    stream.attr("default") = g_stream.lock();
 
     // Order from most specific to less specific
     ExportExternalStream<TORCH>(m);
@@ -339,12 +346,6 @@ void Stream::Export(py::module &m)
         .def("__repr__", &ToString<Stream>)
         .def_property_readonly("handle", &Stream::pyhandle)
         .def_property_readonly("id", &Stream::id);
-
-    // Create the global stream object. It'll be destroyed when
-    // python module is deinitialized.
-    auto globalStream = Stream::Create();
-    g_streamStack.push(globalStream);
-    g_stream = globalStream;
 
     // Make sure all streams we've created are synced when script ends.
     // Also make cleanup hold the globalStream reference during script execution.
