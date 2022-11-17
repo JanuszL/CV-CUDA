@@ -127,9 +127,10 @@ std::shared_ptr<const Resource> Resource::shared_from_this() const
 
 void Resource::Export(py::module &m)
 {
-    py::class_<Resource, std::shared_ptr<Resource>> resource(m, "Resource");
-
-    resource.def_property_readonly("id", &Resource::id, "Unique resource instance identifier");
+    py::class_<Resource, std::shared_ptr<Resource>>(m, "Resource")
+        .def_property_readonly("id", &Resource::id, "Unique resource instance identifier")
+        .def("submitSync", &Resource::submitSync)
+        .def("submitSignal", &Resource::submitSignal);
 }
 
 } // namespace nv::cvpy::priv

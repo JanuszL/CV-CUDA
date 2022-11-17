@@ -18,21 +18,19 @@
 #include "Operators.hpp"
 
 #include <common/PyUtil.hpp>
-#include <mod_core/DataType.hpp>
-#include <mod_core/ResourceGuard.hpp>
-#include <mod_core/Stream.hpp>
-#include <mod_core/Tensor.hpp>
 #include <nvcv/operators/OpConvertTo.hpp>
+#include <nvcv/python/ResourceGuard.hpp>
+#include <nvcv/python/Stream.hpp>
+#include <nvcv/python/Tensor.hpp>
 
 namespace nv::cvpy {
 
 namespace {
-std::shared_ptr<Tensor> ConvertToInto(Tensor &input, Tensor &output, float scale, float offset,
-                                      std::shared_ptr<Stream> pstream)
+Tensor ConvertToInto(Tensor &input, Tensor &output, float scale, float offset, std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     auto cvt = CreateOperator<cvop::ConvertTo>();
@@ -42,17 +40,16 @@ std::shared_ptr<Tensor> ConvertToInto(Tensor &input, Tensor &output, float scale
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*cvt});
 
-    cvt->submit(pstream->handle(), input.impl(), output.impl(), scale, offset);
+    cvt->submit(pstream->cudaHandle(), input, output, scale, offset);
 
-    return output.shared_from_this();
+    return std::move(output);
 }
 
-std::shared_ptr<Tensor> ConvertTo(Tensor &input, cv::DataType dtype, float scale, float offset,
-                                  std::shared_ptr<Stream> pstream)
+Tensor ConvertTo(Tensor &input, cv::DataType dtype, float scale, float offset, std::optional<Stream> pstream)
 {
-    std::shared_ptr<Tensor> output = Tensor::Create(input.shape(), dtype, input.layout());
+    Tensor output = Tensor::Create(input.shape(), dtype);
 
-    return ConvertToInto(input, *output, scale, offset, pstream);
+    return ConvertToInto(input, output, scale, offset, pstream);
 }
 
 } // namespace
@@ -61,10 +58,10 @@ void ExportOpConvertTo(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<Tensor>("convertto", &ConvertTo, "dtype"_a, "scale"_a = 1, "offset"_a = 0, py::kw_only(),
-                                 "stream"_a = nullptr);
-    util::DefClassMethod<Tensor>("convertto_into", &ConvertToInto, "out"_a, "scale"_a = 1, "offset"_a = 0,
-                                 py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("convertto", &ConvertTo, "dtype"_a, "scale"_a = 1, "offset"_a = 0, py::kw_only(),
+                                       "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("convertto_into", &ConvertToInto, "out"_a, "scale"_a = 1, "offset"_a = 0,
+                                       py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

@@ -15,35 +15,28 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_PYTHON_PRIV_RESOURCE_GUARD_HPP
-#define NVCV_PYTHON_PRIV_RESOURCE_GUARD_HPP
+#ifndef NVCV_PYTHON_RESOURCE_HPP
+#define NVCV_PYTHON_RESOURCE_HPP
 
-#include "Resource.hpp"
-#include "Stream.hpp"
+#include <pybind11/pybind11.h>
 
-#include <functional>
-#include <initializer_list>
+namespace nv::cvpy {
 
-namespace nv::cvpy::priv {
+namespace py = pybind11;
 
-class Resource;
-
-class PYBIND11_EXPORT ResourceGuard
+class Resource : public py::object
 {
 public:
-    ResourceGuard(Stream &stream);
-    ResourceGuard &add(LockMode mode, std::initializer_list<std::reference_wrapper<const Resource>> resources);
+    using py::object::object;
 
-    void commit();
+    Resource(py::object o)
+        : py::object(o)
+    {
+    }
 
-    ~ResourceGuard();
-
-private:
-    Stream &m_stream;
-
-    LockResources m_resourcesPerLockMode;
+    virtual ~Resource() = default;
 };
 
-} // namespace nv::cvpy::priv
+} // namespace nv::cvpy
 
-#endif // NVCV_PYTHON_PRIV_RESOURCE_GUARD_HPP
+#endif // NVCV_PYTHON_RESOURCE_HPP

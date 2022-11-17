@@ -43,19 +43,20 @@ nvcv_python_add_module(
         Stream.cpp
         StreamStack.cpp
         Cache.cpp
-        Object.cpp
         Resource.cpp
-        ResourceGuard.cpp
         Container.cpp
         Tensor.cpp
         Image.cpp
         ImageBatch.cpp
         CudaBuffer.cpp
         Rect.cpp
+        Object.cpp
+        CAPI.cpp
 )
 
 target_include_directories(nvcv_module_python
     PRIVATE
+        include
         # for imgformat_defs
         ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -68,6 +69,11 @@ target_link_libraries(nvcv_module_python
         nvcv_util_compat
         nvcv_python_common
         CUDA::cudart_static
+)
+
+add_library(pynvcv INTERFACE)
+target_include_directories(pynvcv
+    INTERFACE include
 )
 
 set_target_properties(nvcv_module_python PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/python)

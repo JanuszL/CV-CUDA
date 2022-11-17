@@ -15,26 +15,17 @@
  * limitations under the License.
  */
 
-#include "Container.hpp"
+#ifndef NVCV_PYTHON_PRIV_CAPI_HPP
+#define NVCV_PYTHON_PRIV_CAPI_HPP
+
+#include <pybind11/pybind11.h>
 
 namespace nv::cvpy::priv {
 
-std::shared_ptr<Container> Container::shared_from_this()
-{
-    return std::static_pointer_cast<Container>(Resource::shared_from_this());
-}
+namespace py = pybind11;
 
-std::shared_ptr<const Container> Container::shared_from_this() const
-{
-    return std::static_pointer_cast<const Container>(Resource::shared_from_this());
-}
-
-void Container::Export(py::module &m)
-{
-    py::class_<Container, std::shared_ptr<Container>, Resource> cont(m, "Container");
-
-    py::class_<ExternalContainer, Container, std::shared_ptr<ExternalContainer>, Resource> extcont(
-        nullptr, "ExternalContainer", py::module_local());
-}
+void ExportCAPI(py::module &m);
 
 } // namespace nv::cvpy::priv
+
+#endif // NVCV_PYTHON_PRIV_CAPI_HPP

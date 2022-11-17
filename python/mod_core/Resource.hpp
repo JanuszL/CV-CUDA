@@ -18,10 +18,10 @@
 #ifndef NVCV_PYTHON_PRIV_RESOURCE_HPP
 #define NVCV_PYTHON_PRIV_RESOURCE_HPP
 
-#include "LockMode.hpp"
 #include "Object.hpp"
 
 #include <nvcv/detail/CudaFwd.h>
+#include <nvcv/python/LockMode.hpp>
 #include <pybind11/pybind11.h>
 
 #include <memory>

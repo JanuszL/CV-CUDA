@@ -19,26 +19,26 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <mod_core/Image.hpp>
-#include <mod_core/ImageBatch.hpp>
-#include <mod_core/ResourceGuard.hpp>
-#include <mod_core/Stream.hpp>
-#include <mod_core/Tensor.hpp>
 #include <nvcv/operators/OpChannelReorder.hpp>
 #include <nvcv/operators/Types.h>
 #include <nvcv/optools/TypeTraits.hpp>
+#include <nvcv/python/Image.hpp>
+#include <nvcv/python/ImageBatchVarShape.hpp>
+#include <nvcv/python/ResourceGuard.hpp>
+#include <nvcv/python/Stream.hpp>
+#include <nvcv/python/Tensor.hpp>
 #include <pybind11/stl.h>
 
 namespace nv::cvpy {
 
 namespace {
 
-std::shared_ptr<ImageBatchVarShape> ChannelReorderVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
-                                                               Tensor &orders, std::shared_ptr<Stream> pstream)
+ImageBatchVarShape ChannelReorderVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output, Tensor &orders,
+                                              std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     auto chReorder = CreateOperator<cvop::ChannelReorder>();
@@ -48,26 +48,25 @@ std::shared_ptr<ImageBatchVarShape> ChannelReorderVarShapeInto(ImageBatchVarShap
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*chReorder});
 
-    chReorder->submit(pstream->handle(), input.impl(), output.impl(), orders.impl());
+    chReorder->submit(pstream->cudaHandle(), input, output, orders);
 
-    return output.shared_from_this();
+    return output;
 }
 
-std::shared_ptr<ImageBatchVarShape> ChannelReorderVarShape(ImageBatchVarShape &input, Tensor &orders,
-                                                           std::optional<cv::ImageFormat> fmt,
-                                                           std::shared_ptr<Stream>        pstream)
+ImageBatchVarShape ChannelReorderVarShape(ImageBatchVarShape &input, Tensor &orders, std::optional<cv::ImageFormat> fmt,
+                                          std::optional<Stream> pstream)
 {
-    std::shared_ptr<ImageBatchVarShape> output = ImageBatchVarShape::Create(input.capacity());
+    ImageBatchVarShape output = ImageBatchVarShape::Create(input.capacity());
 
     for (int i = 0; i < input.numImages(); ++i)
     {
-        cv::ImageFormat format = fmt ? *fmt : input.impl()[i].format();
-        cv::Size2D      size   = input.impl()[i].size();
-        auto            image  = Image::Create(std::tie(size.w, size.h), format);
-        output->pushBack(*image);
+        cv::ImageFormat format = fmt ? *fmt : input[i].format();
+        cv::Size2D      size   = input[i].size();
+        auto            image  = Image::Create(size, format);
+        output.pushBack(image);
     }
 
-    return ChannelReorderVarShapeInto(input, *output, orders, pstream);
+    return ChannelReorderVarShapeInto(input, output, orders, pstream);
 }
 
 } // namespace
@@ -76,10 +75,10 @@ void ExportOpChannelReorder(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<ImageBatchVarShape>("channelreorder", &ChannelReorderVarShape, "order"_a, py::kw_only(),
-                                             "format"_a = nullptr, "stream"_a = nullptr);
-    util::DefClassMethod<ImageBatchVarShape>("channelreorder_into", &ChannelReorderVarShapeInto, "output"_a, "orders"_a,
-                                             py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<priv::ImageBatchVarShape>("channelreorder", &ChannelReorderVarShape, "order"_a, py::kw_only(),
+                                                   "format"_a = nullptr, "stream"_a = nullptr);
+    util::DefClassMethod<priv::ImageBatchVarShape>("channelreorder_into", &ChannelReorderVarShapeInto, "output"_a,
+                                                   "orders"_a, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

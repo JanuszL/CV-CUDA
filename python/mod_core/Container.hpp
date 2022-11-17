@@ -21,12 +21,14 @@
 #include "Cache.hpp"
 #include "Resource.hpp"
 
+#include <nvcv/python/Container.hpp>
+
 #include <memory>
 
 namespace nv::cvpy::priv {
 namespace py = pybind11;
 
-class PYBIND11_EXPORT Container
+class Container
     : public Resource
     , public CacheItem
 {
@@ -38,6 +40,23 @@ public:
 
 protected:
     Container() = default;
+};
+
+class ExternalContainer : public Container
+{
+public:
+    explicit ExternalContainer(cvpy::Container &extCont)
+        : m_extCont(extCont)
+    {
+    }
+
+private:
+    cvpy::Container &m_extCont;
+
+    const IKey &key() const override
+    {
+        return m_extCont.key();
+    }
 };
 
 } // namespace nv::cvpy::priv

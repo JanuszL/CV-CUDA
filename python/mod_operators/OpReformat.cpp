@@ -18,19 +18,19 @@
 #include "Operators.hpp"
 
 #include <common/PyUtil.hpp>
-#include <mod_core/ResourceGuard.hpp>
-#include <mod_core/Stream.hpp>
-#include <mod_core/Tensor.hpp>
 #include <nvcv/operators/OpReformat.hpp>
+#include <nvcv/python/ResourceGuard.hpp>
+#include <nvcv/python/Stream.hpp>
+#include <nvcv/python/Tensor.hpp>
 
 namespace nv::cvpy {
 
 namespace {
-std::shared_ptr<Tensor> ReformatInto(Tensor &input, Tensor &output, std::shared_ptr<Stream> pstream)
+Tensor ReformatInto(Tensor &input, Tensor &output, std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     auto reformat = CreateOperator<cvop::Reformat>();
@@ -40,18 +40,18 @@ std::shared_ptr<Tensor> ReformatInto(Tensor &input, Tensor &output, std::shared_
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*reformat});
 
-    reformat->submit(pstream->handle(), input.impl(), output.impl());
+    reformat->submit(pstream->cudaHandle(), input, output);
 
-    return output.shared_from_this();
+    return std::move(output);
 }
 
-std::shared_ptr<Tensor> Reformat(Tensor &input, const cv::TensorLayout &out_layout, std::shared_ptr<Stream> pstream)
+Tensor Reformat(Tensor &input, const cv::TensorLayout &out_layout, std::optional<Stream> pstream)
 {
-    cv::TensorShape out_shape = Permute(input.impl().shape(), out_layout);
+    cv::TensorShape out_shape = Permute(input.shape(), out_layout);
 
-    std::shared_ptr<Tensor> output = Tensor::Create(CreateShape(out_shape), input.dtype(), out_layout);
+    Tensor output = Tensor::Create(out_shape, input.dtype());
 
-    return ReformatInto(input, *output, pstream);
+    return ReformatInto(input, output, pstream);
 }
 
 } // namespace
@@ -60,8 +60,8 @@ void ExportOpReformat(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<Tensor>("reformat", &Reformat, "layout"_a, py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<Tensor>("reformat_into", &ReformatInto, "out"_a, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("reformat", &Reformat, "layout"_a, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("reformat_into", &ReformatInto, "out"_a, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

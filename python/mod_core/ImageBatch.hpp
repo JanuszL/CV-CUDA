@@ -30,7 +30,7 @@ namespace py = pybind11;
 
 class Image;
 
-class PYBIND11_EXPORT ImageBatchVarShape : public Container
+class ImageBatchVarShape : public Container
 {
     using ImageList = std::vector<std::shared_ptr<Image>>;
 

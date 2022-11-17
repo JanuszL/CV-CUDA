@@ -34,9 +34,9 @@ using Shape = std::vector<int64_t>;
 class CudaBuffer;
 class Image;
 
-PYBIND11_EXPORT Shape CreateShape(const cv::TensorShape &tshape);
+Shape CreateShape(const cv::TensorShape &tshape);
 
-class PYBIND11_EXPORT Tensor : public Container
+class Tensor : public Container
 {
 public:
     static void Export(py::module &m);

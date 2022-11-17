@@ -15,19 +15,35 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_PYTHON_PRIV_LOCKMODE_HPP
-#define NVCV_PYTHON_PRIV_LOCKMODE_HPP
+#ifndef NVCV_PYTHON_CONTAINER_HPP
+#define NVCV_PYTHON_CONTAINER_HPP
 
-namespace nv::cvpy::priv {
+#include "CAPI.hpp"
+#include "Cache.hpp"
+#include "Resource.hpp"
 
-enum LockMode
+#include <pybind11/pybind11.h>
+
+namespace nv::cvpy {
+
+namespace py = pybind11;
+
+class Container
+    : public Resource
+    , public ICacheItem
 {
-    LOCK_NONE      = 0,
-    LOCK_READ      = 1,
-    LOCK_WRITE     = 2,
-    LOCK_READWRITE = LOCK_READ | LOCK_WRITE
+public:
+    Container(py::object o)
+        : Resource(o)
+    {
+    }
+
+    explicit Container()
+        : Resource(py::reinterpret_steal<py::object>(capi().Container_Create(this)))
+    {
+    }
 };
 
-} // namespace nv::cvpy::priv
+} // namespace nv::cvpy
 
-#endif // NVCV_PYTHON_PRIV_LOCKMODE_HPP
+#endif // NVCV_PYTHON_CONTAINER_HPP

@@ -18,12 +18,12 @@
 #include "Operators.hpp"
 
 #include <common/PyUtil.hpp>
-#include <mod_core/Image.hpp>
-#include <mod_core/ImageBatch.hpp>
-#include <mod_core/ResourceGuard.hpp>
-#include <mod_core/Stream.hpp>
-#include <mod_core/Tensor.hpp>
 #include <nvcv/operators/OpNormalize.hpp>
+#include <nvcv/python/Image.hpp>
+#include <nvcv/python/ImageBatchVarShape.hpp>
+#include <nvcv/python/ResourceGuard.hpp>
+#include <nvcv/python/Stream.hpp>
+#include <nvcv/python/Tensor.hpp>
 #include <pybind11/stl.h>
 
 namespace nv::cvpy {
@@ -38,13 +38,12 @@ enum OpFlags : uint32_t
 } // namespace
 
 namespace {
-std::shared_ptr<Tensor> NormalizeInto(Tensor &input, Tensor &output, Tensor &base, Tensor &scale,
-                                      std::optional<uint32_t> flags, float globalScale, float globalShift,
-                                      float epsilon, std::shared_ptr<Stream> pstream)
+Tensor NormalizeInto(Tensor &input, Tensor &output, Tensor &base, Tensor &scale, std::optional<uint32_t> flags,
+                     float globalScale, float globalShift, float epsilon, std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     if (!flags)
@@ -59,28 +58,26 @@ std::shared_ptr<Tensor> NormalizeInto(Tensor &input, Tensor &output, Tensor &bas
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*normalize});
 
-    normalize->submit(pstream->handle(), input.impl(), base.impl(), scale.impl(), output.impl(), globalScale,
-                      globalShift, epsilon, *flags);
+    normalize->submit(pstream->cudaHandle(), input, base, scale, output, globalScale, globalShift, epsilon, *flags);
 
-    return output.shared_from_this();
+    return std::move(output);
 }
 
-std::shared_ptr<Tensor> Normalize(Tensor &input, Tensor &base, Tensor &scale, std::optional<uint32_t> flags,
-                                  float globalScale, float globalShift, float epsilon, std::shared_ptr<Stream> pstream)
+Tensor Normalize(Tensor &input, Tensor &base, Tensor &scale, std::optional<uint32_t> flags, float globalScale,
+                 float globalShift, float epsilon, std::optional<Stream> pstream)
 {
-    std::shared_ptr<Tensor> output = Tensor::Create(input.shape(), input.dtype(), input.layout());
+    Tensor output = Tensor::Create(input.shape(), input.dtype());
 
-    return NormalizeInto(input, *output, base, scale, flags, globalScale, globalShift, epsilon, pstream);
+    return NormalizeInto(input, output, base, scale, flags, globalScale, globalShift, epsilon, pstream);
 }
 
-std::shared_ptr<ImageBatchVarShape> VarShapeNormalizeInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
-                                                          Tensor &base, Tensor &scale, std::optional<uint32_t> flags,
-                                                          float globalScale, float globalShift, float epsilon,
-                                                          std::shared_ptr<Stream> pstream)
+ImageBatchVarShape VarShapeNormalizeInto(ImageBatchVarShape &input, ImageBatchVarShape &output, Tensor &base,
+                                         Tensor &scale, std::optional<uint32_t> flags, float globalScale,
+                                         float globalShift, float epsilon, std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     if (!flags)
@@ -95,27 +92,23 @@ std::shared_ptr<ImageBatchVarShape> VarShapeNormalizeInto(ImageBatchVarShape &in
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*normalize});
 
-    normalize->submit(pstream->handle(), input.impl(), base.impl(), scale.impl(), output.impl(), globalScale,
-                      globalShift, epsilon, *flags);
+    normalize->submit(pstream->cudaHandle(), input, base, scale, output, globalScale, globalShift, epsilon, *flags);
 
-    return output.shared_from_this();
+    return output;
 }
 
-std::shared_ptr<ImageBatchVarShape> VarShapeNormalize(ImageBatchVarShape &input, Tensor &base, Tensor &scale,
-                                                      std::optional<uint32_t> flags, float globalScale,
-                                                      float globalShift, float epsilon, std::shared_ptr<Stream> pstream)
+ImageBatchVarShape VarShapeNormalize(ImageBatchVarShape &input, Tensor &base, Tensor &scale,
+                                     std::optional<uint32_t> flags, float globalScale, float globalShift, float epsilon,
+                                     std::optional<Stream> pstream)
 {
-    std::shared_ptr<ImageBatchVarShape> output = ImageBatchVarShape::Create(input.capacity());
+    ImageBatchVarShape output = ImageBatchVarShape::Create(input.capacity());
 
     for (int i = 0; i < input.numImages(); ++i)
     {
-        cv::ImageFormat format = input.impl()[i].format();
-        cv::Size2D      size   = input.impl()[i].size();
-        auto            image  = Image::Create(std::tie(size.w, size.h), format);
-        output->pushBack(*image);
+        output.pushBack(Image::Create(input[i].size(), input[i].format()));
     }
 
-    return VarShapeNormalizeInto(input, *output, base, scale, flags, globalScale, globalShift, epsilon, pstream);
+    return VarShapeNormalizeInto(input, output, base, scale, flags, globalScale, globalShift, epsilon, pstream);
 }
 
 } // namespace
@@ -130,23 +123,25 @@ void ExportOpNormalize(py::module &m)
     float defGlobalShift = 0;
     float defEpsilon     = 0;
 
-    util::DefClassMethod<Tensor>("normalize", &Normalize, "base"_a, "scale"_a, "flags"_a = std::nullopt, py::kw_only(),
-                                 "globalscale"_a = defGlobalScale, "globalshift"_a = defGlobalShift,
-                                 "epsilon"_a = defEpsilon, "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("normalize", &Normalize, "base"_a, "scale"_a, "flags"_a = std::nullopt,
+                                       py::kw_only(), "globalscale"_a = defGlobalScale,
+                                       "globalshift"_a = defGlobalShift, "epsilon"_a = defEpsilon,
+                                       "stream"_a = nullptr);
 
-    util::DefClassMethod<Tensor>("normalize_into", &NormalizeInto, "out"_a, "base"_a, "scale"_a,
-                                 "flags"_a = std::nullopt, py::kw_only(), "globalscale"_a = defGlobalScale,
-                                 "globalshift"_a = defGlobalShift, "epsilon"_a = defEpsilon, "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("normalize_into", &NormalizeInto, "out"_a, "base"_a, "scale"_a,
+                                       "flags"_a = std::nullopt, py::kw_only(), "globalscale"_a = defGlobalScale,
+                                       "globalshift"_a = defGlobalShift, "epsilon"_a = defEpsilon,
+                                       "stream"_a = nullptr);
 
-    util::DefClassMethod<ImageBatchVarShape>("normalize", &VarShapeNormalize, "base"_a, "scale"_a,
-                                             "flags"_a = std::nullopt, py::kw_only(), "globalscale"_a = defGlobalScale,
-                                             "globalshift"_a = defGlobalShift, "epsilon"_a = defEpsilon,
-                                             "stream"_a = nullptr);
+    util::DefClassMethod<priv::ImageBatchVarShape>("normalize", &VarShapeNormalize, "base"_a, "scale"_a,
+                                                   "flags"_a       = std::nullopt, py::kw_only(),
+                                                   "globalscale"_a = defGlobalScale, "globalshift"_a = defGlobalShift,
+                                                   "epsilon"_a = defEpsilon, "stream"_a = nullptr);
 
-    util::DefClassMethod<ImageBatchVarShape>("normalize_into", &VarShapeNormalizeInto, "out"_a, "base"_a, "scale"_a,
-                                             "flags"_a = std::nullopt, py::kw_only(), "globalscale"_a = defGlobalScale,
-                                             "globalshift"_a = defGlobalShift, "epsilon"_a = defEpsilon,
-                                             "stream"_a = nullptr);
+    util::DefClassMethod<priv::ImageBatchVarShape>("normalize_into", &VarShapeNormalizeInto, "out"_a, "base"_a,
+                                                   "scale"_a, "flags"_a = std::nullopt, py::kw_only(),
+                                                   "globalscale"_a = defGlobalScale, "globalshift"_a = defGlobalShift,
+                                                   "epsilon"_a = defEpsilon, "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

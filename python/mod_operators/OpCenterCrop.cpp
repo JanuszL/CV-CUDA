@@ -20,26 +20,25 @@
 #include <common/Assert.hpp>
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <mod_core/Image.hpp>
-#include <mod_core/ImageBatch.hpp>
-#include <mod_core/ResourceGuard.hpp>
-#include <mod_core/Stream.hpp>
-#include <mod_core/Tensor.hpp>
 #include <nvcv/TensorLayoutInfo.hpp>
 #include <nvcv/operators/OpCenterCrop.hpp>
 #include <nvcv/operators/Types.h>
 #include <nvcv/optools/TypeTraits.hpp>
+#include <nvcv/python/ImageBatchVarShape.hpp>
+#include <nvcv/python/ResourceGuard.hpp>
+#include <nvcv/python/Stream.hpp>
+#include <nvcv/python/Tensor.hpp>
 #include <pybind11/stl.h>
 
 namespace nv::cvpy {
 
 namespace {
-std::shared_ptr<Tensor> CenterCropInto(Tensor &input, Tensor &output, const std::tuple<int, int> &cropSize,
-                                       std::shared_ptr<Stream> pstream)
+Tensor CenterCropInto(Tensor &input, Tensor &output, const std::tuple<int, int> &cropSize,
+                      std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     auto center_crop = CreateOperator<cvop::CenterCrop>();
@@ -51,14 +50,14 @@ std::shared_ptr<Tensor> CenterCropInto(Tensor &input, Tensor &output, const std:
 
     cv::Size2D cropSizeArg{std::get<0>(cropSize), std::get<1>(cropSize)};
 
-    center_crop->submit(pstream->handle(), input.impl(), output.impl(), cropSizeArg);
+    center_crop->submit(pstream->cudaHandle(), input, output, cropSizeArg);
 
-    return output.shared_from_this();
+    return output;
 }
 
-std::shared_ptr<Tensor> CenterCrop(Tensor &input, const std::tuple<int, int> &cropSize, std::shared_ptr<Stream> pstream)
+Tensor CenterCrop(Tensor &input, const std::tuple<int, int> &cropSize, std::optional<Stream> pstream)
 {
-    auto info = cv::TensorLayoutInfoImage::Create(input.layout() ? *input.layout() : cv::TensorLayout::NONE);
+    auto info = cv::TensorLayoutInfoImage::Create(input.layout());
     if (!info)
     {
         throw std::invalid_argument("Non-supported tensor layout");
@@ -71,13 +70,14 @@ std::shared_ptr<Tensor> CenterCrop(Tensor &input, const std::tuple<int, int> &cr
     NVCV_ASSERT(iheight >= 0 && "All images have height");
 
     // Use cropSize (width, height) for output
-    Shape out_shape    = input.shape();
+    cv::TensorShape tshape = input.shape();
+    Shape           out_shape{&tshape[0], &tshape[0] + tshape.rank()};
     out_shape[iwidth]  = std::get<0>(cropSize);
     out_shape[iheight] = std::get<1>(cropSize);
 
-    std::shared_ptr<Tensor> output = Tensor::Create(out_shape, input.dtype(), input.layout());
+    Tensor output = Tensor::Create(cv::TensorShape(out_shape.data(), out_shape.size(), input.layout()), input.dtype());
 
-    return CenterCropInto(input, *output, cropSize, pstream);
+    return CenterCropInto(input, output, cropSize, pstream);
 }
 
 } // namespace
@@ -86,9 +86,9 @@ void ExportOpCenterCrop(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<Tensor>("center_crop", &CenterCrop, "crop_size"_a, py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<Tensor>("center_crop_into", &CenterCropInto, "output"_a, "crop_size"_a, py::kw_only(),
-                                 "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("center_crop", &CenterCrop, "crop_size"_a, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("center_crop_into", &CenterCropInto, "output"_a, "crop_size"_a, py::kw_only(),
+                                       "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

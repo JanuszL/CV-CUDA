@@ -44,27 +44,6 @@ struct KeyEqual
     }
 };
 
-size_t IKey::hash() const
-{
-    size_t h = doGetHash();
-
-    // Make hash dependent on concrete object type
-    h ^= typeid(*this).hash_code() << 1;
-    return h;
-}
-
-bool IKey::operator==(const IKey &that) const
-{
-    if (typeid(*this) == typeid(that))
-    {
-        return doIsEqual(that);
-    }
-    else
-    {
-        return false;
-    }
-}
-
 CacheItem::CacheItem()
 {
     static uint64_t idnext = 0;
@@ -175,6 +154,11 @@ Cache &Cache::Instance()
 
 void Cache::Export(py::module &m)
 {
+    py::class_<CacheItem, std::shared_ptr<CacheItem>>(nullptr, "CacheItem", py::module_local());
+
+    py::class_<ExternalCacheItem, CacheItem, std::shared_ptr<ExternalCacheItem>>(nullptr, "ExternalCacheItem",
+                                                                                 py::module_local());
+
     util::RegisterCleanup(m,
                           []
                           {

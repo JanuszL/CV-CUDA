@@ -19,27 +19,26 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <mod_core/Image.hpp>
-#include <mod_core/ImageBatch.hpp>
-#include <mod_core/ResourceGuard.hpp>
-#include <mod_core/Stream.hpp>
-#include <mod_core/Tensor.hpp>
 #include <nvcv/operators/OpConv2D.hpp>
 #include <nvcv/operators/Types.h>
 #include <nvcv/optools/TypeTraits.hpp>
+#include <nvcv/python/Image.hpp>
+#include <nvcv/python/ImageBatchVarShape.hpp>
+#include <nvcv/python/ResourceGuard.hpp>
+#include <nvcv/python/Stream.hpp>
+#include <nvcv/python/Tensor.hpp>
 #include <pybind11/stl.h>
 
 namespace nv::cvpy {
 
 namespace {
 
-std::shared_ptr<ImageBatchVarShape> Conv2DVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
-                                                       ImageBatchVarShape &kernel, Tensor &kernel_anchor,
-                                                       NVCVBorderType border, std::shared_ptr<Stream> pstream)
+ImageBatchVarShape Conv2DVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output, ImageBatchVarShape &kernel,
+                                      Tensor &kernel_anchor, NVCVBorderType border, std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     auto conv2D = CreateOperator<cvop::Conv2D>();
@@ -49,26 +48,25 @@ std::shared_ptr<ImageBatchVarShape> Conv2DVarShapeInto(ImageBatchVarShape &input
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*conv2D});
 
-    conv2D->submit(pstream->handle(), input.impl(), output.impl(), kernel.impl(), kernel_anchor.impl(), border);
+    conv2D->submit(pstream->cudaHandle(), input, output, kernel, kernel_anchor, border);
 
-    return output.shared_from_this();
+    return output;
 }
 
-std::shared_ptr<ImageBatchVarShape> Conv2DVarShape(ImageBatchVarShape &input, ImageBatchVarShape &kernel,
-                                                   Tensor &kernel_anchor, NVCVBorderType border,
-                                                   std::shared_ptr<Stream> pstream)
+ImageBatchVarShape Conv2DVarShape(ImageBatchVarShape &input, ImageBatchVarShape &kernel, Tensor &kernel_anchor,
+                                  NVCVBorderType border, std::optional<Stream> pstream)
 {
-    std::shared_ptr<ImageBatchVarShape> output = ImageBatchVarShape::Create(input.capacity());
+    ImageBatchVarShape output = ImageBatchVarShape::Create(input.capacity());
 
     for (int i = 0; i < input.numImages(); ++i)
     {
-        cv::ImageFormat format = input.impl()[i].format();
-        cv::Size2D      size   = input.impl()[i].size();
-        auto            image  = Image::Create(std::tie(size.w, size.h), format);
-        output->pushBack(*image);
+        cv::ImageFormat format = input[i].format();
+        cv::Size2D      size   = input[i].size();
+        auto            image  = Image::Create(size, format);
+        output.pushBack(image);
     }
 
-    return Conv2DVarShapeInto(input, *output, kernel, kernel_anchor, border, pstream);
+    return Conv2DVarShapeInto(input, output, kernel, kernel_anchor, border, pstream);
 }
 
 } // namespace
@@ -77,12 +75,12 @@ void ExportOpConv2D(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<ImageBatchVarShape>("conv2d", &Conv2DVarShape, "kernel"_a, "kernel_anchor"_a,
-                                             "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                             "stream"_a = nullptr);
-    util::DefClassMethod<ImageBatchVarShape>("conv2d_into", &Conv2DVarShapeInto, "output"_a, "kernel"_a,
-                                             "kernel_anchor"_a, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                                             py::kw_only(), "stream"_a     = nullptr);
+    util::DefClassMethod<priv::ImageBatchVarShape>("conv2d", &Conv2DVarShape, "kernel"_a, "kernel_anchor"_a,
+                                                   "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
+                                                   "stream"_a = nullptr);
+    util::DefClassMethod<priv::ImageBatchVarShape>("conv2d_into", &Conv2DVarShapeInto, "output"_a, "kernel"_a,
+                                                   "kernel_anchor"_a, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
+                                                   py::kw_only(), "stream"_a     = nullptr);
 }
 
 } // namespace nv::cvpy

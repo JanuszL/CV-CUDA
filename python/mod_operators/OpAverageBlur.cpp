@@ -19,26 +19,24 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <mod_core/Image.hpp>
-#include <mod_core/ImageBatch.hpp>
-#include <mod_core/ResourceGuard.hpp>
-#include <mod_core/Stream.hpp>
-#include <mod_core/Tensor.hpp>
 #include <nvcv/operators/OpAverageBlur.hpp>
 #include <nvcv/operators/Types.h>
 #include <nvcv/optools/TypeTraits.hpp>
+#include <nvcv/python/ImageBatchVarShape.hpp>
+#include <nvcv/python/ResourceGuard.hpp>
+#include <nvcv/python/Stream.hpp>
+#include <nvcv/python/Tensor.hpp>
 #include <pybind11/stl.h>
 
 namespace nv::cvpy {
 
 namespace {
-std::shared_ptr<Tensor> AverageBlurInto(Tensor &input, Tensor &output, const std::tuple<int, int> &kernel_size,
-                                        const std::tuple<int, int> &kernel_anchor, NVCVBorderType border,
-                                        std::shared_ptr<Stream> pstream)
+Tensor AverageBlurInto(Tensor &input, Tensor &output, const std::tuple<int, int> &kernel_size,
+                       const std::tuple<int, int> &kernel_anchor, NVCVBorderType border, std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     cv::Size2D kernelSizeArg{std::get<0>(kernel_size), std::get<1>(kernel_size)};
@@ -51,28 +49,26 @@ std::shared_ptr<Tensor> AverageBlurInto(Tensor &input, Tensor &output, const std
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*averageBlur});
 
-    averageBlur->submit(pstream->handle(), input.impl(), output.impl(), kernelSizeArg, kernelAnchorArg, border);
+    averageBlur->submit(pstream->cudaHandle(), input, output, kernelSizeArg, kernelAnchorArg, border);
 
-    return output.shared_from_this();
+    return output;
 }
 
-std::shared_ptr<Tensor> AverageBlur(Tensor &input, const std::tuple<int, int> &kernel_size,
-                                    const std::tuple<int, int> &kernel_anchor, NVCVBorderType border,
-                                    std::shared_ptr<Stream> pstream)
+Tensor AverageBlur(Tensor &input, const std::tuple<int, int> &kernel_size, const std::tuple<int, int> &kernel_anchor,
+                   NVCVBorderType border, std::optional<Stream> pstream)
 {
-    std::shared_ptr<Tensor> output = Tensor::Create(input.shape(), input.dtype(), input.layout());
+    Tensor output = Tensor::Create(input.shape(), input.dtype());
 
-    return AverageBlurInto(input, *output, kernel_size, kernel_anchor, border, pstream);
+    return AverageBlurInto(input, output, kernel_size, kernel_anchor, border, pstream);
 }
 
-std::shared_ptr<ImageBatchVarShape> AverageBlurVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
-                                                            const std::tuple<int, int> &max_kernel_size,
-                                                            Tensor &kernel_size, Tensor &kernel_anchor,
-                                                            NVCVBorderType border, std::shared_ptr<Stream> pstream)
+ImageBatchVarShape AverageBlurVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
+                                           const std::tuple<int, int> &max_kernel_size, Tensor &kernel_size,
+                                           Tensor &kernel_anchor, NVCVBorderType border, std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     cv::Size2D maxKernelSizeArg{std::get<0>(max_kernel_size), std::get<1>(max_kernel_size)};
@@ -84,28 +80,26 @@ std::shared_ptr<ImageBatchVarShape> AverageBlurVarShapeInto(ImageBatchVarShape &
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*averageBlur});
 
-    averageBlur->submit(pstream->handle(), input.impl(), output.impl(), kernel_size.impl(), kernel_anchor.impl(),
-                        border);
+    averageBlur->submit(pstream->cudaHandle(), input, output, kernel_size, kernel_anchor, border);
 
-    return output.shared_from_this();
+    return output;
 }
 
-std::shared_ptr<ImageBatchVarShape> AverageBlurVarShape(ImageBatchVarShape         &input,
-                                                        const std::tuple<int, int> &max_kernel_size,
-                                                        Tensor &kernel_size, Tensor &kernel_anchor,
-                                                        NVCVBorderType border, std::shared_ptr<Stream> pstream)
+ImageBatchVarShape AverageBlurVarShape(ImageBatchVarShape &input, const std::tuple<int, int> &max_kernel_size,
+                                       Tensor &kernel_size, Tensor &kernel_anchor, NVCVBorderType border,
+                                       std::optional<Stream> pstream)
 {
-    std::shared_ptr<ImageBatchVarShape> output = ImageBatchVarShape::Create(input.capacity());
+    ImageBatchVarShape output = ImageBatchVarShape::Create(input.capacity());
 
     for (int i = 0; i < input.numImages(); ++i)
     {
-        cv::ImageFormat format = input.impl()[i].format();
-        cv::Size2D      size   = input.impl()[i].size();
-        auto            image  = Image::Create(std::tie(size.w, size.h), format);
-        output->pushBack(*image);
+        cv::ImageFormat format = input[i].format();
+        cv::Size2D      size   = input[i].size();
+        auto            image  = Image::Create(size, format);
+        output.pushBack(image);
     }
 
-    return AverageBlurVarShapeInto(input, *output, max_kernel_size, kernel_size, kernel_anchor, border, pstream);
+    return AverageBlurVarShapeInto(input, output, max_kernel_size, kernel_size, kernel_anchor, border, pstream);
 }
 
 } // namespace
@@ -116,17 +110,17 @@ void ExportOpAverageBlur(py::module &m)
 
     const std::tuple<int, int> def_anchor{-1, -1};
 
-    util::DefClassMethod<Tensor>("averageblur", &AverageBlur, "kernel_size"_a, "kernel_anchor"_a = def_anchor,
-                                 "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                 "stream"_a = nullptr);
-    util::DefClassMethod<Tensor>("averageblur_into", &AverageBlurInto, "output"_a, "kernel_size"_a,
-                                 "kernel_anchor"_a = def_anchor, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                                 py::kw_only(), "stream"_a                  = nullptr);
+    util::DefClassMethod<priv::Tensor>("averageblur", &AverageBlur, "kernel_size"_a, "kernel_anchor"_a = def_anchor,
+                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
+                                       "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>(
+        "averageblur_into", &AverageBlurInto, "output"_a, "kernel_size"_a, "kernel_anchor"_a = def_anchor,
+        "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
 
-    util::DefClassMethod<ImageBatchVarShape>("averageblur", &AverageBlurVarShape, "max_kernel_size"_a, "kernel_size"_a,
-                                             "kernel_anchor"_a, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                                             py::kw_only(), "stream"_a     = nullptr);
-    util::DefClassMethod<ImageBatchVarShape>(
+    util::DefClassMethod<priv::ImageBatchVarShape>(
+        "averageblur", &AverageBlurVarShape, "max_kernel_size"_a, "kernel_size"_a, "kernel_anchor"_a,
+        "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<priv::ImageBatchVarShape>(
         "averageblur_into", &AverageBlurVarShapeInto, "output"_a, "max_kernel_size"_a, "kernel_size"_a,
         "kernel_anchor"_a, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
 }

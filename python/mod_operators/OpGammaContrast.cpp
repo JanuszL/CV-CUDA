@@ -19,54 +19,51 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <mod_core/Image.hpp>
-#include <mod_core/ImageBatch.hpp>
-#include <mod_core/ResourceGuard.hpp>
-#include <mod_core/Stream.hpp>
-#include <mod_core/Tensor.hpp>
 #include <nvcv/operators/OpGammaContrast.hpp>
 #include <nvcv/operators/Types.h>
 #include <nvcv/optools/TypeTraits.hpp>
+#include <nvcv/python/ImageBatchVarShape.hpp>
+#include <nvcv/python/ResourceGuard.hpp>
+#include <nvcv/python/Stream.hpp>
+#include <nvcv/python/Tensor.hpp>
 #include <pybind11/stl.h>
 
 namespace nv::cvpy {
 
 namespace {
-std::shared_ptr<ImageBatchVarShape> VarShapeGammaContrastInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
-                                                              Tensor &gamma, std::shared_ptr<Stream> pstream)
+ImageBatchVarShape VarShapeGammaContrastInto(ImageBatchVarShape &input, ImageBatchVarShape &output, Tensor &gamma,
+                                             std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
-    auto gamma_contrast
-        = CreateOperator<cvop::GammaContrast>(input.capacity(), input.impl().uniqueFormat().numChannels());
+    auto gamma_contrast = CreateOperator<cvop::GammaContrast>(input.capacity(), input.uniqueFormat().numChannels());
 
     ResourceGuard guard(*pstream);
     guard.add(LOCK_READ, {input, gamma});
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*gamma_contrast});
 
-    gamma_contrast->submit(pstream->handle(), input.impl(), output.impl(), gamma.impl());
+    gamma_contrast->submit(pstream->cudaHandle(), input, output, gamma);
 
-    return output.shared_from_this();
+    return output;
 }
 
-std::shared_ptr<ImageBatchVarShape> VarShapeGammaContrast(ImageBatchVarShape &input, Tensor &gamma,
-                                                          std::shared_ptr<Stream> pstream)
+ImageBatchVarShape VarShapeGammaContrast(ImageBatchVarShape &input, Tensor &gamma, std::optional<Stream> pstream)
 {
-    std::shared_ptr<ImageBatchVarShape> output = ImageBatchVarShape::Create(input.capacity());
+    ImageBatchVarShape output = ImageBatchVarShape::Create(input.capacity());
 
     for (int i = 0; i < input.numImages(); ++i)
     {
-        cv::ImageFormat format = input.impl()[i].format();
-        cv::Size2D      size   = input.impl()[i].size();
-        auto            image  = Image::Create(std::tie(size.w, size.h), format);
-        output->pushBack(*image);
+        cv::ImageFormat format = input[i].format();
+        cv::Size2D      size   = input[i].size();
+        auto            image  = Image::Create(size, format);
+        output.pushBack(image);
     }
 
-    return VarShapeGammaContrastInto(input, *output, gamma, pstream);
+    return VarShapeGammaContrastInto(input, output, gamma, pstream);
 }
 
 } // namespace
@@ -75,10 +72,10 @@ void ExportOpGammaContrast(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<ImageBatchVarShape>("gamma_contrast", &VarShapeGammaContrast, "gamma"_a, py::kw_only(),
-                                             "stream"_a = nullptr);
-    util::DefClassMethod<ImageBatchVarShape>("gamma_contrast_into", &VarShapeGammaContrastInto, "output"_a, "gamma"_a,
-                                             py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<priv::ImageBatchVarShape>("gamma_contrast", &VarShapeGammaContrast, "gamma"_a, py::kw_only(),
+                                                   "stream"_a = nullptr);
+    util::DefClassMethod<priv::ImageBatchVarShape>("gamma_contrast_into", &VarShapeGammaContrastInto, "output"_a,
+                                                   "gamma"_a, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include "CAPI.hpp"
 #include "Cache.hpp"
 #include "Container.hpp"
 #include "CudaBuffer.hpp"
@@ -62,4 +63,5 @@ PYBIND11_MODULE(nvcv, m)
     Tensor::Export(m);
     Image::Export(m);
     ImageBatchVarShape::Export(m);
+    ExportCAPI(m);
 }

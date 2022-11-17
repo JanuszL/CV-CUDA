@@ -15,26 +15,19 @@
  * limitations under the License.
  */
 
-#include "Container.hpp"
+#ifndef NVCV_PYTHON_LOCKMODE_HPP
+#define NVCV_PYTHON_LOCKMODE_HPP
 
-namespace nv::cvpy::priv {
+namespace nv::cvpy {
 
-std::shared_ptr<Container> Container::shared_from_this()
+enum LockMode
 {
-    return std::static_pointer_cast<Container>(Resource::shared_from_this());
-}
+    LOCK_NONE      = 0,
+    LOCK_READ      = 1,
+    LOCK_WRITE     = 2,
+    LOCK_READWRITE = LOCK_READ | LOCK_WRITE
+};
 
-std::shared_ptr<const Container> Container::shared_from_this() const
-{
-    return std::static_pointer_cast<const Container>(Resource::shared_from_this());
-}
+} // namespace nv::cvpy
 
-void Container::Export(py::module &m)
-{
-    py::class_<Container, std::shared_ptr<Container>, Resource> cont(m, "Container");
-
-    py::class_<ExternalContainer, Container, std::shared_ptr<ExternalContainer>, Resource> extcont(
-        nullptr, "ExternalContainer", py::module_local());
-}
-
-} // namespace nv::cvpy::priv
+#endif // NVCV_PYTHON_PRIV_LOCKMODE_HPP

@@ -19,25 +19,25 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <mod_core/Image.hpp>
-#include <mod_core/ImageBatch.hpp>
-#include <mod_core/ResourceGuard.hpp>
-#include <mod_core/Stream.hpp>
-#include <mod_core/Tensor.hpp>
 #include <nvcv/operators/OpLaplacian.hpp>
 #include <nvcv/operators/Types.h>
 #include <nvcv/optools/TypeTraits.hpp>
+#include <nvcv/python/Image.hpp>
+#include <nvcv/python/ImageBatchVarShape.hpp>
+#include <nvcv/python/ResourceGuard.hpp>
+#include <nvcv/python/Stream.hpp>
+#include <nvcv/python/Tensor.hpp>
 #include <pybind11/stl.h>
 
 namespace nv::cvpy {
 
 namespace {
-std::shared_ptr<Tensor> LaplacianInto(Tensor &input, Tensor &output, const int &ksize, const float &scale,
-                                      NVCVBorderType border, std::shared_ptr<Stream> pstream)
+Tensor LaplacianInto(Tensor &input, Tensor &output, const int &ksize, const float &scale, NVCVBorderType border,
+                     std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     auto laplacian = CreateOperator<cvop::Laplacian>();
@@ -47,26 +47,25 @@ std::shared_ptr<Tensor> LaplacianInto(Tensor &input, Tensor &output, const int &
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*laplacian});
 
-    laplacian->submit(pstream->handle(), input.impl(), output.impl(), ksize, scale, border);
+    laplacian->submit(pstream->cudaHandle(), input, output, ksize, scale, border);
 
-    return output.shared_from_this();
+    return output;
 }
 
-std::shared_ptr<Tensor> Laplacian(Tensor &input, const int &ksize, const float &scale, NVCVBorderType border,
-                                  std::shared_ptr<Stream> pstream)
+Tensor Laplacian(Tensor &input, const int &ksize, const float &scale, NVCVBorderType border,
+                 std::optional<Stream> pstream)
 {
-    std::shared_ptr<Tensor> output = Tensor::Create(input.shape(), input.dtype(), input.layout());
+    Tensor output = Tensor::Create(input.shape(), input.dtype());
 
-    return LaplacianInto(input, *output, ksize, scale, border, pstream);
+    return LaplacianInto(input, output, ksize, scale, border, pstream);
 }
 
-std::shared_ptr<ImageBatchVarShape> LaplacianVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
-                                                          Tensor &ksize, Tensor &scale, NVCVBorderType border,
-                                                          std::shared_ptr<Stream> pstream)
+ImageBatchVarShape LaplacianVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output, Tensor &ksize,
+                                         Tensor &scale, NVCVBorderType border, std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     auto laplacian = CreateOperator<cvop::Laplacian>();
@@ -76,25 +75,25 @@ std::shared_ptr<ImageBatchVarShape> LaplacianVarShapeInto(ImageBatchVarShape &in
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*laplacian});
 
-    laplacian->submit(pstream->handle(), input.impl(), output.impl(), ksize.impl(), scale.impl(), border);
+    laplacian->submit(pstream->cudaHandle(), input, output, ksize, scale, border);
 
-    return output.shared_from_this();
+    return output;
 }
 
-std::shared_ptr<ImageBatchVarShape> LaplacianVarShape(ImageBatchVarShape &input, Tensor &ksize, Tensor &scale,
-                                                      NVCVBorderType border, std::shared_ptr<Stream> pstream)
+ImageBatchVarShape LaplacianVarShape(ImageBatchVarShape &input, Tensor &ksize, Tensor &scale, NVCVBorderType border,
+                                     std::optional<Stream> pstream)
 {
-    std::shared_ptr<ImageBatchVarShape> output = ImageBatchVarShape::Create(input.numImages());
+    ImageBatchVarShape output = ImageBatchVarShape::Create(input.numImages());
 
     for (int i = 0; i < input.numImages(); ++i)
     {
-        cv::ImageFormat format = input.impl()[i].format();
-        cv::Size2D      size   = input.impl()[i].size();
-        auto            image  = Image::Create(std::tie(size.w, size.h), format);
-        output->pushBack(*image);
+        cv::ImageFormat format = input[i].format();
+        cv::Size2D      size   = input[i].size();
+        auto            image  = Image::Create(size, format);
+        output.pushBack(image);
     }
 
-    return LaplacianVarShapeInto(input, *output, ksize, scale, border, pstream);
+    return LaplacianVarShapeInto(input, output, ksize, scale, border, pstream);
 }
 
 } // namespace
@@ -103,19 +102,19 @@ void ExportOpLaplacian(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<Tensor>("laplacian", &Laplacian, "ksize"_a, "scale"_a = 1.f,
-                                 "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                 "stream"_a = nullptr);
-    util::DefClassMethod<Tensor>("laplacian_into", &LaplacianInto, "output"_a, "ksize"_a, "scale"_a = 1.f,
-                                 "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                 "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("laplacian", &Laplacian, "ksize"_a, "scale"_a = 1.f,
+                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
+                                       "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("laplacian_into", &LaplacianInto, "output"_a, "ksize"_a, "scale"_a = 1.f,
+                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
+                                       "stream"_a = nullptr);
 
-    util::DefClassMethod<ImageBatchVarShape>("laplacian", &LaplacianVarShape, "ksize"_a, "scale"_a,
-                                             "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                             "stream"_a = nullptr);
-    util::DefClassMethod<ImageBatchVarShape>("laplacian_into", &LaplacianVarShapeInto, "output"_a, "ksize"_a, "scale"_a,
-                                             "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                             "stream"_a = nullptr);
+    util::DefClassMethod<priv::ImageBatchVarShape>("laplacian", &LaplacianVarShape, "ksize"_a, "scale"_a,
+                                                   "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
+                                                   "stream"_a = nullptr);
+    util::DefClassMethod<priv::ImageBatchVarShape>("laplacian_into", &LaplacianVarShapeInto, "output"_a, "ksize"_a,
+                                                   "scale"_a, "border"_a     = NVCVBorderType::NVCV_BORDER_CONSTANT,
+                                                   py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

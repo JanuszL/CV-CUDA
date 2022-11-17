@@ -19,26 +19,24 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <mod_core/Image.hpp>
-#include <mod_core/ImageBatch.hpp>
-#include <mod_core/ResourceGuard.hpp>
-#include <mod_core/Stream.hpp>
-#include <mod_core/Tensor.hpp>
 #include <nvcv/operators/OpGaussian.hpp>
 #include <nvcv/operators/Types.h>
 #include <nvcv/optools/TypeTraits.hpp>
+#include <nvcv/python/ImageBatchVarShape.hpp>
+#include <nvcv/python/ResourceGuard.hpp>
+#include <nvcv/python/Stream.hpp>
+#include <nvcv/python/Tensor.hpp>
 #include <pybind11/stl.h>
 
 namespace nv::cvpy {
 
 namespace {
-std::shared_ptr<Tensor> GaussianInto(Tensor &input, Tensor &output, const std::tuple<int, int> &kernel_size,
-                                     const std::tuple<double, double> &sigma, NVCVBorderType border,
-                                     std::shared_ptr<Stream> pstream)
+Tensor GaussianInto(Tensor &input, Tensor &output, const std::tuple<int, int> &kernel_size,
+                    const std::tuple<double, double> &sigma, NVCVBorderType border, std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     double2 sigmaArg{std::get<0>(sigma), std::get<1>(sigma)};
@@ -52,28 +50,26 @@ std::shared_ptr<Tensor> GaussianInto(Tensor &input, Tensor &output, const std::t
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*gaussian});
 
-    gaussian->submit(pstream->handle(), input.impl(), output.impl(), kernelSizeArg, sigmaArg, border);
+    gaussian->submit(pstream->cudaHandle(), input, output, kernelSizeArg, sigmaArg, border);
 
-    return output.shared_from_this();
+    return output;
 }
 
-std::shared_ptr<Tensor> Gaussian(Tensor &input, const std::tuple<int, int> &kernel_size,
-                                 const std::tuple<double, double> &sigma, NVCVBorderType border,
-                                 std::shared_ptr<Stream> pstream)
+Tensor Gaussian(Tensor &input, const std::tuple<int, int> &kernel_size, const std::tuple<double, double> &sigma,
+                NVCVBorderType border, std::optional<Stream> pstream)
 {
-    std::shared_ptr<Tensor> output = Tensor::Create(input.shape(), input.dtype(), input.layout());
+    Tensor output = Tensor::Create(input.shape(), input.dtype());
 
-    return GaussianInto(input, *output, kernel_size, sigma, border, pstream);
+    return GaussianInto(input, output, kernel_size, sigma, border, pstream);
 }
 
-std::shared_ptr<ImageBatchVarShape> VarShapeGaussianInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
-                                                         const std::tuple<int, int> &max_kernel_size, Tensor &ksize,
-                                                         Tensor &sigma, NVCVBorderType border,
-                                                         std::shared_ptr<Stream> pstream)
+ImageBatchVarShape VarShapeGaussianInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
+                                        const std::tuple<int, int> &max_kernel_size, Tensor &ksize, Tensor &sigma,
+                                        NVCVBorderType border, std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     cv::Size2D maxKernelSizeArg{std::get<0>(max_kernel_size), std::get<1>(max_kernel_size)};
@@ -85,27 +81,22 @@ std::shared_ptr<ImageBatchVarShape> VarShapeGaussianInto(ImageBatchVarShape &inp
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*gaussian});
 
-    gaussian->submit(pstream->handle(), input.impl(), output.impl(), ksize.impl(), sigma.impl(), border);
+    gaussian->submit(pstream->cudaHandle(), input, output, ksize, sigma, border);
 
-    return output.shared_from_this();
+    return output;
 }
 
-std::shared_ptr<ImageBatchVarShape> VarShapeGaussian(ImageBatchVarShape         &input,
-                                                     const std::tuple<int, int> &max_kernel_size, Tensor &ksize,
-                                                     Tensor &sigma, NVCVBorderType border,
-                                                     std::shared_ptr<Stream> pstream)
+ImageBatchVarShape VarShapeGaussian(ImageBatchVarShape &input, const std::tuple<int, int> &max_kernel_size,
+                                    Tensor &ksize, Tensor &sigma, NVCVBorderType border, std::optional<Stream> pstream)
 {
-    std::shared_ptr<ImageBatchVarShape> output = ImageBatchVarShape::Create(input.capacity());
+    ImageBatchVarShape output = ImageBatchVarShape::Create(input.capacity());
 
     for (int i = 0; i < input.numImages(); ++i)
     {
-        cv::ImageFormat format = input.impl()[i].format();
-        cv::Size2D      size   = input.impl()[i].size();
-        auto            image  = Image::Create(std::tie(size.w, size.h), format);
-        output->pushBack(*image);
+        output.pushBack(Image::Create(input[i].size(), input[i].format()));
     }
 
-    return VarShapeGaussianInto(input, *output, max_kernel_size, ksize, sigma, border, pstream);
+    return VarShapeGaussianInto(input, output, max_kernel_size, ksize, sigma, border, pstream);
 }
 
 } // namespace
@@ -114,17 +105,17 @@ void ExportOpGaussian(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<Tensor>("gaussian", &Gaussian, "kernel_size"_a, "sigma"_a,
-                                 "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                 "stream"_a = nullptr);
-    util::DefClassMethod<Tensor>("gaussian_into", &GaussianInto, "output"_a, "kernel_size"_a, "sigma"_a,
-                                 "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
-                                 "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("gaussian", &Gaussian, "kernel_size"_a, "sigma"_a,
+                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
+                                       "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("gaussian_into", &GaussianInto, "output"_a, "kernel_size"_a, "sigma"_a,
+                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
+                                       "stream"_a = nullptr);
 
-    util::DefClassMethod<ImageBatchVarShape>("gaussian", &VarShapeGaussian, "max_kernel_size"_a, "kernel_size"_a,
-                                             "sigma"_a, "border"_a     = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                                             py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<ImageBatchVarShape>(
+    util::DefClassMethod<priv::ImageBatchVarShape>("gaussian", &VarShapeGaussian, "max_kernel_size"_a, "kernel_size"_a,
+                                                   "sigma"_a, "border"_a     = NVCVBorderType::NVCV_BORDER_CONSTANT,
+                                                   py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<priv::ImageBatchVarShape>(
         "gaussian_into", &VarShapeGaussianInto, "output"_a, "max_kernel_size"_a, "kernel_size"_a, "sigma"_a,
         "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
 }

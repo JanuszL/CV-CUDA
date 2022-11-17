@@ -54,7 +54,7 @@ nvcv_python_add_module(
 target_link_libraries(nvcv_operators_module_python
     PRIVATE
         nvcv_util_compat
-        nvcv_module_python
+        pynvcv
         nvcv_operators
         nvcv_python_common
 )

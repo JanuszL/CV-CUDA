@@ -19,10 +19,10 @@
 #define NVCV_PYTHON_PRIV_STREAM_HPP
 
 #include "Cache.hpp"
-#include "LockMode.hpp"
 #include "Object.hpp"
 
 #include <cuda_runtime.h>
+#include <nvcv/python/LockMode.hpp>
 
 #include <initializer_list>
 #include <memory>

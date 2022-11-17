@@ -19,21 +19,20 @@
 
 #include <common/Assert.hpp>
 #include <common/PyUtil.hpp>
-#include <mod_core/ResourceGuard.hpp>
-#include <mod_core/Stream.hpp>
-#include <mod_core/Tensor.hpp>
 #include <nvcv/TensorLayoutInfo.hpp>
 #include <nvcv/operators/OpCustomCrop.hpp>
+#include <nvcv/python/ResourceGuard.hpp>
+#include <nvcv/python/Stream.hpp>
+#include <nvcv/python/Tensor.hpp>
 
 namespace nv::cvpy {
 
 namespace {
-std::shared_ptr<Tensor> CustomCropInto(Tensor &input, Tensor &output, const NVCVRectI &rcCrop,
-                                       std::shared_ptr<Stream> pstream)
+Tensor CustomCropInto(Tensor &input, Tensor &output, const NVCVRectI &rcCrop, std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     auto crop = CreateOperator<cvop::CustomCrop>();
@@ -43,14 +42,14 @@ std::shared_ptr<Tensor> CustomCropInto(Tensor &input, Tensor &output, const NVCV
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*crop});
 
-    crop->submit(pstream->handle(), input.impl(), output.impl(), rcCrop);
+    crop->submit(pstream->cudaHandle(), input, output, rcCrop);
 
-    return output.shared_from_this();
+    return std::move(output);
 }
 
-std::shared_ptr<Tensor> CustomCrop(Tensor &input, const NVCVRectI &rcCrop, std::shared_ptr<Stream> pstream)
+Tensor CustomCrop(Tensor &input, const NVCVRectI &rcCrop, std::optional<Stream> pstream)
 {
-    auto info = cv::TensorLayoutInfoImage::Create(input.layout() ? *input.layout() : cv::TensorLayout::NONE);
+    auto info = cv::TensorLayoutInfoImage::Create(input.layout());
     if (!info)
     {
         throw std::invalid_argument("Non-supported tensor layout");
@@ -69,16 +68,18 @@ std::shared_ptr<Tensor> CustomCrop(Tensor &input, const NVCVRectI &rcCrop, std::
     }
 
     // Create the output shape based inputs, changing width/height to match rcCrop's size
-    Shape out_shape   = input.shape();
+    cv::Shape            shape = input.shape().shape();
+    std::vector<int64_t> out_shape{shape.begin(), shape.end()};
     out_shape[iwidth] = rcCrop.width;
     if (iheight >= 0)
     {
         out_shape[iheight] = rcCrop.height;
     }
 
-    std::shared_ptr<Tensor> output = Tensor::Create(out_shape, input.dtype(), input.layout());
+    Tensor output
+        = Tensor::Create({out_shape.data(), static_cast<int32_t>(out_shape.size()), input.layout()}, input.dtype());
 
-    return CustomCropInto(input, *output, rcCrop, pstream);
+    return CustomCropInto(input, output, rcCrop, pstream);
 }
 
 } // namespace
@@ -87,9 +88,9 @@ void ExportOpCustomCrop(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<Tensor>("customcrop", &CustomCrop, "rect"_a, py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<Tensor>("customcrop_into", &CustomCropInto, "out"_a, "rect"_a, py::kw_only(),
-                                 "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("customcrop", &CustomCrop, "rect"_a, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("customcrop_into", &CustomCropInto, "out"_a, "rect"_a, py::kw_only(),
+                                       "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

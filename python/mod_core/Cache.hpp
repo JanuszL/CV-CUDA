@@ -21,6 +21,7 @@
 #include "Object.hpp"
 
 #include <common/Hash.hpp>
+#include <nvcv/python/Cache.hpp>
 #include <pybind11/pybind11.h>
 
 #include <vector>
@@ -28,19 +29,6 @@
 namespace nv::cvpy::priv {
 
 namespace py = pybind11;
-
-class IKey
-{
-public:
-    virtual ~IKey() = default;
-
-    size_t hash() const;
-    bool   operator==(const IKey &that) const;
-
-private:
-    virtual size_t doGetHash() const                 = 0;
-    virtual bool   doIsEqual(const IKey &that) const = 0;
-};
 
 class PYBIND11_EXPORT CacheItem : public virtual Object
 {
@@ -59,6 +47,22 @@ protected:
 
 private:
     uint64_t m_id;
+};
+
+class ExternalCacheItem : public CacheItem
+{
+public:
+    ExternalCacheItem(std::shared_ptr<cvpy::ICacheItem> obj_)
+        : obj(obj_)
+    {
+    }
+
+    std::shared_ptr<cvpy::ICacheItem> obj;
+
+    const IKey &key() const override
+    {
+        return obj->key();
+    }
 };
 
 class PYBIND11_EXPORT Cache

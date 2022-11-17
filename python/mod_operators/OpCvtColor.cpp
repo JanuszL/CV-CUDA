@@ -19,14 +19,13 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <mod_core/Image.hpp>
-#include <mod_core/ImageBatch.hpp>
-#include <mod_core/ResourceGuard.hpp>
-#include <mod_core/Stream.hpp>
-#include <mod_core/Tensor.hpp>
 #include <nvcv/operators/OpCvtColor.hpp>
 #include <nvcv/operators/Types.h>
 #include <nvcv/optools/TypeTraits.hpp>
+#include <nvcv/python/ImageBatchVarShape.hpp>
+#include <nvcv/python/ResourceGuard.hpp>
+#include <nvcv/python/Stream.hpp>
+#include <nvcv/python/Tensor.hpp>
 #include <pybind11/stl.h>
 
 #include <map>
@@ -286,12 +285,11 @@ cv::ImageFormat GetOutputFormat(cv::DataType in, NVCVColorConversionCode code)
     return outFormat;
 }
 
-std::shared_ptr<Tensor> CvtColorInto(Tensor &input, Tensor &output, NVCVColorConversionCode code,
-                                     std::shared_ptr<Stream> pstream)
+Tensor CvtColorInto(Tensor &input, Tensor &output, NVCVColorConversionCode code, std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     auto cvtColor = CreateOperator<cvop::CvtColor>();
@@ -301,12 +299,12 @@ std::shared_ptr<Tensor> CvtColorInto(Tensor &input, Tensor &output, NVCVColorCon
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*cvtColor});
 
-    cvtColor->submit(pstream->handle(), input.impl(), output.impl(), code);
+    cvtColor->submit(pstream->cudaHandle(), input, output, code);
 
-    return output.shared_from_this();
+    return output;
 }
 
-std::shared_ptr<Tensor> CvtColor(Tensor &input, NVCVColorConversionCode code, std::shared_ptr<Stream> pstream)
+Tensor CvtColor(Tensor &input, NVCVColorConversionCode code, std::optional<Stream> pstream)
 {
     auto outFormat = GetOutputFormat(input.dtype(), code);
 
@@ -314,20 +312,20 @@ std::shared_ptr<Tensor> CvtColor(Tensor &input, NVCVColorConversionCode code, st
     {
         throw std::runtime_error("Invalid input tensor shape");
     }
-    int    numImgs{static_cast<int>(input.shape()[0])};
-    Size2D size{static_cast<int>(input.shape()[2]), static_cast<int>(input.shape()[1])};
+    int        numImgs{static_cast<int>(input.shape()[0])};
+    cv::Size2D size{static_cast<int>(input.shape()[2]), static_cast<int>(input.shape()[1])};
 
-    std::shared_ptr<Tensor> output = Tensor::CreateForImageBatch(numImgs, size, outFormat);
+    Tensor output = Tensor::CreateForImageBatch(numImgs, size, outFormat);
 
-    return CvtColorInto(input, *output, code, pstream);
+    return CvtColorInto(input, output, code, pstream);
 }
 
-std::shared_ptr<ImageBatchVarShape> CvtColorVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
-                                                         NVCVColorConversionCode code, std::shared_ptr<Stream> pstream)
+ImageBatchVarShape CvtColorVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
+                                        NVCVColorConversionCode code, std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     auto cvtColor = CreateOperator<cvop::CvtColor>();
@@ -337,32 +335,32 @@ std::shared_ptr<ImageBatchVarShape> CvtColorVarShapeInto(ImageBatchVarShape &inp
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*cvtColor});
 
-    cvtColor->submit(pstream->handle(), input.impl(), output.impl(), code);
+    cvtColor->submit(pstream->cudaHandle(), input, output, code);
 
-    return output.shared_from_this();
+    return output;
 }
 
-std::shared_ptr<ImageBatchVarShape> CvtColorVarShape(ImageBatchVarShape &input, NVCVColorConversionCode code,
-                                                     std::shared_ptr<Stream> pstream)
+ImageBatchVarShape CvtColorVarShape(ImageBatchVarShape &input, NVCVColorConversionCode code,
+                                    std::optional<Stream> pstream)
 {
-    auto inFormat = input.impl().uniqueFormat();
+    auto inFormat = input.uniqueFormat();
     if (!inFormat || inFormat.numPlanes() != 1)
     {
         throw std::runtime_error("All images in input must have the same single-plane format");
     }
     auto outFormat = GetOutputFormat(inFormat.planeDataType(0), code);
 
-    std::shared_ptr<ImageBatchVarShape> output = ImageBatchVarShape::Create(input.capacity());
+    ImageBatchVarShape output = ImageBatchVarShape::Create(input.capacity());
 
     for (int i = 0; i < input.numImages(); ++i)
     {
-        cv::Size2D size = input.impl()[i].size();
+        cv::Size2D size = input[i].size();
 
-        auto img = Image::Create(std::tie(size.w, size.h), outFormat);
-        output->pushBack(*img);
+        auto img = Image::Create(size, outFormat);
+        output.pushBack(img);
     }
 
-    return CvtColorVarShapeInto(input, *output, code, pstream);
+    return CvtColorVarShapeInto(input, output, code, pstream);
 }
 
 } // namespace
@@ -371,14 +369,14 @@ void ExportOpCvtColor(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<Tensor>("cvtcolor", &CvtColor, "code"_a, py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<Tensor>("cvtcolor_into", &CvtColorInto, "output"_a, "code"_a, py::kw_only(),
-                                 "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("cvtcolor", &CvtColor, "code"_a, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("cvtcolor_into", &CvtColorInto, "output"_a, "code"_a, py::kw_only(),
+                                       "stream"_a = nullptr);
 
-    util::DefClassMethod<ImageBatchVarShape>("cvtcolor", &CvtColorVarShape, "code"_a, py::kw_only(),
-                                             "stream"_a = nullptr);
-    util::DefClassMethod<ImageBatchVarShape>("cvtcolor_into", &CvtColorVarShapeInto, "output"_a, "code"_a,
-                                             py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<priv::ImageBatchVarShape>("cvtcolor", &CvtColorVarShape, "code"_a, py::kw_only(),
+                                                   "stream"_a = nullptr);
+    util::DefClassMethod<priv::ImageBatchVarShape>("cvtcolor_into", &CvtColorVarShapeInto, "output"_a, "code"_a,
+                                                   py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

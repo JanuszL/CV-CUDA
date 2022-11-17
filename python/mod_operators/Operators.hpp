@@ -15,12 +15,14 @@
  * limitations under the License.
  */
 
-#include <mod_core/Container.hpp>
+#include <common/Hash.hpp>
+#include <nvcv/python/Cache.hpp>
+#include <nvcv/python/Container.hpp>
+#include <nvcv/python/ImageFormat.hpp>
+#include <nvcv/python/Size.hpp>
 #include <pybind11/pybind11.h>
 
 namespace nv::cvpy {
-
-using namespace nv::cvpy::priv;
 
 namespace py = ::pybind11;
 
@@ -66,19 +68,14 @@ public:
         m_op(std::forward<AA>(args)...);
     }
 
+    py::object container() const override
+    {
+        return *this;
+    }
+
     const IKey &key() const override
     {
         return m_key;
-    }
-
-private:
-    template<class OP2, class... AA2>
-    friend std::shared_ptr<PyOperator<OP2, void(AA2...)>> CreateOperator(AA2 &&...args);
-
-    PyOperator(const CTOR_ARGS &...args)
-        : m_key{args...}
-        , m_op{args...}
-    {
     }
 
     class Key : public IKey
@@ -101,16 +98,26 @@ private:
                 m_args);
         }
 
-        bool doIsEqual(const IKey &ithat) const override
+        bool doIsEqual(const IKey &that_) const override
         {
-            auto &that = static_cast<const Key &>(ithat);
+            const Key &that = static_cast<const Key &>(that_);
             return m_args == that.m_args;
         }
 
-        std::tuple<CTOR_ARGS...> m_args;
+        std::tuple<std::decay_t<CTOR_ARGS>...> m_args;
     };
 
-    // order is important
+private:
+    template<class OP2, class... AA2>
+    friend std::shared_ptr<PyOperator<OP2, void(AA2...)>> CreateOperator(AA2 &&...args);
+
+    PyOperator(CTOR_ARGS &&...args)
+        : m_key(args...)
+        , m_op{std::forward<CTOR_ARGS>(args)...}
+    {
+    }
+
+    // Order is important
     Key m_key;
     OP  m_op;
 };
@@ -124,24 +131,35 @@ std::shared_ptr<PyOperator<OP, void(AA...)>> CreateOperator(AA &&...args)
     using PyOP = PyOperator<OP, void(AA...)>;
 
     // Creates a key out of the operator's ctor parameters
-    typename PyOP::Key key{args...};
+    typename PyOP::Key key(args...);
 
     // Try to fetch it from cache
-    std::vector<std::shared_ptr<CacheItem>> vcont = Cache::Instance().fetch(key);
+    std::vector<std::shared_ptr<ICacheItem>> vcont = Cache::fetch(key);
 
     // None found?
     if (vcont.empty())
     {
         // Creates a new one
         auto op = std::shared_ptr<PyOP>(new PyOP(std::forward<AA>(args)...));
+
         // Adds to the resource cache
-        Cache::Instance().add(*op);
+        Cache::add(*op);
         return op;
     }
     else
     {
         // Get the first one found in cache
-        return std::static_pointer_cast<PyOP>(vcont[0]);
+        auto op = std::dynamic_pointer_cast<PyOP>(vcont[0]);
+        assert(op);
+        return op;
     }
 }
 } // namespace nv::cvpy
+
+namespace nv::cv {
+inline size_t ComputeHash(const ImageFormat fmt)
+{
+    using cvpy::util::ComputeHash;
+    return ComputeHash(fmt.cvalue());
+}
+} // namespace nv::cv

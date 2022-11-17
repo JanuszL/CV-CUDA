@@ -19,14 +19,13 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <mod_core/Image.hpp>
-#include <mod_core/ImageBatch.hpp>
-#include <mod_core/ResourceGuard.hpp>
-#include <mod_core/Stream.hpp>
-#include <mod_core/Tensor.hpp>
 #include <nvcv/operators/OpWarpAffine.hpp>
 #include <nvcv/operators/Types.h>
 #include <nvcv/optools/TypeTraits.hpp>
+#include <nvcv/python/ImageBatchVarShape.hpp>
+#include <nvcv/python/ResourceGuard.hpp>
+#include <nvcv/python/Stream.hpp>
+#include <nvcv/python/Tensor.hpp>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
@@ -36,13 +35,12 @@ namespace {
 
 using pyarray = py::array_t<float, py::array::c_style | py::array::forcecast>;
 
-std::shared_ptr<Tensor> WarpAffineInto(Tensor &input, Tensor &output, const pyarray &xform, const int32_t flags,
-                                       const NVCVBorderType borderMode, const pyarray &borderValue,
-                                       std::shared_ptr<Stream> pstream)
+Tensor WarpAffineInto(Tensor &input, Tensor &output, const pyarray &xform, const int32_t flags,
+                      const NVCVBorderType borderMode, const pyarray &borderValue, std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     size_t bValueSize = borderValue.size();
@@ -84,28 +82,26 @@ std::shared_ptr<Tensor> WarpAffineInto(Tensor &input, Tensor &output, const pyar
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*warpAffine});
 
-    warpAffine->submit(pstream->handle(), input.impl(), output.impl(), xformOutput, flags, borderMode, bValue);
+    warpAffine->submit(pstream->cudaHandle(), input, output, xformOutput, flags, borderMode, bValue);
 
-    return output.shared_from_this();
+    return output;
 }
 
-std::shared_ptr<Tensor> WarpAffine(Tensor &input, const pyarray &xform, const int32_t flags,
-                                   const NVCVBorderType borderMode, const pyarray &borderValue,
-                                   std::shared_ptr<Stream> pstream)
+Tensor WarpAffine(Tensor &input, const pyarray &xform, const int32_t flags, const NVCVBorderType borderMode,
+                  const pyarray &borderValue, std::optional<Stream> pstream)
 {
-    std::shared_ptr<Tensor> output = Tensor::Create(input.shape(), input.dtype(), input.layout());
+    Tensor output = Tensor::Create(input.shape(), input.dtype());
 
-    return WarpAffineInto(input, *output, xform, flags, borderMode, borderValue, pstream);
+    return WarpAffineInto(input, output, xform, flags, borderMode, borderValue, pstream);
 }
 
-std::shared_ptr<ImageBatchVarShape> WarpAffineVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
-                                                           Tensor &xform, const int32_t flags,
-                                                           const NVCVBorderType borderMode, const pyarray &borderValue,
-                                                           std::shared_ptr<Stream> pstream)
+ImageBatchVarShape WarpAffineVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output, Tensor &xform,
+                                          const int32_t flags, const NVCVBorderType borderMode,
+                                          const pyarray &borderValue, std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     size_t bValueSize = borderValue.size();
@@ -129,26 +125,26 @@ std::shared_ptr<ImageBatchVarShape> WarpAffineVarShapeInto(ImageBatchVarShape &i
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*warpAffine});
 
-    warpAffine->submit(pstream->handle(), input.impl(), output.impl(), xform.impl(), flags, borderMode, bValue);
+    warpAffine->submit(pstream->cudaHandle(), input, output, xform, flags, borderMode, bValue);
 
-    return output.shared_from_this();
+    return output;
 }
 
-std::shared_ptr<ImageBatchVarShape> WarpAffineVarShape(ImageBatchVarShape &input, Tensor &xform, const int32_t flags,
-                                                       const NVCVBorderType borderMode, const pyarray &borderValue,
-                                                       std::shared_ptr<Stream> pstream)
+ImageBatchVarShape WarpAffineVarShape(ImageBatchVarShape &input, Tensor &xform, const int32_t flags,
+                                      const NVCVBorderType borderMode, const pyarray &borderValue,
+                                      std::optional<Stream> pstream)
 {
-    std::shared_ptr<ImageBatchVarShape> output = ImageBatchVarShape::Create(input.capacity());
+    ImageBatchVarShape output = ImageBatchVarShape::Create(input.capacity());
 
     for (int i = 0; i < input.numImages(); ++i)
     {
-        cv::ImageFormat format = input.impl()[i].format();
-        cv::Size2D      size   = input.impl()[i].size();
-        auto            image  = Image::Create(std::tie(size.w, size.h), format);
-        output->pushBack(*image);
+        cv::ImageFormat format = input[i].format();
+        cv::Size2D      size   = input[i].size();
+        auto            image  = Image::Create(size, format);
+        output.pushBack(image);
     }
 
-    return WarpAffineVarShapeInto(input, *output, xform, flags, borderMode, borderValue, pstream);
+    return WarpAffineVarShapeInto(input, output, xform, flags, borderMode, borderValue, pstream);
 }
 
 } // namespace
@@ -157,19 +153,19 @@ void ExportOpWarpAffine(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<Tensor>("warp_affine", &WarpAffine, "xform"_a, "flags"_a, py::kw_only(),
-                                 "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "border_value"_a = 0,
-                                 "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("warp_affine", &WarpAffine, "xform"_a, "flags"_a, py::kw_only(),
+                                       "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "border_value"_a = 0,
+                                       "stream"_a = nullptr);
 
-    util::DefClassMethod<Tensor>("warp_affine_into", &WarpAffineInto, "output"_a, "xform"_a, "flags"_a, py::kw_only(),
-                                 "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "border_value"_a = 0,
-                                 "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("warp_affine_into", &WarpAffineInto, "output"_a, "xform"_a, "flags"_a,
+                                       py::kw_only(), "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
+                                       "border_value"_a = 0, "stream"_a = nullptr);
 
-    util::DefClassMethod<ImageBatchVarShape>("warp_affine", &WarpAffineVarShape, "xform"_a, "flags"_a, py::kw_only(),
-                                             "border_mode"_a  = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                                             "border_value"_a = 0, "stream"_a = nullptr);
+    util::DefClassMethod<priv::ImageBatchVarShape>(
+        "warp_affine", &WarpAffineVarShape, "xform"_a, "flags"_a, py::kw_only(),
+        "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "border_value"_a = 0, "stream"_a = nullptr);
 
-    util::DefClassMethod<ImageBatchVarShape>(
+    util::DefClassMethod<priv::ImageBatchVarShape>(
         "warp_affine_into", &WarpAffineVarShapeInto, "output"_a, "xform"_a, "flags"_a, py::kw_only(),
         "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "border_value"_a = 0, "stream"_a = nullptr);
 }

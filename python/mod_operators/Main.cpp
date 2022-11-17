@@ -28,7 +28,7 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(nvcv_operators, m)
 {
-    m.attr("__name__") = "nvcv.operators";
+    //m.attr("__name__") = "nvcv.operators";
 
     auto nvcv = py::module_::import("nvcv");
 

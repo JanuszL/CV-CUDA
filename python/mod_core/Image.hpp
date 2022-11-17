@@ -36,7 +36,7 @@
 namespace nv::cvpy::priv {
 namespace py = pybind11;
 
-class PYBIND11_EXPORT Image final : public Container
+class Image final : public Container
 {
 public:
     static void Export(py::module &m);

@@ -19,25 +19,24 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <mod_core/Image.hpp>
-#include <mod_core/ImageBatch.hpp>
-#include <mod_core/ResourceGuard.hpp>
-#include <mod_core/Stream.hpp>
-#include <mod_core/Tensor.hpp>
 #include <nvcv/operators/OpComposite.hpp>
 #include <nvcv/operators/Types.h>
 #include <nvcv/optools/TypeTraits.hpp>
+#include <nvcv/python/ImageBatchVarShape.hpp>
+#include <nvcv/python/ResourceGuard.hpp>
+#include <nvcv/python/Stream.hpp>
+#include <nvcv/python/Tensor.hpp>
 #include <pybind11/stl.h>
 
 namespace nv::cvpy {
 
 namespace {
-std::shared_ptr<Tensor> CompositeInto(Tensor &foreground, Tensor &output, Tensor &background, Tensor &fgMask,
-                                      std::shared_ptr<Stream> pstream)
+Tensor CompositeInto(Tensor &foreground, Tensor &output, Tensor &background, Tensor &fgMask,
+                     std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     auto composite = CreateOperator<cvop::Composite>();
@@ -47,31 +46,31 @@ std::shared_ptr<Tensor> CompositeInto(Tensor &foreground, Tensor &output, Tensor
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*composite});
 
-    composite->submit(pstream->handle(), foreground.impl(), background.impl(), fgMask.impl(), output.impl());
+    composite->submit(pstream->cudaHandle(), foreground, background, fgMask, output);
 
-    return output.shared_from_this();
+    return output;
 }
 
-std::shared_ptr<Tensor> Composite(Tensor &foreground, Tensor &background, Tensor &fgMask, int outChannels,
-                                  std::shared_ptr<Stream> pstream)
+Tensor Composite(Tensor &foreground, Tensor &background, Tensor &fgMask, int outChannels, std::optional<Stream> pstream)
 {
-    Shape fg_shape = foreground.shape();
-    Shape out_shape(fg_shape);
-    int   cdim          = out_shape.size();
-    out_shape[cdim - 1] = outChannels;
+    cv::TensorShape fg_shape = foreground.shape();
+    Shape           out_shape(&fg_shape[0], &fg_shape[0] + fg_shape.rank());
+    int             cdim = out_shape.size();
+    out_shape[cdim - 1]  = outChannels;
 
-    std::shared_ptr<Tensor> output = Tensor::Create(out_shape, foreground.dtype(), foreground.layout());
+    Tensor output
+        = Tensor::Create(cv::TensorShape(out_shape.data(), out_shape.size(), foreground.layout()), foreground.dtype());
 
-    return CompositeInto(foreground, *output, background, fgMask, pstream);
+    return CompositeInto(foreground, output, background, fgMask, pstream);
 }
 
-std::shared_ptr<ImageBatchVarShape> CompositeVarShapeInto(ImageBatchVarShape &foreground, ImageBatchVarShape &output,
-                                                          ImageBatchVarShape &background, ImageBatchVarShape &fgMask,
-                                                          std::shared_ptr<Stream> pstream)
+ImageBatchVarShape CompositeVarShapeInto(ImageBatchVarShape &foreground, ImageBatchVarShape &output,
+                                         ImageBatchVarShape &background, ImageBatchVarShape &fgMask,
+                                         std::optional<Stream> pstream)
 {
-    if (pstream == nullptr)
+    if (!pstream)
     {
-        pstream = Stream::Current().shared_from_this();
+        pstream = Stream::Current();
     }
 
     auto composite = CreateOperator<cvop::Composite>();
@@ -81,26 +80,25 @@ std::shared_ptr<ImageBatchVarShape> CompositeVarShapeInto(ImageBatchVarShape &fo
     guard.add(LOCK_WRITE, {output});
     guard.add(LOCK_NONE, {*composite});
 
-    composite->submit(pstream->handle(), foreground.impl(), background.impl(), fgMask.impl(), output.impl());
+    composite->submit(pstream->cudaHandle(), foreground, background, fgMask, output);
 
-    return output.shared_from_this();
+    return output;
 }
 
-std::shared_ptr<ImageBatchVarShape> CompositeVarShape(ImageBatchVarShape &foreground, ImageBatchVarShape &background,
-                                                      ImageBatchVarShape &fgMask, std::shared_ptr<Stream> pstream)
+ImageBatchVarShape CompositeVarShape(ImageBatchVarShape &foreground, ImageBatchVarShape &background,
+                                     ImageBatchVarShape &fgMask, std::optional<Stream> pstream)
 {
-    std::shared_ptr<ImageBatchVarShape> output = ImageBatchVarShape::Create(foreground.numImages());
+    ImageBatchVarShape output = ImageBatchVarShape::Create(foreground.numImages());
 
-    cv::ImageFormat format = foreground.impl().uniqueFormat();
+    cv::ImageFormat format = foreground.uniqueFormat();
 
-    for (auto img = foreground.impl().begin(); img != foreground.impl().end(); ++img)
+    for (auto img = foreground.begin(); img != foreground.end(); ++img)
     {
-        Size2D size   = {img->size().w, img->size().h};
-        auto   newimg = Image::Create(size, format);
-        output->pushBack(*newimg);
+        auto newimg = Image::Create(img->size(), format);
+        output.pushBack(newimg);
     }
 
-    return CompositeVarShapeInto(foreground, *output, background, fgMask, pstream);
+    return CompositeVarShapeInto(foreground, output, background, fgMask, pstream);
 }
 
 } // namespace
@@ -109,14 +107,14 @@ void ExportOpComposite(py::module &m)
 {
     using namespace pybind11::literals;
 
-    util::DefClassMethod<Tensor>("composite", &Composite, "background"_a, "fgmask"_a, "outchannels"_a, py::kw_only(),
-                                 "stream"_a = nullptr);
-    util::DefClassMethod<Tensor>("composite_into", &CompositeInto, "output"_a, "background"_a, "fgmask"_a,
-                                 py::kw_only(), "stream"_a = nullptr);
-    util::DefClassMethod<ImageBatchVarShape>("composite", &CompositeVarShape, "background"_a, "fgmask"_a, py::kw_only(),
-                                             "stream"_a = nullptr);
-    util::DefClassMethod<ImageBatchVarShape>("composite_into", &CompositeVarShapeInto, "output"_a, "background"_a,
-                                             "fgmask"_a, py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("composite", &Composite, "background"_a, "fgmask"_a, "outchannels"_a,
+                                       py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<priv::Tensor>("composite_into", &CompositeInto, "output"_a, "background"_a, "fgmask"_a,
+                                       py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<priv::ImageBatchVarShape>("composite", &CompositeVarShape, "background"_a, "fgmask"_a,
+                                                   py::kw_only(), "stream"_a = nullptr);
+    util::DefClassMethod<priv::ImageBatchVarShape>("composite_into", &CompositeVarShapeInto, "output"_a, "background"_a,
+                                                   "fgmask"_a, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy
