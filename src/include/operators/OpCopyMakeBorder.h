@@ -19,8 +19,8 @@
  * @{
  */
 
-#ifndef NVCV_OP_PADANDSTACK_H
-#define NVCV_OP_PADANDSTACK_H
+#ifndef NVCV_OP_COPYMAKEBORDER_H
+#define NVCV_OP_COPYMAKEBORDER_H
 
 #include "Operator.h"
 #include "Types.h"
@@ -53,7 +53,7 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopCopyMakeBorderCreate(NVCVOperatorHandle *handle)
  *
  *  Input:
  *       Data Layout:    [kNHWC, kHWC]
- *       Channels:       [1, 3, 4]
+ *       Channels:       [1, 2, 3, 4]
  *
  *       Data Type      | Allowed
  *       -------------- | -------------
@@ -66,9 +66,11 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopCopyMakeBorderCreate(NVCVOperatorHandle *handle)
  *       32bit Float    | Yes
  *       64bit Float    | No
  *
+ *       Note: 2 channels can only support 8bit Unsigned data type.
+ *
  *  Output:
  *       Data Layout:    [kNHWC, kHWC]
- *       Channels:       [1, 3, 4]
+ *       Channels:       [1, 2, 3, 4]
  *
  *       Data Type      | Allowed
  *       -------------- | -------------
@@ -125,4 +127,4 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopCopyMakeBorderSubmit(NVCVOperatorHandle handle, 
 }
 #endif
 
-#endif /* NVCV_OP_PADANDSTACK_H */
+#endif /* NVCV_OP_COPYMAKEBORADER_H */

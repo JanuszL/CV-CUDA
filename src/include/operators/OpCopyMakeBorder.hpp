@@ -19,8 +19,8 @@
  * @{
  */
 
-#ifndef NVCV_OP_PADANDSTACK_HPP
-#define NVCV_OP_PADANDSTACK_HPP
+#ifndef NVCV_OP_COPYMAKEBORDER_HPP
+#define NVCV_OP_COPYMAKEBORDER_HPP
 
 #include "IOperator.hpp"
 #include "OpCopyMakeBorder.h"
