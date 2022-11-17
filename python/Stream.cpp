@@ -291,20 +291,23 @@ void Stream::holdResources(std::vector<std::shared_ptr<const Resource>> usedReso
         std::vector<std::shared_ptr<const Resource>> resources;
     };
 
-    auto closure = std::make_unique<HostFunctionClosure>();
-
-    closure->stream    = this->shared_from_this();
-    closure->resources = std::move(usedResources);
-
-    auto fn = [](cudaStream_t stream, cudaError_t error, void *userData) -> void
+    if (!usedResources.empty())
     {
-        auto *pclosure = reinterpret_cast<HostFunctionClosure *>(userData);
-        delete pclosure;
-    };
+        auto closure = std::make_unique<HostFunctionClosure>();
 
-    CheckThrow(cudaStreamAddCallback(m_handle, fn, closure.get(), 0));
+        closure->stream    = this->shared_from_this();
+        closure->resources = std::move(usedResources);
 
-    closure.release();
+        auto fn = [](cudaStream_t stream, cudaError_t error, void *userData) -> void
+        {
+            auto *pclosure = reinterpret_cast<HostFunctionClosure *>(userData);
+            delete pclosure;
+        };
+
+        CheckThrow(cudaStreamAddCallback(m_handle, fn, closure.get(), 0));
+
+        closure.release();
+    }
 }
 
 std::ostream &operator<<(std::ostream &out, const Stream &stream)
