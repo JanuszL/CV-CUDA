@@ -29,6 +29,7 @@ add_executable(nvcv_test_unit_core
     TestLegacyHelpers.cpp
     TestLockFreeStack.cpp
     TestHandleManager.cpp
+    TestTensorDataUtils.cpp
 )
 
 target_compile_definitions(nvcv_test_unit_core
