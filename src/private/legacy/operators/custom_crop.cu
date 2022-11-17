@@ -35,31 +35,31 @@ using namespace nv::cv::legacy::helpers;
 namespace nvcv = nv::cv;
 
 template<typename Ptr2D>
-__global__ void custom_crop_kernel(const Ptr2D src, Ptr2D dst, int start_x, int start_y)
+__global__ void custom_crop_kernel(const Ptr2D src, Ptr2D dst, int start_x, int start_y, int width, int height)
 {
     const int x         = blockIdx.x * blockDim.x + threadIdx.x;
     const int y         = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx = get_batch_idx();
-    if (x >= dst.cols || y >= dst.rows)
+    if (x >= width || y >= height)
         return;
 
     *dst.ptr(batch_idx, y, x) = *src.ptr(batch_idx, y + start_y, x + start_x);
 }
 
 template<typename T>
-void customCrop(const nvcv::TensorDataAccessPitchImagePlanar &inData,
-                const nvcv::TensorDataAccessPitchImagePlanar &outData, NVCVRectI roi, cudaStream_t stream)
+void customCrop(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData, NVCVRectI roi,
+                cudaStream_t stream)
 {
-    int          cols       = roi.width;
-    int          rows       = roi.height;
-    const int    batch_size = outData.numSamples();
-    Ptr2dNHWC<T> src_ptr(inData);
-    Ptr2dNHWC<T> dst_ptr(outData, cols, rows);
+    auto outAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(outData);
+    NVCV_ASSERT(outAccess);
+
+    nvcv::cuda::Tensor3DWrap<T> src(inData);
+    nvcv::cuda::Tensor3DWrap<T> dst(outData);
 
     dim3 block(16, 16);
-    dim3 grid(divUp(cols, block.x), divUp(rows, block.y), batch_size);
+    dim3 grid(divUp(roi.width, block.x), divUp(roi.height, block.y), outAccess->numSamples());
 
-    custom_crop_kernel<Ptr2dNHWC<T>><<<grid, block, 0, stream>>>(src_ptr, dst_ptr, roi.x, roi.y);
+    custom_crop_kernel<<<grid, block, 0, stream>>>(src, dst, roi.x, roi.y, roi.width, roi.height);
     checkKernelErrors();
 }
 
@@ -133,8 +133,8 @@ ErrorCode CustomCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
         return ErrorCode::INVALID_PARAMETER;
     }
 
-    typedef void (*func_t)(const cv::TensorDataAccessPitchImagePlanar &inData,
-                           const cv::TensorDataAccessPitchImagePlanar &outData, NVCVRectI roi, cudaStream_t stream);
+    typedef void (*func_t)(const cv::ITensorDataPitchDevice &inData, const cv::ITensorDataPitchDevice &outData,
+                           NVCVRectI roi, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {
         {customCrop<uchar1>,  customCrop<uchar2>,  customCrop<uchar3>,  customCrop<uchar4>},
@@ -144,7 +144,7 @@ ErrorCode CustomCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
         {customCrop<double>, customCrop<double2>, customCrop<double3>, customCrop<double4>}
     };
 
-    funcs[data_size / 2][channels - 1](*inAccess, *outAccess, roi, stream);
+    funcs[data_size / 2][channels - 1](inData, outData, roi, stream);
 
     return ErrorCode::SUCCESS;
 }
