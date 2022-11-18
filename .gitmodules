@@ -11,7 +11,7 @@
 # its affiliates is strictly prohibited.
 #
 [submodule "python/pybind11"]
-	path = python/pybind11
+	path = 3rdparty/pybind11
 	url = ../3rdparty/pybind11.git
 [submodule "3rdparty/googletest"]
 	path = 3rdparty/googletest

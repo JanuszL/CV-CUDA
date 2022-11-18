@@ -15,7 +15,7 @@ cmake_minimum_required(VERSION 3.22)
 project(nvcv_python CXX)
 
 set(PYBIND11_PYTHON_VERSION ${PYTHON_VERSION})
-add_subdirectory(pybind11)
+add_subdirectory(${PYBIND11_SOURCE_DIR} pybind11)
 
 find_package(nvcv REQUIRED)
 
