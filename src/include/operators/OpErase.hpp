@@ -40,12 +40,10 @@ public:
 
     ~Erase();
 
-    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, cv::ITensor &anchor_x, cv::ITensor &anchor_y, 
-                    cv::ITensor &erasing_w, cv::ITensor &erasing_h, cv::ITensor &erasing_c, cv::ITensor &values, cv::ITensor &imgIdx, 
-                    int max_eh, int max_ew, bool random, unsigned int seed, bool inplace);
-    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out, cv::ITensor &anchor_x, cv::ITensor &anchor_y, 
-                    cv::ITensor &erasing_w, cv::ITensor &erasing_h, cv::ITensor &erasing_c, cv::ITensor &values, cv::ITensor &imgIdx, 
-                    int max_eh, int max_ew, bool random, unsigned int seed, bool inplace);
+    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, cv::ITensor &anchor_x,
+                    cv::ITensor &anchor_y, cv::ITensor &erasing_w, cv::ITensor &erasing_h, cv::ITensor &erasing_c,
+                    cv::ITensor &values, cv::ITensor &imgIdx, int max_eh, int max_ew, bool random, unsigned int seed,
+                    bool inplace);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -65,15 +63,16 @@ inline Erase::~Erase()
     m_handle = nullptr;
 }
 
-inline void Erase::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, cv::ITensor &anchor_x, cv::ITensor &anchor_y, 
-                    cv::ITensor &erasing_w, cv::ITensor &erasing_h, cv::ITensor &erasing_c, cv::ITensor &values, cv::ITensor &imgIdx, 
-                    int max_eh, int max_ew, bool random, unsigned int seed, bool inplace)
+inline void Erase::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, cv::ITensor &anchor_x,
+                              cv::ITensor &anchor_y, cv::ITensor &erasing_w, cv::ITensor &erasing_h,
+                              cv::ITensor &erasing_c, cv::ITensor &values, cv::ITensor &imgIdx, int max_eh, int max_ew,
+                              bool random, unsigned int seed, bool inplace)
 {
-    cv::detail::CheckThrow(nvcvopEraseSubmit(m_handle, stream, in.handle(), out.handle(), anchor_x.handle(), anchor_y.handle(),
-                                            erasing_w.handle(), erasing_h.handle(), erasing_c.handle(), values.handle(), imgIdx.handle(),
-                                            max_eh, max_ew, random, seed, inplace));
+    cv::detail::CheckThrow(nvcvopEraseSubmit(m_handle, stream, in.handle(), out.handle(), anchor_x.handle(),
+                                             anchor_y.handle(), erasing_w.handle(), erasing_h.handle(),
+                                             erasing_c.handle(), values.handle(), imgIdx.handle(), max_eh, max_ew,
+                                             random, seed, inplace));
 }
-
 
 inline NVCVOperatorHandle Erase::handle() const noexcept
 {

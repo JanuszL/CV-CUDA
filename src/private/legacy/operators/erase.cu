@@ -37,33 +37,34 @@ __device__ int erase_hash(unsigned int x)
     return x;
 }
 
-template <typename D, typename Ptr2D, typename Ptr2DI, typename Ptr2DF>
-__global__ void erase(
-                Ptr2D img, int imgH, int imgW, Ptr2DI anchorxVec, Ptr2DI anchoryVec, Ptr2DI erasingwVec, Ptr2DI erasinghVec,
-                Ptr2DI erasingcVec, Ptr2DF valuesVec, Ptr2DI imgIdxVec, int channels, int random, unsigned int seed)
+template<typename D, typename Ptr2D, typename Ptr2DI, typename Ptr2DF>
+__global__ void erase(Ptr2D img, int imgH, int imgW, Ptr2DI anchorxVec, Ptr2DI anchoryVec, Ptr2DI erasingwVec,
+                      Ptr2DI erasinghVec, Ptr2DI erasingcVec, Ptr2DF valuesVec, Ptr2DI imgIdxVec, int channels,
+                      int random, unsigned int seed)
 {
-    unsigned int id = threadIdx.x + blockIdx.x * blockDim.x;
-    int c = blockIdx.y;
-    int eraseId = blockIdx.z;
-    int anchor_x = *anchorxVec.ptr(0, 0, eraseId);
-    int anchor_y = *anchoryVec.ptr(0, 0, eraseId);
-    int erasing_w = *erasingwVec.ptr(0, 0, eraseId);
-    int erasing_h = *erasinghVec.ptr(0, 0, eraseId);
-    int erasing_c = *erasingcVec.ptr(0, 0, eraseId);
-    float value = *valuesVec.ptr(0, 0, eraseId, c);
-    int batchId = *imgIdxVec.ptr(0, 0, eraseId);
-    if(id < erasing_h * erasing_w && (0x1 & (erasing_c >> c)) == 1)
+    unsigned int id        = threadIdx.x + blockIdx.x * blockDim.x;
+    int          c         = blockIdx.y;
+    int          eraseId   = blockIdx.z;
+    int          anchor_x  = *anchorxVec.ptr(0, 0, eraseId);
+    int          anchor_y  = *anchoryVec.ptr(0, 0, eraseId);
+    int          erasing_w = *erasingwVec.ptr(0, 0, eraseId);
+    int          erasing_h = *erasinghVec.ptr(0, 0, eraseId);
+    int          erasing_c = *erasingcVec.ptr(0, 0, eraseId);
+    float        value     = *valuesVec.ptr(0, 0, eraseId * channels + c);
+    int          batchId   = *imgIdxVec.ptr(0, 0, eraseId);
+    if (id < erasing_h * erasing_w && (0x1 & (erasing_c >> c)) == 1)
     {
         int x = id % erasing_w;
         int y = id / erasing_w;
-        if(anchor_x + x < imgW && anchor_y + y < imgH)
+        if (anchor_x + x < imgW && anchor_y + y < imgH)
         {
-            if(random)
+            if (random)
             {
-                unsigned int hashValue = seed + threadIdx.x +
-                                         0x26AD0C9 * blockDim.x * blockDim.y * blockDim.z * (blockIdx.x + 1) * (blockIdx.y + 1) *
-                                         (blockIdx.z + 1);
-                *img.ptr(batchId, anchor_y + y, anchor_x + x, c) = nv::cv::cuda::SaturateCast<D>(erase_hash(hashValue) % 256);
+                unsigned int hashValue = seed + threadIdx.x
+                                       + 0x26AD0C9 * blockDim.x * blockDim.y * blockDim.z * (blockIdx.x + 1)
+                                             * (blockIdx.y + 1) * (blockIdx.z + 1);
+                *img.ptr(batchId, anchor_y + y, anchor_x + x, c)
+                    = nv::cv::cuda::SaturateCast<D>(erase_hash(hashValue) % 256);
             }
             else
             {
@@ -73,55 +74,44 @@ __global__ void erase(
     }
 }
 
-template <typename D>
-void eraseCaller(const nvcv::TensorDataAccessPitchImagePlanar &imgs, const nvcv::TensorDataAccessPitchImagePlanar &anchorx, const nvcv::TensorDataAccessPitchImagePlanar &anchory, 
-                const nvcv::TensorDataAccessPitchImagePlanar &erasingw, const nvcv::TensorDataAccessPitchImagePlanar &erasingh, const nvcv::TensorDataAccessPitchImagePlanar &erasingc, 
-                const nvcv::TensorDataAccessPitchImagePlanar &imgIdx, const nvcv::TensorDataAccessPitchImagePlanar &values, int max_eh, int max_ew, int num_erasing_area,
-                bool random, unsigned int seed, cudaStream_t stream)
+template<typename D>
+void eraseCaller(
+    const nvcv::TensorDataAccessPitchImagePlanar &imgs, const nvcv::TensorDataAccessPitchImagePlanar &anchorx,
+    const nvcv::TensorDataAccessPitchImagePlanar &anchory, const nvcv::TensorDataAccessPitchImagePlanar &erasingw,
+    const nvcv::TensorDataAccessPitchImagePlanar &erasingh, const nvcv::TensorDataAccessPitchImagePlanar &erasingc,
+    const nvcv::TensorDataAccessPitchImagePlanar &imgIdx, const nvcv::TensorDataAccessPitchImagePlanar &values,
+    int max_eh, int max_ew, int num_erasing_area, bool random, unsigned int seed, cudaStream_t stream)
 {
     Ptr2dNHWC<D> src(imgs);
 
-    Ptr2dNHWC<int> anchorxVec(anchorx);
-    Ptr2dNHWC<int> anchoryVec(anchory);
-    Ptr2dNHWC<int> erasingwVec(erasingw);
-    Ptr2dNHWC<int> erasinghVec(erasingh);
-    Ptr2dNHWC<int> erasingcVec(erasingc);
-    Ptr2dNHWC<int> imgIdxVec(imgIdx);
+    Ptr2dNHWC<int>   anchorxVec(anchorx);
+    Ptr2dNHWC<int>   anchoryVec(anchory);
+    Ptr2dNHWC<int>   erasingwVec(erasingw);
+    Ptr2dNHWC<int>   erasinghVec(erasingh);
+    Ptr2dNHWC<int>   erasingcVec(erasingc);
+    Ptr2dNHWC<int>   imgIdxVec(imgIdx);
     Ptr2dNHWC<float> valuesVec(values);
 
-        
-    #ifdef CUDA_DEBUG_LOG
+#ifdef CUDA_DEBUG_LOG
     checkCudaErrors(cudaStreamSynchronize(stream));
     checkCudaErrors(cudaGetLastError());
-    #endif
+#endif
 
-    int blockSize = (max_eh * max_ew < 1024) ? max_eh * max_ew : 1024;
-    int gridSize = divUp(max_eh * max_ew, 1024);
+    int  blockSize = (max_eh * max_ew < 1024) ? max_eh * max_ew : 1024;
+    int  gridSize  = divUp(max_eh * max_ew, 1024);
     dim3 block(blockSize);
     dim3 grid(gridSize, imgs.numChannels(), num_erasing_area);
-    erase<D, Ptr2dNHWC<D>, Ptr2dNHWC<int>, Ptr2dNHWC<float>><<<grid, block, 0, stream>>>(
-                                        src,
-                                        imgs.numRows(),
-                                        imgs.numCols(),
-                                        anchorxVec,
-                                        anchoryVec,
-                                        erasingwVec,
-                                        erasinghVec,
-                                        erasingcVec,
-                                        valuesVec,
-                                        imgIdxVec,
-                                        imgs.numChannels(),
-                                        random,
-                                        seed);
+    erase<D, Ptr2dNHWC<D>, Ptr2dNHWC<int>, Ptr2dNHWC<float>>
+        <<<grid, block, 0, stream>>>(src, imgs.numRows(), imgs.numCols(), anchorxVec, anchoryVec, erasingwVec,
+                                     erasinghVec, erasingcVec, valuesVec, imgIdxVec, imgs.numChannels(), random, seed);
 
-    #ifdef CUDA_DEBUG_LOG
+#ifdef CUDA_DEBUG_LOG
     checkCudaErrors(cudaStreamSynchronize(stream));
     checkCudaErrors(cudaGetLastError());
-    #endif
+#endif
 }
 
-namespace nv::cv::legacy::cuda_op
-{
+namespace nv::cv::legacy::cuda_op {
 
 /*
 size_t Erase::calBufferSize(
@@ -133,26 +123,28 @@ size_t Erase::calBufferSize(
 // todo support random value && rgb value
 
 ErrorCode Erase::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
-                    const ITensorDataPitchDevice &anchor_x, const ITensorDataPitchDevice &anchor_y, const ITensorDataPitchDevice &erasing_w, const ITensorDataPitchDevice &erasing_h, 
-                    const ITensorDataPitchDevice &erasing_c, const ITensorDataPitchDevice &values, const ITensorDataPitchDevice &imgIdx, int max_eh, int max_ew,
-                    bool random, unsigned int seed, bool inplace, cudaStream_t stream)
+                       const ITensorDataPitchDevice &anchor_x, const ITensorDataPitchDevice &anchor_y,
+                       const ITensorDataPitchDevice &erasing_w, const ITensorDataPitchDevice &erasing_h,
+                       const ITensorDataPitchDevice &erasing_c, const ITensorDataPitchDevice &values,
+                       const ITensorDataPitchDevice &imgIdx, int max_eh, int max_ew, bool random, unsigned int seed,
+                       bool inplace, cudaStream_t stream)
 {
     DataFormat format    = GetLegacyDataFormat(inData.layout());
     DataType   data_type = GetLegacyDataType(inData.dtype());
 
-    if(!(format == kNHWC || format == kHWC))
+    if (!(format == kNHWC || format == kHWC))
     {
         LOG_ERROR("Invalid DataFormat " << format);
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    if(!(data_type == kCV_8U || data_type == kCV_16U || data_type == kCV_16S || data_type == kCV_32S ||
-            data_type == kCV_32F))
+    if (!(data_type == kCV_8U || data_type == kCV_16U || data_type == kCV_16S || data_type == kCV_32S
+          || data_type == kCV_32F))
     {
         LOG_ERROR("Invalid DataType " << data_type);
         return ErrorCode::INVALID_DATA_TYPE;
     }
-    
+
     DataType   anchorx_data_type = GetLegacyDataType(anchor_x.dtype());
     DataFormat anchorx_format    = GetLegacyDataFormat(anchor_x.layout());
     if (anchorx_data_type != kCV_32S)
@@ -172,7 +164,7 @@ ErrorCode Erase::infer(const ITensorDataPitchDevice &inData, const ITensorDataPi
     }
 
     int num_erasing_area = anchorxAccess->numCols();
-    if(num_erasing_area < 0)
+    if (num_erasing_area < 0)
     {
         LOG_ERROR("Invalid num of erasing area " << num_erasing_area);
         return ErrorCode::INVALID_PARAMETER;
@@ -292,26 +284,24 @@ ErrorCode Erase::infer(const ITensorDataPitchDevice &inData, const ITensorDataPi
     auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
-    if(!inplace)
+    if (!inplace)
     {
         for (uint32_t i = 0; i < inAccess->numSamples(); ++i)
         {
             void *inSampData  = inAccess->sampleData(i);
             void *outSampData = outAccess->sampleData(i);
 
-            checkCudaErrors(cudaMemcpy2DAsync(outSampData, outAccess->rowPitchBytes(),
-                                            inSampData, inAccess->rowPitchBytes(),
-                                            inAccess->numCols() * inAccess->colPitchBytes(), inAccess->numRows(),
-                                            cudaMemcpyDeviceToDevice, stream));
+            checkCudaErrors(cudaMemcpy2DAsync(outSampData, outAccess->rowPitchBytes(), inSampData,
+                                              inAccess->rowPitchBytes(),
+                                              inAccess->numCols() * inAccess->colPitchBytes(), inAccess->numRows(),
+                                              cudaMemcpyDeviceToDevice, stream));
         }
     }
 
-    if(num_erasing_area == 0)
+    if (num_erasing_area == 0)
     {
         return SUCCESS;
     }
-
-    
 
     /*
     void *inputImgs;
@@ -337,66 +327,23 @@ ErrorCode Erase::infer(const ITensorDataPitchDevice &inData, const ITensorDataPi
     */
 
     typedef void (*erase_t)(
-                    const TensorDataAccessPitchImagePlanar &imgs,
-                    const TensorDataAccessPitchImagePlanar &anchorx,
-                    const TensorDataAccessPitchImagePlanar &anchory,
-                    const TensorDataAccessPitchImagePlanar &erasingw,
-                    const TensorDataAccessPitchImagePlanar &erasingh,
-                    const TensorDataAccessPitchImagePlanar &erasingc,
-                    const TensorDataAccessPitchImagePlanar &imgIdx,
-                    const TensorDataAccessPitchImagePlanar &values,
-                    int max_eh,
-                    int max_ew,
-                    int num_erasing_area,
-                    bool random,
-                    unsigned int seed,
-                    cudaStream_t stream);
+        const TensorDataAccessPitchImagePlanar &imgs, const TensorDataAccessPitchImagePlanar &anchorx,
+        const TensorDataAccessPitchImagePlanar &anchory, const TensorDataAccessPitchImagePlanar &erasingw,
+        const TensorDataAccessPitchImagePlanar &erasingh, const TensorDataAccessPitchImagePlanar &erasingc,
+        const TensorDataAccessPitchImagePlanar &imgIdx, const TensorDataAccessPitchImagePlanar &values, int max_eh,
+        int max_ew, int num_erasing_area, bool random, unsigned int seed, cudaStream_t stream);
 
-    static const erase_t funcs[6] =
-    {
-        eraseCaller<uchar>,
-        eraseCaller<char>,
-        eraseCaller<ushort>,
-        eraseCaller<short>,
-        eraseCaller<int>,
-        eraseCaller<float>
-    };
+    static const erase_t funcs[6] = {eraseCaller<uchar>, eraseCaller<char>, eraseCaller<ushort>,
+                                     eraseCaller<short>, eraseCaller<int>,  eraseCaller<float>};
 
-    if(inplace)
-        funcs[data_type](
-                    *inAccess,
-                    *anchorxAccess,
-                    *anchoryAccess,
-                    *erasingwAccess,
-                    *erasinghAccess,
-                    *erasingcAccess,
-                    *imgIdxAccess,
-                    *valuesAccess,
-                    max_eh,
-                    max_ew,
-                    num_erasing_area,
-                    random,
-                    seed,
-                    stream);
+    if (inplace)
+        funcs[data_type](*inAccess, *anchorxAccess, *anchoryAccess, *erasingwAccess, *erasinghAccess, *erasingcAccess,
+                         *imgIdxAccess, *valuesAccess, max_eh, max_ew, num_erasing_area, random, seed, stream);
     else
-        funcs[data_type](
-                    *outAccess,
-                    *anchorxAccess,
-                    *anchoryAccess,
-                    *erasingwAccess,
-                    *erasinghAccess,
-                    *erasingcAccess,
-                    *imgIdxAccess,
-                    *valuesAccess,
-                    max_eh,
-                    max_ew,
-                    num_erasing_area,
-                    random,
-                    seed,
-                    stream);
-
+        funcs[data_type](*outAccess, *anchorxAccess, *anchoryAccess, *erasingwAccess, *erasinghAccess, *erasingcAccess,
+                         *imgIdxAccess, *valuesAccess, max_eh, max_ew, num_erasing_area, random, seed, stream);
 
     return SUCCESS;
 }
 
-} // namespace cuda_op*/
+} // namespace nv::cv::legacy::cuda_op

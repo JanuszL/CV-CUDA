@@ -43,14 +43,15 @@ class Erase final : public IOperator
 public:
     explicit Erase();
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, cv::ITensor &anchor_x, cv::ITensor &anchor_y, 
-                    cv::ITensor &erasing_w, cv::ITensor &erasing_h, cv::ITensor &erasing_c, cv::ITensor &values, cv::ITensor &imgIdx, 
-                    int max_eh, int max_ew, bool random, unsigned int seed, bool inplace) const;
+    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, cv::ITensor &anchor_x,
+                    cv::ITensor &anchor_y, cv::ITensor &erasing_w, cv::ITensor &erasing_h, cv::ITensor &erasing_c,
+                    cv::ITensor &values, cv::ITensor &imgIdx, int max_eh, int max_ew, bool random, unsigned int seed,
+                    bool inplace) const;
 
     cv::priv::Version doGetVersion() const override;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::Erase>         m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::Erase> m_legacyOp;
 };
 
 } // namespace nv::cvop::priv

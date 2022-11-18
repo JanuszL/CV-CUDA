@@ -26,12 +26,13 @@ Erase::Erase()
 {
     leg::cuda_op::DataShape maxIn, maxOut;
     // maxIn/maxOut not used by op.
-    m_legacyOp         = std::make_unique<leg::cuda_op::Erase>(maxIn, maxOut);
+    m_legacyOp = std::make_unique<leg::cuda_op::Erase>(maxIn, maxOut);
 }
 
-void Erase::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, cv::ITensor &anchor_x, cv::ITensor &anchor_y, 
-                    cv::ITensor &erasing_w, cv::ITensor &erasing_h, cv::ITensor &erasing_c, cv::ITensor &values, cv::ITensor &imgIdx, 
-                    int max_eh, int max_ew, bool random, unsigned int seed, bool inplace) const
+void Erase::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, cv::ITensor &anchor_x,
+                       cv::ITensor &anchor_y, cv::ITensor &erasing_w, cv::ITensor &erasing_h, cv::ITensor &erasing_c,
+                       cv::ITensor &values, cv::ITensor &imgIdx, int max_eh, int max_ew, bool random, unsigned int seed,
+                       bool inplace) const
 {
     auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
     if (inData == nullptr)
@@ -48,31 +49,36 @@ void Erase::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITe
     auto *anchorxData = dynamic_cast<const cv::ITensorDataPitchDevice *>(anchor_x.exportData());
     if (anchorxData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "anchor_x must be device-acessible, pitch-linear tensor");
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
+                            "anchor_x must be device-acessible, pitch-linear tensor");
     }
 
     auto *anchoryData = dynamic_cast<const cv::ITensorDataPitchDevice *>(anchor_y.exportData());
     if (anchoryData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "anchor_y must be device-acessible, pitch-linear tensor");
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
+                            "anchor_y must be device-acessible, pitch-linear tensor");
     }
 
     auto *erasingwData = dynamic_cast<const cv::ITensorDataPitchDevice *>(erasing_w.exportData());
     if (erasingwData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "erasing_w must be device-acessible, pitch-linear tensor");
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
+                            "erasing_w must be device-acessible, pitch-linear tensor");
     }
 
     auto *erasinghData = dynamic_cast<const cv::ITensorDataPitchDevice *>(erasing_h.exportData());
     if (erasinghData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "erasing_h must be device-acessible, pitch-linear tensor");
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
+                            "erasing_h must be device-acessible, pitch-linear tensor");
     }
 
     auto *erasingcData = dynamic_cast<const cv::ITensorDataPitchDevice *>(erasing_c.exportData());
     if (erasingcData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "erasing_c must be device-acessible, pitch-linear tensor");
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
+                            "erasing_c must be device-acessible, pitch-linear tensor");
     }
 
     auto *valuesData = dynamic_cast<const cv::ITensorDataPitchDevice *>(values.exportData());
@@ -87,9 +93,10 @@ void Erase::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITe
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "imgIdx must be device-acessible, pitch-linear tensor");
     }
 
-    leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, *anchorxData, *anchoryData, *erasingwData, *erasinghData, *erasingcData, *valuesData, *imgIdxData, max_eh, max_ew, random, seed, inplace, stream));
+    leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, *anchorxData, *anchoryData, *erasingwData,
+                                                    *erasinghData, *erasingcData, *valuesData, *imgIdxData, max_eh,
+                                                    max_ew, random, seed, inplace, stream));
 }
-
 
 nv::cv::priv::Version Erase::doGetVersion() const
 {
