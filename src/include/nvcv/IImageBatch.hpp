@@ -71,6 +71,8 @@ public:
 
     void clear();
 
+    ImageWrapHandle operator[](ptrdiff_t n) const;
+
     const IImageBatchVarShapeData *exportData(CUstream stream) const;
 
     class Iterator
@@ -357,6 +359,11 @@ inline void IImageBatchVarShape::pushBack(const IImage &img)
 inline void IImageBatchVarShape::popBack(int32_t imgCount)
 {
     doPopBack(imgCount);
+}
+
+inline ImageWrapHandle IImageBatchVarShape::operator[](ptrdiff_t n) const
+{
+    return ImageWrapHandle(doGetImage(n));
 }
 
 inline void IImageBatchVarShape::clear()

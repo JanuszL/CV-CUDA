@@ -207,6 +207,11 @@ TEST(ImageBatchVarShape, wip_create)
         {
             EXPECT_EQ(goldHandles[cur], it->handle()) << "Image #" << cur;
         }
+
+        for (int i = 0; i < batch.numImages(); ++i)
+        {
+            EXPECT_EQ(goldHandles[i], batch[i].handle()) << "Image #" << i;
+        }
     }
 
     {
