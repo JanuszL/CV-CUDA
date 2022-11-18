@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
 import cvcuda
 import pytest as t
 import numpy as np
@@ -27,28 +26,28 @@ RNG = np.random.default_rng(0)
     [
         (
             5,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (16, 23),
             128.0,
             12,
         ),
         (
             5,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (10, 15),
             256.0,
             6,
         ),
         (
             5,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (8, 8),
             256.0,
             7,
         ),
         (
             4,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (11, 23),
             256.0,
             9,
@@ -76,7 +75,7 @@ def test_op_gamma_contrastvarshape(
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == input.maxsize
 
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.Stream()
 
     out = util.clone_image_batch(input)
 

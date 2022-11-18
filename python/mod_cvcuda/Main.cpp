@@ -28,9 +28,6 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(cvcuda, m)
 {
-    // Automatically import nvcv module, needed by operators
-    py::module_::import("nvcv");
-
     m.doc() = R"pbdoc(
         CV-CUDA Python API reference
         ========================
@@ -40,9 +37,36 @@ PYBIND11_MODULE(cvcuda, m)
 
     m.attr("__version__") = NVCV_OP_VERSION_STRING;
 
+    // Import all public names from nvcv
+    auto nvcv = py::module::import("nvcv");
+
+    // If has __all__ dict, use it
+    if (hasattr(nvcv, "__all__"))
+    {
+        for (py::handle name : nvcv.attr("__all__"))
+        {
+            m.add_object(py::str(name).cast<std::string>().c_str(), nvcv.attr(name));
+        }
+    }
+    else
+    {
+        // Use the "dir" function to get all names
+        for (py::handle hname : nvcv.attr("__dir__")())
+        {
+            auto name = py::str(hname).cast<std::string>();
+            // Only import public names (not starting with '_')
+            if (!name.empty() && name[0] != '_')
+            {
+                m.add_object(name.c_str(), nvcv.attr(hname));
+            }
+        }
+    }
+
+    m.add_object("Stream", nvcv.attr("cuda").attr("Stream"));
+
     using namespace cvcudapy;
 
-    // Operators' auxiliary entities
+    // // Operators' auxiliary entities
     ExportInterpolationType(m);
     ExportBorderType(m);
     ExportMorphologyType(m);

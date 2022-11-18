@@ -24,7 +24,6 @@ import numpy as np
 import argparse
 
 # tag: Import CVCUDA module
-import nvcv
 import cvcuda
 
 # tag: Classification Sample
@@ -139,7 +138,7 @@ class ClassificationSample:
             # A torch tensor can be wrapped into a CVCUDA Object using the "as_tensor"
             # function in the specified layout. The datatype and dimensions are derived
             # directly from the torch tensor.
-            nvcv_input_tensor = nvcv.as_tensor(image_tensors, "NHWC")
+            cvcuda_input_tensor = cvcuda.as_tensor(image_tensors, "NHWC")
 
             # tag: Preprocess
             """
@@ -150,8 +149,8 @@ class ClassificationSample:
 
             # Resize
             # Resize to the input network dimensions
-            nvcv_resize_tensor = cvcuda.resize(
-                nvcv_input_tensor,
+            cvcuda_resize_tensor = cvcuda.resize(
+                cvcuda_input_tensor,
                 (
                     effective_batch_size,
                     self.target_img_height,
@@ -164,8 +163,8 @@ class ClassificationSample:
             # Convert to the data type and range of values needed by the input layer
             # i.e uint8->float. A Scale is applied to normalize the values in the
             # range 0-1
-            nvcv_convert_tensor = cvcuda.convertto(
-                nvcv_resize_tensor, np.float32, scale=1 / 255
+            cvcuda_convert_tensor = cvcuda.convertto(
+                cvcuda_resize_tensor, np.float32, scale=1 / 255
             )
 
             """
@@ -186,21 +185,21 @@ class ClassificationSample:
             stddev_tensor = torch.reshape(stddev_tensor, (1, 1, 1, 3)).cuda()
 
             # Wrap the torch tensor in a CVCUDA Tensor
-            nvcv_base_tensor = nvcv.as_tensor(base_tensor, "NHWC")
-            nvcv_scale_tensor = nvcv.as_tensor(stddev_tensor, "NHWC")
+            cvcuda_base_tensor = cvcuda.as_tensor(base_tensor, "NHWC")
+            cvcuda_scale_tensor = cvcuda.as_tensor(stddev_tensor, "NHWC")
 
             # Apply the normalize operator and indicate the scale values are
             # std deviation i.e scale = 1/stddev
-            nvcv_norm_tensor = cvcuda.normalize(
-                nvcv_convert_tensor,
-                base=nvcv_base_tensor,
-                scale=nvcv_scale_tensor,
+            cvcuda_norm_tensor = cvcuda.normalize(
+                cvcuda_convert_tensor,
+                base=cvcuda_base_tensor,
+                scale=cvcuda_scale_tensor,
                 flags=cvcuda.NormalizeFlags.SCALE_IS_STDDEV,
             )
 
             # The final stage in the preprocess pipeline includes converting the RGB
             # buffer into a planar buffer
-            nvcv_preprocessed_tensor = cvcuda.reformat(nvcv_norm_tensor, "NCHW")
+            cvcuda_preprocessed_tensor = cvcuda.reformat(cvcuda_norm_tensor, "NCHW")
 
             # tag: Inference
             # Inference uses pytorch to run a resnet50 model on the preprocessed
@@ -212,7 +211,7 @@ class ClassificationSample:
 
             # Run inference on the preprocessed input
             torch_preprocessed_tensor = torch.as_tensor(
-                nvcv_preprocessed_tensor.cuda(), device="cuda"
+                cvcuda_preprocessed_tensor.cuda(), device="cuda"
             )
 
             with torch.no_grad():

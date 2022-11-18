@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
 import cvcuda
 import pytest as t
 import numpy as np
@@ -27,31 +26,31 @@ RNG = np.random.default_rng(0)
     "input, kernel_size, sigma, border",
     [
         (
-            nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             [3, 3],
             [0.5, 0.5],
             cvcuda.Border.CONSTANT,
         ),
         (
-            nvcv.Tensor([4, 4, 3], np.float32, "HWC"),
+            cvcuda.Tensor([4, 4, 3], np.float32, "HWC"),
             [5, 5],
             [0.8, 0.8],
             cvcuda.Border.REPLICATE,
         ),
         (
-            nvcv.Tensor([3, 88, 13, 3], np.uint16, "NHWC"),
+            cvcuda.Tensor([3, 88, 13, 3], np.uint16, "NHWC"),
             [7, 7],
             [0.7, 0.7],
             cvcuda.Border.REFLECT,
         ),
         (
-            nvcv.Tensor([3, 4, 4], np.int32, "HWC"),
+            cvcuda.Tensor([3, 4, 4], np.int32, "HWC"),
             [9, 9],
             [0.8, 0.8],
             cvcuda.Border.WRAP,
         ),
         (
-            nvcv.Tensor([1, 2, 3, 4], np.int16, "NHWC"),
+            cvcuda.Tensor([1, 2, 3, 4], np.int16, "NHWC"),
             [7, 7],
             [0.6, 0.6],
             cvcuda.Border.REFLECT101,
@@ -64,8 +63,8 @@ def test_op_gaussian(input, kernel_size, sigma, border):
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
-    stream = nvcv.cuda.Stream()
-    out = nvcv.Tensor(input.shape, input.dtype, input.layout)
+    stream = cvcuda.Stream()
+    out = cvcuda.Tensor(input.shape, input.dtype, input.layout)
     tmp = cvcuda.gaussian_into(
         src=input,
         dst=out,
@@ -85,7 +84,7 @@ def test_op_gaussian(input, kernel_size, sigma, border):
     [
         (
             10,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (123, 321),
             256,
             (3, 3),
@@ -94,7 +93,7 @@ def test_op_gaussian(input, kernel_size, sigma, border):
         ),
         (
             7,
-            nvcv.Format.RGBf32,
+            cvcuda.Format.RGBf32,
             (62, 35),
             1.0,
             (5, 5),
@@ -103,7 +102,7 @@ def test_op_gaussian(input, kernel_size, sigma, border):
         ),
         (
             1,
-            nvcv.Format.U8,
+            cvcuda.Format.U8,
             (33, 48),
             123,
             (7, 7),
@@ -112,7 +111,7 @@ def test_op_gaussian(input, kernel_size, sigma, border):
         ),
         (
             13,
-            nvcv.Format.S16,
+            cvcuda.Format.S16,
             (26, 52),
             1234,
             (9, 9),
@@ -121,7 +120,7 @@ def test_op_gaussian(input, kernel_size, sigma, border):
         ),
         (
             6,
-            nvcv.Format.S32,
+            cvcuda.Format.S32,
             (77, 42),
             123456,
             (11, 11),
@@ -163,7 +162,7 @@ def test_op_gaussianvarshape(
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == input.maxsize
 
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.cuda.Stream()
     out = util.clone_image_batch(input)
     tmp = cvcuda.gaussian_into(
         src=input,

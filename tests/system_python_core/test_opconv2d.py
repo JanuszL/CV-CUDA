@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
 import cvcuda
 import pytest as t
 import numpy as np
@@ -28,42 +27,42 @@ RNG = np.random.default_rng(0)
     [
         (
             util.create_image_batch(
-                10, nvcv.Format.RGB8, size=(123, 321), max_random=256, rng=RNG
+                10, cvcuda.Format.RGB8, size=(123, 321), max_random=256, rng=RNG
             ),
             util.create_image_batch(
-                10, nvcv.Format.F32, size=(3, 3), max_random=1, rng=RNG
+                10, cvcuda.Format.F32, size=(3, 3), max_random=1, rng=RNG
             ),
             util.create_tensor((10, 2), np.int32, "NC", max_random=(3, 3), rng=RNG),
             cvcuda.Border.CONSTANT,
         ),
         (
-            util.create_image_batch(7, nvcv.Format.RGBf32, max_random=1, rng=RNG),
+            util.create_image_batch(7, cvcuda.Format.RGBf32, max_random=1, rng=RNG),
             util.create_image_batch(
-                7, nvcv.Format.F32, size=(5, 5), max_random=3, rng=RNG
+                7, cvcuda.Format.F32, size=(5, 5), max_random=3, rng=RNG
             ),
             util.create_tensor((7, 2), np.int32, "NC", max_random=(5, 5), rng=RNG),
             cvcuda.Border.REPLICATE,
         ),
         (
-            util.create_image_batch(1, nvcv.Format.U8, max_random=123, rng=RNG),
+            util.create_image_batch(1, cvcuda.Format.U8, max_random=123, rng=RNG),
             util.create_image_batch(
-                1, nvcv.Format.F32, size=(7, 7), max_random=2, rng=RNG
+                1, cvcuda.Format.F32, size=(7, 7), max_random=2, rng=RNG
             ),
             util.create_tensor((1, 2), np.int32, "NC", max_random=(7, 7), rng=RNG),
             cvcuda.Border.REFLECT,
         ),
         (
-            util.create_image_batch(6, nvcv.Format.S16, max_random=1234, rng=RNG),
+            util.create_image_batch(6, cvcuda.Format.S16, max_random=1234, rng=RNG),
             util.create_image_batch(
-                6, nvcv.Format.F32, max_size=(9, 9), max_random=4, rng=RNG
+                6, cvcuda.Format.F32, max_size=(9, 9), max_random=4, rng=RNG
             ),
             util.create_tensor((6, 2), np.int32, "NC", max_random=(1, 1), rng=RNG),
             cvcuda.Border.WRAP,
         ),
         (
-            util.create_image_batch(9, nvcv.Format.S32, max_random=12345, rng=RNG),
+            util.create_image_batch(9, cvcuda.Format.S32, max_random=12345, rng=RNG),
             util.create_image_batch(
-                9, nvcv.Format.F32, max_size=(4, 4), max_random=2, rng=RNG
+                9, cvcuda.Format.F32, max_size=(4, 4), max_random=2, rng=RNG
             ),
             util.create_tensor((9, 2), np.int32, "NC", max_random=(4, 4), rng=RNG),
             cvcuda.Border.REFLECT101,
@@ -82,7 +81,7 @@ def test_op_conv2dvarshape(input, kernel, kernel_anchor, border):
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == input.maxsize
 
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.Stream()
     out = util.clone_image_batch(input)
     tmp = cvcuda.conv2d_into(
         src=input,

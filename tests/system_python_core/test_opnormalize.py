@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
 import cvcuda
 import pytest as t
 import numpy as np
@@ -27,36 +26,36 @@ RNG = np.random.default_rng(0)
     "input,base,scale,globalscale,globalshift,epsilon,flags",
     [
         (
-            nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
-            nvcv.Tensor([1, 1], np.float32, "HW"),
-            nvcv.Tensor([1, 1], np.float32, "HW"),
+            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([1, 1], np.float32, "HW"),
+            cvcuda.Tensor([1, 1], np.float32, "HW"),
             1,
             2,
             3,
             None,
         ),
         (
-            nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
-            nvcv.Tensor([16, 1], np.float32, "HW"),
-            nvcv.Tensor([16, 1], np.float32, "HW"),
+            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([16, 1], np.float32, "HW"),
+            cvcuda.Tensor([16, 1], np.float32, "HW"),
             1,
             2,
             3,
             cvcuda.NormalizeFlags.SCALE_IS_STDDEV,
         ),
         (
-            nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
-            nvcv.Tensor([1, 23], np.float32, "HW"),
-            nvcv.Tensor([1, 23], np.float32, "HW"),
+            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([1, 23], np.float32, "HW"),
+            cvcuda.Tensor([1, 23], np.float32, "HW"),
             1,
             2,
             3,
             None,
         ),
         (
-            nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
-            nvcv.Tensor([16, 23], np.float32, "HW"),
-            nvcv.Tensor([16, 23], np.float32, "HW"),
+            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([16, 23], np.float32, "HW"),
+            cvcuda.Tensor([16, 23], np.float32, "HW"),
             1,
             2,
             3,
@@ -70,14 +69,14 @@ def test_op_normalize(input, base, scale, globalscale, globalshift, epsilon, fla
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
-    out = nvcv.Tensor(input.shape, input.dtype, input.layout)
+    out = cvcuda.Tensor(input.shape, input.dtype, input.layout)
     tmp = cvcuda.normalize_into(out, input, base, scale)
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.Stream()
     out = cvcuda.normalize(
         src=input,
         base=base,
@@ -114,11 +113,11 @@ def test_op_normalize(input, base, scale, globalscale, globalshift, epsilon, fla
     [
         (
             5,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (16, 23),
             128.0,
-            nvcv.Tensor([1, 1, 1, 5], np.float32, "NHWC"),
-            nvcv.Tensor([1, 1, 1, 5], np.float32, "NHWC"),
+            cvcuda.Tensor([1, 1, 1, 5], np.float32, "NHWC"),
+            cvcuda.Tensor([1, 1, 1, 5], np.float32, "NHWC"),
             1,
             2,
             3,
@@ -126,11 +125,11 @@ def test_op_normalize(input, base, scale, globalscale, globalshift, epsilon, fla
         ),
         (
             5,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (16, 23),
             256.0,
-            nvcv.Tensor([1, 1, 1, 5], np.float32, "NHWC"),
-            nvcv.Tensor([1, 1, 1, 5], np.float32, "NHWC"),
+            cvcuda.Tensor([1, 1, 1, 5], np.float32, "NHWC"),
+            cvcuda.Tensor([1, 1, 1, 5], np.float32, "NHWC"),
             1,
             2,
             3,
@@ -168,7 +167,7 @@ def test_op_rotatevarshape(
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == input.maxsize
 
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.cuda.Stream()
     out = cvcuda.normalize(
         src=input,
         base=base,

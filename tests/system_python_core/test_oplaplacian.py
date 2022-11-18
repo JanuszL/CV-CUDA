@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
 import cvcuda
 import pytest as t
 import numpy as np
@@ -27,31 +26,31 @@ RNG = np.random.default_rng(0)
     "input, ksize, scale, border",
     [
         (
-            nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             3,
             1.0,
             cvcuda.Border.CONSTANT,
         ),
         (
-            nvcv.Tensor([4, 4, 3], np.float32, "HWC"),
+            cvcuda.Tensor([4, 4, 3], np.float32, "HWC"),
             1,
             0.8,
             cvcuda.Border.REPLICATE,
         ),
         (
-            nvcv.Tensor([3, 88, 13, 3], np.uint16, "NHWC"),
+            cvcuda.Tensor([3, 88, 13, 3], np.uint16, "NHWC"),
             3,
             1.7,
             cvcuda.Border.REFLECT,
         ),
         (
-            nvcv.Tensor([3, 4, 4], np.uint16, "HWC"),
+            cvcuda.Tensor([3, 4, 4], np.uint16, "HWC"),
             1,
             0.5,
             cvcuda.Border.WRAP,
         ),
         (
-            nvcv.Tensor([1, 2, 3, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([1, 2, 3, 4], np.uint8, "NHWC"),
             3,
             1.6,
             cvcuda.Border.REFLECT101,
@@ -64,8 +63,8 @@ def test_op_laplacian(input, ksize, scale, border):
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
-    stream = nvcv.cuda.Stream()
-    out = nvcv.Tensor(input.shape, input.dtype, input.layout)
+    stream = cvcuda.Stream()
+    out = cvcuda.Tensor(input.shape, input.dtype, input.layout)
     tmp = cvcuda.laplacian_into(
         src=input,
         dst=out,
@@ -85,7 +84,7 @@ def test_op_laplacian(input, ksize, scale, border):
     [
         (
             10,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (123, 321),
             256,
             3,
@@ -94,7 +93,7 @@ def test_op_laplacian(input, ksize, scale, border):
         ),
         (
             7,
-            nvcv.Format.RGBf32,
+            cvcuda.Format.RGBf32,
             (62, 35),
             1.0,
             1,
@@ -103,7 +102,7 @@ def test_op_laplacian(input, ksize, scale, border):
         ),
         (
             1,
-            nvcv.Format.F32,
+            cvcuda.Format.F32,
             (33, 48),
             1234,
             3,
@@ -112,7 +111,7 @@ def test_op_laplacian(input, ksize, scale, border):
         ),
         (
             1,
-            nvcv.Format.U8,
+            cvcuda.Format.U8,
             (23, 18),
             123,
             1,
@@ -121,7 +120,7 @@ def test_op_laplacian(input, ksize, scale, border):
         ),
         (
             6,
-            nvcv.Format.F32,
+            cvcuda.Format.F32,
             (77, 42),
             123456,
             3,
@@ -147,7 +146,7 @@ def test_op_laplacianvarshape(
         transform_dist=util.dist_odd,
     )
 
-    scale = nvcv.Tensor(
+    scale = cvcuda.Tensor(
         [
             num_images,
         ],
@@ -166,7 +165,7 @@ def test_op_laplacianvarshape(
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == input.maxsize
 
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.Stream()
     out = util.clone_image_batch(input)
     tmp = cvcuda.laplacian_into(
         src=input,

@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
 import cvcuda
 import pytest as t
 import numpy as np
@@ -23,7 +22,7 @@ import numpy as np
     "input, top, bottom, left, right, border_mode, border_value",
     [
         (
-            nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             1,
             2,
             3,
@@ -32,7 +31,7 @@ import numpy as np
             [0],
         ),
         (
-            nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             1,
             2,
             3,
@@ -41,7 +40,7 @@ import numpy as np
             [12, 3, 4, 55],
         ),
         (
-            nvcv.Tensor([16, 23, 4], np.uint8, "HWC"),
+            cvcuda.Tensor([16, 23, 4], np.uint8, "HWC"),
             2,
             2,
             2,
@@ -50,7 +49,16 @@ import numpy as np
             [0],
         ),
         (
-            nvcv.Tensor([16, 23, 3], np.uint8, "HWC"),
+            cvcuda.Tensor([16, 23, 4], np.uint8, "HWC"),
+            2,
+            2,
+            2,
+            2,
+            cvcuda.Border.WRAP,
+            [0],
+        ),
+        (
+            cvcuda.Tensor([16, 23, 3], np.uint8, "HWC"),
             10,
             12,
             35,
@@ -59,7 +67,7 @@ import numpy as np
             [0],
         ),
         (
-            nvcv.Tensor([16, 23, 1], np.float32, "HWC"),
+            cvcuda.Tensor([16, 23, 1], np.float32, "HWC"),
             11,
             1,
             20,
@@ -68,7 +76,7 @@ import numpy as np
             [0],
         ),
         (
-            nvcv.Tensor([16, 23, 3], np.float32, "HWC"),
+            cvcuda.Tensor([16, 23, 3], np.float32, "HWC"),
             11,
             1,
             20,
@@ -88,8 +96,8 @@ def test_op_copymakeborder(input, top, bottom, left, right, border_mode, border_
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
-    stream = nvcv.cuda.Stream()
-    out = nvcv.Tensor(out_shape, input.dtype, input.layout)
+    stream = cvcuda.Stream()
+    out = cvcuda.Tensor(out_shape, input.dtype, input.layout)
     tmp = cvcuda.copymakeborder_into(
         src=input,
         dst=out,

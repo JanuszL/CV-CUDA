@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
 import cvcuda
 import pytest as t
 import numpy as np
@@ -26,28 +25,28 @@ RNG = np.random.default_rng(0)
     "input, diameter, sigma_color, sigma_space, border",
     [
         (
-            nvcv.Tensor([5, 9, 9, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 9, 9, 4], np.uint8, "NHWC"),
             9,
             1,
             1,
             cvcuda.Border.CONSTANT,
         ),
         (
-            nvcv.Tensor([9, 9, 3], np.uint8, "HWC"),
+            cvcuda.Tensor([9, 9, 3], np.uint8, "HWC"),
             7,
             3,
             10,
             cvcuda.Border.WRAP,
         ),
         (
-            nvcv.Tensor([5, 21, 21, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 21, 21, 4], np.uint8, "NHWC"),
             6,
             15,
             9,
             cvcuda.Border.REPLICATE,
         ),
         (
-            nvcv.Tensor([21, 21, 3], np.uint8, "HWC"),
+            cvcuda.Tensor([21, 21, 3], np.uint8, "HWC"),
             12,
             2,
             5,
@@ -63,8 +62,8 @@ def test_op_bilateral_filter(input, diameter, sigma_color, sigma_space, border):
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
-    stream = nvcv.cuda.Stream()
-    out = nvcv.Tensor(input.shape, input.dtype, input.layout)
+    stream = cvcuda.Stream()
+    out = cvcuda.Tensor(input.shape, input.dtype, input.layout)
     tmp = cvcuda.bilateral_filter_into(
         src=input,
         dst=out,
@@ -85,7 +84,7 @@ def test_op_bilateral_filter(input, diameter, sigma_color, sigma_space, border):
     [
         (
             5,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (16, 23),
             128.0,
             12,
@@ -95,7 +94,7 @@ def test_op_bilateral_filter(input, diameter, sigma_color, sigma_space, border):
         ),
         (
             5,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (16, 23),
             256.0,
             6,
@@ -105,7 +104,7 @@ def test_op_bilateral_filter(input, diameter, sigma_color, sigma_space, border):
         ),
         (
             5,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (16, 23),
             256.0,
             7,
@@ -115,7 +114,7 @@ def test_op_bilateral_filter(input, diameter, sigma_color, sigma_space, border):
         ),
         (
             4,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (11, 23),
             256.0,
             9,
@@ -160,7 +159,7 @@ def test_op_bilateral_filtervarshape(
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == input.maxsize
 
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.Stream()
 
     out = util.clone_image_batch(input)
 

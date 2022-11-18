@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
 import cvcuda
 import pytest as t
 import numpy as np
@@ -26,21 +25,21 @@ RNG = np.random.default_rng(0)
     "foreground, background, fgMask, outChannels",
     [
         (
-            nvcv.Tensor([5, 9, 9, 3], np.uint8, "NHWC"),
-            nvcv.Tensor([5, 9, 9, 3], np.uint8, "NHWC"),
-            nvcv.Tensor([5, 9, 9, 1], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 9, 9, 3], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 9, 9, 3], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 9, 9, 1], np.uint8, "NHWC"),
             3,
         ),
         (
-            nvcv.Tensor([9, 9, 3], np.uint8, "HWC"),
-            nvcv.Tensor([9, 9, 3], np.uint8, "HWC"),
-            nvcv.Tensor([9, 9, 1], np.uint8, "HWC"),
+            cvcuda.Tensor([9, 9, 3], np.uint8, "HWC"),
+            cvcuda.Tensor([9, 9, 3], np.uint8, "HWC"),
+            cvcuda.Tensor([9, 9, 1], np.uint8, "HWC"),
             4,
         ),
         (
-            nvcv.Tensor([5, 21, 10, 3], np.uint8, "NHWC"),
-            nvcv.Tensor([5, 21, 10, 3], np.uint8, "NHWC"),
-            nvcv.Tensor([5, 21, 10, 1], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 21, 10, 3], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 21, 10, 3], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 21, 10, 1], np.uint8, "NHWC"),
             4,
         ),
     ],
@@ -55,11 +54,11 @@ def test_op_composite(foreground, background, fgMask, outChannels):
         assert out.shape[0:2] == foreground.shape[0:2]
     assert out.dtype == foreground.dtype
 
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.Stream()
 
     out_shape = foreground.shape
     out_shape[-1] = outChannels
-    out = nvcv.Tensor(out_shape, foreground.dtype, foreground.layout)
+    out = cvcuda.Tensor(out_shape, foreground.dtype, foreground.layout)
     tmp = cvcuda.composite_into(
         foreground=foreground,
         dst=out,
@@ -94,22 +93,22 @@ def test_op_composite(foreground, background, fgMask, outChannels):
 )
 def test_op_compositevarshape(nimages, max_size, outChannels):
     foreground = util.create_image_batch(
-        nimages, nvcv.Format.RGB8, max_size=max_size, max_random=255, rng=RNG
+        nimages, cvcuda.Format.RGB8, max_size=max_size, max_random=255, rng=RNG
     )
 
     background = util.clone_image_batch(foreground)
-    fgMask = util.clone_image_batch(foreground, img_format=nvcv.Format.U8)
+    fgMask = util.clone_image_batch(foreground, img_format=cvcuda.Format.U8)
 
     out = cvcuda.composite(foreground, background, fgMask)
     assert len(out) == len(foreground)
     assert out.capacity == foreground.capacity
 
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.cuda.Stream()
 
     if outChannels == 3:
         out = util.clone_image_batch(foreground)
     if outChannels == 4:
-        out = util.clone_image_batch(foreground, img_format=nvcv.Format.RGBA8)
+        out = util.clone_image_batch(foreground, img_format=cvcuda.Format.RGBA8)
     tmp = cvcuda.composite_into(
         foreground=foreground,
         dst=out,

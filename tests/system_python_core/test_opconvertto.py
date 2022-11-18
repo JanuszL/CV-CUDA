@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
 import cvcuda
 import pytest as t
 import numpy as np
@@ -22,8 +21,8 @@ import numpy as np
 @t.mark.parametrize(
     "input,dtype,scale,offset",
     [
-        (nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"), np.float32, 1.2, 10.2),
-        (nvcv.Tensor([16, 23, 2], np.uint8, "HWC"), np.int32, -1.2, -5.5),
+        (cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"), np.float32, 1.2, 10.2),
+        (cvcuda.Tensor([16, 23, 2], np.uint8, "HWC"), np.int32, -1.2, -5.5),
     ],
 )
 def test_op_convertto(input, dtype, scale, offset):
@@ -32,7 +31,7 @@ def test_op_convertto(input, dtype, scale, offset):
     assert out.shape == input.shape
     assert out.dtype == dtype
 
-    out = nvcv.Tensor(input.shape, dtype, input.layout)
+    out = cvcuda.Tensor(input.shape, dtype, input.layout)
     tmp = cvcuda.convertto_into(out, input)
     assert tmp is out
     assert out.layout == input.layout
@@ -42,11 +41,11 @@ def test_op_convertto(input, dtype, scale, offset):
     out = cvcuda.convertto(input, dtype, scale)
     out = cvcuda.convertto(input, dtype, scale, offset)
 
-    out = nvcv.Tensor(input.shape, dtype, input.layout)
+    out = cvcuda.Tensor(input.shape, dtype, input.layout)
     tmp = cvcuda.convertto_into(out, input, scale)
     tmp = cvcuda.convertto_into(out, input, scale, offset)
 
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.Stream()
     out = cvcuda.convertto(
         src=input, dtype=dtype, scale=scale, offset=offset, stream=stream
     )

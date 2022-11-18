@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
 import cvcuda
 import pytest as t
 import numpy as np
@@ -27,7 +26,7 @@ RNG = np.random.default_rng(0)
     "input, xform, flags, border_mode, border_value",
     [
         (
-            nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             np.array(
                 [
                     [1, 0, 0],
@@ -40,7 +39,7 @@ RNG = np.random.default_rng(0)
             [],
         ),
         (
-            nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             np.array(
                 [
                     [1, 0, 0],
@@ -53,7 +52,7 @@ RNG = np.random.default_rng(0)
             [0],
         ),
         (
-            nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             np.array(
                 [
                     [1, 2, 0],
@@ -66,7 +65,7 @@ RNG = np.random.default_rng(0)
             [1, 2, 3, 4],
         ),
         (
-            nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             np.array(
                 [
                     [1, 2, 0],
@@ -79,7 +78,7 @@ RNG = np.random.default_rng(0)
             [1, 2, 3, 4],
         ),
         (
-            nvcv.Tensor([11, 21, 4], np.uint8, "HWC"),
+            cvcuda.Tensor([11, 21, 4], np.uint8, "HWC"),
             np.array(
                 [
                     [2, 2, 0],
@@ -92,7 +91,7 @@ RNG = np.random.default_rng(0)
             [0],
         ),
         (
-            nvcv.Tensor([11, 21, 4], np.uint8, "HWC"),
+            cvcuda.Tensor([11, 21, 4], np.uint8, "HWC"),
             np.array(
                 [
                     [2, 2, 1],
@@ -105,7 +104,7 @@ RNG = np.random.default_rng(0)
             [1, 2, 3, 4],
         ),
         (
-            nvcv.Tensor([11, 21, 4], np.uint8, "HWC"),
+            cvcuda.Tensor([11, 21, 4], np.uint8, "HWC"),
             np.array(
                 [
                     [1, 2, 0],
@@ -127,8 +126,8 @@ def test_op_warp_perspective(input, xform, flags, border_mode, border_value):
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
-    stream = nvcv.cuda.Stream()
-    out = nvcv.Tensor(input.shape, input.dtype, input.layout)
+    stream = cvcuda.Stream()
+    out = cvcuda.Tensor(input.shape, input.dtype, input.layout)
     tmp = cvcuda.warp_perspective_into(
         src=input,
         dst=out,
@@ -149,7 +148,7 @@ def test_op_warp_perspective(input, xform, flags, border_mode, border_value):
     [
         (
             5,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (16, 23),
             128.0,
             7,
@@ -159,7 +158,7 @@ def test_op_warp_perspective(input, xform, flags, border_mode, border_value):
         ),
         (
             5,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (16, 23),
             128.0,
             7,
@@ -169,7 +168,7 @@ def test_op_warp_perspective(input, xform, flags, border_mode, border_value):
         ),
         (
             4,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (16, 23),
             128.0,
             5,
@@ -179,7 +178,7 @@ def test_op_warp_perspective(input, xform, flags, border_mode, border_value):
         ),
         (
             3,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (16, 23),
             128.0,
             4,
@@ -209,7 +208,7 @@ def test_op_warp_perspectivevarshape(
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == input.maxsize
 
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.Stream()
 
     out = util.clone_image_batch(input)
     tmp = cvcuda.warp_perspective_into(

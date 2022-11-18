@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
 import cvcuda
 import pytest as t
 import numpy as np
@@ -24,12 +23,16 @@ import util
     "input,out_shape,interp",
     [
         (
-            nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             [5, 132, 15, 4],
             cvcuda.Interp.LINEAR,
         ),
-        (nvcv.Tensor([16, 23, 4], np.uint8, "HWC"), [132, 15, 4], cvcuda.Interp.CUBIC),
-        (nvcv.Tensor([16, 23, 1], np.uint8, "HWC"), [132, 15, 1], None),
+        (
+            cvcuda.Tensor([16, 23, 4], np.uint8, "HWC"),
+            [132, 15, 4],
+            cvcuda.Interp.CUBIC,
+        ),
+        (cvcuda.Tensor([16, 23, 1], np.uint8, "HWC"), [132, 15, 1], None),
     ],
 )
 def test_op_resize(input, out_shape, interp):
@@ -41,7 +44,7 @@ def test_op_resize(input, out_shape, interp):
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
-    out = nvcv.Tensor(out_shape, input.dtype, input.layout)
+    out = cvcuda.Tensor(out_shape, input.dtype, input.layout)
     if interp is None:
         tmp = cvcuda.resize_into(out, input)
     else:
@@ -51,7 +54,7 @@ def test_op_resize(input, out_shape, interp):
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.Stream()
     if interp is None:
         out = cvcuda.resize(src=input, shape=out_shape, stream=stream)
     else:
@@ -79,11 +82,11 @@ def test_op_resizevarshape(inSize, outSize, interp):
     RNG = np.random.default_rng(0)
 
     input = util.create_image_batch(
-        10, nvcv.Format.RGBA8, size=inSize, max_random=256, rng=RNG
+        10, cvcuda.Format.RGBA8, size=inSize, max_random=256, rng=RNG
     )
 
     base_output = util.create_image_batch(
-        10, nvcv.Format.RGBA8, size=outSize, max_random=256, rng=RNG
+        10, cvcuda.Format.RGBA8, size=outSize, max_random=256, rng=RNG
     )
 
     sizes = []
@@ -100,7 +103,7 @@ def test_op_resizevarshape(inSize, outSize, interp):
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == outSize
 
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.cuda.Stream()
     if interp is None:
         tmp = cvcuda.resize_into(src=input, dst=base_output, stream=stream)
     else:
