@@ -128,7 +128,8 @@ TEST(ImageBatchVarShape, wip_create)
     batch.pushBack(vec1.begin(), vec1.end());
 
     // To synchronize buffers
-    const auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataPitchDevice *>(batch.exportData(stream));
+    const nvcv::IImageBatchVarShapeData *vsdata = batch.exportData(stream); // test output type
+    const auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataPitchDevice *>(vsdata);
     ASSERT_NE(nullptr, devdata);
     EXPECT_EQ(calcMaxSize(), devdata->maxSize());
 
@@ -158,13 +159,25 @@ TEST(ImageBatchVarShape, wip_create)
     ASSERT_NE(nullptr, devdata);
     EXPECT_EQ(calcMaxSize(), devdata->maxSize());
 
-    std::vector<std::reference_wrapper<nvcv::Image>> vec4;
-    for (nvcv::Image &img : vec0)
-    {
-        vec4.emplace_back(img);
-        addToGold(vec4.back().get());
-    }
-    batch.pushBack(vec4.begin(), vec4.end());
+    // use callback
+    std::vector<std::shared_ptr<nvcv::IImage>> vec4;
+    batch.pushBack(
+        [&]()
+        {
+            if (vec4.size() < 5)
+            {
+                int i = vec4.size();
+
+                auto img = std::make_shared<nvcv::Image>(nvcv::Size2D{320 + i * 2, 122 - i * 2}, nvcv::FMT_NV12);
+                addToGold(*img);
+                vec4.push_back(img);
+                return img;
+            }
+            else
+            {
+                return std::shared_ptr<nvcv::Image>{};
+            }
+        });
 
     // not-empty data
     {
@@ -193,6 +206,11 @@ TEST(ImageBatchVarShape, wip_create)
         for (auto it = batch.begin(); it != batch.end(); ++it, ++cur)
         {
             EXPECT_EQ(goldHandles[cur], it->handle()) << "Image #" << cur;
+        }
+
+        for (int i = 0; i < batch.numImages(); ++i)
+        {
+            EXPECT_EQ(goldHandles[i], batch[i].handle()) << "Image #" << i;
         }
     }
 

@@ -26,6 +26,10 @@
 
 namespace nv { namespace cv {
 
+namespace detail {
+struct GetImageHandle;
+}
+
 class IImageBatch
 {
 public:
@@ -40,6 +44,9 @@ public:
 
     const IImageBatchData *exportData(CUstream stream) const;
 
+protected:
+    virtual const IImageBatchData *doExportData(CUstream stream) const = 0;
+
 private:
     virtual NVCVImageBatchHandle doGetHandle() const = 0;
 
@@ -48,8 +55,6 @@ private:
     virtual int32_t     doGetNumImages() const = 0;
 
     virtual IAllocator &doGetAlloc() const = 0;
-
-    virtual const IImageBatchData *doExportData(CUstream stream) const = 0;
 };
 
 class IImageBatchVarShape : public virtual IImageBatch
@@ -60,7 +65,15 @@ public:
     void pushBack(const IImage &img);
     void popBack(int32_t imgCount = 1);
 
+    // For any reference wrapper of any other accepted type
+    template<class F, class = decltype(std::declval<detail::GetImageHandle>()(std::declval<F>()()))>
+    void pushBack(F &&cv);
+
     void clear();
+
+    ImageWrapHandle operator[](ptrdiff_t n) const;
+
+    const IImageBatchVarShapeData *exportData(CUstream stream) const;
 
     class Iterator
     {
@@ -110,7 +123,7 @@ private:
     virtual NVCVImageHandle doGetImage(int32_t idx) const = 0;
 };
 
-// Implementation
+// IImageBatch implementation
 
 inline NVCVImageBatchHandle IImageBatch::handle() const
 {
@@ -147,6 +160,8 @@ inline const IImageBatchData *IImageBatch::exportData(CUstream stream) const
     return doExportData(stream);
 }
 
+// IImageBatchVarShape implementation
+
 inline auto IImageBatchVarShape::begin() const -> ConstIterator
 {
     return ConstIterator(*this, 0);
@@ -165,6 +180,11 @@ inline auto IImageBatchVarShape::cbegin() const -> ConstIterator
 inline auto IImageBatchVarShape::cend() const -> ConstIterator
 {
     return this->end();
+}
+
+inline const IImageBatchVarShapeData *IImageBatchVarShape::exportData(CUstream stream) const
+{
+    return static_cast<const IImageBatchVarShapeData *>(doExportData(stream));
 }
 
 inline IImageBatchVarShape::Iterator::Iterator(const IImageBatchVarShape &batch, int32_t idxImage)
@@ -311,6 +331,26 @@ void IImageBatchVarShape::pushBack(IT itBeg, IT itEnd)
     doPushBack(std::ref(cb));
 }
 
+// Functor must return a type that can be converted to an image handle
+template<class F, class SFINAE>
+void IImageBatchVarShape::pushBack(F &&cb)
+{
+    auto cb2 = [cb = std::move(cb)]() mutable -> NVCVImageHandle
+    {
+        if (auto img = cb())
+        {
+            detail::GetImageHandle imgHandle;
+            return imgHandle(img);
+        }
+        else
+        {
+            return nullptr;
+        }
+    };
+
+    doPushBack(std::ref(cb2));
+}
+
 inline void IImageBatchVarShape::pushBack(const IImage &img)
 {
     doPushBack(img);
@@ -319,6 +359,11 @@ inline void IImageBatchVarShape::pushBack(const IImage &img)
 inline void IImageBatchVarShape::popBack(int32_t imgCount)
 {
     doPopBack(imgCount);
+}
+
+inline ImageWrapHandle IImageBatchVarShape::operator[](ptrdiff_t n) const
+{
+    return ImageWrapHandle(doGetImage(n));
 }
 
 inline void IImageBatchVarShape::clear()
