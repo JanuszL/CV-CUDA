@@ -128,7 +128,8 @@ TEST(ImageBatchVarShape, wip_create)
     batch.pushBack(vec1.begin(), vec1.end());
 
     // To synchronize buffers
-    const auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataPitchDevice *>(batch.exportData(stream));
+    const nvcv::IImageBatchVarShapeData *vsdata = batch.exportData(stream); // test output type
+    const auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataPitchDevice *>(vsdata);
     ASSERT_NE(nullptr, devdata);
     EXPECT_EQ(calcMaxSize(), devdata->maxSize());
 

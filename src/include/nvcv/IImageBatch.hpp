@@ -40,6 +40,9 @@ public:
 
     const IImageBatchData *exportData(CUstream stream) const;
 
+protected:
+    virtual const IImageBatchData *doExportData(CUstream stream) const = 0;
+
 private:
     virtual NVCVImageBatchHandle doGetHandle() const = 0;
 
@@ -48,8 +51,6 @@ private:
     virtual int32_t     doGetNumImages() const = 0;
 
     virtual IAllocator &doGetAlloc() const = 0;
-
-    virtual const IImageBatchData *doExportData(CUstream stream) const = 0;
 };
 
 class IImageBatchVarShape : public virtual IImageBatch
@@ -61,6 +62,8 @@ public:
     void popBack(int32_t imgCount = 1);
 
     void clear();
+
+    const IImageBatchVarShapeData *exportData(CUstream stream) const;
 
     class Iterator
     {
@@ -110,7 +113,7 @@ private:
     virtual NVCVImageHandle doGetImage(int32_t idx) const = 0;
 };
 
-// Implementation
+// IImageBatch implementation
 
 inline NVCVImageBatchHandle IImageBatch::handle() const
 {
@@ -147,6 +150,8 @@ inline const IImageBatchData *IImageBatch::exportData(CUstream stream) const
     return doExportData(stream);
 }
 
+// IImageBatchVarShape implementation
+
 inline auto IImageBatchVarShape::begin() const -> ConstIterator
 {
     return ConstIterator(*this, 0);
@@ -165,6 +170,11 @@ inline auto IImageBatchVarShape::cbegin() const -> ConstIterator
 inline auto IImageBatchVarShape::cend() const -> ConstIterator
 {
     return this->end();
+}
+
+inline const IImageBatchVarShapeData *IImageBatchVarShape::exportData(CUstream stream) const
+{
+    return static_cast<const IImageBatchVarShapeData *>(doExportData(stream));
 }
 
 inline IImageBatchVarShape::Iterator::Iterator(const IImageBatchVarShape &batch, int32_t idxImage)

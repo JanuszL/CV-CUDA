@@ -61,8 +61,6 @@ public:
 
     explicit ImageBatchVarShapeWrapHandle(NVCVImageBatchHandle handle);
 
-    const IImageBatchVarShapeData *exportData(CUstream stream) const;
-
 protected:
     using ImageBatchWrapHandle::doGetAlloc;
 
@@ -89,8 +87,6 @@ public:
     explicit ImageBatchVarShape(const Requirements &reqs, IAllocator *alloc = nullptr);
     explicit ImageBatchVarShape(int32_t capacity, ImageFormat fmt, IAllocator *alloc = nullptr);
     ~ImageBatchVarShape();
-
-    using IImageBatch::exportData;
 
 private:
     NVCVImageBatchStorage m_storage;
@@ -181,11 +177,6 @@ inline ImageBatchVarShapeWrapHandle::ImageBatchVarShapeWrapHandle(NVCVImageBatch
     {
         throw Exception(Status::ERROR_INVALID_ARGUMENT, "Image batch handle doesn't correspond to a varshape object");
     }
-}
-
-inline const IImageBatchVarShapeData *ImageBatchVarShapeWrapHandle::exportData(CUstream stream) const
-{
-    return static_cast<const IImageBatchVarShapeData *>(ImageBatchVarShapeWrapHandle::doExportData(stream));
 }
 
 inline void ImageBatchVarShapeWrapHandle::doPushBack(std::function<NVCVImageHandle()> &&cb)
