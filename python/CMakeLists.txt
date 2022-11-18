@@ -51,6 +51,7 @@ pybind11_add_module(nvcv_python MODULE
     BorderType.cpp
     Object.cpp
     Stream.cpp
+    StreamStack.cpp
     Resource.cpp
     Container.cpp
     Tensor.cpp

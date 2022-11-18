@@ -17,11 +17,10 @@
 #include "Cache.hpp"
 #include "CheckError.hpp"
 #include "PyUtil.hpp"
+#include "StreamStack.hpp"
 #include "String.hpp"
 
 #include <pybind11/operators.h>
-
-#include <stack>
 
 namespace nv::cvpy {
 
@@ -261,25 +260,21 @@ void Stream::sync()
     CheckThrow(cudaStreamSynchronize(m_handle));
 }
 
-static std::stack<std::weak_ptr<Stream>> g_streamStack;
-static std::weak_ptr<Stream>             g_stream;
-
 Stream &Stream::Current()
 {
-    NVCV_ASSERT(!g_streamStack.empty());
-    auto defStream = g_streamStack.top().lock();
+    auto defStream = StreamStack::Instance().top();
     NVCV_ASSERT(defStream);
     return *defStream;
 }
 
 void Stream::activate()
 {
-    g_streamStack.push(this->shared_from_this());
+    StreamStack::Instance().push(*this);
 }
 
 void Stream::deactivate(py::object exc_type, py::object exc_value, py::object exc_tb)
 {
-    g_streamStack.pop();
+    StreamStack::Instance().pop();
 }
 
 void Stream::holdResources(std::vector<std::shared_ptr<const Resource>> usedResources)
@@ -291,20 +286,23 @@ void Stream::holdResources(std::vector<std::shared_ptr<const Resource>> usedReso
         std::vector<std::shared_ptr<const Resource>> resources;
     };
 
-    auto closure = std::make_unique<HostFunctionClosure>();
-
-    closure->stream    = this->shared_from_this();
-    closure->resources = std::move(usedResources);
-
-    auto fn = [](cudaStream_t stream, cudaError_t error, void *userData) -> void
+    if (!usedResources.empty())
     {
-        auto *pclosure = reinterpret_cast<HostFunctionClosure *>(userData);
-        delete pclosure;
-    };
+        auto closure = std::make_unique<HostFunctionClosure>();
 
-    CheckThrow(cudaStreamAddCallback(m_handle, fn, closure.get(), 0));
+        closure->stream    = this->shared_from_this();
+        closure->resources = std::move(usedResources);
 
-    closure.release();
+        auto fn = [](cudaStream_t stream, cudaError_t error, void *userData) -> void
+        {
+            auto *pclosure = reinterpret_cast<HostFunctionClosure *>(userData);
+            delete pclosure;
+        };
+
+        CheckThrow(cudaStreamAddCallback(m_handle, fn, closure.get(), 0));
+
+        closure.release();
+    }
 }
 
 std::ostream &operator<<(std::ostream &out, const Stream &stream)
@@ -323,8 +321,13 @@ void Stream::Export(py::module &m)
     py::class_<Stream, std::shared_ptr<Stream>> stream(m, "Stream");
 
     stream.def_property_readonly_static("current", [](py::object) { return Current().shared_from_this(); })
-        .def_property_readonly_static("default", [](py::object) { return g_stream.lock(); })
         .def(py::init(&Stream::Create));
+
+    // Create the global stream object. It'll be destroyed when
+    // python module is deinitialized.
+    auto globalStream = Stream::Create();
+    StreamStack::Instance().push(*globalStream);
+    stream.attr("default") = globalStream;
 
     // Order from most specific to less specific
     ExportExternalStream<TORCH>(m);
@@ -339,12 +342,6 @@ void Stream::Export(py::module &m)
         .def("__repr__", &ToString<Stream>)
         .def_property_readonly("handle", &Stream::pyhandle)
         .def_property_readonly("id", &Stream::id);
-
-    // Create the global stream object. It'll be destroyed when
-    // python module is deinitialized.
-    auto globalStream = Stream::Create();
-    g_streamStack.push(globalStream);
-    g_stream = globalStream;
 
     // Make sure all streams we've created are synced when script ends.
     // Also make cleanup hold the globalStream reference during script execution.

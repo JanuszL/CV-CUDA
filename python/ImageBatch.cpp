@@ -129,7 +129,7 @@ void ImageBatchVarShape::Export(py::module &m)
 {
     using namespace py::literals;
 
-    py::class_<ImageBatchVarShape, std::shared_ptr<ImageBatchVarShape>>(m, "ImageBatchVarShape")
+    py::class_<ImageBatchVarShape, std::shared_ptr<ImageBatchVarShape>, Container>(m, "ImageBatchVarShape")
         .def(py::init(&ImageBatchVarShape::Create), "capacity"_a, "format"_a)
         .def_property_readonly("format", &ImageBatchVarShape::format)
         .def_property_readonly("capacity", &ImageBatchVarShape::capacity)
