@@ -896,6 +896,46 @@ public:
     size_t    calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
 };
 
+class RotateVarShape : public CudaBaseOp
+{
+public:
+    RotateVarShape() = delete;
+    RotateVarShape(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * @brief Rotates input images around the origin (0,0) and then shifts it.
+     * @param inputs gpu pointer, inputs[0] are batched input images, whose shape is input_shape and type is data_type.
+     * @param outputs gpu pointer, outputs[0] are batched output images that have the size dsize and the same type as
+     * data_type.
+     * @param gpu_workspace gpu pointer, gpu memory used to store the temporary variables.
+     * @param cpu_workspace cpu pointer, cpu memory used to store the temporary variables.
+     * @param batch batch_size.
+     * @param buffer_size buffer size of gpu_workspace and cpu_workspace
+     * @param dsize size of the output images.
+     * @param angle angle of rotation in degrees.
+     * @param xShift shift along the horizontal axis.
+     * @param yShift shift along the vertical axis.
+     * @param interpolation interpolation method. Only INTER_NEAREST, INTER_LINEAR, and INTER_CUBIC are supported.
+     * @param input_shape shape of the input images.
+     * @param format format of the input images, e.g. kNHWC.
+     * @param data_type data type of the input images, e.g. kCV_32F.
+     * @param stream for the asynchronous execution.
+     */
+    int infer(
+                    const void **inputs, void **outputs, void *gpu_workspace, void *cpu_workspace, const int batch,
+                    const size_t buffer_size, const cv::Size *dsize, const double *angle, const double *xShift,
+                    const double *yShift, const int interpolation, DataShape *input_shape, DataFormat format, DataType data_type,
+                    cudaStream_t stream);
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param batch_size maximum input batch size
+     */
+    size_t calBufferSize(int batch_size);
+};
+
 } // namespace nv::cv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H
