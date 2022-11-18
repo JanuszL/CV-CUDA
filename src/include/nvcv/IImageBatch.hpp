@@ -26,6 +26,10 @@
 
 namespace nv { namespace cv {
 
+namespace detail {
+struct GetImageHandle;
+}
+
 class IImageBatch
 {
 public:
@@ -60,6 +64,10 @@ public:
     void pushBack(IT itBeg, IT itend);
     void pushBack(const IImage &img);
     void popBack(int32_t imgCount = 1);
+
+    // For any reference wrapper of any other accepted type
+    template<class F, class = decltype(std::declval<detail::GetImageHandle>()(std::declval<F>()()))>
+    void pushBack(F &&cv);
 
     void clear();
 
@@ -319,6 +327,26 @@ void IImageBatchVarShape::pushBack(IT itBeg, IT itEnd)
     // constructing a std::function with a reference_wrapper is guaranteed
     // not to allocate memory from heap.
     doPushBack(std::ref(cb));
+}
+
+// Functor must return a type that can be converted to an image handle
+template<class F, class SFINAE>
+void IImageBatchVarShape::pushBack(F &&cb)
+{
+    auto cb2 = [cb = std::move(cb)]() mutable -> NVCVImageHandle
+    {
+        if (auto img = cb())
+        {
+            detail::GetImageHandle imgHandle;
+            return imgHandle(img);
+        }
+        else
+        {
+            return nullptr;
+        }
+    };
+
+    doPushBack(std::ref(cb2));
 }
 
 inline void IImageBatchVarShape::pushBack(const IImage &img)
