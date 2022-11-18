@@ -53,6 +53,7 @@ pybind11_add_module(nvcv_python MODULE
     Stream.cpp
     StreamStack.cpp
     Resource.cpp
+    ResourceGuard.cpp
     Container.cpp
     Tensor.cpp
     Image.cpp

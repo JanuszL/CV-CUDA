@@ -14,6 +14,7 @@
 #include "Assert.hpp"
 #include "Operators.hpp"
 #include "PyUtil.hpp"
+#include "ResourceGuard.hpp"
 #include "Stream.hpp"
 #include "Tensor.hpp"
 
@@ -31,26 +32,11 @@ std::shared_ptr<Tensor> CustomCropInto(Tensor &input, Tensor &output, const NVCV
         pstream = Stream::Current().shared_from_this();
     }
 
-    std::vector<std::shared_ptr<const Resource>> usedResources = {input.shared_from_this(), output.shared_from_this()};
-
-    input.submitSync(*pstream, LOCK_READ);
-    output.submitSync(*pstream, LOCK_WRITE);
+    ResourceGuard roGuard(*pstream, LOCK_READ, {input});
+    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
 
     cvop::CustomCrop crop;
-
     crop(pstream->handle(), input.impl(), output.impl(), rcCrop);
-
-    try
-    {
-        input.submitSignal(*pstream, LOCK_READ);
-        output.submitSignal(*pstream, LOCK_WRITE);
-        pstream->holdResources(std::move(usedResources));
-    }
-    catch (...)
-    {
-        pstream->holdResources(std::move(usedResources));
-        throw;
-    }
 
     return output.shared_from_this();
 }
