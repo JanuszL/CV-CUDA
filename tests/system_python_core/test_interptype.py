@@ -13,11 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
+import cvcuda
 
 
 def test_interpolation_type():
-    assert nvcv.Interp.NEAREST != nvcv.Interp.LINEAR
-    assert nvcv.Interp.LINEAR != nvcv.Interp.CUBIC
-    assert nvcv.Interp.CUBIC != nvcv.Interp.AREA
-    assert nvcv.Interp.AREA != nvcv.Interp.NEAREST
+    assert cvcuda.Interp.NEAREST != cvcuda.Interp.LINEAR
+    assert cvcuda.Interp.LINEAR != cvcuda.Interp.CUBIC
+    assert cvcuda.Interp.CUBIC != cvcuda.Interp.AREA
+    assert cvcuda.Interp.AREA != cvcuda.Interp.NEAREST

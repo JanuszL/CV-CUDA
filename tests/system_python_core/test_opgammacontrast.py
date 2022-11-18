@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import nvcv
+import cvcuda
 import pytest as t
 import numpy as np
 import util
@@ -68,7 +69,7 @@ def test_op_gamma_contrastvarshape(
 
     gamma = util.create_tensor((nimages), np.float32, "N", max_gamma, rng=RNG)
 
-    out = nvcv.gamma_contrast(input, gamma)
+    out = cvcuda.gamma_contrast(input, gamma)
 
     assert len(out) == len(input)
     assert out.capacity == input.capacity
@@ -79,7 +80,7 @@ def test_op_gamma_contrastvarshape(
 
     out = util.clone_image_batch(input)
 
-    tmp = nvcv.gamma_contrast_into(
+    tmp = cvcuda.gamma_contrast_into(
         src=input,
         dst=out,
         gamma=gamma,

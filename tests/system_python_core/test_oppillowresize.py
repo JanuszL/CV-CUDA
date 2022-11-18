@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import nvcv
+import cvcuda
 import pytest as t
 import numpy as np
 import util
@@ -27,57 +28,57 @@ RNG = np.random.default_rng(0)
         (
             nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             [5, 132, 15, 4],
-            nvcv.Interp.LINEAR,
+            cvcuda.Interp.LINEAR,
             nvcv.Format.RGB8,
         ),
         (
             nvcv.Tensor([5, 31, 31, 4], np.uint8, "NHWC"),
             [5, 55, 55, 4],
-            nvcv.Interp.LINEAR,
+            cvcuda.Interp.LINEAR,
             nvcv.Format.RGB8,
         ),
         (
             nvcv.Tensor([5, 55, 55, 4], np.uint8, "NHWC"),
             [5, 31, 31, 4],
-            nvcv.Interp.LINEAR,
+            cvcuda.Interp.LINEAR,
             nvcv.Format.RGB8,
         ),
         (
             nvcv.Tensor([5, 16, 23, 4], np.float32, "NHWC"),
             [5, 132, 15, 4],
-            nvcv.Interp.LINEAR,
+            cvcuda.Interp.LINEAR,
             nvcv.Format.RGBf32,
         ),
         (
             nvcv.Tensor([5, 31, 31, 4], np.float32, "NHWC"),
             [5, 55, 55, 4],
-            nvcv.Interp.LINEAR,
+            cvcuda.Interp.LINEAR,
             nvcv.Format.RGBf32,
         ),
         (
             nvcv.Tensor([5, 55, 55, 4], np.float32, "NHWC"),
             [5, 31, 31, 4],
-            nvcv.Interp.LINEAR,
+            cvcuda.Interp.LINEAR,
             nvcv.Format.RGBf32,
         ),
     ],
 )
 def test_op_pillowresize(input, out_shape, interp, fmt):
 
-    out = nvcv.pillowresize(input, out_shape, fmt, interp)
+    out = cvcuda.pillowresize(input, out_shape, fmt, interp)
     assert out.layout == input.layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
     out = nvcv.Tensor(out_shape, input.dtype, input.layout)
-    tmp = nvcv.pillowresize_into(out, input, fmt, interp)
+    tmp = cvcuda.pillowresize_into(out, input, fmt, interp)
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
     stream = nvcv.cuda.Stream()
-    tmp = nvcv.pillowresize_into(
+    tmp = cvcuda.pillowresize_into(
         src=input,
         dst=out,
         format=fmt,
@@ -98,21 +99,21 @@ def test_op_pillowresize(input, out_shape, interp, fmt):
             nvcv.Format.RGB8,
             (16, 23),
             256.0,
-            nvcv.Interp.LINEAR,
+            cvcuda.Interp.LINEAR,
         ),
         (
             4,
             nvcv.Format.RGB8,
             (14, 14),
             256.0,
-            nvcv.Interp.LINEAR,
+            cvcuda.Interp.LINEAR,
         ),
         (
             7,
             nvcv.Format.RGBf32,
             (10, 15),
             256.0,
-            nvcv.Interp.LINEAR,
+            cvcuda.Interp.LINEAR,
         ),
     ],
 )
@@ -136,13 +137,13 @@ def test_op_pillowresizevarshape(
     for image in base_output:
         sizes.append([image.width, image.height])
 
-    out = nvcv.pillowresize(input, sizes)
+    out = cvcuda.pillowresize(input, sizes)
     assert len(out) == len(input)
     assert out.capacity == input.capacity
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == base_output.maxsize
 
-    out = nvcv.pillowresize(
+    out = cvcuda.pillowresize(
         input,
         sizes,
         interp,
@@ -155,7 +156,7 @@ def test_op_pillowresizevarshape(
     nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
     stream = nvcv.cuda.Stream()
 
-    tmp = nvcv.pillowresize_into(
+    tmp = cvcuda.pillowresize_into(
         src=input,
         dst=base_output,
         interp=interp,

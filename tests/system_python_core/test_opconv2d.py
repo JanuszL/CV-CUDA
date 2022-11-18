@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 import numpy as np
 import util
@@ -34,7 +34,7 @@ RNG = np.random.default_rng(0)
                 10, nvcv.Format.F32, size=(3, 3), max_random=1, rng=RNG
             ),
             util.create_tensor((10, 2), np.int32, "NC", max_random=(3, 3), rng=RNG),
-            nvcv.Border.CONSTANT,
+            cvcuda.Border.CONSTANT,
         ),
         (
             util.create_image_batch(7, nvcv.Format.RGBf32, max_random=1, rng=RNG),
@@ -42,7 +42,7 @@ RNG = np.random.default_rng(0)
                 7, nvcv.Format.F32, size=(5, 5), max_random=3, rng=RNG
             ),
             util.create_tensor((7, 2), np.int32, "NC", max_random=(5, 5), rng=RNG),
-            nvcv.Border.REPLICATE,
+            cvcuda.Border.REPLICATE,
         ),
         (
             util.create_image_batch(1, nvcv.Format.U8, max_random=123, rng=RNG),
@@ -50,7 +50,7 @@ RNG = np.random.default_rng(0)
                 1, nvcv.Format.F32, size=(7, 7), max_random=2, rng=RNG
             ),
             util.create_tensor((1, 2), np.int32, "NC", max_random=(7, 7), rng=RNG),
-            nvcv.Border.REFLECT,
+            cvcuda.Border.REFLECT,
         ),
         (
             util.create_image_batch(6, nvcv.Format.S16, max_random=1234, rng=RNG),
@@ -58,7 +58,7 @@ RNG = np.random.default_rng(0)
                 6, nvcv.Format.F32, max_size=(9, 9), max_random=4, rng=RNG
             ),
             util.create_tensor((6, 2), np.int32, "NC", max_random=(1, 1), rng=RNG),
-            nvcv.Border.WRAP,
+            cvcuda.Border.WRAP,
         ),
         (
             util.create_image_batch(9, nvcv.Format.S32, max_random=12345, rng=RNG),
@@ -66,12 +66,12 @@ RNG = np.random.default_rng(0)
                 9, nvcv.Format.F32, max_size=(4, 4), max_random=2, rng=RNG
             ),
             util.create_tensor((9, 2), np.int32, "NC", max_random=(4, 4), rng=RNG),
-            nvcv.Border.REFLECT101,
+            cvcuda.Border.REFLECT101,
         ),
     ],
 )
 def test_op_conv2dvarshape(input, kernel, kernel_anchor, border):
-    out = nvcv.conv2d(
+    out = cvcuda.conv2d(
         input,
         kernel,
         kernel_anchor,
@@ -84,7 +84,7 @@ def test_op_conv2dvarshape(input, kernel, kernel_anchor, border):
 
     stream = nvcv.cuda.Stream()
     out = util.clone_image_batch(input)
-    tmp = nvcv.conv2d_into(
+    tmp = cvcuda.conv2d_into(
         src=input,
         dst=out,
         kernel=kernel,

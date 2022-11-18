@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 
 
@@ -33,17 +33,17 @@ def test_op_erase(input, erasing_area_num, random, seed):
     imgIdx = nvcv.Tensor(parameter_shape, nvcv.Type.S32, "N")
     values = nvcv.Tensor(parameter_shape, nvcv.Type.F32, "N")
 
-    out = nvcv.erase(input, anchor, erasing, values, imgIdx)
+    out = cvcuda.erase(input, anchor, erasing, values, imgIdx)
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = nvcv.erase_into(out, input, anchor, erasing, values, imgIdx)
+    tmp = cvcuda.erase_into(out, input, anchor, erasing, values, imgIdx)
     assert tmp is out
 
     stream = nvcv.cuda.Stream()
-    out = nvcv.erase(
+    out = cvcuda.erase(
         src=input,
         anchor=anchor,
         erasing=erasing,
@@ -57,7 +57,7 @@ def test_op_erase(input, erasing_area_num, random, seed):
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
-    tmp = nvcv.erase_into(
+    tmp = cvcuda.erase_into(
         src=input,
         dst=out,
         anchor=anchor,

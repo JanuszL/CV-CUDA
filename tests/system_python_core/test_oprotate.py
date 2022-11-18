@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 import numpy as np
 import util
@@ -30,42 +30,42 @@ RNG = np.random.default_rng(0)
             nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             30,
             [3, 4],
-            nvcv.Interp.NEAREST,
+            cvcuda.Interp.NEAREST,
         ),
         (
             nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             60,
             [3, 4],
-            nvcv.Interp.LINEAR,
+            cvcuda.Interp.LINEAR,
         ),
         (
             nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             90,
             [3, 4],
-            nvcv.Interp.CUBIC,
+            cvcuda.Interp.CUBIC,
         ),
         (
             nvcv.Tensor([7, 12, 3], np.uint8, "HWC"),
             30,
             [2, 3],
-            nvcv.Interp.NEAREST,
+            cvcuda.Interp.NEAREST,
         ),
         (
             nvcv.Tensor([7, 12, 3], np.uint8, "HWC"),
             60,
             [2, 3],
-            nvcv.Interp.LINEAR,
+            cvcuda.Interp.LINEAR,
         ),
         (
             nvcv.Tensor([7, 12, 3], np.uint8, "HWC"),
             90,
             [2, 3],
-            nvcv.Interp.CUBIC,
+            cvcuda.Interp.CUBIC,
         ),
     ],
 )
 def test_op_rotate(input, angle_deg, shift, interpolation):
-    out = nvcv.rotate(input, angle_deg, shift, interpolation)
+    out = cvcuda.rotate(input, angle_deg, shift, interpolation)
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
@@ -73,7 +73,7 @@ def test_op_rotate(input, angle_deg, shift, interpolation):
     stream = nvcv.cuda.Stream()
 
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = nvcv.rotate_into(
+    tmp = cvcuda.rotate_into(
         src=input,
         dst=out,
         angle_deg=angle_deg,
@@ -97,7 +97,7 @@ def test_op_rotate(input, angle_deg, shift, interpolation):
             128.0,
             180,
             [5, 5],
-            nvcv.Interp.NEAREST,
+            cvcuda.Interp.NEAREST,
         ),
         (
             5,
@@ -106,7 +106,7 @@ def test_op_rotate(input, angle_deg, shift, interpolation):
             256.0,
             180,
             [5, 5],
-            nvcv.Interp.LINEAR,
+            cvcuda.Interp.LINEAR,
         ),
         (
             5,
@@ -115,7 +115,7 @@ def test_op_rotate(input, angle_deg, shift, interpolation):
             256.0,
             180,
             [5, 5],
-            nvcv.Interp.CUBIC,
+            cvcuda.Interp.CUBIC,
         ),
     ],
 )
@@ -141,7 +141,7 @@ def test_op_rotatevarshape(
         (nimages, 2), np.float64, "NC", max_random=max_shift, rng=RNG
     )
 
-    out = nvcv.rotate(
+    out = cvcuda.rotate(
         input,
         angle_deg,
         shift,
@@ -155,7 +155,7 @@ def test_op_rotatevarshape(
     stream = nvcv.cuda.Stream()
 
     out = util.clone_image_batch(input)
-    tmp = nvcv.rotate_into(
+    tmp = cvcuda.rotate_into(
         src=input,
         dst=out,
         angle_deg=angle_deg,

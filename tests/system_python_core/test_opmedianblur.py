@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 import numpy as np
 import util
@@ -45,14 +45,14 @@ RNG = np.random.default_rng(0)
     ],
 )
 def test_op_median_blur(input, ksize):
-    out = nvcv.median_blur(input, ksize)
+    out = cvcuda.median_blur(input, ksize)
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
     stream = nvcv.cuda.Stream()
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = nvcv.median_blur_into(
+    tmp = cvcuda.median_blur_into(
         src=input,
         dst=out,
         ksize=ksize,
@@ -98,7 +98,7 @@ def test_op_median_blurvarshape(nimages, format, max_size, max_pixel, max_ksize)
         transform_dist=util.dist_odd,
     )
 
-    out = nvcv.median_blur(input, ksize)
+    out = cvcuda.median_blur(input, ksize)
     assert len(out) == len(input)
     assert out.capacity == input.capacity
     assert out.uniqueformat == input.uniqueformat
@@ -107,7 +107,7 @@ def test_op_median_blurvarshape(nimages, format, max_size, max_pixel, max_ksize)
     stream = nvcv.cuda.Stream()
 
     out = util.clone_image_batch(input)
-    tmp = nvcv.median_blur_into(
+    tmp = cvcuda.median_blur_into(
         src=input,
         dst=out,
         ksize=ksize,

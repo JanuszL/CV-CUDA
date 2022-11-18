@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 import numpy as np
 import util
@@ -29,56 +29,56 @@ RNG = np.random.default_rng(0)
         (
             nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             np.array([[1, 0, 0], [0, 1, 0]]),
-            nvcv.Interp.NEAREST,
-            nvcv.Border.CONSTANT,
+            cvcuda.Interp.NEAREST,
+            cvcuda.Border.CONSTANT,
             [],
         ),
         (
             nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             np.array([[1, 0, 0], [0, 1, 0]]),
-            nvcv.Interp.NEAREST,
-            nvcv.Border.CONSTANT,
+            cvcuda.Interp.NEAREST,
+            cvcuda.Border.CONSTANT,
             [0],
         ),
         (
             nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             np.array([[1, 2, 0], [2, 1, 1]]),
-            nvcv.Interp.LINEAR,
-            nvcv.Border.WRAP,
+            cvcuda.Interp.LINEAR,
+            cvcuda.Border.WRAP,
             [1, 2, 3, 4],
         ),
         (
             nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             np.array([[1, 2, 0], [2, 1, 1]]),
-            nvcv.Interp.LINEAR,
-            nvcv.Border.REPLICATE,
+            cvcuda.Interp.LINEAR,
+            cvcuda.Border.REPLICATE,
             [1, 2, 3, 4],
         ),
         (
             nvcv.Tensor([11, 21, 4], np.uint8, "HWC"),
             np.array([[2, 2, 0], [3, 1, 0]]),
-            nvcv.Interp.NEAREST,
-            nvcv.Border.CONSTANT,
+            cvcuda.Interp.NEAREST,
+            cvcuda.Border.CONSTANT,
             [0],
         ),
         (
             nvcv.Tensor([11, 21, 4], np.uint8, "HWC"),
             np.array([[2, 2, 1], [3, 1, 2]]),
-            nvcv.Interp.LINEAR,
-            nvcv.Border.WRAP,
+            cvcuda.Interp.LINEAR,
+            cvcuda.Border.WRAP,
             [1, 2, 3, 4],
         ),
         (
             nvcv.Tensor([11, 21, 4], np.uint8, "HWC"),
             np.array([[1, 2, 0], [2, 1, 1]]),
-            nvcv.Interp.LINEAR,
-            nvcv.Border.REPLICATE,
+            cvcuda.Interp.LINEAR,
+            cvcuda.Border.REPLICATE,
             [1, 2, 3, 4],
         ),
     ],
 )
 def test_op_warp_affine(input, xform, flags, border_mode, border_value):
-    out = nvcv.warp_affine(
+    out = cvcuda.warp_affine(
         input, xform, flags, border_mode=border_mode, border_value=border_value
     )
     assert out.layout == input.layout
@@ -87,7 +87,7 @@ def test_op_warp_affine(input, xform, flags, border_mode, border_value):
 
     stream = nvcv.cuda.Stream()
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = nvcv.warp_affine_into(
+    tmp = cvcuda.warp_affine_into(
         src=input,
         dst=out,
         xform=xform,
@@ -111,8 +111,8 @@ def test_op_warp_affine(input, xform, flags, border_mode, border_value):
             (16, 23),
             128.0,
             7,
-            nvcv.Interp.NEAREST,
-            nvcv.Border.CONSTANT,
+            cvcuda.Interp.NEAREST,
+            cvcuda.Border.CONSTANT,
             [],
         ),
         (
@@ -121,8 +121,8 @@ def test_op_warp_affine(input, xform, flags, border_mode, border_value):
             (16, 23),
             128.0,
             7,
-            nvcv.Interp.NEAREST,
-            nvcv.Border.CONSTANT,
+            cvcuda.Interp.NEAREST,
+            cvcuda.Border.CONSTANT,
             [1, 2, 3, 4],
         ),
         (
@@ -131,8 +131,8 @@ def test_op_warp_affine(input, xform, flags, border_mode, border_value):
             (16, 23),
             128.0,
             5,
-            nvcv.Interp.LINEAR,
-            nvcv.Border.WRAP,
+            cvcuda.Interp.LINEAR,
+            cvcuda.Border.WRAP,
             [0],
         ),
         (
@@ -141,8 +141,8 @@ def test_op_warp_affine(input, xform, flags, border_mode, border_value):
             (16, 23),
             128.0,
             4,
-            nvcv.Interp.CUBIC,
-            nvcv.Border.REPLICATE,
+            cvcuda.Interp.CUBIC,
+            cvcuda.Border.REPLICATE,
             [2, 1, 0],
         ),
     ],
@@ -159,7 +159,7 @@ def test_op_warp_affinevarshape(
         (nimages, 6), np.float32, "NC", max_random=max_xval, rng=RNG
     )
 
-    out = nvcv.warp_affine(
+    out = cvcuda.warp_affine(
         input, xform, flags, border_mode=bmode, border_value=border_value
     )
     assert len(out) == len(input)
@@ -170,7 +170,7 @@ def test_op_warp_affinevarshape(
     stream = nvcv.cuda.Stream()
 
     out = util.clone_image_batch(input)
-    tmp = nvcv.warp_affine_into(
+    tmp = cvcuda.warp_affine_into(
         src=input,
         dst=out,
         xform=xform,

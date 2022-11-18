@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import nvcv
+import cvcuda
 import pytest as t
 import numpy as np
 import util
@@ -45,7 +46,7 @@ RNG = np.random.default_rng(0)
     ],
 )
 def test_op_composite(foreground, background, fgMask, outChannels):
-    out = nvcv.composite(foreground, background, fgMask, outChannels)
+    out = cvcuda.composite(foreground, background, fgMask, outChannels)
     assert out.layout == foreground.layout
     assert out.shape[-1] == outChannels
     if out.layout == "NHWC":
@@ -59,7 +60,7 @@ def test_op_composite(foreground, background, fgMask, outChannels):
     out_shape = foreground.shape
     out_shape[-1] = outChannels
     out = nvcv.Tensor(out_shape, foreground.dtype, foreground.layout)
-    tmp = nvcv.composite_into(
+    tmp = cvcuda.composite_into(
         foreground=foreground,
         dst=out,
         background=background,
@@ -99,7 +100,7 @@ def test_op_compositevarshape(nimages, max_size, outChannels):
     background = util.clone_image_batch(foreground)
     fgMask = util.clone_image_batch(foreground, img_format=nvcv.Format.U8)
 
-    out = nvcv.composite(foreground, background, fgMask)
+    out = cvcuda.composite(foreground, background, fgMask)
     assert len(out) == len(foreground)
     assert out.capacity == foreground.capacity
 
@@ -109,7 +110,7 @@ def test_op_compositevarshape(nimages, max_size, outChannels):
         out = util.clone_image_batch(foreground)
     if outChannels == 4:
         out = util.clone_image_batch(foreground, img_format=nvcv.Format.RGBA8)
-    tmp = nvcv.composite_into(
+    tmp = cvcuda.composite_into(
         foreground=foreground,
         dst=out,
         background=background,

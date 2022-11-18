@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import numpy as np
 import util
 
@@ -27,7 +27,7 @@ def test_op_channelreorder_varshape():
     input = util.create_image_batch(10, nvcv.Format.RGB8, size=(123, 321), rng=RNG)
     order = util.create_tensor((10, 3), np.int32, "NC", max_random=(2, 2, 2), rng=RNG)
 
-    out = nvcv.channelreorder(input, order)
+    out = cvcuda.channelreorder(input, order)
     assert len(out) == len(input)
     assert out.capacity == input.capacity
     assert out.uniqueformat == input.uniqueformat
@@ -36,7 +36,7 @@ def test_op_channelreorder_varshape():
     order = util.create_tensor(
         (10, 4), np.int32, "NC", max_random=(3, 3, 3, 3), rng=RNG
     )
-    out = nvcv.channelreorder(input, order, format=nvcv.Format.BGRA8)
+    out = cvcuda.channelreorder(input, order, format=nvcv.Format.BGRA8)
 
     assert len(out) == len(input)
     assert out.capacity == input.capacity
@@ -45,7 +45,7 @@ def test_op_channelreorder_varshape():
 
     stream = nvcv.cuda.Stream()
     out = util.clone_image_batch(input)
-    tmp = nvcv.channelreorder_into(src=input, dst=out, orders=order, stream=stream)
+    tmp = cvcuda.channelreorder_into(src=input, dst=out, orders=order, stream=stream)
     assert tmp is out
     assert len(out) == len(input)
     assert out.capacity == input.capacity

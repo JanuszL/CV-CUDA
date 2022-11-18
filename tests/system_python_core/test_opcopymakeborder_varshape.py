@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 from random import randint
 
@@ -27,7 +27,7 @@ from random import randint
             nvcv.RGBf32,
             (1, 1),
             (128, 128),
-            nvcv.Border.CONSTANT,
+            cvcuda.Border.CONSTANT,
             [0],
         ),
         (
@@ -35,7 +35,7 @@ from random import randint
             nvcv.RGB8,
             (1, 1),
             (128, 128),
-            nvcv.Border.CONSTANT,
+            cvcuda.Border.CONSTANT,
             [12, 3, 4, 55],
         ),
         (
@@ -43,7 +43,7 @@ from random import randint
             nvcv.RGBA8,
             (1, 1),
             (128, 128),
-            nvcv.Border.WRAP,
+            cvcuda.Border.WRAP,
             [0],
         ),
         (
@@ -51,7 +51,7 @@ from random import randint
             nvcv.RGBAf32,
             (1, 1),
             (128, 128),
-            nvcv.Border.REPLICATE,
+            cvcuda.Border.REPLICATE,
             [0],
         ),
         (
@@ -59,7 +59,7 @@ from random import randint
             nvcv.RGB8,
             (1, 1),
             (128, 128),
-            nvcv.Border.REFLECT,
+            cvcuda.Border.REFLECT,
             [0],
         ),
         (
@@ -67,7 +67,7 @@ from random import randint
             nvcv.RGBA8,
             (1, 1),
             (128, 128),
-            nvcv.Border.REFLECT101,
+            cvcuda.Border.REFLECT101,
             [0],
         ),
     ],
@@ -99,7 +99,7 @@ def test_op_copymakeborder(
 
     tensor_out = nvcv.Tensor(num_images, [max_out_w, max_out_h], format)
 
-    out = nvcv.copymakeborderstack(
+    out = cvcuda.copymakeborderstack(
         input,
         top=top_tensor,
         left=left_tensor,
@@ -111,7 +111,7 @@ def test_op_copymakeborder(
     assert out.dtype == tensor_out.dtype
 
     stream = nvcv.cuda.Stream()
-    tmp = nvcv.copymakeborderstack_into(
+    tmp = cvcuda.copymakeborderstack_into(
         src=input,
         dst=tensor_out,
         top=top_tensor,
@@ -122,7 +122,7 @@ def test_op_copymakeborder(
     )
     assert tmp is tensor_out
 
-    out = nvcv.copymakeborder(
+    out = cvcuda.copymakeborder(
         src=input,
         top=top_tensor,
         left=left_tensor,
@@ -136,7 +136,7 @@ def test_op_copymakeborder(
         assert res.size == ref.size
         assert res.format == ref.format
 
-    tmp = nvcv.copymakeborder_into(
+    tmp = cvcuda.copymakeborder_into(
         src=input,
         dst=varshape_out,
         top=top_tensor,

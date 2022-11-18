@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 import numpy as np
 
@@ -29,14 +29,14 @@ import numpy as np
     ],
 )
 def test_op_center_crop(input, crop_size, gold_shape):
-    out = nvcv.center_crop(input, crop_size)
+    out = cvcuda.center_crop(input, crop_size)
     assert out.layout == input.layout
     assert out.shape == gold_shape
     assert out.dtype == input.dtype
 
     stream = nvcv.cuda.Stream()
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = nvcv.center_crop_into(
+    tmp = cvcuda.center_crop_into(
         src=input,
         dst=out,
         crop_size=crop_size,

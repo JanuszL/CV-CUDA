@@ -35,7 +35,7 @@ import torchvision.transforms.functional as F
 from torchvision.models import segmentation as segmentation_models
 import numpy as np
 import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import tensorrt as trt
 
 # Bring the commons folder from the samples directory into our path so that
@@ -439,7 +439,7 @@ class SemanticSegmentationSample:
             # Resize -> DataType Convert(U8->F32) -> Normalize -> Interleaved to Planar
 
             # Resize to the input network dimensions.
-            nvcv_resized_tensor = nvcv.resize(
+            nvcv_resized_tensor = cvcuda.resize(
                 nvcv_input_tensor,
                 (
                     effective_batch_size,
@@ -452,7 +452,7 @@ class SemanticSegmentationSample:
 
             # Convert to the data type and range of values needed by the input layer
             # i.e uint8->float. The values are first scaled to the 0-1 range.
-            nvcv_float_tensor = nvcv.convertto(
+            nvcv_float_tensor = cvcuda.convertto(
                 nvcv_resized_tensor, np.float32, scale=1 / 255
             )
 
@@ -463,7 +463,7 @@ class SemanticSegmentationSample:
             stddev_tensor = stddev_tensor.reshape(1, 1, 1, 3).cuda(self.device_id)
             nvcv_mean_tensor = nvcv.as_tensor(mean_tensor, "NHWC")
             nvcv_stddev_tensor = nvcv.as_tensor(stddev_tensor, "NHWC")
-            nvcv_normalized_tensor = nvcv.normalize(
+            nvcv_normalized_tensor = cvcuda.normalize(
                 nvcv_float_tensor,
                 base=nvcv_mean_tensor,
                 scale=nvcv_stddev_tensor,
@@ -472,7 +472,7 @@ class SemanticSegmentationSample:
 
             # The final stage in the pre-process pipeline includes converting the NHWC
             # buffer into a NCHW buffer.
-            nvcv_preprocessed_tensor = nvcv.reformat(nvcv_normalized_tensor, "NCHW")
+            nvcv_preprocessed_tensor = cvcuda.reformat(nvcv_normalized_tensor, "NCHW")
             # docs_tag: end_preproc
 
             # docs_tag: begin_run_infer
@@ -510,7 +510,7 @@ class SemanticSegmentationSample:
             # docs_tag: begin_mask_upscale
             nvcv_class_masks = nvcv.as_tensor(class_masks.cuda(), "NHWC")
             # Upscale it.
-            nvcv_class_masks_upscaled = nvcv.resize(
+            nvcv_class_masks_upscaled = cvcuda.resize(
                 nvcv_class_masks,
                 (effective_batch_size, input_image_height, input_image_width, 1),
                 nvcv.Interp.LINEAR,
@@ -529,10 +529,10 @@ class SemanticSegmentationSample:
 
             # Blur the input images using the median blur op and convert to PyTorch.
             # docs_tag: begin_input_blur
-            nvcv_blurred_input_imgs = nvcv.median_blur(
+            nvcv_blurred_input_imgs = cvcuda.median_blur(
                 nvcv_input_tensor, ksize=(27, 27)
             )
-            nvcv_blurred_input_imgs = nvcv.reformat(nvcv_blurred_input_imgs, "NCHW")
+            nvcv_blurred_input_imgs = cvcuda.reformat(nvcv_blurred_input_imgs, "NCHW")
             blurred_input_imgs = torch.as_tensor(
                 nvcv_blurred_input_imgs.cuda(),
                 device=torch.device("cuda", self.device_id),

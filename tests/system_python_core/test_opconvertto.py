@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 import numpy as np
 
@@ -27,34 +27,34 @@ import numpy as np
     ],
 )
 def test_op_convertto(input, dtype, scale, offset):
-    out = nvcv.convertto(input, dtype)
+    out = cvcuda.convertto(input, dtype)
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == dtype
 
     out = nvcv.Tensor(input.shape, dtype, input.layout)
-    tmp = nvcv.convertto_into(out, input)
+    tmp = cvcuda.convertto_into(out, input)
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == dtype
 
-    out = nvcv.convertto(input, dtype, scale)
-    out = nvcv.convertto(input, dtype, scale, offset)
+    out = cvcuda.convertto(input, dtype, scale)
+    out = cvcuda.convertto(input, dtype, scale, offset)
 
     out = nvcv.Tensor(input.shape, dtype, input.layout)
-    tmp = nvcv.convertto_into(out, input, scale)
-    tmp = nvcv.convertto_into(out, input, scale, offset)
+    tmp = cvcuda.convertto_into(out, input, scale)
+    tmp = cvcuda.convertto_into(out, input, scale, offset)
 
     stream = nvcv.cuda.Stream()
-    out = nvcv.convertto(
+    out = cvcuda.convertto(
         src=input, dtype=dtype, scale=scale, offset=offset, stream=stream
     )
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == dtype
 
-    tmp = nvcv.convertto_into(
+    tmp = cvcuda.convertto_into(
         dst=out, src=input, scale=scale, offset=offset, stream=stream
     )
     assert tmp is out

@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 import numpy as np
 
@@ -28,7 +28,7 @@ import numpy as np
             2,
             3,
             4,
-            nvcv.Border.CONSTANT,
+            cvcuda.Border.CONSTANT,
             [0],
         ),
         (
@@ -37,17 +37,25 @@ import numpy as np
             2,
             3,
             4,
-            nvcv.Border.CONSTANT,
+            cvcuda.Border.CONSTANT,
             [12, 3, 4, 55],
         ),
-        (nvcv.Tensor([16, 23, 4], np.uint8, "HWC"), 2, 2, 2, 2, nvcv.Border.WRAP, [0]),
+        (
+            nvcv.Tensor([16, 23, 4], np.uint8, "HWC"),
+            2,
+            2,
+            2,
+            2,
+            cvcuda.Border.WRAP,
+            [0],
+        ),
         (
             nvcv.Tensor([16, 23, 3], np.uint8, "HWC"),
             10,
             12,
             35,
             18,
-            nvcv.Border.REPLICATE,
+            cvcuda.Border.REPLICATE,
             [0],
         ),
         (
@@ -56,7 +64,7 @@ import numpy as np
             1,
             20,
             3,
-            nvcv.Border.REFLECT,
+            cvcuda.Border.REFLECT,
             [0],
         ),
         (
@@ -65,7 +73,7 @@ import numpy as np
             1,
             20,
             3,
-            nvcv.Border.REFLECT101,
+            cvcuda.Border.REFLECT101,
             [0],
         ),
     ],
@@ -75,14 +83,14 @@ def test_op_copymakeborder(input, top, bottom, left, right, border_mode, border_
     cdim = len(out_shape) - 1
     out_shape[cdim - 2] += top + bottom
     out_shape[cdim - 1] += left + right
-    out = nvcv.copymakeborder(input, top=top, bottom=bottom, left=left, right=right)
+    out = cvcuda.copymakeborder(input, top=top, bottom=bottom, left=left, right=right)
     assert out.layout == input.layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
     stream = nvcv.cuda.Stream()
     out = nvcv.Tensor(out_shape, input.dtype, input.layout)
-    tmp = nvcv.copymakeborder_into(
+    tmp = cvcuda.copymakeborder_into(
         src=input,
         dst=out,
         top=top,

@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 import numpy as np
 
@@ -28,25 +28,25 @@ import numpy as np
     ],
 )
 def test_op_reformat(input, out_shape, out_layout):
-    out = nvcv.reformat(input, out_layout)
+    out = cvcuda.reformat(input, out_layout)
     assert out.layout == out_layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
     out = nvcv.Tensor(out_shape, input.dtype, out_layout)
-    tmp = nvcv.reformat_into(out, input)
+    tmp = cvcuda.reformat_into(out, input)
     assert tmp is out
     assert out.layout == out_layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
     stream = nvcv.cuda.Stream()
-    out = nvcv.reformat(src=input, layout=out_layout, stream=stream)
+    out = cvcuda.reformat(src=input, layout=out_layout, stream=stream)
     assert out.layout == out_layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
-    tmp = nvcv.reformat_into(src=input, dst=out, stream=stream)
+    tmp = cvcuda.reformat_into(src=input, dst=out, stream=stream)
     assert tmp is out
     assert out.layout == out_layout
     assert out.shape == out_shape

@@ -25,7 +25,7 @@ import argparse
 
 # tag: Import CVCUDA module
 import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 
 # tag: Classification Sample
 
@@ -150,7 +150,7 @@ class ClassificationSample:
 
             # Resize
             # Resize to the input network dimensions
-            nvcv_resize_tensor = nvcv.resize(
+            nvcv_resize_tensor = cvcuda.resize(
                 nvcv_input_tensor,
                 (
                     effective_batch_size,
@@ -158,13 +158,13 @@ class ClassificationSample:
                     self.target_img_width,
                     3,
                 ),
-                nvcv.Interp.LINEAR,
+                cvcuda.Interp.LINEAR,
             )
 
             # Convert to the data type and range of values needed by the input layer
             # i.e uint8->float. A Scale is applied to normalize the values in the
             # range 0-1
-            nvcv_convert_tensor = nvcv.convertto(
+            nvcv_convert_tensor = cvcuda.convertto(
                 nvcv_resize_tensor, np.float32, scale=1 / 255
             )
 
@@ -191,16 +191,16 @@ class ClassificationSample:
 
             # Apply the normalize operator and indicate the scale values are
             # std deviation i.e scale = 1/stddev
-            nvcv_norm_tensor = nvcv.normalize(
+            nvcv_norm_tensor = cvcuda.normalize(
                 nvcv_convert_tensor,
                 base=nvcv_base_tensor,
                 scale=nvcv_scale_tensor,
-                flags=nvcv.NormalizeFlags.SCALE_IS_STDDEV,
+                flags=cvcuda.NormalizeFlags.SCALE_IS_STDDEV,
             )
 
             # The final stage in the preprocess pipeline includes converting the RGB
             # buffer into a planar buffer
-            nvcv_preprocessed_tensor = nvcv.reformat(nvcv_norm_tensor, "NCHW")
+            nvcv_preprocessed_tensor = cvcuda.reformat(nvcv_norm_tensor, "NCHW")
 
             # tag: Inference
             # Inference uses pytorch to run a resnet50 model on the preprocessed

@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 import numpy as np
 import util
@@ -28,38 +28,38 @@ RNG = np.random.default_rng(0)
     [
         (
             nvcv.Tensor(5, [16, 23], nvcv.Format.BGR8),
-            nvcv.ColorConversion.BGR2RGB,
+            cvcuda.ColorConversion.BGR2RGB,
             nvcv.Tensor(5, [16, 23], nvcv.Format.RGB8),
         ),
         (
             nvcv.Tensor(3, [86, 22], nvcv.Format.RGBA8),
-            nvcv.ColorConversion.RGBA2BGRA,
+            cvcuda.ColorConversion.RGBA2BGRA,
             nvcv.Tensor(3, [86, 22], nvcv.Format.BGRA8),
         ),
         (
             nvcv.Tensor(7, [13, 21], nvcv.Format.Y8),
-            nvcv.ColorConversion.GRAY2BGR,
+            cvcuda.ColorConversion.GRAY2BGR,
             nvcv.Tensor(7, [13, 21], nvcv.Format.BGR8),
         ),
         (
             nvcv.Tensor(9, [66, 99], nvcv.Format.HSV8),
-            nvcv.ColorConversion.HSV2RGB,
+            cvcuda.ColorConversion.HSV2RGB,
             nvcv.Tensor(9, [66, 99], nvcv.Format.RGB8),
         ),
         (
             nvcv.Tensor([1, 61, 62, 3], np.uint8, "NHWC"),
-            nvcv.ColorConversion.YUV2RGB,
+            cvcuda.ColorConversion.YUV2RGB,
             nvcv.Tensor([1, 61, 62, 3], np.uint8, "NHWC"),
         ),
     ],
 )
 def test_op_cvtcolor(input, code, output):
-    out = nvcv.cvtcolor(input, code)
+    out = cvcuda.cvtcolor(input, code)
     assert out.shape == output.shape
     assert out.dtype == output.dtype
 
     stream = nvcv.cuda.Stream()
-    tmp = nvcv.cvtcolor_into(
+    tmp = cvcuda.cvtcolor_into(
         src=input,
         dst=output,
         code=code,
@@ -77,7 +77,7 @@ def test_op_cvtcolor(input, code, output):
             nvcv.Format.RGB8,
             (123, 321),
             256,
-            nvcv.ColorConversion.RGB2RGBA,
+            cvcuda.ColorConversion.RGB2RGBA,
             nvcv.Format.RGBA8,
         ),
         (
@@ -85,7 +85,7 @@ def test_op_cvtcolor(input, code, output):
             nvcv.Format.BGRA8,
             (23, 21),
             256,
-            nvcv.ColorConversion.BGRA2RGB,
+            cvcuda.ColorConversion.BGRA2RGB,
             nvcv.Format.RGB8,
         ),
         (
@@ -93,7 +93,7 @@ def test_op_cvtcolor(input, code, output):
             nvcv.Format.RGB8,
             (23, 21),
             256,
-            nvcv.ColorConversion.RGB2GRAY,
+            cvcuda.ColorConversion.RGB2GRAY,
             nvcv.Format.Y8_ER,
         ),
         (
@@ -101,7 +101,7 @@ def test_op_cvtcolor(input, code, output):
             nvcv.Format.HSV8,
             (23, 21),
             256,
-            nvcv.ColorConversion.HSV2RGB,
+            cvcuda.ColorConversion.HSV2RGB,
             nvcv.Format.RGB8,
         ),
         (
@@ -109,7 +109,7 @@ def test_op_cvtcolor(input, code, output):
             nvcv.Format.Y8_ER,
             (23, 21),
             256,
-            nvcv.ColorConversion.GRAY2BGR,
+            cvcuda.ColorConversion.GRAY2BGR,
             nvcv.Format.BGR8,
         ),
     ],
@@ -123,13 +123,13 @@ def test_op_cvtcolorvarshape(
     output = util.create_image_batch(
         num_images, out_format, size=img_size, max_random=max_pixel, rng=RNG
     )
-    out = nvcv.cvtcolor(input, code)
+    out = cvcuda.cvtcolor(input, code)
     assert len(out) == len(output)
     assert out.capacity == output.capacity
     assert out.maxsize == output.maxsize
 
     stream = nvcv.cuda.Stream()
-    tmp = nvcv.cvtcolor_into(
+    tmp = cvcuda.cvtcolor_into(
         src=input,
         dst=output,
         code=code,

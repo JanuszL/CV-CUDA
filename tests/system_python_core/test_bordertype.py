@@ -13,12 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
+import cvcuda
 
 
 def test_border_type():
-    assert nvcv.Border.CONSTANT != nvcv.Border.REPLICATE
-    assert nvcv.Border.REPLICATE != nvcv.Border.REFLECT
-    assert nvcv.Border.REFLECT != nvcv.Border.WRAP
-    assert nvcv.Border.WRAP != nvcv.Border.REFLECT101
-    assert nvcv.Border.REFLECT101 != nvcv.Border.CONSTANT
+    assert cvcuda.Border.CONSTANT != cvcuda.Border.REPLICATE
+    assert cvcuda.Border.REPLICATE != cvcuda.Border.REFLECT
+    assert cvcuda.Border.REFLECT != cvcuda.Border.WRAP
+    assert cvcuda.Border.WRAP != cvcuda.Border.REFLECT101
+    assert cvcuda.Border.REFLECT101 != cvcuda.Border.CONSTANT

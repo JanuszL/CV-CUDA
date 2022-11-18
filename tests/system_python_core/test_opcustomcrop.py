@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 import numpy as np
 
@@ -40,26 +40,26 @@ import numpy as np
     ],
 )
 def test_op_customcrop(input, rc, out_shape):
-    out = nvcv.customcrop(input, rc)
+    out = cvcuda.customcrop(input, rc)
     assert out.layout == input.layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = nvcv.customcrop_into(out, input, rc)
+    tmp = cvcuda.customcrop_into(out, input, rc)
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
     stream = nvcv.cuda.Stream()
-    out = nvcv.customcrop(input, rect=rc, stream=stream)
+    out = cvcuda.customcrop(input, rect=rc, stream=stream)
     assert out.layout == input.layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = nvcv.customcrop_into(dst=out, src=input, rect=rc, stream=stream)
+    tmp = cvcuda.customcrop_into(dst=out, src=input, rect=rc, stream=stream)
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == input.shape

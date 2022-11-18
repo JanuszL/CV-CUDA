@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 from random import randint
 
@@ -46,20 +46,20 @@ def test_op_erase(
         img_out = nvcv.Image([w, h], format)
         output.pushback(img_out)
 
-    tmp = nvcv.erase(input, anchor, erasing, values, imgIdx)
+    tmp = cvcuda.erase(input, anchor, erasing, values, imgIdx)
     assert tmp.uniqueformat is not None
     assert tmp.uniqueformat == output.uniqueformat
     for res, ref in zip(tmp, output):
         assert res.size == ref.size
         assert res.format == ref.format
 
-    tmp = nvcv.erase_into(
+    tmp = cvcuda.erase_into(
         output, input, anchor, erasing, values, imgIdx, random=random, seed=seed
     )
     assert tmp is output
 
     stream = nvcv.cuda.Stream()
-    tmp = nvcv.erase(
+    tmp = cvcuda.erase(
         src=input,
         anchor=anchor,
         erasing=erasing,
@@ -75,7 +75,7 @@ def test_op_erase(
         assert res.size == ref.size
         assert res.format == ref.format
 
-    tmp = nvcv.erase_into(
+    tmp = cvcuda.erase_into(
         src=input,
         dst=output,
         anchor=anchor,
