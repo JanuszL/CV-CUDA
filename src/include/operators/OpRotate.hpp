@@ -36,12 +36,15 @@ namespace nv { namespace cvop {
 class Rotate final : public IOperator
 {
 public:
-    explicit Rotate();
+    explicit Rotate(const int maxVarShapeBatchSize);
 
     ~Rotate();
 
     void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const double angleDeg, const double2 shift,
                     const NVCVInterpolationType interpolation);
+
+    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
+                    cv::ITensor &angleDeg, cv::ITensor &shift, const NVCVInterpolationType interpolation);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -49,9 +52,9 @@ private:
     NVCVOperatorHandle m_handle;
 };
 
-inline Rotate::Rotate()
+inline Rotate::Rotate(const int maxVarShapeBatchSize)
 {
-    cv::detail::CheckThrow(nvcvopRotateCreate(&m_handle));
+    cv::detail::CheckThrow(nvcvopRotateCreate(&m_handle, maxVarShapeBatchSize));
     assert(m_handle);
 }
 
@@ -66,6 +69,13 @@ inline void Rotate::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor
 {
     cv::detail::CheckThrow(
         nvcvopRotateSubmit(m_handle, stream, in.handle(), out.handle(), angleDeg, shift, interpolation));
+}
+
+inline void Rotate::operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
+                               cv::ITensor &angleDeg, cv::ITensor &shift, const NVCVInterpolationType interpolation)
+{
+    cv::detail::CheckThrow(nvcvopRotateVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), angleDeg.handle(),
+                                                      shift.handle(), interpolation));
 }
 
 inline NVCVOperatorHandle Rotate::handle() const noexcept

@@ -41,13 +41,17 @@ namespace nv::cvop::priv {
 class Rotate final : public OperatorBase
 {
 public:
-    explicit Rotate();
+    explicit Rotate(const int maxVarShapeBatchSize);
 
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, const double angleDeg,
                     const double2 shift, const NVCVInterpolationType interpolation) const;
 
+    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
+                    cv::ITensor &angleDeg, cv::ITensor &shift, const NVCVInterpolationType interpolation) const;
+
 private:
-    std::unique_ptr<cv::legacy::cuda_op::Rotate> m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::Rotate>         m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::RotateVarShape> m_legacyOpVarShape;
 };
 
 } // namespace nv::cvop::priv

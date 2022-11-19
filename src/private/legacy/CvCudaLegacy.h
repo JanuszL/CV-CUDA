@@ -900,10 +900,10 @@ class RotateVarShape : public CudaBaseOp
 {
 public:
     RotateVarShape() = delete;
-    RotateVarShape(DataShape max_input_shape, DataShape max_output_shape)
-        : CudaBaseOp(max_input_shape, max_output_shape)
-    {
-    }
+
+    RotateVarShape(const int maxVarShapeBatchSize);
+
+    ~RotateVarShape();
 
     /**
      * @brief Rotates input images around the origin (0,0) and then shifts it.
@@ -924,16 +924,13 @@ public:
      * @param data_type data type of the input images, e.g. kCV_32F.
      * @param stream for the asynchronous execution.
      */
-    int infer(
-                    const void **inputs, void **outputs, void *gpu_workspace, void *cpu_workspace, const int batch,
-                    const size_t buffer_size, const cv::Size *dsize, const double *angle, const double *xShift,
-                    const double *yShift, const int interpolation, DataShape *input_shape, DataFormat format, DataType data_type,
-                    cudaStream_t stream);
-    /**
-     * @brief calculate the cpu/gpu buffer size needed by this operator
-     * @param batch_size maximum input batch size
-     */
-    size_t calBufferSize(int batch_size);
+    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
+                    const ITensorDataPitchDevice &angleDeg, const ITensorDataPitchDevice &shift,
+                    const NVCVInterpolationType interpolation, cudaStream_t stream);
+
+protected:
+    double   *d_aCoeffs;
+    const int m_maxBatchSize;
 };
 
 } // namespace nv::cv::legacy::cuda_op
