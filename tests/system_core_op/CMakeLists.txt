@@ -19,6 +19,7 @@ add_executable(nvcv_test_system_core_op
     TestOpNormalize.cpp
     TestOpPadAndStack.cpp
     TestOpConvertTo.cpp
+    TestOpCopyMakeBorder.cpp
 )
 
 target_link_libraries(nvcv_test_system_core_op

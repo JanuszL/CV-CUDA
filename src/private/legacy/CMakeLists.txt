@@ -19,6 +19,7 @@ add_library(cvcuda_legacy STATIC
     ./operators/normalize.cu
     ./operators/pad_and_stack.cu
     ./operators/normalize_var_shape.cu
+    ./operators/copy_make_border.cu
     CvCudaLegacyHelpers.cpp
 )
 

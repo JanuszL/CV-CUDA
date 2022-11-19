@@ -43,6 +43,7 @@ add_library(nvcv SHARED
     operators/OpNormalize.cpp
     operators/OpPadAndStack.cpp
     operators/OpConvertTo.cpp
+    operators/OpCopyMakeBorder.cpp
 )
 
 target_link_libraries(nvcv PRIVATE

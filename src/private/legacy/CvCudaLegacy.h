@@ -746,6 +746,86 @@ public:
                     const NVCVInterpolationType interpolation, cudaStream_t stream);
 };
 
+class CopyMakeBorder : public CudaBaseOp
+{
+public:
+    CopyMakeBorder() = delete;
+
+    CopyMakeBorder(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * Limitations:
+     *
+     * Input:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | No
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Output:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | No
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Input/Output dependency
+     *
+     *      Property      |  Input == Output
+     *     -------------- | -------------
+     *      Data Layout   | Yes
+     *      Data Type     | Yes
+     *      Number        | Yes
+     *      Channels      | Yes
+     *      Width         | No
+     *      Height        | No
+     *
+     * @brief Forms a border around an image.
+     * The function copies the source image into the middle of the destination image. The areas to the left, to the
+     * right, above and below the copied source image will be filled with extrapolated pixels. This is not what
+     * filtering functions based on it do (they extrapolate pixels on-fly), but what other more complex functions,
+     * including your own, may do to simplify image boundary handling.
+     * @param inData Input Tensor
+     * @param outData Output Tensor
+     * @param top the top pixels.
+     * @param left the left pixels.
+     * Parameter specifying how many pixels in each direction from the source image rectangle to extrapolate.
+     * The src and dist size can be got from input and output tensor.
+     * For example, top=1, left=1, src_w=64, src_h=64, dist_w=66, dist_h=66 mean that it builds 1 pixel-wide border.
+     * @param border_type border type. See cv::BorderTypes for details.
+     * @param value border value if borderType==BORDER_CONSTANT.
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, const int top,
+                    const int left, const NVCVBorderType border_type, const float4 value, cudaStream_t stream);
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param max_input_shape maximum input DataShape that may be used
+     * @param max_output_shape maximum output DataShape that may be used
+     * @param max_data_type DataType with the maximum size that may be used
+     */
+};
+
 } // namespace nv::cv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H
