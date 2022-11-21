@@ -26,12 +26,15 @@
 #include <nvcv/IImageData.hpp>  // for IImageDataPitchDevice, etc.
 #include <nvcv/ITensorData.hpp> // for ITensorDataPitchDevice, etc.
 #include <nvcv/TensorDataAccess.hpp>
+#include <nvcv/cuda/BorderWrap.hpp>   // for BorderWrap, etc.
 #include <nvcv/cuda/MathOps.hpp>      // for math operators
 #include <nvcv/cuda/MathWrappers.hpp> // for sqrt, etc.
 #include <nvcv/cuda/SaturateCast.hpp> // for SaturateCast, etc.
 #include <nvcv/cuda/TensorWrap.hpp>   // for TensorWrap, etc.
 #include <nvcv/cuda/TypeTraits.hpp>   // for BaseType, etc.
+#include <nvcv/cuda/math/LinAlg.hpp>  // for Vector, etc.
 #include <util/Assert.h>              // for Status::ASSERT, etc.
+#include <util/CheckError.hpp>        // for NVCV_CHECK_LOG, etc.
 
 #include <cassert>
 #include <cerrno>
@@ -1046,6 +1049,19 @@ struct AreaFilter
     float     scale_x, scale_y;
     int       width, haight;
 };
+
+inline void normalizeAnchor(int &anchor, int ksize)
+{
+    if (anchor < 0)
+        anchor = ksize >> 1;
+    NVCV_ASSERT(0 <= anchor && anchor < ksize);
+}
+
+inline void normalizeAnchor(int2 &anchor, Size2D ksize)
+{
+    normalizeAnchor(anchor.x, ksize.w);
+    normalizeAnchor(anchor.y, ksize.h);
+}
 
 #ifndef checkKernelErrors
 #    define checkKernelErrors(expr)                                                               \

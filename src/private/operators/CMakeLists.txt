@@ -20,6 +20,7 @@ add_library(nvcv_private_operators STATIC
     OpCopyMakeBorder.cpp
     OpCenterCrop.cpp
     OpRotate.cpp
+    OpLaplacian.cpp
 )
 
 target_include_directories(nvcv_private_operators
