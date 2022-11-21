@@ -47,35 +47,35 @@ public:
     constexpr ImageFormat();
     explicit constexpr ImageFormat(NVCVImageFormat format);
 
-    ImageFormat(ColorSpec colorSpec, ChromaSubsampling chromaSub, MemLayout memLayout, DataType dataType,
+    ImageFormat(ColorSpec colorSpec, ChromaSubsampling chromaSub, MemLayout memLayout, DataKind dataKind,
                 Swizzle swizzle, Packing packing0, Packing packing1 = Packing::NONE, Packing packing2 = Packing::NONE,
                 Packing packing3 = Packing::NONE);
 
-    ImageFormat(ColorModel colorModel, ColorSpec colorSpec, MemLayout memLayout, DataType dataType, Swizzle swizzle,
+    ImageFormat(ColorModel colorModel, ColorSpec colorSpec, MemLayout memLayout, DataKind dataKind, Swizzle swizzle,
                 Packing packing0, Packing packing1 = Packing::NONE, Packing packing2 = Packing::NONE,
                 Packing packing3 = Packing::NONE);
 
-    ImageFormat(MemLayout memLayout, DataType dataType, Swizzle swizzle, Packing packing0,
+    ImageFormat(MemLayout memLayout, DataKind dataKind, Swizzle swizzle, Packing packing0,
                 Packing packing1 = Packing::NONE, Packing packing2 = Packing::NONE, Packing packing3 = Packing::NONE);
 
-    ImageFormat(RawPattern rawPattern, MemLayout memLayout, DataType dataType, Swizzle swizzle, Packing packing0,
+    ImageFormat(RawPattern rawPattern, MemLayout memLayout, DataKind dataKind, Swizzle swizzle, Packing packing0,
                 Packing packing1 = Packing::NONE, Packing packing2 = Packing::NONE, Packing packing3 = Packing::NONE);
 
     static constexpr ImageFormat ConstCreate(ColorSpec colorSpec, ChromaSubsampling chromaSub, MemLayout memLayout,
-                                             DataType dataType, Swizzle swizzle, Packing packing0,
+                                             DataKind dataKind, Swizzle swizzle, Packing packing0,
                                              Packing packing1 = Packing::NONE, Packing packing2 = Packing::NONE,
                                              Packing packing3 = Packing::NONE);
 
     static constexpr ImageFormat ConstCreate(ColorModel colorModel, ColorSpec colorSpec, MemLayout memLayout,
-                                             DataType dataType, Swizzle swizzle, Packing packing0,
+                                             DataKind dataKind, Swizzle swizzle, Packing packing0,
                                              Packing packing1 = Packing::NONE, Packing packing2 = Packing::NONE,
                                              Packing packing3 = Packing::NONE);
 
-    static constexpr ImageFormat ConstCreate(MemLayout memLayout, DataType dataType, Swizzle swizzle, Packing packing0,
+    static constexpr ImageFormat ConstCreate(MemLayout memLayout, DataKind dataKind, Swizzle swizzle, Packing packing0,
                                              Packing packing1 = Packing::NONE, Packing packing2 = Packing::NONE,
                                              Packing packing3 = Packing::NONE);
 
-    static constexpr ImageFormat ConstCreate(RawPattern rawPattern, MemLayout memLayout, DataType dataType,
+    static constexpr ImageFormat ConstCreate(RawPattern rawPattern, MemLayout memLayout, DataKind dataKind,
                                              Swizzle swizzle, Packing packing0, Packing packing1 = Packing::NONE,
                                              Packing packing2 = Packing::NONE, Packing packing3 = Packing::NONE);
 
@@ -90,8 +90,8 @@ public:
     constexpr bool operator==(ImageFormat that) const noexcept;
     constexpr bool operator!=(ImageFormat that) const noexcept;
 
-    ImageFormat dataType(DataType dataType) const;
-    DataType    dataType() const noexcept;
+    ImageFormat dataKind(DataKind dataKind) const;
+    DataKind    dataKind() const noexcept;
 
     ImageFormat memLayout(MemLayout newMemLayout) const;
     MemLayout   memLayout() const noexcept;
@@ -389,82 +389,82 @@ constexpr ImageFormat FMT_HSV8{NVCV_IMAGE_FORMAT_HSV8};
 #endif
 
 inline ImageFormat::ImageFormat(ColorSpec colorSpec, ChromaSubsampling chromaSub, MemLayout memLayout,
-                                DataType dataType, Swizzle swizzle, Packing packing0, Packing packing1,
+                                DataKind dataKind, Swizzle swizzle, Packing packing0, Packing packing1,
                                 Packing packing2, Packing packing3)
 {
     detail::CheckThrow(nvcvMakeYCbCrImageFormat(
         &m_format, static_cast<NVCVColorSpec>(colorSpec), static_cast<NVCVChromaSubsampling>(chromaSub),
-        static_cast<NVCVMemLayout>(memLayout), static_cast<NVCVDataType>(dataType), static_cast<NVCVSwizzle>(swizzle),
+        static_cast<NVCVMemLayout>(memLayout), static_cast<NVCVDataKind>(dataKind), static_cast<NVCVSwizzle>(swizzle),
         static_cast<NVCVPacking>(packing0), static_cast<NVCVPacking>(packing1), static_cast<NVCVPacking>(packing2),
         static_cast<NVCVPacking>(packing3)));
 }
 
 constexpr ImageFormat ImageFormat::ConstCreate(ColorSpec colorSpec, ChromaSubsampling chromaSub, MemLayout memLayout,
-                                               DataType dataType, Swizzle swizzle, Packing packing0, Packing packing1,
+                                               DataKind dataKind, Swizzle swizzle, Packing packing0, Packing packing1,
                                                Packing packing2, Packing packing3)
 {
     return ImageFormat{NVCV_MAKE_YCbCr_IMAGE_FORMAT(
         static_cast<NVCVColorSpec>(colorSpec), static_cast<NVCVChromaSubsampling>(chromaSub),
-        static_cast<NVCVMemLayout>(memLayout), static_cast<NVCVDataType>(dataType), static_cast<NVCVSwizzle>(swizzle),
+        static_cast<NVCVMemLayout>(memLayout), static_cast<NVCVDataKind>(dataKind), static_cast<NVCVSwizzle>(swizzle),
         4, static_cast<NVCVPacking>(packing0), static_cast<NVCVPacking>(packing1), static_cast<NVCVPacking>(packing2),
         static_cast<NVCVPacking>(packing3))};
 }
 
-inline ImageFormat::ImageFormat(ColorModel colorModel, ColorSpec colorSpec, MemLayout memLayout, DataType dataType,
+inline ImageFormat::ImageFormat(ColorModel colorModel, ColorSpec colorSpec, MemLayout memLayout, DataKind dataKind,
                                 Swizzle swizzle, Packing packing0, Packing packing1, Packing packing2, Packing packing3)
 {
     detail::CheckThrow(nvcvMakeColorImageFormat(
         &m_format, static_cast<NVCVColorModel>(colorModel), static_cast<NVCVColorSpec>(colorSpec),
-        static_cast<NVCVMemLayout>(memLayout), static_cast<NVCVDataType>(dataType), static_cast<NVCVSwizzle>(swizzle),
+        static_cast<NVCVMemLayout>(memLayout), static_cast<NVCVDataKind>(dataKind), static_cast<NVCVSwizzle>(swizzle),
         static_cast<NVCVPacking>(packing0), static_cast<NVCVPacking>(packing1), static_cast<NVCVPacking>(packing2),
         static_cast<NVCVPacking>(packing3)));
 }
 
 constexpr ImageFormat ImageFormat::ConstCreate(ColorModel colorModel, ColorSpec colorSpec, MemLayout memLayout,
-                                               DataType dataType, Swizzle swizzle, Packing packing0, Packing packing1,
+                                               DataKind dataKind, Swizzle swizzle, Packing packing0, Packing packing1,
                                                Packing packing2, Packing packing3)
 {
     return ImageFormat{NVCV_MAKE_COLOR_IMAGE_FORMAT(
         static_cast<NVCVColorModel>(colorModel), static_cast<NVCVColorSpec>(colorSpec),
-        static_cast<NVCVMemLayout>(memLayout), static_cast<NVCVDataType>(dataType), static_cast<NVCVSwizzle>(swizzle),
+        static_cast<NVCVMemLayout>(memLayout), static_cast<NVCVDataKind>(dataKind), static_cast<NVCVSwizzle>(swizzle),
         4, static_cast<NVCVPacking>(packing0), static_cast<NVCVPacking>(packing1), static_cast<NVCVPacking>(packing2),
         static_cast<NVCVPacking>(packing3))};
 }
 
-inline ImageFormat::ImageFormat(MemLayout memLayout, DataType dataType, Swizzle swizzle, Packing packing0,
+inline ImageFormat::ImageFormat(MemLayout memLayout, DataKind dataKind, Swizzle swizzle, Packing packing0,
                                 Packing packing1, Packing packing2, Packing packing3)
 {
     detail::CheckThrow(nvcvMakeNonColorImageFormat(
-        &m_format, static_cast<NVCVMemLayout>(memLayout), static_cast<NVCVDataType>(dataType),
+        &m_format, static_cast<NVCVMemLayout>(memLayout), static_cast<NVCVDataKind>(dataKind),
         static_cast<NVCVSwizzle>(swizzle), static_cast<NVCVPacking>(packing0), static_cast<NVCVPacking>(packing1),
         static_cast<NVCVPacking>(packing2), static_cast<NVCVPacking>(packing3)));
 }
 
-constexpr ImageFormat ImageFormat::ConstCreate(MemLayout memLayout, DataType dataType, Swizzle swizzle,
+constexpr ImageFormat ImageFormat::ConstCreate(MemLayout memLayout, DataKind dataKind, Swizzle swizzle,
                                                Packing packing0, Packing packing1, Packing packing2, Packing packing3)
 {
     return ImageFormat{NVCV_MAKE_NONCOLOR_IMAGE_FORMAT(
-        static_cast<NVCVMemLayout>(memLayout), static_cast<NVCVDataType>(dataType), static_cast<NVCVSwizzle>(swizzle),
+        static_cast<NVCVMemLayout>(memLayout), static_cast<NVCVDataKind>(dataKind), static_cast<NVCVSwizzle>(swizzle),
         4, static_cast<NVCVPacking>(packing0), static_cast<NVCVPacking>(packing1), static_cast<NVCVPacking>(packing2),
         static_cast<NVCVPacking>(packing3))};
 }
 
-inline ImageFormat::ImageFormat(RawPattern rawPattern, MemLayout memLayout, DataType dataType, Swizzle swizzle,
+inline ImageFormat::ImageFormat(RawPattern rawPattern, MemLayout memLayout, DataKind dataKind, Swizzle swizzle,
                                 Packing packing0, Packing packing1, Packing packing2, Packing packing3)
 {
     detail::CheckThrow(nvcvMakeRawImageFormat(
         &m_format, static_cast<NVCVRawPattern>(rawPattern), static_cast<NVCVMemLayout>(memLayout),
-        static_cast<NVCVDataType>(dataType), static_cast<NVCVSwizzle>(swizzle), static_cast<NVCVPacking>(packing0),
+        static_cast<NVCVDataKind>(dataKind), static_cast<NVCVSwizzle>(swizzle), static_cast<NVCVPacking>(packing0),
         static_cast<NVCVPacking>(packing1), static_cast<NVCVPacking>(packing2), static_cast<NVCVPacking>(packing3)));
 }
 
-constexpr ImageFormat ImageFormat::ConstCreate(RawPattern rawPattern, MemLayout memLayout, DataType dataType,
+constexpr ImageFormat ImageFormat::ConstCreate(RawPattern rawPattern, MemLayout memLayout, DataKind dataKind,
                                                Swizzle swizzle, Packing packing0, Packing packing1, Packing packing2,
                                                Packing packing3)
 {
     return ImageFormat{NVCV_MAKE_RAW_IMAGE_FORMAT(
         static_cast<NVCVRawPattern>(rawPattern), static_cast<NVCVMemLayout>(memLayout),
-        static_cast<NVCVDataType>(dataType), static_cast<NVCVSwizzle>(swizzle), 4, static_cast<NVCVPacking>(packing0),
+        static_cast<NVCVDataKind>(dataKind), static_cast<NVCVSwizzle>(swizzle), 4, static_cast<NVCVPacking>(packing0),
         static_cast<NVCVPacking>(packing1), static_cast<NVCVPacking>(packing2), static_cast<NVCVPacking>(packing3))};
 }
 
@@ -505,18 +505,18 @@ constexpr bool ImageFormat::operator!=(ImageFormat that) const noexcept
     return !operator==(that);
 }
 
-inline ImageFormat ImageFormat::dataType(DataType newDataType) const
+inline ImageFormat ImageFormat::dataKind(DataKind newDataKind) const
 {
     NVCVImageFormat out = m_format;
-    detail::CheckThrow(nvcvImageFormatSetDataType(&out, static_cast<NVCVDataType>(newDataType)));
+    detail::CheckThrow(nvcvImageFormatSetDataKind(&out, static_cast<NVCVDataKind>(newDataKind)));
     return ImageFormat{out};
 }
 
-inline DataType ImageFormat::dataType() const noexcept
+inline DataKind ImageFormat::dataKind() const noexcept
 {
-    NVCVDataType out;
-    detail::CheckThrow(nvcvImageFormatGetDataType(m_format, &out));
-    return static_cast<DataType>(out);
+    NVCVDataKind out;
+    detail::CheckThrow(nvcvImageFormatGetDataKind(m_format, &out));
+    return static_cast<DataKind>(out);
 }
 
 inline ImageFormat ImageFormat::memLayout(MemLayout newMemLayout) const

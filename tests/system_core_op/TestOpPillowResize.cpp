@@ -47,21 +47,21 @@ template<typename T>
 class TestMat
 {
 public:
-    TestMat(int rows_, int cols_, int channels_, nvcv::DataType type_)
+    TestMat(int rows_, int cols_, int channels_, nvcv::DataKind dkind_)
         : rows(rows_)
         , cols(cols_)
         , channels(channels_)
-        , type(type_)
+        , dkind(dkind_)
     {
         data = std::vector<T>();
         data.resize(rows * cols * channels);
     }
 
-    TestMat(int rows_, int cols_, int channels_, nvcv::DataType type_, std::vector<T> &data_)
+    TestMat(int rows_, int cols_, int channels_, nvcv::DataKind dkind_, std::vector<T> &data_)
         : rows(rows_)
         , cols(cols_)
         , channels(channels_)
-        , type(type_)
+        , dkind(dkind_)
     {
         data = std::vector<T>();
         data = data_;
@@ -72,7 +72,7 @@ public:
         rows     = roi.height;
         cols     = roi.width;
         channels = test_mat.channels;
-        type     = test_mat.type;
+        dkind    = test_mat.dkind;
         if (roi.height == test_mat.rows && roi.width == test_mat.cols)
         {
             data = std::vector<T>();
@@ -96,8 +96,8 @@ public:
         }
     }
 
-    TestMat(nvcv::DataType type_)
-        : type(type_)
+    TestMat(nvcv::DataKind dkind_)
+        : dkind(dkind_)
     {
         rows     = 0;
         cols     = 0;
@@ -121,7 +121,7 @@ public:
 
     TestMat<T> t() const
     {
-        TestMat<T> new_test_mat(cols, rows, channels, type);
+        TestMat<T> new_test_mat(cols, rows, channels, dkind);
         for (int i = 0; i < rows; i++)
         {
             for (int j = 0; j < cols; j++)
@@ -166,7 +166,7 @@ public:
     int            cols;
     int            channels;
     std::vector<T> data;
-    nvcv::DataType type;
+    nvcv::DataKind dkind;
 };
 
 struct Rect2f
@@ -320,9 +320,9 @@ protected:
      * \return Matrix element type.
      */
     template<typename T>
-    [[nodiscard]] static nvcv::DataType _getPixelType(const TestMat<T> &img)
+    [[nodiscard]] static nvcv::DataKind _getPixelType(const TestMat<T> &img)
     {
-        return img.type; // NOLINT
+        return img.dkind; // NOLINT
     }
 
     /**
@@ -705,8 +705,8 @@ template<typename T>
 TestMat<T> PillowResizeCPU::_resample(const TestMat<T> &im_in, int x_size, int y_size,
                                       const std::shared_ptr<Filter> &filter_p, const Vecf &rect)
 {
-    TestMat<T> im_out(im_in.type);
-    TestMat<T> im_temp(im_in.type);
+    TestMat<T> im_out(im_in.dkind);
+    TestMat<T> im_temp(im_in.dkind);
 
     std::vector<int>    bounds_horiz;
     std::vector<int>    bounds_vert;
@@ -744,7 +744,7 @@ TestMat<T> PillowResizeCPU::_resample(const TestMat<T> &im_in, int x_size, int y
         }
         else
         {
-            return TestMat<T>(im_in.type);
+            return TestMat<T>(im_in.dkind);
         }
         im_out = im_temp;
     }
@@ -766,7 +766,7 @@ TestMat<T> PillowResizeCPU::_resample(const TestMat<T> &im_in, int x_size, int y
         }
         else
         {
-            return TestMat<T>(im_in.type);
+            return TestMat<T>(im_in.dkind);
         }
     }
 
@@ -786,13 +786,13 @@ void PillowResizeCPU::_resampleHorizontal(TestMat<T> &im_out, const TestMat<T> &
     // Check pixel type.
     switch (_getPixelType(im_in))
     {
-    case nvcv::DataType::UNSIGNED:
+    case nvcv::DataKind::UNSIGNED:
         return _resampleHorizontal<T, unsigned char>(im_out, im_in, offset, ksize, bounds, prekk, _normalizeCoeffs8bpc,
                                                      (1U << (precision_bits - 1)), _clip8);
-    case nvcv::DataType::FLOAT:
+    case nvcv::DataKind::FLOAT:
         return _resampleHorizontal<T, float>(im_out, im_in, offset, ksize, bounds, prekk);
     default:
-        throw std::runtime_error("Pixel type not supported");
+        throw std::runtime_error("Pixel kind not supported");
     }
 }
 
@@ -893,7 +893,7 @@ void StartTest(int srcWidth, int srcHeight, int dstWidth, int dstHeight, NVCVInt
                                dstVecRowPitch, // vec has no padding
                                dstHeight, cudaMemcpyDeviceToHost));
 
-        TestMat<T> test_in(srcHeight, srcWidth, fmt.planePixelStrideBytes(0), nvcv::DataType::UNSIGNED, srcVec[i]);
+        TestMat<T> test_in(srcHeight, srcWidth, fmt.planePixelStrideBytes(0), nvcv::DataKind::UNSIGNED, srcVec[i]);
         PillowResizeCPU::InterpolationMethods inter = PillowResizeCPU::getInterpolationMethods(interpolation);
         TestMat<T> test_out = PillowResizeCPU::resize(test_in, nvcv::Size2D(dstWidth, dstHeight), inter);
 
@@ -1025,7 +1025,7 @@ void StartVarShapeTest(int srcWidthBase, int srcHeightBase, int dstWidthBase, in
                                dstRowPitch, // vec has no padding
                                dstHeight, cudaMemcpyDeviceToHost));
 
-        TestMat<T> test_in(srcHeight, srcWidth, fmt.planePixelStrideBytes(0), nvcv::DataType::UNSIGNED, srcVec[i]);
+        TestMat<T> test_in(srcHeight, srcWidth, fmt.planePixelStrideBytes(0), nvcv::DataKind::UNSIGNED, srcVec[i]);
         PillowResizeCPU::InterpolationMethods inter = PillowResizeCPU::getInterpolationMethods(interpolation);
         TestMat<T> test_out = PillowResizeCPU::resize(test_in, nvcv::Size2D(dstWidth, dstHeight), inter);
 

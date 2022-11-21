@@ -47,7 +47,7 @@
  * @brief Preprocess function
  *
  * @details Preprocessing includes the following sequence of operations.
- * Resize -> DataType COnvert(U8->F32) -> Normalize( Apply mean and std deviation) -> Interleaved to Planar
+ * Resize -> DataType Convert(U8->F32) -> Normalize( Apply mean and std deviation) -> Interleaved to Planar
  *
  * @param [in] inTensor CVCUDA Tensor containing the batched input images
  * @param [in] batchSize Batch size of the input tensor

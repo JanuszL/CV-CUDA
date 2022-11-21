@@ -86,24 +86,24 @@ bool FindPixelType(const py::dtype &dt, cv::PixelType *pix)
 
     if (dtbase.equal(py::dtype::of<T>()))
     {
-        cv::DataType dataType;
+        cv::DataKind dataKind;
         if (IsComplex<T>::value)
         {
             nchannels = 2;
             itemsize /= 2;
-            dataType = cv::DataType::FLOAT;
+            dataKind = cv::DataKind::FLOAT;
         }
         else if (std::is_floating_point<T>::value)
         {
-            dataType = cv::DataType::FLOAT;
+            dataKind = cv::DataKind::FLOAT;
         }
         else if (std::is_signed<T>::value)
         {
-            dataType = cv::DataType::SIGNED;
+            dataKind = cv::DataKind::SIGNED;
         }
         else if (std::is_unsigned<T>::value)
         {
-            dataType = cv::DataType::UNSIGNED;
+            dataKind = cv::DataKind::UNSIGNED;
         }
         else
         {
@@ -140,7 +140,7 @@ bool FindPixelType(const py::dtype &dt, cv::PixelType *pix)
 
         // Finally, infer the pixel type
         NVCV_ASSERT(pix != nullptr);
-        *pix = cv::PixelType{dataType, packing};
+        *pix = cv::PixelType{dataKind, packing};
         return true;
     }
     else
@@ -193,11 +193,11 @@ bool FindDType(T *, const cv::PixelType &pix, py::dtype *dt)
         return false;
     }
 
-    cv::DataType dataType = pix.dataType();
+    cv::DataKind dataKind = pix.dataKind();
 
-    if ((std::is_floating_point_v<T> && dataType == cv::DataType::FLOAT)
-        || (std::is_integral_v<T> && std::is_signed_v<T> && dataType == cv::DataType::SIGNED)
-        || (std::is_integral_v<T> && std::is_unsigned_v<T> && dataType == cv::DataType::UNSIGNED))
+    if ((std::is_floating_point_v<T> && dataKind == cv::DataKind::FLOAT)
+        || (std::is_integral_v<T> && std::is_signed_v<T> && dataKind == cv::DataKind::SIGNED)
+        || (std::is_integral_v<T> && std::is_unsigned_v<T> && dataKind == cv::DataKind::UNSIGNED))
     {
         NVCV_ASSERT(dt != nullptr);
 
@@ -220,11 +220,11 @@ bool FindDType(T *, const cv::PixelType &pix, py::dtype *dt)
 template<class T>
 bool FindDType(std::complex<T> *, const cv::PixelType &pix, py::dtype *dt)
 {
-    cv::DataType dataType  = pix.dataType();
+    cv::DataKind dataKind  = pix.dataKind();
     int          nchannels = pix.numChannels();
     int          itemsize  = pix.bitsPerPixel() / 8;
 
-    if (dataType == cv::DataType::FLOAT && sizeof(std::complex<T>) == itemsize && nchannels == 2)
+    if (dataKind == cv::DataKind::FLOAT && sizeof(std::complex<T>) == itemsize && nchannels == 2)
     {
         NVCV_ASSERT(dt != nullptr);
         *dt = py::dtype::of<std::complex<T>>();

@@ -265,7 +265,7 @@ cv::PixelType MakePackedType(cv::PixelType pix, int numChannels)
         }
 
         cv::Packing newPacking = MakePacking(pp);
-        return cv::PixelType{pix.dataType(), newPacking};
+        return cv::PixelType{pix.dataKind(), newPacking};
     }
     else
     {
@@ -293,13 +293,13 @@ cv::ImageFormat InferImageFormat(const std::vector<cv::PixelType> &planePixTypes
         packing[p] = planePixTypes[p].packing();
         numChannels += planePixTypes[p].numChannels();
 
-        if (planePixTypes[p].dataType() != planePixTypes[0].dataType())
+        if (planePixTypes[p].dataKind() != planePixTypes[0].dataKind())
         {
             throw std::invalid_argument("Planes must all have the same data type");
         }
     }
 
-    cv::DataType dataType = planePixTypes[0].dataType();
+    cv::DataKind dataKind = planePixTypes[0].dataKind();
 
     int numPlanes = planePixTypes.size();
 
@@ -316,16 +316,16 @@ cv::ImageFormat InferImageFormat(const std::vector<cv::PixelType> &planePixTypes
         {
         case cv::ColorModel::YCbCr:
             return cv::ImageFormat(baseFormat.colorSpec(), baseFormat.chromaSubsampling(), baseFormat.memLayout(),
-                                   dataType, baseFormat.swizzle(), packing[0], packing[1], packing[2], packing[3]);
+                                   dataKind, baseFormat.swizzle(), packing[0], packing[1], packing[2], packing[3]);
 
         case cv::ColorModel::UNDEFINED:
-            return cv::ImageFormat(baseFormat.memLayout(), dataType, baseFormat.swizzle(), packing[0], packing[1],
+            return cv::ImageFormat(baseFormat.memLayout(), dataKind, baseFormat.swizzle(), packing[0], packing[1],
                                    packing[2], packing[3]);
         case cv::ColorModel::RAW:
-            return cv::ImageFormat(baseFormat.rawPattern(), baseFormat.memLayout(), dataType, baseFormat.swizzle(),
+            return cv::ImageFormat(baseFormat.rawPattern(), baseFormat.memLayout(), dataKind, baseFormat.swizzle(),
                                    packing[0], packing[1], packing[2], packing[3]);
         default:
-            return cv::ImageFormat(model, baseFormat.colorSpec(), baseFormat.memLayout(), dataType,
+            return cv::ImageFormat(model, baseFormat.colorSpec(), baseFormat.memLayout(), dataKind,
                                    baseFormat.swizzle(), packing[0], packing[1], packing[2], packing[3]);
         }
     }
@@ -333,7 +333,7 @@ cv::ImageFormat InferImageFormat(const std::vector<cv::PixelType> &planePixTypes
     // TODO: this test is too fragile, must improve
     else if (numPlanes == 2 && numChannels == 3)
     {
-        return cv::FMT_NV12_ER.dataType(dataType).swizzleAndPacking(cv::Swizzle::S_XYZ0, packing[0], packing[1],
+        return cv::FMT_NV12_ER.dataKind(dataKind).swizzleAndPacking(cv::Swizzle::S_XYZ0, packing[0], packing[1],
                                                                     packing[2], packing[3]);
     }
     // Or else, we'll consider it as representing a non-color format
@@ -346,7 +346,7 @@ cv::ImageFormat InferImageFormat(const std::vector<cv::PixelType> &planePixTypes
                                      numChannels >= 4 ? cv::Channel::W : cv::Channel::NONE);
         // clang-format on
 
-        return cv::FMT_U8.dataType(dataType).swizzleAndPacking(sw, packing[0], packing[1], packing[2], packing[3]);
+        return cv::FMT_U8.dataKind(dataKind).swizzleAndPacking(sw, packing[0], packing[1], packing[2], packing[3]);
     }
 }
 

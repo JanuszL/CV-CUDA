@@ -109,7 +109,7 @@ static void ValidateSwizzlePacking(NVCVSwizzle swizzle, NVCVPacking packing0, NV
 }
 
 ImageFormat::ImageFormat(NVCVColorModel colorModel, ColorSpec colorSpec, NVCVChromaSubsampling chromaSub,
-                         NVCVMemLayout memLayout, NVCVDataType dataType, NVCVSwizzle swizzle, NVCVPacking packing0,
+                         NVCVMemLayout memLayout, NVCVDataKind dataKind, NVCVSwizzle swizzle, NVCVPacking packing0,
                          NVCVPacking packing1, NVCVPacking packing2, NVCVPacking packing3)
 {
     ValidateSwizzlePacking(swizzle, packing0, packing1, packing2, packing3);
@@ -147,7 +147,7 @@ ImageFormat::ImageFormat(NVCVColorModel colorModel, ColorSpec colorSpec, NVCVChr
 
         if (colorModel == NVCV_COLOR_MODEL_YCbCr)
         {
-            m_format = NVCV_MAKE_YCbCr_IMAGE_FORMAT(colorSpec, chromaSub, memLayout, dataType, swizzle, 4, packing0,
+            m_format = NVCV_MAKE_YCbCr_IMAGE_FORMAT(colorSpec, chromaSub, memLayout, dataKind, swizzle, 4, packing0,
                                                     packing1, packing2, packing3);
         }
         else if (chromaSub != NVCV_CSS_NONE)
@@ -157,31 +157,31 @@ ImageFormat::ImageFormat(NVCVColorModel colorModel, ColorSpec colorSpec, NVCVChr
         }
         else
         {
-            m_format = NVCV_MAKE_COLOR_IMAGE_FORMAT(colorModel, colorSpec, memLayout, dataType, swizzle, 4, packing0,
+            m_format = NVCV_MAKE_COLOR_IMAGE_FORMAT(colorModel, colorSpec, memLayout, dataKind, swizzle, 4, packing0,
                                                     packing1, packing2, packing3);
         }
     }
 }
 
-ImageFormat::ImageFormat(NVCVRawPattern rawPattern, NVCVMemLayout memLayout, NVCVDataType dataType, NVCVSwizzle swizzle,
+ImageFormat::ImageFormat(NVCVRawPattern rawPattern, NVCVMemLayout memLayout, NVCVDataKind dataKind, NVCVSwizzle swizzle,
                          NVCVPacking packing0, NVCVPacking packing1, NVCVPacking packing2, NVCVPacking packing3)
 {
     ValidateSwizzlePacking(swizzle, packing0, packing1, packing2, packing3);
 
-    m_format = NVCV_MAKE_RAW_IMAGE_FORMAT(rawPattern, memLayout, dataType, swizzle, 4, packing0, packing1, packing2,
+    m_format = NVCV_MAKE_RAW_IMAGE_FORMAT(rawPattern, memLayout, dataKind, swizzle, 4, packing0, packing1, packing2,
                                           packing3);
 }
 
-ImageFormat::ImageFormat(NVCVMemLayout memLayout, NVCVDataType dataType, NVCVSwizzle swizzle, NVCVPacking packing0,
+ImageFormat::ImageFormat(NVCVMemLayout memLayout, NVCVDataKind dataKind, NVCVSwizzle swizzle, NVCVPacking packing0,
                          NVCVPacking packing1, NVCVPacking packing2, NVCVPacking packing3)
 {
     ValidateSwizzlePacking(swizzle, packing0, packing1, packing2, packing3);
 
-    m_format = NVCV_MAKE_NONCOLOR_IMAGE_FORMAT(memLayout, dataType, swizzle, 4, packing0, packing1, packing2, packing3);
+    m_format = NVCV_MAKE_NONCOLOR_IMAGE_FORMAT(memLayout, dataKind, swizzle, 4, packing0, packing1, packing2, packing3);
 }
 
 ImageFormat::ImageFormat(const ColorFormat &colorFormat, NVCVChromaSubsampling chromaSub, NVCVMemLayout memLayout,
-                         NVCVDataType dataType, NVCVSwizzle swizzle, NVCVPacking packing0, NVCVPacking packing1,
+                         NVCVDataKind dataKind, NVCVSwizzle swizzle, NVCVPacking packing0, NVCVPacking packing1,
                          NVCVPacking packing2, NVCVPacking packing3)
 {
     if (colorFormat.model == NVCV_COLOR_MODEL_RAW)
@@ -192,12 +192,12 @@ ImageFormat::ImageFormat(const ColorFormat &colorFormat, NVCVChromaSubsampling c
                 << "When color model is raw, chroma subsampling must be NONE, not " << chromaSub;
         }
 
-        m_format = ImageFormat{colorFormat.raw, memLayout, dataType, swizzle, packing0, packing1, packing2, packing3}
+        m_format = ImageFormat{colorFormat.raw, memLayout, dataKind, swizzle, packing0, packing1, packing2, packing3}
                        .value();
     }
     else
     {
-        m_format = ImageFormat{colorFormat.model, colorFormat.cspec, chromaSub, memLayout, dataType,
+        m_format = ImageFormat{colorFormat.model, colorFormat.cspec, chromaSub, memLayout, dataKind,
                                swizzle,           packing0,          packing1,  packing2,  packing3}
                        .value();
         ;
@@ -213,7 +213,7 @@ ImageFormat ImageFormat::FromPlanes(const util::StaticVector<ImageFormat, 4> &fm
 
     ColorFormat                   colorFormat = fmtPlanes[0].colorFormat();
     NVCVMemLayout                 memLayout   = fmtPlanes[0].memLayout();
-    NVCVDataType                  dataType    = fmtPlanes[0].dataType();
+    NVCVDataKind                  dataKind    = fmtPlanes[0].dataKind();
     std::optional<NVCVRawPattern> rawPattern  = fmtPlanes[0].rawPattern();
 
     NVCVChromaSubsampling css = NVCV_CSS_NONE;
@@ -264,10 +264,10 @@ ImageFormat ImageFormat::FromPlanes(const util::StaticVector<ImageFormat, 4> &fm
                 throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
                     << "Memory layout of all plane formats must be the same, but plane #" << i << "'s is " << memLayout;
             }
-            if (fmtPlanes[i].dataType() != dataType)
+            if (fmtPlanes[i].dataKind() != dataKind)
             {
                 throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
-                    << "Data type of all plane formats must be the same, but plane #" << i << "'s is " << dataType;
+                    << "Data type of all plane formats must be the same, but plane #" << i << "'s is " << dataKind;
             }
             if (fmtPlanes[i].rawPattern() != rawPattern)
             {
@@ -310,7 +310,7 @@ ImageFormat ImageFormat::FromPlanes(const util::StaticVector<ImageFormat, 4> &fm
         fmtPlanes.size() > 3 ? fmtPlanes[3].planePacking(0) : NVCV_PACKING_0,
     };
 
-    return ImageFormat{colorFormat,  css,          memLayout,    dataType,    swizzle,
+    return ImageFormat{colorFormat,  css,          memLayout,    dataKind,    swizzle,
                        packPlane[0], packPlane[1], packPlane[2], packPlane[3]};
 }
 
@@ -331,13 +331,13 @@ constexpr uint32_t FCC(char a, char b, char c, char d)
     ImageFormat                                                                                  \
     {                                                                                            \
         NVCV_COLOR_MODEL_##model, NVCV_COLOR_SPEC_UNDEFINED, NVCV_CSS_##css, NVCV_MEM_LAYOUT_PL, \
-            NVCV_DATA_TYPE_##type, NVCV_SWIZZLE_##swizzle, __VA_ARGS__                           \
+            NVCV_DATA_KIND_##type, NVCV_SWIZZLE_##swizzle, __VA_ARGS__                           \
     }
 
 #define FCC_BAYER_IF(pattern, type, swizzle, ...)                                                                \
     ImageFormat                                                                                                  \
     {                                                                                                            \
-        NVCV_RAW_BAYER_##pattern, NVCV_MEM_LAYOUT_PL, NVCV_DATA_TYPE_##type, NVCV_SWIZZLE_##swizzle, __VA_ARGS__ \
+        NVCV_RAW_BAYER_##pattern, NVCV_MEM_LAYOUT_PL, NVCV_DATA_KIND_##type, NVCV_SWIZZLE_##swizzle, __VA_ARGS__ \
     }
 
 // clang-format off
@@ -708,7 +708,7 @@ ImageFormat ImageFormat::planeFormat(int plane) const
     if (plane < this->numPlanes())
     {
         return ImageFormat{this->colorFormat(),       plane == 0 ? NVCV_CSS_NONE : this->css(),
-                           this->memLayout(),         this->dataType(),
+                           this->memLayout(),         this->dataKind(),
                            this->planeSwizzle(plane), this->planePacking(plane)};
     }
     else
@@ -719,7 +719,7 @@ ImageFormat ImageFormat::planeFormat(int plane) const
 
 PixelType ImageFormat::planePixelType(int plane) const noexcept
 {
-    NVCVDataType dataType = this->dataType();
+    NVCVDataKind dataKind = this->dataKind();
     NVCVPacking  packing  = this->planePacking(plane);
 
     switch (packing)
@@ -736,7 +736,7 @@ PixelType ImageFormat::planePixelType(int plane) const noexcept
         break;
     }
 
-    return PixelType{dataType, packing};
+    return PixelType{dataKind, packing};
 }
 
 int ImageFormat::planePixelStrideBytes(int plane) const noexcept
@@ -796,7 +796,7 @@ bool ImageFormat::hasUniformBitDepth() const
     return true;
 }
 
-ImageFormat ImageFormat::dataType(NVCVDataType newDataType) const
+ImageFormat ImageFormat::dataKind(NVCVDataKind newDataKind) const
 {
     if (m_format == NVCV_IMAGE_FORMAT_NONE)
     {
@@ -809,7 +809,7 @@ ImageFormat ImageFormat::dataType(NVCVDataType newDataType) const
     // uint64_t. The 64 bits are still there, we just have to handle the sign
     // bit to be the 64th bit of our bitmask.
 
-    if (ExtractBitfield(newDataType, 2, 1))
+    if (ExtractBitfield(newDataKind, 2, 1))
     {
         // here the result won't fit into an int64_t.
 
@@ -818,14 +818,14 @@ ImageFormat ImageFormat::dataType(NVCVDataType newDataType) const
         // bit, the sign bit, will be 1, as we want.
         return ImageFormat{static_cast<NVCVImageFormat>(
             -(1
-              + (int64_t)(~(((uint64_t)m_format & ~MaskBitfield(61, 3)) | SetBitfield(newDataType, 61, 2))
+              + (int64_t)(~(((uint64_t)m_format & ~MaskBitfield(61, 3)) | SetBitfield(newDataKind, 61, 2))
                           & ~(1ULL << 63))))};
     }
     else
     {
         // the result fits into an int64_t, we don't need any hackery.
         return ImageFormat{static_cast<NVCVImageFormat>(
-            (((uint64_t)m_format & ~MaskBitfield(61, 3)) | SetBitfield(newDataType, 61, 3)))};
+            (((uint64_t)m_format & ~MaskBitfield(61, 3)) | SetBitfield(newDataKind, 61, 3)))};
     }
 }
 
@@ -869,7 +869,7 @@ ImageFormat ImageFormat::swizzleAndPacking(NVCVSwizzle newSwizzle, NVCVPacking n
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Can't set raw pattern of NONE format");
     }
 
-    return ImageFormat{this->colorFormat(), this->css(), this->memLayout(), this->dataType(), newSwizzle,
+    return ImageFormat{this->colorFormat(), this->css(), this->memLayout(), this->dataKind(), newSwizzle,
                        newPacking0,         newPacking1, newPacking2,       newPacking3};
 }
 
@@ -1072,7 +1072,7 @@ std::ostream &operator<<(std::ostream &out, ImageFormat fmt)
         break;
     }
 
-    out << fmt.memLayout() << "," << fmt.dataType() << "," << fmt.swizzle();
+    out << fmt.memLayout() << "," << fmt.dataKind() << "," << fmt.swizzle();
     for (int i = 0; i < fmt.numPlanes(); ++i)
     {
         out << "," << fmt.planePacking(i);

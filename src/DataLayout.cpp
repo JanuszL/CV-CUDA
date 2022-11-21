@@ -180,7 +180,7 @@ NVCV_DEFINE_API(0, 2, const char *, nvcvPackingGetName, (NVCVPacking packing))
     return priv::GetName(packing);
 }
 
-NVCV_DEFINE_API(0, 2, const char *, nvcvDataTypeGetName, (NVCVDataType dtype))
+NVCV_DEFINE_API(0, 2, const char *, nvcvDataKindGetName, (NVCVDataKind dtype))
 {
     return priv::GetName(dtype);
 }

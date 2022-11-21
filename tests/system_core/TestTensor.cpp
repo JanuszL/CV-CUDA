@@ -260,7 +260,7 @@ TEST(Tensor, wip_user_pointer)
 TEST(TensorWrapData, wip_create)
 {
     nvcv::ImageFormat fmt
-        = nvcv::ImageFormat(nvcv::ColorModel::RGB, nvcv::CSPEC_BT601_ER, nvcv::MemLayout::PL, nvcv::DataType::FLOAT,
+        = nvcv::ImageFormat(nvcv::ColorModel::RGB, nvcv::CSPEC_BT601_ER, nvcv::MemLayout::PL, nvcv::DataKind::FLOAT,
                             nvcv::Swizzle::S_XY00, nvcv::Packing::X16, nvcv::Packing::X16);
     nvcv::PixelType GOLD_DTYPE = fmt.planePixelType(0);
 

@@ -146,16 +146,16 @@ typedef uint64_t NVCVPixelType;
  *
  * Example to create a block-linear format two interleaved 32-bit floating point channels:
  * \code{.c}
- *     NVCVPixelType type = NVCV_MAKE_PIXEL_TYPE(NVCV_DATA_TYPE_FLOAT, NVCV_PACKING_X32_Y32);
+ *     NVCVPixelType type = NVCV_MAKE_PIXEL_TYPE(NVCV_DATA_KIND_FLOAT, NVCV_PACKING_X32_Y32);
  * \endcode
  *
- * @param[in] dataType  \ref NVCVDataType to be used.
+ * @param[in] dataKind  \ref NVCVDataKind to be used.
  * @param[in] packing   Format packing used, which also defines the number of channels.
  *
  * @returns The user-defined pixel type.
  */
 #ifdef DOXYGEN_SHOULD_SKIP_THIS
-#    define NVCV_MAKE_PIXEL_TYPE(dataType, packing)
+#    define NVCV_MAKE_PIXEL_TYPE(dataKind, packing)
 #else
 #    define NVCV_MAKE_PIXEL_TYPE (NVCVPixelType) NVCV_DETAIL_MAKE_PIXEL_TYPE
 #endif
@@ -166,13 +166,13 @@ typedef uint64_t NVCVPixelType;
  * @param[out] outPixType The user-defined pixel type.
  *                        + Cannot be NULL.
  *
- * @param[in] dataType \ref NVCVDataType to be used.
+ * @param[in] dataKind \ref NVCVDataKind to be used.
  * @param[in] packing Format packing used, which also defines the number of channels.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some argument is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvMakePixelType(NVCVPixelType *outPixType, NVCVDataType dataType, NVCVPacking packing);
+NVCV_PUBLIC NVCVStatus nvcvMakePixelType(NVCVPixelType *outPixType, NVCVDataKind dataKind, NVCVPacking packing);
 
 /** Get the packing of a pixel type.
  *
@@ -228,13 +228,13 @@ NVCV_PUBLIC NVCVStatus nvcvPixelTypeGetAlignment(NVCVPixelType type, int32_t *ou
  *
  * @param[in] type Pixel type to be queried.
  *
- * @param[out] outDataType The data type of the pixel type.
+ * @param[out] outDataKind The data type of the pixel type.
  *                      + Cannot be NULL.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some argument is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvPixelTypeGetDataType(NVCVPixelType type, NVCVDataType *outDataType);
+NVCV_PUBLIC NVCVStatus nvcvPixelTypeGetDataKind(NVCVPixelType type, NVCVDataKind *outDataKind);
 
 /** Get the number of channels of a pixel type.
  *

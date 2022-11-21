@@ -30,7 +30,7 @@ namespace priv = nv::cv::priv;
 namespace util = nv::cv::util;
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvMakePixelType,
-                (NVCVPixelType * outPixelType, NVCVDataType dataType, NVCVPacking packing))
+                (NVCVPixelType * outPixelType, NVCVDataKind dataKind, NVCVPacking packing))
 {
     return priv::ProtectCall(
         [&]
@@ -40,7 +40,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvMakePixelType,
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output pixel type cannot be NULL");
             }
 
-            *outPixelType = priv::PixelType{dataType, packing}.value();
+            *outPixelType = priv::PixelType{dataKind, packing}.value();
         });
 }
 
@@ -91,18 +91,18 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvPixelTypeGetBitsPerChannel, (NVCVPixelType
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvPixelTypeGetDataType, (NVCVPixelType type, NVCVDataType *outDataType))
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvPixelTypeGetDataKind, (NVCVPixelType type, NVCVDataKind *outDataKind))
 {
     return priv::ProtectCall(
         [&]
         {
-            if (outDataType == nullptr)
+            if (outDataKind == nullptr)
             {
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to data type output cannot be NULL");
             }
 
             priv::PixelType ptype{type};
-            *outDataType = ptype.dataType();
+            *outDataKind = ptype.dataKind();
         });
 }
 
@@ -151,7 +151,7 @@ NVCV_DEFINE_API(0, 0, const char *, nvcvPixelTypeGetName, (NVCVPixelType type))
 
         using namespace std::literals;
 
-        util::ReplaceAllInline(buffer, bufSize, "NVCV_DATA_TYPE_"sv, ""sv);
+        util::ReplaceAllInline(buffer, bufSize, "NVCV_DATA_KIND_"sv, ""sv);
         util::ReplaceAllInline(buffer, bufSize, "NVCV_PACKING_"sv, ""sv);
     }
     catch (std::exception &e)

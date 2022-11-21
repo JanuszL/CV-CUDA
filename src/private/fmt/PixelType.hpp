@@ -35,8 +35,8 @@ public:
     {
     }
 
-    constexpr PixelType(NVCVDataType dataType, NVCVPacking packing) noexcept
-        : m_type{NVCV_MAKE_PIXEL_TYPE(dataType, packing)}
+    constexpr PixelType(NVCVDataKind dataKind, NVCVPacking packing) noexcept
+        : m_type{NVCV_MAKE_PIXEL_TYPE(dataKind, packing)}
     {
     }
 
@@ -60,9 +60,9 @@ public:
         return ImageFormat{m_type}.planePacking(0);
     }
 
-    constexpr NVCVDataType dataType() const noexcept
+    constexpr NVCVDataKind dataKind() const noexcept
     {
-        return ImageFormat{m_type}.dataType();
+        return ImageFormat{m_type}.dataKind();
     }
 
     int                    bpp() const noexcept;

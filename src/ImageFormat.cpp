@@ -32,7 +32,7 @@ namespace util = nv::cv::util;
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvMakeColorImageFormat,
                 (NVCVImageFormat * outFormat, NVCVColorModel colorModel, NVCVColorSpec colorSpec,
-                 NVCVMemLayout memLayout, NVCVDataType dataType, NVCVSwizzle swizzle, NVCVPacking packing0,
+                 NVCVMemLayout memLayout, NVCVDataKind dataKind, NVCVSwizzle swizzle, NVCVPacking packing0,
                  NVCVPacking packing1, NVCVPacking packing2, NVCVPacking packing3))
 {
     return priv::ProtectCall(
@@ -42,7 +42,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvMakeColorImageFormat,
             {
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output image format cannot be NULL");
             }
-            priv::ImageFormat pout{colorModel, colorSpec, NVCV_CSS_NONE, memLayout, dataType,
+            priv::ImageFormat pout{colorModel, colorSpec, NVCV_CSS_NONE, memLayout, dataKind,
                                    swizzle,    packing0,  packing1,      packing2,  packing3};
             *outFormat = pout.value();
         });
@@ -50,7 +50,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvMakeColorImageFormat,
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvMakeYCbCrImageFormat,
                 (NVCVImageFormat * outFormat, NVCVColorSpec colorSpec, NVCVChromaSubsampling chromaSub,
-                 NVCVMemLayout memLayout, NVCVDataType dataType, NVCVSwizzle swizzle, NVCVPacking packing0,
+                 NVCVMemLayout memLayout, NVCVDataKind dataKind, NVCVSwizzle swizzle, NVCVPacking packing0,
                  NVCVPacking packing1, NVCVPacking packing2, NVCVPacking packing3))
 {
     return priv::ProtectCall(
@@ -65,7 +65,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvMakeYCbCrImageFormat,
                                    colorSpec,
                                    chromaSub,
                                    memLayout,
-                                   dataType,
+                                   dataKind,
                                    swizzle,
                                    packing0,
                                    packing1,
@@ -76,7 +76,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvMakeYCbCrImageFormat,
 }
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvMakeNonColorImageFormat,
-                (NVCVImageFormat * outFormat, NVCVMemLayout memLayout, NVCVDataType dataType, NVCVSwizzle swizzle,
+                (NVCVImageFormat * outFormat, NVCVMemLayout memLayout, NVCVDataKind dataKind, NVCVSwizzle swizzle,
                  NVCVPacking packing0, NVCVPacking packing1, NVCVPacking packing2, NVCVPacking packing3))
 {
     return priv::ProtectCall(
@@ -87,13 +87,13 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvMakeNonColorImageFormat,
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output image format cannot be NULL");
             }
 
-            priv::ImageFormat pout{memLayout, dataType, swizzle, packing0, packing1, packing2, packing3};
+            priv::ImageFormat pout{memLayout, dataKind, swizzle, packing0, packing1, packing2, packing3};
             *outFormat = pout.value();
         });
 }
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvMakeRawImageFormat,
-                (NVCVImageFormat * outFormat, NVCVRawPattern rawPattern, NVCVMemLayout memLayout, NVCVDataType dataType,
+                (NVCVImageFormat * outFormat, NVCVRawPattern rawPattern, NVCVMemLayout memLayout, NVCVDataKind dataKind,
                  NVCVSwizzle swizzle, NVCVPacking packing0, NVCVPacking packing1, NVCVPacking packing2,
                  NVCVPacking packing3))
 {
@@ -105,7 +105,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvMakeRawImageFormat,
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output image format cannot be NULL");
             }
 
-            priv::ImageFormat pout{rawPattern, memLayout, dataType, swizzle, packing0, packing1, packing2, packing3};
+            priv::ImageFormat pout{rawPattern, memLayout, dataKind, swizzle, packing0, packing1, packing2, packing3};
             *outFormat = pout.value();
         });
 }
@@ -158,7 +158,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageFormatSetSwizzleAndPacking,
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageFormatSetDataType, (NVCVImageFormat * fmt, NVCVDataType newDataType))
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageFormatSetDataKind, (NVCVImageFormat * fmt, NVCVDataKind newDataKind))
 {
     return priv::ProtectCall(
         [&]
@@ -168,21 +168,21 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageFormatSetDataType, (NVCVImageFormat *
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to input image format cannot be NULL");
             }
             priv::ImageFormat pfmt{*fmt};
-            *fmt = pfmt.dataType(newDataType).value();
+            *fmt = pfmt.dataKind(newDataKind).value();
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageFormatGetDataType, (NVCVImageFormat fmt, NVCVDataType *outDataType))
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageFormatGetDataKind, (NVCVImageFormat fmt, NVCVDataKind *outDataKind))
 {
     return priv::ProtectCall(
         [&]
         {
-            if (outDataType == nullptr)
+            if (outDataKind == nullptr)
             {
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to data type output cannot be NULL");
             }
             priv::ImageFormat pfmt{fmt};
-            *outDataType = pfmt.dataType();
+            *outDataKind = pfmt.dataKind();
         });
 }
 
@@ -585,7 +585,7 @@ NVCV_DEFINE_API(0, 0, const char *, nvcvImageFormatGetName, (NVCVImageFormat fmt
         util::ReplaceAllInline(buffer, bufSize, "NVCV_COLOR_SPEC_"sv, ""sv);
         util::ReplaceAllInline(buffer, bufSize, "NVCV_CSS_"sv, ""sv);
         util::ReplaceAllInline(buffer, bufSize, "NVCV_MEM_LAYOUT_"sv, ""sv);
-        util::ReplaceAllInline(buffer, bufSize, "NVCV_DATA_TYPE_"sv, ""sv);
+        util::ReplaceAllInline(buffer, bufSize, "NVCV_DATA_KIND_"sv, ""sv);
         util::ReplaceAllInline(buffer, bufSize, "NVCV_PACKING_"sv, ""sv);
         util::ReplaceAllInline(buffer, bufSize, "NVCV_CHROMA_"sv, ""sv);
         util::ReplaceAllInline(buffer, bufSize, "NVCV_YCbCr_"sv, ""sv);

@@ -80,24 +80,18 @@ static cuda_op::DataType GetLegacyCvUnsignedType(int32_t bpc)
     throw Exception(Status::ERROR_INVALID_ARGUMENT, "Invalid bpc(%d) for unsigned cuda op type ", bpc);
 }
 
-cuda_op::DataType GetLegacyDataType(int32_t bpc, cv::DataType type)
+cuda_op::DataType GetLegacyDataType(int32_t bpc, cv::DataKind kind)
 {
-    switch (type)
+    switch (kind)
     {
-    case cv::DataType::FLOAT:
-    {
+    case cv::DataKind::FLOAT:
         return GetLegacyCvFloatType(bpc);
-    }
 
-    case cv::DataType::SIGNED:
-    {
+    case cv::DataKind::SIGNED:
         return GetLegacyCvSignedType(bpc);
-    }
 
-    case cv::DataType::UNSIGNED:
-    {
+    case cv::DataKind::UNSIGNED:
         return GetLegacyCvUnsignedType(bpc);
-    }
     }
     throw Exception(Status::ERROR_INVALID_ARGUMENT, "Only planar formats supported ");
 }
@@ -114,7 +108,7 @@ cuda_op::DataType GetLegacyDataType(PixelType dtype)
         }
     }
 
-    return GetLegacyDataType(bpc[0], (cv::DataType)dtype.dataType());
+    return GetLegacyDataType(bpc[0], (cv::DataKind)dtype.dataKind());
 }
 
 cuda_op::DataType GetLegacyDataType(ImageFormat fmt)

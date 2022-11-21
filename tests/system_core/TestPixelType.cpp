@@ -32,14 +32,14 @@ struct Params
 {
     NVCVPixelType pixType;
     NVCVPacking   packing;
-    NVCVDataType  dataType;
+    NVCVDataKind  dataKind;
     int           channels;
     int           bpp;
 };
 
 std::ostream &operator<<(std::ostream &out, const Params &p)
 {
-    return out << "pixType=" << nvcvPixelTypeGetName(p.pixType) << ", dataType=" << p.dataType
+    return out << "pixType=" << nvcvPixelTypeGetName(p.pixType) << ", dataKind=" << p.dataKind
                << ", packing=" << p.packing;
 }
 
@@ -49,10 +49,10 @@ class PixelTypeTests : public t::TestWithParam<Params>
 {
 };
 
-#define FMT_PIXEL_PARAMS(DataType, Packing) NVCV_PACKING_##Packing, NVCV_DATA_TYPE_##DataType
+#define FMT_PIXEL_PARAMS(DataKind, Packing) NVCV_PACKING_##Packing, NVCV_DATA_KIND_##DataKind
 
-#define MAKE_PIXEL_TYPE(DataType, Packing) \
-    NVCV_MAKE_PIXEL_TYPE(NVCV_DATA_TYPE_##DataType, NVCV_PACKING_##Packing), FMT_PIXEL_PARAMS(DataType, Packing)
+#define MAKE_PIXEL_TYPE(DataKind, Packing) \
+    NVCV_MAKE_PIXEL_TYPE(NVCV_DATA_KIND_##DataKind, NVCV_PACKING_##Packing), FMT_PIXEL_PARAMS(DataKind, Packing)
 
 INSTANTIATE_TEST_SUITE_P(Range, PixelTypeTests, t::Values(Params{MAKE_PIXEL_TYPE(FLOAT, X32_Y32_Z32_W32), 4, 128}));
 
@@ -112,9 +112,9 @@ TEST_P(PixelTypeTests, get_datatype_works)
 {
     const Params &p = GetParam();
 
-    NVCVDataType dataType;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvPixelTypeGetDataType(p.pixType, &dataType));
-    EXPECT_EQ(p.dataType, dataType);
+    NVCVDataKind dataKind;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvPixelTypeGetDataKind(p.pixType, &dataKind));
+    EXPECT_EQ(p.dataKind, dataKind);
 }
 
 TEST_P(PixelTypeTests, get_channel_count)
@@ -132,7 +132,7 @@ TEST_P(PixelTypeTests, make_pixel_type)
     const Params &p = GetParam();
 
     NVCVPixelType pix;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvMakePixelType(&pix, p.dataType, p.packing));
+    ASSERT_EQ(NVCV_SUCCESS, nvcvMakePixelType(&pix, p.dataKind, p.packing));
     EXPECT_EQ(p.pixType, pix);
 }
 
@@ -164,9 +164,9 @@ TEST(PixelTypeTests, pixel_type_none_must_be_0)
 TEST(PixelTypeTests, make_pixel_type_macro)
 {
     NVCVPixelType pixType;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvMakePixelType(&pixType, NVCV_DATA_TYPE_UNSIGNED, NVCV_PACKING_X8_Y8_Z8));
+    ASSERT_EQ(NVCV_SUCCESS, nvcvMakePixelType(&pixType, NVCV_DATA_KIND_UNSIGNED, NVCV_PACKING_X8_Y8_Z8));
 
-    EXPECT_EQ(pixType, NVCV_MAKE_PIXEL_TYPE(NVCV_DATA_TYPE_UNSIGNED, NVCV_PACKING_X8_Y8_Z8));
+    EXPECT_EQ(pixType, NVCV_MAKE_PIXEL_TYPE(NVCV_DATA_KIND_UNSIGNED, NVCV_PACKING_X8_Y8_Z8));
 }
 
 TEST(PixelTypeTests, get_name_predefined)
@@ -176,7 +176,7 @@ TEST(PixelTypeTests, get_name_predefined)
 
 TEST(PixelTypeTests, get_name_not_predefined)
 {
-    NVCVPixelType pix = NVCV_MAKE_PIXEL_TYPE(NVCV_DATA_TYPE_FLOAT, NVCV_PACKING_X8_Y8_Z8);
+    NVCVPixelType pix = NVCV_MAKE_PIXEL_TYPE(NVCV_DATA_KIND_FLOAT, NVCV_PACKING_X8_Y8_Z8);
 
     EXPECT_STREQ("NVCVPixelType(FLOAT,X8_Y8_Z8)", nvcvPixelTypeGetName(pix));
 }
@@ -186,7 +186,7 @@ class ChannelPixelTypeTests : public t::TestWithParam<std::tuple<NVCVPixelType, 
 };
 
 #define MAKE_PIXEL_TYPE_ABBREV(datatype, packing) \
-    NVCV_MAKE_PIXEL_TYPE(NVCV_DATA_TYPE_##datatype, NVCV_PACKING_##packing)
+    NVCV_MAKE_PIXEL_TYPE(NVCV_DATA_KIND_##datatype, NVCV_PACKING_##packing)
 
 // clang-format off
 NVCV_INSTANTIATE_TEST_SUITE_P(

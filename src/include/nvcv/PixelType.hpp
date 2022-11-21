@@ -43,15 +43,15 @@ class PixelType
 public:
     constexpr PixelType();
     explicit constexpr PixelType(NVCVPixelType type);
-    PixelType(DataType dataType, Packing packing);
+    PixelType(DataKind dataKind, Packing packing);
 
-    static constexpr PixelType ConstCreate(DataType dataType, Packing packing);
+    static constexpr PixelType ConstCreate(DataKind dataKind, Packing packing);
 
     constexpr operator NVCVPixelType() const;
 
     Packing                packing() const;
     std::array<int32_t, 4> bitsPerChannel() const;
-    DataType               dataType() const;
+    DataKind               dataKind() const;
     int32_t                numChannels() const;
     PixelType              channelType(int32_t channel) const;
     int32_t                strideBytes() const;
@@ -164,15 +164,15 @@ constexpr PixelType TYPE_3F64{NVCV_PIXEL_TYPE_3F64};
 constexpr PixelType TYPE_4F64{NVCV_PIXEL_TYPE_4F64};
 #endif
 
-inline PixelType::PixelType(DataType dataType, Packing packing)
+inline PixelType::PixelType(DataKind dataKind, Packing packing)
 {
     detail::CheckThrow(
-        nvcvMakePixelType(&m_type, static_cast<NVCVDataType>(dataType), static_cast<NVCVPacking>(packing)));
+        nvcvMakePixelType(&m_type, static_cast<NVCVDataKind>(dataKind), static_cast<NVCVPacking>(packing)));
 }
 
-constexpr PixelType PixelType::ConstCreate(DataType dataType, Packing packing)
+constexpr PixelType PixelType::ConstCreate(DataKind dataKind, Packing packing)
 {
-    return PixelType{NVCV_MAKE_PIXEL_TYPE(static_cast<NVCVDataType>(dataType), static_cast<NVCVPacking>(packing))};
+    return PixelType{NVCV_MAKE_PIXEL_TYPE(static_cast<NVCVDataKind>(dataKind), static_cast<NVCVPacking>(packing))};
 }
 
 constexpr PixelType::operator NVCVPixelType() const
@@ -201,11 +201,11 @@ inline std::array<int32_t, 4> PixelType::bitsPerChannel() const
     return {bits[0], bits[1], bits[2], bits[3]};
 }
 
-inline DataType PixelType::dataType() const
+inline DataKind PixelType::dataKind() const
 {
-    NVCVDataType out;
-    detail::CheckThrow(nvcvPixelTypeGetDataType(m_type, &out));
-    return static_cast<DataType>(out);
+    NVCVDataKind out;
+    detail::CheckThrow(nvcvPixelTypeGetDataKind(m_type, &out));
+    return static_cast<DataKind>(out);
 }
 
 inline int32_t PixelType::numChannels() const

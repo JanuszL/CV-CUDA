@@ -46,20 +46,20 @@ public:
     }
 
     ImageFormat(NVCVColorModel colorModel, ColorSpec colorSpec, NVCVChromaSubsampling chromaSub,
-                NVCVMemLayout memLayout, NVCVDataType dataType, NVCVSwizzle swizzle, NVCVPacking packing0,
+                NVCVMemLayout memLayout, NVCVDataKind dataKind, NVCVSwizzle swizzle, NVCVPacking packing0,
                 NVCVPacking packing1 = NVCV_PACKING_0, NVCVPacking packing2 = NVCV_PACKING_0,
                 NVCVPacking packing3 = NVCV_PACKING_0);
 
-    ImageFormat(NVCVRawPattern rawPattern, NVCVMemLayout memLayout, NVCVDataType dataType, NVCVSwizzle swizzle,
+    ImageFormat(NVCVRawPattern rawPattern, NVCVMemLayout memLayout, NVCVDataKind dataKind, NVCVSwizzle swizzle,
                 NVCVPacking packing0, NVCVPacking packing1 = NVCV_PACKING_0, NVCVPacking packing2 = NVCV_PACKING_0,
                 NVCVPacking packing3 = NVCV_PACKING_0);
 
-    ImageFormat(NVCVMemLayout memLayout, NVCVDataType dataType, NVCVSwizzle swizzle, NVCVPacking packing0,
+    ImageFormat(NVCVMemLayout memLayout, NVCVDataKind dataKind, NVCVSwizzle swizzle, NVCVPacking packing0,
                 NVCVPacking packing1 = NVCV_PACKING_0, NVCVPacking packing2 = NVCV_PACKING_0,
                 NVCVPacking packing3 = NVCV_PACKING_0);
 
     ImageFormat(const ColorFormat &colorFormat, NVCVChromaSubsampling chromaSub, NVCVMemLayout memLayout,
-                NVCVDataType dataType, NVCVSwizzle swizzle, NVCVPacking packing0, NVCVPacking packing1 = NVCV_PACKING_0,
+                NVCVDataKind dataKind, NVCVSwizzle swizzle, NVCVPacking packing0, NVCVPacking packing1 = NVCV_PACKING_0,
                 NVCVPacking packing2 = NVCV_PACKING_0, NVCVPacking packing3 = NVCV_PACKING_0);
 
     static ImageFormat FromFourCC(uint32_t fourcc, ColorSpec colorSpec, NVCVMemLayout memLayout);
@@ -71,13 +71,13 @@ public:
     constexpr bool operator==(ImageFormat that) const noexcept;
     constexpr bool operator!=(ImageFormat that) const noexcept;
 
-    ImageFormat            dataType(NVCVDataType newDataType) const;
-    constexpr NVCVDataType dataType() const noexcept;
+    ImageFormat            dataKind(NVCVDataKind newDataKind) const;
+    constexpr NVCVDataKind dataKind() const noexcept;
 
     ImageFormat colorSpec(ColorSpec newColorSpec) const;
     ColorSpec   colorSpec() const noexcept;
 
-    ImageFormat   memLayout(NVCVMemLayout newDataType) const;
+    ImageFormat   memLayout(NVCVMemLayout newDataKind) const;
     NVCVMemLayout memLayout() const noexcept;
 
     ImageFormat                   rawPattern(NVCVRawPattern newRawPattern) const;
@@ -187,10 +187,10 @@ constexpr NVCVPacking ImageFormat::planePacking(int plane) const noexcept
     }
 }
 
-constexpr NVCVDataType ImageFormat::dataType() const noexcept
+constexpr NVCVDataKind ImageFormat::dataKind() const noexcept
 {
     // signed -> unsigned is defined behavior
-    return (NVCVDataType)ExtractBitfield(m_format, 61, 3);
+    return (NVCVDataKind)ExtractBitfield(m_format, 61, 3);
 }
 
 bool HasSameDataLayout(ImageFormat a, ImageFormat b) noexcept;

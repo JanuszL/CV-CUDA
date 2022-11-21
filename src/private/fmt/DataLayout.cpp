@@ -28,7 +28,7 @@
 #include <map>
 
 //                    |63 62 61|60 59 58|57 56 55|54|53 52 51|50 49 48|47|46 45 44|43 42 41 40|39 38|37 36 35|
-//                    |DataType|  BPP3  |  BPP2  +C2+ Pack2  |  BPP1  +C1+ Pack1  |    BPP0   +Chan0+  Pack0 |
+//                    |DataKind|  BPP3  |  BPP2  +C2+ Pack2  |  BPP1  +C1+ Pack1  |    BPP0   +Chan0+  Pack0 |
 //
 //  |34 33 32 31 30 29 28 27 26 25 24 23 22 21 20|19 18 17|16|15|14 13 12|11 10 09|08 07 06|05 04 03|02 01 00|
 //  |14|13 12|11 10|09 08 07|06 05 04 03|02 01 00|
@@ -837,21 +837,21 @@ NVCVSwizzle FlipByteOrder(NVCVSwizzle swizzle, int off, int len) noexcept
     return NVCV_MAKE_SWIZZLE(comp[0], comp[1], comp[2], comp[3]);
 }
 
-const char *GetName(NVCVDataType dataType)
+const char *GetName(NVCVDataKind dataKind)
 {
-    switch (dataType)
+    switch (dataKind)
     {
 #define ENUM_CASE(X) \
     case X:          \
         return #X
-        ENUM_CASE(NVCV_DATA_TYPE_UNSIGNED);
-        ENUM_CASE(NVCV_DATA_TYPE_SIGNED);
-        ENUM_CASE(NVCV_DATA_TYPE_FLOAT);
+        ENUM_CASE(NVCV_DATA_KIND_UNSIGNED);
+        ENUM_CASE(NVCV_DATA_KIND_SIGNED);
+        ENUM_CASE(NVCV_DATA_KIND_FLOAT);
 #undef ENUM_CASE
     }
     priv::FormatTLS &tls = priv::GetFormatTLS();
-    util::BufferOStream(tls.bufDataTypeName, sizeof(tls.bufDataTypeName)) << "NVCVDataType(" << (int)dataType << ")";
-    return tls.bufDataTypeName;
+    util::BufferOStream(tls.bufDataKindName, sizeof(tls.bufDataKindName)) << "NVCVDataKind(" << (int)dataKind << ")";
+    return tls.bufDataKindName;
 }
 
 const char *GetName(NVCVMemLayout memLayout)
@@ -947,9 +947,9 @@ const char *GetName(NVCVPacking packing)
 
 namespace priv = nv::cv::priv;
 
-std::ostream &operator<<(std::ostream &out, NVCVDataType dataType)
+std::ostream &operator<<(std::ostream &out, NVCVDataKind dataKind)
 {
-    return out << priv::GetName(dataType);
+    return out << priv::GetName(dataKind);
 }
 
 std::ostream &operator<<(std::ostream &out, NVCVMemLayout memLayout)

@@ -86,7 +86,7 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t numImages, Size2D imgSiz
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Image format can't be represented in a tensor: " << fmt;
     }
 
-    PixelType dtype{fmt.dataType(), *chPacking};
+    PixelType dtype{fmt.dataKind(), *chPacking};
 
     return CalcRequirements(layout.ndim, shape, dtype, layout, userBaseAlign, userRowAlign);
 }

@@ -69,7 +69,7 @@ PixelType PixelType::channelType(int ch) const
 
     if (std::optional<NVCVPacking> packing = MakeNVCVPacking(bits[ch]))
     {
-        return PixelType{this->dataType(), *packing};
+        return PixelType{this->dataKind(), *packing};
     }
     else
     {
@@ -143,7 +143,7 @@ std::ostream &operator<<(std::ostream &out, PixelType type)
 #undef NVCV_ENUM
     }
 
-    return out << "NVCVPixelType(" << type.dataType() << "," << type.packing() << ")";
+    return out << "NVCVPixelType(" << type.dataKind() << "," << type.packing() << ")";
 }
 
 } // namespace nv::cv::priv

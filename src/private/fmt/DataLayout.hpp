@@ -61,7 +61,7 @@ NVCVSwizzle MergePlaneSwizzles(NVCVSwizzle sw0, NVCVSwizzle sw1 = NVCV_SWIZZLE_0
 // restrict the flipping only to these components alone.
 NVCVSwizzle FlipByteOrder(NVCVSwizzle swizzle, int off = 0, int len = 4) noexcept;
 
-const char *GetName(NVCVDataType dataType);
+const char *GetName(NVCVDataKind dataKind);
 const char *GetName(NVCVPacking packing);
 const char *GetName(NVCVMemLayout memLayout);
 const char *GetName(NVCVChannel swizzleChannel);
@@ -70,7 +70,7 @@ const char *GetName(NVCVByteOrder byteOrder);
 
 } // namespace nv::cv::priv
 
-std::ostream &operator<<(std::ostream &out, NVCVDataType dataType);
+std::ostream &operator<<(std::ostream &out, NVCVDataKind dataKind);
 std::ostream &operator<<(std::ostream &out, NVCVPacking packing);
 std::ostream &operator<<(std::ostream &out, NVCVMemLayout memLayout);
 std::ostream &operator<<(std::ostream &out, NVCVChannel swizzleChannel);

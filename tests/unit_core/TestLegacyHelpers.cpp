@@ -78,17 +78,17 @@ TEST_P(CheckLegacyFormatHelpersInvalid, check_conversion_to_legacy_data_format_i
 }
 
 // clang-format off
-NVCV_TEST_SUITE_P(CheckLegacyHelpersDataType, test::ValueList<legOp::DataType, int32_t, nv::cv::DataType>
+NVCV_TEST_SUITE_P(CheckLegacyHelpersDataType, test::ValueList<legOp::DataType, int32_t, nv::cv::DataKind>
 {
     // type, bpp, cv type
-     { legOp::DataType::kCV_8U , 8, nv::cv::DataType::UNSIGNED},
-     { legOp::DataType::kCV_8S , 8, nv::cv::DataType::SIGNED},
-     { legOp::DataType::kCV_16U, 16, nv::cv::DataType::UNSIGNED},
-     { legOp::DataType::kCV_16S, 16, nv::cv::DataType::SIGNED},
-     { legOp::DataType::kCV_32S, 32, nv::cv::DataType::SIGNED},
-     { legOp::DataType::kCV_32F, 32, nv::cv::DataType::FLOAT},
-     { legOp::DataType::kCV_64F, 64, nv::cv::DataType::FLOAT},
-     { legOp::DataType::kCV_16F, 16, nv::cv::DataType::FLOAT},
+     { legOp::DataType::kCV_8U , 8, nv::cv::DataKind::UNSIGNED},
+     { legOp::DataType::kCV_8S , 8, nv::cv::DataKind::SIGNED},
+     { legOp::DataType::kCV_16U, 16, nv::cv::DataKind::UNSIGNED},
+     { legOp::DataType::kCV_16S, 16, nv::cv::DataKind::SIGNED},
+     { legOp::DataType::kCV_32S, 32, nv::cv::DataKind::SIGNED},
+     { legOp::DataType::kCV_32F, 32, nv::cv::DataKind::FLOAT},
+     { legOp::DataType::kCV_64F, 64, nv::cv::DataKind::FLOAT},
+     { legOp::DataType::kCV_16F, 16, nv::cv::DataKind::FLOAT},
 });
 
 // clang-format on
@@ -96,7 +96,7 @@ TEST_P(CheckLegacyHelpersDataType, check_conversion_to_legacy_data_type)
 {
     legOp::DataType  expect = GetParamValue<0>();
     int32_t          bpp    = GetParamValue<1>();
-    nv::cv::DataType type   = GetParamValue<2>();
+    nv::cv::DataKind type   = GetParamValue<2>();
 
     EXPECT_EQ(expect, helpers::GetLegacyDataType(bpp, type));
 }
