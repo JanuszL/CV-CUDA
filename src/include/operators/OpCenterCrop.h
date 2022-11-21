@@ -102,16 +102,16 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopCenterCropCreate(NVCVOperatorHandle *handle);
  *
  * @param [out] out output tensor.
  *
- * @param [in] crop_rows crop rectangle rows.
+ * @param [in] cropWidth crop rectangle width;
  *
- * @param [in] crop_columns crop rectangle columns.
+ * @param [in] cropHeight crop rectangle height.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
  * @retval #NVCV_ERROR_INTERNAL         Internal error in the operator, invalid types passed in.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_OP_PUBLIC NVCVStatus nvcvopCenterCropSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
-                                                 NVCVTensorHandle out, const int crop_rows, const int crop_columns);
+                                                 NVCVTensorHandle out, int32_t cropWidth, int32_t cropHeight);
 
 #ifdef __cplusplus
 }

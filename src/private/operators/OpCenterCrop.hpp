@@ -43,8 +43,8 @@ class CenterCrop final : public IOperator
 public:
     explicit CenterCrop();
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, const int crop_rows,
-                    const int crop_columns) const;
+    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
+                    const cv::Size2D &cropSize) const;
 
     cv::priv::Version doGetVersion() const override;
 

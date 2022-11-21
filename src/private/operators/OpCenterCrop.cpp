@@ -28,8 +28,8 @@ CenterCrop::CenterCrop()
     m_legacyOp = std::make_unique<leg::cuda_op::CenterCrop>(maxIn, maxOut);
 }
 
-void CenterCrop::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, const int crop_rows,
-                            const int crop_columns) const
+void CenterCrop::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
+                            const cv::Size2D &cropSize) const
 {
     auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
     if (inData == nullptr)
@@ -44,7 +44,7 @@ void CenterCrop::operator()(cudaStream_t stream, const cv::ITensor &in, const cv
                             "Output must be device-accessible, pitch-linear tensor");
     }
 
-    leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, crop_rows, crop_columns, stream));
+    leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, cropSize.h, cropSize.w, stream));
 }
 
 nv::cv::priv::Version CenterCrop::doGetVersion() const

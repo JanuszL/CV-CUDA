@@ -39,12 +39,12 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopCenterCropCreate, (NVCVOperatorHandle * 
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopCenterCropSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                 const int crop_rows, const int crop_columns))
+                 int32_t cropWidth, int32_t cropHeight))
 {
     return nvcv::ProtectCall(
         [&]
         {
             nv::cv::TensorWrapHandle input(in), output(out);
-            priv::ToDynamicRef<priv_op::CenterCrop>(handle)(stream, input, output, crop_rows, crop_columns);
+            priv::ToDynamicRef<priv_op::CenterCrop>(handle)(stream, input, output, {cropWidth, cropHeight});
         });
 }

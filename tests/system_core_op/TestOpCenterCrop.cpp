@@ -172,7 +172,7 @@ TEST_P(OpCenterCrop, CenterCrop_packed)
     // run operator
     nv::cvop::CenterCrop cropOp;
 
-    EXPECT_NO_THROW(cropOp(stream, imgIn, imgOut, crop_rows, crop_columns));
+    EXPECT_NO_THROW(cropOp(stream, imgIn, imgOut, {crop_columns, crop_rows}));
 
     // check cdata
     std::vector<uint8_t> test(outBufSize);

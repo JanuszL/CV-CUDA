@@ -28,6 +28,7 @@
 #include <cuda_runtime.h>
 #include <nvcv/ITensor.hpp>
 #include <nvcv/ImageFormat.hpp>
+#include <nvcv/Size.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 
 namespace nv { namespace cvop {
@@ -39,8 +40,7 @@ public:
 
     ~CenterCrop();
 
-    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const int crop_rows,
-                    const int crop_columns);
+    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const cv::Size2D &cropSize);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -60,11 +60,9 @@ inline CenterCrop::~CenterCrop()
     m_handle = nullptr;
 }
 
-inline void CenterCrop::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const int crop_rows,
-                                   const int crop_columns)
+inline void CenterCrop::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const cv::Size2D &cropSize)
 {
-    cv::detail::CheckThrow(
-        nvcvopCenterCropSubmit(m_handle, stream, in.handle(), out.handle(), crop_rows, crop_columns));
+    cv::detail::CheckThrow(nvcvopCenterCropSubmit(m_handle, stream, in.handle(), out.handle(), cropSize.w, cropSize.h));
 }
 
 inline NVCVOperatorHandle CenterCrop::handle() const noexcept
