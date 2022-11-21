@@ -67,7 +67,7 @@ class TensorWrap<const T, Pitches...>
     static_assert(HasTypeTraits<T>, "TensorWrap<T> can only be used if T has type traits");
 
 public:
-    using Type = T;
+    using ValueType = const T;
 
     static constexpr int kNumDimensions   = sizeof...(Pitches);
     static constexpr int kVariablePitches = ((Pitches == -1) + ...);
@@ -234,7 +234,7 @@ class TensorWrap : public TensorWrap<const T, Pitches...>
     using Base = TensorWrap<const T, Pitches...>;
 
 public:
-    using Type = typename Base::Type;
+    using ValueType = T;
 
     static constexpr int kNumDimensions   = Base::kNumDimensions;
     static constexpr int kVariablePitches = Base::kVariablePitches;

@@ -50,7 +50,7 @@ __global__ void normalizeKernel(const input_type src, const base_type base, cons
     const int scale_y         = scale_size.y == 1 ? 0 : src_y;
     const int scale_batch_idx = scale_size.z == 1 ? 0 : batch_idx;
 
-    typedef typename input_type::Type input_value_type;
+    using input_value_type = typename input_type::ValueType;
 
     *dst.ptr(batch_idx, src_y, src_x) = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<input_value_type>>(
         (*src.ptr(batch_idx, src_y, src_x) - *base.ptr(base_batch_idx, base_y, base_x))
@@ -79,8 +79,8 @@ __global__ void normalizeInvStdDevKernel(const input_type src, const base_type b
     const int scale_y         = scale_size.y == 1 ? 0 : src_y;
     const int scale_batch_idx = scale_size.z == 1 ? 0 : batch_idx;
 
-    typedef typename input_type::Type input_value_type;
-    typedef typename scale_type::Type scale_value_type;
+    using input_value_type = typename input_type::ValueType;
+    using scale_value_type = typename scale_type::ValueType;
 
     scale_value_type s   = *scale.ptr(scale_batch_idx, scale_y, scale_x);
     scale_value_type x   = s * s + epsilon;
