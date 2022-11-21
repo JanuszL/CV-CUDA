@@ -26,7 +26,7 @@ namespace nv { namespace cv {
 
 // Tensor implementation -------------------------------------
 
-inline auto Tensor::CalcRequirements(const TensorShape &shape, PixelType dtype, const MemAlignment &bufAlign)
+inline auto Tensor::CalcRequirements(const TensorShape &shape, DataType dtype, const MemAlignment &bufAlign)
     -> Requirements
 {
     Requirements reqs;
@@ -56,7 +56,7 @@ inline Tensor::Tensor(int numImages, Size2D imgSize, ImageFormat fmt, const MemA
 {
 }
 
-inline Tensor::Tensor(const TensorShape &shape, PixelType dtype, const MemAlignment &bufAlign, IAllocator *alloc)
+inline Tensor::Tensor(const TensorShape &shape, DataType dtype, const MemAlignment &bufAlign, IAllocator *alloc)
     : Tensor(CalcRequirements(shape, dtype, bufAlign), alloc)
 {
 }

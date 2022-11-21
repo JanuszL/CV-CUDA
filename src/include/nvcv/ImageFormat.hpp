@@ -26,8 +26,8 @@
 
 #include "ColorSpec.hpp"
 #include "DataLayout.hpp"
+#include "DataType.hpp"
 #include "ImageFormat.h"
-#include "PixelType.hpp"
 #include "Size.hpp"
 
 #include <array>
@@ -117,7 +117,7 @@ public:
 
     Packing     planePacking(int32_t plane) const noexcept;
     int32_t     planePixelStrideBytes(int32_t plane) const noexcept;
-    PixelType   planePixelType(int32_t plane) const noexcept;
+    DataType    planeDataType(int32_t plane) const noexcept;
     int32_t     planeNumChannels(int32_t plane) const noexcept;
     int32_t     planeBitsPerPixel(int32_t plane) const noexcept;
     int32_t     planeRowAlignment(int32_t plane) const noexcept;
@@ -635,11 +635,11 @@ inline Packing ImageFormat::planePacking(int32_t plane) const noexcept
     return static_cast<Packing>(out);
 }
 
-inline PixelType ImageFormat::planePixelType(int32_t plane) const noexcept
+inline DataType ImageFormat::planeDataType(int32_t plane) const noexcept
 {
-    NVCVPixelType out;
-    detail::CheckThrow(nvcvImageFormatGetPlanePixelType(m_format, plane, &out));
-    return static_cast<PixelType>(out);
+    NVCVDataType out;
+    detail::CheckThrow(nvcvImageFormatGetPlaneDataType(m_format, plane, &out));
+    return static_cast<DataType>(out);
 }
 
 inline int32_t ImageFormat::planePixelStrideBytes(int32_t plane) const noexcept
@@ -665,7 +665,7 @@ inline int32_t ImageFormat::planeBitsPerPixel(int32_t plane) const noexcept
 
 inline int32_t ImageFormat::planeRowAlignment(int32_t plane) const noexcept
 {
-    return planePixelType(plane).alignment();
+    return planeDataType(plane).alignment();
 }
 
 inline Size2D ImageFormat::planeSize(Size2D imgSize, int32_t plane) const noexcept

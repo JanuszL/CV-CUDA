@@ -25,7 +25,7 @@
 #include "Tensor.hpp"
 #include "operators/Types.h"
 
-#include <nvcv/PixelType.hpp>
+#include <nvcv/DataType.hpp>
 #include <nvcv/cuda/TypeTraits.hpp>
 #include <operators/OpCopyMakeBorder.hpp>
 #include <pybind11/stl.h>

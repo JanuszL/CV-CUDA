@@ -19,7 +19,7 @@
 #define NVCV_ITENSOR_HPP
 
 #include "Casts.hpp"
-#include "PixelType.hpp"
+#include "DataType.hpp"
 #include "Tensor.h"
 #include "TensorData.hpp"
 #include "TensorLayout.hpp"
@@ -41,7 +41,7 @@ public:
 
     int          ndim() const;
     TensorShape  shape() const;
-    PixelType    dtype() const;
+    DataType     dtype() const;
     TensorLayout layout() const;
 
     const ITensorData *exportData() const;

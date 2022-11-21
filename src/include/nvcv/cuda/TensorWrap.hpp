@@ -60,9 +60,9 @@ namespace nv::cv::cuda {
  * compile-time constant pitch as the size of the channel type.
  *
  * @code
- * using PixelType = ...;
- * using ChannelType = BaseType<PixelType>;
- * using TensorWrap = TensorWrap<ChannelType, -1, -1, sizeof(PixelType), sizeof(ChannelType)>;
+ * using DataType = ...;
+ * using ChannelType = BaseType<DataType>;
+ * using TensorWrap = TensorWrap<ChannelType, -1, -1, sizeof(DataType), sizeof(ChannelType)>;
  * void *imageData = ...;
  * int imgPitchBytes = ...;
  * int rowPitchBytes = ...;

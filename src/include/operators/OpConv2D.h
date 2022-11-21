@@ -105,12 +105,12 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopConv2DCreate(NVCVOperatorHandle *handle);
  *
  * @param [in] kernel Convolution kernels (one for each batch image) to be used.  Each image width and height
  * correspond to the kernel width and height.
- *                    + Must be of pixel type NVCV_PIXEL_TYPE_F32
+ *                    + Must be of pixel type NVCV_DATA_TYPE_F32
  *
  * @param [in] kernelAnchor 1D Tensor with the anchor of each kernel (one for each batch image).  The anchor (x, y)
  * indicates the relative position of a filtered point within the kernel.  (-1, -1) means that the anchor is at the
  * kernel center.
- *                          + Must be of pixel type NVCV_PIXEL_TYPE_2S32
+ *                          + Must be of pixel type NVCV_DATA_TYPE_2S32
  *
  * @param [in] borderMode Border mode to be used when accessing elements outside, cf. \p NVCVBorderType.
  *

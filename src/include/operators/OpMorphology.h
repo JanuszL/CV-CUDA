@@ -187,11 +187,11 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopMorphologySubmit(NVCVOperatorHandle handle, cuda
  *
  * @param [in] morphType Type of operation to perform (Erode/Dilate). \ref NVCVMorphologyType.
  *
- * @param [in] masks  1D Tensor of NVCV_PIXEL_TYPE_2S32 mask W/H pairs, where the 1st pair is for image 0, second for image 1, etc.
+ * @param [in] masks  1D Tensor of NVCV_DATA_TYPE_2S32 mask W/H pairs, where the 1st pair is for image 0, second for image 1, etc.
  *                    Setting values to -1,-1 will create a default 3,3 mask.
  *                    (Note after the operation the tensor values may be modified by kernel)
  *
- * @param [in] anchors 1D Tensor of NVCV_PIXEL_TYPE_2S32 X/Y pairs, where the 1st pair is for image 0, second for image 1, etc
+ * @param [in] anchors 1D Tensor of NVCV_DATA_TYPE_2S32 X/Y pairs, where the 1st pair is for image 0, second for image 1, etc
  *                      Setting values to -1,-1 will anchor the kernel at the center.
  *                      (Note after the operation the tensor values may be modified by kernel)
  *

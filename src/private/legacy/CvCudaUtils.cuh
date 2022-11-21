@@ -173,10 +173,10 @@ struct Ptr2dNCHW
                     throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "All image buffer must be packed");
                 }
 
-                if (inData.format().planePixelType(i) != inData.format().planePixelType(0))
+                if (inData.format().planeDataType(i) != inData.format().planeDataType(0))
                 {
                     throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
-                                              "All image planes must have the same pixel type");
+                                              "All image planes must have the same data type");
                 }
 
                 if (plane.width != inData.plane(0).width || plane.height != inData.plane(0).height)
@@ -398,7 +398,7 @@ struct Ptr2dVarShapeNHWC
                   // If not using number of channels,
                   if (nch_ < 0)
                   {
-                      // Require that all images have the same format (it'd be better if we had data.uniquePixelType)
+                      // Require that all images have the same format (it'd be better if we had data.uniqueDataType)
                       if (!data.uniqueFormat())
                       {
                           throw std::runtime_error("Images in a batch must all have the same format");

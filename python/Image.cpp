@@ -20,8 +20,8 @@
 #include "Assert.hpp"
 #include "Cache.hpp"
 #include "CheckError.hpp"
+#include "DataType.hpp"
 #include "ImageFormat.hpp"
-#include "PixelType.hpp"
 #include "PyUtil.hpp"
 #include "Stream.hpp"
 #include "String.hpp"
@@ -71,14 +71,13 @@ namespace {
 
 struct BufferImageInfo
 {
-    int           numPlanes;
-    cv::Size2D    size;
-    int           numChannels;
-    bool          isChannelLast;
-    cv::PixelType pixType;
-    int64_t       planePitchBytes, rowPitchBytes;
-    cv::PixelType dtype;
-    void         *data;
+    int          numPlanes;
+    cv::Size2D   size;
+    int          numChannels;
+    bool         isChannelLast;
+    int64_t      planePitchBytes, rowPitchBytes;
+    cv::DataType dtype;
+    void        *data;
 };
 
 std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer_info> &buffers,
@@ -219,7 +218,7 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer
         bufInfo.planePitchBytes  = strides[infoLayout->idxSample()];
         bufInfo.rowPitchBytes    = strides[infoLayout->idxHeight()];
         bufInfo.data             = info.ptr;
-        bufInfo.dtype            = py::cast<cv::PixelType>(ToDType(info));
+        bufInfo.dtype            = py::cast<cv::DataType>(ToDType(info));
 
         curChannel += bufInfo.numPlanes * bufInfo.numChannels;
         if (curChannel > 4)
@@ -234,17 +233,17 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer
     return bufferInfoList;
 }
 
-cv::PixelType MakePackedType(cv::PixelType pix, int numChannels)
+cv::DataType MakePackedType(cv::DataType dtype, int numChannels)
 {
-    if (pix.numChannels() == numChannels)
+    if (dtype.numChannels() == numChannels)
     {
-        return pix;
+        return dtype;
     }
-    else if (pix.numChannels() == 1)
+    else if (dtype.numChannels() == 1)
     {
         NVCV_ASSERT(2 <= numChannels && numChannels <= 4);
 
-        cv::PackingParams pp = GetParams(pix.packing());
+        cv::PackingParams pp = GetParams(dtype.packing());
 
         switch (numChannels)
         {
@@ -265,16 +264,16 @@ cv::PixelType MakePackedType(cv::PixelType pix, int numChannels)
         }
 
         cv::Packing newPacking = MakePacking(pp);
-        return cv::PixelType{pix.dataKind(), newPacking};
+        return cv::DataType{dtype.dataKind(), newPacking};
     }
     else
     {
         // in case of complex numbers, the number of channels == 1 but pix has 2 channels.
-        return pix;
+        return dtype;
     }
 }
 
-cv::ImageFormat InferImageFormat(const std::vector<cv::PixelType> &planePixTypes)
+cv::ImageFormat InferImageFormat(const std::vector<cv::DataType> &planePixTypes)
 {
     if (planePixTypes.empty())
     {
@@ -356,8 +355,8 @@ void FillNVCVImageBufferPitch(NVCVImageData &imgData, const std::vector<py::buff
     // Otherwise, we need to infer the image format from the given buffers.
 
     // Here's the plan:
-    // 1. Loop through all buffers and infer its dimensions, number of channels and pixel type.
-    //    In case of ambiguity in inferring pixel type for a buffer,
+    // 1. Loop through all buffers and infer its dimensions, number of channels and data type.
+    //    In case of ambiguity in inferring data type for a buffer,
     //    - If available, use given image format for disambiguation
     //    - Otherwise, if number of channels in last dimension is <= 4, treat it as packed, or else it's planar
     // 2. Validate the data collected to see if it represents a real image format
@@ -370,7 +369,7 @@ void FillNVCVImageBufferPitch(NVCVImageData &imgData, const std::vector<py::buff
     dataPitch = {}; // start anew
 
     std::vector<BufferImageInfo> bufferInfoList = ExtractBufferImageInfo(infos, fmt);
-    std::vector<cv::PixelType>   planePixelTypes;
+    std::vector<cv::DataType>    planeDataTypes;
 
     int curPlane = 0;
     for (const BufferImageInfo &b : bufferInfoList)
@@ -384,7 +383,7 @@ void FillNVCVImageBufferPitch(NVCVImageData &imgData, const std::vector<py::buff
             dataPitch.planes[curPlane].pitchBytes = b.rowPitchBytes;
             dataPitch.planes[curPlane].buffer     = reinterpret_cast<uint8_t *>(b.data) + b.planePitchBytes * p;
 
-            planePixelTypes.push_back(MakePackedType(b.dtype, b.isChannelLast ? b.numChannels : 1));
+            planeDataTypes.push_back(MakePackedType(b.dtype, b.isChannelLast ? b.numChannels : 1));
         }
     }
     dataPitch.numPlanes = curPlane;
@@ -394,7 +393,7 @@ void FillNVCVImageBufferPitch(NVCVImageData &imgData, const std::vector<py::buff
         throw std::invalid_argument("Number of planes must be >= 1");
     }
 
-    cv::ImageFormat inferredFormat = InferImageFormat(planePixelTypes);
+    cv::ImageFormat inferredFormat = InferImageFormat(planeDataTypes);
 
     cv::ImageFormat finalFormat;
 
@@ -662,14 +661,14 @@ std::vector<std::pair<py::buffer_info, cv::TensorLayout>> ToPyBufferInfo(const c
     bool singleBuffer = true;
 
     // Let's check if we can return only one buffer, depending
-    // on the planes dimensions, pitch and pixel type.
+    // on the planes dimensions, pitch and data type.
     for (int p = 1; p < imgData.numPlanes(); ++p)
     {
         const cv::ImagePlanePitch &plane = imgData.plane(p);
 
         if (plane.width != firstPlane.width || plane.height != firstPlane.height
-            || plane.pitchBytes != firstPlane.pitchBytes || imgData.format().planePixelType(0).numChannels() >= 2
-            || imgData.format().planePixelType(0) != imgData.format().planePixelType(p))
+            || plane.pitchBytes != firstPlane.pitchBytes || imgData.format().planeDataType(0).numChannels() >= 2
+            || imgData.format().planeDataType(0) != imgData.format().planeDataType(p))
         {
             singleBuffer = false;
             break;
@@ -701,7 +700,7 @@ std::vector<std::pair<py::buffer_info, cv::TensorLayout>> ToPyBufferInfo(const c
         int planeHeight      = imgData.plane(p).height;
         int planeNumChannels = imgData.format().planeNumChannels(p);
         // bytes per pixel in the plane
-        int planeBPP = imgData.format().planePixelType(p).strideBytes();
+        int planeBPP = imgData.format().planeDataType(p).strideBytes();
 
         switch (imgData.format().planePacking(p))
         {
@@ -731,7 +730,7 @@ std::vector<std::pair<py::buffer_info, cv::TensorLayout>> ToPyBufferInfo(const c
                 inferredShape   = {planeHeight, planeWidth};
                 inferredStrides = {imgData.plane(p).pitchBytes, planeBPP};
                 inferredLayout  = cv::TensorLayout{"HW"};
-                inferredDType   = py::cast(imgData.format().planePixelType(p));
+                inferredDType   = py::cast(imgData.format().planeDataType(p));
             }
             else if (imgData.numPlanes() == 1)
             {
@@ -739,7 +738,7 @@ std::vector<std::pair<py::buffer_info, cv::TensorLayout>> ToPyBufferInfo(const c
                 inferredShape   = {planeHeight, planeWidth, planeNumChannels};
                 inferredStrides = {imgData.plane(p).pitchBytes, planeBPP, planeBPP / planeNumChannels};
                 inferredLayout  = cv::TensorLayout{"HWC"};
-                inferredDType   = py::cast(imgData.format().planePixelType(p).channelType(0));
+                inferredDType   = py::cast(imgData.format().planeDataType(p).channelType(0));
             }
             else
             {
@@ -752,7 +751,7 @@ std::vector<std::pair<py::buffer_info, cv::TensorLayout>> ToPyBufferInfo(const c
                 inferredShape   = {imgData.numPlanes(), planeHeight, planeWidth};
                 inferredStrides = {planeStride, imgData.plane(p).pitchBytes, planeBPP};
                 inferredLayout  = cv::TensorLayout{"CHW"};
-                inferredDType   = py::cast(imgData.format().planePixelType(p));
+                inferredDType   = py::cast(imgData.format().planeDataType(p));
             }
         }
         else
@@ -764,7 +763,7 @@ std::vector<std::pair<py::buffer_info, cv::TensorLayout>> ToPyBufferInfo(const c
             inferredStrides
                 = {(int64_t)imgData.plane(p).pitchBytes, (int64_t)planeBPP, (int64_t)planeBPP / planeNumChannels};
             inferredLayout = cv::TensorLayout{"HWC"};
-            inferredDType  = py::cast(imgData.format().planePixelType(p).channelType(0));
+            inferredDType  = py::cast(imgData.format().planeDataType(p).channelType(0));
         }
 
         NVCV_ASSERT((ssize_t)inferredShape.size() == inferredLayout.ndim());

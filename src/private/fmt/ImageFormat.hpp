@@ -23,8 +23,8 @@
 
 #include <core/Exception.hpp>
 #include <core/Size.hpp>
+#include <nvcv/DataType.h>
 #include <nvcv/ImageFormat.h>
-#include <nvcv/PixelType.h>
 #include <util/StaticVector.hpp>
 
 #include <array>
@@ -34,7 +34,7 @@
 namespace nv::cv::priv {
 
 class ColorFormat;
-class PixelType;
+class DataType;
 
 // Wrapper to NVCVImageFormat to make it properly typed.
 class ImageFormat
@@ -104,7 +104,7 @@ public:
     constexpr NVCVPacking planePacking(int plane) const noexcept;
     int                   planePixelStrideBytes(int plane) const noexcept;
     int                   planeRowAlignment(int plane) const noexcept;
-    PixelType             planePixelType(int plane) const noexcept;
+    DataType              planeDataType(int plane) const noexcept;
     int                   planeNumChannels(int plane) const noexcept;
     int                   planeBPP(int plane) const noexcept;
     Size2D                planeSize(Size2D imgSize, int plane) const noexcept;

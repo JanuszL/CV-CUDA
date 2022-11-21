@@ -21,7 +21,7 @@
 #include "Requirements.hpp"
 
 #include <cuda_runtime.h>
-#include <fmt/PixelType.hpp>
+#include <fmt/DataType.hpp>
 #include <util/CheckError.hpp>
 #include <util/Math.hpp>
 

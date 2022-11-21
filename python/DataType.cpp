@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-#include "PixelType.hpp"
+#include "DataType.hpp"
 
 #include "Assert.hpp"
 #include "String.hpp"
 
-#include <nvcv/PixelType.hpp>
+#include <nvcv/DataType.hpp>
 #include <nvcv/cuda/TypeTraits.hpp>
 #include <pybind11/numpy.h>
 #include <pybind11/operators.h>
@@ -28,13 +28,13 @@
 #include <complex>
 #include <sstream>
 
-// PixelType is implicitly convertible fromto numpy types such as
+// DataType is implicitly convertible from/to numpy types such as
 // numpy.int8, numpy.complex64, numpy.dtype, etc.
 
 namespace nv::cv {
-size_t ComputeHash(const cv::PixelType &pix)
+size_t ComputeHash(const cv::DataType &dtype)
 {
-    return std::hash<uint64_t>()(static_cast<uint64_t>(pix));
+    return std::hash<uint64_t>()(static_cast<uint64_t>(dtype));
 }
 
 } // namespace nv::cv
@@ -54,7 +54,7 @@ struct IsComplex<std::complex<T>> : std::true_type
 };
 
 template<class T>
-bool FindPixelType(const py::dtype &dt, cv::PixelType *pix)
+bool FindDataType(const py::dtype &dt, cv::DataType *dtype)
 {
     int       nchannels = 1;
     py::dtype dtbase    = dt;
@@ -138,9 +138,9 @@ bool FindPixelType(const py::dtype &dt, cv::PixelType *pix)
         }
         cv::Packing packing = MakePacking(pp);
 
-        // Finally, infer the pixel type
-        NVCV_ASSERT(pix != nullptr);
-        *pix = cv::PixelType{dataKind, packing};
+        // Finally, infer the data type
+        NVCV_ASSERT(dtype != nullptr);
+        *dtype = cv::DataType{dataKind, packing};
         return true;
     }
     else
@@ -163,13 +163,13 @@ using SupportedBaseTypes = std::tuple<
 // clang-format on
 
 template<class... TT>
-std::optional<cv::PixelType> SelectPixelType(std::tuple<TT...>, const py::dtype &dt)
+std::optional<cv::DataType> SelectDataType(std::tuple<TT...>, const py::dtype &dt)
 {
-    cv::PixelType pixtype;
+    cv::DataType dtype;
 
-    if ((FindPixelType<TT>(dt, &pixtype) || ...))
+    if ((FindDataType<TT>(dt, &dtype) || ...))
     {
-        return pixtype;
+        return dtype;
     }
     else
     {
@@ -177,23 +177,23 @@ std::optional<cv::PixelType> SelectPixelType(std::tuple<TT...>, const py::dtype 
     }
 }
 
-std::optional<cv::PixelType> ToPixelType(const py::dtype &dt)
+std::optional<cv::DataType> ToDataType(const py::dtype &dt)
 {
-    return SelectPixelType(SupportedBaseTypes(), dt);
+    return SelectDataType(SupportedBaseTypes(), dt);
 }
 
 template<class T>
-bool FindDType(T *, const cv::PixelType &pix, py::dtype *dt)
+bool FindDType(T *, const cv::DataType &dtype, py::dtype *dt)
 {
-    int nchannels = pix.numChannels();
-    int itemsize  = pix.bitsPerPixel() / 8;
+    int nchannels = dtype.numChannels();
+    int itemsize  = dtype.bitsPerPixel() / 8;
 
     if (sizeof(T) != itemsize / nchannels)
     {
         return false;
     }
 
-    cv::DataKind dataKind = pix.dataKind();
+    cv::DataKind dataKind = dtype.dataKind();
 
     if ((std::is_floating_point_v<T> && dataKind == cv::DataKind::FLOAT)
         || (std::is_integral_v<T> && std::is_signed_v<T> && dataKind == cv::DataKind::SIGNED)
@@ -203,7 +203,7 @@ bool FindDType(T *, const cv::PixelType &pix, py::dtype *dt)
 
         *dt = py::dtype::of<T>();
 
-        // pix has multiple components?
+        // data type has multiple components?
         if (cv::cuda::NumElements<T> != nchannels)
         {
             // Create a dtype with multiple components too, with shape argument
@@ -218,11 +218,11 @@ bool FindDType(T *, const cv::PixelType &pix, py::dtype *dt)
 }
 
 template<class T>
-bool FindDType(std::complex<T> *, const cv::PixelType &pix, py::dtype *dt)
+bool FindDType(std::complex<T> *, const cv::DataType &dtype, py::dtype *dt)
 {
-    cv::DataKind dataKind  = pix.dataKind();
-    int          nchannels = pix.numChannels();
-    int          itemsize  = pix.bitsPerPixel() / 8;
+    cv::DataKind dataKind  = dtype.dataKind();
+    int          nchannels = dtype.numChannels();
+    int          itemsize  = dtype.bitsPerPixel() / 8;
 
     if (dataKind == cv::DataKind::FLOAT && sizeof(std::complex<T>) == itemsize && nchannels == 2)
     {
@@ -237,27 +237,27 @@ bool FindDType(std::complex<T> *, const cv::PixelType &pix, py::dtype *dt)
 }
 
 template<class... TT>
-py::dtype SelectDType(std::tuple<TT...>, const cv::PixelType &pix)
+py::dtype SelectDType(std::tuple<TT...>, const cv::DataType &dtype)
 {
     py::dtype dt;
 
-    (FindDType((TT *)nullptr, pix, &dt) || ...);
+    (FindDType((TT *)nullptr, dtype, &dt) || ...);
 
     return dt;
 }
 
-py::dtype ToDType(cv::PixelType pix)
+py::dtype ToDType(cv::DataType dtype)
 {
-    return SelectDType(SupportedBaseTypes(), pix);
+    return SelectDType(SupportedBaseTypes(), dtype);
 }
 
 } // namespace
 
-static std::string PixelTypeToString(cv::PixelType type)
+static std::string DataTypeToString(cv::DataType type)
 {
-    const char *str = nvcvPixelTypeGetName(type);
+    const char *str = nvcvDataTypeGetName(type);
 
-    const char *prefix = "NVCV_PIXEL_TYPE_";
+    const char *prefix = "NVCV_DATA_TYPE_";
 
     std::ostringstream out;
 
@@ -269,7 +269,7 @@ static std::string PixelTypeToString(cv::PixelType type)
     }
     else
     {
-        prefix = "PixelType";
+        prefix = "DataType";
         if (strncmp(str, prefix, strlen(prefix)) == 0)
         {
             out << "Type" << str + strlen(prefix);
@@ -283,43 +283,43 @@ static std::string PixelTypeToString(cv::PixelType type)
     return out.str();
 }
 
-void ExportPixelType(py::module &m)
+void ExportDataType(py::module &m)
 {
-    py::class_<cv::PixelType> type(m, "Type");
+    py::class_<cv::DataType> type(m, "Type");
 
 #define DEF(F)     type.def_readonly_static(#F, &cv::TYPE_##F);
 // for formats that begin with a number, we must prepend it with underscore to make
 // it a valid python identifier
 #define DEF_NUM(F) type.def_readonly_static("_" #F, &cv::TYPE_##F);
 
-#include "NVCVPythonPixelTypeDefs.inc"
+#include "NVCVPythonDataTypeDefs.inc"
 
 #undef DEF
 #undef DEF_NUM
 
-    type.def_property_readonly("components", &cv::PixelType::numChannels);
-    type.def(py::init<cv::PixelType>());
+    type.def_property_readonly("components", &cv::DataType::numChannels);
+    type.def(py::init<cv::DataType>());
     type.def(py::init<>());
 
-    type.def("__repr__", &PixelTypeToString);
+    type.def("__repr__", &DataTypeToString);
     type.def(py::self == py::self);
     type.def(py::self != py::self);
     type.def(py::self < py::self);
 
-    py::implicitly_convertible<py::dtype, cv::PixelType>();
+    py::implicitly_convertible<py::dtype, cv::DataType>();
 }
 
 } // namespace nv::cvpy
 
 namespace pybind11::detail {
 
-bool type_caster<nv::cv::PixelType>::load(handle src, bool)
+bool type_caster<nv::cv::DataType>::load(handle src, bool)
 {
-    const type_info *pixtype = get_type_info(typeid(nv::cv::PixelType));
-    if (Py_TYPE(src.ptr()) == pixtype->type)
+    const type_info *tinfo = get_type_info(typeid(nv::cv::DataType));
+    if (Py_TYPE(src.ptr()) == tinfo->type)
     {
         value_and_holder vh = reinterpret_cast<instance *>(src.ptr())->get_value_and_holder();
-        value               = *vh.template holder<nv::cv::PixelType *>();
+        value               = *vh.template holder<nv::cv::DataType *>();
         return true;
     }
     else
@@ -332,9 +332,9 @@ bool type_caster<nv::cv::PixelType>::load(handle src, bool)
         }
         dtype dt = dtype::from_args(reinterpret_steal<object>(ptr));
 
-        if (std::optional<nv::cv::PixelType> pix = nv::cvpy::ToPixelType(dt))
+        if (std::optional<nv::cv::DataType> _dt = nv::cvpy::ToDataType(dt))
         {
-            value = *pix;
+            value = *_dt;
             return true;
         }
         else
@@ -344,8 +344,7 @@ bool type_caster<nv::cv::PixelType>::load(handle src, bool)
     }
 }
 
-handle type_caster<nv::cv::PixelType>::cast(nv::cv::PixelType type, return_value_policy /* policy */,
-                                            handle /*parent */)
+handle type_caster<nv::cv::DataType>::cast(nv::cv::DataType type, return_value_policy /* policy */, handle /*parent */)
 {
     dtype dt = nv::cvpy::ToDType(type);
 

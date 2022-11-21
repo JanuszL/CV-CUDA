@@ -69,10 +69,10 @@ inline const TensorLayout &ITensorData::layout() const
     return this->shape().layout();
 }
 
-inline PixelType ITensorData::dtype() const
+inline DataType ITensorData::dtype() const
 {
     const NVCVTensorData &data = this->cdata();
-    return PixelType{data.dtype};
+    return DataType{data.dtype};
 }
 
 inline const NVCVTensorData &ITensorData::cdata() const

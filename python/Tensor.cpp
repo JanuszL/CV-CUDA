@@ -20,10 +20,10 @@
 #include "Assert.hpp"
 #include "CheckError.hpp"
 #include "CudaBuffer.hpp"
+#include "DataType.hpp"
 #include "Hash.hpp"
 #include "Image.hpp"
 #include "ImageFormat.hpp"
-#include "PixelType.hpp"
 #include "PyUtil.hpp"
 #include "String.hpp"
 
@@ -55,7 +55,7 @@ std::shared_ptr<Tensor> Tensor::CreateForImageBatch(int numImages, const Size2D 
     return CreateFromReqs(reqs);
 }
 
-std::shared_ptr<Tensor> Tensor::Create(Shape shape, cv::PixelType dtype, std::optional<cv::TensorLayout> layout)
+std::shared_ptr<Tensor> Tensor::Create(Shape shape, cv::DataType dtype, std::optional<cv::TensorLayout> layout)
 {
     if (!layout)
     {
@@ -95,7 +95,7 @@ NVCVTensorData FillNVCVTensorData(const py::buffer_info &info, std::optional<cv:
     NVCVTensorData tensorData = {};
 
     // dtype ------------
-    tensorData.dtype = py::cast<cv::PixelType>(ToDType(info));
+    tensorData.dtype = py::cast<cv::DataType>(ToDType(info));
 
     // layout ------------
     if (layout)
@@ -256,7 +256,7 @@ std::optional<cv::TensorLayout> Tensor::layout() const
     }
 }
 
-cv::PixelType Tensor::dtype() const
+cv::DataType Tensor::dtype() const
 {
     return m_impl->dtype();
 }
@@ -267,11 +267,11 @@ int Tensor::ndim() const
 }
 
 Tensor::Key::Key(const cv::Tensor::Requirements &reqs)
-    : Key(cv::TensorShape(reqs.shape, reqs.ndim, reqs.layout), static_cast<cv::PixelType>(reqs.dtype))
+    : Key(cv::TensorShape(reqs.shape, reqs.ndim, reqs.layout), static_cast<cv::DataType>(reqs.dtype))
 {
 }
 
-Tensor::Key::Key(const cv::TensorShape &shape, cv::PixelType dtype)
+Tensor::Key::Key(const cv::TensorShape &shape, cv::DataType dtype)
     : m_shape(std::move(shape))
     , m_dtype(dtype)
     , m_wrapper(false)

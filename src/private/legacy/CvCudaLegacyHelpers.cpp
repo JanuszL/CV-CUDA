@@ -19,7 +19,7 @@
 
 #include "nvcv/TensorDataAccess.hpp"
 
-#include <nvcv/PixelType.hpp>
+#include <nvcv/DataType.hpp>
 #include <private/core/Exception.hpp>
 #include <private/legacy/CvCudaLegacy.h>
 
@@ -96,7 +96,7 @@ cuda_op::DataType GetLegacyDataType(int32_t bpc, cv::DataKind kind)
     throw Exception(Status::ERROR_INVALID_ARGUMENT, "Only planar formats supported ");
 }
 
-cuda_op::DataType GetLegacyDataType(PixelType dtype)
+cuda_op::DataType GetLegacyDataType(DataType dtype)
 {
     auto bpc = dtype.bitsPerChannel();
 
@@ -115,13 +115,13 @@ cuda_op::DataType GetLegacyDataType(ImageFormat fmt)
 {
     for (int i = 1; i < fmt.numPlanes(); ++i)
     {
-        if (fmt.planePixelType(i) != fmt.planePixelType(0))
+        if (fmt.planeDataType(i) != fmt.planeDataType(0))
         {
-            throw Exception(Status::ERROR_INVALID_ARGUMENT, "All planes must have the same pixel type");
+            throw Exception(Status::ERROR_INVALID_ARGUMENT, "All planes must have the same data type");
         }
     }
 
-    return GetLegacyDataType(fmt.planePixelType(0));
+    return GetLegacyDataType(fmt.planeDataType(0));
 }
 
 cuda_op::DataShape GetLegacyDataShape(const TensorShapeInfoImage &shapeInfo)
@@ -140,9 +140,9 @@ cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShape &imgBatch)
 
     for (int i = 1; i < fmt.numPlanes(); ++i)
     {
-        if (fmt.planePixelType(i) != fmt.planePixelType(0))
+        if (fmt.planeDataType(i) != fmt.planeDataType(0))
         {
-            throw Exception(Status::ERROR_INVALID_ARGUMENT, "All planes must have the same pixel type");
+            throw Exception(Status::ERROR_INVALID_ARGUMENT, "All planes must have the same data type");
         }
     }
 
@@ -185,9 +185,9 @@ cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShapeDataPitchDevice
 
     for (int i = 1; i < fmt.numPlanes(); ++i)
     {
-        if (fmt.planePixelType(i) != fmt.planePixelType(0))
+        if (fmt.planeDataType(i) != fmt.planeDataType(0))
         {
-            throw Exception(Status::ERROR_INVALID_ARGUMENT, "All planes must have the same pixel type");
+            throw Exception(Status::ERROR_INVALID_ARGUMENT, "All planes must have the same data type");
         }
     }
 

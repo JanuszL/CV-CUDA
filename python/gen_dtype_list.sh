@@ -17,12 +17,12 @@
 
 if [ $# != 1 ]; then
     echo "Invalid arguments"
-    echo "Usage: $(basename "$0") <C pixel type header path>"
+    echo "Usage: $(basename "$0") <C data type header path>"
     exit 1
 fi
 
-pixtype_header=$1
+dtype_header=$1
 shift
 
-sed -n 's@^#define NVCV_PIXEL_TYPE_\([0-9][^ ]\+\) \+NVCV_DETAIL.*@DEF_NUM(\1)@gp' $pixtype_header
-sed -n 's@^#define NVCV_PIXEL_TYPE_\([^0-9][^ ]\+\) \+NVCV_DETAIL.*@DEF(\1)@gp' $pixtype_header
+sed -n 's@^#define NVCV_DATA_TYPE_\([0-9][^ ]\+\) \+NVCV_DETAIL.*@DEF_NUM(\1)@gp' $dtype_header
+sed -n 's@^#define NVCV_DATA_TYPE_\([^0-9][^ ]\+\) \+NVCV_DETAIL.*@DEF(\1)@gp' $dtype_header

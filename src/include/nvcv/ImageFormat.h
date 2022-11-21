@@ -26,7 +26,7 @@
 
 #include "ColorSpec.h"
 #include "DataLayout.h"
-#include "PixelType.h"
+#include "DataType.h"
 
 #include <assert.h>
 
@@ -795,19 +795,19 @@ NVCV_PUBLIC NVCVStatus nvcvImageFormatGetNumChannels(NVCVImageFormat fmt, int32_
  */
 NVCV_PUBLIC NVCVStatus nvcvImageFormatGetBitsPerChannel(NVCVImageFormat fmt, int32_t *bits);
 
-/** Get the pixel type of image format's plane.
+/** Get the data type of image format's plane.
  *
  * @param[in] fmt   Image format to be queried.
  * @param[in] plane Plane to be queried.
  *                  + Valid values range from 0 (first) to 3 (fourth and last) plane.
  *                  + Cannot be NULL.
  *
- * @param[out] outPixType The pixel type of the given plane.
+ * @param[out] outPixType The data type of the given plane.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some argument is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvImageFormatGetPlanePixelType(NVCVImageFormat fmt, int32_t plane, NVCVPixelType *outPixType);
+NVCV_PUBLIC NVCVStatus nvcvImageFormatGetPlaneDataType(NVCVImageFormat fmt, int32_t plane, NVCVDataType *outPixType);
 
 /** Get the plane format of an image format.
  *

@@ -17,10 +17,10 @@
 
 #include "Definitions.hpp"
 #include "nvcv/DataLayout.hpp"
+#include "nvcv/DataType.hpp"
 #include "nvcv/IImageData.hpp"
 #include "nvcv/ITensorData.hpp"
 #include "nvcv/ImageFormat.hpp"
-#include "nvcv/PixelType.hpp"
 
 #include <common/BorderUtils.hpp>
 #include <common/ValueTests.hpp>

@@ -214,8 +214,8 @@ protected:
  * @sa NVCV_CPP_CUDATOOLS_BORDERWRAPS
  *
  * @code
- * using PixelType = ...;
- * using TensorWrap2D = TensorWrap<-1, -1, PixelType>;
+ * using DataType = ...;
+ * using TensorWrap2D = TensorWrap<-1, -1, DataType>;
  * using BorderWrap2D = BorderWrap<Tensor, NVCV_BORDER_REFLECT, 1, 1>;
  * TensorWrap2D tensorWrap(...);
  * int2 tensorShape = ...;

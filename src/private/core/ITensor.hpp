@@ -35,7 +35,7 @@ public:
 
     virtual const NVCVTensorLayout &layout() const = 0;
 
-    virtual PixelType dtype() const = 0;
+    virtual DataType dtype() const = 0;
 
     virtual IAllocator &alloc() const = 0;
 

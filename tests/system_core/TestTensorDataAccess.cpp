@@ -40,7 +40,7 @@ public:
         NVCVTensorData &data = this->cdata();
         data.bufferType      = NVCV_TENSOR_BUFFER_PITCH_DEVICE;
         data.ndim            = tshape.size();
-        data.dtype           = NVCV_PIXEL_TYPE_U8;
+        data.dtype           = NVCV_DATA_TYPE_U8;
         data.layout          = tshape.layout();
 
         const nvcv::TensorShape::ShapeType &shape = tshape.shape();

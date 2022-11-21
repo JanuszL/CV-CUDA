@@ -252,7 +252,7 @@ const std::unordered_map<NVCVColorConversionCode, NVCVImageFormat> kOutputFormat
   //NVCV_COLORCVT_MAX = 148,
 };
 
-cv::ImageFormat GetOutputFormat(cv::PixelType in, NVCVColorConversionCode code)
+cv::ImageFormat GetOutputFormat(cv::DataType in, NVCVColorConversionCode code)
 {
     auto outFormatIt = kOutputFormat.find(code);
     if (outFormatIt == kOutputFormat.end())
@@ -350,7 +350,7 @@ std::shared_ptr<ImageBatchVarShape> CvtColorVarShape(ImageBatchVarShape &input, 
     {
         throw std::runtime_error("All images in input must have the same single-plane format");
     }
-    auto outFormat = GetOutputFormat(inFormat.planePixelType(0), code);
+    auto outFormat = GetOutputFormat(inFormat.planeDataType(0), code);
 
     std::shared_ptr<ImageBatchVarShape> output = ImageBatchVarShape::Create(input.capacity());
 

@@ -42,7 +42,7 @@ public:
     static void Export(py::module &m);
 
     static std::shared_ptr<Tensor> CreateForImageBatch(int numImages, const Size2D &size, cv::ImageFormat fmt);
-    static std::shared_ptr<Tensor> Create(Shape shape, cv::PixelType dtype, std::optional<cv::TensorLayout> layout);
+    static std::shared_ptr<Tensor> Create(Shape shape, cv::DataType dtype, std::optional<cv::TensorLayout> layout);
 
     static std::shared_ptr<Tensor> CreateFromReqs(const cv::Tensor::Requirements &reqs);
 
@@ -54,7 +54,7 @@ public:
 
     std::optional<cv::TensorLayout> layout() const;
     Shape                           shape() const;
-    cv::PixelType                   dtype() const;
+    cv::DataType                    dtype() const;
     int                             ndim() const;
 
     cv::ITensor       &impl();
@@ -69,11 +69,11 @@ public:
         }
 
         explicit Key(const cv::Tensor::Requirements &reqs);
-        explicit Key(const cv::TensorShape &shape, cv::PixelType dtype);
+        explicit Key(const cv::TensorShape &shape, cv::DataType dtype);
 
     private:
         cv::TensorShape m_shape;
-        cv::PixelType   m_dtype;
+        cv::DataType    m_dtype;
         bool            m_wrapper;
 
         virtual size_t doGetHash() const override;

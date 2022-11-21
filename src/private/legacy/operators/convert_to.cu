@@ -73,13 +73,13 @@ void convertToScaleCN(const nvcv::ITensorDataPitchDevice &inData, const nvcv::IT
     dim3 block(32, 8);
     dim3 grid(divUp(size.x, block.x), divUp(size.y, block.y), batch_size);
 
-    using DT_AB          = decltype(float() * DT_SOURCE() * DT_DEST()); //pick correct scalar
-    using SRC_PIXEL_TYPE = nvcv::cuda::MakeType<DT_SOURCE, NC>;
-    using DST_PIXEL_TYPE = nvcv::cuda::MakeType<DT_DEST, NC>;
+    using DT_AB         = decltype(float() * DT_SOURCE() * DT_DEST()); //pick correct scalar
+    using SRC_DATA_TYPE = nvcv::cuda::MakeType<DT_SOURCE, NC>;
+    using DST_DATA_TYPE = nvcv::cuda::MakeType<DT_DEST, NC>;
 
-    Convertor<SRC_PIXEL_TYPE, DST_PIXEL_TYPE, DT_AB> op;
-    nvcv::cuda::Tensor3DWrap<SRC_PIXEL_TYPE>         src(inData);
-    nvcv::cuda::Tensor3DWrap<DST_PIXEL_TYPE>         dst(outData);
+    Convertor<SRC_DATA_TYPE, DST_DATA_TYPE, DT_AB> op;
+    nvcv::cuda::Tensor3DWrap<SRC_DATA_TYPE>        src(inData);
+    nvcv::cuda::Tensor3DWrap<DST_DATA_TYPE>        dst(outData);
 
     op.alpha = nvcv::cuda::SaturateCast<DT_AB>(alpha);
     op.beta  = nvcv::cuda::SaturateCast<DT_AB>(beta);

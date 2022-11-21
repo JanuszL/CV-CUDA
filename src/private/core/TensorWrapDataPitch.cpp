@@ -23,7 +23,7 @@
 #include "TensorLayout.hpp"
 
 #include <cuda_runtime.h>
-#include <fmt/PixelType.hpp>
+#include <fmt/DataType.hpp>
 #include <util/CheckError.hpp>
 #include <util/Math.hpp>
 
@@ -58,7 +58,7 @@ static void ValidateTensorBufferPitch(const NVCVTensorData &tdata)
         }
     }
 
-    PixelType dtype{tdata.dtype};
+    DataType dtype{tdata.dtype};
 
     int firstPacked = IsChannelLast(tdata.layout) ? std::max(0, ndim - 2) : ndim - 1;
 
@@ -119,9 +119,9 @@ const NVCVTensorLayout &TensorWrapDataPitch::layout() const
     return m_tdata.layout;
 }
 
-PixelType TensorWrapDataPitch::dtype() const
+DataType TensorWrapDataPitch::dtype() const
 {
-    return PixelType{m_tdata.dtype};
+    return DataType{m_tdata.dtype};
 }
 
 IAllocator &TensorWrapDataPitch::alloc() const

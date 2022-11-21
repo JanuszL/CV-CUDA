@@ -20,7 +20,7 @@
 #include "Bitfield.hpp"
 #include "ColorFormat.hpp"
 #include "DataLayout.hpp"
-#include "PixelType.hpp"
+#include "DataType.hpp"
 
 #include <core/Exception.hpp>
 #include <util/Assert.h>
@@ -423,9 +423,9 @@ bool HasSameDataLayout(ImageFormat a, ImageFormat b) noexcept
     {
         for (int i = 0; i < a.numPlanes(); ++i)
         {
-            // we have to test packing explicitely t as pixel type's packing isn't the same
+            // we have to test packing explicitely t as data type's packing isn't the same
             // as image format's plane packing
-            if (a.planePacking(i) != b.planePacking(i) || a.planePixelType(i) != b.planePixelType(i))
+            if (a.planePacking(i) != b.planePacking(i) || a.planeDataType(i) != b.planeDataType(i))
             {
                 return false;
             }
@@ -557,7 +557,7 @@ int ImageFormat::planeNumChannels(int plane) const noexcept
 
 int ImageFormat::planeRowAlignment(int plane) const noexcept
 {
-    return planePixelType(plane).alignment();
+    return planeDataType(plane).alignment();
 }
 
 int ImageFormat::numPlanes() const noexcept
@@ -717,7 +717,7 @@ ImageFormat ImageFormat::planeFormat(int plane) const
     }
 }
 
-PixelType ImageFormat::planePixelType(int plane) const noexcept
+DataType ImageFormat::planeDataType(int plane) const noexcept
 {
     NVCVDataKind dataKind = this->dataKind();
     NVCVPacking  packing  = this->planePacking(plane);
@@ -725,7 +725,7 @@ PixelType ImageFormat::planePixelType(int plane) const noexcept
     switch (packing)
     {
     case NVCV_PACKING_0:
-        return PixelType{NVCV_PIXEL_TYPE_NONE};
+        return DataType{NVCV_DATA_TYPE_NONE};
 
     case NVCV_PACKING_X8_Y8__X8_Z8:
     case NVCV_PACKING_Y8_X8__Z8_X8:
@@ -736,12 +736,12 @@ PixelType ImageFormat::planePixelType(int plane) const noexcept
         break;
     }
 
-    return PixelType{dataKind, packing};
+    return DataType{dataKind, packing};
 }
 
 int ImageFormat::planePixelStrideBytes(int plane) const noexcept
 {
-    return this->planePixelType(plane).strideBytes();
+    return this->planeDataType(plane).strideBytes();
 }
 
 uint32_t ImageFormat::fourCC() const

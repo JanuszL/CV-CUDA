@@ -135,9 +135,9 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopGaussianSubmit(NVCVOperatorHandle handle, cudaSt
  * @param[in] in Input image batch.
  * @param[out] out Output image batch.
  * @param[in] kernelSize Gaussian kernel size as a Tensor of int2.
- *                       + Must be of pixel type NVCV_PIXEL_TYPE_2S32
+ *                       + Must be of pixel type NVCV_DATA_TYPE_2S32
  * @param[in] sigma Gaussian sigma as a Tensor of double2.
- *                  + Must be of pixel type NVCV_PIXEL_TYPE_2F64
+ *                  + Must be of pixel type NVCV_DATA_TYPE_2F64
  * @param[in] borderMode Border mode to be used when accessing elements outside input image, cf. \p NVCVBorderType.
  */
 NVCV_OP_PUBLIC NVCVStatus nvcvopGaussianVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,

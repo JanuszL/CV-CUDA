@@ -18,8 +18,8 @@
 #ifndef NVCV_IMAGEDATA_H
 #define NVCV_IMAGEDATA_H
 
+#include "DataType.h"
 #include "ImageFormat.h"
-#include "PixelType.h"
 #include "detail/CudaFwd.h"
 
 #include <stdint.h>
@@ -39,7 +39,7 @@ typedef struct NVCVImagePlanePitchRec
          @code
             T *pix_addr = (T *)((uint8_t *)data + pitchBytes*height)+width;
          @endcode
-         where T is the C type related to pixelType.
+         where T is the C type related to dataType.
 
          + It must be at least `(width * bits-per-pixel + 7)/8`.
     */

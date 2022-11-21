@@ -1981,10 +1981,10 @@ public:
      * @param inData Input images.
      * @param outData Output images.
      * @param kernelSize Average blur kernel size.
-     *                     + Must be 1D tensor of int2, NVCV_PIXEL_TYPE_2S32
+     *                     + Must be 1D tensor of int2, NVCV_DATA_TYPE_2S32
      * @param kernelAnchor Anchor of the kernel that indicates the relative position of a filtered point within the kernel.
      * (-1,-1) means that the anchor is at the kernel center.
-     *                     + Must be 1D tensor of int2, NVCV_PIXEL_TYPE_2S32
+     *                     + Must be 1D tensor of int2, NVCV_DATA_TYPE_2S32
      * @param borderMode pixel extrapolation method, e.g. cv::BORDER_CONSTANT
      * @param stream for the asynchronous execution.
      */

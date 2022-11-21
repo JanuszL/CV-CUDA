@@ -77,8 +77,8 @@ constexpr bool HasEnoughComponents = N <= TypeTraits<T>::components;
  * @brief Metatype to get the base type of a CUDA compound types
  *
  * @code
- * using PixelType = ...;
- * using ChannelType = nv::cv::cuda::BaseType<PixelType>;
+ * using DataType = ...;
+ * using ChannelType = nv::cv::cuda::BaseType<DataType>;
  * @endcode
  *
  * @note This is identity for regular C types.
@@ -92,8 +92,8 @@ using BaseType = typename TypeTraits<T>::base_type;
  * @brief Metavariable to get the number of components of a type
  *
  * @code
- * using PixelType = ...;
- * int nc = nv::cv::cuda::NumComponents<PixelType>;
+ * using DataType = ...;
+ * int nc = nv::cv::cuda::NumComponents<DataType>;
  * @endcode
  *
  * @note This is zero for regular C types.
@@ -107,8 +107,8 @@ constexpr int NumComponents = TypeTraits<T>::components;
  * @brief Metavariable to get the number of elements of a type
  *
  * @code
- * using PixelType = ...;
- * for (int e = 0; e < nv::cv::cuda::NumElements<PixelType>; ++e)
+ * using DataType = ...;
+ * for (int e = 0; e < nv::cv::cuda::NumElements<DataType>; ++e)
  *     // ...
  * @endcode
  *
@@ -143,8 +143,8 @@ using MakeType = detail::MakeType_t<T, C>;
  * @details The base type of target type \p T is replaced to be \p BT.
  *
  * @code
- * using PixelType = ...;
- * using FloatPixelType = ConvertBaseTypeTo<float, PixelType>; // yields float1..4
+ * using DataType = ...;
+ * using FloatDataType = ConvertBaseTypeTo<float, DataType>; // yields float1..4
  * @endcode
  *
  * @tparam BT Base type to use in the conversion
@@ -239,7 +239,7 @@ __host__ __device__ RT SetAll(BT x)
  * function returns the name of the type resembling the CUDA compound type, that may be useful for debug printing.
  *
  * @code
- * std::cout << GetTypeName<PixelType>();
+ * std::cout << GetTypeName<DataType>();
  * @endcode
  *
  * @tparam T Type to get the name from
@@ -264,7 +264,7 @@ __host__ const char *GetTypeName()
  * parentheses.
  *
  * @code
- * PixelType pix = ...;
+ * DataType pix = ...;
  * std::cout << pix;
  * @endcode
  *
@@ -273,7 +273,7 @@ __host__ const char *GetTypeName()
  * @param[in, out] out Output stream to be changed and returned
  * @param[in] v Pixel value to be inserted formatted in the output stream
  *
- * @return Output stream with the pixel type and values
+ * @return Output stream with the data type and values
  */
 template<class T, class = nv::cv::cuda::Require<nv::cv::cuda::IsCompound<T>>>
 __host__ std::ostream &operator<<(std::ostream &out, const T &v)

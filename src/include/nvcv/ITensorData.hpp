@@ -18,7 +18,7 @@
 #ifndef NVCV_ITENSORDATA_HPP
 #define NVCV_ITENSORDATA_HPP
 
-#include "PixelType.hpp"
+#include "DataType.hpp"
 #include "TensorData.h"
 #include "TensorShape.hpp"
 #include "detail/Optional.hpp"
@@ -37,7 +37,7 @@ public:
 
     const TensorLayout &layout() const;
 
-    PixelType dtype() const;
+    DataType dtype() const;
 
     const NVCVTensorData &cdata() const;
 

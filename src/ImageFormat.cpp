@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
+#include <fmt/DataType.hpp>
 #include <fmt/ImageFormat.hpp>
-#include <fmt/PixelType.hpp>
 #include <fmt/TLS.hpp>
 #include <nvcv/ImageFormat.h>
 #include <private/core/Exception.hpp>
@@ -380,18 +380,18 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageFormatGetNumChannels, (NVCVImageForma
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageFormatGetPlanePixelType,
-                (NVCVImageFormat fmt, int plane, NVCVPixelType *outPixType))
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageFormatGetPlaneDataType,
+                (NVCVImageFormat fmt, int plane, NVCVDataType *outPixType))
 {
     return priv::ProtectCall(
         [&]
         {
             if (outPixType == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to pixel type output cannot be NULL");
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to data type output cannot be NULL");
             }
             priv::ImageFormat pfmt{fmt};
-            *outPixType = pfmt.planePixelType(plane).value();
+            *outPixType = pfmt.planeDataType(plane).value();
         });
 }
 

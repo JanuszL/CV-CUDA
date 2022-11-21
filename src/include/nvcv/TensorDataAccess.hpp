@@ -44,7 +44,7 @@ public:
         return m_infoShape.numSamples();
     }
 
-    PixelType dtype() const
+    DataType dtype() const
     {
         return m_tdata.dtype();
     }

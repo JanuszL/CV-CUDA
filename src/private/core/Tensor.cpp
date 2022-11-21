@@ -25,7 +25,7 @@
 
 #include <cuda_runtime.h>
 #include <fmt/DataLayout.hpp>
-#include <fmt/PixelType.hpp>
+#include <fmt/DataType.hpp>
 #include <util/Assert.h>
 #include <util/CheckError.hpp>
 #include <util/Math.hpp>
@@ -75,7 +75,7 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t numImages, Size2D imgSiz
     int64_t shape[NVCV_TENSOR_MAX_NDIM];
     PermuteShape(NVCV_TENSOR_NCHW, shapeNCHW, layout, shape);
 
-    // Calculate the element type. It's the pixel type of the
+    // Calculate the element type. It's the data type of the
     // first channel. It assumes that all channels have same packing.
     NVCVPackingParams params = GetPackingParams(fmt.planePacking(0));
     params.swizzle           = NVCV_SWIZZLE_X000;
@@ -86,12 +86,12 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t numImages, Size2D imgSiz
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Image format can't be represented in a tensor: " << fmt;
     }
 
-    PixelType dtype{fmt.dataKind(), *chPacking};
+    DataType dtype{fmt.dataKind(), *chPacking};
 
     return CalcRequirements(layout.ndim, shape, dtype, layout, userBaseAlign, userRowAlign);
 }
 
-NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int64_t *shape, const PixelType &dtype,
+NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int64_t *shape, const DataType &dtype,
                                                 NVCVTensorLayout layout, int32_t userBaseAlign, int32_t userRowAlign)
 {
     NVCVTensorRequirements reqs;
@@ -219,9 +219,9 @@ const NVCVTensorLayout &Tensor::layout() const
     return m_reqs.layout;
 }
 
-PixelType Tensor::dtype() const
+DataType Tensor::dtype() const
 {
-    return PixelType{m_reqs.dtype};
+    return DataType{m_reqs.dtype};
 }
 
 IAllocator &Tensor::alloc() const

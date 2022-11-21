@@ -20,13 +20,13 @@
 #include "ColorConversionCode.hpp"
 #include "Container.hpp"
 #include "CudaBuffer.hpp"
+#include "DataType.hpp"
 #include "Image.hpp"
 #include "ImageBatch.hpp"
 #include "ImageFormat.hpp"
 #include "InterpolationType.hpp"
 #include "MorphologyType.hpp"
 #include "Operators.hpp"
-#include "PixelType.hpp"
 #include "Rect.hpp"
 #include "Resource.hpp"
 #include "Stream.hpp"
@@ -60,7 +60,7 @@ PYBIND11_MODULE(nvcv, m)
     }
 
     ExportImageFormat(m);
-    ExportPixelType(m);
+    ExportDataType(m);
     ExportRect(m);
     ExportBorderType(m);
     ExportMorphologyType(m);

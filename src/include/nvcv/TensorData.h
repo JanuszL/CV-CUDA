@@ -26,7 +26,7 @@ extern "C"
 {
 #endif
 
-typedef NVCVPixelType NVCVElementType;
+typedef NVCVDataType NVCVElementType;
 
 /** Stores the tensor plane contents. */
 typedef struct NVCVTensorBufferPitchRec

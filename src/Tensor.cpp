@@ -28,8 +28,8 @@
 #include <private/core/TensorLayout.hpp>
 #include <private/core/TensorManager.hpp>
 #include <private/core/TensorWrapDataPitch.hpp>
+#include <private/fmt/DataType.hpp>
 #include <private/fmt/ImageFormat.hpp>
-#include <private/fmt/PixelType.hpp>
 
 #include <algorithm>
 
@@ -54,7 +54,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorCalcRequirementsForImages,
 }
 
 NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorCalcRequirements,
-                (int32_t ndim, const int64_t *shape, NVCVPixelType dtype, NVCVTensorLayout layout, int32_t baseAlign,
+                (int32_t ndim, const int64_t *shape, NVCVDataType dtype, NVCVTensorLayout layout, int32_t baseAlign,
                  int32_t rowAlign, NVCVTensorRequirements *reqs))
 {
     return priv::ProtectCall(
@@ -65,9 +65,9 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorCalcRequirements,
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output requirements must not be NULL");
             }
 
-            priv::PixelType pix{dtype};
+            priv::DataType type{dtype};
 
-            *reqs = priv::Tensor::CalcRequirements(ndim, shape, pix, layout, baseAlign, rowAlign);
+            *reqs = priv::Tensor::CalcRequirements(ndim, shape, type, layout, baseAlign, rowAlign);
         });
 }
 
@@ -232,7 +232,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorGetShape, (NVCVTensorHandle handle, 
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorGetDataType, (NVCVTensorHandle handle, NVCVPixelType *dtype))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorGetDataType, (NVCVTensorHandle handle, NVCVDataType *dtype))
 {
     return priv::ProtectCall(
         [&]

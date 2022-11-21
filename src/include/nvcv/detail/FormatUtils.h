@@ -57,7 +57,7 @@
 #define NVCV_DETAIL_MAKE_SWZL(x, y, z, w) \
     NVCV_DETAIL_MAKE_SWIZZLE(NVCV_CHANNEL_##x, NVCV_CHANNEL_##y, NVCV_CHANNEL_##z, NVCV_CHANNEL_##w)
 
-// Image format / pixel type utils
+// Image format / data type utils
 
 #define NVCV_DETAIL_ADJUST_BPP_ENCODING(PACK, BPP, PACKLEN) \
     ((PACKLEN) == 0 && (BPP) == 0 && (PACK) == 4 ? (uint64_t)-1 : (BPP))
@@ -147,12 +147,12 @@
 #define NVCV_DETAIL_MAKE_COLOR_FMT(ColorModel, ColorSpec, MemLayout, DataKind, Swizzle, NumPlanes, ...) \
     NVCV_DETAIL_MAKE_COLOR_FMT##NumPlanes(ColorModel, ColorSpec, MemLayout, DataKind, Swizzle, __VA_ARGS__)
 
-// MAKE_PIXEL_TYPE ========================================
+// MAKE_DATA_TYPE ========================================
 
 // Full arg name
 
-#define NVCV_DETAIL_MAKE_PIXEL_TYPE(DataKind, Packing)                                                      \
-    ((NVCVPixelType)NVCV_DETAIL_MAKE_FMTTYPE(                                                               \
+#define NVCV_DETAIL_MAKE_DATA_TYPE(DataKind, Packing)                                                       \
+    ((NVCVDataType)NVCV_DETAIL_MAKE_FMTTYPE(                                                                \
         NVCV_COLOR_MODEL_UNDEFINED, NVCV_COLOR_SPEC_UNDEFINED, NVCV_CSS_NONE, NVCV_MEM_LAYOUT_PL, DataKind, \
         NVCV_DETAIL_MAKE_SWIZZLE(NVCV_CHANNEL_X,                                                            \
                                  NVCV_DETAIL_EXTRACT_PACKING_CHANNELS(Packing) >= 2 ? NVCV_CHANNEL_Y : 0,   \
@@ -163,7 +163,7 @@
 // Abbreviated
 
 #define NVCV_DETAIL_MAKE_PIX_TYPE(DataKind, Packing) \
-    NVCV_DETAIL_MAKE_PIXEL_TYPE(NVCV_DATA_KIND_##DataKind, NVCV_PACKING_##Packing)
+    NVCV_DETAIL_MAKE_DATA_TYPE(NVCV_DATA_KIND_##DataKind, NVCV_PACKING_##Packing)
 
 // MAKE_NONCOLOR ==================================
 

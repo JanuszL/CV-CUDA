@@ -308,7 +308,7 @@ TEST_P(OpNormalize, varshape_correct_output)
             {1, 1, 1, baseFormat.numChannels()},
             nvcv::TensorLayout::NHWC
     },
-        baseFormat.planePixelType(0));
+        baseFormat.planeDataType(0));
     std::vector<float> baseVec(baseFormat.numChannels());
     {
         const auto *baseData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgBase.exportData());
@@ -331,7 +331,7 @@ TEST_P(OpNormalize, varshape_correct_output)
             {1, 1, 1, scaleFormat.numChannels()},
             nvcv::TensorLayout::NHWC
     },
-        scaleFormat.planePixelType(0));
+        scaleFormat.planeDataType(0));
     std::vector<float> scaleVec(scaleFormat.numChannels());
     {
         const auto *scaleData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgScale.exportData());

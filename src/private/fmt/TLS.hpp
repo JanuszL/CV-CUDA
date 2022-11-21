@@ -42,7 +42,7 @@ struct FormatTLS
     char bufByteOrderName[128];
     char bufPackingName[128];
 
-    char bufPixelTypeName[1024];
+    char bufDataTypeName[1024];
     char bufImageFormatName[1024];
 };
 

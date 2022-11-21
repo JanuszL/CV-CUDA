@@ -27,7 +27,7 @@ add_library(nvcv SHARED
     Status.cpp
     ColorSpec.cpp
     DataLayout.cpp
-    PixelType.cpp
+    DataType.cpp
     ImageFormat.cpp
     Allocator.cpp
     Requirements.cpp

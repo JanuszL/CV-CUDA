@@ -91,13 +91,13 @@ TYPED_TEST(SaturateCastTest, correct_output_in_host)
 
 TYPED_TEST(SaturateCastTest, correct_output_in_device)
 {
-    using TargetBaseType  = ttype::GetType<TypeParam, 0>;
-    auto input            = ttype::GetValue<TypeParam, 1>;
-    auto gold             = ttype::GetValue<TypeParam, 2>;
-    using InputType       = decltype(input);
-    using TargetPixelType = cuda::ConvertBaseTypeTo<TargetBaseType, InputType>;
+    using TargetBaseType = ttype::GetType<TypeParam, 0>;
+    auto input           = ttype::GetValue<TypeParam, 1>;
+    auto gold            = ttype::GetValue<TypeParam, 2>;
+    using InputType      = decltype(input);
+    using TargetDataType = cuda::ConvertBaseTypeTo<TargetBaseType, InputType>;
 
-    auto test = DeviceRunSaturateCast<TargetPixelType>(input);
+    auto test = DeviceRunSaturateCast<TargetDataType>(input);
 
     EXPECT_TRUE((std::is_same_v<decltype(test), decltype(gold)>));
     EXPECT_EQ(test, gold);

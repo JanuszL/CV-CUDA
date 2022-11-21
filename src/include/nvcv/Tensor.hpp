@@ -32,12 +32,12 @@ class Tensor : public ITensor
 {
 public:
     using Requirements = NVCVTensorRequirements;
-    static Requirements CalcRequirements(const TensorShape &shape, PixelType dtype, const MemAlignment &bufAlign = {});
+    static Requirements CalcRequirements(const TensorShape &shape, DataType dtype, const MemAlignment &bufAlign = {});
     static Requirements CalcRequirements(int numImages, Size2D imgSize, ImageFormat fmt,
                                          const MemAlignment &bufAlign = {});
 
     explicit Tensor(const Requirements &reqs, IAllocator *alloc = nullptr);
-    explicit Tensor(const TensorShape &shape, PixelType dtype, const MemAlignment &bufAlign = {},
+    explicit Tensor(const TensorShape &shape, DataType dtype, const MemAlignment &bufAlign = {},
                     IAllocator *alloc = nullptr);
     explicit Tensor(int numImages, Size2D imgSize, ImageFormat fmt, const MemAlignment &bufAlign = {},
                     IAllocator *alloc = nullptr);

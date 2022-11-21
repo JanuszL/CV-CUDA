@@ -89,7 +89,7 @@ void PreProcess(nv::cv::TensorWrapData &inTensor, uint32_t batchSize, int inputL
     std::copy(reqsScale.pitchBytes, reqsScale.pitchBytes + NVCV_TENSOR_MAX_NDIM, bufScale.pitchBytes);
     CHECK_CUDA_ERROR(cudaMalloc(&bufScale.data, scaleBufferSize));
     nv::cv::TensorDataPitchDevice scaleIn(nv::cv::TensorShape{reqsScale.shape, reqsScale.ndim, reqsScale.layout},
-                                          nv::cv::PixelType{reqsScale.dtype}, bufScale);
+                                          nv::cv::DataType{reqsScale.dtype}, bufScale);
     nv::cv::TensorWrapData        scaleTensor(scaleIn);
 
     // Create a Tensor to store the mean values for R,G,B
@@ -99,7 +99,7 @@ void PreProcess(nv::cv::TensorWrapData &inTensor, uint32_t batchSize, int inputL
     std::copy(reqsBase.pitchBytes, reqsBase.pitchBytes + NVCV_TENSOR_MAX_NDIM, bufBase.pitchBytes);
     CHECK_CUDA_ERROR(cudaMalloc(&bufBase.data, baseBufferSize));
     nv::cv::TensorDataPitchDevice baseIn(nv::cv::TensorShape{reqsBase.shape, reqsBase.ndim, reqsBase.layout},
-                                         nv::cv::PixelType{reqsBase.dtype}, bufBase);
+                                         nv::cv::DataType{reqsBase.dtype}, bufBase);
     nv::cv::TensorWrapData        baseTensor(baseIn);
 
     // Copy the values from Host to Device
@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
         = nv::cv::Tensor::CalcRequirements(batchSize, {maxImageWidth, maxImageHeight}, nv::cv::FMT_RGB8);
 
     nv::cv::TensorDataPitchDevice inData(nv::cv::TensorShape{inReqs.shape, inReqs.ndim, inReqs.layout},
-                                         nv::cv::PixelType{inReqs.dtype}, inBuf);
+                                         nv::cv::DataType{inReqs.dtype}, inBuf);
     nv::cv::TensorWrapData        inTensor(inData);
 
     // NvJpeg is used to load the images to create a batched input device buffer.
@@ -283,7 +283,7 @@ int main(int argc, char *argv[])
     // Wrap the tensor as a CVCUDA tensor
     nv::cv::TensorDataPitchDevice inputLayerTensorData(
         nv::cv::TensorShape{reqsInputLayer.shape, reqsInputLayer.ndim, reqsInputLayer.layout},
-        nv::cv::PixelType{reqsInputLayer.dtype}, bufInputLayer);
+        nv::cv::DataType{reqsInputLayer.dtype}, bufInputLayer);
     nv::cv::TensorWrapData inputLayerTensor(inputLayerTensorData);
 
     // Allocate ouput layer buffer based on the output layer dimensions and batch size
@@ -295,7 +295,7 @@ int main(int argc, char *argv[])
     CHECK_CUDA_ERROR(cudaMalloc(&bufOutputLayer.data, outputLayerSize));
     nv::cv::TensorDataPitchDevice outputLayerTensorData(
         nv::cv::TensorShape{reqsOutputLayer.shape, reqsOutputLayer.ndim, reqsOutputLayer.layout},
-        nv::cv::PixelType{reqsOutputLayer.dtype}, bufOutputLayer);
+        nv::cv::DataType{reqsOutputLayer.dtype}, bufOutputLayer);
     nv::cv::TensorWrapData outputLayerTensor(outputLayerTensorData);
 
     // Run preprocess on the input image batch

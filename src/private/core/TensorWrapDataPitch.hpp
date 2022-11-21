@@ -35,7 +35,7 @@ public:
 
     const NVCVTensorLayout &layout() const override;
 
-    PixelType dtype() const override;
+    DataType dtype() const override;
 
     IAllocator &alloc() const override;
 

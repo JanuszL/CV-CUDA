@@ -52,10 +52,10 @@ struct Params
 
     struct
     {
-        int           bpp       = 0;
-        int           channels  = 0;
-        NVCVPixelType pixFormat = NVCV_PIXEL_TYPE_NONE;
-        NVCVSwizzle   swizzle   = NVCV_SWIZZLE_0000;
+        int          bpp       = 0;
+        int          channels  = 0;
+        NVCVDataType pixFormat = NVCV_DATA_TYPE_NONE;
+        NVCVSwizzle  swizzle   = NVCV_SWIZZLE_0000;
     } planes[4];
 };
 
@@ -96,9 +96,9 @@ INSTANTIATE_TEST_SUITE_P(ExplicitTypes, ImageFormatTests,
                                  4,
                                  NVCV_CHROMA_LOC_EVEN,
                                  NVCV_CHROMA_LOC_EVEN,
-                                 {                                            8, 0, 0, 0},
+                                 {                                           8, 0, 0, 0},
                                  1,
-                                 {{8, 1, NVCV_PIXEL_TYPE_U8, NVCV_SWIZZLE_X000}  }
+                                 {{8, 1, NVCV_DATA_TYPE_U8, NVCV_SWIZZLE_X000}  }
 },
                              Params{NVCV_IMAGE_FORMAT_S8,
                                     FMT_IMAGE_PARAMS(UNDEFINED, UNDEFINED, NONE, PL, SIGNED, X000, X8, 0, 0, 0),
@@ -108,7 +108,7 @@ INSTANTIATE_TEST_SUITE_P(ExplicitTypes, ImageFormatTests,
                                     NVCV_CHROMA_LOC_EVEN,
                                     {8, 0, 0, 0},
                                     1,
-                                    {{8, 1, NVCV_PIXEL_TYPE_S8, NVCV_SWIZZLE_X000}}},
+                                    {{8, 1, NVCV_DATA_TYPE_S8, NVCV_SWIZZLE_X000}}},
                              Params{NVCV_IMAGE_FORMAT_U16,
                                     FMT_IMAGE_PARAMS(UNDEFINED, UNDEFINED, NONE, PL, UNSIGNED, X000, X16, 0, 0, 0),
                                     4,
@@ -117,7 +117,7 @@ INSTANTIATE_TEST_SUITE_P(ExplicitTypes, ImageFormatTests,
                                     NVCV_CHROMA_LOC_EVEN,
                                     {16, 0, 0, 0},
                                     1,
-                                    {{16, 1, NVCV_PIXEL_TYPE_U16, NVCV_SWIZZLE_X000}}},
+                                    {{16, 1, NVCV_DATA_TYPE_U16, NVCV_SWIZZLE_X000}}},
                              Params{NVCV_IMAGE_FORMAT_S16,
                                     FMT_IMAGE_PARAMS(UNDEFINED, UNDEFINED, NONE, PL, SIGNED, X000, X16, 0, 0, 0),
                                     4,
@@ -126,7 +126,7 @@ INSTANTIATE_TEST_SUITE_P(ExplicitTypes, ImageFormatTests,
                                     NVCV_CHROMA_LOC_EVEN,
                                     {16, 0, 0, 0},
                                     1,
-                                    {{16, 1, NVCV_PIXEL_TYPE_S16, NVCV_SWIZZLE_X000}}},
+                                    {{16, 1, NVCV_DATA_TYPE_S16, NVCV_SWIZZLE_X000}}},
                              Params{NVCV_IMAGE_FORMAT_NV12_ER,
                                     FMT_IMAGE_PARAMS(YCbCr, BT601_ER, 420, PL, UNSIGNED, XYZ0, X8, X8_Y8, 0, 0),
                                     2,
@@ -135,8 +135,8 @@ INSTANTIATE_TEST_SUITE_P(ExplicitTypes, ImageFormatTests,
                                     NVCV_CHROMA_LOC_EVEN,
                                     {8, 8, 8, 0},
                                     2,
-                                    {{8, 1, NVCV_PIXEL_TYPE_U8, NVCV_SWIZZLE_X000},
-                                     {16, 2, NVCV_PIXEL_TYPE_2U8, NVCV_SWIZZLE_0XY0}}},
+                                    {{8, 1, NVCV_DATA_TYPE_U8, NVCV_SWIZZLE_X000},
+                                     {16, 2, NVCV_DATA_TYPE_2U8, NVCV_SWIZZLE_0XY0}}},
 
                              Params{NVCV_IMAGE_FORMAT_YUYV_ER,
                                     FMT_IMAGE_PARAMS(YCbCr, BT601_ER, 422, PL, UNSIGNED, XYZ1, X8_Y8__X8_Z8, 0, 0, 0),
@@ -146,7 +146,7 @@ INSTANTIATE_TEST_SUITE_P(ExplicitTypes, ImageFormatTests,
                                     NVCV_CHROMA_LOC_EVEN,
                                     {8, 8, 8, 0},
                                     1,
-                                    {{16, 3, NVCV_PIXEL_TYPE_2U8, NVCV_SWIZZLE_XYZ1}}},
+                                    {{16, 3, NVCV_DATA_TYPE_2U8, NVCV_SWIZZLE_XYZ1}}},
 
                              Params{NVCV_IMAGE_FORMAT_UYVY_ER,
                                     FMT_IMAGE_PARAMS(YCbCr, BT601_ER, 422, PL, UNSIGNED, XYZ1, Y8_X8__Z8_X8, 0, 0, 0),
@@ -156,7 +156,7 @@ INSTANTIATE_TEST_SUITE_P(ExplicitTypes, ImageFormatTests,
                                     NVCV_CHROMA_LOC_EVEN,
                                     {8, 8, 8, 0},
                                     1,
-                                    {{16, 3, NVCV_PIXEL_TYPE_2U8, NVCV_SWIZZLE_XYZ1}}},
+                                    {{16, 3, NVCV_DATA_TYPE_2U8, NVCV_SWIZZLE_XYZ1}}},
 
                              Params{NVCV_IMAGE_FORMAT_RGB8,
                                     FMT_IMAGE_PARAMS(RGB, UNDEFINED, NONE, PL, UNSIGNED, XYZ1, X8_Y8_Z8, 0, 0, 0),
@@ -166,7 +166,7 @@ INSTANTIATE_TEST_SUITE_P(ExplicitTypes, ImageFormatTests,
                                     NVCV_CHROMA_LOC_EVEN,
                                     {8, 8, 8, 0},
                                     1,
-                                    {{24, 3, NVCV_PIXEL_TYPE_3U8, NVCV_SWIZZLE_XYZ1}}},
+                                    {{24, 3, NVCV_DATA_TYPE_3U8, NVCV_SWIZZLE_XYZ1}}},
                              Params{NVCV_IMAGE_FORMAT_RGBA8,
                                     FMT_IMAGE_PARAMS(RGB, UNDEFINED, NONE, PL, UNSIGNED, XYZW, X8_Y8_Z8_W8, 0, 0, 0),
                                     4,
@@ -175,7 +175,7 @@ INSTANTIATE_TEST_SUITE_P(ExplicitTypes, ImageFormatTests,
                                     NVCV_CHROMA_LOC_EVEN,
                                     {8, 8, 8, 8},
                                     1,
-                                    {{32, 4, NVCV_PIXEL_TYPE_4U8, NVCV_SWIZZLE_XYZW}}},
+                                    {{32, 4, NVCV_DATA_TYPE_4U8, NVCV_SWIZZLE_XYZW}}},
                              Params{NVCV_IMAGE_FORMAT_F32,
                                     FMT_IMAGE_PARAMS(UNDEFINED, UNDEFINED, NONE, PL, FLOAT, X000, X32, 0, 0, 0),
                                     4,
@@ -184,7 +184,7 @@ INSTANTIATE_TEST_SUITE_P(ExplicitTypes, ImageFormatTests,
                                     NVCV_CHROMA_LOC_EVEN,
                                     {32, 0, 0, 0},
                                     1,
-                                    {{32, 1, NVCV_PIXEL_TYPE_F32, NVCV_SWIZZLE_X000}}},
+                                    {{32, 1, NVCV_DATA_TYPE_F32, NVCV_SWIZZLE_X000}}},
                              Params{NVCV_IMAGE_FORMAT_F64,
                                     FMT_IMAGE_PARAMS(UNDEFINED, UNDEFINED, NONE, PL, FLOAT, X000, X64, 0, 0, 0),
                                     4,
@@ -193,7 +193,7 @@ INSTANTIATE_TEST_SUITE_P(ExplicitTypes, ImageFormatTests,
                                     NVCV_CHROMA_LOC_EVEN,
                                     {64, 0, 0, 0},
                                     1,
-                                    {{64, 1, NVCV_PIXEL_TYPE_F64, NVCV_SWIZZLE_X000}}},
+                                    {{64, 1, NVCV_DATA_TYPE_F64, NVCV_SWIZZLE_X000}}},
                              Params{NVCV_IMAGE_FORMAT_2F32,
                                     FMT_IMAGE_PARAMS(UNDEFINED, UNDEFINED, NONE, PL, FLOAT, XY00, X32_Y32, 0, 0, 0),
                                     4,
@@ -202,7 +202,7 @@ INSTANTIATE_TEST_SUITE_P(ExplicitTypes, ImageFormatTests,
                                     NVCV_CHROMA_LOC_EVEN,
                                     {32, 32, 0, 0},
                                     1,
-                                    {{64, 2, NVCV_PIXEL_TYPE_2F32, NVCV_SWIZZLE_XY00}}},
+                                    {{64, 2, NVCV_DATA_TYPE_2F32, NVCV_SWIZZLE_XY00}}},
                              Params{NVCV_IMAGE_FORMAT_BGR8,
                                     FMT_IMAGE_PARAMS(RGB, UNDEFINED, NONE, PL, UNSIGNED, ZYX1, X8_Y8_Z8, 0, 0, 0),
                                     4,
@@ -211,7 +211,7 @@ INSTANTIATE_TEST_SUITE_P(ExplicitTypes, ImageFormatTests,
                                     NVCV_CHROMA_LOC_EVEN,
                                     {8, 8, 8, 0},
                                     1,
-                                    {{24, 3, NVCV_PIXEL_TYPE_3U8, NVCV_SWIZZLE_ZYX1}}},
+                                    {{24, 3, NVCV_DATA_TYPE_3U8, NVCV_SWIZZLE_ZYX1}}},
                              Params{NVCV_IMAGE_FORMAT_BGRA8,
                                     FMT_IMAGE_PARAMS(RGB, UNDEFINED, NONE, PL, UNSIGNED, ZYXW, X8_Y8_Z8_W8, 0, 0, 0),
                                     4,
@@ -220,7 +220,7 @@ INSTANTIATE_TEST_SUITE_P(ExplicitTypes, ImageFormatTests,
                                     NVCV_CHROMA_LOC_EVEN,
                                     {8, 8, 8, 8},
                                     1,
-                                    {{32, 4, NVCV_PIXEL_TYPE_4U8, NVCV_SWIZZLE_ZYXW}}},
+                                    {{32, 4, NVCV_DATA_TYPE_4U8, NVCV_SWIZZLE_ZYXW}}},
                              Params{NVCV_IMAGE_FORMAT_2S16,
                                     FMT_IMAGE_PARAMS(UNDEFINED, UNDEFINED, NONE, PL, SIGNED, XY00, X16_Y16, 0, 0, 0),
                                     4,
@@ -229,7 +229,7 @@ INSTANTIATE_TEST_SUITE_P(ExplicitTypes, ImageFormatTests,
                                     NVCV_CHROMA_LOC_EVEN,
                                     {16, 16, 0, 0},
                                     1,
-                                    {{32, 2, NVCV_PIXEL_TYPE_2S16, NVCV_SWIZZLE_XY00}}}));
+                                    {{32, 2, NVCV_DATA_TYPE_2S16, NVCV_SWIZZLE_XY00}}}));
 
 TEST_P(ImageFormatTests, make_image_format)
 {
@@ -544,17 +544,17 @@ TEST_P(ImageFormatTests, check_plane_pixel_type)
 {
     const Params &p = GetParam();
 
-    NVCVPixelType pix;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvImageFormatGetPlanePixelType(p.imgFormat, 0, &pix));
+    NVCVDataType pix;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvImageFormatGetPlaneDataType(p.imgFormat, 0, &pix));
     EXPECT_EQ(p.planes[0].pixFormat, pix);
 
-    ASSERT_EQ(NVCV_SUCCESS, nvcvImageFormatGetPlanePixelType(p.imgFormat, 1, &pix));
+    ASSERT_EQ(NVCV_SUCCESS, nvcvImageFormatGetPlaneDataType(p.imgFormat, 1, &pix));
     EXPECT_EQ(p.planes[1].pixFormat, pix);
 
-    ASSERT_EQ(NVCV_SUCCESS, nvcvImageFormatGetPlanePixelType(p.imgFormat, 2, &pix));
+    ASSERT_EQ(NVCV_SUCCESS, nvcvImageFormatGetPlaneDataType(p.imgFormat, 2, &pix));
     EXPECT_EQ(p.planes[2].pixFormat, pix);
 
-    ASSERT_EQ(NVCV_SUCCESS, nvcvImageFormatGetPlanePixelType(p.imgFormat, 3, &pix));
+    ASSERT_EQ(NVCV_SUCCESS, nvcvImageFormatGetPlaneDataType(p.imgFormat, 3, &pix));
     EXPECT_EQ(p.planes[3].pixFormat, pix);
 }
 
@@ -2031,11 +2031,11 @@ NVCV_INSTANTIATE_TEST_SUITE_P(_,ImageFormatPlanePixelStrideBytesExecTests,
 
 TEST_P(ImageFormatPlanePixelStrideBytesExecTests, works)
 {
-    const NVCVImageFormat pixType    = std::get<0>(GetParam());
+    const NVCVImageFormat dtype      = std::get<0>(GetParam());
     const int             plane      = std::get<1>(GetParam());
     const int             goldStride = std::get<2>(GetParam());
 
     int32_t testStride;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvImageFormatGetPlanePixelStrideBytes(pixType, plane, &testStride));
+    ASSERT_EQ(NVCV_SUCCESS, nvcvImageFormatGetPlanePixelStrideBytes(dtype, plane, &testStride));
     EXPECT_EQ(goldStride, testStride);
 }

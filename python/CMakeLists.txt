@@ -35,17 +35,17 @@ add_custom_command(OUTPUT ${imgformat_defs}
     DEPENDS ${imgformat_script} ${imgformat_header}
 )
 
-set(pixtype_defs ${CMAKE_CURRENT_BINARY_DIR}/NVCVPythonPixelTypeDefs.inc)
-set(pixtype_script ${CMAKE_CURRENT_SOURCE_DIR}/gen_pixtype_list.sh)
-set(pixtype_header ${CMAKE_CURRENT_SOURCE_DIR}/../src/include/nvcv/PixelType.h)
-add_custom_command(OUTPUT ${pixtype_defs}
-    COMMAND ${pixtype_script} "${pixtype_header}" > ${pixtype_defs}
-    DEPENDS ${pixtype_script} ${pixtype_header}
+set(dtype_defs ${CMAKE_CURRENT_BINARY_DIR}/NVCVPythonDataTypeDefs.inc)
+set(dtype_script ${CMAKE_CURRENT_SOURCE_DIR}/gen_dtype_list.sh)
+set(dtype_header ${CMAKE_CURRENT_SOURCE_DIR}/../src/include/nvcv/DataType.h)
+add_custom_command(OUTPUT ${dtype_defs}
+    COMMAND ${dtype_script} "${dtype_header}" > ${dtype_defs}
+    DEPENDS ${dtype_script} ${dtype_header}
 )
 
 pybind11_add_module(nvcv_python MODULE
     ${imgformat_defs}
-    ${pixtype_defs}
+    ${dtype_defs}
     Assert.cpp
     Cache.cpp
     CheckError.cpp
@@ -53,7 +53,7 @@ pybind11_add_module(nvcv_python MODULE
     String.cpp
     Main.cpp
     ImageFormat.cpp
-    PixelType.cpp
+    DataType.cpp
     BorderType.cpp
     MorphologyType.cpp
     ColorConversionCode.cpp
