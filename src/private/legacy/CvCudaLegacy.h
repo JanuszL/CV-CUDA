@@ -812,7 +812,7 @@ public:
      * Parameter specifying how many pixels in each direction from the source image rectangle to extrapolate.
      * The src and dist size can be got from input and output tensor.
      * For example, top=1, left=1, src_w=64, src_h=64, dist_w=66, dist_h=66 mean that it builds 1 pixel-wide border.
-     * @param border_type border type. See cv::BorderTypes for details.
+     * @param border_type border type. See \p NVCVBorderType for details.
      * @param value border value if borderType==BORDER_CONSTANT.
      * @param stream for the asynchronous execution.
      */
