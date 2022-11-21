@@ -27,6 +27,7 @@ add_executable(nvcv_test_unit_core
     TestMetaprogramming.cpp
     TestOptional.cpp
     TestLegacyHelpers.cpp
+    TestLockFreeStack.cpp
 )
 
 target_compile_definitions(nvcv_test_unit_core
