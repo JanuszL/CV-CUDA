@@ -140,6 +140,15 @@ ErrorCode Reformat::infer(const nv::cv::ITensorDataPitchDevice &inData, const nv
         return SUCCESS;
     }
 
+    if (((input_format == cuda_op::kNHWC || input_format == cuda_op::kHWC)
+         && !(output_format == cuda_op::kNCHW || output_format == cuda_op::kCHW))
+        || ((input_format == cuda_op::kNCHW || input_format == cuda_op::kCHW)
+            && !(output_format == cuda_op::kNHWC || output_format == cuda_op::kHWC)))
+    {
+        LOG_ERROR("Invalid combination of input format " << input_format << " and output format " << output_format);
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
     DataType data_type = helpers::GetLegacyDataType(inData.dtype());
 
     if (!(data_type == kCV_8U || data_type == kCV_8S || data_type == kCV_16U || data_type == kCV_16S
