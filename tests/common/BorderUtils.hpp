@@ -27,6 +27,8 @@ void ReflectBorderIndex(int2 &coord, int2 size);
 
 void Reflect101BorderIndex(int2 &coord, int2 size);
 
+bool IsInside(int2 &inCoord, int2 inSize, NVCVBorderType borderMode);
+
 } // namespace nv::cv::test
 
 #endif // NVCV_TEST_COMMON_BORDER_UTILS_HPP

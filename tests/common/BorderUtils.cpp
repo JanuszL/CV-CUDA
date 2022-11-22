@@ -89,4 +89,40 @@ void Reflect101BorderIndex(int2 &coord, int2 size)
     Reflect101BorderIndex(coord.y, size.y);
 }
 
+bool IsInside(int2 &inCoord, int2 inSize, NVCVBorderType borderMode)
+{
+    if (inCoord.y >= 0 && inCoord.y < inSize.y && inCoord.x >= 0 && inCoord.x < inSize.x)
+    {
+        return true;
+    }
+    else
+    {
+        if (borderMode == NVCV_BORDER_CONSTANT)
+        {
+            return false;
+        }
+        else
+        {
+            if (borderMode == NVCV_BORDER_REPLICATE)
+            {
+                test::ReplicateBorderIndex(inCoord, inSize);
+            }
+            else if (borderMode == NVCV_BORDER_WRAP)
+            {
+                test::WrapBorderIndex(inCoord, inSize);
+            }
+            else if (borderMode == NVCV_BORDER_REFLECT)
+            {
+                test::ReflectBorderIndex(inCoord, inSize);
+            }
+            else if (borderMode == NVCV_BORDER_REFLECT101)
+            {
+                test::Reflect101BorderIndex(inCoord, inSize);
+            }
+
+            return true;
+        }
+    }
+}
+
 } // namespace nv::cv::test
