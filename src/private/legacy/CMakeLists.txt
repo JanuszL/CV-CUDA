@@ -28,6 +28,7 @@ add_library(cvcuda_legacy STATIC
     ./operators/erase.cu
     ./operators/erase_var_shape.cu
     ./operators/filter_var_shape.cu
+    ./operators/median_blur.cu
     CvCudaLegacyHelpers.cpp
 )
 
