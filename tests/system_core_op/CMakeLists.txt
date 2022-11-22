@@ -21,6 +21,7 @@ add_executable(nvcv_test_system_core_op
     TestOpConvertTo.cpp
     TestOpCopyMakeBorder.cpp
     TestOpCenterCrop.cpp
+    TestOpRotate.cpp
 )
 
 target_link_libraries(nvcv_test_system_core_op

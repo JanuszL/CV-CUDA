@@ -21,6 +21,7 @@ add_library(cvcuda_legacy STATIC
     ./operators/normalize_var_shape.cu
     ./operators/copy_make_border.cu
     ./operators/center_crop.cu
+    ./operators/rotate.cu
     CvCudaLegacyHelpers.cpp
 )
 
