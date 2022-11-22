@@ -13,7 +13,7 @@
 
 #include "Definitions.hpp"
 
-#include <common/ValueTests.hpp>
+#include <common/TypedTests.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
@@ -25,75 +25,76 @@
 #include <iostream>
 #include <random>
 
-namespace nvcv = nv::cv;
-namespace test = nv::cv::test;
-namespace cuda = nv::cv::cuda;
+namespace nvcv  = nv::cv;
+namespace test  = nv::cv::test;
+namespace cuda  = nv::cv::cuda;
+namespace ttype = nv::cv::test::type;
 
-static void ReformatNHWC(std::vector<uint8_t> &hDst, long4 dstPitches, long4 dstShape,
-                         const nvcv::TensorLayout &dstLayout, const std::vector<uint8_t> &hSrc, long4 srcPitches,
-                         long4 srcShape, const nvcv::TensorLayout &srcLayout)
+using uchar = unsigned char;
+
+template<typename T>
+inline T &ValueAt(std::vector<uint8_t> &vec, long4 pitches, int b, int y, int x, int c, nv::cv::TensorLayout layout)
 {
-    long srcN = cuda::GetElement(srcShape, srcLayout.find('N'));
-    long srcH = cuda::GetElement(srcShape, srcLayout.find('H'));
-    long srcW = cuda::GetElement(srcShape, srcLayout.find('W'));
-    long srcC = cuda::GetElement(srcShape, srcLayout.find('C'));
-    long dstN = cuda::GetElement(dstShape, dstLayout.find('N'));
-    long dstH = cuda::GetElement(dstShape, dstLayout.find('H'));
-    long dstW = cuda::GetElement(dstShape, dstLayout.find('W'));
-    long dstC = cuda::GetElement(dstShape, dstLayout.find('C'));
-
-    EXPECT_EQ(srcN, dstN);
-    EXPECT_EQ(srcH, dstH);
-    EXPECT_EQ(srcW, dstW);
-    EXPECT_EQ(srcC, dstC);
-
-    long srcPbN = cuda::GetElement(srcPitches, srcLayout.find('N'));
-    long srcPbH = cuda::GetElement(srcPitches, srcLayout.find('H'));
-    long srcPbW = cuda::GetElement(srcPitches, srcLayout.find('W'));
-    long srcPbC = cuda::GetElement(srcPitches, srcLayout.find('C'));
-    long dstPbN = cuda::GetElement(dstPitches, dstLayout.find('N'));
-    long dstPbH = cuda::GetElement(dstPitches, dstLayout.find('H'));
-    long dstPbW = cuda::GetElement(dstPitches, dstLayout.find('W'));
-    long dstPbC = cuda::GetElement(dstPitches, dstLayout.find('C'));
-
-    for (long b = 0; b < dstN; ++b)
+    if (layout == nv::cv::TensorLayout::NHWC || layout == nv::cv::TensorLayout::HWC)
     {
-        for (long y = 0; y < dstH; ++y)
+        return *reinterpret_cast<T *>(&vec[b * pitches.x + y * pitches.y + x * pitches.z + c * pitches.w]);
+    }
+    else if (layout == nv::cv::TensorLayout::NCHW || layout == nv::cv::TensorLayout::CHW)
+    {
+        return *reinterpret_cast<T *>(&vec[b * pitches.x + c * pitches.y + y * pitches.z + x * pitches.w]);
+    }
+    return *reinterpret_cast<T *>(&vec[0]);
+}
+
+template<typename T>
+inline void Reformat(std::vector<uint8_t> &hDst, long4 dstPitches, nv::cv::TensorLayout dstLayout,
+                     std::vector<uint8_t> &hSrc, long4 srcPitches, nv::cv::TensorLayout srcLayout, int numBatches,
+                     int numRows, int numCols, int numChannels)
+{
+    for (int b = 0; b < numBatches; ++b)
+    {
+        for (int y = 0; y < numRows; ++y)
         {
-            for (long x = 0; x < dstW; ++x)
+            for (int x = 0; x < numCols; ++x)
             {
-                for (long c = 0; c < dstC; ++c)
+                for (int c = 0; c < numChannels; ++c)
                 {
-                    hDst[b * dstPbN + y * dstPbH + x * dstPbW + c * dstPbC]
-                        = hSrc[b * srcPbN + y * srcPbH + x * srcPbW + c * srcPbC];
+                    ValueAt<T>(hDst, dstPitches, b, y, x, c, dstLayout)
+                        = ValueAt<T>(hSrc, srcPitches, b, y, x, c, srcLayout);
                 }
             }
         }
     }
 }
 
-// Parameters are: width, height, batches, inFormat, outFormat
+#define NVCV_TEST_ROW(WIDTH, HEIGHT, BATCHES, INFORMAT, OUTFORMAT, VALUETYPE)                              \
+    ttype::Types<ttype::Value<WIDTH>, ttype::Value<HEIGHT>, ttype::Value<BATCHES>, ttype::Value<INFORMAT>, \
+                 ttype::Value<OUTFORMAT>, VALUETYPE>
 
-NVCV_TEST_SUITE_P(OpReformat, test::ValueList<int, int, int, nvcv::ImageFormat, nvcv::ImageFormat>{
-                                  {176, 113, 1,  nvcv::FMT_RGBA8,  nvcv::FMT_RGBA8},
-                                  {156, 149, 1,   nvcv::FMT_RGB8,  nvcv::FMT_RGB8p},
-                                  {222, 133, 1,  nvcv::FMT_RGB8p,   nvcv::FMT_RGB8},
-                                  { 76,  13, 2,   nvcv::FMT_RGB8,   nvcv::FMT_RGB8},
-                                  { 56,  49, 3,  nvcv::FMT_RGBA8, nvcv::FMT_RGBA8p},
-                                  { 22,  33, 4, nvcv::FMT_RGBA8p,  nvcv::FMT_RGBA8}
-});
+NVCV_TYPED_TEST_SUITE(
+    OpReformat, ttype::Types<NVCV_TEST_ROW(176, 113, 1, NVCV_IMAGE_FORMAT_RGB8, NVCV_IMAGE_FORMAT_RGB8, uchar),
+                             NVCV_TEST_ROW(23, 43, 23, NVCV_IMAGE_FORMAT_RGB8p, NVCV_IMAGE_FORMAT_RGB8p, uchar),
+                             NVCV_TEST_ROW(7, 4, 7, NVCV_IMAGE_FORMAT_RGBf32, NVCV_IMAGE_FORMAT_RGBf32, float),
+                             NVCV_TEST_ROW(56, 49, 2, NVCV_IMAGE_FORMAT_RGBA8p, NVCV_IMAGE_FORMAT_RGBA8, uchar),
+                             NVCV_TEST_ROW(56, 49, 3, NVCV_IMAGE_FORMAT_RGB8, NVCV_IMAGE_FORMAT_RGB8p, uchar),
+                             NVCV_TEST_ROW(31, 30, 3, NVCV_IMAGE_FORMAT_RGBAf32, NVCV_IMAGE_FORMAT_RGBAf32p, float),
+                             NVCV_TEST_ROW(30, 31, 3, NVCV_IMAGE_FORMAT_RGBf32p, NVCV_IMAGE_FORMAT_RGBf32, float)>);
 
-TEST_P(OpReformat, correct_output)
+#undef NVCV_TEST_ROW
+
+TYPED_TEST(OpReformat, correct_output)
 {
     cudaStream_t stream;
     ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
 
-    int width   = GetParamValue<0>();
-    int height  = GetParamValue<1>();
-    int batches = GetParamValue<2>();
+    int width   = ttype::GetValue<TypeParam, 0>;
+    int height  = ttype::GetValue<TypeParam, 1>;
+    int batches = ttype::GetValue<TypeParam, 2>;
 
-    nvcv::ImageFormat inFormat  = GetParamValue<3>();
-    nvcv::ImageFormat outFormat = GetParamValue<4>();
+    nvcv::ImageFormat inFormat{ttype::GetValue<TypeParam, 3>};
+    nvcv::ImageFormat outFormat{ttype::GetValue<TypeParam, 4>};
+
+    using ValueType = ttype::GetType<TypeParam, 5>;
 
     nvcv::Tensor inTensor(batches, {width, height}, inFormat);
     nvcv::Tensor outTensor(batches, {width, height}, outFormat);
@@ -107,11 +108,16 @@ TEST_P(OpReformat, correct_output)
     long4 inPitches{inData->pitchBytes(0), inData->pitchBytes(1), inData->pitchBytes(2), inData->pitchBytes(3)};
     long4 outPitches{outData->pitchBytes(0), outData->pitchBytes(1), outData->pitchBytes(2), outData->pitchBytes(3)};
 
-    long4 inShape{inData->shape(0), inData->shape(1), inData->shape(2), inData->shape(3)};
-    long4 outShape{outData->shape(0), outData->shape(1), outData->shape(2), outData->shape(3)};
+    auto inAccess = nv::cv::TensorDataAccessPitchImagePlanar::Create(*inData);
+    ASSERT_TRUE(inAccess);
 
-    long inBufSize  = inPitches.x * inShape.x;
-    long outBufSize = outPitches.x * outShape.x;
+    int numBatches  = inAccess->numSamples();
+    int numRows     = inAccess->numRows();
+    int numCols     = inAccess->numCols();
+    int numChannels = inAccess->numChannels();
+
+    long inBufSize  = inPitches.x * inData->shape(0);
+    long outBufSize = outPitches.x * outData->shape(0);
 
     std::vector<uint8_t> inVec(inBufSize);
 
@@ -138,7 +144,8 @@ TEST_P(OpReformat, correct_output)
     ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), outData->data(), outBufSize, cudaMemcpyDeviceToHost));
 
     // generate gold result
-    ReformatNHWC(goldVec, outPitches, outShape, outData->layout(), inVec, inPitches, inShape, inData->layout());
+    Reformat<ValueType>(goldVec, outPitches, outData->layout(), inVec, inPitches, inData->layout(), numBatches, numRows,
+                        numCols, numChannels);
 
     EXPECT_EQ(testVec, goldVec);
 }
