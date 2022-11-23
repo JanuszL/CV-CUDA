@@ -48,6 +48,7 @@ add_library(nvcv SHARED
     operators/OpCenterCrop.cpp
     operators/OpRotate.cpp
     operators/OpLaplacian.cpp
+    operators/OpGaussian.cpp
 )
 
 target_link_libraries(nvcv PRIVATE

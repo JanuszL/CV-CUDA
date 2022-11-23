@@ -228,4 +228,158 @@ ErrorCode Laplacian::infer(const ITensorDataPitchDevice &inData, const ITensorDa
     return ErrorCode::SUCCESS;
 }
 
+// Gaussian --------------------------------------------------------------------
+
+__global__ void CalculateGaussianKernel(float *kernel, Size2D kernelSize, double2 sigma)
+{
+    int2 coord = cuda::StaticCast<int>(cuda::DropCast<2>(blockIdx * blockDim + threadIdx));
+
+    if (coord.x >= kernelSize.w || coord.y >= kernelSize.h)
+    {
+        return;
+    }
+
+    int2 half{kernelSize.w / 2, kernelSize.h / 2};
+
+    float sx = 2.f * sigma.x * sigma.x;
+    float sy = 2.f * sigma.y * sigma.y;
+    float s  = 2.f * sigma.x * sigma.y * M_PI;
+
+    float sum = 0.f;
+
+    for (int y = -half.y; y <= half.y; ++y)
+    {
+        for (int x = -half.x; x <= half.x; ++x)
+        {
+            sum += cuda::exp(-((x * x) / sx + (y * y) / sy)) / s;
+        }
+    }
+
+    int x = coord.x - half.x;
+    int y = coord.y - half.y;
+
+    kernel[coord.y * kernelSize.w + coord.x] = cuda::exp(-((x * x) / sx + (y * y) / sy)) / (s * sum);
+}
+
+Gaussian::Gaussian(DataShape max_input_shape, DataShape max_output_shape, Size2D maxKernelSize)
+    : CudaBaseOp(max_input_shape, max_output_shape)
+    , m_maxKernelSize(maxKernelSize)
+{
+    NVCV_CHECK_LOG(cudaMalloc(&m_kernel, maxKernelSize.w * maxKernelSize.h * sizeof(float)));
+}
+
+Gaussian::~Gaussian()
+{
+    NVCV_CHECK_LOG(cudaFree(m_kernel));
+}
+
+size_t Gaussian::calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type,
+                               Size2D maxKernelSize)
+{
+    return maxKernelSize.w * maxKernelSize.h * sizeof(float);
+}
+
+ErrorCode Gaussian::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+                          Size2D kernelSize, double2 sigma, NVCVBorderType borderMode, cudaStream_t stream)
+{
+    if (inData.dtype() != outData.dtype())
+    {
+        LOG_ERROR("Invalid DataType between input (" << inData.dtype() << ") and output (" << outData.dtype() << ")");
+        return ErrorCode::INVALID_DATA_TYPE;
+    }
+
+    DataFormat input_format  = GetLegacyDataFormat(inData.layout());
+    DataFormat output_format = GetLegacyDataFormat(outData.layout());
+
+    if (input_format != output_format)
+    {
+        LOG_ERROR("Invalid DataFormat between input (" << input_format << ") and output (" << output_format << ")");
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    DataFormat format = input_format;
+
+    if (!(format == kNHWC || format == kHWC))
+    {
+        LOG_ERROR("Invalid DataFormat " << format);
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    if (!(borderMode == NVCV_BORDER_REFLECT101 || borderMode == NVCV_BORDER_REPLICATE
+          || borderMode == NVCV_BORDER_CONSTANT || borderMode == NVCV_BORDER_REFLECT || borderMode == NVCV_BORDER_WRAP))
+    {
+        LOG_ERROR("Invalid borderMode " << borderMode);
+        return ErrorCode::INVALID_PARAMETER;
+    }
+
+    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    NVCV_ASSERT(inAccess);
+
+    cuda_op::DataType  data_type   = GetLegacyDataType(inData.dtype());
+    cuda_op::DataShape input_shape = GetLegacyDataShape(inAccess->infoShape());
+
+    if (!(data_type == kCV_8U || data_type == kCV_16U || data_type == kCV_16S || data_type == kCV_32S
+          || data_type == kCV_32F))
+    {
+        LOG_ERROR("Invalid DataType " << data_type);
+        return ErrorCode::INVALID_DATA_TYPE;
+    }
+
+    if (sigma.y <= 0)
+        sigma.y = sigma.x;
+
+    // automatic detection of kernel size from sigma
+    if (kernelSize.w <= 0 && sigma.x > 0)
+        kernelSize.w = nv::cv::cuda::round<int>(sigma.x * (data_type == kCV_8U ? 3 : 4) * 2 + 1) | 1;
+    if (kernelSize.h <= 0 && sigma.y > 0)
+        kernelSize.h = nv::cv::cuda::round<int>(sigma.y * (data_type == kCV_8U ? 3 : 4) * 2 + 1) | 1;
+
+    if (!(kernelSize.w > 0 && kernelSize.w % 2 == 1 && kernelSize.w <= m_maxKernelSize.w && kernelSize.h > 0
+          && kernelSize.h % 2 == 1 && kernelSize.h <= m_maxKernelSize.h))
+    {
+        LOG_ERROR("Invalid kernel size = " << kernelSize.w << " " << kernelSize.h);
+        return ErrorCode::INVALID_PARAMETER;
+    }
+
+    sigma.x = std::max(sigma.x, 0.0);
+    sigma.y = std::max(sigma.y, 0.0);
+
+    if (m_curSigma != sigma || m_curKernelSize != kernelSize)
+    {
+        dim3 block(32, 4);
+        dim3 grid(divUp(kernelSize.w, block.x), divUp(kernelSize.h, block.y));
+
+        CalculateGaussianKernel<<<grid, block, 0, stream>>>(m_kernel, kernelSize, sigma);
+
+        checkKernelErrors();
+
+        m_curKernelSize = kernelSize;
+        m_curSigma      = sigma;
+    }
+
+    const int channels = input_shape.C;
+
+    int2 kernelAnchor{-1, -1};
+    normalizeAnchor(kernelAnchor, kernelSize);
+    float borderValue = .0f;
+
+    typedef void (*filter2D_t)(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+                               float *kernel, Size2D kernelSize, int2 kernelAnchor, NVCVBorderType borderMode,
+                               float borderValue, cudaStream_t stream);
+
+    static const filter2D_t funcs[6][4] = {
+        { Filter2D<uchar>, 0,  Filter2D<uchar3>,  Filter2D<uchar4>},
+        {               0, 0,                 0,                 0},
+        {Filter2D<ushort>, 0, Filter2D<ushort3>, Filter2D<ushort4>},
+        { Filter2D<short>, 0,  Filter2D<short3>,  Filter2D<short4>},
+        {   Filter2D<int>, 0,    Filter2D<int3>,    Filter2D<int4>},
+        { Filter2D<float>, 0,  Filter2D<float3>,  Filter2D<float4>},
+    };
+
+    funcs[data_type][channels - 1](inData, outData, m_kernel, kernelSize, kernelAnchor, borderMode, borderValue,
+                                   stream);
+
+    return ErrorCode::SUCCESS;
+}
+
 } // namespace nv::cv::legacy::cuda_op

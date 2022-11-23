@@ -21,6 +21,7 @@ add_library(nvcv_private_operators STATIC
     OpCenterCrop.cpp
     OpRotate.cpp
     OpLaplacian.cpp
+    OpGaussian.cpp
 )
 
 target_include_directories(nvcv_private_operators
