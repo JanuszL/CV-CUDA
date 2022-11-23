@@ -38,7 +38,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopPadAndStackCreate, (NVCVOperatorHandle *
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopPadAndStackSubmit,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopPadAndStackSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVTensorHandle out,
                  NVCVTensorHandle top, NVCVTensorHandle left, NVCVBorderType borderMode, float borderValue))
 {

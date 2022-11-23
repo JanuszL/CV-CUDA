@@ -37,7 +37,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopConvertToCreate, (NVCVOperatorHandle * h
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopConvertToSubmit,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopConvertToSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
                  const double alpha, const double beta))
 {

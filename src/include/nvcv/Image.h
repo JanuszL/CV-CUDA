@@ -46,13 +46,6 @@ typedef enum
     NVCV_TYPE_IMAGE_WRAPDATA
 } NVCVTypeImage;
 
-/** Storage for image instance. */
-typedef struct NVCVImageStorageRec
-{
-    /** Instance storage */
-    alignas(8) uint8_t storage[1024];
-} NVCVImageStorage;
-
 typedef struct NVCVImage *NVCVImageHandle;
 
 /** Image data cleanup function type */
@@ -100,8 +93,6 @@ NVCV_PUBLIC NVCVStatus nvcvImageCalcRequirements(int32_t width, int32_t height, 
  *                       If NULL, it'll use the internal default allocator.
  *                   + Allocator must not be destroyed while an image still refers to it.
  *
- * @param [in,out] storage Memory storage where the image instance will be constructed in.
- *
  * @param [out] handle Where the image instance handle will be written to.
  *                     + Must not be NULL.
  *
@@ -110,7 +101,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageCalcRequirements(int32_t width, int32_t height, 
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvImageConstruct(const NVCVImageRequirements *reqs, NVCVAllocatorHandle alloc,
-                                          NVCVImageStorage *storage, NVCVImageHandle *handle);
+                                          NVCVImageHandle *handle);
 
 /** Wraps an existing image buffer into an NVCV image instance constructed in given storage
  *
@@ -128,8 +119,6 @@ NVCV_PUBLIC NVCVStatus nvcvImageConstruct(const NVCVImageRequirements *reqs, NVC
  *
  * @param [in] ctxCleanup Pointer to be passed unchanged to the cleanup function, if defined.
  *
- * @param [in,out] storage Memory storage where the image instance will be created in.
- *
  * @param [out] handle      Where the image instance handle will be written to.
  *                          + Must not be NULL.
  *
@@ -138,7 +127,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageConstruct(const NVCVImageRequirements *reqs, NVC
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvImageWrapDataConstruct(const NVCVImageData *data, NVCVImageDataCleanupFunc cleanup,
-                                                  void *ctxCleanup, NVCVImageStorage *storage, NVCVImageHandle *handle);
+                                                  void *ctxCleanup, NVCVImageHandle *handle);
 
 /** Destroys an existing image instance.
  *

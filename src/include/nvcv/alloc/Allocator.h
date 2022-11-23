@@ -125,13 +125,6 @@ typedef struct NVCVCustomAllocatorRec
     NVCVCustomResourceAllocator res;
 } NVCVCustomAllocator;
 
-/** Storage for allocator instance. */
-typedef struct NVCVAllocatorStorageRec
-{
-    /** Instance storage */
-    alignas(8) uint8_t storage[128];
-} NVCVAllocatorStorage[1];
-
 typedef struct NVCVAllocator *NVCVAllocatorHandle;
 
 /** Constructs a custom allocator instance in the given storage.
@@ -149,8 +142,6 @@ typedef struct NVCVAllocator *NVCVAllocatorHandle;
  *
  * @param [in] numCustomAllocators Number of custom allocators in the array.
  *
- * @param [in,out] storage Memory storage where the allocator instance will be created in.
- *
  * @param [out] halloc Where new instance handle will be written to.
  *                     + Must not be NULL.
  *
@@ -159,8 +150,7 @@ typedef struct NVCVAllocator *NVCVAllocatorHandle;
  * @retval #NVCV_SUCCESS                Allocator created successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvAllocatorConstructCustom(const NVCVCustomAllocator *customAllocators,
-                                                    int32_t numCustomAllocators, NVCVAllocatorStorage *storage,
-                                                    NVCVAllocatorHandle *handle);
+                                                    int32_t numCustomAllocators, NVCVAllocatorHandle *handle);
 
 /** Destroys an existing allocator instance.
  *

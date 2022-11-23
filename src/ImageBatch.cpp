@@ -12,8 +12,10 @@
  */
 
 #include <nvcv/ImageBatch.h>
+#include <private/core/AllocatorManager.hpp>
 #include <private/core/Exception.hpp>
 #include <private/core/IAllocator.hpp>
+#include <private/core/ImageBatchManager.hpp>
 #include <private/core/ImageBatchVarShape.hpp>
 #include <private/core/Status.hpp>
 #include <private/core/SymbolVersioning.hpp>
@@ -36,9 +38,9 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchVarShapeCalcRequirements,
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchVarShapeConstruct,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchVarShapeConstruct,
                 (const NVCVImageBatchVarShapeRequirements *reqs, NVCVAllocatorHandle halloc,
-                 NVCVImageBatchStorage *storage, NVCVImageBatchHandle *handle))
+                 NVCVImageBatchHandle *handle))
 {
     return priv::ProtectCall(
         [&]
@@ -49,11 +51,6 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchVarShapeConstruct,
                                       "Pointer to varshape image batch requirements must not be NULL");
             }
 
-            if (storage == nullptr)
-            {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to image batch storage must not be NULL");
-            }
-
             if (handle == nullptr)
             {
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output handle must not be NULL");
@@ -61,29 +58,16 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchVarShapeConstruct,
 
             priv::IAllocator &alloc = priv::GetAllocator(halloc);
 
-            static_assert(sizeof(NVCVImageBatchStorage) >= sizeof(priv::ImageBatchVarShape));
-            static_assert(alignof(NVCVImageBatchStorage) % alignof(priv::ImageBatchVarShape) == 0);
-
-            *handle = reinterpret_cast<NVCVImageBatchHandle>(new (storage) priv::ImageBatchVarShape{*reqs, alloc});
+            *handle = priv::CreateCoreObject<priv::ImageBatchVarShape>(*reqs, alloc);
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchDestroy, (NVCVImageBatchHandle handle))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchDestroy, (NVCVImageBatchHandle handle))
 {
-    return priv::ProtectCall(
-        [&]
-        {
-            if (!priv::IsDestroyed(handle))
-            {
-                priv::ToStaticPtr<priv::IImageBatch>(handle)->~IImageBatch();
-                memset(handle, 0, sizeof(NVCVImageBatchStorage));
-
-                NVCV_ASSERT(priv::IsDestroyed(handle));
-            }
-        });
+    return priv::ProtectCall([&] { priv::DestroyCoreObject(handle); });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchGetNumImages, (NVCVImageBatchHandle handle, int32_t *size))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchGetNumImages, (NVCVImageBatchHandle handle, int32_t *size))
 {
     return priv::ProtectCall(
         [&]
@@ -99,7 +83,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchGetNumImages, (NVCVImageBatchHan
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchGetCapacity, (NVCVImageBatchHandle handle, int32_t *capacity))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchGetCapacity, (NVCVImageBatchHandle handle, int32_t *capacity))
 {
     return priv::ProtectCall(
         [&]
@@ -115,7 +99,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchGetCapacity, (NVCVImageBatchHand
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchGetFormat, (NVCVImageBatchHandle handle, NVCVImageFormat *fmt))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchGetFormat, (NVCVImageBatchHandle handle, NVCVImageFormat *fmt))
 {
     return priv::ProtectCall(
         [&]
@@ -131,7 +115,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchGetFormat, (NVCVImageBatchHandle
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchGetAllocator,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchGetAllocator,
                 (NVCVImageBatchHandle handle, NVCVAllocatorHandle *halloc))
 {
     return priv::ProtectCall(
@@ -148,7 +132,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchGetAllocator,
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchGetType, (NVCVImageBatchHandle handle, NVCVTypeImageBatch *type))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchGetType, (NVCVImageBatchHandle handle, NVCVTypeImageBatch *type))
 {
     return priv::ProtectCall(
         [&]
@@ -164,7 +148,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchGetType, (NVCVImageBatchHandle h
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchExportData,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchExportData,
                 (NVCVImageBatchHandle handle, CUstream stream, NVCVImageBatchData *data))
 {
     return priv::ProtectCall(
@@ -180,7 +164,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchExportData,
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchVarShapePushImages,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchVarShapePushImages,
                 (NVCVImageBatchHandle handle, const NVCVImageHandle *images, int32_t numImages))
 {
     return priv::ProtectCall(
@@ -192,7 +176,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchVarShapePushImages,
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchVarShapePushImagesCallback,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchVarShapePushImagesCallback,
                 (NVCVImageBatchHandle handle, NVCVPushImageFunc cbPushImage, void *ctxCallback))
 {
     return priv::ProtectCall(
@@ -204,7 +188,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchVarShapePushImagesCallback,
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchVarShapePopImages, (NVCVImageBatchHandle handle, int32_t numImages))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchVarShapePopImages, (NVCVImageBatchHandle handle, int32_t numImages))
 {
     return priv::ProtectCall(
         [&]
@@ -215,7 +199,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchVarShapePopImages, (NVCVImageBat
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchVarShapeClear, (NVCVImageBatchHandle handle))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchVarShapeClear, (NVCVImageBatchHandle handle))
 {
     return priv::ProtectCall(
         [&]
@@ -226,7 +210,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchVarShapeClear, (NVCVImageBatchHa
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchVarShapeGetImages,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchVarShapeGetImages,
                 (NVCVImageBatchHandle handle, int32_t begIndex, NVCVImageHandle *outImages, int32_t numImages))
 {
     return priv::ProtectCall(

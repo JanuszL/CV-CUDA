@@ -89,8 +89,7 @@ public:
     ~ImageBatchVarShape();
 
 private:
-    NVCVImageBatchStorage m_storage;
-    IAllocator           *m_alloc;
+    IAllocator *m_alloc;
 
     IAllocator &doGetAlloc() const override;
 };
@@ -229,8 +228,7 @@ inline ImageBatchVarShape::ImageBatchVarShape(const Requirements &reqs, IAllocat
         [&]
         {
             NVCVImageBatchHandle handle;
-            detail::CheckThrow(
-                nvcvImageBatchVarShapeConstruct(&reqs, alloc ? alloc->handle() : nullptr, &m_storage, &handle));
+            detail::CheckThrow(nvcvImageBatchVarShapeConstruct(&reqs, alloc ? alloc->handle() : nullptr, &handle));
             return handle;
         }())
     , m_alloc(alloc)

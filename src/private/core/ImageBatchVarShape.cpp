@@ -15,6 +15,7 @@
 
 #include "IAllocator.hpp"
 #include "IImage.hpp"
+#include "ImageManager.hpp"
 #include "Requirements.hpp"
 
 #include <cuda_runtime.h>

@@ -37,7 +37,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopCopyMakeBorderCreate, (NVCVOperatorHandl
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopCopyMakeBorderSubmit,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCopyMakeBorderSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out, int top,
                  int left, NVCVBorderType borderMode, const float4 borderValue))
 {

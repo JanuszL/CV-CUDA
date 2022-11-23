@@ -63,8 +63,7 @@ public:
     ~Tensor();
 
 private:
-    NVCVTensorStorage m_storage;
-    IAllocator       *m_alloc;
+    IAllocator *m_alloc;
 
     IAllocator &doGetAlloc() const override;
 };
@@ -84,8 +83,6 @@ public:
     ~TensorWrapData();
 
 private:
-    NVCVTensorStorage m_storage;
-
     std::function<TensorDataCleanupFunc> m_cleanup;
 
     static void doCleanup(void *ctx, const NVCVTensorData *data);
@@ -104,9 +101,6 @@ public:
 
     explicit TensorWrapImage(const IImage &mg);
     ~TensorWrapImage();
-
-private:
-    NVCVTensorStorage m_storage;
 };
 
 // TensorWrapHandle implementation -------------------------------------
@@ -209,7 +203,7 @@ inline Tensor::Tensor(const Requirements &reqs, IAllocator *alloc)
         [&]
         {
             NVCVTensorHandle handle;
-            detail::CheckThrow(nvcvTensorConstruct(&reqs, alloc ? alloc->handle() : nullptr, &m_storage, &handle));
+            detail::CheckThrow(nvcvTensorConstruct(&reqs, alloc ? alloc->handle() : nullptr, &handle));
             return handle;
         }())
     , m_alloc(alloc)
@@ -255,7 +249,7 @@ inline TensorWrapData::TensorWrapData(const ITensorData &data, std::function<Ten
         {
             NVCVTensorHandle handle;
             detail::CheckThrow(
-                nvcvTensorWrapDataConstruct(&data.cdata(), cleanup ? &doCleanup : nullptr, this, &m_storage, &handle));
+                nvcvTensorWrapDataConstruct(&data.cdata(), cleanup ? &doCleanup : nullptr, this, &handle));
             return handle;
         }())
     , m_cleanup(std::move(cleanup))
@@ -308,7 +302,7 @@ inline TensorWrapImage::TensorWrapImage(const IImage &img)
         [&]
         {
             NVCVTensorHandle handle;
-            detail::CheckThrow(nvcvTensorWrapImageConstruct(img.handle(), &m_storage, &handle));
+            detail::CheckThrow(nvcvTensorWrapImageConstruct(img.handle(), &handle));
             return handle;
         }())
 {

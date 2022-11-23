@@ -14,6 +14,13 @@
 #ifndef NVCV_PRIV_CORE_ICONTEXT_HPP
 #define NVCV_PRIV_CORE_ICONTEXT_HPP
 
+#include "ICoreObject.hpp"
+
+typedef struct NVCVImage      *NVCVImageHandle;
+typedef struct NVCVImageBatch *NVCVImageBatchHandle;
+typedef struct NVCVTensor     *NVCVTensorHandle;
+typedef struct NVCVAllocator  *NVCVAllocatorHandle;
+
 namespace nv::cv::priv {
 
 class IAllocator;
@@ -22,6 +29,11 @@ class IContext
 {
 public:
     virtual IAllocator &allocDefault() = 0;
+
+    virtual CoreObjManager<NVCVImageHandle>      &imageManager()      = 0;
+    virtual CoreObjManager<NVCVImageBatchHandle> &imageBatchManager() = 0;
+    virtual CoreObjManager<NVCVTensorHandle>     &tensorManager()     = 0;
+    virtual CoreObjManager<NVCVAllocatorHandle>  &allocatorManager()  = 0;
 };
 
 // Defined in Context.cpp

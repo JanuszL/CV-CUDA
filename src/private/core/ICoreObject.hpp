@@ -15,10 +15,12 @@
 #define NVCV_PRIV_ICOREOBJECT_HPP
 
 #include "Exception.hpp"
+#include "HandleManager.hpp"
 #include "Version.hpp"
 
 #include <nvcv/alloc/Fwd.h>
 
+#include <memory>
 #include <type_traits>
 
 // Here we define the base classes for all objects that can be created/destroyed
@@ -38,7 +40,7 @@
 
 namespace nv::cv::priv {
 
-class ICoreObject
+class alignas(kResourceAlignment) ICoreObject
 {
 public:
     // Disable copy/move to avoid slicing.
@@ -46,57 +48,109 @@ public:
 
     virtual ~ICoreObject() = default;
 
-    Version version() const
-    {
-        return doGetVersion();
-    }
+    virtual Version version() const = 0;
 
 protected:
     ICoreObject() = default;
-
-    // Using NVI idiom.
-    virtual Version doGetVersion() const = 0;
 };
 
-template<class T>
-bool IsDestroyed(T handle)
+template<class HANDLE>
+class IHandleHolder
 {
-    // A handle is freed if first 8 bytes are set to zero.
-    return std::all_of(reinterpret_cast<const std::byte *>(handle), reinterpret_cast<const std::byte *>(handle) + 8,
-                       [](std::byte b) { return b == std::byte{0}; });
-}
+public:
+    using HandleType = HANDLE;
+
+    virtual void       setHandle(HandleType h) = 0;
+    virtual HandleType handle()                = 0;
+};
 
 // Base class for all core objects that exposes a handle with a particular type.
 // Along with the ToPtr and ToRef methods below, it provides facilities to convert
 // between external C handles to the actual internal object instance they refer to.
 template<class I, class HANDLE>
-class ICoreObjectHandle : public ICoreObject
+class ICoreObjectHandle
+    : public ICoreObject
+    , public IHandleHolder<HANDLE>
 {
 public:
-    using HandleType    = HANDLE;
     using InterfaceType = I;
-
-    HandleType handle() const
-    {
-        return reinterpret_cast<HandleType>(const_cast<ICoreObject *>(static_cast<const ICoreObject *>(this)));
-    }
 };
 
 template<class Interface>
 class CoreObjectBase : public Interface
 {
-private:
-    cv::priv::Version doGetVersion() const final
+public:
+    using HandleType = typename Interface::HandleType;
+
+    void setHandle(HandleType h) final
+    {
+        m_handle = h;
+    }
+
+    HandleType handle() final
+    {
+        return m_handle;
+    }
+
+    cv::priv::Version version() const final
     {
         //todo need to have a version decoupled from NVCV
         return cv::priv::CURRENT_VERSION;
     }
+
+private:
+    HandleType m_handle = {};
 };
 
-inline ICoreObject *ToCoreObjectPtr(void *handle)
+template<class HandleType>
+class CoreObjManager;
+
+template<class T, class... ARGS>
+typename T::HandleType CreateCoreObject(ARGS &&...args)
 {
-    // First cast to the core interface, this must always succeed.
-    if (ICoreObject *core = reinterpret_cast<ICoreObject *>(handle))
+    using Manager = CoreObjManager<typename T::HandleType>;
+
+    auto &mgr = Manager::Instance();
+
+    typename T::HandleType h = mgr.template create<T>(std::forward<ARGS>(args)...);
+    mgr.validate(h)->setHandle(h);
+    return h;
+}
+
+template<class HandleType>
+void DestroyCoreObject(HandleType handle)
+{
+    using Manager = CoreObjManager<HandleType>;
+
+    auto &mgr = Manager::Instance();
+
+    mgr.destroy(handle);
+}
+
+template<class, class = void>
+constexpr bool HasObjManager = false;
+
+template<class T>
+constexpr bool HasObjManager<T, std::void_t<decltype(sizeof(CoreObjManager<T>))>> = true;
+
+template<class HandleType>
+inline ICoreObject *ToCoreObjectPtr(HandleType h)
+{
+    ICoreObject *core;
+
+    if constexpr (HasObjManager<HandleType>)
+    {
+        using Manager = CoreObjManager<HandleType>;
+
+        core = Manager::Instance().validate(h);
+    }
+    else
+    {
+        // First cast to the core interface, this must always succeed.
+        core = reinterpret_cast<ICoreObject *>(h);
+    }
+
+    if (core != nullptr)
     {
         // If major version are the same,
         if (core->version().major() == CURRENT_VERSION.major())
@@ -118,24 +172,12 @@ inline ICoreObject *ToCoreObjectPtr(void *handle)
 template<class T>
 T *ToStaticPtr(typename T::HandleType h)
 {
-    if (!IsDestroyed(h))
-    {
-        return static_cast<T *>(ToCoreObjectPtr(h));
-    }
-    else
-    {
-        return nullptr;
-    }
+    return static_cast<T *>(ToCoreObjectPtr(h));
 }
 
 template<class T>
 T &ToStaticRef(typename T::HandleType h)
 {
-    if (h == nullptr)
-    {
-        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Handle cannot be NULL");
-    }
-
     T *child = ToStaticPtr<T>(h);
 
     if (child == nullptr)
@@ -149,24 +191,12 @@ T &ToStaticRef(typename T::HandleType h)
 template<class T>
 T *ToDynamicPtr(typename T::HandleType h)
 {
-    if (!IsDestroyed(h))
-    {
-        return dynamic_cast<T *>(ToCoreObjectPtr(h));
-    }
-    else
-    {
-        return nullptr;
-    }
+    return dynamic_cast<T *>(ToCoreObjectPtr(h));
 }
 
 template<class T>
 T &ToDynamicRef(typename T::HandleType h)
 {
-    if (h == nullptr)
-    {
-        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Handle cannot be NULL");
-    }
-
     if (T *child = ToDynamicPtr<T>(h))
     {
         return *child;
