@@ -147,8 +147,7 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopEraseSubmit(NVCVOperatorHandle handle, cudaStrea
                                             NVCVTensorHandle out, NVCVTensorHandle anchor_x, NVCVTensorHandle anchor_y,
                                             NVCVTensorHandle erasing_w, NVCVTensorHandle erasing_h,
                                             NVCVTensorHandle erasing_c, NVCVTensorHandle values,
-                                            NVCVTensorHandle imgIdx, int max_eh, int max_ew, bool random,
-                                            unsigned int seed, bool inplace);
+                                            NVCVTensorHandle imgIdx, bool random, unsigned int seed, bool inplace);
 
 /** @} */
 

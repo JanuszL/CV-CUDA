@@ -45,8 +45,7 @@ public:
 
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, cv::ITensor &anchor_x,
                     cv::ITensor &anchor_y, cv::ITensor &erasing_w, cv::ITensor &erasing_h, cv::ITensor &erasing_c,
-                    cv::ITensor &values, cv::ITensor &imgIdx, int max_eh, int max_ew, bool random, unsigned int seed,
-                    bool inplace) const;
+                    cv::ITensor &values, cv::ITensor &imgIdx, bool random, unsigned int seed, bool inplace) const;
 
     cv::priv::Version doGetVersion() const override;
 

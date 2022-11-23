@@ -31,8 +31,7 @@ Erase::Erase()
 
 void Erase::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, cv::ITensor &anchor_x,
                        cv::ITensor &anchor_y, cv::ITensor &erasing_w, cv::ITensor &erasing_h, cv::ITensor &erasing_c,
-                       cv::ITensor &values, cv::ITensor &imgIdx, int max_eh, int max_ew, bool random, unsigned int seed,
-                       bool inplace) const
+                       cv::ITensor &values, cv::ITensor &imgIdx, bool random, unsigned int seed, bool inplace) const
 {
     auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
     if (inData == nullptr)
@@ -94,8 +93,8 @@ void Erase::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITe
     }
 
     leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, *anchorxData, *anchoryData, *erasingwData,
-                                                    *erasinghData, *erasingcData, *valuesData, *imgIdxData, max_eh,
-                                                    max_ew, random, seed, inplace, stream));
+                                                    *erasinghData, *erasingcData, *valuesData, *imgIdxData, random,
+                                                    seed, inplace, stream));
 }
 
 nv::cv::priv::Version Erase::doGetVersion() const

@@ -68,13 +68,13 @@ TEST(OpErase, OpErase_Tensor)
     EXPECT_EQ(cudaSuccess, cudaMemset(outAccess->sampleData(0), 0xFA, outBufferSize));
 
     //parameters
-    nvcv::Tensor anchor_x(1, {1, 1}, nvcv::FMT_S32);
-    nvcv::Tensor anchor_y(1, {1, 1}, nvcv::FMT_S32);
-    nvcv::Tensor erasing_w(1, {1, 1}, nvcv::FMT_S32);
-    nvcv::Tensor erasing_h(1, {1, 1}, nvcv::FMT_S32);
-    nvcv::Tensor erasing_c(1, {1, 1}, nvcv::FMT_S32);
-    nvcv::Tensor values(1, {1, 1}, nvcv::FMT_F32);
-    nvcv::Tensor imgIdx(1, {1, 1}, nvcv::FMT_S32);
+    nvcv::Tensor anchor_x(1, {2, 1}, nvcv::FMT_S32);
+    nvcv::Tensor anchor_y(1, {2, 1}, nvcv::FMT_S32);
+    nvcv::Tensor erasing_w(1, {2, 1}, nvcv::FMT_S32);
+    nvcv::Tensor erasing_h(1, {2, 1}, nvcv::FMT_S32);
+    nvcv::Tensor erasing_c(1, {2, 1}, nvcv::FMT_S32);
+    nvcv::Tensor values(1, {2, 1}, nvcv::FMT_F32);
+    nvcv::Tensor imgIdx(1, {2, 1}, nvcv::FMT_S32);
 
     const auto *anchorxData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(anchor_x.exportData());
     const auto *anchoryData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(anchor_y.exportData());
@@ -128,6 +128,14 @@ TEST(OpErase, OpErase_Tensor)
     imgIdxVec[0]   = 0;
     valuesVec[0]   = 1.f;
 
+    anchorxVec[1]  = 10;
+    anchoryVec[1]  = 10;
+    erasingwVec[1] = 20;
+    erasinghVec[1] = 20;
+    erasingcVec[1] = 0x1;
+    imgIdxVec[1]   = 0;
+    valuesVec[1]   = 1.f;
+
     // Copy vectors to the GPU
     ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(anchorxData->data(), anchorxVec.data(), anchorxVec.size() * sizeof(int),
                                            cudaMemcpyHostToDevice, stream));
@@ -145,12 +153,11 @@ TEST(OpErase, OpErase_Tensor)
                                            cudaMemcpyHostToDevice, stream));
 
     // Call operator
-    int             max_eh = 10, max_ew = 10;
     unsigned int    seed   = 0;
     bool            random = false, inplace = false;
     nv::cvop::Erase eraseOp;
     EXPECT_NO_THROW(eraseOp(stream, imgIn, imgOut, anchor_x, anchor_y, erasing_w, erasing_h, erasing_c, values, imgIdx,
-                            max_eh, max_ew, random, seed, inplace));
+                            random, seed, inplace));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
 
@@ -166,7 +173,7 @@ TEST(OpErase, OpErase_Tensor)
     EXPECT_EQ(test[9 * 640 + 9], 1);
     EXPECT_EQ(test[9 * 640 + 10], 0);
     EXPECT_EQ(test[10 * 640], 0);
-    EXPECT_EQ(test[10 * 640 + 10], 0);
+    EXPECT_EQ(test[10 * 640 + 10], 1);
 
     EXPECT_EQ(cudaSuccess, cudaFree(bufPlanar.data));
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));

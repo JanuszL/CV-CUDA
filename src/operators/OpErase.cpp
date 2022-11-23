@@ -41,7 +41,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopEraseSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
                  NVCVTensorHandle anchor_x, NVCVTensorHandle anchor_y, NVCVTensorHandle erasing_w,
                  NVCVTensorHandle erasing_h, NVCVTensorHandle erasing_c, NVCVTensorHandle values,
-                 NVCVTensorHandle imgIdx, int max_eh, int max_ew, bool random, unsigned int seed, bool inplace))
+                 NVCVTensorHandle imgIdx, bool random, unsigned int seed, bool inplace))
 {
     return priv::ProtectCall(
         [&]
@@ -50,7 +50,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopEraseSubmit,
                 erasingwwrap(erasing_w), erasinghwrap(erasing_h), erasingcwrap(erasing_c), valueswrap(values),
                 imgIdxwrap(imgIdx);
             priv::ToDynamicRef<priv_op::Erase>(handle)(stream, input, output, anchorxwrap, anchorywrap, erasingwwrap,
-                                                       erasinghwrap, erasingcwrap, valueswrap, imgIdxwrap, max_eh,
-                                                       max_ew, random, seed, inplace);
+                                                       erasinghwrap, erasingcwrap, valueswrap, imgIdxwrap, random, seed,
+                                                       inplace);
         });
 }

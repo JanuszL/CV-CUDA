@@ -22,6 +22,7 @@
 #include "../CvCudaLegacyHelpers.hpp"
 
 #include "../CvCudaUtils.cuh"
+#include "cub/cub.cuh"
 
 using namespace nv::cv::legacy::helpers;
 
@@ -92,11 +93,6 @@ void eraseCaller(
     Ptr2dNHWC<int>   imgIdxVec(imgIdx);
     Ptr2dNHWC<float> valuesVec(values);
 
-#ifdef CUDA_DEBUG_LOG
-    checkCudaErrors(cudaStreamSynchronize(stream));
-    checkCudaErrors(cudaGetLastError());
-#endif
-
     int  blockSize = (max_eh * max_ew < 1024) ? max_eh * max_ew : 1024;
     int  gridSize  = divUp(max_eh * max_ew, 1024);
     dim3 block(blockSize);
@@ -104,30 +100,51 @@ void eraseCaller(
     erase<D, Ptr2dNHWC<D>, Ptr2dNHWC<int>, Ptr2dNHWC<float>>
         <<<grid, block, 0, stream>>>(src, imgs.numRows(), imgs.numCols(), anchorxVec, anchoryVec, erasingwVec,
                                      erasinghVec, erasingcVec, valuesVec, imgIdxVec, imgs.numChannels(), random, seed);
-
-#ifdef CUDA_DEBUG_LOG
-    checkCudaErrors(cudaStreamSynchronize(stream));
-    checkCudaErrors(cudaGetLastError());
-#endif
 }
 
 namespace nv::cv::legacy::cuda_op {
 
-/*
-size_t Erase::calBufferSize(
-                DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type, int num_erasing_area)
+Erase::Erase(DataShape max_input_shape, DataShape max_output_shape)
+    : CudaBaseOp(max_input_shape, max_output_shape)
+    , d_max_values(nullptr)
+    , h_max_values(nullptr)
 {
-    return num_erasing_area * sizeof(int) * 6 + num_erasing_area * sizeof(float) * 4;
+    cudaError_t err = cudaMalloc(&d_max_values, sizeof(int) * 2);
+    if (err != cudaSuccess)
+    {
+        LOG_ERROR("CUDA memory allocation error of size: " << sizeof(int) * 2);
+        throw std::runtime_error("CUDA memory allocation error!");
+    }
+    h_max_values = (int *)malloc(sizeof(int) * 2);
+    if (h_max_values == nullptr)
+    {
+        LOG_ERROR("Host memory allocation error of size: " << sizeof(int) * 2);
+        throw std::runtime_error("Host memory allocation error!");
+    }
 }
-*/
-// todo support random value && rgb value
+
+Erase::~Erase()
+{
+    if (d_max_values != nullptr)
+    {
+        cudaError_t err = cudaFree(d_max_values);
+        if (err != cudaSuccess)
+        {
+            LOG_ERROR("CUDA memory free error, possible memory leak!");
+        }
+    }
+    if (h_max_values != nullptr)
+        free(h_max_values);
+    d_max_values = nullptr;
+    h_max_values = nullptr;
+}
 
 ErrorCode Erase::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
                        const ITensorDataPitchDevice &anchor_x, const ITensorDataPitchDevice &anchor_y,
                        const ITensorDataPitchDevice &erasing_w, const ITensorDataPitchDevice &erasing_h,
                        const ITensorDataPitchDevice &erasing_c, const ITensorDataPitchDevice &values,
-                       const ITensorDataPitchDevice &imgIdx, int max_eh, int max_ew, bool random, unsigned int seed,
-                       bool inplace, cudaStream_t stream)
+                       const ITensorDataPitchDevice &imgIdx, bool random, unsigned int seed, bool inplace,
+                       cudaStream_t stream)
 {
     DataFormat format    = GetLegacyDataFormat(inData.layout());
     DataType   data_type = GetLegacyDataType(inData.dtype());
@@ -303,28 +320,24 @@ ErrorCode Erase::infer(const ITensorDataPitchDevice &inData, const ITensorDataPi
         return SUCCESS;
     }
 
-    /*
-    void *inputImgs;
-    if(inplace)
-    {
-        inputImgs = inputs[0];
-    }
-    else
-    {
-        inputImgs = outputs[0];
-    }
+    void  *temp_storage_w = NULL, *temp_storage_h = NULL;
+    size_t storage_bytes_w = 0, storage_bytes_h = 0;
+    int   *d_erasingw = (int *)erasingwAccess->sampleData(0), *d_erasingh = (int *)erasinghAccess->sampleData(0);
+    int   *d_max_ew = d_max_values, *d_max_eh = (d_max_values + 1);
+    cub::DeviceReduce::Max(temp_storage_w, storage_bytes_w, d_erasingw, d_max_ew, num_erasing_area, stream);
+    cub::DeviceReduce::Max(temp_storage_h, storage_bytes_h, d_erasingh, d_max_eh, num_erasing_area, stream);
 
-    int max_eh = 0, max_ew = 0;
-    for(int i = 0; i < num_erasing_area; i++)
-    {
-        int eh = erasing_h[i], ew = erasing_w[i];
-        if(eh * ew > max_eh * max_ew)
-        {
-            max_eh = eh;
-            max_ew = ew;
-        }
-    }
-    */
+    checkCudaErrors(cudaMalloc(&temp_storage_w, storage_bytes_w));
+    checkCudaErrors(cudaMalloc(&temp_storage_h, storage_bytes_h));
+
+    cub::DeviceReduce::Max(temp_storage_w, storage_bytes_w, d_erasingw, d_max_ew, num_erasing_area, stream);
+    cub::DeviceReduce::Max(temp_storage_h, storage_bytes_h, d_erasingh, d_max_eh, num_erasing_area, stream);
+    checkCudaErrors(cudaStreamSynchronize(stream));
+    checkCudaErrors(cudaFree(temp_storage_w));
+    checkCudaErrors(cudaFree(temp_storage_h));
+    checkCudaErrors(cudaMemcpy(h_max_values, d_max_values, sizeof(int) * 2, cudaMemcpyDeviceToHost));
+
+    int max_ew = h_max_values[0], max_eh = h_max_values[1];
 
     typedef void (*erase_t)(
         const TensorDataAccessPitchImagePlanar &imgs, const TensorDataAccessPitchImagePlanar &anchorx,
