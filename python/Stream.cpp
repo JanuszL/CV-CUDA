@@ -229,6 +229,7 @@ Stream::~Stream()
 {
     if (m_owns)
     {
+        CheckLog(cudaStreamSynchronize(m_handle));
         CheckLog(cudaStreamDestroy(m_handle));
     }
 }
@@ -352,6 +353,7 @@ void Stream::Export(py::module &m)
                         {
                             stream->sync();
                         }
+                        globalStream->sync();
                     });
 }
 
