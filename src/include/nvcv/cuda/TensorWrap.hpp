@@ -236,9 +236,9 @@ class TensorWrap : public TensorWrap<const T, Pitches...>
 public:
     using ValueType = T;
 
-    static constexpr int kNumDimensions   = Base::kNumDimensions;
-    static constexpr int kVariablePitches = Base::kVariablePitches;
-    static constexpr int kConstantPitches = Base::kConstantPitches;
+    using Base::kConstantPitches;
+    using Base::kNumDimensions;
+    using Base::kVariablePitches;
 
     TensorWrap() = default;
 
