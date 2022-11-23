@@ -354,6 +354,20 @@ void Stream::Export(py::module &m)
                             stream->sync();
                         }
                         globalStream->sync();
+
+                        // There should only be 1 stream in the stack, namely the
+                        // global stream.
+                        auto s = StreamStack::Instance().top();
+                        if (s != globalStream)
+                        {
+                            std::cerr << "Stream stack leak detected" << std::endl;
+                        }
+
+                        // Make sure stream stack is empty
+                        while (auto s = StreamStack::Instance().top())
+                        {
+                            StreamStack::Instance().pop();
+                        }
                     });
 }
 
