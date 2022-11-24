@@ -82,9 +82,7 @@ CustomAllocator::CustomAllocator(const NVCVCustomAllocator *customAllocators, in
     // Now go through all allocators, find the ones that aren't customized
     // and set them to corresponding default allocator.
 
-    static DefaultAllocator defAllocator;
-    static_assert(sizeof(DefaultAllocator) == sizeof(IAllocator),
-                  "Default allocator must be stateless for this to work");
+    static IAllocator &defAllocator = GetDefaultAllocator();
 
     for (int i = 0; i < NVCV_NUM_RESOURCE_TYPES; ++i)
     {
