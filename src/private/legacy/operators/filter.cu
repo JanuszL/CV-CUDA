@@ -382,4 +382,134 @@ ErrorCode Gaussian::infer(const ITensorDataPitchDevice &inData, const ITensorDat
     return ErrorCode::SUCCESS;
 }
 
+// Average Blur ----------------------------------------------------------------
+
+__global__ void compute_average_blur_kernel(float *kernel_ptr, int k_size)
+{
+    float kernelVal = 1.0 / k_size;
+    int   tid       = threadIdx.x;
+    if (tid < k_size)
+    {
+        kernel_ptr[tid] = kernelVal;
+    }
+}
+
+AverageBlur::AverageBlur(DataShape max_input_shape, DataShape max_output_shape, Size2D maxKernelSize)
+    : CudaBaseOp(max_input_shape, max_output_shape)
+    , m_maxKernelSize(maxKernelSize)
+{
+    NVCV_CHECK_LOG(cudaMalloc(&m_kernel, maxKernelSize.w * maxKernelSize.h * sizeof(float)));
+}
+
+AverageBlur::~AverageBlur()
+{
+    NVCV_CHECK_LOG(cudaFree(m_kernel));
+}
+
+size_t AverageBlur::calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type,
+                                  Size2D maxKernelSize)
+{
+    return maxKernelSize.w * maxKernelSize.h * sizeof(float);
+}
+
+ErrorCode AverageBlur::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+                             Size2D kernelSize, int2 kernelAnchor, NVCVBorderType borderMode, cudaStream_t stream)
+{
+    if (inData.dtype() != outData.dtype())
+    {
+        LOG_ERROR("Invalid DataType between input (" << inData.dtype() << ") and output (" << outData.dtype() << ")");
+        return ErrorCode::INVALID_DATA_TYPE;
+    }
+
+    DataFormat input_format  = GetLegacyDataFormat(inData.layout());
+    DataFormat output_format = GetLegacyDataFormat(outData.layout());
+
+    if (input_format != output_format)
+    {
+        LOG_ERROR("Invalid DataFormat between input (" << input_format << ") and output (" << output_format << ")");
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    DataFormat format = input_format;
+
+    if (!(format == kNHWC || format == kHWC))
+    {
+        LOG_ERROR("Invalid DataFormat " << format);
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    if (!(borderMode == NVCV_BORDER_REFLECT101 || borderMode == NVCV_BORDER_REPLICATE
+          || borderMode == NVCV_BORDER_CONSTANT || borderMode == NVCV_BORDER_REFLECT || borderMode == NVCV_BORDER_WRAP))
+    {
+        LOG_ERROR("Invalid borderMode " << borderMode);
+        return ErrorCode::INVALID_PARAMETER;
+    }
+
+    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    NVCV_ASSERT(inAccess);
+
+    cuda_op::DataType  data_type   = GetLegacyDataType(inData.dtype());
+    cuda_op::DataShape input_shape = GetLegacyDataShape(inAccess->infoShape());
+
+    if (!(data_type == kCV_8U || data_type == kCV_16U || data_type == kCV_16S || data_type == kCV_32S
+          || data_type == kCV_32F))
+    {
+        LOG_ERROR("Invalid DataType " << data_type);
+        return ErrorCode::INVALID_DATA_TYPE;
+    }
+
+    if (!(kernelSize.w > 0 && kernelSize.w % 2 == 1 && kernelSize.w <= m_maxKernelSize.w && kernelSize.h > 0
+          && kernelSize.h % 2 == 1 && kernelSize.h <= m_maxKernelSize.h))
+    {
+        LOG_ERROR("Invalid ksize " << kernelSize.w << " " << kernelSize.h);
+        return ErrorCode::INVALID_PARAMETER;
+    }
+
+    if (!(kernelAnchor.x == -1 || kernelAnchor.x > 0 || kernelAnchor.x < kernelSize.w))
+    {
+        LOG_ERROR("Invalid kernelAnchor.x " << kernelAnchor.x);
+        return ErrorCode::INVALID_PARAMETER;
+    }
+
+    if (!(kernelAnchor.y == -1 || kernelAnchor.y > 0 || kernelAnchor.y < kernelSize.h))
+    {
+        LOG_ERROR("Invalid kernelAnchor.y " << kernelAnchor.y);
+        return ErrorCode::INVALID_PARAMETER;
+    }
+
+    const int channels = input_shape.C;
+
+    normalizeAnchor(kernelAnchor, kernelSize);
+    float borderValue = .0f;
+
+    typedef void (*filter2D_t)(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+                               float *kernel, Size2D kernelSize, int2 kernelAnchor, NVCVBorderType borderMode,
+                               float borderValue, cudaStream_t stream);
+
+    static const filter2D_t funcs[6][4] = {
+        { Filter2D<uchar>, 0,  Filter2D<uchar3>,  Filter2D<uchar4>},
+        {               0, 0,                 0,                 0},
+        {Filter2D<ushort>, 0, Filter2D<ushort3>, Filter2D<ushort4>},
+        { Filter2D<short>, 0,  Filter2D<short3>,  Filter2D<short4>},
+        {   Filter2D<int>, 0,    Filter2D<int3>,    Filter2D<int4>},
+        { Filter2D<float>, 0,  Filter2D<float3>,  Filter2D<float4>},
+    };
+
+    if (m_curKernelSize != kernelSize)
+    {
+        int k_size = kernelSize.h * kernelSize.w;
+
+        compute_average_blur_kernel<<<1, k_size, 0, stream>>>(m_kernel, k_size);
+
+        checkKernelErrors();
+
+        m_curKernelSize = kernelSize;
+    }
+
+    funcs[data_type][channels - 1](inData, outData, m_kernel, kernelSize, kernelAnchor, borderMode, borderValue,
+                                   stream);
+
+    return ErrorCode::SUCCESS;
+}
+
 } // namespace nv::cv::legacy::cuda_op

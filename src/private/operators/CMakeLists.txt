@@ -23,6 +23,7 @@ add_library(nvcv_private_operators STATIC
     OpLaplacian.cpp
     OpGaussian.cpp
     OpErase.cpp
+    OpAverageBlur.cpp
 )
 
 target_include_directories(nvcv_private_operators

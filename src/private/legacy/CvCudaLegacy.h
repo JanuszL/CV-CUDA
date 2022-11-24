@@ -1173,6 +1173,85 @@ protected:
     int    max_num_erasing_area;
 };
 
+class AverageBlur : public CudaBaseOp
+{
+public:
+    AverageBlur() = delete;
+
+    AverageBlur(DataShape max_input_shape, DataShape max_output_shape, Size2D maxKernelSize);
+
+    ~AverageBlur();
+
+    /**
+     * Limitations:
+     *
+     * Input:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | Yes
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Output:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | Yes
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Input/Output dependency
+     *
+     *      Property      |  Input == Output
+     *     -------------- | -------------
+     *      Data Layout   | Yes
+     *      Data Type     | Yes
+     *      Number        | Yes
+     *      Channels      | Yes
+     *      Width         | Yes
+     *      Height        | Yes
+     *
+     * @brief Blur an image using an average kernel.
+     * @param ksize average blur kernel size.
+     * @param anchor anchor of the kernel that indicates the relative position of a filtered point within the kernel.
+     * (-1,-1) means that the anchor is at the kernel center.
+     * @param borderMode pixel extrapolation method, e.g. NVCV_BORDER_CONSTANT
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, Size2D kernelSize,
+                    int2 kernelAnchor, NVCVBorderType borderMode, cudaStream_t stream);
+
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param max_input_shape maximum input DataShape that may be used
+     * @param max_output_shape maximum output DataShape that may be used
+     * @param max_data_type DataType with the maximum size that may be used
+     * @param maxKernelSize Maximum average blur kernel size that may be used
+     */
+    size_t calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type,
+                         Size2D maxKernelSize);
+
+private:
+    Size2D m_maxKernelSize = {0, 0};
+    Size2D m_curKernelSize = {0, 0};
+    float *m_kernel        = nullptr;
+};
+
 } // namespace nv::cv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H
