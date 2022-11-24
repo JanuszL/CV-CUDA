@@ -12,14 +12,6 @@
 
 @startuml
 
-struct NVCVImageDataBufferPitch
-{
-    + width: int32_t
-    + height: int32_t
-    + pitchBytes: int32_t
-    + buffer: void *
-}
-
 interface IImageData
 {
     + {abstract} format() const: ImageFormat
@@ -33,20 +25,70 @@ interface IImageDataCudaArray extends IImageData
     + {abstract} plane(int p) const: cudaArray_t
 }
 
-interface IImageDataDeviceMem extends IImageData
+struct Size2D
+{
+    + w: int32_t
+    + h: int32_t
+}
+
+struct ImagePlanePitch
+{
+    + width: int32_t
+    + height: int32_t
+    + pitchBytes: int32_t
+    + mem: void *
+}
+
+interface IImageDataPitch extends IImageData
 {
     + {abstract} size() const: Size2D
 
     + {abstract} numPlanes() const: int32_t
-    + {abstract} plane(int p) const: const NVCVImageDataBufferPitch &
+    + {abstract} plane(int p) const: const ImagePlanePitch &
 }
 
-class ImageDataDeviceMem implements IImageDataDeviceMem
+interface IImageDataPitchDevice implements IImageDataPitch
 {
+}
+
+interface IImageDataPitchHost implements IImageDataPitch
+{
+}
+
+struct ImageBufferCudaArray
+{
+    + numPlanes: int32_t
+    + planes: cudaArray_t[MAX_PLANES]
 }
 
 class ImageDataCudaArray implements IImageDataCudaArray
 {
+    + ImageDataCudaArray(ImageFormat fmt,
+                         const ImageBufferCudaArray &buffer)
 }
+
+struct ImageBufferPitch
+{
+    + numPlanes: int32_t
+    + planes: ImagePlanePitch[MAX_PLANES]
+}
+
+class ImageDataPitchDevice implements IImageDataPitchDevice
+{
+    + ImageDataPitchDevice(ImageFormat fmt,
+                           const ImageBufferPitch &buffer)
+}
+
+class ImageDataPitchHost implements IImageDataPitchHost
+{
+    + ImageDataPitchHost(ImageFormat fmt,
+                         const ImageBufferPitch &buffer)
+}
+
+ImageBufferPitch -up-o ImageDataPitchHost: contains <
+ImageBufferPitch -up-o ImageDataPitchDevice: contains <
+ImagePlanePitch -right-o ImageBufferPitch: contains <
+
+ImageBufferCudaArray -up-o ImageDataCudaArray: contains <
 
 @enduml

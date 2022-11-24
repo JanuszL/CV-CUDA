@@ -31,16 +31,6 @@ interface IImage
 IAllocator -right-o IImage: refers to <
 IImageData -left-o IImage: refers to <
 
-interface IImageWrapData extends IImage
-{
-    + {abstract} setData(const IImageData &data): void
-    + {abstract} setDataWithCleanup(const IImageData &data,
-                                    std::function<void(const IImageData &)> cleanup): void
-
-    + {abstract} resetData(): void
-}
-
-
 class Image implements IImage
 {
     + Image(Size2D size, ImageFormat fmt,
@@ -52,9 +42,8 @@ class ImageWrapHandle implements IImage
     + ImageWrapData(NVCVImage handle)
 }
 
-class ImageWrapData implements IImageWrapData
+class ImageWrapData implements IImage
 {
-    + ImageWrapData
     + ImageWrapData(const IImageData &data,
                     std::function<void(const IImageData &)> cleanup)
 }
