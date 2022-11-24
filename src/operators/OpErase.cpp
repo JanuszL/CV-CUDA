@@ -23,7 +23,7 @@
 namespace priv    = nv::cv::priv;
 namespace priv_op = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopEraseCreate, (NVCVOperatorHandle * handle))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopEraseCreate, (NVCVOperatorHandle * handle))
 {
     return priv::ProtectCall(
         [&]
@@ -37,7 +37,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopEraseCreate, (NVCVOperatorHandle * handl
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopEraseSubmit,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopEraseSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
                  NVCVTensorHandle anchor_x, NVCVTensorHandle anchor_y, NVCVTensorHandle erasing_w,
                  NVCVTensorHandle erasing_h, NVCVTensorHandle erasing_c, NVCVTensorHandle values,
