@@ -332,10 +332,11 @@ ErrorCode Erase::infer(const ITensorDataPitchDevice &inData, const ITensorDataPi
 
     cub::DeviceReduce::Max(temp_storage_w, storage_bytes_w, d_erasingw, d_max_ew, num_erasing_area, stream);
     cub::DeviceReduce::Max(temp_storage_h, storage_bytes_h, d_erasingh, d_max_eh, num_erasing_area, stream);
+    checkCudaErrors(cudaMemcpyAsync(h_max_values, d_max_values, sizeof(int) * 2, cudaMemcpyDeviceToHost, stream));
+
     checkCudaErrors(cudaStreamSynchronize(stream));
     checkCudaErrors(cudaFree(temp_storage_w));
     checkCudaErrors(cudaFree(temp_storage_h));
-    checkCudaErrors(cudaMemcpy(h_max_values, d_max_values, sizeof(int) * 2, cudaMemcpyDeviceToHost));
 
     int max_ew = h_max_values[0], max_eh = h_max_values[1];
 
