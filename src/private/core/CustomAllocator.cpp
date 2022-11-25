@@ -153,11 +153,6 @@ CustomAllocator::CustomAllocator(const NVCVCustomAllocator *customAllocators, in
                 && "Some allocators weren't filled in");
 }
 
-Version CustomAllocator::doGetVersion() const
-{
-    return CURRENT_VERSION;
-}
-
 // Host Memory ------------------
 
 void *CustomAllocator::doAllocHostMem(int64_t size, int32_t align)

@@ -38,7 +38,7 @@
 // Use the public nvcv API
 namespace nv::cvop::priv {
 
-class Normalize final : public IOperator
+class Normalize final : public OperatorBase
 {
 public:
     explicit Normalize();
@@ -49,8 +49,6 @@ public:
     void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::ITensor &base,
                     const cv::ITensor &scale, cv::IImageBatchVarShape &out, float global_scale, float shift,
                     float epsilon, uint32_t flags) const;
-
-    cv::priv::Version doGetVersion() const override;
 
 private:
     std::unique_ptr<cv::legacy::cuda_op::Normalize>         m_legacyOp;

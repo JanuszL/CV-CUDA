@@ -38,15 +38,13 @@
 // Use the public nvcv API
 namespace nv::cvop::priv {
 
-class CenterCrop final : public IOperator
+class CenterCrop final : public OperatorBase
 {
 public:
     explicit CenterCrop();
 
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
                     const cv::Size2D &cropSize) const;
-
-    cv::priv::Version doGetVersion() const override;
 
 private:
     std::unique_ptr<cv::legacy::cuda_op::CenterCrop> m_legacyOp;

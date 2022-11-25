@@ -45,10 +45,4 @@ void Reformat::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::
     leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, stream));
 }
 
-cv::priv::Version Reformat::doGetVersion() const
-{
-    //todo need to have a version decoupled from NVCV
-    return cv::priv::CURRENT_VERSION;
-}
-
 } // namespace nv::cvop::priv

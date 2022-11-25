@@ -46,10 +46,4 @@ void CustomCrop::operator()(cudaStream_t stream, const cv::ITensor &in, const cv
     leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, cropRect, stream));
 }
 
-nv::cv::priv::Version CustomCrop::doGetVersion() const
-{
-    //todo need to have a version decoupled from NVCV
-    return nv::cv::priv::CURRENT_VERSION;
-}
-
 } // namespace nv::cvop::priv

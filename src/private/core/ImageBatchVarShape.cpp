@@ -126,11 +126,6 @@ NVCVTypeImageBatch ImageBatchVarShape::type() const
     return NVCV_TYPE_IMAGEBATCH_VARSHAPE;
 }
 
-Version ImageBatchVarShape::doGetVersion() const
-{
-    return CURRENT_VERSION;
-}
-
 int32_t ImageBatchVarShape::capacity() const
 {
     return m_reqs.capacity;

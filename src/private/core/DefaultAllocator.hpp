@@ -18,11 +18,9 @@
 
 namespace nv::cv::priv {
 
-class DefaultAllocator final : public IAllocator
+class DefaultAllocator final : public CoreObjectBase<IAllocator>
 {
 private:
-    virtual Version doGetVersion() const final;
-
     void *doAllocHostMem(int64_t size, int32_t align) override;
     void  doFreeHostMem(void *ptr, int64_t size, int32_t align) noexcept override;
 

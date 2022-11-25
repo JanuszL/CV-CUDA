@@ -37,15 +37,13 @@
 
 namespace nv::cvop::priv {
 
-class PadAndStack final : public IOperator
+class PadAndStack final : public OperatorBase
 {
 public:
     explicit PadAndStack();
 
     void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::ITensor &out, cv::ITensor &top,
                     cv::ITensor &left, const NVCVBorderType borderMode, const float borderValue) const;
-
-    cv::priv::Version doGetVersion() const override;
 
 private:
     std::unique_ptr<cv::legacy::cuda_op::PadAndStack> m_legacyOp;

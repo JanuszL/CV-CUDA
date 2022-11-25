@@ -100,11 +100,6 @@ NVCVTypeImage Image::type() const
     return NVCV_TYPE_IMAGE;
 }
 
-Version Image::doGetVersion() const
-{
-    return CURRENT_VERSION;
-}
-
 Size2D Image::size() const
 {
     return {m_reqs.width, m_reqs.height};
@@ -253,11 +248,6 @@ void ImageWrapData::exportData(NVCVImageData &data) const
 NVCVTypeImage ImageWrapData::type() const
 {
     return NVCV_TYPE_IMAGE_WRAPDATA;
-}
-
-Version ImageWrapData::doGetVersion() const
-{
-    return CURRENT_VERSION;
 }
 
 void ImageWrapData::doCleanup() noexcept

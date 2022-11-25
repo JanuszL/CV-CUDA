@@ -37,15 +37,13 @@
 // Use the public nvcv API
 namespace nv::cvop::priv {
 
-class ConvertTo final : public IOperator
+class ConvertTo final : public OperatorBase
 {
 public:
     explicit ConvertTo();
 
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, const double alpha,
                     const double beta) const;
-
-    cv::priv::Version doGetVersion() const override;
 
 private:
     std::unique_ptr<cv::legacy::cuda_op::ConvertTo> m_legacyOp;

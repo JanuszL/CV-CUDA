@@ -20,7 +20,7 @@
 
 namespace nv::cv::priv {
 
-class ImageBatchVarShape final : public IImageBatchVarShape
+class ImageBatchVarShape final : public CoreObjectBase<IImageBatchVarShape>
 {
 public:
     explicit ImageBatchVarShape(NVCVImageBatchVarShapeRequirements reqs, IAllocator &alloc);
@@ -62,8 +62,6 @@ private:
 
     // TODO: must be retrieved from the resource allocator;
     cudaEvent_t m_evPostFence;
-
-    Version doGetVersion() const override;
 
     // Assumes there's enough space for image.
     // Does not update dirty count

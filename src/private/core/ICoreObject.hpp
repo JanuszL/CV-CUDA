@@ -82,6 +82,17 @@ public:
     }
 };
 
+template<class Interface>
+class CoreObjectBase : public Interface
+{
+private:
+    cv::priv::Version doGetVersion() const final
+    {
+        //todo need to have a version decoupled from NVCV
+        return cv::priv::CURRENT_VERSION;
+    }
+};
+
 inline ICoreObject *ToCoreObjectPtr(void *handle)
 {
     // First cast to the core interface, this must always succeed.

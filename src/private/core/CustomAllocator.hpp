@@ -20,15 +20,13 @@
 
 namespace nv::cv::priv {
 
-class CustomAllocator final : public IAllocator
+class CustomAllocator final : public CoreObjectBase<IAllocator>
 {
 public:
     CustomAllocator(const NVCVCustomAllocator *customAllocators, int32_t numCustomAllocators);
 
 private:
     NVCVCustomAllocator m_allocators[NVCV_NUM_RESOURCE_TYPES];
-
-    virtual Version doGetVersion() const final;
 
     void *doAllocHostMem(int64_t size, int32_t align) override;
     void  doFreeHostMem(void *ptr, int64_t size, int32_t align) noexcept override;
