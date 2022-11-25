@@ -286,10 +286,10 @@ TEST_P(OpResize, varshape_correct_output)
             std::make_unique<nvcv::Image>(nvcv::Size2D{rndDstWidth(randEng), rndDstHeight(randEng)}, fmt));
     }
 
-    nvcv::ImageBatchVarShape batchSrc(numberOfImages, fmt);
+    nvcv::ImageBatchVarShape batchSrc(numberOfImages);
     batchSrc.pushBack(imgSrc.begin(), imgSrc.end());
 
-    nvcv::ImageBatchVarShape batchDst(numberOfImages, fmt);
+    nvcv::ImageBatchVarShape batchDst(numberOfImages);
     batchDst.pushBack(imgDst.begin(), imgDst.end());
 
     std::vector<std::vector<uint8_t>> srcVec(numberOfImages);

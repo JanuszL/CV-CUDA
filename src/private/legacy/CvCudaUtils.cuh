@@ -385,23 +385,35 @@ struct Ptr2dVarShapeNHWC
 
     __host__ __forceinline__ Ptr2dVarShapeNHWC(const cv::IImageBatchVarShapeDataPitchDevice &data)
         : batches(data.numImages())
-        , imgList(data.imgPlanes())
-        , nch(data.format().numChannels())
+        , imgList(data.imageList())
+        , nch(
+              [&]
+              {
+                  if (!data.uniqueFormat())
+                  {
+                      throw std::runtime_error("Images in a batch must all have the same format");
+                  }
+
+                  assert(1 == data.uniqueFormat().numPlanes() && "This class is only for NHWC");
+
+                  return data.uniqueFormat().numChannels();
+              }())
     {
-        assert(1 == data.format().numPlanes() && "This class is only for NHWC");
     }
 
     // ptr for uchar1/3/4, ushort1/3/4, float1/3/4, typename T -> uchar3 etc.
     // each fetch operation get a x-channel elements
     __host__ __device__ __forceinline__ T *ptr(int b, int y, int x)
     {
-        return reinterpret_cast<T *>(reinterpret_cast<uint8_t *>(imgList[b].buffer) + imgList[b].pitchBytes * y) + x;
+        return reinterpret_cast<T *>(reinterpret_cast<uint8_t *>(imgList[b].planes[0].buffer)
+                                     + imgList[b].planes[0].pitchBytes * y)
+             + x;
     }
 
     const __host__ __device__ __forceinline__ T *ptr(int b, int y, int x) const
     {
-        return reinterpret_cast<const T *>(reinterpret_cast<const uint8_t *>(imgList[b].buffer)
-                                           + imgList[b].pitchBytes * y)
+        return reinterpret_cast<const T *>(reinterpret_cast<const uint8_t *>(imgList[b].planes[0].buffer)
+                                           + imgList[b].planes[0].pitchBytes * y)
              + x;
     }
 
@@ -409,14 +421,15 @@ struct Ptr2dVarShapeNHWC
     // each fetch operation get a single channel element
     __host__ __device__ __forceinline__ T *ptr(int b, int y, int x, int c)
     {
-        return reinterpret_cast<T *>(reinterpret_cast<uint8_t *>(imgList[b].buffer) + imgList[b].pitchBytes * y)
+        return reinterpret_cast<T *>(reinterpret_cast<uint8_t *>(imgList[b].planes[0].buffer)
+                                     + imgList[b].planes[0].pitchBytes * y)
              + (x * nch + c);
     }
 
     const __host__ __device__ __forceinline__ T *ptr(int b, int y, int x, int c) const
     {
-        return reinterpret_cast<const T *>(reinterpret_cast<const uint8_t *>(imgList[b].buffer)
-                                           + imgList[b].pitchBytes * y)
+        return reinterpret_cast<const T *>(reinterpret_cast<const uint8_t *>(imgList[b].planes[0].buffer)
+                                           + imgList[b].planes[0].pitchBytes * y)
              + (x * nch + c);
     }
 
@@ -437,23 +450,22 @@ struct Ptr2dVarShapeNHWC
 
     __host__ __device__ __forceinline__ int at_pitchBytes(int b) const
     {
-        return imgList[b].pitchBytes;
+        return imgList[b].planes[0].pitchBytes;
     }
 
     __host__ __device__ __forceinline__ int at_rows(int b) const
     {
-        return imgList[b].height;
+        return imgList[b].planes[0].height;
     }
 
     __host__ __device__ __forceinline__ int at_cols(int b) const
     {
-        return imgList[b].width;
+        return imgList[b].planes[0].width;
     }
 
-    const int                  batches;
-    // Assuming each image has only one plane, as per class name.
-    const NVCVImagePlanePitch *imgList;
-    const int                  nch;
+    const int                   batches;
+    const NVCVImageBufferPitch *imgList;
+    const int                   nch;
 };
 
 template<typename D>

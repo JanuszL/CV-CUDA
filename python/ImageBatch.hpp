@@ -33,17 +33,17 @@ class ImageBatchVarShape : public Container
 public:
     static void Export(py::module &m);
 
-    static std::shared_ptr<ImageBatchVarShape> Create(int capacity, cv::ImageFormat fmt);
+    static std::shared_ptr<ImageBatchVarShape> Create(int capacity);
 
     const cv::ImageBatchVarShape &impl() const;
     cv::ImageBatchVarShape       &impl();
 
     // Let's simplify a bit and NOT export the base class ImageBatch,
     // as we currently have only one leaf class (this one).
-    cv::ImageFormat format() const;
-    int32_t         capacity() const;
-    int32_t         numImages() const;
-    Size2D          maxSize() const;
+    py::object uniqueFormat() const;
+    int32_t    capacity() const;
+    int32_t    numImages() const;
+    Size2D     maxSize() const;
 
     void pushBack(Image &img);
     void pushBackMany(std::vector<std::shared_ptr<Image>> &imgList);
@@ -58,15 +58,13 @@ public:
     public:
         Key() = default;
 
-        explicit Key(int capacity, cv::ImageFormat fmt)
+        explicit Key(int capacity)
             : m_capacity(capacity)
-            , m_format(fmt)
         {
         }
 
     private:
-        int             m_capacity;
-        cv::ImageFormat m_format;
+        int m_capacity;
 
         virtual size_t doGetHash() const override;
         virtual bool   doIsEqual(const IKey &that) const override;
@@ -78,7 +76,7 @@ public:
     }
 
 private:
-    explicit ImageBatchVarShape(int capacity, cv::ImageFormat fmt);
+    explicit ImageBatchVarShape(int capacity);
     Key                    m_key;
     ImageList              m_list;
     cv::ImageBatchVarShape m_impl;

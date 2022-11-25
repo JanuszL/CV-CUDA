@@ -43,7 +43,7 @@ def test_op_padandstack(
     out_dtype,
 ):
 
-    input = nvcv.ImageBatchVarShape(num_images, format)
+    input = nvcv.ImageBatchVarShape(num_images)
 
     input.pushback(
         [

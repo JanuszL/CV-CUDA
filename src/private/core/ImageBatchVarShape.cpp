@@ -30,15 +30,15 @@ namespace nv::cv::priv {
 
 // ImageBatchVarShape implementation -------------------------------------------
 
-NVCVImageBatchVarShapeRequirements ImageBatchVarShape::CalcRequirements(int32_t capacity, ImageFormat fmt)
+NVCVImageBatchVarShapeRequirements ImageBatchVarShape::CalcRequirements(int32_t capacity)
 {
     NVCVImageBatchVarShapeRequirements reqs;
     reqs.capacity = capacity;
-    reqs.format   = fmt.value();
     reqs.mem      = {};
 
-    reqs.alignBytes = alignof(NVCVImagePlanePitch);
+    reqs.alignBytes = alignof(NVCVImageBufferPitch);
     reqs.alignBytes = std::lcm(alignof(NVCVImageHandle), reqs.alignBytes);
+    reqs.alignBytes = std::lcm(alignof(NVCVImageFormat), reqs.alignBytes);
 
     reqs.alignBytes = util::RoundUpNextPowerOfTwo(reqs.alignBytes);
 
@@ -49,8 +49,12 @@ NVCVImageBatchVarShapeRequirements ImageBatchVarShape::CalcRequirements(int32_t 
                         NVCV_MAX_MEM_REQUIREMENTS_BLOCK_SIZE);
     }
 
-    AddBuffer(reqs.mem.deviceMem, capacity * sizeof(NVCVImagePlanePitch), reqs.alignBytes);
-    AddBuffer(reqs.mem.hostMem, capacity * sizeof(NVCVImagePlanePitch), reqs.alignBytes);
+    AddBuffer(reqs.mem.deviceMem, capacity * sizeof(NVCVImageBufferPitch), reqs.alignBytes);
+    AddBuffer(reqs.mem.deviceMem, capacity * sizeof(NVCVImageFormat), reqs.alignBytes);
+
+    AddBuffer(reqs.mem.hostMem, capacity * sizeof(NVCVImageBufferPitch), reqs.alignBytes);
+    AddBuffer(reqs.mem.hostMem, capacity * sizeof(NVCVImageFormat), reqs.alignBytes);
+
     AddBuffer(reqs.mem.hostMem, capacity * sizeof(NVCVImageHandle), reqs.alignBytes);
 
     return reqs;
@@ -63,30 +67,32 @@ ImageBatchVarShape::ImageBatchVarShape(NVCVImageBatchVarShapeRequirements reqs, 
     , m_numImages(0)
     , m_cacheMaxSize{Size2D{0,0}}
 {
-    ImageFormat fmt{m_reqs.format};
-
-    if (fmt.memLayout() != NVCV_MEM_LAYOUT_PL)
-    {
-        throw Exception(NVCV_ERROR_NOT_IMPLEMENTED,
-                        "Image batch of block-linear format images is not currently supported.");
-    }
-
     m_evPostFence     = nullptr;
-    m_devPlanesBuffer = m_hostPlanesBuffer = nullptr;
-    m_imgHandleBuffer                      = nullptr;
+    m_devImagesBuffer = m_hostImagesBuffer = nullptr;
+    m_devFormatsBuffer = m_hostFormatsBuffer = nullptr;
+    m_imgHandleBuffer                        = nullptr;
 
-    int64_t bufPlanesSize  = m_reqs.capacity * sizeof(NVCVImagePlanePitch) * fmt.numPlanes();
+    int64_t bufImagesSize  = m_reqs.capacity * sizeof(NVCVImageBufferPitch);
+    int64_t bufFormatsSize = m_reqs.capacity * sizeof(NVCVImageFormat);
     int64_t imgHandlesSize = m_reqs.capacity * sizeof(NVCVImageHandle);
 
     try
     {
-        m_devPlanesBuffer
-            = reinterpret_cast<NVCVImagePlanePitch *>(m_alloc.allocDeviceMem(bufPlanesSize, m_reqs.alignBytes));
-        NVCV_ASSERT(m_devPlanesBuffer != nullptr);
+        m_devImagesBuffer
+            = reinterpret_cast<NVCVImageBufferPitch *>(m_alloc.allocDeviceMem(bufImagesSize, m_reqs.alignBytes));
+        NVCV_ASSERT(m_devImagesBuffer != nullptr);
 
-        m_hostPlanesBuffer
-            = reinterpret_cast<NVCVImagePlanePitch *>(m_alloc.allocHostMem(bufPlanesSize, m_reqs.alignBytes));
-        NVCV_ASSERT(m_devPlanesBuffer != nullptr);
+        m_hostImagesBuffer
+            = reinterpret_cast<NVCVImageBufferPitch *>(m_alloc.allocHostMem(bufImagesSize, m_reqs.alignBytes));
+        NVCV_ASSERT(m_devImagesBuffer != nullptr);
+
+        m_devFormatsBuffer
+            = reinterpret_cast<NVCVImageFormat *>(m_alloc.allocDeviceMem(bufFormatsSize, m_reqs.alignBytes));
+        NVCV_ASSERT(m_devFormatsBuffer != nullptr);
+
+        m_hostFormatsBuffer
+            = reinterpret_cast<NVCVImageFormat *>(m_alloc.allocHostMem(bufFormatsSize, m_reqs.alignBytes));
+        NVCV_ASSERT(m_devFormatsBuffer != nullptr);
 
         m_imgHandleBuffer
             = reinterpret_cast<NVCVImageHandle *>(m_alloc.allocHostMem(imgHandlesSize, m_reqs.alignBytes));
@@ -101,8 +107,12 @@ ImageBatchVarShape::ImageBatchVarShape(NVCVImageBatchVarShapeRequirements reqs, 
             NVCV_CHECK_LOG(cudaEventDestroy(m_evPostFence));
         }
 
-        m_alloc.freeDeviceMem(m_devPlanesBuffer, bufPlanesSize, m_reqs.alignBytes);
-        m_alloc.freeHostMem(m_hostPlanesBuffer, bufPlanesSize, m_reqs.alignBytes);
+        m_alloc.freeDeviceMem(m_devImagesBuffer, bufImagesSize, m_reqs.alignBytes);
+        m_alloc.freeHostMem(m_hostImagesBuffer, bufImagesSize, m_reqs.alignBytes);
+
+        m_alloc.freeDeviceMem(m_devFormatsBuffer, bufFormatsSize, m_reqs.alignBytes);
+        m_alloc.freeHostMem(m_hostFormatsBuffer, bufFormatsSize, m_reqs.alignBytes);
+
         m_alloc.freeHostMem(m_imgHandleBuffer, imgHandlesSize, m_reqs.alignBytes);
         throw;
     }
@@ -112,11 +122,16 @@ ImageBatchVarShape::~ImageBatchVarShape()
 {
     NVCV_CHECK_LOG(cudaEventSynchronize(m_evPostFence));
 
-    int64_t bufPlanesSize  = m_reqs.capacity * sizeof(NVCVImagePlanePitch) * this->format().numPlanes();
+    int64_t bufImagesSize  = m_reqs.capacity * sizeof(NVCVImageBufferPitch);
+    int64_t bufFormatsSize = m_reqs.capacity * sizeof(NVCVImageFormat);
     int64_t imgHandlesSize = m_reqs.capacity * sizeof(NVCVImageHandle);
 
-    m_alloc.freeDeviceMem(m_devPlanesBuffer, bufPlanesSize, m_reqs.alignBytes);
-    m_alloc.freeHostMem(m_hostPlanesBuffer, bufPlanesSize, m_reqs.alignBytes);
+    m_alloc.freeDeviceMem(m_devImagesBuffer, bufImagesSize, m_reqs.alignBytes);
+    m_alloc.freeHostMem(m_hostImagesBuffer, bufImagesSize, m_reqs.alignBytes);
+
+    m_alloc.freeDeviceMem(m_devFormatsBuffer, bufFormatsSize, m_reqs.alignBytes);
+    m_alloc.freeHostMem(m_hostFormatsBuffer, bufFormatsSize, m_reqs.alignBytes);
+
     m_alloc.freeHostMem(m_imgHandleBuffer, imgHandlesSize, m_reqs.alignBytes);
 
     NVCV_CHECK_LOG(cudaEventDestroy(m_evPostFence));
@@ -143,9 +158,10 @@ Size2D ImageBatchVarShape::maxSize() const
     return *m_cacheMaxSize;
 }
 
-ImageFormat ImageBatchVarShape::format() const
+ImageFormat ImageBatchVarShape::uniqueFormat() const
 {
-    return ImageFormat{m_reqs.format};
+    doUpdateCache();
+    return *m_cacheUniqueFormat;
 }
 
 IAllocator &ImageBatchVarShape::alloc() const
@@ -155,43 +171,65 @@ IAllocator &ImageBatchVarShape::alloc() const
 
 void ImageBatchVarShape::doUpdateCache() const
 {
-    if (m_cacheMaxSize)
+    if (m_cacheMaxSize && m_cacheUniqueFormat)
     {
         return;
     }
 
-    m_cacheMaxSize = Size2D{0, 0};
+    if (!m_cacheMaxSize)
+    {
+        m_cacheMaxSize = Size2D{0, 0};
+    }
+
     for (int i = 0; i < m_numImages; ++i)
     {
-        m_cacheMaxSize->w = std::max(m_cacheMaxSize->w, m_hostPlanesBuffer[i].width);
-        m_cacheMaxSize->h = std::max(m_cacheMaxSize->h, m_hostPlanesBuffer[i].height);
+        if (m_cacheMaxSize)
+        {
+            // first plane has the image size
+            m_cacheMaxSize->w = std::max(m_cacheMaxSize->w, m_hostImagesBuffer[i].planes[0].width);
+            m_cacheMaxSize->h = std::max(m_cacheMaxSize->h, m_hostImagesBuffer[i].planes[0].height);
+        }
+
+        constexpr ImageFormat fmt_none = ImageFormat{NVCV_IMAGE_FORMAT_NONE};
+
+        if (!m_cacheUniqueFormat)
+        {
+            m_cacheUniqueFormat = ImageFormat{m_hostFormatsBuffer[i]};
+        }
+        else if (*m_cacheUniqueFormat != fmt_none && *m_cacheUniqueFormat != ImageFormat{m_hostFormatsBuffer[i]})
+        {
+            *m_cacheUniqueFormat = fmt_none;
+        }
+    }
+
+    if (!m_cacheUniqueFormat)
+    {
+        NVCV_ASSERT(m_numImages == 0);
+        m_cacheUniqueFormat = ImageFormat{NVCV_IMAGE_FORMAT_NONE};
     }
 }
 
 void ImageBatchVarShape::exportData(CUstream stream, NVCVImageBatchData &data) const
 {
-    ImageFormat fmt{m_reqs.format};
-
-    NVCV_ASSERT(fmt.memLayout() == NVCV_MEM_LAYOUT_PL);
-
-    data.format     = m_reqs.format;
     data.numImages  = m_numImages;
     data.bufferType = NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_PITCH_DEVICE;
 
     NVCVImageBatchVarShapeBufferPitch &buf = data.buffer.varShapePitch;
-    buf.imgPlanes                          = m_devPlanesBuffer;
+    buf.imageList                          = m_devImagesBuffer;
+    buf.formatList                         = m_devFormatsBuffer;
+    buf.hostFormatList                     = m_hostFormatsBuffer;
 
     NVCV_ASSERT(m_dirtyStartingFromIndex <= m_numImages);
 
     if (m_dirtyStartingFromIndex < m_numImages)
     {
-        int numPlanes = this->format().numPlanes();
+        NVCV_CHECK_THROW(cudaMemcpyAsync(
+            m_devImagesBuffer + m_dirtyStartingFromIndex, m_hostImagesBuffer + m_dirtyStartingFromIndex,
+            (m_numImages - m_dirtyStartingFromIndex) * sizeof(*m_devImagesBuffer), cudaMemcpyHostToDevice, stream));
 
-        NVCV_CHECK_THROW(
-            cudaMemcpyAsync(m_devPlanesBuffer + m_dirtyStartingFromIndex * numPlanes,
-                            m_hostPlanesBuffer + m_dirtyStartingFromIndex * numPlanes,
-                            (m_numImages - m_dirtyStartingFromIndex) * sizeof(*m_devPlanesBuffer) * numPlanes,
-                            cudaMemcpyHostToDevice, stream));
+        NVCV_CHECK_THROW(cudaMemcpyAsync(
+            m_devFormatsBuffer + m_dirtyStartingFromIndex, m_hostFormatsBuffer + m_dirtyStartingFromIndex,
+            (m_numImages - m_dirtyStartingFromIndex) * sizeof(*m_devFormatsBuffer), cudaMemcpyHostToDevice, stream));
 
         // Signal that we finished reading from m_hostBuffer
         NVCV_CHECK_THROW(cudaEventRecord(m_evPostFence, stream));
@@ -202,8 +240,12 @@ void ImageBatchVarShape::exportData(CUstream stream, NVCVImageBatchData &data) c
 
     doUpdateCache();
 
+    NVCV_ASSERT(m_cacheMaxSize);
     buf.maxWidth  = m_cacheMaxSize->w;
     buf.maxHeight = m_cacheMaxSize->h;
+
+    NVCV_ASSERT(m_cacheUniqueFormat);
+    buf.uniqueFormat = m_cacheUniqueFormat->value();
 }
 
 void ImageBatchVarShape::pushImages(const NVCVImageHandle *images, int32_t numImages)
@@ -279,10 +321,10 @@ void ImageBatchVarShape::doPushImage(NVCVImageHandle imgHandle)
 
     auto &img = ToStaticRef<IImage>(imgHandle);
 
-    if (img.format() != this->format())
+    if (img.format().memLayout() != NVCV_MEM_LAYOUT_PL)
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Format of image to be added, " << img.format()
-                                                     << ", is different from image batch format " << this->format();
+                                                     << " must be pitch-linear, not " << img.format().memLayout();
     }
 
     NVCVImageData imgData;
@@ -293,23 +335,33 @@ void ImageBatchVarShape::doPushImage(NVCVImageHandle imgHandle)
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Data buffer of image to be added isn't gpu-accessible";
     }
 
-    int numPlanes = imgData.buffer.pitch.numPlanes;
-
-    std::copy(imgData.buffer.pitch.planes, imgData.buffer.pitch.planes + numPlanes,
-              m_hostPlanesBuffer + m_numImages * numPlanes);
-
-    m_imgHandleBuffer[m_numImages] = imgHandle;
+    m_hostImagesBuffer[m_numImages]  = imgData.buffer.pitch;
+    m_hostFormatsBuffer[m_numImages] = imgData.format;
+    m_imgHandleBuffer[m_numImages]   = imgHandle;
 
     Size2D imgSize = img.size();
 
-    // Only update max size if
-    if (m_cacheMaxSize)
-    {
-        m_cacheMaxSize->w = std::max(m_cacheMaxSize->w, imgSize.w);
-        m_cacheMaxSize->h = std::max(m_cacheMaxSize->h, imgSize.h);
-    }
-
     ++m_numImages;
+
+    if (m_numImages == 1)
+    {
+        m_cacheMaxSize      = imgSize;
+        m_cacheUniqueFormat = ImageFormat{imgData.format};
+    }
+    else
+    {
+        // Only update max size if data is valid
+        if (m_cacheMaxSize)
+        {
+            m_cacheMaxSize->w = std::max(m_cacheMaxSize->w, imgSize.w);
+            m_cacheMaxSize->h = std::max(m_cacheMaxSize->h, imgSize.h);
+        }
+
+        if (m_cacheUniqueFormat && *m_cacheUniqueFormat != ImageFormat{imgData.format})
+        {
+            m_cacheUniqueFormat = ImageFormat{NVCV_IMAGE_FORMAT_NONE};
+        }
+    }
 }
 
 void ImageBatchVarShape::popImages(int32_t numImages)
@@ -330,6 +382,12 @@ void ImageBatchVarShape::popImages(int32_t numImages)
 
     // Removing images invalidates size.
     m_cacheMaxSize = std::nullopt;
+    // It *does not* always invalidate m_cacheUniqueFormat, though.
+    // But if we're now empty, yeah, we reset it.
+    if (m_numImages == 0)
+    {
+        m_cacheUniqueFormat = std::nullopt;
+    }
 }
 
 void ImageBatchVarShape::getImages(int32_t begIndex, NVCVImageHandle *outImages, int32_t numImages) const
@@ -347,6 +405,7 @@ void ImageBatchVarShape::clear()
     m_numImages              = 0;
     m_dirtyStartingFromIndex = 0;
     m_cacheMaxSize           = {0, 0};
+    m_cacheUniqueFormat      = std::nullopt;
 }
 
 } // namespace nv::cv::priv

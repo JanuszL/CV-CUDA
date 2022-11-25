@@ -20,23 +20,23 @@ namespace nv::cvpy {
 
 size_t ImageBatchVarShape::Key::doGetHash() const
 {
-    return ComputeHash(m_capacity, m_format);
+    return ComputeHash(m_capacity);
 }
 
 bool ImageBatchVarShape::Key::doIsEqual(const IKey &ithat) const
 {
     auto &that = static_cast<const Key &>(ithat);
-    return std::tie(m_capacity, m_format) == std::tie(that.m_capacity, that.m_format);
+    return m_capacity == that.m_capacity;
 }
 
-std::shared_ptr<ImageBatchVarShape> ImageBatchVarShape::Create(int capacity, cv::ImageFormat fmt)
+std::shared_ptr<ImageBatchVarShape> ImageBatchVarShape::Create(int capacity)
 {
-    std::vector<std::shared_ptr<CacheItem>> vcont = Cache::Instance().fetch(Key{capacity, fmt});
+    std::vector<std::shared_ptr<CacheItem>> vcont = Cache::Instance().fetch(Key{capacity});
 
     // None found?
     if (vcont.empty())
     {
-        std::shared_ptr<ImageBatchVarShape> batch(new ImageBatchVarShape(capacity, fmt));
+        std::shared_ptr<ImageBatchVarShape> batch(new ImageBatchVarShape(capacity));
         Cache::Instance().add(*batch);
         return batch;
     }
@@ -49,9 +49,9 @@ std::shared_ptr<ImageBatchVarShape> ImageBatchVarShape::Create(int capacity, cv:
     }
 }
 
-ImageBatchVarShape::ImageBatchVarShape(int capacity, cv::ImageFormat fmt)
-    : m_key(capacity, fmt)
-    , m_impl(capacity, fmt)
+ImageBatchVarShape::ImageBatchVarShape(int capacity)
+    : m_key(capacity)
+    , m_impl(capacity)
 {
     m_list.reserve(capacity);
 }
@@ -66,9 +66,17 @@ cv::ImageBatchVarShape &ImageBatchVarShape::impl()
     return m_impl;
 }
 
-cv::ImageFormat ImageBatchVarShape::format() const
+py::object ImageBatchVarShape::uniqueFormat() const
 {
-    return m_impl.format();
+    cv::ImageFormat fmt = m_impl.uniqueFormat();
+    if (fmt)
+    {
+        return py::cast(fmt);
+    }
+    else
+    {
+        return py::none();
+    }
 }
 
 Size2D ImageBatchVarShape::maxSize() const
@@ -136,8 +144,8 @@ void ImageBatchVarShape::Export(py::module &m)
     using namespace py::literals;
 
     py::class_<ImageBatchVarShape, std::shared_ptr<ImageBatchVarShape>, Container>(m, "ImageBatchVarShape")
-        .def(py::init(&ImageBatchVarShape::Create), "capacity"_a, "format"_a)
-        .def_property_readonly("format", &ImageBatchVarShape::format)
+        .def(py::init(&ImageBatchVarShape::Create), "capacity"_a)
+        .def_property_readonly("uniqueformat", &ImageBatchVarShape::uniqueFormat)
         .def_property_readonly("maxsize", &ImageBatchVarShape::maxSize)
         .def_property_readonly("capacity", &ImageBatchVarShape::capacity)
         .def("__len__", &ImageBatchVarShape::numImages)

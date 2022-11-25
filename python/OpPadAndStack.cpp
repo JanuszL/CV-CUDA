@@ -44,7 +44,13 @@ std::shared_ptr<Tensor> PadAndStackInto(ImageBatchVarShape &input, Tensor &outpu
 std::shared_ptr<Tensor> PadAndStack(ImageBatchVarShape &input, Tensor &top, Tensor &left, NVCVBorderType border,
                                     float borderValue, std::shared_ptr<Stream> pstream)
 {
-    std::shared_ptr<Tensor> output = Tensor::CreateForImageBatch(input.numImages(), input.maxSize(), input.format());
+    cv::ImageFormat fmt = input.impl().uniqueFormat();
+    if (fmt == cv::FMT_NONE)
+    {
+        throw std::runtime_error("All images in the input must have the same format");
+    }
+
+    std::shared_ptr<Tensor> output = Tensor::CreateForImageBatch(input.numImages(), input.maxSize(), fmt);
 
     return PadAndStackInto(input, *output, top, left, border, borderValue, pstream);
 }

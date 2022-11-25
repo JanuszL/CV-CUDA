@@ -195,7 +195,7 @@ TEST_P(OpPadAndStack, correct_output)
         batchSrcVec.push_back(srcVec);
     }
 
-    nvcv::ImageBatchVarShape imgBatchSrc(numBatches, nvcv::FMT_RGBA8);
+    nvcv::ImageBatchVarShape imgBatchSrc(numBatches);
 
     imgBatchSrc.pushBack(srcImgVec.begin(), srcImgVec.end());
 

@@ -28,17 +28,49 @@ static bool operator==(const NVCVImagePlanePitch &a, const NVCVImagePlanePitch &
     return a.width == b.width && a.height == b.height && a.pitchBytes == b.pitchBytes && a.buffer == b.buffer;
 }
 
+static bool operator==(const NVCVImageBufferPitch &a, const NVCVImageBufferPitch &b)
+{
+    if (a.numPlanes != b.numPlanes)
+    {
+        return false;
+    }
+    else
+    {
+        for (int i = 0; i != a.numPlanes; ++i)
+        {
+            if (a.planes[i] != b.planes[i])
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 static std::ostream &operator<<(std::ostream &out, const NVCVImagePlanePitch &a)
 {
     return out << a.width << 'x' << a.height << '@' << a.pitchBytes << ':' << a.buffer;
 }
 
+static std::ostream &operator<<(std::ostream &out, const NVCVImageBufferPitch &a)
+{
+    out << "{";
+    for (int i = 0; i < a.numPlanes; ++i)
+    {
+        if (i > 0)
+        {
+            out << ',';
+        }
+        out << a.planes[i];
+    }
+    return out;
+}
+
 TEST(ImageBatchVarShape, wip_create)
 {
-    nvcv::ImageBatchVarShape batch(100, nvcv::FMT_NV12);
+    nvcv::ImageBatchVarShape batch(100);
 
     EXPECT_EQ(100, batch.capacity());
-    EXPECT_EQ(nvcv::FMT_NV12, batch.format());
     EXPECT_EQ(0, batch.numImages());
     ASSERT_NE(nullptr, batch.handle());
 
@@ -53,42 +85,42 @@ TEST(ImageBatchVarShape, wip_create)
         const nvcv::IImageBatchData *data = batch.exportData(0);
         ASSERT_NE(nullptr, data);
 
-        ASSERT_EQ(batch.format(), data->format());
-
         auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataPitchDevice *>(data);
         ASSERT_NE(nullptr, devdata);
 
         ASSERT_EQ(0, devdata->numImages());
-        EXPECT_NE(nullptr, devdata->imgPlanes());
+        EXPECT_NE(nullptr, devdata->imageList());
+        EXPECT_NE(nullptr, devdata->formatList());
 
         EXPECT_EQ(nvcv::Size2D(0, 0), devdata->maxSize());
         EXPECT_EQ(devdata->maxSize(), batch.maxSize());
+        ASSERT_EQ(nvcv::FMT_NONE, devdata->uniqueFormat());
+        ASSERT_EQ(devdata->uniqueFormat(), batch.uniqueFormat());
     }
 
-    std::vector<NVCVImagePlanePitch> goldPlanes;
-    std::vector<NVCVImageHandle>     goldHandles;
+    std::vector<NVCVImageBufferPitch> goldImages;
+    std::vector<NVCVImageFormat>      goldFormats;
+    std::vector<NVCVImageHandle>      goldHandles;
 
-    auto addToGold = [&goldPlanes, &goldHandles](const nvcv::IImage &img)
+    auto addToGold = [&goldImages, &goldFormats, &goldHandles](const nvcv::IImage &img)
     {
         auto *imgdata = dynamic_cast<const nvcv::IImageDataPitchDevice *>(img.exportData());
         EXPECT_NE(nullptr, imgdata);
         if (imgdata)
         {
-            for (int i = 0; i < imgdata->numPlanes(); ++i)
-            {
-                goldPlanes.push_back(imgdata->plane(i));
-            }
+            goldImages.push_back(imgdata->cdata().buffer.pitch);
+            goldFormats.push_back(imgdata->cdata().format);
             goldHandles.push_back(img.handle());
         }
     };
 
-    auto calcMaxSize = [&goldPlanes]()
+    auto calcMaxSize = [&goldImages]()
     {
         nvcv::Size2D maxSize = {0, 0};
-        for (size_t i = 0; i < goldPlanes.size(); ++i)
+        for (size_t i = 0; i < goldImages.size(); ++i)
         {
-            maxSize.w = std::max(maxSize.w, goldPlanes[i].width);
-            maxSize.h = std::max(maxSize.h, goldPlanes[i].height);
+            maxSize.w = std::max(maxSize.w, goldImages[i].planes[0].width);
+            maxSize.h = std::max(maxSize.h, goldImages[i].planes[0].height);
         }
         return maxSize;
     };
@@ -153,7 +185,8 @@ TEST(ImageBatchVarShape, wip_create)
 
     // Remove some
     batch.popBack(5);
-    goldPlanes.erase(goldPlanes.end() - 5 * 2, goldPlanes.end());
+    goldImages.erase(goldImages.end() - 5, goldImages.end());
+    goldFormats.erase(goldFormats.end() - 5, goldFormats.end());
     goldHandles.erase(goldHandles.end() - 5, goldHandles.end());
 
     // To synchronize buffers
@@ -161,6 +194,17 @@ TEST(ImageBatchVarShape, wip_create)
     ASSERT_NE(nullptr, devdata);
     EXPECT_EQ(calcMaxSize(), devdata->maxSize());
     EXPECT_EQ(devdata->maxSize(), batch.maxSize());
+
+    // So far we have all images with the same format
+    ASSERT_EQ(nvcv::FMT_NV12, devdata->uniqueFormat());
+    ASSERT_EQ(devdata->uniqueFormat(), batch.uniqueFormat());
+    EXPECT_THAT(std::make_tuple(devdata->hostFormatList(), devdata->numImages()),
+                t::Each(static_cast<NVCVImageFormat>(devdata->uniqueFormat())));
+
+    // Add one image with a different format
+    nvcv::Image imgRGBA8({42, 59}, nvcv::FMT_RGBA8);
+    addToGold(imgRGBA8);
+    batch.pushBack(imgRGBA8);
 
     // use callback
     std::vector<std::shared_ptr<nvcv::IImage>> vec4;
@@ -187,24 +231,32 @@ TEST(ImageBatchVarShape, wip_create)
         const nvcv::IImageBatchData *data = batch.exportData(stream);
         ASSERT_NE(nullptr, data);
 
-        ASSERT_EQ(batch.format(), data->format());
-
         auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataPitchDevice *>(data);
         ASSERT_NE(nullptr, devdata);
 
+        ASSERT_EQ(devdata->uniqueFormat(), batch.uniqueFormat());
+
         ASSERT_EQ(goldHandles.size(), devdata->numImages());
-        EXPECT_NE(nullptr, devdata->imgPlanes());
+        EXPECT_NE(nullptr, devdata->imageList());
+        EXPECT_NE(nullptr, devdata->formatList());
+        EXPECT_NE(nullptr, devdata->hostFormatList());
 
         EXPECT_EQ(calcMaxSize(), devdata->maxSize());
         EXPECT_EQ(devdata->maxSize(), batch.maxSize());
 
-        std::vector<NVCVImagePlanePitch> planes(devdata->numImages() * 2);
-        ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(planes.data(), devdata->imgPlanes(), sizeof(planes[0]) * planes.size(),
+        std::vector<NVCVImageBufferPitch> images(devdata->numImages());
+        ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(images.data(), devdata->imageList(), sizeof(images[0]) * images.size(),
                                                cudaMemcpyDeviceToHost, stream));
+
+        std::vector<NVCVImageFormat> formats(devdata->numImages());
+        ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(formats.data(), devdata->formatList(),
+                                               sizeof(formats[0]) * formats.size(), cudaMemcpyDeviceToHost, stream));
 
         ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
 
-        EXPECT_THAT(planes, t::ElementsAreArray(goldPlanes));
+        EXPECT_THAT(images, t::ElementsAreArray(goldImages));
+        EXPECT_THAT(formats, t::ElementsAreArray(goldFormats));
+        EXPECT_THAT(std::make_tuple(devdata->hostFormatList(), devdata->numImages()), t::ElementsAreArray(goldFormats));
 
         int cur = 0;
         for (auto it = batch.begin(); it != batch.end(); ++it, ++cur)
@@ -221,7 +273,6 @@ TEST(ImageBatchVarShape, wip_create)
     {
         nvcv::ImageBatchVarShapeWrapHandle wrap(batch.handle());
         EXPECT_EQ(batch.capacity(), wrap.capacity());
-        EXPECT_EQ(batch.format(), wrap.format());
         ASSERT_EQ(batch.numImages(), wrap.numImages());
         EXPECT_EQ(batch.handle(), wrap.handle());
 
@@ -238,17 +289,18 @@ TEST(ImageBatchVarShape, wip_create)
 
 TEST(ImageBatchVarShape, wip_sync)
 {
-    std::vector<NVCVImagePlanePitch> goldPlanes;
-    std::vector<NVCVImageHandle>     goldHandles;
+    std::vector<NVCVImageBufferPitch> goldImages;
+    std::vector<NVCVImageFormat>      goldFormats;
+    std::vector<NVCVImageHandle>      goldHandles;
 
-    auto addToGold = [&goldPlanes, &goldHandles](const nvcv::IImage &img)
+    auto addToGold = [&goldImages, &goldFormats, &goldHandles](const nvcv::IImage &img)
     {
         auto *imgdata = dynamic_cast<const nvcv::IImageDataPitchDevice *>(img.exportData());
         EXPECT_NE(nullptr, imgdata);
         if (imgdata)
         {
-            goldPlanes.push_back(imgdata->plane(0));
-            goldPlanes.push_back(imgdata->plane(1));
+            goldImages.push_back(imgdata->cdata().buffer.pitch);
+            goldFormats.push_back(imgdata->format());
             goldHandles.push_back(img.handle());
         }
     };
@@ -256,7 +308,7 @@ TEST(ImageBatchVarShape, wip_sync)
     cudaStream_t stream;
     ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
 
-    nvcv::ImageBatchVarShape batch(10000, nvcv::FMT_NV12);
+    nvcv::ImageBatchVarShape batch(10000);
 
     std::mt19937                  rng(123);
     std::uniform_int_distribution rnd(1, 4);
@@ -290,14 +342,15 @@ TEST(ImageBatchVarShape, wip_sync)
     // show up
     {
         ASSERT_EQ(goldHandles.size(), devdata->numImages());
-        EXPECT_NE(nullptr, devdata->imgPlanes());
+        EXPECT_NE(nullptr, devdata->imageList());
+        EXPECT_NE(nullptr, devdata->formatList());
 
-        std::vector<NVCVImagePlanePitch> planes(devdata->numImages() * 2);
-        ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(planes.data(), devdata->imgPlanes(), sizeof(planes[0]) * planes.size(),
+        std::vector<NVCVImageBufferPitch> images(devdata->numImages());
+        ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(images.data(), devdata->imageList(), sizeof(images[0]) * images.size(),
                                                cudaMemcpyDeviceToHost, stream));
         ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
 
-        EXPECT_THAT(planes, t::ElementsAreArray(goldPlanes));
+        EXPECT_THAT(images, t::ElementsAreArray(goldImages));
     }
 
     ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));

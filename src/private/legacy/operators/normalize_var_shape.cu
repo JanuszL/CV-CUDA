@@ -205,7 +205,13 @@ ErrorCode NormalizeVarShape::infer(const nv::cv::IImageBatchVarShapeDataPitchDev
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    DataType data_type = helpers::GetLegacyDataType(inData.format());
+    if (!inData.uniqueFormat())
+    {
+        printf("Images in the input batch must all have the same format");
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    DataType data_type = helpers::GetLegacyDataType(inData.uniqueFormat());
 
     if (!(data_type == kCV_8U || data_type == kCV_8S || data_type == kCV_16U || data_type == kCV_16S
           || data_type == kCV_32S || data_type == kCV_32F))
@@ -214,7 +220,13 @@ ErrorCode NormalizeVarShape::infer(const nv::cv::IImageBatchVarShapeDataPitchDev
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    DataType out_data_type = helpers::GetLegacyDataType(outData.format());
+    if (!outData.uniqueFormat())
+    {
+        printf("Images in the output batch must all have the same format");
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    DataType out_data_type = helpers::GetLegacyDataType(outData.uniqueFormat());
 
     if (!(out_data_type == kCV_8U || out_data_type == kCV_32F))
     {
@@ -222,7 +234,7 @@ ErrorCode NormalizeVarShape::infer(const nv::cv::IImageBatchVarShapeDataPitchDev
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    int channels = inData.format().numChannels();
+    int channels = inData.uniqueFormat().numChannels();
     if (channels > 4)
     {
         LOG_ERROR("Invalid channel number " << channels);

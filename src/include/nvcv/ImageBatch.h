@@ -53,8 +53,7 @@ typedef void (*NVCVImageBatchDataCleanupFunc)(void *ctx, const NVCVImageBatchDat
 /** Stores the requirements of an varshape image batch. */
 typedef struct NVCVImageBatchVarShapeRequirementsRec
 {
-    int32_t         capacity; /*< Maximum number of images stored. */
-    NVCVImageFormat format;   /*< Format of batched images. */
+    int32_t capacity; /*< Maximum number of images stored. */
 
     int32_t          alignBytes; /*< Alignment/block size in bytes */
     NVCVRequirements mem;        /*< Image batch resource requirements. */
@@ -65,16 +64,13 @@ typedef struct NVCVImageBatchVarShapeRequirementsRec
  * @param [in] capacity Maximum number of images that fits in the image batch.
  *                      + Must be >= 1.
  *
- * @param [in] format Format of the images in the image batch.
- *                    + Must not be \ref NVCV_IMAGE_FORMAT_NONE.
- *
  * @param [out] reqs  Where the image batch requirements will be written to.
  *                    + Must not be NULL.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvImageBatchVarShapeCalcRequirements(int32_t capacity, NVCVImageFormat format,
+NVCV_PUBLIC NVCVStatus nvcvImageBatchVarShapeCalcRequirements(int32_t                             capacity,
                                                               NVCVImageBatchVarShapeRequirements *reqs);
 
 /** Constructs a varshape image batch instance with given requirements in the given storage.
@@ -133,20 +129,6 @@ NVCV_PUBLIC NVCVStatus nvcvImageBatchGetType(NVCVImageBatchHandle handle, NVCVTy
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvImageBatchGetCapacity(NVCVImageBatchHandle handle, int32_t *capacity);
-
-/**
- * Get the format of the images the image batch can store.
- *
- * @param[in] handle Image batch to be queried.
- *                   + Must not be NULL.
- *
- * @param[out] format Where the image format will be written to.
- *                    + Must not be NULL.
- *
- * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
- * @retval #NVCV_SUCCESS                Operation executed successfully.
- */
-NVCV_PUBLIC NVCVStatus nvcvImageBatchGetFormat(NVCVImageBatchHandle handle, NVCVImageFormat *fmt);
 
 /**
  * Get the allocator associated with an image batch.
@@ -212,6 +194,26 @@ NVCV_PUBLIC NVCVStatus nvcvImageBatchVarShapeGetMaxSize(NVCVImageBatchHandle han
                                                         int32_t *maxHeight);
 
 /**
+ * Get the unique format of the image batch.
+ *
+ * The unique format of an image batch is defined as being the format of all images in it,
+ * if all images have the same format, or \ref NVCV_IMAGE_FORMAT_NONE otherwise.
+ * If the batch is empty, its format is \ref NVCV_IMAGE_FORMAT_NONE.
+ *
+ * @param[in] handle Image batch to be queried.
+ *                   + Must not be NULL.
+ *
+ * @param[out] format Where the unique format will be written to.
+ *                    If batch isn't empty and all images have the same format,
+ *                    it'll return this format. Or else it returns \ref NVCV_IMAGE_FORMAT_NONE
+ *                    + Must not be NULL.
+ *
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
+ * @retval #NVCV_SUCCESS                Operation executed successfully.
+ */
+NVCV_PUBLIC NVCVStatus nvcvImageBatchVarShapeGetUniqueFormat(NVCVImageBatchHandle handle, NVCVImageFormat *format);
+
+/**
  * Push images to the end of the image batch.
  *
  * @param[in] handle Image batch to be manipulated
@@ -222,6 +224,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageBatchVarShapeGetMaxSize(NVCVImageBatchHandle han
  *                   + Must not be NULL.
  *                   + Must point to an array of at least @p numImages image handles.
  *                   + The images must not be destroyed while they're being referenced by the image batch.
+ *                   + Image format must indicate a pitch-linear memory layout.
  *
  * @param[in] numImages Number of images in the @p images array.
  *                      + Must be >= 1.
@@ -259,6 +262,7 @@ typedef NVCVImageHandle (*NVCVPushImageFunc)(void *ctx);
  *                       + Must not be NULL.
  *                       + It must return NULL before the capacity of the batch is exceeded.
  *                       + The images returned must not be destroyed while they're being referenced by the image batch.
+ *                       + Image format must indicate a pitch-linear memory layout.
  *
  * @param[in] ctxCallback Pointer passed to the callback function unchanged.
  *

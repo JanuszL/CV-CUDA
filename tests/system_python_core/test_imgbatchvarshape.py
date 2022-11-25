@@ -14,10 +14,10 @@ import nvcv
 
 
 def test_imgbatchvarshape_creation_works():
-    batch = nvcv.ImageBatchVarShape(15, nvcv.Format.RGBA8)
+    batch = nvcv.ImageBatchVarShape(15)
     assert batch.capacity == 15
     assert len(batch) == 0
-    assert batch.format == nvcv.Format.RGBA8
+    assert batch.uniqueformat is None
     assert batch.maxsize == (0, 0)
 
     # range must be empty
@@ -28,11 +28,12 @@ def test_imgbatchvarshape_creation_works():
 
 
 def test_imgbatchvarshape_one_image():
-    batch = nvcv.ImageBatchVarShape(15, nvcv.Format.RGBA8)
+    batch = nvcv.ImageBatchVarShape(15)
 
     img = nvcv.Image((64, 32), nvcv.Format.RGBA8)
     batch.pushback(img)
     assert len(batch) == 1
+    assert batch.uniqueformat == nvcv.Format.RGBA8
     assert batch.maxsize == (64, 32)
 
     # range must contain one
@@ -54,13 +55,14 @@ def test_imgbatchvarshape_one_image():
 
 
 def test_imgbatchvarshape_several_images():
-    batch = nvcv.ImageBatchVarShape(15, nvcv.Format.RGBA8)
+    batch = nvcv.ImageBatchVarShape(15)
 
     # add 4 images with different dimensions
     imgs = [nvcv.Image((m * 2, m), nvcv.Format.RGBA8) for m in range(2, 10, 2)]
     batch.pushback(imgs)
     assert len(batch) == 4
     assert batch.maxsize == (16, 8)
+    assert batch.uniqueformat == nvcv.Format.RGBA8
 
     # check if they were really added
     cnt = 0
@@ -78,6 +80,11 @@ def test_imgbatchvarshape_several_images():
     assert cnt == 2
 
     assert batch.maxsize == (8, 4)
+
+    # add one with a different format
+    batch.pushback(nvcv.Image((58, 26), nvcv.Format.NV12))
+    assert batch.maxsize == (58, 26)
+    assert batch.uniqueformat is None
 
     # clear everything
     batch.clear()

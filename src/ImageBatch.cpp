@@ -19,12 +19,11 @@
 #include <private/core/ImageBatchVarShape.hpp>
 #include <private/core/Status.hpp>
 #include <private/core/SymbolVersioning.hpp>
-#include <private/fmt/ImageFormat.hpp>
 
 namespace priv = nv::cv::priv;
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchVarShapeCalcRequirements,
-                (int32_t capacity, NVCVImageFormat format, NVCVImageBatchVarShapeRequirements *reqs))
+                (int32_t capacity, NVCVImageBatchVarShapeRequirements *reqs))
 {
     return priv::ProtectCall(
         [&]
@@ -34,7 +33,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchVarShapeCalcRequirements,
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output requirements must not be NULL");
             }
 
-            *reqs = priv::ImageBatchVarShape::CalcRequirements(capacity, priv::ImageFormat{format});
+            *reqs = priv::ImageBatchVarShape::CalcRequirements(capacity);
         });
 }
 
@@ -125,7 +124,8 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchVarShapeGetMaxSize,
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchGetFormat, (NVCVImageBatchHandle handle, NVCVImageFormat *fmt))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchVarShapeGetUniqueFormat,
+                (NVCVImageBatchHandle handle, NVCVImageFormat *fmt))
 {
     return priv::ProtectCall(
         [&]
@@ -135,9 +135,9 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchGetFormat, (NVCVImageBatchHandle
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output image format cannot be NULL");
             }
 
-            auto &batch = priv::ToStaticRef<const priv::IImageBatch>(handle);
+            auto &batch = priv::ToDynamicRef<const priv::IImageBatchVarShape>(handle);
 
-            *fmt = batch.format().value();
+            *fmt = batch.uniqueFormat().value();
         });
 }
 
