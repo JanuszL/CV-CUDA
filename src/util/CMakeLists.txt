@@ -47,7 +47,6 @@ target_include_directories(nvcv_util
 target_link_libraries(nvcv_util
     PUBLIC
         nvcv_headers
-        nvcv_format
         nvcv_util_sanitizer
         CUDA::cudart_static
     PRIVATE
