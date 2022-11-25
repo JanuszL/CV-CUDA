@@ -28,6 +28,7 @@ add_executable(nvcv_test_unit_core
     TestOptional.cpp
     TestLegacyHelpers.cpp
     TestLockFreeStack.cpp
+    TestHandleManager.cpp
 )
 
 target_compile_definitions(nvcv_test_unit_core
