@@ -51,6 +51,7 @@ add_library(nvcv SHARED
     operators/OpGaussian.cpp
     operators/OpErase.cpp
     operators/OpAverageBlur.cpp
+    operators/OpConv2D.cpp
 )
 
 target_link_libraries(nvcv PRIVATE

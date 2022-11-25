@@ -26,6 +26,7 @@ add_library(cvcuda_legacy STATIC
     ./operators/rotate_var_shape.cu
     ./operators/filter.cu
     ./operators/erase.cu
+    ./operators/filter_var_shape.cu
     CvCudaLegacyHelpers.cpp
 )
 
