@@ -238,7 +238,7 @@ public:
             throw std::runtime_error("Bad optional access");
         }
 
-        T *p = reinterpret_cast<T *>(&m_storage);
+        const T *p = reinterpret_cast<const T *>(&m_storage);
 #if __cplusplus >= 201703L
         return *std::launder(p);
 #else
@@ -270,6 +270,89 @@ private:
     bool                                                       m_hasValue;
     typename std::aligned_storage<sizeof(T), alignof(T)>::type m_storage;
 };
+
+template<class T>
+bool operator==(const Optional<T> &a, const Optional<T> &b)
+{
+    if (a && b)
+    {
+        return *a == b;
+    }
+    else if (!a && !b)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+template<class T>
+bool operator==(const Optional<T> &a, NullOptT)
+{
+    return !a;
+}
+
+template<class T>
+bool operator==(NullOptT, const Optional<T> &b)
+{
+    return !b;
+}
+
+template<class T>
+bool operator==(const Optional<T> &a, nullptr_t)
+{
+    return !a;
+}
+
+template<class T>
+bool operator==(nullptr_t, const Optional<T> &b)
+{
+    return !b;
+}
+
+template<class T>
+bool operator==(const Optional<T> &a, const T &b)
+{
+    return a && *a == b;
+}
+
+template<class T>
+bool operator==(const T &a, const Optional<T> &b)
+{
+    return b && a == *b;
+}
+
+template<class T>
+bool operator!=(const Optional<T> &a, const Optional<T> &b)
+{
+    return !(a == b);
+}
+
+template<class T>
+bool operator!=(const Optional<T> &a, nullptr_t)
+{
+    return !(a == nullptr);
+}
+
+template<class T>
+bool operator!=(nullptr_t, const Optional<T> &b)
+{
+    return !(nullptr == b);
+}
+
+template<class T>
+bool operator!=(const Optional<T> &a, const T &b)
+{
+    return !(a == b);
+}
+
+template<class T>
+bool operator!=(const T &a, const Optional<T> &b)
+{
+    return !(a == b);
+}
 
 }}} // namespace nv::cv::detail
 
