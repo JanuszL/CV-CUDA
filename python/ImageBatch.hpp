@@ -15,6 +15,7 @@
 #define NVCV_PYTHON_IMAGEBATCH_HPP
 
 #include "Container.hpp"
+#include "Size.hpp"
 
 #include <nvcv/ImageBatch.hpp>
 
@@ -42,6 +43,7 @@ public:
     cv::ImageFormat format() const;
     int32_t         capacity() const;
     int32_t         numImages() const;
+    Size2D          maxSize() const;
 
     void pushBack(Image &img);
     void pushBackMany(std::vector<std::shared_ptr<Image>> &imgList);

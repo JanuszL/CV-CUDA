@@ -62,6 +62,7 @@ TEST(ImageBatchVarShape, wip_create)
         EXPECT_NE(nullptr, devdata->imgPlanes());
 
         EXPECT_EQ(nvcv::Size2D(0, 0), devdata->maxSize());
+        EXPECT_EQ(devdata->maxSize(), batch.maxSize());
     }
 
     std::vector<NVCVImagePlanePitch> goldPlanes;
@@ -132,6 +133,7 @@ TEST(ImageBatchVarShape, wip_create)
     const auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataPitchDevice *>(vsdata);
     ASSERT_NE(nullptr, devdata);
     EXPECT_EQ(calcMaxSize(), devdata->maxSize());
+    EXPECT_EQ(devdata->maxSize(), batch.maxSize());
 
     std::vector<std::shared_ptr<nvcv::IImage>> vec2;
     for (int i = 0; i < 10; ++i)
@@ -158,6 +160,7 @@ TEST(ImageBatchVarShape, wip_create)
     devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataPitchDevice *>(batch.exportData(stream));
     ASSERT_NE(nullptr, devdata);
     EXPECT_EQ(calcMaxSize(), devdata->maxSize());
+    EXPECT_EQ(devdata->maxSize(), batch.maxSize());
 
     // use callback
     std::vector<std::shared_ptr<nvcv::IImage>> vec4;
@@ -193,6 +196,7 @@ TEST(ImageBatchVarShape, wip_create)
         EXPECT_NE(nullptr, devdata->imgPlanes());
 
         EXPECT_EQ(calcMaxSize(), devdata->maxSize());
+        EXPECT_EQ(devdata->maxSize(), batch.maxSize());
 
         std::vector<NVCVImagePlanePitch> planes(devdata->numImages() * 2);
         ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(planes.data(), devdata->imgPlanes(), sizeof(planes[0]) * planes.size(),

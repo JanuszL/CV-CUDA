@@ -71,6 +71,8 @@ public:
 
     void clear();
 
+    Size2D maxSize() const;
+
     ImageWrapHandle operator[](ptrdiff_t n) const;
 
     const IImageBatchVarShapeData *exportData(CUstream stream) const;
@@ -119,6 +121,8 @@ private:
     virtual void doPushBack(const IImage &img)                     = 0;
     virtual void doPopBack(int32_t imgCount)                       = 0;
     virtual void doClear()                                         = 0;
+
+    virtual Size2D doGetMaxSize() const = 0;
 
     virtual NVCVImageHandle doGetImage(int32_t idx) const = 0;
 };
@@ -369,6 +373,11 @@ inline ImageWrapHandle IImageBatchVarShape::operator[](ptrdiff_t n) const
 inline void IImageBatchVarShape::clear()
 {
     doClear();
+}
+
+inline Size2D IImageBatchVarShape::maxSize() const
+{
+    return doGetMaxSize();
 }
 
 }} // namespace nv::cv

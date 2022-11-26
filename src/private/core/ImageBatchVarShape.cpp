@@ -137,6 +137,12 @@ int32_t ImageBatchVarShape::numImages() const
     return m_numImages;
 }
 
+Size2D ImageBatchVarShape::maxSize() const
+{
+    doUpdateCache();
+    return *m_cacheMaxSize;
+}
+
 ImageFormat ImageBatchVarShape::format() const
 {
     return ImageFormat{m_reqs.format};
@@ -145,6 +151,21 @@ ImageFormat ImageBatchVarShape::format() const
 IAllocator &ImageBatchVarShape::alloc() const
 {
     return m_alloc;
+}
+
+void ImageBatchVarShape::doUpdateCache() const
+{
+    if (m_cacheMaxSize)
+    {
+        return;
+    }
+
+    m_cacheMaxSize = Size2D{0, 0};
+    for (int i = 0; i < m_numImages; ++i)
+    {
+        m_cacheMaxSize->w = std::max(m_cacheMaxSize->w, m_hostPlanesBuffer[i].width);
+        m_cacheMaxSize->h = std::max(m_cacheMaxSize->h, m_hostPlanesBuffer[i].height);
+    }
 }
 
 void ImageBatchVarShape::exportData(CUstream stream, NVCVImageBatchData &data) const
@@ -179,15 +200,7 @@ void ImageBatchVarShape::exportData(CUstream stream, NVCVImageBatchData &data) c
         m_dirtyStartingFromIndex = m_numImages;
     }
 
-    if (!m_cacheMaxSize)
-    {
-        m_cacheMaxSize = Size2D{0, 0};
-        for (int i = 0; i < m_numImages; ++i)
-        {
-            m_cacheMaxSize->w = std::max(m_cacheMaxSize->w, m_hostPlanesBuffer[i].width);
-            m_cacheMaxSize->h = std::max(m_cacheMaxSize->h, m_hostPlanesBuffer[i].height);
-        }
-    }
+    doUpdateCache();
 
     buf.maxWidth  = m_cacheMaxSize->w;
     buf.maxHeight = m_cacheMaxSize->h;
@@ -315,7 +328,7 @@ void ImageBatchVarShape::popImages(int32_t numImages)
         m_dirtyStartingFromIndex = m_numImages;
     }
 
-    // Removing images invalidates maxSize.
+    // Removing images invalidates size.
     m_cacheMaxSize = std::nullopt;
 }
 

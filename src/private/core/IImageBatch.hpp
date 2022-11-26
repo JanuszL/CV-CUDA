@@ -47,6 +47,8 @@ public:
 
     virtual void clear() = 0;
 
+    virtual Size2D maxSize() const = 0;
+
     virtual void getImages(int32_t begIndex, NVCVImageHandle *outImages, int32_t numImages) const = 0;
 };
 

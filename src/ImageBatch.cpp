@@ -99,7 +99,33 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchGetCapacity, (NVCVImageBatchHand
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchGetFormat, (NVCVImageBatchHandle handle, NVCVImageFormat *fmt))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchVarShapeGetMaxSize,
+                (NVCVImageBatchHandle handle, int32_t *maxWidth, int32_t *maxHeight))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            if (maxWidth == nullptr && maxHeight == nullptr)
+            {
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                                      "Both output width and height pointers cannot be NULL");
+            }
+
+            auto &batch = priv::ToStaticRef<const priv::IImageBatchVarShape>(handle);
+
+            priv::Size2D s = batch.maxSize();
+            if (maxWidth)
+            {
+                *maxWidth = s.w;
+            }
+            if (maxHeight)
+            {
+                *maxHeight = s.h;
+            }
+        });
+}
+
+NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageBatchGetFormat, (NVCVImageBatchHandle handle, NVCVImageFormat *fmt))
 {
     return priv::ProtectCall(
         [&]

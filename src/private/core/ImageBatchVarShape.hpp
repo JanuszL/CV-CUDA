@@ -32,6 +32,8 @@ public:
     ImageFormat format() const override;
     int32_t     numImages() const override;
 
+    Size2D maxSize() const override;
+
     NVCVTypeImageBatch type() const override;
 
     IAllocator &alloc() const override;
@@ -59,6 +61,8 @@ private:
     // Max width/height up to m_numImages.
     // If nullopt, must be recalculated from the beginning.
     mutable std::optional<Size2D> m_cacheMaxSize;
+
+    void doUpdateCache() const;
 
     // TODO: must be retrieved from the resource allocator;
     cudaEvent_t m_evPostFence;

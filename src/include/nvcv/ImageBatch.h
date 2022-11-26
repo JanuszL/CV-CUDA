@@ -193,6 +193,25 @@ NVCV_PUBLIC NVCVStatus nvcvImageBatchGetNumImages(NVCVImageBatchHandle handle, i
 NVCV_PUBLIC NVCVStatus nvcvImageBatchExportData(NVCVImageBatchHandle handle, CUstream stream, NVCVImageBatchData *data);
 
 /**
+ * Get the maximum size of the images in the batch.
+ *
+ * The maximum size of the image batch is defined as the maximum width and height
+ * of all images in it. If the batch is empty, its maximum size is (0,0).
+ *
+ * @param[in] handle Image batch to be queried.
+ *                   + Must not be NULL.
+ *
+ * @param[out] maxWidth,maxHeight Where the maximum width and height will be stored.
+ *                                If NULL, corresponding value won't be returned.
+ *                                + Both cannot be NULL
+ *
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
+ * @retval #NVCV_SUCCESS                Operation executed successfully.
+ */
+NVCV_PUBLIC NVCVStatus nvcvImageBatchVarShapeGetMaxSize(NVCVImageBatchHandle handle, int32_t *maxWidth,
+                                                        int32_t *maxHeight);
+
+/**
  * Push images to the end of the image batch.
  *
  * @param[in] handle Image batch to be manipulated

@@ -71,6 +71,12 @@ cv::ImageFormat ImageBatchVarShape::format() const
     return m_impl.format();
 }
 
+Size2D ImageBatchVarShape::maxSize() const
+{
+    cv::Size2D s = m_impl.maxSize();
+    return {s.w, s.h};
+}
+
 int32_t ImageBatchVarShape::capacity() const
 {
     return m_impl.capacity();
@@ -132,6 +138,7 @@ void ImageBatchVarShape::Export(py::module &m)
     py::class_<ImageBatchVarShape, std::shared_ptr<ImageBatchVarShape>, Container>(m, "ImageBatchVarShape")
         .def(py::init(&ImageBatchVarShape::Create), "capacity"_a, "format"_a)
         .def_property_readonly("format", &ImageBatchVarShape::format)
+        .def_property_readonly("maxsize", &ImageBatchVarShape::maxSize)
         .def_property_readonly("capacity", &ImageBatchVarShape::capacity)
         .def("__len__", &ImageBatchVarShape::numImages)
         .def("__iter__", [](const ImageBatchVarShape &list) { return py::make_iterator(list); })

@@ -70,6 +70,8 @@ private:
     void doPopBack(int32_t imgCount) override;
     void doClear() override;
 
+    Size2D doGetMaxSize() const override;
+
     NVCVImageHandle doGetImage(int32_t idx) const override;
 };
 
@@ -205,6 +207,13 @@ inline void ImageBatchVarShapeWrapHandle::doPopBack(int32_t imgCount)
 inline void ImageBatchVarShapeWrapHandle::doClear()
 {
     detail::CheckThrow(nvcvImageBatchVarShapeClear(ImageBatchWrapHandle::doGetHandle()));
+}
+
+inline Size2D ImageBatchVarShapeWrapHandle::doGetMaxSize() const
+{
+    Size2D s;
+    detail::CheckThrow(nvcvImageBatchVarShapeGetMaxSize(ImageBatchWrapHandle::doGetHandle(), &s.w, &s.h));
+    return s;
 }
 
 inline NVCVImageHandle ImageBatchVarShapeWrapHandle::doGetImage(int32_t idx) const
