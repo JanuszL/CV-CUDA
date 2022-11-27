@@ -1623,6 +1623,41 @@ private:
     float *m_kernel        = nullptr;
 };
 
+class MedianBlurVarShape : public CudaBaseOp
+{
+public:
+    MedianBlurVarShape() = delete;
+    MedianBlurVarShape(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+    /**
+     * @brief Blur an image using a median kernel.
+     * @param inputs gpu pointer, inputs[i] is input image where i ranges from 0 to batch-1, whose shape is
+     * input_shape[i] and type is data_type.
+     * @param outputs gpu pointer, outputs[i] is output image where i ranges from 0 to batch-1, whose size is
+     * input_shape[i] and type is data_type.
+     * @param gpu_workspace gpu pointer, gpu memory used to store the temporary variable.
+     * @param cpu_workspace cpu pointer, cpu memory used to store the temporary variable.
+     * @param batch batch size of the input images.
+     * @param buffer_size size of the gpu_workspace/cpu_workspace.
+     * @param ksize median blur kernel size.
+     * @param input_shapes shape of the input images.
+     * @param format format of the input images, e.g. kNHWC.
+     * @param data_type data type of the input images, e.g. kCV_32F.
+     * @param stream for the asynchronous execution.
+     */
+    int infer(
+                    const void **inputs, void **outputs, void *gpu_workspace, void *cpu_workspace, const int batch,
+                    const size_t buffer_size, cv::Size *ksize, DataShape *input_shape, DataFormat format, DataType data_type,
+                    cudaStream_t stream);
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param batch_size maximum input batch size
+     */
+    size_t calBufferSize(int batch_size);
+};
+
 } // namespace nv::cv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H
