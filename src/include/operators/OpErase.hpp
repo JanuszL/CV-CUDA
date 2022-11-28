@@ -36,7 +36,7 @@ namespace nv { namespace cvop {
 class Erase final : public IOperator
 {
 public:
-    explicit Erase(int num_erasing_area);
+    explicit Erase(int max_num_erasing_area);
 
     ~Erase();
 
@@ -50,9 +50,9 @@ private:
     NVCVOperatorHandle m_handle;
 };
 
-inline Erase::Erase(int num_erasing_area)
+inline Erase::Erase(int max_num_erasing_area)
 {
-    cv::detail::CheckThrow(nvcvopEraseCreate(&m_handle, num_erasing_area));
+    cv::detail::CheckThrow(nvcvopEraseCreate(&m_handle, max_num_erasing_area));
     assert(m_handle);
 }
 

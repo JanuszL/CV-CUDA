@@ -41,12 +41,14 @@ extern "C"
  * @param [out] handle Where the image instance handle will be written to.
  *                     + Must not be NULL.
  *
+ * @param [in] max_num_erasing_area the maximum number of areas that will be erased.
+ *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Handle is null.
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the operator.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
 */
 
-NVCV_OP_PUBLIC NVCVStatus nvcvopEraseCreate(NVCVOperatorHandle *handle, int num_erasing_area);
+NVCV_OP_PUBLIC NVCVStatus nvcvopEraseCreate(NVCVOperatorHandle *handle, int max_num_erasing_area);
 
 /* Executes the erase operation on the given cuda stream. This operation does not
  *  wait for completion.
@@ -127,10 +129,6 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopEraseCreate(NVCVOperatorHandle *handle, int num_
  * @param [in] values an array of size num_erasing_area*4 that gives the filling value for each erase area.
  *
  * @param [in] imgIdx an array of size num_erasing_area that maps a erase area idx to img idx in the batch.
- *
- * @param [in] max_eh the maximum value of erasing_h.
- *
- * @param [in] max_ew the maximum value of erasing_w.
  *
  * @param [in] random an boolean for random op.
  *
