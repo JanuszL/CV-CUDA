@@ -1111,8 +1111,6 @@ public:
             each of whose bits indicates whether or not the corresponding channel need to be erased.
      * @param values an array of size num_erasing_area*4 that gives the filling value for each erase area.
      * @param imgIdx an array of size num_erasing_area that maps a erase area idx to img idx in the batch.
-     * @param max_eh the maximum value of erasing_h
-     * @param max_ew the maximum value of erasing_w
      * @param random an boolean for random op.
      * @param seed random seed for random filling erase area
      * @param inplace for perform inplace op.

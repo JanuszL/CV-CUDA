@@ -107,6 +107,7 @@ namespace nv::cv::legacy::cuda_op {
 Erase::Erase(DataShape max_input_shape, DataShape max_output_shape, int num_erasing_area)
     : CudaBaseOp(max_input_shape, max_output_shape)
     , d_max_values(nullptr)
+    , temp_storage(nullptr)
 {
     cudaError_t err = cudaMalloc(&d_max_values, sizeof(int) * 2);
     if (err != cudaSuccess)
@@ -125,7 +126,12 @@ Erase::Erase(DataShape max_input_shape, DataShape max_output_shape, int num_eras
     storage_bytes = 0;
     cub::DeviceReduce::Max(temp_storage, storage_bytes, (int *)nullptr, (int *)nullptr, max_num_erasing_area);
 
-    checkCudaErrors(cudaMalloc(&temp_storage, storage_bytes * 2));
+    err = cudaMalloc(&temp_storage, storage_bytes * 2);
+    if (err != cudaSuccess)
+    {
+        LOG_ERROR("CUDA memory allocation error of size: " << storage_bytes * 2);
+        throw std::runtime_error("CUDA memory allocation error!");
+    }
 }
 
 Erase::~Erase()
