@@ -13,7 +13,7 @@
 
 #include "IAllocator.hpp"
 
-#include "DefaultAllocator.hpp"
+#include "IContext.hpp"
 
 #include <util/Math.hpp>
 
@@ -103,20 +103,16 @@ void IAllocator::freeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept
     doFreeDeviceMem(ptr, size, align);
 }
 
-namespace {
-priv::DefaultAllocator g_DefaultAllocator;
-}
-
 priv::IAllocator &GetDefaultAllocator()
 {
-    return g_DefaultAllocator;
+    return GlobalContext().allocDefault();
 }
 
 priv::IAllocator &GetAllocator(NVCVAllocatorHandle handle)
 {
     if (handle == nullptr)
     {
-        return g_DefaultAllocator;
+        return GetDefaultAllocator();
     }
     else
     {
