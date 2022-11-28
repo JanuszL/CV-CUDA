@@ -41,5 +41,5 @@ function run()
 
     echo "Running $testexec test suite..."
 
-    "$curdir/$testexec"
+    NVCV_LEAK_DETECTION=warn "$curdir/$testexec"
 }

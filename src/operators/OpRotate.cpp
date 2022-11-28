@@ -37,7 +37,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopRotateCreate, (NVCVOperatorHandle * hand
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopRotateSubmit,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopRotateSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
                  const double angleDeg, const double2 shift, const NVCVInterpolationType interpolation))
 {

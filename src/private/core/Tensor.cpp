@@ -171,11 +171,6 @@ Tensor::~Tensor()
     m_alloc.freeDeviceMem(m_buffer, CalcTotalSizeBytes(m_reqs.mem.deviceMem), m_reqs.alignBytes);
 }
 
-Version Tensor::doGetVersion() const
-{
-    return CURRENT_VERSION;
-}
-
 int32_t Tensor::ndim() const
 {
     return m_reqs.ndim;

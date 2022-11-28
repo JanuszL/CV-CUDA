@@ -47,10 +47,4 @@ void CenterCrop::operator()(cudaStream_t stream, const cv::ITensor &in, const cv
     leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, cropSize.h, cropSize.w, stream));
 }
 
-nv::cv::priv::Version CenterCrop::doGetVersion() const
-{
-    //todo need to have a version decoupled from NVCV
-    return nv::cv::priv::CURRENT_VERSION;
-}
-
 } // namespace nv::cvop::priv

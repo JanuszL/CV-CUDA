@@ -37,7 +37,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopReformatCreate, (NVCVOperatorHandle * ha
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopReformatSubmit,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopReformatSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out))
 {
     return nvcv::ProtectCall(

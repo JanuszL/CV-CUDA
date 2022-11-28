@@ -125,9 +125,4 @@ void TensorWrapDataPitch::exportData(NVCVTensorData &tdata) const
     tdata = m_tdata;
 }
 
-Version TensorWrapDataPitch::doGetVersion() const
-{
-    return CURRENT_VERSION;
-}
-
 } // namespace nv::cv::priv

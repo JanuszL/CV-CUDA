@@ -45,13 +45,6 @@ typedef enum
     NVCV_TYPE_IMAGEBATCH_TENSOR_WRAPDATA,
 } NVCVTypeImageBatch;
 
-/** Storage for image batch instance. */
-typedef struct NVCVImageBatchStorageRec
-{
-    /** Instance storage */
-    alignas(8) uint8_t storage[1024];
-} NVCVImageBatchStorage;
-
 typedef struct NVCVImageBatch *NVCVImageBatchHandle;
 
 /** Image batch data cleanup function type */
@@ -96,8 +89,6 @@ NVCV_PUBLIC NVCVStatus nvcvImageBatchVarShapeCalcRequirements(int32_t capacity, 
  *                          If NULL, it'll use the internal default allocator.
  *                          + Allocator must not be destroyed while an image batch still refers to it.
  *
- * @param [in,out] storage Memory storage where the image batch instance will be constructed in.
- *
  * @param [out] handle      Where the image batch instance handle will be written to.
  *                          + Must not be NULL.
  *
@@ -106,8 +97,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageBatchVarShapeCalcRequirements(int32_t capacity, 
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvImageBatchVarShapeConstruct(const NVCVImageBatchVarShapeRequirements *reqs,
-                                                       NVCVAllocatorHandle alloc, NVCVImageBatchStorage *storage,
-                                                       NVCVImageBatchHandle *handle);
+                                                       NVCVAllocatorHandle alloc, NVCVImageBatchHandle *handle);
 
 /** Destroys an existing image batch instance.
  *

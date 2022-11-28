@@ -37,7 +37,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopCustomCropCreate, (NVCVOperatorHandle * 
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopCustomCropSubmit,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCustomCropSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
                  const NVCVRectI cropRect))
 {

@@ -47,10 +47,4 @@ void CopyMakeBorder::operator()(cudaStream_t stream, const cv::ITensor &in, cons
     leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, top, left, borderMode, borderValue, stream));
 }
 
-nv::cv::priv::Version CopyMakeBorder::doGetVersion() const
-{
-    //todo need to have a version decoupled from NVCV
-    return nv::cv::priv::CURRENT_VERSION;
-}
-
 } // namespace nv::cvop::priv

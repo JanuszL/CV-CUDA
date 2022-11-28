@@ -37,15 +37,13 @@
 
 namespace nv::cvop::priv {
 
-class CopyMakeBorder final : public IOperator
+class CopyMakeBorder final : public OperatorBase
 {
 public:
     explicit CopyMakeBorder();
 
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, const int top, const int left,
                     const NVCVBorderType borderMode, const float4 borderValue) const;
-
-    cv::priv::Version doGetVersion() const override;
 
 private:
     std::unique_ptr<cv::legacy::cuda_op::CopyMakeBorder> m_legacyOp;

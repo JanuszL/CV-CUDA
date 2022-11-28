@@ -38,7 +38,7 @@
 // Use the public nvcv API
 namespace nv::cvop::priv {
 
-class Resize final : public IOperator
+class Resize final : public OperatorBase
 {
 public:
     explicit Resize();
@@ -48,8 +48,6 @@ public:
 
     void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
                     const NVCVInterpolationType interpolation) const;
-
-    cv::priv::Version doGetVersion() const override;
 
 private:
     std::unique_ptr<cv::legacy::cuda_op::Resize>         m_legacyOp;

@@ -14,8 +14,12 @@
 #ifndef NVCV_PRIV_CORE_CONTEXT_HPP
 #define NVCV_PRIV_CORE_CONTEXT_HPP
 
+#include "AllocatorManager.hpp"
 #include "DefaultAllocator.hpp"
 #include "IContext.hpp"
+#include "ImageBatchManager.hpp"
+#include "ImageManager.hpp"
+#include "TensorManager.hpp"
 
 namespace nv::cv::priv {
 
@@ -25,10 +29,20 @@ public:
     Context();
     ~Context();
 
+    CoreObjManager<NVCVImageHandle>      &imageManager() override;
+    CoreObjManager<NVCVImageBatchHandle> &imageBatchManager() override;
+    CoreObjManager<NVCVTensorHandle>     &tensorManager() override;
+    CoreObjManager<NVCVAllocatorHandle>  &allocatorManager() override;
+
     IAllocator &allocDefault() override;
 
 private:
-    DefaultAllocator m_allocDefault;
+    // Order is important due to inter-dependencies
+    DefaultAllocator  m_allocDefault;
+    AllocatorManager  m_allocatorManager;
+    ImageManager      m_imageManager;
+    ImageBatchManager m_imageBatchManager;
+    TensorManager     m_tensorManager;
 };
 
 } // namespace nv::cv::priv

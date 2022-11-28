@@ -38,7 +38,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopNormalizeCreate, (NVCVOperatorHandle * h
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopNormalizeSubmit,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopNormalizeSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle base,
                  NVCVTensorHandle scale, NVCVTensorHandle out, float global_scale, float shift, float epsilon,
                  uint32_t flags))

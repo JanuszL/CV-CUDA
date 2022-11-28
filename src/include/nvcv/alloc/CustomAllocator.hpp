@@ -50,9 +50,6 @@ public:
     }
 
 private:
-    // Must come before m_wrap;
-    NVCVAllocatorStorage m_storage;
-
     std::tuple<AA...> m_resAllocators;
 
     AllocatorWrapHandle m_wrap;
@@ -67,7 +64,7 @@ private:
         doFillAllocatorList(custAllocList, detail::MakeIndexSequence<sizeof...(AA)>());
 
         NVCVAllocatorHandle handle;
-        detail::CheckThrow(nvcvAllocatorConstructCustom(custAllocList, sizeof...(AA), &m_storage, &handle));
+        detail::CheckThrow(nvcvAllocatorConstructCustom(custAllocList, sizeof...(AA), &handle));
         return handle;
     }
 

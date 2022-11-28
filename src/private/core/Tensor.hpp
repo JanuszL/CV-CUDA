@@ -20,7 +20,7 @@
 
 namespace nv::cv::priv {
 
-class Tensor final : public ITensor
+class Tensor final : public CoreObjectBase<ITensor>
 {
 public:
     explicit Tensor(NVCVTensorRequirements reqs, IAllocator &alloc);
@@ -46,8 +46,6 @@ private:
     NVCVTensorRequirements m_reqs;
 
     void *m_buffer;
-
-    Version doGetVersion() const override;
 };
 
 } // namespace nv::cv::priv

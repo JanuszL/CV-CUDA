@@ -18,7 +18,7 @@
 
 namespace nv::cv::priv {
 
-class Image final : public IImage
+class Image final : public CoreObjectBase<IImage>
 {
 public:
     explicit Image(NVCVImageRequirements reqs, IAllocator &alloc);
@@ -37,11 +37,9 @@ private:
     IAllocator           &m_alloc;
     NVCVImageRequirements m_reqs;
     void                 *m_buffer;
-
-    Version doGetVersion() const override;
 };
 
-class ImageWrapData final : public IImage
+class ImageWrapData final : public CoreObjectBase<IImage>
 {
 public:
     explicit ImageWrapData(const NVCVImageData &data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup);
@@ -60,8 +58,6 @@ private:
 
     NVCVImageDataCleanupFunc m_cleanup;
     void                    *m_ctxCleanup;
-
-    Version doGetVersion() const override;
 
     void doCleanup() noexcept;
 

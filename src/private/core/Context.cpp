@@ -13,6 +13,10 @@
 
 #include "Context.hpp"
 
+#include "HandleManagerImpl.hpp"
+
+#include <util/Assert.h>
+
 namespace nv::cv::priv {
 
 IContext &GlobalContext()
@@ -22,8 +26,11 @@ IContext &GlobalContext()
 }
 
 Context::Context()
+    : m_allocatorManager("Allocator")
+    , m_imageManager("Image")
+    , m_imageBatchManager("ImageBatch")
+    , m_tensorManager("Tensor")
 {
-    // empty
 }
 
 Context::~Context()
@@ -35,5 +42,30 @@ IAllocator &Context::allocDefault()
 {
     return m_allocDefault;
 }
+
+ImageManager &Context::imageManager()
+{
+    return m_imageManager;
+}
+
+ImageBatchManager &Context::imageBatchManager()
+{
+    return m_imageBatchManager;
+}
+
+TensorManager &Context::tensorManager()
+{
+    return m_tensorManager;
+}
+
+AllocatorManager &Context::allocatorManager()
+{
+    return m_allocatorManager;
+}
+
+template class HandleManager<IImage, ImageStorage>;
+template class HandleManager<IImageBatch, ImageBatchStorage>;
+template class HandleManager<ITensor, TensorStorage>;
+template class HandleManager<IAllocator, AllocatorStorage>;
 
 } // namespace nv::cv::priv

@@ -99,10 +99,4 @@ void Normalize::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &i
                                                             shift, epsilon, flags, stream));
 }
 
-cv::priv::Version Normalize::doGetVersion() const
-{
-    //todo need to have a version decoupled from NVCV
-    return cv::priv::CURRENT_VERSION;
-}
-
 } // namespace nv::cvop::priv

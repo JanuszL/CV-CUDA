@@ -38,15 +38,13 @@
 // Use the public nvcv API
 namespace nv::cvop::priv {
 
-class Rotate final : public IOperator
+class Rotate final : public OperatorBase
 {
 public:
     explicit Rotate();
 
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, const double angleDeg,
                     const double2 shift, const NVCVInterpolationType interpolation) const;
-
-    cv::priv::Version doGetVersion() const override;
 
 private:
     std::unique_ptr<cv::legacy::cuda_op::Rotate> m_legacyOp;

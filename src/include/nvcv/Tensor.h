@@ -34,13 +34,6 @@ extern "C"
 {
 #endif
 
-/** Storage for tensor instance. */
-typedef struct NVCVTensorStorageRec
-{
-    /** Instance storage */
-    alignas(8) uint8_t storage[1024 + 64];
-} NVCVTensorStorage;
-
 typedef struct NVCVTensor *NVCVTensorHandle;
 
 /** Tensor data cleanup function type */
@@ -127,8 +120,6 @@ NVCV_PUBLIC NVCVStatus nvcvTensorCalcRequirementsForImages(int32_t numImages, in
  *                   If NULL, it'll use the internal default allocator.
  *                   + Allocator must not be destroyed while an tensor still refers to it.
  *
- * @param [in,out] storage Memory storage where the tensor instance will be constructed in.
- *
  * @param [out] handle Where the tensor instance handle will be written to.
  *                     + Must not be NULL.
  *
@@ -137,7 +128,7 @@ NVCV_PUBLIC NVCVStatus nvcvTensorCalcRequirementsForImages(int32_t numImages, in
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvTensorConstruct(const NVCVTensorRequirements *reqs, NVCVAllocatorHandle alloc,
-                                           NVCVTensorStorage *storage, NVCVTensorHandle *handle);
+                                           NVCVTensorHandle *handle);
 
 /** Wraps an existing tensor buffer into an NVCV tensor instance constructed in given storage
  *
@@ -154,8 +145,6 @@ NVCV_PUBLIC NVCVStatus nvcvTensorConstruct(const NVCVTensorRequirements *reqs, N
  *
  * @param [in] ctxCleanup Pointer to be passed unchanged to the cleanup function, if defined.
  *
- * @param [in,out] storage Memory storage where the tensor instance will be created in.
- *
  * @param [out] handle Where the tensor instance handle will be written to.
  *                     + Must not be NULL.
  *
@@ -164,8 +153,7 @@ NVCV_PUBLIC NVCVStatus nvcvTensorConstruct(const NVCVTensorRequirements *reqs, N
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvTensorWrapDataConstruct(const NVCVTensorData *data, NVCVTensorDataCleanupFunc cleanup,
-                                                   void *ctxCleanup, NVCVTensorStorage *storage,
-                                                   NVCVTensorHandle *handle);
+                                                   void *ctxCleanup, NVCVTensorHandle *handle);
 
 /** Wraps an existing NVCV image into an NVCV tensor instance constructed in given storage
  *
@@ -190,16 +178,13 @@ NVCV_PUBLIC NVCVStatus nvcvTensorWrapDataConstruct(const NVCVTensorData *data, N
  *                 + Image format must be pitch-linear.
  *                 + All planes must have the same dimensions.
  *
- * @param [in,out] storage Memory storage where the tensor instance will be created in.
- *
  * @param [out] handle Where the tensor instance handle will be written to.
  *                     + Must not be NULL.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvTensorWrapImageConstruct(NVCVImageHandle img, NVCVTensorStorage *storage,
-                                                    NVCVTensorHandle *handle);
+NVCV_PUBLIC NVCVStatus nvcvTensorWrapImageConstruct(NVCVImageHandle img, NVCVTensorHandle *handle);
 
 /** Destroys an existing tensor instance.
  *

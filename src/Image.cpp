@@ -12,9 +12,11 @@
  */
 
 #include <nvcv/Image.h>
+#include <private/core/AllocatorManager.hpp>
 #include <private/core/Exception.hpp>
 #include <private/core/IAllocator.hpp>
 #include <private/core/Image.hpp>
+#include <private/core/ImageManager.hpp>
 #include <private/core/Status.hpp>
 #include <private/core/SymbolVersioning.hpp>
 
@@ -35,9 +37,8 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageCalcRequirements,
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageConstruct,
-                (const NVCVImageRequirements *reqs, NVCVAllocatorHandle halloc, NVCVImageStorage *storage,
-                 NVCVImageHandle *handle))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageConstruct,
+                (const NVCVImageRequirements *reqs, NVCVAllocatorHandle halloc, NVCVImageHandle *handle))
 {
     return priv::ProtectCall(
         [&]
@@ -47,11 +48,6 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageConstruct,
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to image requirements must not be NULL");
             }
 
-            if (storage == nullptr)
-            {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to image storage must not be NULL");
-            }
-
             if (handle == nullptr)
             {
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output handle must not be NULL");
@@ -59,16 +55,13 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageConstruct,
 
             priv::IAllocator &alloc = priv::GetAllocator(halloc);
 
-            static_assert(sizeof(NVCVImageStorage) >= sizeof(priv::Image));
-            static_assert(alignof(NVCVImageStorage) % alignof(priv::Image) == 0);
-
-            *handle = reinterpret_cast<NVCVImageHandle>(new (storage) priv::Image{*reqs, alloc});
+            *handle = priv::CreateCoreObject<priv::Image>(*reqs, alloc);
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageWrapDataConstruct,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageWrapDataConstruct,
                 (const NVCVImageData *data, NVCVImageDataCleanupFunc cleanup, void *ctxCleanup,
-                 NVCVImageStorage *storage, NVCVImageHandle *handle))
+                 NVCVImageHandle *handle))
 {
     return priv::ProtectCall(
         [&]
@@ -78,39 +71,21 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageWrapDataConstruct,
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output handle must not be NULL");
             }
 
-            if (storage == nullptr)
-            {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to image storage must not be NULL");
-            }
-
             if (data == nullptr)
             {
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Image data must not be NULL");
             }
 
-            static_assert(sizeof(NVCVImageStorage) >= sizeof(priv::ImageWrapData));
-            static_assert(alignof(NVCVImageStorage) % alignof(priv::ImageWrapData) == 0);
-
-            *handle = reinterpret_cast<NVCVImageHandle>(new (storage) priv::ImageWrapData{*data, cleanup, ctxCleanup});
+            *handle = priv::CreateCoreObject<priv::ImageWrapData>(*data, cleanup, ctxCleanup);
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageDestroy, (NVCVImageHandle handle))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageDestroy, (NVCVImageHandle handle))
 {
-    return priv::ProtectCall(
-        [&]
-        {
-            if (!priv::IsDestroyed(handle))
-            {
-                priv::ToStaticPtr<priv::IImage>(handle)->~IImage();
-                memset(handle, 0, sizeof(NVCVImageStorage));
-
-                NVCV_ASSERT(priv::IsDestroyed(handle));
-            }
-        });
+    return priv::ProtectCall([&] { priv::DestroyCoreObject(handle); });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageGetSize, (NVCVImageHandle handle, int32_t *width, int32_t *height))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageGetSize, (NVCVImageHandle handle, int32_t *width, int32_t *height))
 {
     return priv::ProtectCall(
         [&]
@@ -133,7 +108,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageGetSize, (NVCVImageHandle handle, int
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageGetFormat, (NVCVImageHandle handle, NVCVImageFormat *fmt))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageGetFormat, (NVCVImageHandle handle, NVCVImageFormat *fmt))
 {
     return priv::ProtectCall(
         [&]
@@ -149,7 +124,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageGetFormat, (NVCVImageHandle handle, N
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageGetAllocator, (NVCVImageHandle handle, NVCVAllocatorHandle *halloc))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageGetAllocator, (NVCVImageHandle handle, NVCVAllocatorHandle *halloc))
 {
     return priv::ProtectCall(
         [&]
@@ -165,7 +140,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageGetAllocator, (NVCVImageHandle handle
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageGetType, (NVCVImageHandle handle, NVCVTypeImage *type))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageGetType, (NVCVImageHandle handle, NVCVTypeImage *type))
 {
     return priv::ProtectCall(
         [&]
@@ -181,7 +156,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageGetType, (NVCVImageHandle handle, NVC
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageExportData, (NVCVImageHandle handle, NVCVImageData *data))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageExportData, (NVCVImageHandle handle, NVCVImageData *data))
 {
     return priv::ProtectCall(
         [&]

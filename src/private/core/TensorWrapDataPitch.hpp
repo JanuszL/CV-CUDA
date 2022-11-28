@@ -20,7 +20,7 @@
 
 namespace nv::cv::priv {
 
-class TensorWrapDataPitch final : public ITensor
+class TensorWrapDataPitch final : public CoreObjectBase<ITensor>
 {
 public:
     explicit TensorWrapDataPitch(const NVCVTensorData &tdata, NVCVTensorDataCleanupFunc cleanup, void *ctxCleanup);
@@ -42,8 +42,6 @@ private:
 
     NVCVTensorDataCleanupFunc m_cleanup;
     void                     *m_ctxCleanup;
-
-    Version doGetVersion() const override;
 };
 
 } // namespace nv::cv::priv

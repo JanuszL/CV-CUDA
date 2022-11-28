@@ -65,10 +65,4 @@ void Resize::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, 
     leg::helpers::CheckOpErrThrow(m_legacyOpVarShape->infer(*inData, *outData, interpolation, stream));
 }
 
-nv::cv::priv::Version Resize::doGetVersion() const
-{
-    // TODO: How to decouple NVCV version from legacy version?
-    return nv::cv::priv::CURRENT_VERSION;
-}
-
 } // namespace nv::cvop::priv

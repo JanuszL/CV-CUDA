@@ -298,9 +298,8 @@ TEST(Allocator, wip_test_dali_stream_async)
 
 TEST(Allocator, wip_double_destroy_noop)
 {
-    NVCVAllocatorStorage allocStorage;
-    NVCVAllocatorHandle  handle;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvAllocatorConstructCustom(nullptr, 0, &allocStorage, &handle));
+    NVCVAllocatorHandle handle;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvAllocatorConstructCustom(nullptr, 0, &handle));
 
     nvcvAllocatorDestroy(handle);
 

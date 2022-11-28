@@ -23,6 +23,7 @@ add_subdirectory(util)
 add_subdirectory(private)
 
 add_library(nvcv SHARED
+    Config.cpp
     Version.cpp
     Status.cpp
     ColorSpec.cpp

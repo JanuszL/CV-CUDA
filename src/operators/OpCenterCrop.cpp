@@ -37,7 +37,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopCenterCropCreate, (NVCVOperatorHandle * 
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopCenterCropSubmit,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCenterCropSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
                  int32_t cropWidth, int32_t cropHeight))
 {

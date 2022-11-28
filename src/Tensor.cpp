@@ -12,14 +12,17 @@
  */
 
 #include <nvcv/Tensor.h>
+#include <private/core/AllocatorManager.hpp>
 #include <private/core/Exception.hpp>
 #include <private/core/IAllocator.hpp>
 #include <private/core/IImage.hpp>
+#include <private/core/ImageManager.hpp>
 #include <private/core/Status.hpp>
 #include <private/core/SymbolVersioning.hpp>
 #include <private/core/Tensor.hpp>
 #include <private/core/TensorData.hpp>
 #include <private/core/TensorLayout.hpp>
+#include <private/core/TensorManager.hpp>
 #include <private/core/TensorWrapDataPitch.hpp>
 #include <private/fmt/ImageFormat.hpp>
 #include <private/fmt/PixelType.hpp>
@@ -63,9 +66,8 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorCalcRequirements,
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorConstruct,
-                (const NVCVTensorRequirements *reqs, NVCVAllocatorHandle halloc, NVCVTensorStorage *storage,
-                 NVCVTensorHandle *handle))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorConstruct,
+                (const NVCVTensorRequirements *reqs, NVCVAllocatorHandle halloc, NVCVTensorHandle *handle))
 {
     return priv::ProtectCall(
         [&]
@@ -76,11 +78,6 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorConstruct,
                                       "Pointer to tensor image batch requirements must not be NULL");
             }
 
-            if (storage == nullptr)
-            {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to image batch storage must not be NULL");
-            }
-
             if (handle == nullptr)
             {
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output handle must not be NULL");
@@ -88,16 +85,13 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorConstruct,
 
             priv::IAllocator &alloc = priv::GetAllocator(halloc);
 
-            static_assert(sizeof(NVCVTensorStorage) >= sizeof(priv::Tensor));
-            static_assert(alignof(NVCVTensorStorage) % alignof(priv::Tensor) == 0);
-
-            *handle = reinterpret_cast<NVCVTensorHandle>(new (storage) priv::Tensor{*reqs, alloc});
+            *handle = priv::CreateCoreObject<priv::Tensor>(*reqs, alloc);
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorWrapDataConstruct,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorWrapDataConstruct,
                 (const NVCVTensorData *data, NVCVTensorDataCleanupFunc cleanup, void *ctxCleanup,
-                 NVCVTensorStorage *storage, NVCVTensorHandle *handle))
+                 NVCVTensorHandle *handle))
 {
     return priv::ProtectCall(
         [&]
@@ -107,24 +101,15 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorWrapDataConstruct,
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to image batch data must not be NULL");
             }
 
-            if (storage == nullptr)
-            {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to image batch storage must not be NULL");
-            }
-
             if (handle == nullptr)
             {
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output handle must not be NULL");
             }
 
-            static_assert(sizeof(NVCVTensorStorage) >= sizeof(priv::TensorWrapDataPitch));
-            static_assert(alignof(NVCVTensorStorage) % alignof(priv::TensorWrapDataPitch) == 0);
-
             switch (data->bufferType)
             {
             case NVCV_TENSOR_BUFFER_PITCH_DEVICE:
-                *handle = reinterpret_cast<NVCVTensorHandle>(new (storage)
-                                                                 priv::TensorWrapDataPitch{*data, cleanup, ctxCleanup});
+                *handle = priv::CreateCoreObject<priv::TensorWrapDataPitch>(*data, cleanup, ctxCleanup);
                 break;
 
             default:
@@ -133,8 +118,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorWrapDataConstruct,
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorWrapImageConstruct,
-                (NVCVImageHandle himg, NVCVTensorStorage *storage, NVCVTensorHandle *handle))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorWrapImageConstruct, (NVCVImageHandle himg, NVCVTensorHandle *handle))
 {
     return priv::ProtectCall(
         [&]
@@ -142,11 +126,6 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorWrapImageConstruct,
             if (himg == nullptr)
             {
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Image handle must not be NULL");
-            }
-
-            if (storage == nullptr)
-            {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to image batch storage must not be NULL");
             }
 
             if (handle == nullptr)
@@ -159,27 +138,16 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorWrapImageConstruct,
             NVCVTensorData tensorData;
             FillTensorData(img, tensorData);
 
-            *handle = reinterpret_cast<NVCVTensorHandle>(new (storage)
-                                                             priv::TensorWrapDataPitch{tensorData, nullptr, nullptr});
+            *handle = priv::CreateCoreObject<priv::TensorWrapDataPitch>(tensorData, nullptr, nullptr);
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorDestroy, (NVCVTensorHandle handle))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorDestroy, (NVCVTensorHandle handle))
 {
-    return priv::ProtectCall(
-        [&]
-        {
-            if (!priv::IsDestroyed(handle))
-            {
-                priv::ToStaticPtr<priv::ITensor>(handle)->~ITensor();
-                memset(handle, 0, sizeof(NVCVTensorStorage));
-
-                NVCV_ASSERT(priv::IsDestroyed(handle));
-            }
-        });
+    return priv::ProtectCall([&] { priv::DestroyCoreObject(handle); });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetLayout, (NVCVTensorHandle handle, NVCVTensorLayout *layout))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorGetLayout, (NVCVTensorHandle handle, NVCVTensorLayout *layout))
 {
     return priv::ProtectCall(
         [&]
@@ -195,7 +163,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetLayout, (NVCVTensorHandle handle,
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetAllocator, (NVCVTensorHandle handle, NVCVAllocatorHandle *halloc))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorGetAllocator, (NVCVTensorHandle handle, NVCVAllocatorHandle *halloc))
 {
     return priv::ProtectCall(
         [&]
@@ -211,7 +179,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetAllocator, (NVCVTensorHandle hand
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorExportData, (NVCVTensorHandle handle, NVCVTensorData *data))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorExportData, (NVCVTensorHandle handle, NVCVTensorData *data))
 {
     return priv::ProtectCall(
         [&]
@@ -226,7 +194,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorExportData, (NVCVTensorHandle handle
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetShape, (NVCVTensorHandle handle, int32_t *ndim, int64_t *shape))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorGetShape, (NVCVTensorHandle handle, int32_t *ndim, int64_t *shape))
 {
     return priv::ProtectCall(
         [&]
@@ -259,7 +227,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetShape, (NVCVTensorHandle handle, 
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorGetDataType, (NVCVTensorHandle handle, NVCVPixelType *dtype))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorGetDataType, (NVCVTensorHandle handle, NVCVPixelType *dtype))
 {
     return priv::ProtectCall(
         [&]

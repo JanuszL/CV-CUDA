@@ -22,11 +22,6 @@
 
 namespace nv::cv::priv {
 
-Version DefaultAllocator::doGetVersion() const
-{
-    return CURRENT_VERSION;
-}
-
 void *DefaultAllocator::doAllocHostMem(int64_t size, int32_t align)
 {
     return std::aligned_alloc(align, size);

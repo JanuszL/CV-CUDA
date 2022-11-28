@@ -38,15 +38,13 @@
 // Use the public nvcv API
 namespace nv::cvop::priv {
 
-class CustomCrop final : public IOperator
+class CustomCrop final : public OperatorBase
 {
 public:
     explicit CustomCrop();
 
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
                     const NVCVRectI &cropRect) const;
-
-    cv::priv::Version doGetVersion() const override;
 
 private:
     std::unique_ptr<cv::legacy::cuda_op::CustomCrop> m_legacyOp;

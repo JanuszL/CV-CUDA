@@ -37,14 +37,12 @@
 // Use the public nvcv API
 namespace nv::cvop::priv {
 
-class Reformat final : public IOperator
+class Reformat final : public OperatorBase
 {
 public:
     explicit Reformat();
 
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out) const;
-
-    cv::priv::Version doGetVersion() const override;
 
 private:
     std::unique_ptr<cv::legacy::cuda_op::Reformat> m_legacyOp;

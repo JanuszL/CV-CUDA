@@ -60,10 +60,4 @@ void PadAndStack::operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, c
         m_legacyOp->infer(*inData, *outData, *topData, *leftData, borderMode, borderValue, stream));
 }
 
-nv::cv::priv::Version PadAndStack::doGetVersion() const
-{
-    //todo need to have a version decoupled from NVCV
-    return nv::cv::priv::CURRENT_VERSION;
-}
-
 } // namespace nv::cvop::priv

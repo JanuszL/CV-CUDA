@@ -46,10 +46,4 @@ void Rotate::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::IT
     leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, angleDeg, shift, interpolation, stream));
 }
 
-nv::cv::priv::Version Rotate::doGetVersion() const
-{
-    // TODO: How to decouple NVCV version from legacy version?
-    return nv::cv::priv::CURRENT_VERSION;
-}
-
 } // namespace nv::cvop::priv

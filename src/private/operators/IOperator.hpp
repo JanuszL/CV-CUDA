@@ -26,7 +26,11 @@
 
 namespace nv::cvop::priv {
 
-class IOperator : public nv::cv::priv::ICoreObjectHandle<IOperator, NVCVOperatorHandle>
+class IOperator : public cv::priv::ICoreObjectHandle<IOperator, NVCVOperatorHandle>
+{
+};
+
+class OperatorBase : public cv::priv::CoreObjectBase<IOperator>
 {
 };
 

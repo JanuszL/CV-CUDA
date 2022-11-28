@@ -15,6 +15,7 @@
 
 #include "IAllocator.hpp"
 #include "IImage.hpp"
+#include "ImageManager.hpp"
 #include "Requirements.hpp"
 
 #include <cuda_runtime.h>
@@ -124,11 +125,6 @@ ImageBatchVarShape::~ImageBatchVarShape()
 NVCVTypeImageBatch ImageBatchVarShape::type() const
 {
     return NVCV_TYPE_IMAGEBATCH_VARSHAPE;
-}
-
-Version ImageBatchVarShape::doGetVersion() const
-{
-    return CURRENT_VERSION;
 }
 
 int32_t ImageBatchVarShape::capacity() const

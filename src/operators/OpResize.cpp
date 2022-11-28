@@ -38,7 +38,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopResizeCreate, (NVCVOperatorHandle * hand
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopResizeSubmit,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopResizeSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
                  const NVCVInterpolationType interpolation))
 {
