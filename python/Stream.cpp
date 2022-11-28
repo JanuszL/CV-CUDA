@@ -229,6 +229,7 @@ Stream::~Stream()
 {
     if (m_owns)
     {
+        CheckLog(cudaStreamSynchronize(m_handle));
         CheckLog(cudaStreamDestroy(m_handle));
     }
 }
@@ -351,6 +352,21 @@ void Stream::Export(py::module &m)
                         for (std::shared_ptr<Stream> stream : Cache::Instance().fetchAll<Stream>())
                         {
                             stream->sync();
+                        }
+                        globalStream->sync();
+
+                        // There should only be 1 stream in the stack, namely the
+                        // global stream.
+                        auto s = StreamStack::Instance().top();
+                        if (s != globalStream)
+                        {
+                            std::cerr << "Stream stack leak detected" << std::endl;
+                        }
+
+                        // Make sure stream stack is empty
+                        while (auto s = StreamStack::Instance().top())
+                        {
+                            StreamStack::Instance().pop();
                         }
                     });
 }
