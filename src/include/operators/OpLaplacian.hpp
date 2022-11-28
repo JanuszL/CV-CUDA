@@ -26,6 +26,7 @@
 #include "OpLaplacian.h"
 
 #include <cuda_runtime.h>
+#include <nvcv/IImageBatch.hpp>
 #include <nvcv/ITensor.hpp>
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/alloc/Requirements.hpp>
@@ -41,6 +42,9 @@ public:
 
     void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, int ksize, float scale,
                     NVCVBorderType borderMode);
+
+    void operator()(cudaStream_t stream, cv::IImageBatch &in, cv::IImageBatch &out, cv::ITensor &ksize,
+                    cv::ITensor &scale, NVCVBorderType borderMode);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -65,6 +69,13 @@ inline void Laplacian::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITen
 {
     cv::detail::CheckThrow(
         nvcvopLaplacianSubmit(m_handle, stream, in.handle(), out.handle(), ksize, scale, borderMode));
+}
+
+inline void Laplacian::operator()(cudaStream_t stream, cv::IImageBatch &in, cv::IImageBatch &out, cv::ITensor &ksize,
+                                  cv::ITensor &scale, NVCVBorderType borderMode)
+{
+    cv::detail::CheckThrow(nvcvopLaplacianVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), ksize.handle(),
+                                                         scale.handle(), borderMode));
 }
 
 inline NVCVOperatorHandle Laplacian::handle() const noexcept
