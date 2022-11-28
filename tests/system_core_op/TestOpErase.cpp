@@ -155,7 +155,8 @@ TEST(OpErase, OpErase_Tensor)
     // Call operator
     unsigned int    seed   = 0;
     bool            random = false, inplace = false;
-    nv::cvop::Erase eraseOp;
+    int             num_erasing_area = 2;
+    nv::cvop::Erase eraseOp(num_erasing_area);
     EXPECT_NO_THROW(eraseOp(stream, imgIn, imgOut, anchor_x, anchor_y, erasing_w, erasing_h, erasing_c, values, imgIdx,
                             random, seed, inplace));
 

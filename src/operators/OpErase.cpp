@@ -23,7 +23,7 @@
 namespace priv    = nv::cv::priv;
 namespace priv_op = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopEraseCreate, (NVCVOperatorHandle * handle))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopEraseCreate, (NVCVOperatorHandle * handle, int num_erasing_area))
 {
     return priv::ProtectCall(
         [&]
@@ -33,7 +33,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopEraseCreate, (NVCVOperatorHandle * handl
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
             }
 
-            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::Erase());
+            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::Erase(num_erasing_area));
         });
 }
 

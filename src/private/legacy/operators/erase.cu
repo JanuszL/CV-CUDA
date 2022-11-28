@@ -104,10 +104,9 @@ void eraseCaller(
 
 namespace nv::cv::legacy::cuda_op {
 
-Erase::Erase(DataShape max_input_shape, DataShape max_output_shape)
+Erase::Erase(DataShape max_input_shape, DataShape max_output_shape, int num_erasing_area)
     : CudaBaseOp(max_input_shape, max_output_shape)
     , d_max_values(nullptr)
-    , h_max_values(nullptr)
 {
     cudaError_t err = cudaMalloc(&d_max_values, sizeof(int) * 2);
     if (err != cudaSuccess)
@@ -115,28 +114,30 @@ Erase::Erase(DataShape max_input_shape, DataShape max_output_shape)
         LOG_ERROR("CUDA memory allocation error of size: " << sizeof(int) * 2);
         throw std::runtime_error("CUDA memory allocation error!");
     }
-    h_max_values = (int *)malloc(sizeof(int) * 2);
-    if (h_max_values == nullptr)
+
+    max_num_erasing_area = num_erasing_area;
+    if (max_num_erasing_area < 0)
     {
-        LOG_ERROR("Host memory allocation error of size: " << sizeof(int) * 2);
-        throw std::runtime_error("Host memory allocation error!");
+        LOG_ERROR("Invalid num of erasing area" << max_num_erasing_area);
+        throw std::runtime_error("Parameter error!");
     }
+    temp_storage  = NULL;
+    storage_bytes = 0;
+    cub::DeviceReduce::Max(temp_storage, storage_bytes, (int *)nullptr, (int *)nullptr, max_num_erasing_area);
+
+    checkCudaErrors(cudaMalloc(&temp_storage, storage_bytes * 2));
 }
 
 Erase::~Erase()
 {
-    if (d_max_values != nullptr)
+    cudaError_t err0 = cudaFree(d_max_values);
+    cudaError_t err1 = cudaFree(temp_storage);
+    if (err0 != cudaSuccess || err1 != cudaSuccess)
     {
-        cudaError_t err = cudaFree(d_max_values);
-        if (err != cudaSuccess)
-        {
-            LOG_ERROR("CUDA memory free error, possible memory leak!");
-        }
+        LOG_ERROR("CUDA memory free error, possible memory leak!");
     }
-    if (h_max_values != nullptr)
-        free(h_max_values);
     d_max_values = nullptr;
-    h_max_values = nullptr;
+    temp_storage = nullptr;
 }
 
 ErrorCode Erase::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
@@ -182,6 +183,11 @@ ErrorCode Erase::infer(const ITensorDataPitchDevice &inData, const ITensorDataPi
 
     int num_erasing_area = anchorxAccess->numCols();
     if (num_erasing_area < 0)
+    {
+        LOG_ERROR("Invalid num of erasing area " << num_erasing_area);
+        return ErrorCode::INVALID_PARAMETER;
+    }
+    if (num_erasing_area > max_num_erasing_area)
     {
         LOG_ERROR("Invalid num of erasing area " << num_erasing_area);
         return ErrorCode::INVALID_PARAMETER;
@@ -320,23 +326,16 @@ ErrorCode Erase::infer(const ITensorDataPitchDevice &inData, const ITensorDataPi
         return SUCCESS;
     }
 
-    void  *temp_storage_w = NULL, *temp_storage_h = NULL;
-    size_t storage_bytes_w = 0, storage_bytes_h = 0;
-    int   *d_erasingw = (int *)erasingwAccess->sampleData(0), *d_erasingh = (int *)erasinghAccess->sampleData(0);
-    int   *d_max_ew = d_max_values, *d_max_eh = (d_max_values + 1);
-    cub::DeviceReduce::Max(temp_storage_w, storage_bytes_w, d_erasingw, d_max_ew, num_erasing_area, stream);
-    cub::DeviceReduce::Max(temp_storage_h, storage_bytes_h, d_erasingh, d_max_eh, num_erasing_area, stream);
+    void *temp_storage_w = temp_storage, *temp_storage_h = (void *)((char *)temp_storage + storage_bytes);
+    int  *d_erasingw = (int *)erasingwAccess->sampleData(0), *d_erasingh = (int *)erasinghAccess->sampleData(0);
+    int  *d_max_ew = d_max_values, *d_max_eh = (d_max_values + 1);
+    int   h_max_values[2];
 
-    checkCudaErrors(cudaMalloc(&temp_storage_w, storage_bytes_w));
-    checkCudaErrors(cudaMalloc(&temp_storage_h, storage_bytes_h));
-
-    cub::DeviceReduce::Max(temp_storage_w, storage_bytes_w, d_erasingw, d_max_ew, num_erasing_area, stream);
-    cub::DeviceReduce::Max(temp_storage_h, storage_bytes_h, d_erasingh, d_max_eh, num_erasing_area, stream);
+    cub::DeviceReduce::Max(temp_storage_w, storage_bytes, d_erasingw, d_max_ew, num_erasing_area, stream);
+    cub::DeviceReduce::Max(temp_storage_h, storage_bytes, d_erasingh, d_max_eh, num_erasing_area, stream);
     checkCudaErrors(cudaMemcpyAsync(h_max_values, d_max_values, sizeof(int) * 2, cudaMemcpyDeviceToHost, stream));
 
     checkCudaErrors(cudaStreamSynchronize(stream));
-    checkCudaErrors(cudaFree(temp_storage_w));
-    checkCudaErrors(cudaFree(temp_storage_h));
 
     int max_ew = h_max_values[0], max_eh = h_max_values[1];
 

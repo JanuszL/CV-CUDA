@@ -41,7 +41,7 @@ namespace nv::cvop::priv {
 class Erase final : public IOperator
 {
 public:
-    explicit Erase();
+    explicit Erase(int num_erasing_area);
 
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, cv::ITensor &anchor_x,
                     cv::ITensor &anchor_y, cv::ITensor &erasing_w, cv::ITensor &erasing_h, cv::ITensor &erasing_c,

@@ -1090,6 +1090,49 @@ private:
     float  *m_kernel        = nullptr;
 };
 
+class Erase : public CudaBaseOp
+{
+public:
+    Erase() = delete;
+
+    Erase(DataShape max_input_shape, DataShape max_output_shape, int num_erasing_area);
+
+    ~Erase();
+
+    /**
+     * @brief erase areas of images. Different images in the same batch can be erased differently.
+     * @param inData gpu pointer, inputs[0] are batched input images, whose shape is input_shape and type is data_type.
+     * @param outData gpu pointer, outputs[0] are batched output images that have the same type as data_type.
+     * @param anchor_x an array of size num_erasing_area that gives the x coordinate of the top left point in the eraseing areas.
+     * @param anchor_y an array of size num_erasing_area that gives the y coordinate of the top left point in the eraseing areas.
+     * @param erasing_w an array of size num_erasing_area that gives the widths of the eraseing areas.
+     * @param erasing_h an array of size num_erasing_area that gives the heights of the eraseing areas.
+     * @param erasing_c an array of size num_erasing_area that gives integers in range 0-15,
+            each of whose bits indicates whether or not the corresponding channel need to be erased.
+     * @param values an array of size num_erasing_area*4 that gives the filling value for each erase area.
+     * @param imgIdx an array of size num_erasing_area that maps a erase area idx to img idx in the batch.
+     * @param max_eh the maximum value of erasing_h
+     * @param max_ew the maximum value of erasing_w
+     * @param random an boolean for random op.
+     * @param seed random seed for random filling erase area
+     * @param inplace for perform inplace op.
+     * @param stream for the asynchronous execution.
+     *
+     */
+    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+                    const ITensorDataPitchDevice &anchor_x, const ITensorDataPitchDevice &anchor_y,
+                    const ITensorDataPitchDevice &erasing_w, const ITensorDataPitchDevice &erasing_h,
+                    const ITensorDataPitchDevice &erasing_c, const ITensorDataPitchDevice &values,
+                    const ITensorDataPitchDevice &imgIdx, bool random, unsigned int seed, bool inplace,
+                    cudaStream_t stream);
+
+protected:
+    int   *d_max_values;
+    void  *temp_storage;
+    size_t storage_bytes;
+    int    max_num_erasing_area;
+};
+
 } // namespace nv::cv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H

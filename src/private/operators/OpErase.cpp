@@ -22,11 +22,11 @@ namespace nv::cvop::priv {
 
 namespace leg = cv::legacy;
 
-Erase::Erase()
+Erase::Erase(int num_erasing_area)
 {
     leg::cuda_op::DataShape maxIn, maxOut;
     // maxIn/maxOut not used by op.
-    m_legacyOp = std::make_unique<leg::cuda_op::Erase>(maxIn, maxOut);
+    m_legacyOp = std::make_unique<leg::cuda_op::Erase>(maxIn, maxOut, num_erasing_area);
 }
 
 void Erase::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, cv::ITensor &anchor_x,

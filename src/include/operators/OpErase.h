@@ -46,7 +46,7 @@ extern "C"
  * @retval #NVCV_SUCCESS                Operation executed successfully.
 */
 
-NVCV_OP_PUBLIC NVCVStatus nvcvopEraseCreate(NVCVOperatorHandle *handle);
+NVCV_OP_PUBLIC NVCVStatus nvcvopEraseCreate(NVCVOperatorHandle *handle, int num_erasing_area);
 
 /* Executes the erase operation on the given cuda stream. This operation does not
  *  wait for completion.
