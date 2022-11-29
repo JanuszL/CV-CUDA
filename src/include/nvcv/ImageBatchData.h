@@ -20,26 +20,33 @@
 /** Stores the image plane in a variable shape image batch. */
 typedef struct NVCVImageBatchVarShapeBufferPitchRec
 {
+    /** Format of all images in the batch.
+     * If images don't have all the same format, or the batch is empty,
+     * the value is \ref NVCV_IMAGE_FORMAT_NONE . */
+    NVCVImageFormat uniqueFormat;
+
     /** Union of all image dimensions.
      * If 0 and number of images is >= 1, this value
      * must not be relied upon. */
     int32_t maxWidth, maxHeight;
+
+    /** Pointer to an array of formats, one for each image in `imageList`. */
+    NVCVImageFormat *formatList;
+
+    /** Pointer to a host-side array of formats, one for each image in `imageList`. */
+    const NVCVImageFormat *hostFormatList;
 
     /** Pointer to all image planes in pitch-linear layout in the image batch.
      * It's an array of `numPlanesPerImage*numImages` planes. The number of planes
      * in the image can be fetched from the image batch's format. With that,
      * plane P of image N can be indexed as imgPlanes[N*numPlanesPerImage + P].
      */
-    NVCVImagePlanePitch *imgPlanes;
+    NVCVImageBufferPitch *imageList;
 } NVCVImageBatchVarShapeBufferPitch;
 
 /** Stores the tensor plane contents. */
 typedef struct NVCVImageBatchTensorBufferPitchRec
 {
-    /** Number of images in the batch.
-     *  + Must be >= 1. */
-    int32_t numImages;
-
     /** Distance in bytes from beginning of first plane of one image to the
      *  first plane of the next image.
      *  + Must be >= 1. */
@@ -86,9 +93,6 @@ typedef union NVCVImageBatchBufferRec
 /** Stores information about image batch characteristics and content. */
 typedef struct NVCVImageBatchDataRec
 {
-    /** Image format. */
-    NVCVImageFormat format;
-
     /** Number of images in the image batch */
     int32_t numImages;
 

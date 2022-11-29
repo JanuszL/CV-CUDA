@@ -295,7 +295,7 @@ TEST_P(OpNormalize, varshape_correct_output)
                                imgSrc[i]->size().h, cudaMemcpyHostToDevice));
     }
 
-    nvcv::ImageBatchVarShape batchSrc(numImages, fmt);
+    nvcv::ImageBatchVarShape batchSrc(numImages);
     batchSrc.pushBack(imgSrc.begin(), imgSrc.end());
 
     // Create base tensor
@@ -350,7 +350,7 @@ TEST_P(OpNormalize, varshape_correct_output)
     {
         imgDst.emplace_back(std::make_unique<nvcv::Image>(imgSrc[i]->size(), imgSrc[i]->format()));
     }
-    nvcv::ImageBatchVarShape batchDst(numImages, fmt);
+    nvcv::ImageBatchVarShape batchDst(numImages);
     batchDst.pushBack(imgDst.begin(), imgDst.end());
 
     // Generate test result

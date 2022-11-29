@@ -33,7 +33,7 @@ std::unique_ptr<T> CreateObj()
     }
     else if constexpr (std::is_same_v<nvcv::IImageBatch, T>)
     {
-        return std::make_unique<nvcv::ImageBatchVarShape>(32, nvcv::FMT_RGBA8);
+        return std::make_unique<nvcv::ImageBatchVarShape>(32);
     }
     else if constexpr (std::is_same_v<nvcv::IAllocator, T>)
     {

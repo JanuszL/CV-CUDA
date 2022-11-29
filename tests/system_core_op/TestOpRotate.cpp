@@ -393,10 +393,10 @@ TEST_P(OpRotate, varshape_correct_output)
                                 shiftVecs.data(), sizeof(double2), sizeof(double2), numberOfImages,
                                 cudaMemcpyHostToDevice, stream));
 
-    nvcv::ImageBatchVarShape batchSrc(numberOfImages, fmt);
+    nvcv::ImageBatchVarShape batchSrc(numberOfImages);
     batchSrc.pushBack(imgSrc.begin(), imgSrc.end());
 
-    nvcv::ImageBatchVarShape batchDst(numberOfImages, fmt);
+    nvcv::ImageBatchVarShape batchDst(numberOfImages);
     batchDst.pushBack(imgDst.begin(), imgDst.end());
 
     std::vector<std::vector<uint8_t>> srcVec(numberOfImages);

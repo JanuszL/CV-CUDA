@@ -45,9 +45,8 @@ private:
 
     mutable detail::Optional<AllocatorWrapHandle> m_alloc;
 
-    int32_t     doGetCapacity() const override;
-    int32_t     doGetNumImages() const override;
-    ImageFormat doGetFormat() const override;
+    int32_t doGetCapacity() const override;
+    int32_t doGetNumImages() const override;
 };
 
 // ImageBatchVarShapeWrapHandle definition -------------------------------------
@@ -70,6 +69,9 @@ private:
     void doPopBack(int32_t imgCount) override;
     void doClear() override;
 
+    Size2D      doGetMaxSize() const override;
+    ImageFormat doGetUniqueFormat() const override;
+
     NVCVImageHandle doGetImage(int32_t idx) const override;
 };
 
@@ -80,12 +82,12 @@ class ImageBatchVarShape final
 {
 public:
     using Requirements = NVCVImageBatchVarShapeRequirements;
-    static Requirements CalcRequirements(int32_t capacity, ImageFormat fmt);
+    static Requirements CalcRequirements(int32_t capacity);
 
     ImageBatchVarShape(const ImageBatchVarShape &) = delete;
 
     explicit ImageBatchVarShape(const Requirements &reqs, IAllocator *alloc = nullptr);
-    explicit ImageBatchVarShape(int32_t capacity, ImageFormat fmt, IAllocator *alloc = nullptr);
+    explicit ImageBatchVarShape(int32_t capacity, IAllocator *alloc = nullptr);
     ~ImageBatchVarShape();
 
 private:
@@ -125,13 +127,6 @@ inline int32_t ImageBatchWrapHandle::doGetCapacity() const
     return out;
 }
 
-inline ImageFormat ImageBatchWrapHandle::doGetFormat() const
-{
-    NVCVImageFormat out;
-    detail::CheckThrow(nvcvImageBatchGetFormat(m_handle, &out));
-    return ImageFormat{out};
-}
-
 inline IAllocator &ImageBatchWrapHandle::doGetAlloc() const
 {
     if (!m_alloc)
@@ -155,7 +150,7 @@ inline const IImageBatchData *ImageBatchWrapHandle::doExportData(CUstream stream
                         "Image batch data cannot be exported, buffer type not supported");
     }
 
-    m_data.emplace(ImageFormat{batchData.format}, batchData.numImages, batchData.buffer.varShapePitch);
+    m_data.emplace(batchData.numImages, batchData.buffer.varShapePitch);
 
     return &*m_data;
 }
@@ -207,6 +202,20 @@ inline void ImageBatchVarShapeWrapHandle::doClear()
     detail::CheckThrow(nvcvImageBatchVarShapeClear(ImageBatchWrapHandle::doGetHandle()));
 }
 
+inline Size2D ImageBatchVarShapeWrapHandle::doGetMaxSize() const
+{
+    Size2D s;
+    detail::CheckThrow(nvcvImageBatchVarShapeGetMaxSize(ImageBatchWrapHandle::doGetHandle(), &s.w, &s.h));
+    return s;
+}
+
+inline ImageFormat ImageBatchVarShapeWrapHandle::doGetUniqueFormat() const
+{
+    NVCVImageFormat out;
+    detail::CheckThrow(nvcvImageBatchVarShapeGetUniqueFormat(ImageBatchWrapHandle::doGetHandle(), &out));
+    return ImageFormat{out};
+}
+
 inline NVCVImageHandle ImageBatchVarShapeWrapHandle::doGetImage(int32_t idx) const
 {
     NVCVImageHandle himg;
@@ -216,10 +225,10 @@ inline NVCVImageHandle ImageBatchVarShapeWrapHandle::doGetImage(int32_t idx) con
 
 // ImageBatchVarShape implementation -------------------------------------
 
-inline auto ImageBatchVarShape::CalcRequirements(int32_t capacity, ImageFormat fmt) -> Requirements
+inline auto ImageBatchVarShape::CalcRequirements(int32_t capacity) -> Requirements
 {
     Requirements reqs;
-    detail::CheckThrow(nvcvImageBatchVarShapeCalcRequirements(capacity, fmt, &reqs));
+    detail::CheckThrow(nvcvImageBatchVarShapeCalcRequirements(capacity, &reqs));
     return reqs;
 }
 
@@ -235,8 +244,8 @@ inline ImageBatchVarShape::ImageBatchVarShape(const Requirements &reqs, IAllocat
 {
 }
 
-inline ImageBatchVarShape::ImageBatchVarShape(int32_t capacity, ImageFormat fmt, IAllocator *alloc)
-    : ImageBatchVarShape(CalcRequirements(capacity, fmt), alloc)
+inline ImageBatchVarShape::ImageBatchVarShape(int32_t capacity, IAllocator *alloc)
+    : ImageBatchVarShape(CalcRequirements(capacity), alloc)
 {
 }
 

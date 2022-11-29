@@ -26,11 +26,13 @@ public:
     explicit ImageBatchVarShape(NVCVImageBatchVarShapeRequirements reqs, IAllocator &alloc);
     ~ImageBatchVarShape();
 
-    static NVCVImageBatchVarShapeRequirements CalcRequirements(int32_t capacity, ImageFormat fmt);
+    static NVCVImageBatchVarShapeRequirements CalcRequirements(int32_t capacity);
 
-    int32_t     capacity() const override;
-    ImageFormat format() const override;
-    int32_t     numImages() const override;
+    int32_t capacity() const override;
+    int32_t numImages() const override;
+
+    Size2D      maxSize() const override;
+    ImageFormat uniqueFormat() const override;
 
     NVCVTypeImageBatch type() const override;
 
@@ -51,14 +53,21 @@ private:
 
     mutable int32_t m_dirtyStartingFromIndex;
 
-    int32_t              m_numImages;
-    NVCVImagePlanePitch *m_hostPlanesBuffer;
-    NVCVImagePlanePitch *m_devPlanesBuffer;
-    NVCVImageHandle     *m_imgHandleBuffer;
+    int32_t               m_numImages;
+    NVCVImageBufferPitch *m_hostImagesBuffer;
+    NVCVImageBufferPitch *m_devImagesBuffer;
+
+    NVCVImageFormat *m_hostFormatsBuffer;
+    NVCVImageFormat *m_devFormatsBuffer;
+
+    NVCVImageHandle *m_imgHandleBuffer;
 
     // Max width/height up to m_numImages.
     // If nullopt, must be recalculated from the beginning.
-    mutable std::optional<Size2D> m_cacheMaxSize;
+    mutable std::optional<Size2D>      m_cacheMaxSize;
+    mutable std::optional<ImageFormat> m_cacheUniqueFormat;
+
+    void doUpdateCache() const;
 
     // TODO: must be retrieved from the resource allocator;
     cudaEvent_t m_evPostFence;

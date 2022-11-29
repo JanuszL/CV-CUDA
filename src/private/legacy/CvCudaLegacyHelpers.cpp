@@ -18,6 +18,7 @@
 #include <private/legacy/CvCudaLegacy.h>
 
 #include <iostream>
+#include <optional>
 
 using namespace std;
 
@@ -131,7 +132,11 @@ cuda_op::DataShape GetLegacyDataShape(const TensorShapeInfoImage &shapeInfo)
 
 cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShapeDataPitchDevice &imgBatch)
 {
-    ImageFormat fmt = imgBatch.format();
+    ImageFormat fmt = imgBatch.uniqueFormat();
+    if (!fmt)
+    {
+        throw Exception(Status::ERROR_INVALID_ARGUMENT, "All images must have the same format");
+    }
 
     for (int i = 1; i < fmt.numPlanes(); ++i)
     {

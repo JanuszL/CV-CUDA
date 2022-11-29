@@ -36,7 +36,6 @@ public:
     virtual ~IImageBatch() = default;
 
     NVCVImageBatchHandle handle() const;
-    ImageFormat          format() const;
     IAllocator          &alloc() const;
 
     int32_t capacity() const;
@@ -50,9 +49,8 @@ protected:
 private:
     virtual NVCVImageBatchHandle doGetHandle() const = 0;
 
-    virtual ImageFormat doGetFormat() const    = 0;
-    virtual int32_t     doGetCapacity() const  = 0;
-    virtual int32_t     doGetNumImages() const = 0;
+    virtual int32_t doGetCapacity() const  = 0;
+    virtual int32_t doGetNumImages() const = 0;
 
     virtual IAllocator &doGetAlloc() const = 0;
 };
@@ -70,6 +68,9 @@ public:
     void pushBack(F &&cv);
 
     void clear();
+
+    Size2D      maxSize() const;
+    ImageFormat uniqueFormat() const;
 
     ImageWrapHandle operator[](ptrdiff_t n) const;
 
@@ -120,6 +121,9 @@ private:
     virtual void doPopBack(int32_t imgCount)                       = 0;
     virtual void doClear()                                         = 0;
 
+    virtual Size2D      doGetMaxSize() const      = 0;
+    virtual ImageFormat doGetUniqueFormat() const = 0;
+
     virtual NVCVImageHandle doGetImage(int32_t idx) const = 0;
 };
 
@@ -128,11 +132,6 @@ private:
 inline NVCVImageBatchHandle IImageBatch::handle() const
 {
     return doGetHandle();
-}
-
-inline ImageFormat IImageBatch::format() const
-{
-    return doGetFormat();
 }
 
 inline IAllocator &IImageBatch::alloc() const
@@ -369,6 +368,16 @@ inline ImageWrapHandle IImageBatchVarShape::operator[](ptrdiff_t n) const
 inline void IImageBatchVarShape::clear()
 {
     doClear();
+}
+
+inline Size2D IImageBatchVarShape::maxSize() const
+{
+    return doGetMaxSize();
+}
+
+inline ImageFormat IImageBatchVarShape::uniqueFormat() const
+{
+    return doGetUniqueFormat();
 }
 
 }} // namespace nv::cv

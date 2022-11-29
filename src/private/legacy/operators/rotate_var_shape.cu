@@ -246,7 +246,13 @@ ErrorCode RotateVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    int channels = inData.format().numChannels();
+    if (!inData.uniqueFormat())
+    {
+        LOG_ERROR("Images in the input varshape must all have the same format");
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    int channels = inData.uniqueFormat().numChannels();
 
     if (channels > 4)
     {
@@ -254,7 +260,7 @@ ErrorCode RotateVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    DataType data_type = helpers::GetLegacyDataType(inData.format());
+    DataType data_type = helpers::GetLegacyDataType(inData.uniqueFormat());
 
     if (!(data_type == kCV_8U || data_type == kCV_16U || data_type == kCV_16S || data_type == kCV_32F))
     {

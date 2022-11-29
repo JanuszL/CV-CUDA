@@ -26,9 +26,8 @@ class IAllocator;
 class IImageBatch : public ICoreObjectHandle<IImageBatch, NVCVImageBatchHandle>
 {
 public:
-    virtual int32_t     capacity() const  = 0;
-    virtual ImageFormat format() const    = 0;
-    virtual int32_t     numImages() const = 0;
+    virtual int32_t capacity() const  = 0;
+    virtual int32_t numImages() const = 0;
 
     virtual NVCVTypeImageBatch type() const = 0;
 
@@ -46,6 +45,9 @@ public:
     virtual void popImages(int32_t numImages) = 0;
 
     virtual void clear() = 0;
+
+    virtual Size2D      maxSize() const      = 0;
+    virtual ImageFormat uniqueFormat() const = 0;
 
     virtual void getImages(int32_t begIndex, NVCVImageHandle *outImages, int32_t numImages) const = 0;
 };
