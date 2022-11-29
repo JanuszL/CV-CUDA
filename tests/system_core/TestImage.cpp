@@ -17,6 +17,8 @@
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
 
+#include <nvcv/Fwd.hpp>
+
 namespace nvcv = nv::cv;
 
 TEST(Image, wip_create)

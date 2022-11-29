@@ -18,8 +18,6 @@
 #include "HandleManager.hpp"
 #include "Version.hpp"
 
-#include <nvcv/alloc/Fwd.h>
-
 #include <memory>
 #include <type_traits>
 

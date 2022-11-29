@@ -21,6 +21,8 @@
 #include <list>
 #include <random>
 
+#include <nvcv/Fwd.hpp>
+
 namespace nvcv = nv::cv;
 namespace t    = ::testing;
 namespace test = nv::cv::test;

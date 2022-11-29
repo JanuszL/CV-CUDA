@@ -21,6 +21,7 @@
 #define NVCV_IMAGE_H
 
 #include "Export.h"
+#include "Fwd.h"
 #include "ImageData.h"
 #include "ImageFormat.h"
 #include "Status.h"
