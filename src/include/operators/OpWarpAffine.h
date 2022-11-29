@@ -30,6 +30,8 @@
 #include <nvcv/Status.h>
 #include <nvcv/Tensor.h>
 
+typedef float NVCVAffineTransform[6];
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -104,12 +106,10 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopWarpAffineCreate(NVCVOperatorHandle *handle);
  *
  * @param [out] out output tensor.
  *
- * @param [in] trans_matrix 2x3 affine transformation matrix.
- *
- * @param [in] dsize size of the output images.
+ * @param [in] xform 2x3 float affine transformation matrix stored as a 1-D array of length 6.
  *
  * @param [in] flags Combination of interpolation methods(NVCV_INTERP_NEAREST, NVCV_INTERP_LINEAR or NVCV_INTERP_CUBIC)
-                     and the optional flag NVCV_WARP_INVERSE_MAP, that sets trans_matrix as the inverse transformation.
+                     and the optional flag NVCV_WARP_INVERSE_MAP, that sets xform as the inverse transformation.
  *
  * @param [in] borderMode pixel extrapolation method (NVCV_BORDER_CONSTANT or NVCV_BORDER_REPLICATE).
  *
@@ -120,8 +120,7 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopWarpAffineCreate(NVCVOperatorHandle *handle);
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_OP_PUBLIC NVCVStatus nvcvopWarpAffineSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
-                                                 NVCVTensorHandle out, const float trans_matrix[2 * 3],
-                                                 const nv::cv::Size2D dsize, const int flags,
+                                                 NVCVTensorHandle out, const NVCVAffineTransform xform, const int flags,
                                                  const NVCVBorderType borderMode, const float4 borderValue);
 
 #ifdef __cplusplus

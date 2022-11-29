@@ -24,8 +24,8 @@
 
 #include <cuda_runtime.h>
 #include <nvcv/ITensor.hpp>
-#include <operators/OpWarpAffine.h>
 #include <nvcv/alloc/Requirements.hpp>
+#include <operators/OpWarpAffine.h>
 #include <private/core/Exception.hpp>
 #include <private/core/ICoreObject.hpp>
 #include <private/core/Status.hpp>
@@ -43,9 +43,8 @@ class WarpAffine final : public OperatorBase
 public:
     explicit WarpAffine();
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, const float trans_matrix[2 * 3],
-                    const nv::cv::Size2D dsize, const int flags, const NVCVBorderType borderMode,
-                    const float4 borderValueconst) const;
+    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, const NVCVAffineTransform xform,
+                    const int flags, const NVCVBorderType borderMode, const float4 borderValueconst) const;
 
 private:
     std::unique_ptr<cv::legacy::cuda_op::WarpAffine> m_legacyOp;

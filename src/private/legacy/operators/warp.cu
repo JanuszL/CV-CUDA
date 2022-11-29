@@ -40,7 +40,7 @@ __global__ void warp(const Filter src, Ptr2dNHWC<T> dst, Transform transform)
     extern __shared__ float coeff[];
     if (lid < 9)
     {
-        coeff[lid] = transform.trans_matrix[lid];
+        coeff[lid] = transform.xform[lid];
     }
     __syncthreads();
     if (x < dst.cols && y < dst.rows)
@@ -101,15 +101,12 @@ void warp_caller(const Ptr2dNHWC<T> src, Ptr2dNHWC<T> dst, Transform transform, 
 
 template<typename T>
 void warpAffine(const nvcv::TensorDataAccessPitchImagePlanar &inData,
-                const nvcv::TensorDataAccessPitchImagePlanar &outData, AffineTransform transform,
-                const nvcv::Size2D dsize, const int interpolation, int borderMode, const float4 borderValue,
-                cudaStream_t stream)
+                const nvcv::TensorDataAccessPitchImagePlanar &outData, WarpAffineTransform transform,
+                const int interpolation, int borderMode, const float4 borderValue, cudaStream_t stream)
 {
-    //int          cols       = dsize.width;
-    //int          rows       = dsize.height;
     Ptr2dNHWC<T> src_ptr(inData);
-    Ptr2dNHWC<T> dst_ptr(outData); //, cols, rows);
-    warp_caller<AffineTransform, T>(src_ptr, dst_ptr, transform, interpolation, borderMode, borderValue, stream);
+    Ptr2dNHWC<T> dst_ptr(outData);
+    warp_caller<WarpAffineTransform, T>(src_ptr, dst_ptr, transform, interpolation, borderMode, borderValue, stream);
 }
 
 static void invertMat(const float *M, float *h_aCoeffs)
@@ -128,8 +125,8 @@ static void invertMat(const float *M, float *h_aCoeffs)
 namespace nv::cv::legacy::cuda_op {
 
 ErrorCode WarpAffine::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
-                            const float trans_matrix[2 * 3], const Size2D dsize, const int flags,
-                            const NVCVBorderType borderMode, const float4 borderValue, cudaStream_t stream)
+                            const float *xform, const int flags, const NVCVBorderType borderMode,
+                            const float4 borderValue, cudaStream_t stream)
 {
     DataFormat input_format  = GetLegacyDataFormat(inData.layout());
     DataFormat output_format = GetLegacyDataFormat(outData.layout());
@@ -180,9 +177,8 @@ ErrorCode WarpAffine::infer(const ITensorDataPitchDevice &inData, const ITensorD
                 || borderMode == NVCV_BORDER_WRAP);
 
     typedef void (*func_t)(const nvcv::TensorDataAccessPitchImagePlanar &inData,
-                           const nvcv::TensorDataAccessPitchImagePlanar &outData, AffineTransform transform,
-                           const Size2D dsize, const int interpolation, int borderMode, const float4 borderValue,
-                           cudaStream_t stream);
+                           const nvcv::TensorDataAccessPitchImagePlanar &outData, WarpAffineTransform transform,
+                           const int interpolation, int borderMode, const float4 borderValue, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {
         { warpAffine<uchar>, 0,  warpAffine<uchar3>,  warpAffine<uchar4>},
@@ -196,23 +192,20 @@ ErrorCode WarpAffine::infer(const ITensorDataPitchDevice &inData, const ITensorD
     const func_t func = funcs[data_type][channels - 1];
     NVCV_ASSERT(func != 0);
 
-    AffineTransform transform;
+    WarpAffineTransform transform;
 
-    if (!(flags & NVCV_WARP_INVERSE_MAP))
+    // initialize affine transform
+    for (int i = 0; i < 9; i++)
     {
-        transform.trans_matrix[0] = (float)(trans_matrix[0]);
-        transform.trans_matrix[1] = (float)(trans_matrix[1]);
-        transform.trans_matrix[2] = (float)(trans_matrix[2]);
-        transform.trans_matrix[3] = (float)(trans_matrix[3]);
-        transform.trans_matrix[4] = (float)(trans_matrix[4]);
-        transform.trans_matrix[5] = (float)(trans_matrix[5]);
-    }
-    else
-    {
-        invertMat(trans_matrix, transform.trans_matrix);
+        transform.xform[i] = i < 6 ? (float)(xform[i]) : 0.0f;
     }
 
-    func(*inAccess, *outAccess, transform, dsize, interpolation, borderMode, borderValue, stream);
+    if (flags & NVCV_WARP_INVERSE_MAP)
+    {
+        invertMat(xform, transform.xform);
+    }
+
+    func(*inAccess, *outAccess, transform, interpolation, borderMode, borderValue, stream);
 
     return ErrorCode::SUCCESS;
 }

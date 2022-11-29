@@ -128,7 +128,7 @@ inline size_t DataSize(DataType data_type)
     return size;
 }
 
-struct AffineTransform
+struct WarpAffineTransform
 {
     static __device__ __forceinline__ float2 calcCoord(const float *c_warpMat, int x, int y)
     {
@@ -138,7 +138,8 @@ struct AffineTransform
         return make_float2(xcoo, ycoo);
     }
 
-    float trans_matrix[2 * 3];
+    // declare a 3x3 matrix/array to avoid conflicts in shared GPU kernel with warpPerspective
+    float xform[9];
 };
 
 // cuda base operator class
@@ -1063,7 +1064,6 @@ public:
     {
     }
 
-
     /**
      * @brief Crops the given image at the center based on input crop dimensions.
      * @param inputs gpu pointer, inputs[0] are batched input images, whose shape is input_shape and type is data_type.
@@ -1811,17 +1811,15 @@ public:
      * @brief Applies an affine transformation to an image. Same function as cv::warpAffine.
      * @param inData input tensor.
      * @param outData output tensor.
-     * @param trans_matrix cpu pointer, 2x3 transformation matrix.
-     * @param dsize size of the output images.
+     * @param xform cpu pointer, 2x3 transformation matrix.
      * @param flags Combination of interpolation methods(NVCV_INTERP_NEAREST, NVCV_INTERP_LINEAR or NVCV_INTERP_CUBIC)
                      and the optional flag NVCV_WARP_INVERSE_MAP, that sets trans_matrix as the inverse transformation.
      * @param borderMode pixel extrapolation method(NVCV_BORDER_CONSTANT or NVCV_BORDER_REPLICATE).
      * @param borderValue used in case of a constant border.
      * @param stream for the asynchronous execution.
     */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
-                    const float trans_matrix[2 * 3], const nv::cv::Size2D dsize, const int flags,
-                    const NVCVBorderType borderMode, const float4 borderValue, cudaStream_t stream);
+    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, const float *xform,
+                    const int flags, const NVCVBorderType borderMode, const float4 borderValue, cudaStream_t stream);
 };
 
 } // namespace nv::cv::legacy::cuda_op

@@ -30,8 +30,8 @@ WarpAffine::WarpAffine()
 }
 
 void WarpAffine::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
-                            const float trans_matrix[2 * 3], const nv::cv::Size2D dsize, const int flags,
-                            const NVCVBorderType borderMode, const float4 borderValue) const
+                            const NVCVAffineTransform xform, const int flags, const NVCVBorderType borderMode,
+                            const float4 borderValue) const
 {
     auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
     if (inData == nullptr)
@@ -42,11 +42,11 @@ void WarpAffine::operator()(cudaStream_t stream, const cv::ITensor &in, const cv
     auto *outData = dynamic_cast<const cv::ITensorDataPitchDevice *>(out.exportData());
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be device-accessible, pitch-linear tensor");
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
+                            "Output must be device-accessible, pitch-linear tensor");
     }
 
-    leg::helpers::CheckOpErrThrow(
-        m_legacyOp->infer(*inData, *outData, trans_matrix, dsize, flags, borderMode, borderValue, stream));
+    leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, xform, flags, borderMode, borderValue, stream));
 }
 
 } // namespace nv::cvop::priv

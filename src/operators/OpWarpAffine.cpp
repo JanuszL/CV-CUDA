@@ -22,7 +22,7 @@
 namespace priv    = nv::cv::priv;
 namespace priv_op = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopWarpAffineCreate, (NVCVOperatorHandle * handle))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopWarpAffineCreate, (NVCVOperatorHandle * handle))
 {
     return priv::ProtectCall(
         [&]
@@ -36,16 +36,16 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopWarpAffineCreate, (NVCVOperatorHandle * 
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopWarpAffineSubmit,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopWarpAffineSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                 const float trans_matrix[2 * 3], const nv::cv::Size2D dsize, const int flags,
-                 const NVCVBorderType borderMode, const float4 borderValue))
+                 const NVCVAffineTransform xform, const int flags, const NVCVBorderType borderMode,
+                 const float4 borderValue))
 {
     return priv::ProtectCall(
         [&]
         {
             nv::cv::TensorWrapHandle input(in), output(out);
-            priv::ToDynamicRef<priv_op::WarpAffine>(handle)(stream, input, output, trans_matrix, dsize, flags,
-                                                            borderMode, borderValue);
+            priv::ToDynamicRef<priv_op::WarpAffine>(handle)(stream, input, output, xform, flags, borderMode,
+                                                            borderValue);
         });
 }

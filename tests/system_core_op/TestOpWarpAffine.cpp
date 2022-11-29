@@ -13,7 +13,7 @@
 
 #include "Definitions.hpp"
 
-//#include <common/Utils.hpp>
+#include <common/BorderUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
@@ -30,58 +30,16 @@ namespace nvcv     = nv::cv;
 namespace nvcvcuda = nv::cv::cuda;
 namespace test     = nv::cv::test;
 using namespace nv::cv::cuda;
+using namespace test;
 
 //#define DBG 1
 
-inline int reflect_idx_low(int x, int last_col_)
-{
-    return (std::abs(x) - (x < 0)) % (last_col_ + 1);
-}
-
-inline int reflect_idx_high(int x, int last_col_)
-{
-    return (last_col_ - std::abs(last_col_ - x) + (x > last_col_));
-}
-
-inline int reflect_idx(int x, int last_col_)
-{
-    return reflect_idx_low(reflect_idx_high(x, last_col_), last_col_);
-}
-
-inline int reflect101_idx_low(int x, int last_col_)
-{
-    return std::abs(x) % (last_col_ + 1);
-}
-
-inline int reflect101_idx_high(int x, int last_col_)
-{
-    return std::abs(last_col_ - std::abs(last_col_ - x)) % (last_col_ + 1);
-}
-
-inline int reflect101_idx(int x, int last_col_)
-{
-    return reflect101_idx_low(reflect101_idx_high(x, last_col_), last_col_);
-}
-
-inline int wrap_idx_low(int x, int width_)
-{
-    return (x >= 0) ? x : (x - ((x - width_ + 1) / width_) * width_);
-}
-
-inline int wrap_idx_high(int x, int width_)
-{
-    return (x < width_) ? x : (x % width_);
-}
-
-inline int wrap_idx(int x, int width_)
-{
-    return wrap_idx_high(wrap_idx_low(x, width_), width_);
-}
-
 template<typename T>
-T getPixel(const T *srcPtr, const int y, const int x, int k, int width, int height, int srcRowPitch,
-           int elementsPerPixel, NVCVBorderType borderMode, const float4 borderVal)
+static T getPixel(const T *srcPtr, const int y, const int x, int k, int width, int height, int srcRowPitch,
+                  int elementsPerPixel, NVCVBorderType borderMode, const float4 borderVal)
 {
+    int2 coord = {x, y};
+    int2 size  = {width, height};
     if (borderMode == NVCV_BORDER_CONSTANT)
     {
         return (x >= 0 && x < width && y >= 0 && y < height) ? srcPtr[y * srcRowPitch + x * elementsPerPixel + k]
@@ -89,27 +47,23 @@ T getPixel(const T *srcPtr, const int y, const int x, int k, int width, int heig
     }
     else if (borderMode == NVCV_BORDER_REPLICATE)
     {
-        int x1 = std::max(std::min(x, width - 1), 0);
-        int y1 = std::max(std::min(y, height - 1), 0);
-        return srcPtr[y1 * srcRowPitch + x1 * elementsPerPixel + k];
+        ReplicateBorderIndex(coord, size);
+        return srcPtr[coord.y * srcRowPitch + coord.x * elementsPerPixel + k];
     }
     else if (borderMode == NVCV_BORDER_REFLECT)
     {
-        int x1 = reflect_idx(x, width - 1);
-        int y1 = reflect_idx(y, height - 1);
-        return srcPtr[y1 * srcRowPitch + x1 * elementsPerPixel + k];
+        ReflectBorderIndex(coord, size);
+        return srcPtr[coord.y * srcRowPitch + coord.x * elementsPerPixel + k];
     }
     else if (borderMode == NVCV_BORDER_REFLECT101)
     {
-        int x1 = reflect101_idx(x, width - 1);
-        int y1 = reflect101_idx(y, height - 1);
-        return srcPtr[y1 * srcRowPitch + x1 * elementsPerPixel + k];
+        Reflect101BorderIndex(coord, size);
+        return srcPtr[coord.y * srcRowPitch + coord.x * elementsPerPixel + k];
     }
     else if (borderMode == NVCV_BORDER_WRAP)
     {
-        int x1 = wrap_idx(x, width);
-        int y1 = wrap_idx(y, height);
-        return srcPtr[y1 * srcRowPitch + x1 * elementsPerPixel + k];
+        WrapBorderIndex(coord, size);
+        return srcPtr[coord.y * srcRowPitch + coord.x * elementsPerPixel + k];
     }
     else
     {
@@ -117,10 +71,39 @@ T getPixel(const T *srcPtr, const int y, const int x, int k, int width, int heig
     }
 }
 
+inline float calcBicubicCoeff(float x_)
+{
+    float x = std::abs(x_);
+    if (x <= 1.0f)
+    {
+        return x * x * (1.5f * x - 2.5f) + 1.0f;
+    }
+    else if (x < 2.0f)
+    {
+        return x * (x * (-0.5f * x + 2.5f) - 4.0f) + 2.0f;
+    }
+    else
+    {
+        return 0.0f;
+    }
+}
+
+static void invertAffineTransform(const NVCVAffineTransform xform, NVCVAffineTransform inverseXform)
+{
+    float den       = xform[0] * xform[4] - xform[1] * xform[3];
+    den             = std::abs(den) > 1e-5 ? 1. / den : .0;
+    inverseXform[0] = (float)xform[5] * den;
+    inverseXform[1] = (float)-xform[1] * den;
+    inverseXform[2] = (float)(xform[1] * xform[5] - xform[4] * xform[2]) * den;
+    inverseXform[3] = (float)-xform[3] * den;
+    inverseXform[4] = (float)xform[0] * den;
+    inverseXform[5] = (float)(xform[3] * xform[2] - xform[0] * xform[5]) * den;
+}
+
 template<typename T>
 static void WarpAffineGold(std::vector<uint8_t> &hDst, int dstRowPitch, nvcv::Size2D dstSize,
                            const std::vector<uint8_t> &hSrc, int srcRowPitch, nvcv::Size2D srcSize,
-                           nvcv::ImageFormat fmt, const float trans_matrix[6], const int flags,
+                           nvcv::ImageFormat fmt, const NVCVAffineTransform xform, const int flags,
                            NVCVBorderType borderMode, const float4 borderVal)
 {
     assert(fmt.numPlanes() == 1);
@@ -135,12 +118,26 @@ static void WarpAffineGold(std::vector<uint8_t> &hDst, int dstRowPitch, nvcv::Si
 
     const int interpolation = flags & NVCV_INTERP_MAX;
 
+    NVCVAffineTransform xform1;
+
+    if (flags & NVCV_WARP_INVERSE_MAP)
+    {
+        invertAffineTransform(xform, xform1);
+    }
+    else
+    {
+        for (int i = 0; i < 6; i++)
+        {
+            xform1[i] = xform[i];
+        }
+    }
+
     for (int dst_y = 0; dst_y < dstSize.h; dst_y++)
     {
         for (int dst_x = 0; dst_x < dstSize.w; dst_x++)
         {
-            float src_x = (float)(dst_x * trans_matrix[0] + dst_y * trans_matrix[1] + trans_matrix[2]);
-            float src_y = (float)(dst_x * trans_matrix[3] + dst_y * trans_matrix[4] + trans_matrix[5]);
+            float src_x = (float)(dst_x * xform1[0] + dst_y * xform1[1] + xform1[2]);
+            float src_y = (float)(dst_x * xform1[3] + dst_y * xform1[4] + xform1[5]);
 
             if (interpolation == NVCV_INTERP_LINEAR)
             {
@@ -185,6 +182,36 @@ static void WarpAffineGold(std::vector<uint8_t> &hDst, int dstRowPitch, nvcv::Si
                     dstPtr[dst_y * dstRowPitch + dst_x * elementsPerPixel + k] = src_reg;
                 }
             }
+            else if (interpolation == NVCV_INTERP_CUBIC)
+            {
+                const int xmin = std::ceil(src_x - 2.0f);
+                const int xmax = std::floor(src_x + 2.0f);
+
+                const int ymin = std::ceil(src_y - 2.0f);
+                const int ymax = std::floor(src_y + 2.0f);
+
+                for (int k = 0; k < elementsPerPixel; k++)
+                {
+                    float sum  = 0;
+                    float wsum = 0;
+
+                    for (int cy = ymin; cy <= ymax; cy += 1)
+                    {
+                        for (int cx = xmin; cx <= xmax; cx += 1)
+                        {
+                            const float w       = calcBicubicCoeff(src_x - cx) * calcBicubicCoeff(src_y - cy);
+                            T           src_reg = getPixel<T>(srcPtr, cy, cx, k, srcWidth, srcHeight, srcRowPitch,
+                                                    elementsPerPixel, borderMode, borderVal);
+                            sum += w * src_reg;
+                            wsum += w;
+                        }
+                    }
+
+                    float res                                                  = (!wsum) ? 0 : sum / wsum;
+                    res                                                        = std::rint(res);
+                    dstPtr[dst_y * dstRowPitch + dst_x * elementsPerPixel + k] = res < 0 ? 0 : (res > 255 ? 255 : res);
+                }
+            }
             else
             {
                 return;
@@ -194,48 +221,88 @@ static void WarpAffineGold(std::vector<uint8_t> &hDst, int dstRowPitch, nvcv::Si
 }
 
 // clang-format off
-NVCV_TEST_SUITE_P(OpWarpAffine, test::ValueList<int, int, int, int, float, float, float, float, float, float, NVCVInterpolationType, NVCVBorderType, float, float, float, float, int>
+NVCV_TEST_SUITE_P(OpWarpAffine, test::ValueList<int, int, int, int, float, float, float, float, float, float, NVCVInterpolationType, NVCVBorderType, float, float, float, float, int, bool>
 {
-    // srcWidth, srcHeight, dstWidth, dstHeight, transformation_matrix,       interpolation,           borderType,  borderValue, batchSize
-    {        4,        4,       4,        4,      1, 0, 0, 0, 1, 0, NVCV_INTERP_LINEAR, NVCV_BORDER_CONSTANT,   0, 0, 0, 0,         1},
-    {        4,        4,       4,        4,      1, 0, 1, 0, 1, 1, NVCV_INTERP_LINEAR, NVCV_BORDER_CONSTANT,   0, 0, 0, 0,         1},
-    {        4,        4,       4,        4,      2, 0, 1, 0, 2, 1, NVCV_INTERP_LINEAR, NVCV_BORDER_CONSTANT,   0, 0, 0, 0,         1},
-    {        4,        4,       4,        4,      0.5, 0, 1, 0, 0.5, 1, NVCV_INTERP_LINEAR, NVCV_BORDER_CONSTANT,   0, 0, 0, 0,         1},
-    {        4,        4,       4,        4,      0.5, 1, 1, 0, 0.5, 1, NVCV_INTERP_LINEAR, NVCV_BORDER_CONSTANT,   0, 0, 0, 0,         1},
-    {        4,        4,       4,        4,      0.5, 1, 1, 1, 0.5, 1, NVCV_INTERP_LINEAR, NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         1},
+    // srcWidth, srcHeight, dstWidth, dstHeight,     transformation_matrix,       interpolation,              borderType,  borderValue, batchSize, inverseAffine
+    // vary transformation matrix and border type
+    {         5,         4,        5,         4,          1, 0, 0, 0, 1, 0, NVCV_INTERP_NEAREST,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        5,         4,          1, 0, 1, 0, 1, 2, NVCV_INTERP_NEAREST,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        5,         4,          1, 2, 1, 2, 1, 2, NVCV_INTERP_NEAREST,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        5,         4,          2, 2, 1, 3, 1, 2, NVCV_INTERP_NEAREST,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        5,         4,          2, 2, 1, 3, 1, 2, NVCV_INTERP_NEAREST,   NVCV_BORDER_REPLICATE,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        5,         4,          1, 2, 0, 1, 1, 0, NVCV_INTERP_NEAREST,  NVCV_BORDER_REFLECT101,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        5,         4,          1, 2, 0, 1, 1, 0, NVCV_INTERP_NEAREST,     NVCV_BORDER_REFLECT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        5,         4,          2, 2, 1, 3, 1, 2, NVCV_INTERP_NEAREST,        NVCV_BORDER_WRAP,   1, 2, 3, 4,         4,         false},
 
-    {        4,        4,       4,        4,      1, 0, 0, 0, 1, 0, NVCV_INTERP_LINEAR, NVCV_BORDER_REPLICATE,   0, 0, 0, 0,         1},
-    {        4,        4,       4,        4,      1, 0, 1, 0, 1, 1, NVCV_INTERP_LINEAR, NVCV_BORDER_REPLICATE,   0, 0, 0, 0,         1},
-    {        4,        4,       4,        4,      2, 0, 1, 0, 2, 1, NVCV_INTERP_LINEAR, NVCV_BORDER_REPLICATE,   0, 0, 0, 0,         1},
-    {        4,        4,       4,        4,      0.5, 0, 1, 0, 0.5, 1, NVCV_INTERP_LINEAR, NVCV_BORDER_REPLICATE,   0, 0, 0, 0,         1},
-    {        4,        4,       4,        4,      0.5, 1, 1, 0, 0.5, 1, NVCV_INTERP_LINEAR, NVCV_BORDER_REPLICATE,   0, 0, 0, 0,         1},
+    // change output size to larger image
+    {         5,         4,        6,         8,          1, 0, 0, 0, 1, 0, NVCV_INTERP_NEAREST,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        6,         8,          1, 0, 1, 0, 1, 2, NVCV_INTERP_NEAREST,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        6,         8,          1, 2, 1, 2, 1, 2, NVCV_INTERP_NEAREST,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        6,         8,          2, 2, 1, 3, 1, 2, NVCV_INTERP_NEAREST,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        6,         8,          2, 2, 1, 3, 1, 2, NVCV_INTERP_NEAREST,   NVCV_BORDER_REPLICATE,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        6,         8,          2, 2, 1, 3, 1, 2, NVCV_INTERP_NEAREST,        NVCV_BORDER_WRAP,   1, 2, 3, 4,         4,         false},
 
-    {        4,        4,       4,        4,      1, 0, 0, 0, 1, 0, NVCV_INTERP_LINEAR, NVCV_BORDER_REPLICATE,   0, 0, 0, 0,         4},
-    {        4,        5,       4,        5,      1, 0, 0, 0, 1, 0, NVCV_INTERP_LINEAR, NVCV_BORDER_REPLICATE,   0, 0, 0, 0,         4},
-    {        5,        4,       5,        4,      1, 0, 0, 0, 1, 0, NVCV_INTERP_LINEAR, NVCV_BORDER_REPLICATE,   0, 0, 0, 0,         4},
+    // change output size to smaller image
+    {         7,         8,        4,         5,          1, 0, 0, 0, 1, 0, NVCV_INTERP_NEAREST,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          1, 0, 1, 0, 1, 2, NVCV_INTERP_NEAREST,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          1, 2, 1, 2, 1, 2, NVCV_INTERP_NEAREST,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          2, 2, 1, 3, 1, 2, NVCV_INTERP_NEAREST,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          2, 2, 1, 3, 1, 2, NVCV_INTERP_NEAREST,   NVCV_BORDER_REPLICATE,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          2, 2, 1, 3, 1, 2, NVCV_INTERP_NEAREST,  NVCV_BORDER_REFLECT101,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          2, 2, 1, 3, 1, 2, NVCV_INTERP_NEAREST,     NVCV_BORDER_REFLECT,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          2, 2, 1, 3, 1, 2, NVCV_INTERP_NEAREST,        NVCV_BORDER_WRAP,   1, 2, 3, 4,         4,         false},
 
-    {        5,        4,       5,        4,      0.5, 1, 1, 0, 0.5, 1, NVCV_INTERP_LINEAR, NVCV_BORDER_REFLECT,   0, 0, 0, 0,         4},
-    {        5,        4,       5,        4,      0.5, 1, 1, 0, 0.5, 1, NVCV_INTERP_LINEAR, NVCV_BORDER_REFLECT101,   0, 0, 0, 0,         4},
-    {        5,        4,       5,        4,      0.5, 1, 1, 0, 0.5, 1, NVCV_INTERP_LINEAR, NVCV_BORDER_WRAP,   0, 0, 0, 0,         4},
+    // LINEAR INTERP
+    {         5,         4,        5,         4,          1, 0, 0, 0, 1, 1,  NVCV_INTERP_LINEAR,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        5,         4,          1, 0, 0, 0, 1, 1,  NVCV_INTERP_LINEAR,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        5,         4,          1, 2, 0, 2, 1, 1,  NVCV_INTERP_LINEAR,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        5,         4,          2, 2, 0, 3, 1, 1,  NVCV_INTERP_LINEAR,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        5,         4,          2, 2, 0, 3, 1, 1,  NVCV_INTERP_LINEAR,   NVCV_BORDER_REPLICATE,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        5,         4,          1, 2, 0, 1, 1, 0,  NVCV_INTERP_LINEAR,     NVCV_BORDER_REFLECT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        5,         4,          2, 2, 0, 3, 1, 1,  NVCV_INTERP_LINEAR,        NVCV_BORDER_WRAP,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        6,         8,          1, 0, 0, 0, 1, 1,  NVCV_INTERP_LINEAR,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        6,         8,          1, 0, 0, 0, 1, 1,  NVCV_INTERP_LINEAR,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        6,         8,          1, 2, 0, 2, 1, 1,  NVCV_INTERP_LINEAR,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        6,         8,          2, 2, 0, 3, 1, 1,  NVCV_INTERP_LINEAR,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        6,         8,          2, 2, 0, 3, 1, 1,  NVCV_INTERP_LINEAR,   NVCV_BORDER_REPLICATE,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        6,         8,          2, 2, 0, 3, 1, 1,  NVCV_INTERP_LINEAR,        NVCV_BORDER_WRAP,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          1, 0, 0, 0, 1, 1,  NVCV_INTERP_LINEAR,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          1, 0, 0, 0, 1, 1,  NVCV_INTERP_LINEAR,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          1, 2, 0, 2, 1, 1,  NVCV_INTERP_LINEAR,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          2, 2, 0, 3, 1, 1,  NVCV_INTERP_LINEAR,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          2, 2, 0, 3, 1, 1,  NVCV_INTERP_LINEAR,   NVCV_BORDER_REPLICATE,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          2, 2, 0, 3, 1, 1,  NVCV_INTERP_LINEAR,  NVCV_BORDER_REFLECT101,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          2, 2, 0, 3, 1, 1,  NVCV_INTERP_LINEAR,     NVCV_BORDER_REFLECT,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          2, 2, 0, 3, 1, 1,  NVCV_INTERP_LINEAR,        NVCV_BORDER_WRAP,   1, 2, 3, 4,         4,         false},
 
-    {        5,        4,       5,        4,      1, 0, 0, 0, 1, 0, NVCV_INTERP_NEAREST, NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4},
-    {        5,        4,       5,        4,      1, 0, 1, 0, 1, 2, NVCV_INTERP_NEAREST, NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4},
+    // number of images in batch
+    {         7,         8,        4,         5,          2, 2, 1, 3, 1, 2,  NVCV_INTERP_LINEAR,        NVCV_BORDER_WRAP,   1, 2, 3, 4,         1,         false},
+    {         7,         8,        4,         5,          2, 2, 1, 3, 1, 2,  NVCV_INTERP_LINEAR,        NVCV_BORDER_WRAP,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          2, 2, 1, 3, 1, 2,  NVCV_INTERP_LINEAR,        NVCV_BORDER_WRAP,   1, 2, 3, 4,         8,         false},
+    {         7,         8,        4,         5,          2, 2, 1, 3, 1, 2,  NVCV_INTERP_LINEAR,        NVCV_BORDER_WRAP,   1, 2, 3, 4,        16,         false},
 
-    {        5,        4,       5,        4,     1, 0, 1, 0, 1, 2, NVCV_INTERP_NEAREST, NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4},
-    {        5,        4,       5,        4,     1, 0, 1, 0, 1, 2, NVCV_INTERP_NEAREST, NVCV_BORDER_REPLICATE,   1, 2, 3, 4,         4},
-    {        5,        4,       5,        4,     1, 0, 1, 0, 1, 2, NVCV_INTERP_NEAREST, NVCV_BORDER_REFLECT,   1, 2, 3, 4,         4},
-    {        5,        4,       5,        4,     1, 0, 1, 0, 1, 2, NVCV_INTERP_NEAREST, NVCV_BORDER_REFLECT101,   1, 2, 3, 4,         4},
-    {        5,        4,       5,        4,     1, 0, 1, 0, 1, 2, NVCV_INTERP_NEAREST, NVCV_BORDER_WRAP,   1, 2, 3, 4,         4},
+    // CUBIC INTERP
+    {         5,         4,        5,         4,          1, 0, 0, 0, 1, 0,   NVCV_INTERP_CUBIC,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        5,         4,          1, 0, 0, 0, 1, 0,   NVCV_INTERP_CUBIC,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        5,         4,          1, 2, 0, 2, 1, 0,   NVCV_INTERP_CUBIC,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        5,         4,          2, 2, 0, 3, 1, 0,   NVCV_INTERP_CUBIC,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        5,         4,          2, 2, 0, 3, 1, 0,   NVCV_INTERP_CUBIC,   NVCV_BORDER_REPLICATE,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        5,         4,          2, 2, 0, 3, 1, 0,   NVCV_INTERP_CUBIC,        NVCV_BORDER_WRAP,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        6,         8,          1, 0, 0, 0, 1, 0,   NVCV_INTERP_CUBIC,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        6,         8,          1, 0, 0, 0, 1, 0,   NVCV_INTERP_CUBIC,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        6,         8,          1, 2, 0, 2, 1, 0,   NVCV_INTERP_CUBIC,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        6,         8,          2, 2, 0, 3, 1, 0,   NVCV_INTERP_CUBIC,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        6,         8,          2, 2, 0, 3, 1, 0,   NVCV_INTERP_CUBIC,   NVCV_BORDER_REPLICATE,   1, 2, 3, 4,         4,         false},
+    {         5,         4,        6,         8,          2, 2, 0, 3, 1, 0,   NVCV_INTERP_CUBIC,        NVCV_BORDER_WRAP,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          1, 0, 0, 0, 1, 0,   NVCV_INTERP_CUBIC,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          1, 0, 0, 0, 1, 0,   NVCV_INTERP_CUBIC,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          1, 2, 0, 2, 1, 0,   NVCV_INTERP_CUBIC,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          2, 2, 0, 3, 1, 0,   NVCV_INTERP_CUBIC,    NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          2, 2, 0, 3, 1, 0,   NVCV_INTERP_CUBIC,   NVCV_BORDER_REPLICATE,   1, 2, 3, 4,         4,         false},
+    {         7,         8,        4,         5,          2, 2, 0, 3, 1, 0,   NVCV_INTERP_CUBIC,        NVCV_BORDER_WRAP,   1, 2, 3, 4,         4,         false},
 
-    {        5,        4,       5,        4,     0.5, 0, 0, 0, 0.5, 0, NVCV_INTERP_NEAREST, NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4},
-    {        5,        4,       5,        4,      0.5, 1, 1, 0, 0.5, 1, NVCV_INTERP_NEAREST, NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4},
-    {        5,        4,       5,        4,      0.5, 1, 1, 0, 0.5, 1, NVCV_INTERP_NEAREST, NVCV_BORDER_WRAP,   0, 0, 0, 0,         4},
-
-    // vary output size
-    {        4,        4,       8,        8,      0.5, 1, 1, 1, 0.5, 1, NVCV_INTERP_NEAREST, NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4},
-    {        4,        4,       8,        8,      0.5, 1, 0, 1, 0.5, 0, NVCV_INTERP_NEAREST, NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4},
-    {        4,        4,       8,        8,      0.5, 0, 0, 0, 0.5, 0, NVCV_INTERP_NEAREST, NVCV_BORDER_CONSTANT,   1, 2, 3, 4,         4},
-    {        2,        2,       4,        4,      0, 1, 0, 1, 0, 0, NVCV_INTERP_NEAREST, NVCV_BORDER_CONSTANT,   0, 0, 0, 0,         4},
+    // inverse warp affine
+    {         7,         8,        4,         5,          2, 2, 0, 3, 1, 0,   NVCV_INTERP_CUBIC,        NVCV_BORDER_WRAP,   1, 2, 3, 4,         4,          true},
 
 });
 
@@ -251,8 +318,8 @@ TEST_P(OpWarpAffine, tensor_correct_output)
     int dstWidth  = GetParamValue<2>();
     int dstHeight = GetParamValue<3>();
 
-    const float trans_matrix[6] = {GetParamValue<4>(), GetParamValue<5>(), GetParamValue<6>(),
-                                   GetParamValue<7>(), GetParamValue<8>(), GetParamValue<9>()};
+    const NVCVAffineTransform xform = {GetParamValue<4>(), GetParamValue<5>(), GetParamValue<6>(),
+                                       GetParamValue<7>(), GetParamValue<8>(), GetParamValue<9>()};
 
     NVCVInterpolationType interpolation = GetParamValue<10>();
 
@@ -262,11 +329,11 @@ TEST_P(OpWarpAffine, tensor_correct_output)
 
     int numberOfImages = GetParamValue<16>();
 
+    bool inverseMap = GetParamValue<17>();
+
     const nvcv::ImageFormat fmt = nvcv::FMT_RGBA8;
 
-    const nvcv::Size2D dsize = {dstWidth, dstHeight};
-
-    const int flags = interpolation;
+    const int flags = interpolation | (inverseMap ? NVCV_WARP_INVERSE_MAP : 0);
 
     // Generate input
     nvcv::Tensor imgSrc(numberOfImages, {srcWidth, srcHeight}, fmt);
@@ -301,7 +368,7 @@ TEST_P(OpWarpAffine, tensor_correct_output)
     nvcv::Tensor imgDst(numberOfImages, {dstWidth, dstHeight}, nvcv::FMT_RGBA8);
 
     nv::cvop::WarpAffine warpAffineOp;
-    EXPECT_NO_THROW(warpAffineOp(stream, imgSrc, imgDst, trans_matrix, dsize, flags, borderMode, borderValue));
+    EXPECT_NO_THROW(warpAffineOp(stream, imgSrc, imgDst, xform, flags, borderMode, borderValue));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
@@ -330,7 +397,7 @@ TEST_P(OpWarpAffine, tensor_correct_output)
 
         // Generate gold result
         WarpAffineGold<uint8_t>(goldVec, dstVecRowPitch, {dstWidth, dstHeight}, srcVec[i], srcVecRowPitch,
-                                {srcWidth, srcHeight}, fmt, trans_matrix, flags, borderMode, borderValue);
+                                {srcWidth, srcHeight}, fmt, xform, flags, borderMode, borderValue);
 
 #if DBG
         std::cout << "\nPrint src vec " << std::endl;
@@ -367,6 +434,5 @@ TEST_P(OpWarpAffine, tensor_correct_output)
 #endif
 
         EXPECT_EQ(goldVec, testVec);
-        //EXPECT_EQ(1,1);
     }
 }

@@ -54,7 +54,7 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopConvertToCreate(NVCVOperatorHandle *handle);
  *
  *  Input:
  *       Data Layout:    [kNHWC, kHWC]
- *       Channels:       [1,3,4]
+ *       Channels:       [1-4]
  *
  *       Data Type      | Allowed
  *       -------------- | -------------
@@ -69,7 +69,7 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopConvertToCreate(NVCVOperatorHandle *handle);
  *
  *  Output:
  *       Data Layout:    [kNHWC, kHWC]
- *       Channels:       [1,3,4]
+ *       Channels:       [1-4]
  *
  *       Data Type      | Allowed
  *       -------------- | -------------

@@ -30,6 +30,9 @@
 #include <nvcv/ITensor.hpp>
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/alloc/Requirements.hpp>
+#include <nvcv/cuda/math/LinAlg.hpp>
+
+namespace cvmath = nv::cv::cuda::math;
 
 namespace nv { namespace cvop {
 
@@ -40,9 +43,8 @@ public:
 
     ~WarpAffine();
 
-    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const float trans_matrix[2 * 3],
-                    const nv::cv::Size2D dsize, const int flags, const NVCVBorderType borderMode,
-                    const float4 borderValue);
+    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const NVCVAffineTransform xform,
+                    const int flags, const NVCVBorderType borderMode, const float4 borderValue);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -63,11 +65,11 @@ inline WarpAffine::~WarpAffine()
 }
 
 inline void WarpAffine::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out,
-                                   const float trans_matrix[2 * 3], const nv::cv::Size2D dsize, const int flags,
-                                   const NVCVBorderType borderMode, const float4 borderValue)
+                                   const NVCVAffineTransform xform, const int flags, const NVCVBorderType borderMode,
+                                   const float4 borderValue)
 {
-    cv::detail::CheckThrow(nvcvopWarpAffineSubmit(m_handle, stream, in.handle(), out.handle(), trans_matrix, dsize,
-                                                  flags, borderMode, borderValue));
+    cv::detail::CheckThrow(
+        nvcvopWarpAffineSubmit(m_handle, stream, in.handle(), out.handle(), xform, flags, borderMode, borderValue));
 }
 
 inline NVCVOperatorHandle WarpAffine::handle() const noexcept
