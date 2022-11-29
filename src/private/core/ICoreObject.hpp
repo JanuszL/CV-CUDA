@@ -110,8 +110,8 @@ typename T::HandleType CreateCoreObject(ARGS &&...args)
     using H   = typename T::HandleType;
     auto &mgr = GlobalContext().manager<H>();
 
-    H h = mgr.template create<T>(std::forward<ARGS>(args)...);
-    mgr.validate(h)->setHandle(h);
+    auto [h, obj] = mgr.template create<T>(std::forward<ARGS>(args)...);
+    obj->setHandle(h);
 
     return h;
 }

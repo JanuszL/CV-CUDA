@@ -105,11 +105,11 @@ public:
     ~HandleManager();
 
     template<class T, typename... Args>
-    HandleType create(Args &&...args)
+    std::pair<HandleType, T *> create(Args &&...args)
     {
         Resource *res = doFetchFreeResource();
-        res->template constructObject<T>(std::forward<Args>(args)...);
-        return doGetHandleFromResource(res);
+        T        *obj = res->template constructObject<T>(std::forward<Args>(args)...);
+        return std::make_pair(doGetHandleFromResource(res), obj);
     }
 
     // true if handle is destroyed, false if handle is invalid (or already removed)
