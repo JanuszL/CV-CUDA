@@ -18,13 +18,11 @@
 #include "DefaultAllocator.hpp"
 #include "IContext.hpp"
 
-#include <variant>
-
 namespace nv::cv::priv {
 
 using AllocatorManager = CoreObjManager<NVCVAllocatorHandle>;
 
-using AllocatorStorage = std::variant<DefaultAllocator, CustomAllocator>;
+using AllocatorStorage = CompatibleStorage<DefaultAllocator, CustomAllocator>;
 
 template<>
 class CoreObjManager<NVCVAllocatorHandle> : public HandleManager<IAllocator, AllocatorStorage>

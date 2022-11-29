@@ -17,13 +17,11 @@
 #include "IContext.hpp"
 #include "Image.hpp"
 
-#include <variant>
-
 namespace nv::cv::priv {
 
 using ImageManager = CoreObjManager<NVCVImageHandle>;
 
-using ImageStorage = std::variant<Image, ImageWrapData>;
+using ImageStorage = CompatibleStorage<Image, ImageWrapData>;
 
 template<>
 class CoreObjManager<NVCVImageHandle> : public HandleManager<IImage, ImageStorage>

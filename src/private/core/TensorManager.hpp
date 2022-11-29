@@ -18,13 +18,11 @@
 #include "Tensor.hpp"
 #include "TensorWrapDataPitch.hpp"
 
-#include <variant>
-
 namespace nv::cv::priv {
 
 using TensorManager = CoreObjManager<NVCVTensorHandle>;
 
-using TensorStorage = std::variant<Tensor, TensorWrapDataPitch>;
+using TensorStorage = CompatibleStorage<Tensor, TensorWrapDataPitch>;
 
 template<>
 class CoreObjManager<NVCVTensorHandle> : public HandleManager<ITensor, TensorStorage>

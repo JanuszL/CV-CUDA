@@ -14,6 +14,7 @@
 #ifndef NVCV_PRIV_CORE_HANDLE_MANAGER_HPP
 #define NVCV_PRIV_CORE_HANDLE_MANAGER_HPP
 
+#include <util/Algorithm.hpp>
 #include <util/Assert.h>
 
 #include <cstddef>
@@ -132,6 +133,12 @@ private:
     HandleType doGetHandleFromResource(Resource *r) const;
     Resource  *doGetResourceFromHandle(HandleType handle) const;
     bool       isManagedResource(Resource *r) const;
+};
+
+template<class... AA>
+struct alignas(util::Max(alignof(AA)...)) CompatibleStorage
+{
+    std::byte storage[util::Max(sizeof(AA)...)];
 };
 
 } // namespace nv::cv::priv
