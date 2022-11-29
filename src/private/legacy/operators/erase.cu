@@ -120,6 +120,7 @@ Erase::Erase(DataShape max_input_shape, DataShape max_output_shape, int num_eras
     max_num_erasing_area = num_erasing_area;
     if (max_num_erasing_area < 0)
     {
+        cudaFree(d_max_values);
         LOG_ERROR("Invalid num of erasing area" << max_num_erasing_area);
         throw std::runtime_error("Parameter error!");
     }
@@ -130,6 +131,7 @@ Erase::Erase(DataShape max_input_shape, DataShape max_output_shape, int num_eras
     err = cudaMalloc(&temp_storage, storage_bytes * 2);
     if (err != cudaSuccess)
     {
+        cudaFree(d_max_values);
         LOG_ERROR("CUDA memory allocation error of size: " << storage_bytes * 2);
         throw std::runtime_error("CUDA memory allocation error!");
     }
