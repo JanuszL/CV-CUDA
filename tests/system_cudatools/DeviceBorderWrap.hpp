@@ -11,24 +11,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_TEST_COMMON_BORDER_UTILS_HPP
-#define NVCV_TEST_COMMON_BORDER_UTILS_HPP
+#ifndef NVCV_TESTS_DEVICE_BORDER_WRAP_HPP
+#define NVCV_TESTS_DEVICE_BORDER_WRAP_HPP
 
-#include <cuda_runtime.h>    // for int2, etc.
-#include <operators/Types.h> // for NVCVBorderType, etc.
+#include <cuda_runtime.h> // for cudaStream_t, etc.
 
-namespace nv::cv::test {
+template<class DstWrapper, class SrcWrapper, typename DimType>
+void DeviceRunFillBorder(DstWrapper &dstWrap, SrcWrapper &srcWrap, DimType dstSize, DimType srcSize,
+                         cudaStream_t &stream);
 
-void ReplicateBorderIndex(int2 &coord, int2 size);
-
-void WrapBorderIndex(int2 &coord, int2 size);
-
-void ReflectBorderIndex(int2 &coord, int2 size);
-
-void Reflect101BorderIndex(int2 &coord, int2 size);
-
-bool IsInside(int2 &inCoord, int2 inSize, NVCVBorderType borderMode);
-
-} // namespace nv::cv::test
-
-#endif // NVCV_TEST_COMMON_BORDER_UTILS_HPP
+#endif // NVCV_TESTS_DEVICE_BORDER_WRAP_HPP

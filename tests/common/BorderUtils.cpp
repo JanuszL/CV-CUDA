@@ -17,94 +17,112 @@
 
 namespace nv::cv::test {
 
+inline void ReplicateBorderIndex(int &coord, int size)
+{
+    if (coord < 0)
+    {
+        coord = 0;
+    }
+    else
+    {
+        if (coord >= size)
+        {
+            coord = size - 1;
+        }
+    }
+}
+
+inline void WrapBorderIndex(int &coord, int size)
+{
+    coord = coord % size;
+    if (coord < 0)
+    {
+        coord += size;
+    }
+}
+
+inline void ReflectBorderIndex(int &coord, int size)
+{
+    // Reflect 1001: starting at size, we slope downards, the value at size - 1 is repeated
+    coord = coord % (size * 2);
+    if (coord < 0)
+    {
+        coord += size * 2;
+    }
+    if (coord >= size)
+    {
+        coord = size - 1 - (coord - size);
+    }
+}
+
+inline void Reflect101BorderIndex(int &coord, int size)
+{
+    coord = coord % (2 * size - 2);
+    if (coord < 0)
+    {
+        coord += 2 * size - 2;
+    }
+    coord = size - 1 - abs(size - 1 - coord);
+}
+
 void ReplicateBorderIndex(int2 &coord, int2 size)
 {
-    if (coord.x < 0)
-    {
-        coord.x = 0;
-    }
-    else
-    {
-        if (coord.x >= size.x)
-        {
-            coord.x = size.x - 1;
-        }
-    }
-
-    if (coord.y < 0)
-    {
-        coord.y = 0;
-    }
-    else
-    {
-        if (coord.y >= size.y)
-        {
-            coord.y = size.y - 1;
-        }
-    }
+    ReplicateBorderIndex(coord.x, size.x);
+    ReplicateBorderIndex(coord.y, size.y);
 }
 
 void WrapBorderIndex(int2 &coord, int2 size)
 {
-    coord.x = coord.x % size.x;
-    if (coord.x < 0)
-    {
-        coord.x += size.x;
-    }
-
-    coord.y = coord.y % size.y;
-    if (coord.y < 0)
-    {
-        coord.y += size.y;
-    }
+    WrapBorderIndex(coord.x, size.x);
+    WrapBorderIndex(coord.y, size.y);
 }
 
 void ReflectBorderIndex(int2 &coord, int2 size)
 {
-    const int2 last = {size.x - 1, size.y - 1};
-
-    if (coord.x >= size.x)
-    {
-        coord.x = (last.x - std::abs(last.x - coord.x)) + 1;
-    }
-    else
-    {
-        coord.x = (last.x - std::abs(last.x - coord.x));
-    }
-    if (coord.x < 0)
-    {
-        coord.x = (std::abs(coord.x) - 1) % size.x;
-    }
-    else
-    {
-        coord.x = (std::abs(coord.x)) % size.x;
-    }
-
-    if (coord.y >= size.y)
-    {
-        coord.y = (last.y - std::abs(last.y - coord.y)) + 1;
-    }
-    else
-    {
-        coord.y = (last.y - std::abs(last.y - coord.y));
-    }
-    if (coord.y < 0)
-    {
-        coord.y = (std::abs(coord.y) - 1) % size.y;
-    }
-    else
-    {
-        coord.y = (std::abs(coord.y)) % size.y;
-    }
+    ReflectBorderIndex(coord.x, size.x);
+    ReflectBorderIndex(coord.y, size.y);
 }
 
 void Reflect101BorderIndex(int2 &coord, int2 size)
 {
-    const int2 last = {size.x - 1, size.y - 1};
+    Reflect101BorderIndex(coord.x, size.x);
+    Reflect101BorderIndex(coord.y, size.y);
+}
 
-    coord.x = std::abs(last.x - std::abs(last.x - coord.x)) % size.x;
+bool IsInside(int2 &inCoord, int2 inSize, NVCVBorderType borderMode)
+{
+    if (inCoord.y >= 0 && inCoord.y < inSize.y && inCoord.x >= 0 && inCoord.x < inSize.x)
+    {
+        return true;
+    }
+    else
+    {
+        if (borderMode == NVCV_BORDER_CONSTANT)
+        {
+            return false;
+        }
+        else
+        {
+            if (borderMode == NVCV_BORDER_REPLICATE)
+            {
+                test::ReplicateBorderIndex(inCoord, inSize);
+            }
+            else if (borderMode == NVCV_BORDER_WRAP)
+            {
+                test::WrapBorderIndex(inCoord, inSize);
+            }
+            else if (borderMode == NVCV_BORDER_REFLECT)
+            {
+                test::ReflectBorderIndex(inCoord, inSize);
+            }
+            else if (borderMode == NVCV_BORDER_REFLECT101)
+            {
+                test::Reflect101BorderIndex(inCoord, inSize);
+            }
 
-    coord.y = std::abs(last.y - std::abs(last.y - coord.y)) % size.y;
+            return true;
+        }
+    }
 }
 
 } // namespace nv::cv::test
