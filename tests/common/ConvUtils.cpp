@@ -15,6 +15,7 @@
 
 #include <nvcv/cuda/DropCast.hpp>     // for SaturateCast, etc.
 #include <nvcv/cuda/MathOps.hpp>      // for operator *, etc.
+#include <nvcv/cuda/MathWrappers.hpp> // for min/max
 #include <nvcv/cuda/SaturateCast.hpp> // for SaturateCast, etc.
 #include <nvcv/cuda/TypeTraits.hpp>   // for BaseType, etc.
 #include <util/Assert.h>              // for NVCV_ASSERT, etc.
@@ -92,13 +93,73 @@ inline void Convolve(std::vector<uint8_t> &hDst, const long3 &dstPitches, const 
     }
 }
 
+template<typename T>
+inline void Morph(std::vector<uint8_t> &hDst, const long3 &dstPitches, const std::vector<uint8_t> &hSrc,
+                  const long3 &srcPitches, const int3 &shape, const Size2D &kernelSize, int2 &kernelAnchor,
+                  const NVCVBorderType &borderMode, NVCVMorphologyType type)
+{
+    using BT  = cuda::BaseType<T>;
+    int2 size = cuda::DropCast<2>(shape);
+
+    BT val
+        = (type == NVCVMorphologyType::NVCV_DILATE) ? std::numeric_limits<BT>::min() : std::numeric_limits<BT>::max();
+    T borderValueT;
+    for (int e = 0; e < cuda::NumElements<T>; ++e)
+    {
+        cuda::GetElement(borderValueT, e) = val;
+    }
+
+    if (kernelAnchor.x < 0)
+    {
+        kernelAnchor.x = kernelSize.w / 2;
+    }
+    if (kernelAnchor.y < 0)
+    {
+        kernelAnchor.y = kernelSize.h / 2;
+    }
+
+    for (int b = 0; b < shape.z; ++b)
+    {
+        for (int y = 0; y < shape.y; ++y)
+        {
+            for (int x = 0; x < shape.x; ++x)
+            {
+                T res = cuda::SetAll<T>(val);
+
+                int2 coord;
+
+                for (int ky = 0; ky < kernelSize.h; ++ky)
+                {
+                    coord.y = y + ky - kernelAnchor.y;
+
+                    for (int kx = 0; kx < kernelSize.w; ++kx)
+                    {
+                        coord.x = x + kx - kernelAnchor.x;
+
+                        T srcValue = IsInside(coord, size, borderMode)
+                                       ? ValueAt<T>(hSrc, srcPitches, b, coord.y, coord.x)
+                                       : borderValueT;
+
+                        res = (type == NVCVMorphologyType::NVCV_DILATE) ? cuda::max(res, srcValue)
+                                                                        : cuda::min(res, srcValue);
+                    }
+                }
+                ValueAt<T>(hDst, dstPitches, b, y, x) = cuda::SaturateCast<BT>(res);
+            }
+        }
+    }
+}
+
 #define NVCV_TEST_INST(TYPE)                                                                                            \
     template const TYPE &ValueAt<TYPE>(const std::vector<uint8_t> &, long3, int, int, int);                             \
     template TYPE       &ValueAt<TYPE>(std::vector<uint8_t> &, long3, int, int, int);                                   \
     template void        Convolve<TYPE>(std::vector<uint8_t> & hDst, const long3 &dstPitches,                           \
                                  const std::vector<uint8_t> &hSrc, const long3 &srcPitches, const int3 &shape,   \
                                  const std::vector<float> &kernel, const Size2D &kernelSize, int2 &kernelAnchor, \
-                                 const NVCVBorderType &borderMode, const float4 &borderValue)
+                                 const NVCVBorderType &borderMode, const float4 &borderValue);                   \
+    template void Morph<TYPE>(std::vector<uint8_t> & hDst, const long3 &dstPitches, const std::vector<uint8_t> &hSrc,   \
+                              const long3 &srcPitches, const int3 &shape, const Size2D &kernelSize,                     \
+                              int2 &kernelAnchor, const NVCVBorderType &borderMode, NVCVMorphologyType type)
 
 NVCV_TEST_INST(uint8_t);
 NVCV_TEST_INST(ushort);
@@ -123,6 +184,33 @@ void Convolve(std::vector<uint8_t> &hDst, const long3 &dstPitches, const std::ve
     case NVCV_PIXEL_TYPE_##PIXELTYPE:                                                                       \
         detail::Convolve<TYPE>(hDst, dstPitches, hSrc, srcPitches, shape, kernel, kernelSize, kernelAnchor, \
                                borderMode, borderValue);                                                    \
+        break
+
+        NVCV_TEST_CASE(U8, uint8_t);
+        NVCV_TEST_CASE(U16, ushort);
+        NVCV_TEST_CASE(3U8, uchar3);
+        NVCV_TEST_CASE(4U8, uchar4);
+        NVCV_TEST_CASE(4F32, float4);
+        NVCV_TEST_CASE(3F32, float3);
+
+#undef NVCV_TEST_CASE
+
+    default:
+        break;
+    }
+}
+
+void Morph(std::vector<uint8_t> &hDst, const long3 &dstPitches, const std::vector<uint8_t> &hSrc,
+           const long3 &srcPitches, const int3 &shape, const ImageFormat &format, const Size2D &kernelSize,
+           int2 &kernelAnchor, const NVCVBorderType &borderMode, NVCVMorphologyType type)
+{
+    NVCV_ASSERT(format.numPlanes() == 1);
+
+    switch (format.planePixelType(0))
+    {
+#define NVCV_TEST_CASE(PIXELTYPE, TYPE)                                                                             \
+    case NVCV_PIXEL_TYPE_##PIXELTYPE:                                                                               \
+        detail::Morph<TYPE>(hDst, dstPitches, hSrc, srcPitches, shape, kernelSize, kernelAnchor, borderMode, type); \
         break
 
         NVCV_TEST_CASE(U8, uint8_t);

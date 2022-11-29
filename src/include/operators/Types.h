@@ -48,6 +48,12 @@ typedef enum
     NVCV_BORDER_REFLECT101 = 4,
 } NVCVBorderType;
 
+typedef enum
+{
+    NVCV_ERODE  = 0,
+    NVCV_DILATE = 1,
+} NVCVMorphologyType;
+
 #ifdef __cplusplus
 }
 #endif

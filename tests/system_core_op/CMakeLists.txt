@@ -28,6 +28,7 @@ add_executable(nvcv_test_system_core_op
     TestOpAverageBlur.cpp
     TestOpConv2D.cpp
     TestOpMedianBlur.cpp
+    TestOpMorphology.cpp
 )
 
 target_link_libraries(nvcv_test_system_core_op
