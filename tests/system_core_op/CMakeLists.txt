@@ -30,6 +30,7 @@ add_executable(nvcv_test_system_core_op
     TestOpMedianBlur.cpp
     TestOpMorphology.cpp
     TestOpCvtColor.cpp
+    TestOpWarpAffine.cpp
 )
 
 target_link_libraries(nvcv_test_system_core_op

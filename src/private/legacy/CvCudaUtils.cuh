@@ -53,6 +53,7 @@ typedef unsigned char uchar;
 typedef signed char   schar;
 
 #define get_batch_idx() (blockIdx.z)
+#define get_lid()       (threadIdx.y * blockDim.x + threadIdx.x)
 
 inline int divUp(int a, int b)
 {

@@ -32,10 +32,12 @@ extern "C"
 // @brief Flag to choose the interpolation method to be used
 typedef enum
 {
-    NVCV_INTERP_NEAREST,
-    NVCV_INTERP_LINEAR,
-    NVCV_INTERP_CUBIC,
-    NVCV_INTERP_AREA,
+    NVCV_INTERP_NEAREST   = 0,
+    NVCV_INTERP_LINEAR    = 1,
+    NVCV_INTERP_CUBIC     = 2,
+    NVCV_INTERP_AREA      = 3,
+    NVCV_INTERP_MAX       = 7,
+    NVCV_WARP_INVERSE_MAP = 16
 } NVCVInterpolationType;
 
 // @brief Flag to choose the border mode to be used

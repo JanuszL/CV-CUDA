@@ -32,6 +32,7 @@ add_library(cvcuda_legacy STATIC
     ./operators/median_blur_var_shape.cu
     ./operators/morphology.cu
     ./operators/cvt_color.cu
+    ./operators/warp.cu
     CvCudaLegacyHelpers.cpp
 )
 
