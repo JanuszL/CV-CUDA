@@ -21,11 +21,12 @@ namespace nv::cvop::priv {
 
 namespace leg = cv::legacy;
 
-Rotate::Rotate()
+Rotate::Rotate(const int maxVarShapeBatchSize)
 {
     leg::cuda_op::DataShape maxIn, maxOut;
     // maxIn/maxOut not used by op.
-    m_legacyOp = std::make_unique<leg::cuda_op::Rotate>(maxIn, maxOut);
+    m_legacyOp         = std::make_unique<leg::cuda_op::Rotate>(maxIn, maxOut);
+    m_legacyOpVarShape = std::make_unique<leg::cuda_op::RotateVarShape>(maxVarShapeBatchSize);
 }
 
 void Rotate::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, const double angleDeg,
@@ -44,6 +45,37 @@ void Rotate::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::IT
     }
 
     leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, angleDeg, shift, interpolation, stream));
+}
+
+void Rotate::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
+                        cv::ITensor &angleDeg, cv::ITensor &shift, const NVCVInterpolationType interpolation) const
+{
+    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
+    if (inData == nullptr)
+    {
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be varshape image batch");
+    }
+
+    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(out.exportData(stream));
+    if (outData == nullptr)
+    {
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be varshape image batch");
+    }
+
+    auto *angleDegData = dynamic_cast<const cv::ITensorDataPitchDevice *>(angleDeg.exportData());
+    if (angleDegData == nullptr)
+    {
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "angleDeg must be a tensor");
+    }
+
+    auto *shiftData = dynamic_cast<const cv::ITensorDataPitchDevice *>(shift.exportData());
+    if (shiftData == nullptr)
+    {
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "shift must be a tensor");
+    }
+
+    leg::helpers::CheckOpErrThrow(
+        m_legacyOpVarShape->infer(*inData, *outData, *angleDegData, *shiftData, interpolation, stream));
 }
 
 } // namespace nv::cvop::priv

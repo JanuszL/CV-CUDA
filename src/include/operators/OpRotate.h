@@ -41,11 +41,13 @@ extern "C"
  * @param [out] handle Where the image instance handle will be written to.
  *                     + Must not be NULL.
  *
+ * @param [in] maxVarShapeBatchSize maximum batch size for var shape operator
+ *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Handle is null.
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the operator.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_OP_PUBLIC NVCVStatus nvcvopRotateCreate(NVCVOperatorHandle *handle);
+NVCV_OP_PUBLIC NVCVStatus nvcvopRotateCreate(NVCVOperatorHandle *handle, const int maxVarShapeBatchSize);
 
 /** Executes the rotate operation on the given cuda stream. This operation does not
  *  wait for completion.
@@ -125,6 +127,10 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopRotateSubmit(NVCVOperatorHandle handle, cudaStre
                                              NVCVTensorHandle out, const double angleDeg, const double2 shift,
                                              const NVCVInterpolationType interpolation);
 
+NVCV_OP_PUBLIC NVCVStatus nvcvopRotateVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
+                                                     NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                                                     NVCVTensorHandle angleDeg, NVCVTensorHandle shift,
+                                                     const NVCVInterpolationType interpolation);
 /** @} */
 
 #ifdef __cplusplus
