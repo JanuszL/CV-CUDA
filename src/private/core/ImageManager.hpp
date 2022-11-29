@@ -30,11 +30,6 @@ class CoreObjManager<NVCVImageHandle> : public HandleManager<IImage, ImageStorag
 
 public:
     using Base::Base;
-
-    static ImageManager &Instance()
-    {
-        return GlobalContext().imageManager();
-    }
 };
 
 } // namespace nv::cv::priv

@@ -31,11 +31,6 @@ class CoreObjManager<NVCVAllocatorHandle> : public HandleManager<IAllocator, All
 
 public:
     using Base::Base;
-
-    static AllocatorManager &Instance()
-    {
-        return GlobalContext().allocatorManager();
-    }
 };
 
 } // namespace nv::cv::priv

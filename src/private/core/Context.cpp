@@ -30,6 +30,7 @@ Context::Context()
     , m_imageManager("Image")
     , m_imageBatchManager("ImageBatch")
     , m_tensorManager("Tensor")
+    , m_managerList{m_allocatorManager, m_imageManager, m_imageBatchManager, m_tensorManager}
 {
 }
 
@@ -43,24 +44,9 @@ IAllocator &Context::allocDefault()
     return m_allocDefault;
 }
 
-ImageManager &Context::imageManager()
+auto Context::managerList() const -> const Managers &
 {
-    return m_imageManager;
-}
-
-ImageBatchManager &Context::imageBatchManager()
-{
-    return m_imageBatchManager;
-}
-
-TensorManager &Context::tensorManager()
-{
-    return m_tensorManager;
-}
-
-AllocatorManager &Context::allocatorManager()
-{
-    return m_allocatorManager;
+    return m_managerList;
 }
 
 template class HandleManager<IImage, ImageStorage>;

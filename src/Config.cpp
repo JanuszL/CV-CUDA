@@ -26,13 +26,14 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvConfigSetMaxImageCount, (int32_t maxCount)
     return priv::ProtectCall(
         [&]
         {
+            auto &mgr = std::get<priv::ImageManager &>(priv::GlobalContext().managerList());
             if (maxCount >= 0)
             {
-                priv::ImageManager::Instance().setFixedSize(maxCount);
+                mgr.setFixedSize(maxCount);
             }
             else
             {
-                priv::ImageManager::Instance().setDynamicSize();
+                mgr.setDynamicSize();
             }
         });
 }
@@ -42,13 +43,14 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvConfigSetMaxImageBatchCount, (int32_t maxC
     return priv::ProtectCall(
         [&]
         {
+            auto &mgr = std::get<priv::ImageBatchManager &>(priv::GlobalContext().managerList());
             if (maxCount >= 0)
             {
-                priv::ImageBatchManager::Instance().setFixedSize(maxCount);
+                mgr.setFixedSize(maxCount);
             }
             else
             {
-                priv::ImageBatchManager::Instance().setDynamicSize();
+                mgr.setDynamicSize();
             }
         });
 }
@@ -58,13 +60,14 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvConfigSetMaxTensorCount, (int32_t maxCount
     return priv::ProtectCall(
         [&]
         {
+            auto &mgr = std::get<priv::TensorManager &>(priv::GlobalContext().managerList());
             if (maxCount >= 0)
             {
-                priv::TensorManager::Instance().setFixedSize(maxCount);
+                mgr.setFixedSize(maxCount);
             }
             else
             {
-                priv::TensorManager::Instance().setDynamicSize();
+                mgr.setDynamicSize();
             }
         });
 }
@@ -74,13 +77,14 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvConfigSetMaxAllocatorCount, (int32_t maxCo
     return priv::ProtectCall(
         [&]
         {
+            auto &mgr = std::get<priv::AllocatorManager &>(priv::GlobalContext().managerList());
             if (maxCount >= 0)
             {
-                priv::AllocatorManager::Instance().setFixedSize(maxCount);
+                mgr.setFixedSize(maxCount);
             }
             else
             {
-                priv::AllocatorManager::Instance().setDynamicSize();
+                mgr.setDynamicSize();
             }
         });
 }

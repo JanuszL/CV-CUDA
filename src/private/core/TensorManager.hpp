@@ -31,11 +31,6 @@ class CoreObjManager<NVCVTensorHandle> : public HandleManager<ITensor, TensorSto
 
 public:
     using Base::Base;
-
-    static TensorManager &Instance()
-    {
-        return GlobalContext().tensorManager();
-    }
 };
 
 } // namespace nv::cv::priv

@@ -30,11 +30,6 @@ class CoreObjManager<NVCVImageBatchHandle> : public HandleManager<IImageBatch, I
 
 public:
     using Base::Base;
-
-    static ImageBatchManager &Instance()
-    {
-        return GlobalContext().imageBatchManager();
-    }
 };
 
 } // namespace nv::cv::priv

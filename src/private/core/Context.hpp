@@ -29,12 +29,8 @@ public:
     Context();
     ~Context();
 
-    CoreObjManager<NVCVImageHandle>      &imageManager() override;
-    CoreObjManager<NVCVImageBatchHandle> &imageBatchManager() override;
-    CoreObjManager<NVCVTensorHandle>     &tensorManager() override;
-    CoreObjManager<NVCVAllocatorHandle>  &allocatorManager() override;
-
-    IAllocator &allocDefault() override;
+    const Managers &managerList() const override;
+    IAllocator     &allocDefault() override;
 
 private:
     // Order is important due to inter-dependencies
@@ -43,6 +39,8 @@ private:
     ImageManager      m_imageManager;
     ImageBatchManager m_imageBatchManager;
     TensorManager     m_tensorManager;
+
+    Managers m_managerList;
 };
 
 } // namespace nv::cv::priv
