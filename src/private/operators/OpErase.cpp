@@ -97,10 +97,4 @@ void Erase::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITe
                                                     seed, inplace, stream));
 }
 
-nv::cv::priv::Version Erase::doGetVersion() const
-{
-    // TODO: How to decouple NVCV version from legacy version?
-    return nv::cv::priv::CURRENT_VERSION;
-}
-
 } // namespace nv::cvop::priv
