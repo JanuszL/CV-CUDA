@@ -23,6 +23,7 @@ add_executable(nvcv_test_system_core_op
     TestOpCenterCrop.cpp
     TestOpRotate.cpp
     TestOpLaplacian.cpp
+    TestOpGaussian.cpp
 )
 
 target_link_libraries(nvcv_test_system_core_op
