@@ -345,6 +345,19 @@ protected:
 };
 
 /**
+ * @brief Tensor 1D wrapper class.
+ *
+ * @detail Tensor1DWrap is a wrapper of a 1D tensor, i.e. a vector or an array, with a fixed (compile-time) pitch
+ * in bytes for its only dimension, elements of a vector, as the size of type \p T.  It does not have any run-time
+ * pitch dimension.  The operator [] used with int1 gets a reference to the x index (only dimension) of each
+ * element.  The ptr method used with one int i gets a pointer to the i-th element.
+ *
+ * @tparam T Type (it can be const) of each element inside the 1D tensor wrapper.
+ */
+template<typename T>
+using Tensor1DWrap = TensorWrap<T, sizeof(T)>;
+
+/**
  * @brief Tensor 2D wrapper class.
  *
  * @detail Tensor2DWrap is a wrapper of a 2-D tensor, i.e. a matrix, with a fixed (compile-time) pitch in bytes for
