@@ -73,4 +73,5 @@ PYBIND11_MODULE(nvcv, m)
     ExportOpNormalize(m);
     ExportOpConvertTo(m);
     ExportOpPadAndStack(m);
+    ExportOpCopyMakeBorder(m);
 }
