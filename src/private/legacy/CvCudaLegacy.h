@@ -933,6 +933,80 @@ protected:
     const int m_maxBatchSize;
 };
 
+class Laplacian : public CudaBaseOp
+{
+public:
+    Laplacian() = delete;
+
+    Laplacian(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * Limitations:
+     *
+     * Input:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | No
+     *      32bit Unsigned | No
+     *      32bit Signed   | No
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Output:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | No
+     *      32bit Unsigned | No
+     *      32bit Signed   | No
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Input/Output dependency
+     *
+     *      Property      |  Input == Output
+     *     -------------- | -------------
+     *      Data Layout   | Yes
+     *      Data Type     | Yes
+     *      Number        | Yes
+     *      Channels      | Yes
+     *      Width         | Yes
+     *      Height        | Yes
+     *
+     * @brief Calculates the Laplacian of an image.
+     * @param inData Input Tensor
+     * @param outData Output Tensor
+     * @param ksize aperture size used to compute the second-derivative filters, it can be 1 or 3.
+     * @param scale optional scale factor for the computed Laplacian values. By default, no scaling is applied.
+     * @param borderMode pixel extrapolation method, e.g. \p NVCV_BORDER_CONSTANT
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, int ksize, float scale,
+                    NVCVBorderType borderMode, cudaStream_t stream);
+
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param max_input_shape maximum input DataShape that may be used
+     * @param max_output_shape maximum output DataShape that may be used
+     * @param max_data_type DataType with the maximum size that may be used
+     */
+    size_t calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
+};
+
 } // namespace nv::cv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H

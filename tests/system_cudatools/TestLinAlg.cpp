@@ -193,7 +193,9 @@ TYPED_TEST(LinAlgMatrixTest, correct_with_one_template_argument)
     EXPECT_EQ(mat.rows(), M);
     EXPECT_EQ(mat.cols(), M);
 
-    EXPECT_EQ(mat[0][0], 1);
+    int2 c{0, 0};
+
+    EXPECT_EQ(mat[c], 1);
 }
 
 TYPED_TEST(LinAlgMatrixTest, correct_with_constexpr)
@@ -226,7 +228,9 @@ TYPED_TEST(LinAlgMatrixTest, correct_with_one_template_argument_and_constexpr)
     EXPECT_EQ(mat.rows(), M);
     EXPECT_EQ(mat.cols(), M);
 
-    EXPECT_EQ(mat[0][0], 1);
+    int2 c{0, 0};
+
+    EXPECT_EQ(mat[c], 1);
 }
 
 TYPED_TEST(LinAlgMatrixTest, can_change_content)
@@ -243,7 +247,9 @@ TYPED_TEST(LinAlgMatrixTest, can_change_content)
         {
             mat[i][j] = i * mat.rows() + j;
 
-            EXPECT_EQ(mat[i][j], i * mat.rows() + j);
+            int2 c{j, i};
+
+            EXPECT_EQ(mat[c], i * mat.rows() + j);
         }
     }
 }

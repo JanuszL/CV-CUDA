@@ -240,6 +240,34 @@ public:
     }
 
     /**
+     * @brief Subscript operator for read-only access of matrix elements.
+     *
+     * @param[in] c Coordinates (y row and x column) of the matrix element to access
+     *
+     * @return Element (constant reference) of the corresponding row and column
+     */
+    constexpr const __host__ __device__ T &operator[](int2 c) const
+    {
+        assert(c.y >= 0 && c.y < rows());
+        assert(c.x >= 0 && c.x < cols());
+        return m_data[c.y][c.x];
+    }
+
+    /**
+     * @brief Subscript operator for read-and-write access of matrix elements.
+     *
+     * @param[in] c Coordinates (y row and x column) of the matrix element to access
+     *
+     * @return Element (reference) of the corresponding row and column
+     */
+    constexpr __host__ __device__ T &operator[](int2 c)
+    {
+        assert(c.y >= 0 && c.y < rows());
+        assert(c.x >= 0 && c.x < cols());
+        return m_data[c.y][c.x];
+    }
+
+    /**
      * @brief Get column j of this matrix
      *
      * @param[in] j Index of column to get
