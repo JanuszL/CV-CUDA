@@ -225,7 +225,7 @@ protected:
 
 private:
     const void *m_data                         = nullptr;
-    int         m_pitchBytes[kVariablePitches] = {0};
+    int         m_pitchBytes[kVariablePitches] = {};
 };
 
 template<typename T, int... Pitches>
