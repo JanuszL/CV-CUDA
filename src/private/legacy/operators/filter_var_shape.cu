@@ -378,4 +378,257 @@ ErrorCode LaplacianVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inD
     return ErrorCode::SUCCESS;
 }
 
+// GaussianVarShape ------------------------------------------------------------
+
+__global__ void CalculateGaussianKernel(cuda::Tensor3DWrap<float> kernel, int dataKernelSize, Size2D maxKernelSize,
+                                        cuda::Tensor1DWrap<int2> kernelSizeArr, cuda::Tensor1DWrap<double2> sigmaArr)
+{
+    int3 coord = cuda::StaticCast<int>(blockIdx * blockDim + threadIdx);
+
+    int2 kernelSize = *kernelSizeArr.ptr(coord.z);
+
+    if (coord.x >= kernelSize.x || coord.y >= kernelSize.y)
+    {
+        return;
+    }
+
+    double2 sigma = *sigmaArr.ptr(coord.z);
+
+    if (sigma.y <= 0)
+        sigma.y = sigma.x;
+
+    // automatic detection of kernel size from sigma
+    if (kernelSize.x <= 0 && sigma.x > 0)
+        kernelSize.x = cuda::round<int>(sigma.x * dataKernelSize * 2 + 1) | 1;
+    if (kernelSize.y <= 0 && sigma.y > 0)
+        kernelSize.y = cuda::round<int>(sigma.y * dataKernelSize * 2 + 1) | 1;
+
+    assert(kernelSize.x > 0 && (kernelSize.x % 2 == 1) && kernelSize.x <= maxKernelSize.w);
+    assert(kernelSize.y > 0 && (kernelSize.y % 2 == 1) && kernelSize.y <= maxKernelSize.h);
+
+    int2 half{kernelSize.x / 2, kernelSize.y / 2};
+
+    sigma.x = cuda::max(sigma.x, 0.0);
+    sigma.y = cuda::max(sigma.y, 0.0);
+
+    float sx = 2.f * sigma.x * sigma.x;
+    float sy = 2.f * sigma.y * sigma.y;
+    float s  = 2.f * sigma.x * sigma.y * M_PI;
+
+    float sum = 0.f;
+
+    for (int y = -half.y; y <= half.y; ++y)
+    {
+        for (int x = -half.x; x <= half.x; ++x)
+        {
+            sum += cuda::exp(-((x * x) / sx + (y * y) / sy)) / s;
+        }
+    }
+
+    int x = coord.x - half.x;
+    int y = coord.y - half.y;
+
+    kernel[coord] = cuda::exp(-((x * x) / sx + (y * y) / sy)) / (s * sum);
+}
+
+template<typename D, typename BrdRd>
+__global__ void gaussianFilter2D(const BrdRd src, Ptr2dVarShapeNHWC<D> dst, cuda::Tensor3DWrap<float> kernel,
+                                 cuda::Tensor1DWrap<int2> kernelSizeArr)
+{
+    using work_type = cuda::ConvertBaseTypeTo<float, D>;
+    work_type res   = cuda::SetAll<work_type>(0);
+
+    const int x         = blockIdx.x * blockDim.x + threadIdx.x;
+    const int y         = blockIdx.y * blockDim.y + threadIdx.y;
+    const int batch_idx = get_batch_idx();
+
+    if (x >= dst.at_cols(batch_idx) || y >= dst.at_rows(batch_idx))
+        return;
+
+    int2 kernelSize = *kernelSizeArr.ptr(batch_idx);
+
+    int2 anchor{kernelSize.x / 2, kernelSize.y / 2};
+
+    for (int i = 0; i < kernelSize.y; ++i)
+    {
+        for (int j = 0; j < kernelSize.x; ++j)
+        {
+            res = res + (src(batch_idx, y - anchor.y + i, x - anchor.x + j)) * (*kernel.ptr(batch_idx, i, j));
+        }
+    }
+
+    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<cuda::BaseType<D>>(res);
+}
+
+template<typename D, template<typename> class Brd>
+void GaussianFilter2DCaller(const IImageBatchVarShapeDataPitchDevice &inData,
+                            const IImageBatchVarShapeDataPitchDevice &outData,
+                            const cuda::Tensor3DWrap<float>          &kernelTensor,
+                            const cuda::Tensor1DWrap<int2> &kernelSizeTensor, float borderValue, cudaStream_t stream)
+{
+    Ptr2dVarShapeNHWC<D> src(inData);
+    Ptr2dVarShapeNHWC<D> dst(outData);
+
+    using work_type = cuda::ConvertBaseTypeTo<float, D>;
+
+    dim3 block(16, 16);
+    dim3 grid(divUp(inData.maxSize().w, block.x), divUp(inData.maxSize().h, block.y), outData.numImages());
+
+    Brd<work_type>                                     brd(0, 0, cuda::SetAll<work_type>(borderValue));
+    BorderReader<Ptr2dVarShapeNHWC<D>, Brd<work_type>> brdSrc(src, brd);
+
+#ifdef CUDA_DEBUG_LOG
+    checkCudaErrors(cudaStreamSynchronize(stream));
+    checkCudaErrors(cudaGetLastError());
+#endif
+
+    gaussianFilter2D<D, BorderReader<Ptr2dVarShapeNHWC<D>, Brd<work_type>>>
+        <<<grid, block, 0, stream>>>(brdSrc, dst, kernelTensor, kernelSizeTensor);
+    checkKernelErrors();
+#ifdef CUDA_DEBUG_LOG
+    checkCudaErrors(cudaStreamSynchronize(stream));
+    checkCudaErrors(cudaGetLastError());
+#endif
+}
+
+template<typename D>
+void GaussianFilter2D(const IImageBatchVarShapeDataPitchDevice &inData,
+                      const IImageBatchVarShapeDataPitchDevice &outData, const cuda::Tensor3DWrap<float> &kernelTensor,
+                      const cuda::Tensor1DWrap<int2> &kernelSizeTensor, NVCVBorderType borderMode, float borderValue,
+                      cudaStream_t stream)
+{
+    typedef void (*func_t)(const IImageBatchVarShapeDataPitchDevice &inData,
+                           const IImageBatchVarShapeDataPitchDevice &outData,
+                           const cuda::Tensor3DWrap<float>          &kernelTensor,
+                           const cuda::Tensor1DWrap<int2> &kernelSizeTensor, float borderValue, cudaStream_t stream);
+
+    static const func_t funcs[] = {GaussianFilter2DCaller<D, BrdConstant>, GaussianFilter2DCaller<D, BrdReplicate>,
+                                   GaussianFilter2DCaller<D, BrdReflect>, GaussianFilter2DCaller<D, BrdWrap>,
+                                   GaussianFilter2DCaller<D, BrdReflect101>};
+
+    funcs[borderMode](inData, outData, kernelTensor, kernelSizeTensor, borderValue, stream);
+}
+
+GaussianVarShape::GaussianVarShape(DataShape max_input_shape, DataShape max_output_shape, Size2D maxKernelSize,
+                                   int maxBatchSize)
+    : CudaBaseOp(max_input_shape, max_output_shape)
+    , m_maxKernelSize(maxKernelSize)
+    , m_maxBatchSize(maxBatchSize)
+{
+    if (maxBatchSize > 0)
+    {
+        NVCV_CHECK_THROW(cudaMalloc(&m_kernel, maxKernelSize.w * maxKernelSize.h * maxBatchSize * sizeof(float)));
+    }
+}
+
+GaussianVarShape::~GaussianVarShape()
+{
+    NVCV_CHECK_LOG(cudaFree(m_kernel));
+}
+
+size_t GaussianVarShape::calBufferSize(Size2D maxKernelSize, int maxBatchSize)
+{
+    return maxKernelSize.w * maxKernelSize.h * maxBatchSize * sizeof(float);
+}
+
+ErrorCode GaussianVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData,
+                                  const IImageBatchVarShapeDataPitchDevice &outData,
+                                  const ITensorDataPitchDevice &kernelSize, const ITensorDataPitchDevice &sigma,
+                                  NVCVBorderType borderMode, cudaStream_t stream)
+{
+    if (m_maxBatchSize <= 0 || inData.numImages() > m_maxBatchSize)
+    {
+        LOG_ERROR("Invalid maximum batch size");
+        return ErrorCode::INVALID_PARAMETER;
+    }
+
+    DataFormat input_format  = helpers::GetLegacyDataFormat(inData);
+    DataFormat output_format = helpers::GetLegacyDataFormat(outData);
+    if (input_format != output_format)
+    {
+        LOG_ERROR("Invalid DataFormat between input (" << input_format << ") and output (" << output_format << ")");
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    DataFormat format = input_format;
+
+    if (!(format == kNHWC || format == kHWC))
+    {
+        LOG_ERROR("Invalid DataFormat " << format);
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    if (!(borderMode == NVCV_BORDER_REFLECT101 || borderMode == NVCV_BORDER_REPLICATE
+          || borderMode == NVCV_BORDER_CONSTANT || borderMode == NVCV_BORDER_REFLECT || borderMode == NVCV_BORDER_WRAP))
+    {
+        LOG_ERROR("Invalid borderMode " << borderMode);
+        return ErrorCode::INVALID_PARAMETER;
+    }
+
+    if (!inData.uniqueFormat())
+    {
+        printf("Images in the input batch must all have the same format");
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    DataType data_type = helpers::GetLegacyDataType(inData.uniqueFormat());
+
+    if (!(data_type == kCV_8U || data_type == kCV_16U || data_type == kCV_16S || data_type == kCV_32S
+          || data_type == kCV_32F))
+    {
+        LOG_ERROR("Invalid DataType " << data_type);
+        return ErrorCode::INVALID_DATA_TYPE;
+    }
+
+    const int channels = inData.uniqueFormat().numChannels();
+
+    if (channels > 4)
+    {
+        LOG_ERROR("Invalid channel number " << channels);
+        return ErrorCode::INVALID_DATA_SHAPE;
+    }
+
+    float borderValue = .0f;
+
+    int dataKernelSize = (data_type == kCV_8U ? 3 : 4);
+
+    dim3 block(32, 4);
+    dim3 grid(divUp(m_maxKernelSize.w, block.x), divUp(m_maxKernelSize.h, block.y), outData.numImages());
+
+    cuda::Tensor1DWrap<int2>    kernelSizeTensor(kernelSize);
+    cuda::Tensor1DWrap<double2> sigmaTensor(sigma);
+
+    int kernelPitch2 = static_cast<int>(m_maxKernelSize.w * sizeof(float));
+    int kernelPitch1 = m_maxKernelSize.h * kernelPitch2;
+
+    cuda::Tensor3DWrap<float> kernelTensor(m_kernel, kernelPitch1, kernelPitch2);
+
+    CalculateGaussianKernel<<<grid, block, 0, stream>>>(kernelTensor, dataKernelSize, m_maxKernelSize, kernelSizeTensor,
+                                                        sigmaTensor);
+
+    checkKernelErrors();
+
+    typedef void (*filter2D_t)(
+        const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
+        const cuda::Tensor3DWrap<float> &kernelTensor, const cuda::Tensor1DWrap<int2> &kernelSizeTensor,
+        NVCVBorderType borderMode, float borderValue, cudaStream_t stream);
+
+    static const filter2D_t funcs[6][4] = {
+        { GaussianFilter2D<uchar>, 0,  GaussianFilter2D<uchar3>,  GaussianFilter2D<uchar4>},
+        {                       0, 0,                         0,                         0},
+        {GaussianFilter2D<ushort>, 0, GaussianFilter2D<ushort3>, GaussianFilter2D<ushort4>},
+        { GaussianFilter2D<short>, 0,  GaussianFilter2D<short3>,  GaussianFilter2D<short4>},
+        {   GaussianFilter2D<int>, 0,    GaussianFilter2D<int3>,    GaussianFilter2D<int4>},
+        { GaussianFilter2D<float>, 0,  GaussianFilter2D<float3>,  GaussianFilter2D<float4>},
+    };
+
+    const filter2D_t func = funcs[data_type][channels - 1];
+
+    NVCV_ASSERT(func != 0);
+
+    func(inData, outData, kernelTensor, kernelSizeTensor, borderMode, borderValue, stream);
+
+    return ErrorCode::SUCCESS;
+}
+
 } // namespace nv::cv::legacy::cuda_op

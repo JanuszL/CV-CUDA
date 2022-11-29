@@ -27,6 +27,7 @@
 #include "detail/Export.h"
 
 #include <cuda_runtime.h>
+#include <nvcv/ImageBatch.h>
 #include <nvcv/Status.h>
 #include <nvcv/Tensor.h>
 
@@ -43,12 +44,15 @@ extern "C"
  *                            + Positive value.
  * @param [in] maxKernelHeight The maximum kernel height that will be used by the operator.
  *                             + Positive value.
+ * @param [in] maxVarShapeBatchSize The maximum batch size that will be used by the var-shape operator.
+ *                                  + Positive value.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Handle is null.
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the operator.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_OP_PUBLIC NVCVStatus nvcvopGaussianCreate(NVCVOperatorHandle *handle, int maxKernelWidth, int maxKernelHeight);
+NVCV_OP_PUBLIC NVCVStatus nvcvopGaussianCreate(NVCVOperatorHandle *handle, int maxKernelWidth, int maxKernelHeight,
+                                               int maxVarShapeBatchSize);
 
 /** Executes the Gaussian operation on the given cuda stream.  This operation does not wait for completion.
  *
@@ -120,6 +124,22 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopGaussianCreate(NVCVOperatorHandle *handle, int m
 NVCV_OP_PUBLIC NVCVStatus nvcvopGaussianSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
                                                NVCVTensorHandle out, int kernelWidth, int kernelHeight, double sigmaX,
                                                double sigmaY, NVCVBorderType borderMode);
+
+/**
+ * Executes the Gaussian operation on a batch of images.
+ *
+ * @param[in] in Input image batch.
+ * @param[out] out Output image batch.
+ * @param[in] kernelSize Gaussian kernel size as a Tensor of int2.
+ *                       + Must be of pixel type NVCV_PIXEL_TYPE_2S32
+ * @param[in] sigma Gaussian sigma as a Tensor of double2.
+ *                  + Must be of pixel type NVCV_PIXEL_TYPE_2F64
+ * @param[in] borderMode Border mode to be used when accessing elements outside input image, cf. \p NVCVBorderType.
+ */
+NVCV_OP_PUBLIC NVCVStatus nvcvopGaussianVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
+                                                       NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                                                       NVCVTensorHandle kernelSize, NVCVTensorHandle sigma,
+                                                       NVCVBorderType borderMode);
 
 #ifdef __cplusplus
 }
