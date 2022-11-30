@@ -22,6 +22,7 @@ add_library(nvcv_private_operators STATIC
     OpRotate.cpp
     OpLaplacian.cpp
     OpGaussian.cpp
+    OpErase.cpp
 )
 
 target_include_directories(nvcv_private_operators
