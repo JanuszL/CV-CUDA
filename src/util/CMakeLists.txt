@@ -13,6 +13,8 @@
 set(OPENSSL_USE_STATIC_LIBS TRUE)
 find_package(OpenSSL COMPONENTS Crypto REQUIRED)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE on)
+
 # nvcv_util_sanitizer ---------------------------------
 add_library(nvcv_util_sanitizer
     SanitizerOptions.c
@@ -151,13 +153,19 @@ target_include_directories(nvcv_util
 
 target_link_libraries(nvcv_util
     PUBLIC
-        nvcv_headers
         nvcv_util_sanitizer
         CUDA::cudart_static
     PRIVATE
         OpenSSL::Crypto
         nvcv_util_compat
 )
+
+if(TARGET nvcv_headers)
+    target_link_libraries(nvcv_util PUBLIC nvcv_headers)
+else()
+    get_target_property(NVCV_INCLUDE_DIRS nvcv INTERFACE_INCLUDE_DIRECTORIES )
+    target_include_directories(nvcv_util PUBLIC ${NVCV_INCLUDE_DIRS})
+endif()
 
 target_compile_definitions(nvcv_util
     PUBLIC

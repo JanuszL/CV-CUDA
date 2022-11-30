@@ -16,12 +16,6 @@ if(LTO_ENABLED)
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION on)
 endif()
 
-# general utilities library
-add_subdirectory(util)
-
-# nvcv core private implementation
-add_subdirectory(private)
-
 add_library(nvcv SHARED
     Config.cpp
     Version.cpp
@@ -77,6 +71,12 @@ target_compile_definitions(nvcv PRIVATE -DNVCV_EXPORTING=1)
 # target used when only public headers are needed
 add_library(nvcv_headers INTERFACE)
 target_include_directories(nvcv_headers INTERFACE include ${CMAKE_CURRENT_BINARY_DIR}/include)
+
+# general utilities library
+add_subdirectory(util)
+
+# nvcv core private implementation
+add_subdirectory(private)
 
 # Installer
 
