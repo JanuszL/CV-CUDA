@@ -1,0 +1,54 @@
+# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#
+# SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
+.test_compat_common:
+    extends: .launch_rule
+    stage: compat
+    variables:
+        CUDA_CACHE_DISABLE: 1
+        GIT_STRATEGY: none
+    needs: [ 'b:x64:rel' ]
+    tags: [ linux-x64, test, cuda11 ]
+    script:
+      - 'version=$(cat cvcuda-installer/VERSION)'
+      - 'vermaj=${version%%.*}'
+      - 'rm -rf opt'
+      - 'ar xv cvcuda-installer/nvcv-lib-${version}.deb && tar xvf data.tar.*'
+      - 'ar xv cvcuda-installer/cvcuda-tests-${version}.deb && tar xvf data.tar.*'
+      - 'prefix=$(pwd)/opt/nvidia/cvcuda${vermaj}'
+      - 'tests=$(find $prefix/bin -executable -type f -name "nvcv_test_*" -not -name "*python*")'
+      - 'LD_LIBRARY_PATH=$prefix/lib/x86_64-linux-gnu'
+      - 'for exec in $tests; do'
+      - '   echo $exec && $exec'
+      - 'done'
+
+t:compat:centos7:
+    extends: .test_compat_common
+    image: nvidia/cuda:11.8.0-runtime-centos7
+    tags: [ linux-x64, test, cuda11, centos7 ]
+
+.install_ubuntu_deps:
+    before_script:
+      - 'apt-get update'
+      - 'DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends binutils xz-utils tar'
+
+t:compat:ub1804:
+    extends:
+      - .test_compat_common
+      - .install_ubuntu_deps
+    image: nvidia/cuda:11.8.0-runtime-ubuntu18.04
+
+t:compat:ub2004:
+    extends:
+      - .test_compat_common
+      - .install_ubuntu_deps
+    image: nvidia/cuda:11.8.0-runtime-ubuntu20.04

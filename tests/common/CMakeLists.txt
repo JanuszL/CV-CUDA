@@ -40,6 +40,7 @@ target_link_libraries(nvcv_test_common
     PUBLIC
         nvcv_headers
         nvcv_util
+        nvcv_util_compat
 )
 
 # nvcv_test_common_system ==============================

@@ -31,6 +31,111 @@ if(ENABLE_SANITIZER)
         -Wl,-u__ubsan_default_suppressions)
 endif()
 
+# nvcv_util_compat ---------------------------------
+
+set_directory_properties(PROPERTIES CMAKE_CONFIGURE_DEPENDS compat_symbols.txt)
+
+# Load up the symbols that must be replaced
+file(STRINGS compat_symbols.txt symbols)
+set(srccompat "")
+set(linkcompat "")
+foreach(sym ${symbols})
+    # Skip lines that start with #
+    if(NOT "${sym}" MATCHES "^#")
+        string(REGEX REPLACE "([^@]+).*" "\\1" fnname ${sym})
+
+        # tell linker to resolve "fnname" to a wrapper symbol, __wrap_fname
+        list(APPEND linkcompat "-Wl,--wrap=${fnname}")
+
+        # Define the wrapper that will jump into the old symbol
+        set(srccompat " \
+${srccompat}
+__attribute__((used,naked))
+void __wrap_${fnname}()
+{
+    asm(\".symver __my_${fnname},${sym}\");
+    asm(\"jmp __my_${fnname}\" ::);
+}
+")
+    endif()
+endforeach()
+
+# Same as configure_file, but create backups instead
+# of overwriten existing destination file.
+macro(safe_configure_file TEMPLATE DEST)
+    set(dest ${DEST})
+    cmake_path(IS_RELATIVE dest isrel)
+    if(isrel)
+        set(dest ${CMAKE_CURRENT_BINARY_DIR}/${dest})
+    endif()
+
+    configure_file(${TEMPLATE} ${dest}.new ${ARGN})
+
+    if(EXISTS ${dest})
+        file(READ ${dest} orig_data)
+        file(READ ${dest}.new new_data)
+        if(NOT orig_data STREQUAL new_data)
+            set(idx 0)
+            while(EXISTS ${dest}.bak${idx})
+                math(EXPR idx "${idx}+1")
+            endwhile()
+
+            file(COPY_FILE ${dest} ${dest}.bak${idx})
+            file(RENAME ${dest}.new ${dest})
+        else()
+            file(REMOVE ${dest}.new)
+        endif()
+    else()
+        file(RENAME ${dest}.new ${dest})
+    endif()
+endmacro()
+
+# Replace the wrappers into the template source/header
+set(TEMPLATE "${srccompat}")
+safe_configure_file(Compat.c.in Compat.c @ONLY)
+
+add_library(nvcv_util_compat OBJECT
+    Compat.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/Compat.c
+)
+
+# Compat.c needs Compat.h
+get_source_file_property(COMPAT_INCDIRS ${CMAKE_CURRENT_BINARY_DIR}/Compat.c INCLUDE_DIRECTORIES)
+if(COMPAT_INCDIRS)
+    list(APPEND COMPAT_INCDIRS ${CMAKE_CURRENT_SOURCE_DIR}/..)
+else()
+    set(COMPAT_INCDIRS ${CMAKE_CURRENT_SOURCE_DIR}/..)
+endif()
+set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/Compat.c PROPERTIES INCLUDE_DIRECTORIES "${COMPAT_INCDIRS}")
+
+target_include_directories(nvcv_util_compat
+    INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+)
+
+# glibc-2.17 came split into different libraries.
+# We have to link against them instead of only against libc.so.
+# In later glibc versions, these libraries
+# are still present, but their empty. The symbols are all in libc.
+
+# We'll link to the corresponding stub libraries so that glibc<2.30's
+# dl-reloc can find the symbols in the correct sonames. Later glibc
+# can resolve symbols in different recorded sonames.
+
+target_link_options(nvcv_util_compat
+    PUBLIC
+        -static-libstdc++
+        -static-libgcc
+        -Wl,--wrap=__libc_start_main
+        -Wl,-u__cxa_thread_atexit_impl
+        ${linkcompat}
+        -Wl,--push-state,--no-as-needed
+        ${CMAKE_CURRENT_SOURCE_DIR}/stubs/libdl-2.17_stub.so
+        ${CMAKE_CURRENT_SOURCE_DIR}/stubs/librt-2.17_stub.so
+        ${CMAKE_CURRENT_SOURCE_DIR}/stubs/libpthread-2.17_stub.so
+        -Wl,--pop-state
+)
+
 # nvcv_util ---------------------------------
 add_library(nvcv_util
     Assert.cpp
@@ -51,6 +156,7 @@ target_link_libraries(nvcv_util
         CUDA::cudart_static
     PRIVATE
         OpenSSL::Crypto
+        nvcv_util_compat
 )
 
 target_compile_definitions(nvcv_util

@@ -1,0 +1,75 @@
+# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#
+# SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
+# Select symbol versions so that we can support the following distros:
+# * CentOS 7 (oldest)
+# * Ubuntu 18.04
+# * Ubuntu 20.04
+
+dlerror@GLIBC_2.2.5
+dlopen@GLIBC_2.2.5
+dlinfo@GLIBC_2.3.3
+dlsym@GLIBC_2.2.5
+dlclose@GLIBC_2.2.5
+__pthread_key_create@GLIBC_2.2.5
+pthread_join@GLIBC_2.2.5
+pthread_mutexattr_destroy@GLIBC_2.2.5
+pthread_rwlock_tryrdlock@GLIBC_2.2.5
+pthread_rwlock_destroy@GLIBC_2.2.5
+pthread_setspecific@GLIBC_2.2.5
+pthread_rwlock_timedwrlock@GLIBC_2.2.5
+sem_destroy@GLIBC_2.2.5
+sem_wait@GLIBC_2.2.5
+pthread_create@GLIBC_2.2.5
+pthread_rwlock_rdlock@GLIBC_2.2.5
+pthread_rwlock_timedrdlock@GLIBC_2.2.5
+pthread_kill@GLIBC_2.2.5
+pthread_mutexattr_init@GLIBC_2.2.5
+pthread_key_create@GLIBC_2.2.5
+pthread_rwlock_init@GLIBC_2.2.5
+pthread_rwlockattr_init@GLIBC_2.2.5
+sem_init@GLIBC_2.2.5
+pthread_rwlock_unlock@GLIBC_2.2.5
+pthread_detach@GLIBC_2.2.5
+pthread_mutexattr_setpshared@GLIBC_2.2.5
+sem_timedwait@GLIBC_2.2.5
+pthread_rwlock_wrlock@GLIBC_2.2.5
+sem_post@GLIBC_2.2.5
+pthread_rwlock_trywrlock@GLIBC_2.2.5
+pthread_condattr_setpshared@GLIBC_2.2.5
+sem_trywait@GLIBC_2.2.5
+pthread_key_delete@GLIBC_2.2.5
+pthread_getspecific@GLIBC_2.2.5
+pthread_mutexattr_settype@GLIBC_2.2.5
+pthread_mutex_trylock@GLIBC_2.2.5
+pthread_rwlockattr_setpshared@GLIBC_2.2.5
+pthread_rwlockattr_destroy@GLIBC_2.2.5
+shm_unlink@GLIBC_2.2.5
+shm_open@GLIBC_2.2.5
+dlvsym@GLIBC_2.2.5
+pthread_once@GLIBC_2.2.5
+statfs64@GLIBC_2.2.5
+statfs@GLIBC_2.2.5
+statvfs64@GLIBC_2.2.5
+statvfs@GLIBC_2.2.5
+fstatfs64@GLIBC_2.2.5
+fstatfs@GLIBC_2.2.5
+fstatvfs64@GLIBC_2.2.5
+fstatvfs@GLIBC_2.2.5
+dladdr1@GLIBC_2.3.3
+dladdr@GLIBC_2.2.5
+log2@GLIBC_2.2.5
+log2f@GLIBC_2.2.5
+log2l@GLIBC_2.2.5
+exp@GLIBC_2.2.5
+expf@GLIBC_2.2.5
+pow@GLIBC_2.2.5
