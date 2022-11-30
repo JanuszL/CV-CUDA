@@ -30,24 +30,35 @@
       - 'for exec in $tests; do'
       - '   echo $exec && $exec'
       - 'done'
+      - 'if [ "$PYTHONVER" ]; then'
+      - '   ar xv cvcuda-installer/nvcv-python${PYTHONVER}-${version}.deb && tar xvf data.tar.*'
+      - '   PYTHONPATH=$prefix/lib/x86_64-linux-gnu/python python$PYTHONVER -c "import nvcv; print(nvcv.Image((256,64),nvcv.Format.RGBA8))"'
+      - 'fi'
+
+.install_ubuntu_deps:
+    before_script:
+      - 'apt-get update'
+      - 'if [ "$PYTHONVER" ]; then'
+      - '   pythonpkg=python$PYTHONVER'
+      - 'fi'
+      - 'DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends binutils xz-utils tar $pythonpkg'
 
 t:compat:centos7:
     extends: .test_compat_common
     image: nvidia/cuda:11.8.0-runtime-centos7
     tags: [ linux-x64, test, cuda11, centos7 ]
 
-.install_ubuntu_deps:
-    before_script:
-      - 'apt-get update'
-      - 'DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends binutils xz-utils tar'
-
 t:compat:ub1804:
+    variables:
+      PYTHONVER: '3.7'
     extends:
       - .test_compat_common
       - .install_ubuntu_deps
     image: nvidia/cuda:11.8.0-runtime-ubuntu18.04
 
 t:compat:ub2004:
+    variables:
+      PYTHONVER: '3.8'
     extends:
       - .test_compat_common
       - .install_ubuntu_deps
