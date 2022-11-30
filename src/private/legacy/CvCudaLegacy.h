@@ -1509,6 +1509,87 @@ private:
     float *m_kernel        = nullptr;
 };
 
+class AverageBlurVarShape : public CudaBaseOp
+{
+public:
+    AverageBlurVarShape() = delete;
+
+    AverageBlurVarShape(DataShape max_input_shape, DataShape max_output_shape, Size2D maxKernelSize, int maxBatchSize);
+
+    ~AverageBlurVarShape();
+
+    /**
+     * Limitations:
+     *
+     * Input:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | Yes
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Output:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | Yes
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Input/Output dependency
+     *
+     *      Property      |  Input == Output
+     *     -------------- | -------------
+     *      Data Layout   | Yes
+     *      Data Type     | Yes
+     *      Number        | Yes
+     *      Channels      | Yes
+     *      Width         | Yes
+     *      Height        | Yes
+     *
+     * @brief Blur each image using an average filter.
+     * @param inData Input images.
+     * @param outData Output images.
+     * @param kernelSize Average blur kernel size.
+     *                     + Must be 1D tensor of int2, NVCV_PIXEL_TYPE_2S32
+     * @param kernelAnchor Anchor of the kernel that indicates the relative position of a filtered point within the kernel.
+     * (-1,-1) means that the anchor is at the kernel center.
+     *                     + Must be 1D tensor of int2, NVCV_PIXEL_TYPE_2S32
+     * @param borderMode pixel extrapolation method, e.g. cv::BORDER_CONSTANT
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
+                    const ITensorDataPitchDevice &kernelSize, const ITensorDataPitchDevice &kernelAnchor,
+                    NVCVBorderType borderMode, cudaStream_t stream);
+
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param maxKernelSize Maximum Gaussian kernel size that may be used
+     * @param maxBatchSize Maximum batch size that may be used
+     */
+    size_t calBufferSize(Size2D maxKernelSize, int maxBatchSize);
+
+private:
+    Size2D m_maxKernelSize = {0, 0};
+    int    m_maxBatchSize  = 0;
+    float *m_kernel        = nullptr;
+};
+
 } // namespace nv::cv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H

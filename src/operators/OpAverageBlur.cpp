@@ -11,6 +11,7 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <operators/OpAverageBlur.hpp>
 #include <private/core/Exception.hpp>
@@ -23,7 +24,7 @@ namespace priv    = nv::cv::priv;
 namespace priv_op = nv::cvop::priv;
 
 NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopAverageBlurCreate,
-                (NVCVOperatorHandle * handle, int maxKernelWidth, int maxKernelHeight))
+                (NVCVOperatorHandle * handle, int maxKernelWidth, int maxKernelHeight, int maxVarShapeBatchSize))
 {
     return priv::ProtectCall(
         [&]
@@ -34,7 +35,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopAverageBlurCreate,
             }
 
             *handle = reinterpret_cast<NVCVOperatorHandle>(
-                new priv_op::AverageBlur(nv::cv::Size2D{maxKernelWidth, maxKernelHeight}));
+                new priv_op::AverageBlur(nv::cv::Size2D{maxKernelWidth, maxKernelHeight}, maxVarShapeBatchSize));
         });
 }
 
@@ -49,5 +50,19 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopAverageBlurSubmit,
             priv::ToDynamicRef<priv_op::AverageBlur>(handle)(stream, input, output,
                                                              nv::cv::Size2D{kernelWidth, kernelHeight},
                                                              int2{kernelAnchorX, kernelAnchorY}, borderMode);
+        });
+}
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopAverageBlurVarShapeSubmit,
+                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                 NVCVTensorHandle kernelSize, NVCVTensorHandle kernelAnchor, NVCVBorderType borderMode))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            nv::cv::ImageBatchVarShapeWrapHandle inWrap(in), outWrap(out);
+            nv::cv::TensorWrapHandle             kernelSizeWrap(kernelSize), kernelAnchorWrap(kernelAnchor);
+            priv::ToDynamicRef<priv_op::AverageBlur>(handle)(stream, inWrap, outWrap, kernelSizeWrap, kernelAnchorWrap,
+                                                             borderMode);
         });
 }

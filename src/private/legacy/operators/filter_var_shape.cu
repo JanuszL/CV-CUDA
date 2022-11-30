@@ -631,4 +631,244 @@ ErrorCode GaussianVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inDa
     return ErrorCode::SUCCESS;
 }
 
+// AverageBlurVarShape ---------------------------------------------------------
+
+__global__ void compute_average_blur_kernel(cuda::Tensor3DWrap<float> kernel, cuda::Tensor1DWrap<int2> kernelSizeArr,
+                                            cuda::Tensor1DWrap<int2> kernelAnchorArr)
+{
+    int3 coord = cuda::StaticCast<int>(blockIdx * blockDim + threadIdx);
+
+    int2 kernelSize = *kernelSizeArr.ptr(coord.z);
+
+    if (coord.x >= kernelSize.x || coord.y >= kernelSize.y)
+    {
+        return;
+    }
+
+    bool kernelAnchorUpdated = false;
+    int2 kernelAnchor        = *kernelAnchorArr.ptr(coord.z);
+
+    if (kernelAnchor.x < 0)
+    {
+        kernelAnchor.x      = kernelSize.x / 2;
+        kernelAnchorUpdated = true;
+    }
+
+    if (kernelAnchor.y < 0)
+    {
+        kernelAnchor.y      = kernelSize.y / 2;
+        kernelAnchorUpdated = true;
+    }
+
+    if (kernelAnchorUpdated)
+    {
+        *kernelAnchorArr.ptr(coord.z) = kernelAnchor;
+    }
+
+    kernel[coord] = 1.f / (kernelSize.x * kernelSize.y);
+}
+
+template<typename D, typename BrdRd>
+__global__ void avgBlurFilter2D(const BrdRd src, Ptr2dVarShapeNHWC<D> dst, cuda::Tensor3DWrap<float> kernel,
+                                cuda::Tensor1DWrap<int2> kernelSizeArr, cuda::Tensor1DWrap<int2> kernelAnchorArr)
+{
+    using work_type = cuda::ConvertBaseTypeTo<float, D>;
+    work_type res   = cuda::SetAll<work_type>(0);
+
+    const int x         = blockIdx.x * blockDim.x + threadIdx.x;
+    const int y         = blockIdx.y * blockDim.y + threadIdx.y;
+    const int batch_idx = get_batch_idx();
+
+    if (x >= dst.at_cols(batch_idx) || y >= dst.at_rows(batch_idx))
+        return;
+
+    int2 kernelSize = *kernelSizeArr.ptr(batch_idx);
+
+    int2 anchor = *kernelAnchorArr.ptr(batch_idx);
+
+    for (int i = 0; i < kernelSize.y; ++i)
+    {
+        for (int j = 0; j < kernelSize.x; ++j)
+        {
+            res = res + (src(batch_idx, y - anchor.y + i, x - anchor.x + j)) * (*kernel.ptr(batch_idx, i, j));
+        }
+    }
+
+    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<cuda::BaseType<D>>(res);
+}
+
+template<typename D, template<typename> class Brd>
+void AverageBlurFilter2DCaller(const IImageBatchVarShapeDataPitchDevice &inData,
+                               const IImageBatchVarShapeDataPitchDevice &outData,
+                               const cuda::Tensor3DWrap<float>          &kernelTensor,
+                               const cuda::Tensor1DWrap<int2>           &kernelSizeTensor,
+                               const cuda::Tensor1DWrap<int2> &kernelAnchorTensor, float borderValue,
+                               cudaStream_t stream)
+{
+    Ptr2dVarShapeNHWC<D> src(inData);
+    Ptr2dVarShapeNHWC<D> dst(outData);
+
+    using work_type = cuda::ConvertBaseTypeTo<float, D>;
+
+    dim3 block(16, 16);
+    dim3 grid(divUp(inData.maxSize().w, block.x), divUp(inData.maxSize().h, block.y), outData.numImages());
+
+    Brd<work_type>                                     brd(0, 0, cuda::SetAll<work_type>(borderValue));
+    BorderReader<Ptr2dVarShapeNHWC<D>, Brd<work_type>> brdSrc(src, brd);
+
+#ifdef CUDA_DEBUG_LOG
+    checkCudaErrors(cudaStreamSynchronize(stream));
+    checkCudaErrors(cudaGetLastError());
+#endif
+
+    avgBlurFilter2D<D, BorderReader<Ptr2dVarShapeNHWC<D>, Brd<work_type>>>
+        <<<grid, block, 0, stream>>>(brdSrc, dst, kernelTensor, kernelSizeTensor, kernelAnchorTensor);
+    checkKernelErrors();
+#ifdef CUDA_DEBUG_LOG
+    checkCudaErrors(cudaStreamSynchronize(stream));
+    checkCudaErrors(cudaGetLastError());
+#endif
+}
+
+template<typename D>
+void AverageBlurFilter2D(const IImageBatchVarShapeDataPitchDevice &inData,
+                         const IImageBatchVarShapeDataPitchDevice &outData,
+                         const cuda::Tensor3DWrap<float>          &kernelTensor,
+                         const cuda::Tensor1DWrap<int2>           &kernelSizeTensor,
+                         const cuda::Tensor1DWrap<int2> &kernelAnchorTensor, NVCVBorderType borderMode,
+                         float borderValue, cudaStream_t stream)
+{
+    typedef void (*func_t)(
+        const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
+        const cuda::Tensor3DWrap<float> &kernelTensor, const cuda::Tensor1DWrap<int2> &kernelSizeTensor,
+        const cuda::Tensor1DWrap<int2> &kernelAnchorTensor, float borderValue, cudaStream_t stream);
+
+    static const func_t funcs[] = {AverageBlurFilter2DCaller<D, BrdConstant>,
+                                   AverageBlurFilter2DCaller<D, BrdReplicate>, AverageBlurFilter2DCaller<D, BrdReflect>,
+                                   AverageBlurFilter2DCaller<D, BrdWrap>, AverageBlurFilter2DCaller<D, BrdReflect101>};
+
+    funcs[borderMode](inData, outData, kernelTensor, kernelSizeTensor, kernelAnchorTensor, borderValue, stream);
+}
+
+AverageBlurVarShape::AverageBlurVarShape(DataShape max_input_shape, DataShape max_output_shape, Size2D maxKernelSize,
+                                         int maxBatchSize)
+    : CudaBaseOp(max_input_shape, max_output_shape)
+    , m_maxKernelSize(maxKernelSize)
+    , m_maxBatchSize(maxBatchSize)
+{
+    if (maxBatchSize > 0)
+    {
+        NVCV_CHECK_THROW(cudaMalloc(&m_kernel, maxKernelSize.w * maxKernelSize.h * maxBatchSize * sizeof(float)));
+    }
+}
+
+AverageBlurVarShape::~AverageBlurVarShape()
+{
+    NVCV_CHECK_LOG(cudaFree(m_kernel));
+}
+
+size_t AverageBlurVarShape::calBufferSize(Size2D maxKernelSize, int maxBatchSize)
+{
+    return maxKernelSize.w * maxKernelSize.h * maxBatchSize * sizeof(float);
+}
+
+ErrorCode AverageBlurVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData,
+                                     const IImageBatchVarShapeDataPitchDevice &outData,
+                                     const ITensorDataPitchDevice             &kernelSize,
+                                     const ITensorDataPitchDevice &kernelAnchor, NVCVBorderType borderMode,
+                                     cudaStream_t stream)
+{
+    if (m_maxBatchSize <= 0 || inData.numImages() > m_maxBatchSize)
+    {
+        LOG_ERROR("Invalid maximum batch size");
+        return ErrorCode::INVALID_PARAMETER;
+    }
+
+    DataFormat input_format  = helpers::GetLegacyDataFormat(inData);
+    DataFormat output_format = helpers::GetLegacyDataFormat(outData);
+    if (input_format != output_format)
+    {
+        LOG_ERROR("Invalid DataFormat between input (" << input_format << ") and output (" << output_format << ")");
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    DataFormat format = input_format;
+
+    if (!(format == kNHWC || format == kHWC))
+    {
+        LOG_ERROR("Invalid DataFormat " << format);
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    if (!(borderMode == NVCV_BORDER_REFLECT101 || borderMode == NVCV_BORDER_REPLICATE
+          || borderMode == NVCV_BORDER_CONSTANT || borderMode == NVCV_BORDER_REFLECT || borderMode == NVCV_BORDER_WRAP))
+    {
+        LOG_ERROR("Invalid borderMode " << borderMode);
+        return ErrorCode::INVALID_PARAMETER;
+    }
+
+    if (!inData.uniqueFormat())
+    {
+        printf("Images in the input batch must all have the same format");
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    DataType data_type = helpers::GetLegacyDataType(inData.uniqueFormat());
+
+    if (!(data_type == kCV_8U || data_type == kCV_16U || data_type == kCV_16S || data_type == kCV_32S
+          || data_type == kCV_32F))
+    {
+        LOG_ERROR("Invalid DataType " << data_type);
+        return ErrorCode::INVALID_DATA_TYPE;
+    }
+
+    const int channels = inData.uniqueFormat().numChannels();
+
+    if (channels > 4)
+    {
+        printf("Invalid channel number %d\n", channels);
+        return ErrorCode::INVALID_DATA_SHAPE;
+    }
+
+    float borderValue = .0f;
+
+    dim3 block(32, 4);
+    dim3 grid(divUp(m_maxKernelSize.w, block.x), divUp(m_maxKernelSize.h, block.y), outData.numImages());
+
+    cuda::Tensor1DWrap<int2> kernelSizeTensor(kernelSize);
+    cuda::Tensor1DWrap<int2> kernelAnchorTensor(kernelAnchor);
+
+    int kernelPitch2 = static_cast<int>(m_maxKernelSize.w * sizeof(float));
+    int kernelPitch1 = m_maxKernelSize.h * kernelPitch2;
+
+    cuda::Tensor3DWrap<float> kernelTensor(m_kernel, kernelPitch1, kernelPitch2);
+
+    compute_average_blur_kernel<<<grid, block, 0, stream>>>(kernelTensor, kernelSizeTensor, kernelAnchorTensor);
+
+    checkKernelErrors();
+
+    typedef void (*filter2D_t)(
+        const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
+        const cuda::Tensor3DWrap<float> &kernelTensor, const cuda::Tensor1DWrap<int2> &kernelSizeTensor,
+        const cuda::Tensor1DWrap<int2> &kernelAnchorTensor, NVCVBorderType borderMode, float borderValue,
+        cudaStream_t stream);
+
+    static const filter2D_t funcs[6][4] = {
+        { AverageBlurFilter2D<uchar>, 0,  AverageBlurFilter2D<uchar3>,  AverageBlurFilter2D<uchar4>},
+        {                          0, 0,                            0,                            0},
+        {AverageBlurFilter2D<ushort>, 0, AverageBlurFilter2D<ushort3>, AverageBlurFilter2D<ushort4>},
+        { AverageBlurFilter2D<short>, 0,  AverageBlurFilter2D<short3>,  AverageBlurFilter2D<short4>},
+        {   AverageBlurFilter2D<int>, 0,    AverageBlurFilter2D<int3>,    AverageBlurFilter2D<int4>},
+        { AverageBlurFilter2D<float>, 0,  AverageBlurFilter2D<float3>,  AverageBlurFilter2D<float4>},
+    };
+
+    const filter2D_t func = funcs[data_type][channels - 1];
+
+    NVCV_ASSERT(func != 0);
+
+    func(inData, outData, kernelTensor, kernelSizeTensor, kernelAnchorTensor, borderMode, borderValue, stream);
+
+    return ErrorCode::SUCCESS;
+}
+
 } // namespace nv::cv::legacy::cuda_op
