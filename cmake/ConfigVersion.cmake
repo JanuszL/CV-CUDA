@@ -83,7 +83,11 @@ function(configure_symbol_versioning dso_target VERPREFIX input_targets)
         get_target_property(tgt_srcdir ${tgt} SOURCE_DIR)
 
         foreach(src ${tgt_sources})
-            list(APPEND ALL_SOURCES ${tgt_srcdir}/${src})
+            if(${src} MATCHES "^/") # absolute paths?
+                list(APPEND ALL_SOURCES ${src})
+            else()
+                list(APPEND ALL_SOURCES ${tgt_srcdir}/${src})
+            endif()
         endforeach()
     endforeach()
 
