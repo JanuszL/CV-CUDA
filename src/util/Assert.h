@@ -14,16 +14,21 @@
 #ifndef NVCV_UTIL_ASSERT_H
 #define NVCV_UTIL_ASSERT_H
 
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C"
+#    define NVCV_ASSERT_NORETURN [[noreturn]]
 {
+#else
+#    define NVCV_ASSERT_NORETURN __attribute__((noreturn))
 #endif
 
 #ifdef NVCV_ASSERT_OVERRIDE_HEADER
 #    include NVCV_ASSERT_OVERRIDE_HEADER
 #endif
 
-[[noreturn]] void NvCVAssert(const char *file, int line, const char *cond);
+NVCV_ASSERT_NORETURN void NvCVAssert(const char *file, int line, const char *cond);
 
 #if !defined(NVCV_DEBUG)
 #    define NVCV_DEBUG (!NDEBUG)
@@ -34,7 +39,7 @@ extern "C"
 #    define NVCV_SOURCE_FILE_LINENO    __LINE__
 #    define NVCV_OPTIONAL_STRINGIFY(X) #    X
 #else
-#    define NVCV_SOURCE_FILE_NAME      nullptr
+#    define NVCV_SOURCE_FILE_NAME      NULL
 #    define NVCV_SOURCE_FILE_LINENO    0
 #    define NVCV_OPTIONAL_STRINGIFY(X) ""
 #endif
