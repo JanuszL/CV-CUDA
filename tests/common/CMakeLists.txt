@@ -18,6 +18,7 @@ add_library(nvcv_test_common STATIC
     Printers.cpp
     BorderUtils.cpp
     ConvUtils.cpp
+    TensorDataUtils.cpp
 )
 
 target_include_directories(nvcv_test_common
