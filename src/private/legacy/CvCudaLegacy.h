@@ -142,6 +142,34 @@ struct WarpAffineTransform
     float xform[9];
 };
 
+struct PerspectiveTransform
+{
+    PerspectiveTransform(const float *transMatrix)
+    {
+        xform[0] = transMatrix[0];
+        xform[1] = transMatrix[1];
+        xform[2] = transMatrix[2];
+        xform[3] = transMatrix[3];
+        xform[4] = transMatrix[4];
+        xform[5] = transMatrix[5];
+        xform[6] = transMatrix[6];
+        xform[7] = transMatrix[7];
+        xform[8] = transMatrix[8];
+    }
+
+    static __device__ __forceinline__ float2 calcCoord(const float *c_warpMat, int x, int y)
+    {
+        const float coeff = 1.0f / (c_warpMat[6] * x + c_warpMat[7] * y + c_warpMat[8]);
+
+        const float xcoo = coeff * (c_warpMat[0] * x + c_warpMat[1] * y + c_warpMat[2]);
+        const float ycoo = coeff * (c_warpMat[3] * x + c_warpMat[4] * y + c_warpMat[5]);
+
+        return make_float2(xcoo, ycoo);
+    }
+
+    float xform[9];
+};
+
 // cuda base operator class
 class CudaBaseOp
 {
@@ -1850,10 +1878,12 @@ class WarpPerspective : public CudaBaseOp
 {
 public:
     WarpPerspective() = delete;
+
     WarpPerspective(DataShape max_input_shape, DataShape max_output_shape)
         : CudaBaseOp(max_input_shape, max_output_shape)
     {
     }
+
     /**
      * @brief Applies a perspective transformation to an image. Same function as cv::warpPerspective.
      * @param inputs gpu pointer, inputs[0] are batched input images, whose shape is input_shape and type is data_type.
@@ -1873,17 +1903,16 @@ public:
      * @param data_type data type of the input images, e.g. kCV_32F.
      * @param stream for the asynchronous execution.
      */
-    int infer(
-                    const void *const *inputs, void **outputs, void *workspace, const float trans_matrix[3 * 3],
-                    void *cpu_workspace, const cv::Size dsize, const int flags, const int borderMode, const cv::Scalar borderValue,
-                    DataShape input_shape, DataFormat format, DataType data_type, cudaStream_t stream);
+    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+                    const float *transMatrix, const int32_t flags, const NVCVBorderType borderMode,
+                    const float4 borderValue, cudaStream_t stream);
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator
      * @param max_input_shape maximum input DataShape that may be used
      * @param max_output_shape maximum output DataShape that may be used
      * @param max_data_type DataType with the maximum size that may be used
      */
-    size_t calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
+    size_t    calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
 };
 
 } // namespace nv::cv::legacy::cuda_op

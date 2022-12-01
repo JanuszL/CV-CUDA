@@ -30,6 +30,7 @@ add_library(nvcv_private_operators STATIC
     OpBilateralFilter.cpp
     OpCvtColor.cpp
     OpWarpAffine.cpp
+    OpWarpPerspective.cpp
 )
 
 target_include_directories(nvcv_private_operators
