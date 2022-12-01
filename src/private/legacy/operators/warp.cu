@@ -109,6 +109,17 @@ void warpAffine(const nvcv::TensorDataAccessPitchImagePlanar &inData,
     warp_caller<WarpAffineTransform, T>(src_ptr, dst_ptr, transform, interpolation, borderMode, borderValue, stream);
 }
 
+template<typename T>
+void warpPerspective(const void *input, void *output, float *d_coeffs, cuda_op::DataShape input_shape,
+                     const float *trans_matrix, const cv::Size dsize, const int interpolation, int borderMode,
+                     const float *borderValue, cudaStream_t stream)
+{
+    cuda_op::Ptr2dNHWC<T> src_ptr(input_shape.N, input_shape.H, input_shape.W, input_shape.C, (T *) input);
+    cuda_op::Ptr2dNHWC<T> dst_ptr(input_shape.N, dsize.height, dsize.width, input_shape.C, (T *) output);
+    checkCudaErrors(cudaMemcpyAsync(d_coeffs, trans_matrix, 9 * sizeof(float), cudaMemcpyHostToDevice, stream));
+    warp_caller<PerspectiveTransform, T>(src_ptr, dst_ptr, d_coeffs, interpolation, borderMode, borderValue, stream);
+}
+
 static void invertMat(const float *M, float *h_aCoeffs)
 {
     // M is stored in row-major format M[0,0], M[0,1], M[0,2], M[1,0], M[1,1], M[1,2]
@@ -208,6 +219,80 @@ ErrorCode WarpAffine::infer(const ITensorDataPitchDevice &inData, const ITensorD
     func(*inAccess, *outAccess, transform, interpolation, borderMode, borderValue, stream);
 
     return ErrorCode::SUCCESS;
+}
+
+size_t WarpPerspective::calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type)
+{
+    return 9 * sizeof(float);
+}
+
+int WarpPerspective::infer(const void *const *inputs, void **outputs, void *workspace, const float trans_matrix[3 * 3],
+                           void *cpu_workspace, const cv::Size dsize, const int flags, const int borderMode, const cv::Scalar borderValue,
+                           DataShape input_shape, DataFormat format, DataType data_type, cudaStream_t stream)
+{
+    if(!(format == kNHWC || format == kHWC))
+    {
+        LOG_ERROR("Invalid DataFormat " << format);
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    int channels = input_shape.C;
+    const int interpolation = flags & cv::INTER_MAX;
+
+    if(channels > 4)
+    {
+        LOG_ERROR("Invalid channel number " << channels);
+        return ErrorCode::INVALID_DATA_SHAPE;
+    }
+
+    if(!(data_type == kCV_8U || data_type == kCV_8S ||
+            data_type == kCV_16U || data_type == kCV_16S ||
+            data_type == kCV_32S || data_type == kCV_32F))
+    {
+        LOG_ERROR("Invalid DataType " << data_type);
+        return ErrorCode::INVALID_DATA_TYPE;
+    }
+
+    CV_Assert(interpolation == cv::INTER_NEAREST || interpolation == cv::INTER_LINEAR || interpolation == cv::INTER_CUBIC);
+    CV_Assert(borderMode == cv::BORDER_REFLECT101 || borderMode == cv::BORDER_REPLICATE
+              || borderMode == cv::BORDER_CONSTANT || borderMode == cv::BORDER_REFLECT || borderMode == cv::BORDER_WRAP);
+
+    typedef void (*func_t)(const void *input, void *output, float* d_coeffs, cuda_op::DataShape input_shape,
+                           const float *trans_matrix, const cv::Size dsize, const int interpolation, int borderMode,
+                           const float* borderValue, cudaStream_t stream);
+
+    static const func_t funcs[6][4] =
+    {
+        {warpPerspective<uchar>, 0 /*warpPerspective<uchar2>*/, warpPerspective<uchar3>, warpPerspective<uchar4>     },
+        {0 /*warpPerspective<schar>*/, 0 /*warpPerspective<char2>*/, 0 /*warpPerspective<char3>*/, 0 /*warpPerspective<char4>*/},
+        {warpPerspective<ushort>, 0 /*warpPerspective<ushort2>*/, warpPerspective<ushort3>, warpPerspective<ushort4>    },
+        {warpPerspective<short>, 0 /*warpPerspective<short2>*/, warpPerspective<short3>, warpPerspective<short4>     },
+        {0 /*warpPerspective<int>*/, 0 /*warpPerspective<int2>*/, 0 /*warpPerspective<int3>*/, 0 /*warpPerspective<int4>*/ },
+        {warpPerspective<float>, 0 /*warpPerspective<float2>*/, warpPerspective<float3>, warpPerspective<float4>     }
+    };
+
+    const func_t func = funcs[data_type][channels - 1];
+    CV_Assert(func != 0);
+
+    cv::Mat coeffsMat(3, 3, CV_32FC1, (void *)cpu_workspace);
+    cv::Mat trans_mat(3, 3, CV_32FC1, (void *)trans_matrix);
+    if(flags & cv::WARP_INVERSE_MAP)
+    {
+        trans_mat.convertTo(coeffsMat, coeffsMat.type());
+    }
+    else
+    {
+        cv::Mat iM;
+        cv::invert(trans_mat, iM);
+        iM.convertTo(coeffsMat, coeffsMat.type());
+    }
+
+    cv::Scalar_<float> borderValueFloat;
+    borderValueFloat = borderValue;
+
+    func(inputs[0], outputs[0], (float *)workspace, input_shape, (float *)cpu_workspace, dsize, interpolation, borderMode,
+         borderValueFloat.val, stream);
+    return 0;
 }
 
 } // namespace nv::cv::legacy::cuda_op

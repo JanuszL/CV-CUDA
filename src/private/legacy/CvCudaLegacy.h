@@ -1846,6 +1846,46 @@ public:
                     const int flags, const NVCVBorderType borderMode, const float4 borderValue, cudaStream_t stream);
 };
 
+class WarpPerspective : public CudaBaseOp
+{
+public:
+    WarpPerspective() = delete;
+    WarpPerspective(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+    /**
+     * @brief Applies a perspective transformation to an image. Same function as cv::warpPerspective.
+     * @param inputs gpu pointer, inputs[0] are batched input images, whose shape is input_shape and type is data_type.
+     * @param outputs gpu pointer, outputs[0] are batched output images that have the size dsize and the same type as
+     * data_type.
+     * @param workspace gpu pointer, gpu memory used to store the temporary variables.
+     * @param trans_matrix cpu pointer, 3×3 transformation matrix.
+     * @param cpu_workspace cpu pointer, storage transformation matrix or inverse transformation matrix. It has the same
+     * size as trans_matrix, e.g. 3x3.
+     * @param dsize size of the output images.
+     * @param flags Combination of interpolation methods(INTER_NEAREST or INTER_LINEAR) and the optional flag
+     * WARP_INVERSE_MAP, that sets trans_matrix as the inverse transformation ( dst→src ).
+     * @param borderMode pixel extrapolation method (BORDER_CONSTANT or BORDER_REPLICATE).
+     * @param borderValue used in case of a constant border.
+     * @param input_shape shape of the input images.
+     * @param format format of the input images, e.g. kNHWC.
+     * @param data_type data type of the input images, e.g. kCV_32F.
+     * @param stream for the asynchronous execution.
+     */
+    int infer(
+                    const void *const *inputs, void **outputs, void *workspace, const float trans_matrix[3 * 3],
+                    void *cpu_workspace, const cv::Size dsize, const int flags, const int borderMode, const cv::Scalar borderValue,
+                    DataShape input_shape, DataFormat format, DataType data_type, cudaStream_t stream);
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param max_input_shape maximum input DataShape that may be used
+     * @param max_output_shape maximum output DataShape that may be used
+     * @param max_data_type DataType with the maximum size that may be used
+     */
+    size_t calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
+};
+
 } // namespace nv::cv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H
