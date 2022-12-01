@@ -20,6 +20,7 @@ add_library(cvcuda_legacy STATIC
     ./operators/pad_and_stack.cu
     ./operators/normalize_var_shape.cu
     ./operators/copy_make_border.cu
+    ./operators/copy_make_border_var_shape.cu
     ./operators/center_crop.cu
     ./operators/rotate.cu
     ./operators/rotate_var_shape.cu

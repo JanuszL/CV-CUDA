@@ -864,6 +864,48 @@ public:
      */
 };
 
+class CopyMakeBorderVarShape : public CudaBaseOp
+{
+public:
+    CopyMakeBorderVarShape() = delete;
+
+    CopyMakeBorderVarShape(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * @brief Forms a border around an image.
+     * The function copies the source image into the middle of the destination image. The areas to the left, to the
+     * right, above and below the copied source image will be filled with extrapolated pixels. This is not what
+     * filtering functions based on it do (they extrapolate pixels on-fly), but what other more complex functions,
+     * including your own, may do to simplify image boundary handling.
+     * @param inData Input Tensor
+     * @param outData Output Tensor
+     * @param top the top pixels.
+     * @param left the left pixels.
+     * Parameter specifying how many pixels in each direction from the source image rectangle to extrapolate.
+     * The src and dist size can be got from input and output tensor.
+     * For example, top=1, left=1, src_w=64, src_h=64, dist_w=66, dist_h=66 mean that it builds 1 pixel-wide border of top=left=buttom=right=1.
+     * @param border_type border type. See NVCVBorderType for details.
+     * @param value border value if borderType==BORDER_CONSTANT.
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
+                    const nv::cv::ITensorDataPitchDevice &top, const nv::cv::ITensorDataPitchDevice &left,
+                    const NVCVBorderType border_type, const float4 value, cudaStream_t stream);
+
+    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+                    const nv::cv::ITensorDataPitchDevice &top, const nv::cv::ITensorDataPitchDevice &left,
+                    const NVCVBorderType border_type, const float4 value, cudaStream_t stream);
+
+private:
+    template<class OutType>
+    ErrorCode inferWarp(const IImageBatchVarShapeDataPitchDevice &inData, const OutType &outData,
+                        const nv::cv::ITensorDataPitchDevice &top, const nv::cv::ITensorDataPitchDevice &left,
+                        const NVCVBorderType border_type, const float4 value, cudaStream_t stream);
+};
+
 class CenterCrop : public CudaBaseOp
 {
 public:

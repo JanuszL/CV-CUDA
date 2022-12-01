@@ -23,7 +23,7 @@
 namespace priv    = nv::cv::priv;
 namespace priv_op = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopCopyMakeBorderCreate, (NVCVOperatorHandle * handle))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCopyMakeBorderCreate, (NVCVOperatorHandle * handle))
 {
     return priv::ProtectCall(
         [&]
@@ -46,6 +46,34 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCopyMakeBorderSubmit,
         {
             nv::cv::TensorWrapHandle output(out), input(in);
             priv::ToDynamicRef<priv_op::CopyMakeBorder>(handle)(stream, input, output, top, left, borderMode,
+                                                                borderValue);
+        });
+}
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCopyMakeBorderVarShapeSubmit,
+                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                 NVCVTensorHandle top, NVCVTensorHandle left, NVCVBorderType borderMode, const float4 borderValue))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            nv::cv::ImageBatchWrapHandle output(out), input(in);
+            nv::cv::TensorWrapHandle     topVec(top), leftVec(left);
+            priv::ToDynamicRef<priv_op::CopyMakeBorder>(handle)(stream, input, output, topVec, leftVec, borderMode,
+                                                                borderValue);
+        });
+}
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCopyMakeBorderVarShapeStackSubmit,
+                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVTensorHandle out,
+                 NVCVTensorHandle top, NVCVTensorHandle left, NVCVBorderType borderMode, const float4 borderValue))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            nv::cv::ImageBatchWrapHandle input(in);
+            nv::cv::TensorWrapHandle     output(out), topVec(top), leftVec(left);
+            priv::ToDynamicRef<priv_op::CopyMakeBorder>(handle)(stream, input, output, topVec, leftVec, borderMode,
                                                                 borderValue);
         });
 }

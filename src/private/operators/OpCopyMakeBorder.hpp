@@ -17,8 +17,8 @@
  * @brief Defines the private C++ class for the pad and stack operation.
  */
 
-#ifndef NVCV_OP_PRIV_PADANDSTACK_HPP
-#define NVCV_OP_PRIV_PADANDSTACK_HPP
+#ifndef NVCV_OP_PRIV_COPYMAKEBORDER_HPP
+#define NVCV_OP_PRIV_COPYMAKEBORDER_HPP
 
 #include "IOperator.hpp"
 
@@ -44,9 +44,14 @@ public:
 
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, const int top, const int left,
                     const NVCVBorderType borderMode, const float4 borderValue) const;
+    void operator()(cudaStream_t stream, const cv::IImageBatch &in, const cv::IImageBatch &out, const cv::ITensor &top,
+                    const cv::ITensor &left, const NVCVBorderType borderMode, const float4 borderValue) const;
+    void operator()(cudaStream_t stream, const cv::IImageBatch &in, const cv::ITensor &out, const cv::ITensor &top,
+                    const cv::ITensor &left, const NVCVBorderType borderMode, const float4 borderValue) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::CopyMakeBorder> m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::CopyMakeBorder>         m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::CopyMakeBorderVarShape> m_legacyOpVarShape;
 };
 
 } // namespace nv::cvop::priv
