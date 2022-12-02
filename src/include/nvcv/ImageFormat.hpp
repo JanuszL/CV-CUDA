@@ -378,6 +378,9 @@ constexpr ImageFormat FMT_RGBAf32p{NVCV_IMAGE_FORMAT_RGBAf32p};
 /** Planar BGRA unsigned float32 per channel. */
 constexpr ImageFormat FMT_BGRAf32p{NVCV_IMAGE_FORMAT_BGRAf32p};
 
+/** Single plane with interleaved HSV 8-bit channel. */
+constexpr ImageFormat FMT_HSV8{NVCV_IMAGE_FORMAT_HSV8};
+
 #endif
 
 inline ImageFormat::ImageFormat(ColorSpec colorSpec, ChromaSubsampling chromaSub, MemLayout memLayout,

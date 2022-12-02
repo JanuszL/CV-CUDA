@@ -42,6 +42,7 @@ typedef enum
     NVCV_COLOR_MODEL_RGB       = 2,     /**< red, green, blue components. */
     NVCV_COLOR_MODEL_RAW       = 2 + 7, /**< RAW color model, used for Bayer image formats. */
     NVCV_COLOR_MODEL_XYZ,               /**< CIE XYZ tristimulus color spec. */
+    NVCV_COLOR_MODEL_HSV,               /**< hue, saturation, value components. */
 } NVCVColorModel;
 
 /** Defines the color primaries and the white point of a \ref NVCVColorSpec. */
