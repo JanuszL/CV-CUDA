@@ -78,6 +78,23 @@ struct DataShape
         , C(c)
         , H(h)
         , W(w){};
+
+    bool operator==(const DataShape &s)
+    {
+        return s.N == N && s.H == H && s.W == W && s.C == C;
+    }
+
+    bool operator!=(const DataShape &s)
+    {
+        return !(*this == s);
+    }
+
+    friend std::ostream &operator<<(std::ostream &out, const DataShape &s)
+    {
+        out << "(N = " << s.N << ", H = " << s.H << ", W = " << s.W << ", C = " << s.C << ")";
+        return out;
+    }
+
     int N = 1; // batch
     int C;     // channel
     int H;     // height
@@ -1735,6 +1752,35 @@ public:
 protected:
     const int        m_maxBatchSize;
     std::vector<int> m_kernelSizes;
+};
+
+class CvtColor : public CudaBaseOp
+{
+public:
+    CvtColor() = delete;
+
+    CvtColor(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * @brief Converts an image from one color space to another.
+     * @param inData Input tensor.
+     * @param outData Output tensor.
+     * @param code Color space conversion code, \ref NVCVColorConversionCode.
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+                    NVCVColorConversionCode code, cudaStream_t stream);
+
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param max_input_shape maximum input DataShape that may be used
+     * @param max_output_shape maximum output DataShape that may be used
+     * @param max_data_type DataType with the maximum size that may be used
+     */
+    size_t calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
 };
 
 } // namespace nv::cv::legacy::cuda_op
