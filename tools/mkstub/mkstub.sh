@@ -141,7 +141,9 @@ function get_symbols()
 {
     local dso=$1
 
-    readelf -W --dyn-syms "$dso"
+    # IFUNC on x86_64-redhat-linux DSOs (Centos7)
+    # aren't well understood x86_64-linux-gnu (Ubuntu, Gentoo...)
+    readelf -W --dyn-syms "$dso" | sed 's/<OS specific>: 10/IFUNC/g'
 }
 
 first=1
