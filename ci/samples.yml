@@ -10,8 +10,14 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
+.samples_common:
+    variables:
+        PYTHON_VERSIONS: "3.8 3.9"
+
 b:samples:
-    extends: .launch_rule
+    extends:
+      - .launch_rule
+      - .samples_common
     stage: build
     image: 'gitlab-master.nvidia.com:5005/cv/cvcuda/samples-linux-x64:$TAG_IMAGE'
     tags: [ linux-x64, build]
@@ -20,18 +26,21 @@ b:samples:
     before_script:
         - 'rm -rf cvcuda-installer'
     script:
-        -  ./ci/build_samples.sh
+        - apt-get update
+        - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends libpython3.8-dev libpython3.9-dev python3.8 python3.9
+        -  ./ci/build_samples.sh build "-DPYTHON_VERSIONS=${PYTHON_VERSIONS/ /;}"
         - 'pushd build && cpack && popd'
         - 'mkdir cvcuda-installer && mv -v build/*.{deb,tar.*} build/VERSION cvcuda-installer'
 
 test:samples:
-    extends: .launch_rule
+    extends:
+      - .launch_rule
+      - .samples_common
     stage: test
     image: 'nvcr.io/nvidia/tensorrt:22.09-py3'
     variables:
         CUDA_CACHE_DISABLE: 1
         GIT_STRATEGY: none
-        PYTHON_VERSIONS: "3.8 3.9"
     needs: [ 'b:samples' ]
     tags: [ linux-x64, test, cuda11 ]
     script:
