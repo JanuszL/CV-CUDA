@@ -137,6 +137,13 @@ function print_symbol()
 symbol_filter='$7 !~ /(Ndx|UND|ABS|^$)/ && $5 !~ /(UNIQUE|LOCAL)/ && ( $5 ~ /WEAK/ || $4 !~ /NOTYPE/ )'
 symbol_parser='{ print gensub(/^([^@]+)(@*)(.*)$/,"<\\3> <\\2> <\\1>", 1, $8),$4,$5,$6 }'
 
+function get_symbols()
+{
+    local dso=$1
+
+    readelf -W --dyn-syms "$dso"
+}
+
 first=1
 versioned=0
 
@@ -195,7 +202,7 @@ while read ver vertype name symtype bind vis; do
     ver_symbols+=("$cname")
 
     prev_ver=$ver
-done <<< "$(readelf -W --dyn-syms "$dso" | gawk "$symbol_filter $symbol_parser" | sort -V)"
+done <<< "$(get_symbols $dso | gawk "$symbol_filter $symbol_parser" | sort -V)"
 
 # weak indirect functions must be defined last
 for syminfo in "${weak_ifuncs[@]}"; do
@@ -242,7 +249,8 @@ $STRIP -s $stub_dso
 function list_contents()
 {
     local parser='{ print $4,$5,$6,$8 }'
-    readelf --dyn-syms "$1" | gawk "$symbol_filter $parser" | sort
+    local dso=$1
+    get_symbols $dso | gawk "$symbol_filter $parser" | sort
 }
 
 list_contents $dso > $tmp_orig_symbols
