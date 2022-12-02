@@ -11,27 +11,28 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_PRIV_CORE_IMAGEMANAGER_HPP
-#define NVCV_PRIV_CORE_IMAGEMANAGER_HPP
+/**
+ * @file Fwd.h
+ *
+ * @brief Forward declaration of some public C interface entities.
+ */
 
-#include "IContext.hpp"
-#include "Image.hpp"
+#ifndef NVCV_FWD_H
+#define NVCV_FWD_H
 
-namespace nv::cv::priv {
+#include "alloc/Fwd.h"
 
-using ImageManager = CoreObjManager<NVCVImageHandle>;
-
-using ImageStorage = CompatibleStorage<Image, ImageWrapData>;
-
-template<>
-class CoreObjManager<NVCVImageHandle> : public HandleManager<IImage, ImageStorage>
+#ifdef __cplusplus
+extern "C"
 {
-    using Base = HandleManager<IImage, ImageStorage>;
+#endif
 
-public:
-    using Base::Base;
-};
+typedef struct NVCVImage      *NVCVImageHandle;
+typedef struct NVCVImageBatch *NVCVImageBatchHandle;
+typedef struct NVCVTensor     *NVCVTensorHandle;
 
-} // namespace nv::cv::priv
+#ifdef __cplusplus
+}
+#endif
 
-#endif // NVCV_PRIV_CORE_IMAGEMANAGER_HPP
+#endif // NVCV_FWD_H

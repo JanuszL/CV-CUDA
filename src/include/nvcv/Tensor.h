@@ -21,6 +21,7 @@
 #define NVCV_TENSOR_H
 
 #include "Export.h"
+#include "Fwd.h"
 #include "Image.h"
 #include "ImageFormat.h"
 #include "Status.h"

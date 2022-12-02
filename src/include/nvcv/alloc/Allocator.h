@@ -49,6 +49,7 @@
 
 #include "../Export.h"
 #include "../Status.h"
+#include "Fwd.h"
 
 #include <stdalign.h>
 

@@ -14,26 +14,36 @@
 #ifndef NVCV_PRIV_CORE_ICONTEXT_HPP
 #define NVCV_PRIV_CORE_ICONTEXT_HPP
 
-#include "ICoreObject.hpp"
+#include <nvcv/Fwd.h>
 
-typedef struct NVCVImage      *NVCVImageHandle;
-typedef struct NVCVImageBatch *NVCVImageBatchHandle;
-typedef struct NVCVTensor     *NVCVTensorHandle;
-typedef struct NVCVAllocator  *NVCVAllocatorHandle;
+#include <tuple>
 
 namespace nv::cv::priv {
+
+// Forward declaration
+template<class HandleType>
+class CoreObjManager;
+
+using ImageManager      = CoreObjManager<NVCVImageHandle>;
+using ImageBatchManager = CoreObjManager<NVCVImageBatchHandle>;
+using TensorManager     = CoreObjManager<NVCVTensorHandle>;
+using AllocatorManager  = CoreObjManager<NVCVAllocatorHandle>;
 
 class IAllocator;
 
 class IContext
 {
 public:
-    virtual IAllocator &allocDefault() = 0;
+    using Managers = std::tuple<AllocatorManager &, ImageManager &, ImageBatchManager &, TensorManager &>;
 
-    virtual CoreObjManager<NVCVImageHandle>      &imageManager()      = 0;
-    virtual CoreObjManager<NVCVImageBatchHandle> &imageBatchManager() = 0;
-    virtual CoreObjManager<NVCVTensorHandle>     &tensorManager()     = 0;
-    virtual CoreObjManager<NVCVAllocatorHandle>  &allocatorManager()  = 0;
+    template<class HandleType>
+    CoreObjManager<HandleType> &manager()
+    {
+        return std::get<CoreObjManager<HandleType> &>(managerList());
+    }
+
+    virtual const Managers &managerList() const = 0;
+    virtual IAllocator     &allocDefault()      = 0;
 };
 
 // Defined in Context.cpp

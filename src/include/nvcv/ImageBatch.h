@@ -21,6 +21,7 @@
 #define NVCV_IMAGEBATCH_H
 
 #include "Export.h"
+#include "Fwd.h"
 #include "Image.h"
 #include "ImageBatchData.h"
 #include "ImageFormat.h"

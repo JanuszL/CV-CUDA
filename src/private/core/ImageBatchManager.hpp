@@ -17,13 +17,11 @@
 #include "IContext.hpp"
 #include "ImageBatchVarShape.hpp"
 
-#include <variant>
-
 namespace nv::cv::priv {
 
 using ImageBatchManager = CoreObjManager<NVCVImageBatchHandle>;
 
-using ImageBatchStorage = ImageBatchVarShape;
+using ImageBatchStorage = CompatibleStorage<ImageBatchVarShape>;
 
 template<>
 class CoreObjManager<NVCVImageBatchHandle> : public HandleManager<IImageBatch, ImageBatchStorage>
@@ -32,11 +30,6 @@ class CoreObjManager<NVCVImageBatchHandle> : public HandleManager<IImageBatch, I
 
 public:
     using Base::Base;
-
-    static ImageBatchManager &Instance()
-    {
-        return GlobalContext().imageBatchManager();
-    }
 };
 
 } // namespace nv::cv::priv

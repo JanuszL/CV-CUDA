@@ -35,7 +35,8 @@ class LockFreeStack
 public:
     Node *pop() noexcept
     {
-        // Lock the stack's head to that "push" doesn't change it
+        // Lock the stack's head so that we can pop current head and set the
+        // new one to curhead->next atomically below.
         for (;;)
         {
             Node *head = doGetUnlocked(m_head.load(std::memory_order_relaxed));

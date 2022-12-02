@@ -14,6 +14,7 @@
 #ifndef NVCV_PRIV_CORE_HANDLE_MANAGER_HPP
 #define NVCV_PRIV_CORE_HANDLE_MANAGER_HPP
 
+#include <util/Algorithm.hpp>
 #include <util/Assert.h>
 
 #include <cstddef>
@@ -104,11 +105,11 @@ public:
     ~HandleManager();
 
     template<class T, typename... Args>
-    HandleType create(Args &&...args)
+    std::pair<HandleType, T *> create(Args &&...args)
     {
         Resource *res = doFetchFreeResource();
-        res->template constructObject<T>(std::forward<Args>(args)...);
-        return doGetHandleFromResource(res);
+        T        *obj = res->template constructObject<T>(std::forward<Args>(args)...);
+        return std::make_pair(doGetHandleFromResource(res), obj);
     }
 
     // true if handle is destroyed, false if handle is invalid (or already removed)
@@ -132,6 +133,12 @@ private:
     HandleType doGetHandleFromResource(Resource *r) const;
     Resource  *doGetResourceFromHandle(HandleType handle) const;
     bool       isManagedResource(Resource *r) const;
+};
+
+template<class... AA>
+struct alignas(util::Max(alignof(AA)...)) CompatibleStorage
+{
+    std::byte storage[util::Max(sizeof(AA)...)];
 };
 
 } // namespace nv::cv::priv

@@ -11,27 +11,25 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_PRIV_CORE_IMAGEMANAGER_HPP
-#define NVCV_PRIV_CORE_IMAGEMANAGER_HPP
+#ifndef NVCV_UTIL_ALGORITHM_HPP
+#define NVCV_UTIL_ALGORITHM_HPP
 
-#include "IContext.hpp"
-#include "Image.hpp"
+namespace nv::cv::util {
 
-namespace nv::cv::priv {
-
-using ImageManager = CoreObjManager<NVCVImageHandle>;
-
-using ImageStorage = CompatibleStorage<Image, ImageWrapData>;
-
-template<>
-class CoreObjManager<NVCVImageHandle> : public HandleManager<IImage, ImageStorage>
+template<class HEAD, class... TAIL>
+constexpr auto Max(const HEAD &head, const TAIL &...tail)
 {
-    using Base = HandleManager<IImage, ImageStorage>;
+    if constexpr (sizeof...(TAIL) == 0)
+    {
+        return head;
+    }
+    else
+    {
+        auto maxTail = Max(tail...);
+        return head >= maxTail ? head : maxTail;
+    }
+}
 
-public:
-    using Base::Base;
-};
+} // namespace nv::cv::util
 
-} // namespace nv::cv::priv
-
-#endif // NVCV_PRIV_CORE_IMAGEMANAGER_HPP
+#endif // NVCV_UTIL_ALGORITHM_HPP

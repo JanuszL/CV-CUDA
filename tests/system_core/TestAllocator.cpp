@@ -21,6 +21,8 @@
 
 #include <thread>
 
+#include <nvcv/alloc/Fwd.hpp>
+
 namespace t    = ::testing;
 namespace test = nv::cv::test;
 namespace nvcv = nv::cv;

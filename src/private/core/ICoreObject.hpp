@@ -16,9 +16,8 @@
 
 #include "Exception.hpp"
 #include "HandleManager.hpp"
+#include "IContext.hpp"
 #include "Version.hpp"
-
-#include <nvcv/alloc/Fwd.h>
 
 #include <memory>
 #include <type_traits>
@@ -108,21 +107,19 @@ class CoreObjManager;
 template<class T, class... ARGS>
 typename T::HandleType CreateCoreObject(ARGS &&...args)
 {
-    using Manager = CoreObjManager<typename T::HandleType>;
+    using H   = typename T::HandleType;
+    auto &mgr = GlobalContext().manager<H>();
 
-    auto &mgr = Manager::Instance();
+    auto [h, obj] = mgr.template create<T>(std::forward<ARGS>(args)...);
+    obj->setHandle(h);
 
-    typename T::HandleType h = mgr.template create<T>(std::forward<ARGS>(args)...);
-    mgr.validate(h)->setHandle(h);
     return h;
 }
 
 template<class HandleType>
 void DestroyCoreObject(HandleType handle)
 {
-    using Manager = CoreObjManager<HandleType>;
-
-    auto &mgr = Manager::Instance();
+    auto &mgr = GlobalContext().manager<HandleType>();
 
     mgr.destroy(handle);
 }
@@ -140,9 +137,8 @@ inline ICoreObject *ToCoreObjectPtr(HandleType h)
 
     if constexpr (HasObjManager<HandleType>)
     {
-        using Manager = CoreObjManager<HandleType>;
-
-        core = Manager::Instance().validate(h);
+        auto &mgr = GlobalContext().manager<HandleType>();
+        core      = mgr.validate(h);
     }
     else
     {
