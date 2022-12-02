@@ -1,5 +1,8 @@
-/*
- * Copyright (c) 2021-2022, NVIDIA CORPORATION. All rights reserved.
+/* Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *
+ * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+ *
  * Copyright (C) 2021-2022, Bytedance Inc. All rights reserved.
  * Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
  * Copyright (C) 2009-2010, Willow Garage Inc., all rights reserved.
@@ -18,221 +21,269 @@
  * limitations under the License.
  */
 
-#include "cv_cuda.h"
-#include "cuda_utils.cuh"
-#include "border.cuh"
-#include "transform.cuh"
+#include "../CvCudaLegacy.h"
+#include "../CvCudaLegacyHelpers.hpp"
+
+#include "../CvCudaUtils.cuh"
 
 #define BLOCK 32
-using namespace cv::cudev;
 
-template <class Transform, class Filter, typename T> __global__ void warp(const Filter src,
-        cuda_op::Ptr2dVarShapeNHWC<T> dst,
-        const float *d_coeffs_)
+using namespace nv::cv::legacy::cuda_op;
+using namespace nv::cv::legacy::helpers;
+using namespace nv::cv::cuda;
+
+namespace nv::cv::legacy::cuda_op {
+
+__global__ void inverseMatWarpPerspective(const int numImages, const cuda::Tensor2DWrap<float> in,
+                                          cuda::Tensor2DWrap<float> out)
 {
-    const int x = blockDim.x * blockIdx.x + threadIdx.x;
-    const int y = blockDim.y * blockIdx.y + threadIdx.y;
+    int index = threadIdx.x + blockIdx.x * blockDim.x;
+    if (index >= numImages)
+    {
+        return;
+    }
+
+    cuda::math::Matrix<float, 3, 3> transMatrix;
+    transMatrix[0][0] = (float)(*in.ptr(index, 0));
+    transMatrix[0][1] = (float)(*in.ptr(index, 1));
+    transMatrix[0][2] = (float)(*in.ptr(index, 2));
+    transMatrix[1][0] = (float)(*in.ptr(index, 3));
+    transMatrix[1][1] = (float)(*in.ptr(index, 4));
+    transMatrix[1][2] = (float)(*in.ptr(index, 5));
+    transMatrix[2][0] = (float)(*in.ptr(index, 6));
+    transMatrix[2][1] = (float)(*in.ptr(index, 7));
+    transMatrix[2][2] = (float)(*in.ptr(index, 8));
+
+    cuda::math::inv_inplace(transMatrix);
+
+    *out.ptr(index, 0) = transMatrix[0][0];
+    *out.ptr(index, 1) = transMatrix[0][1];
+    *out.ptr(index, 2) = transMatrix[0][2];
+    *out.ptr(index, 3) = transMatrix[1][0];
+    *out.ptr(index, 4) = transMatrix[1][1];
+    *out.ptr(index, 5) = transMatrix[1][2];
+    *out.ptr(index, 6) = transMatrix[2][0];
+    *out.ptr(index, 7) = transMatrix[2][1];
+    *out.ptr(index, 8) = transMatrix[2][2];
+}
+
+template<class Transform, class Filter, typename T>
+__global__ void warp(const Filter src, Ptr2dVarShapeNHWC<T> dst, const cuda::Tensor2DWrap<float> d_coeffs_)
+{
+    const int x         = blockDim.x * blockIdx.x + threadIdx.x;
+    const int y         = blockDim.y * blockIdx.y + threadIdx.y;
     const int batch_idx = get_batch_idx();
-    const int lid = get_lid();
-    const float *d_coeffs = d_coeffs_ + batch_idx * 9;
+    const int lid       = get_lid();
 
     extern __shared__ float coeff[];
-    if(lid < 9)
+    if (lid < 9)
     {
-        coeff[lid] = d_coeffs[lid];
+        coeff[lid] = *d_coeffs_.ptr(batch_idx, lid);
     }
     __syncthreads();
 
-    if(x < dst.cols[batch_idx] && y < dst.rows[batch_idx])
+    if (x < dst.at_cols(batch_idx) && y < dst.at_rows(batch_idx))
     {
         const float2 coord = Transform::calcCoord(coeff, x, y);
-        *dst.ptr(batch_idx, y, x) = saturate_cast<T>(src(batch_idx, coord.y, coord.x));
+        *dst.ptr(batch_idx, y, x)
+            = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<T>>(src(batch_idx, coord.y, coord.x));
     }
 }
 
-template <class Transform, template <typename> class Filter, template <typename> class B, typename T> struct
-    WarpDispatcher
+template<class Transform, template<typename> class Filter, template<typename> class B, typename T>
+struct WarpDispatcher
 {
-    static void call(const cuda_op::Ptr2dVarShapeNHWC<T> src, cuda_op::Ptr2dVarShapeNHWC<T> dst, float *d_coeffs,
-                     const int max_height, const int max_width,
-                     const float *borderValue, cudaStream_t stream)
+    static void call(const Ptr2dVarShapeNHWC<T> src, Ptr2dVarShapeNHWC<T> dst, const cuda::Tensor2DWrap<float> d_coeffs,
+                     const int max_height, const int max_width, const float4 borderValue, cudaStream_t stream)
     {
-        typedef typename MakeVec<float, VecTraits<T>::cn>::type work_type;
+        using work_type = nv::cv::cuda::ConvertBaseTypeTo<float, T>;
 
-        dim3 block(BLOCK, BLOCK/4);
+        dim3 block(BLOCK, BLOCK / 4);
         dim3 grid(divUp(max_width, block.x), divUp(max_height, block.y), dst.batches);
 
-        B<work_type> brd(0, 0, VecTraits<work_type>::make(borderValue));
-        cuda_op::BorderReader< cuda_op::Ptr2dVarShapeNHWC<T>, B<work_type> > brdSrc(src, brd);
-        Filter< cuda_op::BorderReader< cuda_op::Ptr2dVarShapeNHWC<T>, B<work_type> > > filter_src(brdSrc);
-        size_t smem_size = 9 * sizeof(float);
+        work_type    borderVal = nv::cv::cuda::DropCast<NumComponents<T>>(borderValue);
+        B<work_type> brd(0, 0, borderVal);
+        // B<work_type> brd(max_height, max_width, borderVal);
+        BorderReader<Ptr2dVarShapeNHWC<T>, B<work_type>>         brdSrc(src, brd);
+        Filter<BorderReader<Ptr2dVarShapeNHWC<T>, B<work_type>>> filter_src(brdSrc);
+        size_t                                                   smem_size = 9 * sizeof(float);
         warp<Transform><<<grid, block, smem_size, stream>>>(filter_src, dst, d_coeffs);
         checkKernelErrors();
     }
 };
 
-template <class Transform, typename T>
-void warp_caller(const cuda_op::Ptr2dVarShapeNHWC<T> src, cuda_op::Ptr2dVarShapeNHWC<T> dst, float *d_coeffs,
-                 const int max_height, const int max_width,
-                 int interpolation, int borderMode, const float *borderValue, cudaStream_t stream)
+template<class Transform, typename T>
+void warp_caller(const Ptr2dVarShapeNHWC<T> src, Ptr2dVarShapeNHWC<T> dst, const cuda::Tensor2DWrap<float> transform,
+                 const int max_height, const int max_width, const int interpolation, const int borderMode,
+                 const float4 borderValue, cudaStream_t stream)
 {
-    typedef void (*func_t)(const cuda_op::Ptr2dVarShapeNHWC<T> src, cuda_op::Ptr2dVarShapeNHWC<T> dst, float* d_coeffs,
-                           const int max_height, const int max_width, const float* borderValue, cudaStream_t stream);
+    typedef void (*func_t)(const Ptr2dVarShapeNHWC<T> src, Ptr2dVarShapeNHWC<T> dst,
+                           const cuda::Tensor2DWrap<float> transform, const int max_height, const int max_width,
+                           const float4 borderValue, cudaStream_t stream);
 
-    static const func_t funcs[3][5] =
-    {
-        {
-            WarpDispatcher<Transform, cuda_op::PointFilter, cuda_op::BrdConstant, T>::call,
-            WarpDispatcher<Transform, cuda_op::PointFilter, cuda_op::BrdReplicate, T>::call,
-            WarpDispatcher<Transform, cuda_op::PointFilter, cuda_op::BrdReflect, T>::call,
-            WarpDispatcher<Transform, cuda_op::PointFilter, cuda_op::BrdWrap, T>::call,
-            WarpDispatcher<Transform, cuda_op::PointFilter, cuda_op::BrdReflect101, T>::call
-        },
-        {
-            WarpDispatcher<Transform, cuda_op::LinearFilter, cuda_op::BrdConstant, T>::call,
-            WarpDispatcher<Transform, cuda_op::LinearFilter, cuda_op::BrdReplicate, T>::call,
-            WarpDispatcher<Transform, cuda_op::LinearFilter, cuda_op::BrdReflect, T>::call,
-            WarpDispatcher<Transform, cuda_op::LinearFilter, cuda_op::BrdWrap, T>::call,
-            WarpDispatcher<Transform, cuda_op::LinearFilter, cuda_op::BrdReflect101, T>::call
-        },
-        {
-            WarpDispatcher<Transform, cuda_op::CubicFilter, cuda_op::BrdConstant, T>::call,
-            WarpDispatcher<Transform, cuda_op::CubicFilter, cuda_op::BrdReplicate, T>::call,
-            WarpDispatcher<Transform, cuda_op::CubicFilter, cuda_op::BrdReflect, T>::call,
-            WarpDispatcher<Transform, cuda_op::CubicFilter, cuda_op::BrdWrap, T>::call,
-            WarpDispatcher<Transform, cuda_op::CubicFilter, cuda_op::BrdReflect101, T>::call
-        }
+    static const func_t funcs[3][5] = {
+        {WarpDispatcher<Transform,  PointFilter, BrdConstant, T>::call,
+         WarpDispatcher<Transform,  PointFilter, BrdReplicate, T>::call,
+         WarpDispatcher<Transform,  PointFilter, BrdReflect, T>::call,
+         WarpDispatcher<Transform,  PointFilter, BrdWrap, T>::call,
+         WarpDispatcher<Transform,  PointFilter, BrdReflect101, T>::call},
+        {WarpDispatcher<Transform, LinearFilter, BrdConstant, T>::call,
+         WarpDispatcher<Transform, LinearFilter, BrdReplicate, T>::call,
+         WarpDispatcher<Transform, LinearFilter, BrdReflect, T>::call,
+         WarpDispatcher<Transform, LinearFilter, BrdWrap, T>::call,
+         WarpDispatcher<Transform, LinearFilter, BrdReflect101, T>::call},
+        {WarpDispatcher<Transform,  CubicFilter, BrdConstant, T>::call,
+         WarpDispatcher<Transform,  CubicFilter, BrdReplicate, T>::call,
+         WarpDispatcher<Transform,  CubicFilter, BrdReflect, T>::call,
+         WarpDispatcher<Transform,  CubicFilter, BrdWrap, T>::call,
+         WarpDispatcher<Transform,  CubicFilter, BrdReflect101, T>::call}
     };
 
-    funcs[interpolation][borderMode](src, dst, d_coeffs, max_height, max_width, borderValue, stream);
+    funcs[interpolation][borderMode](src, dst, transform, max_height, max_width, borderValue, stream);
 }
-namespace cuda_op
-{
 
 template<typename T>
-void warpPerspective(const void **input, void **output, float *d_coeffs, const int *height, const int *width,
-                     const int *out_height, const int *out_width, const int max_height, const int max_width, const int batch,
-                     const int interpolation, int borderMode, const float *borderValue, cudaStream_t stream)
+void warpPerspective(const nv::cv::IImageBatchVarShapeDataPitchDevice &inData,
+                     const nv::cv::IImageBatchVarShapeDataPitchDevice &outData,
+                     const cuda::Tensor2DWrap<float> transform, const int interpolation, const int borderMode,
+                     const float4 borderValue, cudaStream_t stream)
 {
-    int channels = VecTraits<T>::cn;
-    cuda_op::Ptr2dVarShapeNHWC<T> src_ptr(batch, height, width, channels, (T **) input);
-    cuda_op::Ptr2dVarShapeNHWC<T> dst_ptr(batch, out_height, out_width, channels, (T **) output);
+    Ptr2dVarShapeNHWC<T> src_ptr(inData);
+    Ptr2dVarShapeNHWC<T> dst_ptr(outData);
 
-    warp_caller<PerspectiveTransform, T>(src_ptr, dst_ptr, d_coeffs, max_height, max_width,
-                                         interpolation, borderMode, borderValue, stream);
+    Size2D outMaxSize = outData.maxSize();
+
+    warp_caller<PerspectiveTransform, T>(src_ptr, dst_ptr, transform, outMaxSize.h, outMaxSize.w, interpolation,
+                                         borderMode, borderValue, stream);
 }
 
-size_t WarpPerspectiveVarShape::calBufferSize(int batch_size)
+WarpPerspectiveVarShape::WarpPerspectiveVarShape(const int32_t maxBatchSize)
+    : CudaBaseOp()
+    , m_maxBatchSize(maxBatchSize)
 {
-    return (2 * sizeof(void *) + 4 * sizeof(int) + 9 * sizeof(float)) * batch_size;
+    if (m_maxBatchSize > 0)
+    {
+        size_t bufferSize = sizeof(float) * 9 * m_maxBatchSize;
+        NVCV_CHECK_LOG(cudaMalloc(&m_transformationMatrix, bufferSize));
+    }
 }
 
-int WarpPerspectiveVarShape::infer(const void **data_in, void **data_out, void *gpu_workspace, void *cpu_workspace,
-                                   const int batch, const size_t buffer_size, const cv::Size *dsize, const float *trans_matrix,
-                                   const int flags, const int borderMode, const cv::Scalar borderValue, const DataShape *input_shape,
-                                   DataFormat format, DataType data_type, cudaStream_t stream)
+WarpPerspectiveVarShape::~WarpPerspectiveVarShape()
 {
-    if(!(format == kNHWC || format == kHWC))
+    if (m_transformationMatrix != nullptr)
+    {
+        NVCV_CHECK_LOG(cudaFree(m_transformationMatrix));
+    }
+    m_transformationMatrix = nullptr;
+}
+
+ErrorCode WarpPerspectiveVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData,
+                                         const IImageBatchVarShapeDataPitchDevice &outData,
+                                         const ITensorDataPitchDevice &transMatrix, const int32_t flags,
+                                         const NVCVBorderType borderMode, const float4 borderValue, cudaStream_t stream)
+{
+    if (m_maxBatchSize <= 0)
+    {
+        LOG_ERROR("Operator warp perspective var shape is not initialized properly, maxVarShapeBatchSize: "
+                  << m_maxBatchSize);
+        return ErrorCode::INVALID_PARAMETER;
+    }
+
+    if (m_maxBatchSize < inData.numImages())
+    {
+        LOG_ERROR("Invalid number of images, it should not exceed " << m_maxBatchSize);
+        return ErrorCode::INVALID_DATA_SHAPE;
+    }
+
+    DataFormat input_format  = helpers::GetLegacyDataFormat(inData);
+    DataFormat output_format = helpers::GetLegacyDataFormat(outData);
+
+    if (input_format != output_format)
+    {
+        LOG_ERROR("Invalid DataFormat between input (" << input_format << ") and output (" << output_format << ")");
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    DataFormat format = input_format;
+
+    if (!(format == kNHWC || format == kHWC))
     {
         LOG_ERROR("Invalid DataFormat " << format);
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    int channels = input_shape[0].C;
-    const int interpolation = flags & cv::INTER_MAX;
+    if (!inData.uniqueFormat())
+    {
+        LOG_ERROR("Images in the input varshape must all have the same format");
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
 
-    if(channels > 4)
+    int channels = inData.uniqueFormat().numChannels();
+
+    if (channels > 4)
     {
         LOG_ERROR("Invalid channel number " << channels);
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    if(!(data_type == kCV_8U || data_type == kCV_8S ||
-            data_type == kCV_16U || data_type == kCV_16S ||
-            data_type == kCV_32S || data_type == kCV_32F))
+    const int interpolation = flags & NVCV_INTERP_MAX;
+
+    DataType data_type = helpers::GetLegacyDataType(inData.uniqueFormat());
+
+    if (!(data_type == kCV_8U || data_type == kCV_8S || data_type == kCV_16U || data_type == kCV_16S
+          || data_type == kCV_32S || data_type == kCV_32F))
     {
         LOG_ERROR("Invalid DataType " << data_type);
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    CV_Assert(interpolation == cv::INTER_NEAREST || interpolation == cv::INTER_LINEAR || interpolation == cv::INTER_CUBIC);
-    CV_Assert(borderMode == cv::BORDER_REFLECT101 || borderMode == cv::BORDER_REPLICATE
-              || borderMode == cv::BORDER_CONSTANT || borderMode == cv::BORDER_REFLECT || borderMode == cv::BORDER_WRAP);
+    NVCV_ASSERT(interpolation == NVCV_INTERP_NEAREST || interpolation == NVCV_INTERP_LINEAR
+                || interpolation == NVCV_INTERP_CUBIC);
+    NVCV_ASSERT(borderMode == NVCV_BORDER_REFLECT101 || borderMode == NVCV_BORDER_REPLICATE
+                || borderMode == NVCV_BORDER_CONSTANT || borderMode == NVCV_BORDER_REFLECT
+                || borderMode == NVCV_BORDER_WRAP);
 
-    const void **inputs = (const void **)cpu_workspace;
-    void **outputs = (void **)((char *)inputs + sizeof(void *) * batch);
-    int *rows = (int *)((char *)outputs + sizeof(void *) * batch);
-    int *cols = (int *)((char *)rows + sizeof(int) * batch);
-    int *out_rows = (int *)((char *)cols + sizeof(int) * batch);
-    int *out_cols = (int *)((char *)out_rows + sizeof(int) * batch);
-    float *d_aCoeffs = (float *)((char *)out_cols + sizeof(int) * batch);
+    // Check if inverse op is needed
+    bool performInverse = flags & NVCV_WARP_INVERSE_MAP;
 
-    size_t data_size = DataSize(data_type);
-    int max_out_width = 0, max_out_height = 0;
+    // Wrap the matrix in 2D wrappers with proper pitch
+    cuda::Tensor2DWrap<float> transMatrixInput(transMatrix);
+    cuda::Tensor2DWrap<float> transMatrixOutput(m_transformationMatrix, static_cast<int>(sizeof(float) * 9));
 
-    for(int i = 0; i < batch; ++i)
+    if (performInverse)
     {
-        inputs[i] = data_in[i];
-        outputs[i] = data_out[i];
-        rows[i] = input_shape[i].H;
-        cols[i] = input_shape[i].W;
-        out_rows[i] = dsize[i].height;
-        out_cols[i] = dsize[i].width;
-
-        cv::Mat coeffsMat(3, 3, CV_32FC1, (void *)(d_aCoeffs + i * 9));
-        cv::Mat trans_mat(3, 3, CV_32FC1, (void *)(trans_matrix + i * 9));
-        if(flags & cv::WARP_INVERSE_MAP)
-        {
-            trans_mat.convertTo(coeffsMat, coeffsMat.type());
-        }
-        else
-        {
-            cv::Mat iM;
-            cv::invert(trans_mat, iM);
-            iM.convertTo(coeffsMat, coeffsMat.type());
-        }
-
-        if(max_out_width < dsize[i].width)
-            max_out_width = dsize[i].width;
-        if(max_out_height < dsize[i].height)
-            max_out_height = dsize[i].height;
+        inverseMatWarpPerspective<<<1, inData.numImages(), 0, stream>>>(inData.numImages(), transMatrixInput,
+                                                                        transMatrixOutput);
+        checkKernelErrors();
+    }
+    else
+    {
+        NVCV_CHECK_LOG(cudaMemcpy2DAsync(m_transformationMatrix, sizeof(float) * 9, transMatrixInput.ptr(0, 0),
+                                         transMatrixInput.pitchBytes()[0], sizeof(float) * 9, inData.numImages(),
+                                         cudaMemcpyDeviceToDevice, stream));
     }
 
-    const void **inputs_gpu = (const void **)gpu_workspace;
-    void **outputs_gpu = (void **)((char *)inputs_gpu + sizeof(void *) * batch);
-    int *rows_gpu = (int *)((char *)outputs_gpu + sizeof(void *) * batch);
-    int *cols_gpu = (int *)((char *)rows_gpu + sizeof(int) * batch);
-    int *out_rows_gpu = (int *)((char *)cols_gpu + sizeof(int) * batch);
-    int *out_cols_gpu = (int *)((char *)out_rows_gpu + sizeof(int) * batch);
-    float *d_aCoeffs_gpu = (float *)((char *)out_cols_gpu + sizeof(int) * batch);
+    typedef void (*func_t)(const nv::cv::IImageBatchVarShapeDataPitchDevice &inData,
+                           const nv::cv::IImageBatchVarShapeDataPitchDevice &outData,
+                           const cuda::Tensor2DWrap<float> transform, const int interpolation, const int borderMode,
+                           const float4 borderValue, cudaStream_t stream);
 
-    checkCudaErrors(cudaMemcpyAsync((void *)gpu_workspace, (void *)cpu_workspace, buffer_size, cudaMemcpyHostToDevice,
-                                    stream));
-
-    typedef void (*func_t)(const void **input, void **output, float *d_coeffs, const int *height, const int *width,
-                           const int *out_height, const int *out_width, const int max_height, const int max_width, const int batch,
-                           const int interpolation, int borderMode, const float *borderValue, cudaStream_t stream);
-
-    static const func_t funcs[6][4] =
-    {
-        {warpPerspective<uchar>, 0 /*warpPerspective<uchar2>*/, warpPerspective<uchar3>, warpPerspective<uchar4>     },
-        {0 /*warpPerspective<schar>*/, 0 /*warpPerspective<char2>*/, 0 /*warpPerspective<char3>*/, 0 /*warpPerspective<char4>*/},
-        {warpPerspective<ushort>, 0 /*warpPerspective<ushort2>*/, warpPerspective<ushort3>, warpPerspective<ushort4>    },
-        {warpPerspective<short>, 0 /*warpPerspective<short2>*/, warpPerspective<short3>, warpPerspective<short4>     },
-        {0 /*warpPerspective<int>*/, 0 /*warpPerspective<int2>*/, 0 /*warpPerspective<int3>*/, 0 /*warpPerspective<int4>*/ },
-        {warpPerspective<float>, 0 /*warpPerspective<float2>*/, warpPerspective<float3>, warpPerspective<float4>     }
+    static const func_t funcs[6][4] = {
+        {      warpPerspective<uchar>,  0 /*warpPerspective<uchar2>*/,      warpPerspective<uchar3>,warpPerspective<uchar4>                                                                                                    },
+        {0 /*warpPerspective<schar>*/,   0 /*warpPerspective<char2>*/, 0 /*warpPerspective<char3>*/,
+         0 /*warpPerspective<char4>*/                                                                                        },
+        {     warpPerspective<ushort>, 0 /*warpPerspective<ushort2>*/,     warpPerspective<ushort3>, warpPerspective<ushort4>},
+        {      warpPerspective<short>,  0 /*warpPerspective<short2>*/,      warpPerspective<short3>,  warpPerspective<short4>},
+        {  0 /*warpPerspective<int>*/,    0 /*warpPerspective<int2>*/,  0 /*warpPerspective<int3>*/,
+         0 /*warpPerspective<int4>*/                                                                                         },
+        {      warpPerspective<float>,  0 /*warpPerspective<float2>*/,      warpPerspective<float3>,  warpPerspective<float4>}
     };
 
     const func_t func = funcs[data_type][channels - 1];
-    CV_Assert(func != 0);
+    NVCV_ASSERT(func != 0);
 
-    cv::Scalar_<float> borderValueFloat;
-    borderValueFloat = borderValue;
-
-    func(inputs_gpu, outputs_gpu, d_aCoeffs_gpu, rows_gpu, cols_gpu, out_rows_gpu, out_cols_gpu, max_out_height,
-         max_out_width,
-         batch, interpolation, borderMode, borderValueFloat.val, stream);
-    return 0;
+    func(inData, outData, transMatrixOutput, interpolation, borderMode, borderValue, stream);
+    return SUCCESS;
 }
 
-} // cuda_op
+} // namespace nv::cv::legacy::cuda_op

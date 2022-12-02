@@ -11,6 +11,7 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <operators/OpWarpPerspective.hpp>
 #include <private/core/Exception.hpp>
@@ -22,7 +23,8 @@
 namespace priv    = nv::cv::priv;
 namespace priv_op = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopWarpPerspectiveCreate, (NVCVOperatorHandle * handle))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopWarpPerspectiveCreate,
+                (NVCVOperatorHandle * handle, const int maxVarShapeBatchSize))
 {
     return priv::ProtectCall(
         [&]
@@ -32,7 +34,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopWarpPerspectiveCreate, (NVCVOperatorHand
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
             }
 
-            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::WarpPerspective());
+            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::WarpPerspective(maxVarShapeBatchSize));
         });
 }
 
@@ -47,5 +49,20 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopWarpPerspectiveSubmit,
             nv::cv::TensorWrapHandle input(in), output(out);
             priv::ToDynamicRef<priv_op::WarpPerspective>(handle)(stream, input, output, transMatrix, flags, borderMode,
                                                                  borderValue);
+        });
+}
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopWarpPerspectiveVarShapeSubmit,
+                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                 NVCVTensorHandle transMatrix, const int flags, const NVCVBorderType borderMode,
+                 const float4 borderValue))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            nv::cv::ImageBatchVarShapeWrapHandle input(in), output(out);
+            nv::cv::TensorWrapHandle             transMatrixWrap(transMatrix);
+            priv::ToDynamicRef<priv_op::WarpPerspective>(handle)(stream, input, output, transMatrixWrap, flags,
+                                                                 borderMode, borderValue);
         });
 }
