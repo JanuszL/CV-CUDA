@@ -34,6 +34,12 @@ CC=${CC:-gcc}
 target=$($CC -v 2>&1 | sed -n 's@Target: @@pg')
 #echo Targetting $target
 
+if [ ${CC%-*} = $CC ]; then
+    STRIP="strip"
+else
+    STRIP="$target-strip"
+fi
+
 tmp_c=$(mktemp).c
 tmp_v=$(mktemp).v
 tmp_orig_symbols=$(mktemp)
@@ -231,7 +237,7 @@ fi
 
 rm -f $tmp_v $tmp_c
 
-$target-strip -s $stub_dso
+$STRIP -s $stub_dso
 
 function list_contents()
 {
