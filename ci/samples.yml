@@ -31,6 +31,7 @@ test:samples:
     variables:
         CUDA_CACHE_DISABLE: 1
         GIT_STRATEGY: none
+        PYTHON_VERSIONS: "3.8 3.9"
     needs: [ 'b:samples' ]
     tags: [ linux-x64, test, cuda11 ]
     script:
@@ -38,7 +39,9 @@ test:samples:
       - 'ls -1 cvcuda-installer/*.deb'
       - 'version=$(cat cvcuda-installer/VERSION)'
       - "apt-get update"
-      - "apt-get install -y --no-install-recommends ./cvcuda-installer/nvcv-lib-${version}.deb ./cvcuda-installer/nvcv-dev-${version}.deb ./cvcuda-installer/cvcuda-samples-${version}.deb ./cvcuda-installer/nvcv-python3.*-${version}.deb"
+      - 'pkgs="./cvcuda-installer/nvcv-lib-${version}.deb ./cvcuda-installer/nvcv-dev-${version}.deb ./cvcuda-installer/cvcuda-samples-${version}.deb"'
+      - 'for p in $PYTHON_VERSIONS; do pkgs="$pkgs ./cvcuda-installer/nvcv-python$p-${version}.deb"; done'
+      - "apt-get install -y --no-install-recommends $pkgs"
       - "cd /opt/nvidia/cvcuda*/samples"
       - "chmod a+x ./scripts/*.sh"
       - "./scripts/install_dependencies.sh"
