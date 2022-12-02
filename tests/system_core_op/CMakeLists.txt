@@ -26,6 +26,7 @@ add_executable(nvcv_test_system_core_op
     TestOpGaussian.cpp
     TestOpErase.cpp
     TestOpAverageBlur.cpp
+    TestOpConv2D.cpp
 )
 
 target_link_libraries(nvcv_test_system_core_op
