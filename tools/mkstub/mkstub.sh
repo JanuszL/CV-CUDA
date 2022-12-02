@@ -237,9 +237,18 @@ if [ -n "$soname" ]; then
     args="$args -Wl,-soname=$soname"
 fi
 
-# -Wl,--no-ld-generated-unwind-info could help, but isn't supported on ld-2.30 (ubuntu 18.04)
+# Some old versions of ld don't support these options.
+# Let's use only what's supported.
+for p in '--no-ld-generated-unwind-info' '--no-eh-frame-hdr'; do
+    if ld $p 2>&1 | head -n1 | grep -v unrecognized > /dev/null; then
+        args+=" -Wl,$p"
+    else
+        echo "ld: warning: $p ignored"
+    fi
+done
+
 # -Wl,--strip-all ends up breaking ifunc attribute
-if ! $CC -o $stub_dso $tmp_c -Os -Wl,-no-eh-frame-hdr,-z,noseparate-code,-z,norelro -fPIC -fno-asynchronous-unwind-tables -Qn -Wno-implicit-function-declaration -fno-builtin -nostdlib -shared $args; then
+if ! $CC -o $stub_dso $tmp_c -Os -Wl,-z,noseparate-code,-z,norelro -fPIC -fno-asynchronous-unwind-tables -Qn -Wno-implicit-function-declaration -fno-builtin -nostdlib -shared $args; then
     echo "Can't process $dso"
     exit 1
 fi
