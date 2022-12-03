@@ -159,8 +159,8 @@ struct TestSuffixPrinter
 #define NVCV_INSTANTIATE_TEST_SUITE_P(GROUP, TEST, ...)                                                           \
     INSTANTIATE_TEST_SUITE_P(                                                                                     \
         GROUP, TEST,                                                                                              \
-        ::testing::ValuesIn(typename ::nv::cv::test::detail::NormalizeValueList<                                  \
-                            ::nv::cv::test::ValueList<typename TEST::ParamType>>::type(UniqueSort(__VA_ARGS__))), \
+        ::testing::ValuesIn(UniqueSort(typename ::nv::cv::test::detail::NormalizeValueList<                       \
+                                       ::nv::cv::test::ValueList<typename TEST::ParamType>>::type(__VA_ARGS__))), \
         ::nv::cv::test::TestSuffixPrinter())
 
 #define NVCV_TEST_SUITE_P(TEST, ...)                                                              \

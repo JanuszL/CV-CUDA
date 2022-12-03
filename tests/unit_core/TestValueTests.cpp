@@ -137,3 +137,31 @@ TEST_P(ValueTestsNamedNoDefaultParameterTests, test)
     EXPECT_THAT(pf.value, 123);
     EXPECT_THAT(pc, t::AnyOf('a', 'b'));
 }
+
+class ValueTestsInferParameterTypesTests
+    : public t::TestWithParam<std::tuple<test::Param<"param", Foo>, test::Param<"char", char>>>
+{
+};
+
+// clang-format off
+NVCV_INSTANTIATE_TEST_SUITE_P(_, ValueTestsInferParameterTypesTests,
+{
+    { Foo{1}, 'r' },
+    { Foo{2}, 'o' },
+    { Foo{3}, 'd' },
+});
+
+TEST_P(ValueTestsInferParameterTypesTests, test)
+{
+    Foo  pf = std::get<0>(GetParam());
+    char pc = std::get<1>(GetParam());
+
+    test::ValueList<Foo, char> params =
+    {
+        { Foo{1}, 'r' },
+        { Foo{2}, 'o' },
+        { Foo{3}, 'd' },
+    };
+
+    EXPECT_THAT((test::ValueList<Foo,char>{{pf, pc}}), t::IsSubsetOf(params));
+}
