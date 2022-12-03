@@ -55,4 +55,3 @@ test:samples:
       - "chmod a+x ./scripts/*.sh"
       - "./scripts/install_dependencies.sh"
       - "./scripts/run_samples.sh"
-      - "python3 ./classification/python/inference.py"

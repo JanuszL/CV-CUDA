@@ -23,7 +23,7 @@ python3 ./scripts/export_resnet.py
 ./scripts/serialize_models.sh
 
 # Run python sample
-python3 ./classification/python/inference.py
+python3 ./classification/python/inference.py -i ./assets/tabby_tiger_cat.jpg -l ./models/imagenet-classes.txt -b 1
 
 # Classification sample
 # Batch size 1
