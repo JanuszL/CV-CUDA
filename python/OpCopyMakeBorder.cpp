@@ -59,12 +59,12 @@ std::shared_ptr<Tensor> CopyMakeBorderInto(Tensor &input, Tensor &output, NVCVBo
 }
 
 std::shared_ptr<Tensor> CopyMakeBorder(Tensor &input, NVCVBorderType borderMode, const std::vector<float> &borderValue,
-                                       int top, int buttom, int left, int right, std::shared_ptr<Stream> pstream)
+                                       int top, int bottom, int left, int right, std::shared_ptr<Stream> pstream)
 {
     Shape in_shape = input.shape();
     Shape out_shape(in_shape);
     int   cdim = out_shape.size() - 1;
-    out_shape[cdim - 2] += top + buttom;
+    out_shape[cdim - 2] += top + bottom;
     out_shape[cdim - 1] += left + right;
 
     std::shared_ptr<Tensor> output = Tensor::Create(out_shape, input.dtype(), input.layout());
@@ -188,7 +188,7 @@ void ExportOpCopyMakeBorder(py::module &m)
     using namespace pybind11::literals;
 
     DefClassMethod<Tensor>("copymakeborder", &CopyMakeBorder, "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
-                           "border_value"_a = std::vector<float>(), py::kw_only(), "top"_a, "buttom"_a, "left"_a,
+                           "border_value"_a = std::vector<float>(), py::kw_only(), "top"_a, "bottom"_a, "left"_a,
                            "right"_a, "stream"_a = nullptr);
     DefClassMethod<Tensor>(
         "copymakeborder_into", &CopyMakeBorderInto, "output"_a, "border_mode"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
