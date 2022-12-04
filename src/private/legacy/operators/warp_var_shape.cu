@@ -143,6 +143,18 @@ void warp_caller(const Ptr2dVarShapeNHWC<T> src, Ptr2dVarShapeNHWC<T> dst, const
 }
 
 template<typename T>
+void warpAffine(const void **input, void **output, float *d_coeffs, const int *height, const int *width,
+                const int *out_height, const int *out_width, const int max_height, const int max_width, const int batch,
+                const int interpolation, int borderMode, const float *borderValue, cudaStream_t stream)
+{
+    int channels = VecTraits<T>::cn;
+    cuda_op::Ptr2dVarShapeNHWC<T> src_ptr(batch, height, width, channels, (T **) input);
+    cuda_op::Ptr2dVarShapeNHWC<T> dst_ptr(batch, out_height, out_width, channels, (T **) output);
+    warp_caller<AffineTransform, T>(src_ptr, dst_ptr, d_coeffs, max_height, max_width,
+                                    interpolation, borderMode, borderValue, stream);
+}
+
+template<typename T>
 void warpPerspective(const nv::cv::IImageBatchVarShapeDataPitchDevice &inData,
                      const nv::cv::IImageBatchVarShapeDataPitchDevice &outData,
                      const cuda::Tensor2DWrap<float> transform, const int interpolation, const int borderMode,
@@ -155,6 +167,129 @@ void warpPerspective(const nv::cv::IImageBatchVarShapeDataPitchDevice &inData,
 
     warp_caller<PerspectiveTransform, T>(src_ptr, dst_ptr, transform, outMaxSize.h, outMaxSize.w, interpolation,
                                          borderMode, borderValue, stream);
+}
+
+void invertMatVarShape(cv::Mat M, float *h_aCoeffs)
+{
+    float den = M.at<float>(0, 0) * M.at<float>(1, 1) - M.at<float>(0, 1) * M.at<float>(1, 0);
+    den = std::abs(den) > 1e-5 ? 1. / den : .0;
+    h_aCoeffs[0] = (float) M.at<float>(1, 1) * den;
+    h_aCoeffs[1] = (float) - M.at<float>(0, 1) * den;
+    h_aCoeffs[2] = (float)(M.at<float>(0, 1) * M.at<float>(1, 2) - M.at<float>(1, 1) * M.at<float>(0, 2)) * den;
+    h_aCoeffs[3] = (float) - M.at<float>(1, 0) * den;
+    h_aCoeffs[4] = (float) M.at<float>(0, 0) * den;
+    h_aCoeffs[5] = (float)(M.at<float>(1, 0) * M.at<float>(0, 2) - M.at<float>(0, 0) * M.at<float>(1, 2)) * den;
+}
+
+size_t WarpAffineVarShape::calBufferSize(int batch_size)
+{
+    return (2 * sizeof(void *) + 4 * sizeof(int) + 9 * sizeof(float)) * batch_size;
+}
+
+int WarpAffineVarShape::infer(const void **data_in, void **data_out, void *gpu_workspace, void *cpu_workspace,
+                              const int batch, const size_t buffer_size, const cv::Size *dsize, const float *trans_matrix,
+                              const int flags, const int borderMode, const cv::Scalar borderValue, const DataShape *input_shape,
+                              DataFormat format, DataType data_type, cudaStream_t stream)
+{
+    if(!(format == kNHWC || format == kHWC))
+    {
+        LOG_ERROR("Invalid DataFormat " << format);
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    int channels = input_shape[0].C;
+    const int interpolation = flags & cv::INTER_MAX;
+
+    if(channels > 4)
+    {
+        LOG_ERROR("Invalid channel number " << channels);
+        return ErrorCode::INVALID_DATA_SHAPE;
+    }
+
+    if(!(data_type == kCV_8U || data_type == kCV_8S ||
+            data_type == kCV_16U || data_type == kCV_16S ||
+            data_type == kCV_32S || data_type == kCV_32F))
+    {
+        LOG_ERROR("Invalid DataType " << data_type);
+        return ErrorCode::INVALID_DATA_TYPE;
+    }
+
+    CV_Assert(interpolation == cv::INTER_NEAREST || interpolation == cv::INTER_LINEAR || interpolation == cv::INTER_CUBIC);
+    CV_Assert(borderMode == cv::BORDER_REFLECT101 || borderMode == cv::BORDER_REPLICATE
+              || borderMode == cv::BORDER_CONSTANT || borderMode == cv::BORDER_REFLECT || borderMode == cv::BORDER_WRAP);
+
+    const void **inputs = (const void **)cpu_workspace;
+    void **outputs = (void **)((char *)inputs + sizeof(void *) * batch);
+    int *rows = (int *)((char *)outputs + sizeof(void *) * batch);
+    int *cols = (int *)((char *)rows + sizeof(int) * batch);
+    int *out_rows = (int *)((char *)cols + sizeof(int) * batch);
+    int *out_cols = (int *)((char *)out_rows + sizeof(int) * batch);
+    float *h_aCoeffs = (float *)((char *)out_cols + sizeof(int) * batch);
+
+    size_t data_size = DataSize(data_type);
+    int max_out_width = 0, max_out_height = 0;
+
+    for(int i = 0; i < batch; ++i)
+    {
+        inputs[i] = data_in[i];
+        outputs[i] = data_out[i];
+        rows[i] = input_shape[i].H;
+        cols[i] = input_shape[i].W;
+        out_rows[i] = dsize[i].height;
+        out_cols[i] = dsize[i].width;
+
+        cv::Mat coeffsMat(2, 3, CV_32FC1, (void *)(h_aCoeffs + i * 9));
+        cv::Mat trans_mat(2, 3, CV_32FC1, (void *)(trans_matrix + i * 6));
+        if(flags & cv::WARP_INVERSE_MAP)
+        {
+            trans_mat.convertTo(coeffsMat, coeffsMat.type());
+        }
+        else
+        {
+            invertMatVarShape(trans_mat, h_aCoeffs + i * 9);
+        }
+
+        if(max_out_width < dsize[i].width)
+            max_out_width = dsize[i].width;
+        if(max_out_height < dsize[i].height)
+            max_out_height = dsize[i].height;
+    }
+
+    const void **inputs_gpu = (const void **)gpu_workspace;
+    void **outputs_gpu = (void **)((char *)inputs_gpu + sizeof(void *) * batch);
+    int *rows_gpu = (int *)((char *)outputs_gpu + sizeof(void *) * batch);
+    int *cols_gpu = (int *)((char *)rows_gpu + sizeof(int) * batch);
+    int *out_rows_gpu = (int *)((char *)cols_gpu + sizeof(int) * batch);
+    int *out_cols_gpu = (int *)((char *)out_rows_gpu + sizeof(int) * batch);
+    float *d_aCoeffs_gpu = (float *)((char *)out_cols_gpu + sizeof(int) * batch);
+
+    checkCudaErrors(cudaMemcpyAsync((void *)gpu_workspace, (void *)cpu_workspace, buffer_size, cudaMemcpyHostToDevice,
+                                    stream));
+
+    typedef void (*func_t)(const void **input, void **output, float *d_coeffs, const int *height, const int *width,
+                           const int *out_height, const int *out_width, const int max_height, const int max_width, const int batch,
+                           const int interpolation, int borderMode, const float *borderValue, cudaStream_t stream);
+
+    static const func_t funcs[6][4] =
+    {
+        {warpAffine<uchar>, 0 /*warpAffine<uchar2>*/, warpAffine<uchar3>, warpAffine<uchar4>     },
+        {0 /*warpAffine<schar>*/, 0 /*warpAffine<char2>*/, 0 /*warpAffine<char3>*/, 0 /*warpAffine<char4>*/},
+        {warpAffine<ushort>, 0 /*warpAffine<ushort2>*/, warpAffine<ushort3>, warpAffine<ushort4>    },
+        {warpAffine<short>, 0 /*warpAffine<short2>*/, warpAffine<short3>, warpAffine<short4>     },
+        {0 /*warpAffine<int>*/, 0 /*warpAffine<int2>*/, 0 /*warpAffine<int3>*/, 0 /*warpAffine<int4>*/ },
+        {warpAffine<float>, 0 /*warpAffine<float2>*/, warpAffine<float3>, warpAffine<float4>     }
+    };
+
+    const func_t func = funcs[data_type][channels - 1];
+    CV_Assert(func != 0);
+
+    cv::Scalar_<float> borderValueFloat;
+    borderValueFloat = borderValue;
+
+    func(inputs_gpu, outputs_gpu, d_aCoeffs_gpu, rows_gpu, cols_gpu, out_rows_gpu, out_cols_gpu, max_out_height,
+         max_out_width,
+         batch, interpolation, borderMode, borderValueFloat.val, stream);
+    return 0;
 }
 
 WarpPerspectiveVarShape::WarpPerspectiveVarShape(const int32_t maxBatchSize)

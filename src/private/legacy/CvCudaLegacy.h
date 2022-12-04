@@ -1956,6 +1956,49 @@ protected:
     float    *m_transformationMatrix = nullptr;
 };
 
+class WarpAffineVarShape : public CudaBaseOp
+{
+public:
+    WarpAffineVarShape() = delete;
+    WarpAffineVarShape(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+    /**
+     * @brief Applies an affine transformation to an image. Same function as cv::warpAffine.
+     * @param inputs gpu pointer, inputs[i] is input image where i ranges from 0 to batch-1, whose shape is
+     * input_shape[i] and type is data_type.
+     * @param outputs gpu pointer, outputs[i] is output image where i ranges from 0 to batch-1, whose size is dsize[i]
+     * and type is data_type.
+     * @param gpu_workspace gpu pointer, gpu memory used to store the temporary variable.
+     * @param cpu_workspace cpu pointer, storage transformation matrix or inverse transformation matrix. It has the same
+     * size as trans_matrix, e.g. 3x3.
+     * @param batch batch size of the input images.
+     * @param buffer_size size of the gpu_workspace/cpu_workspace.
+     * @param dsize cpu pointer, sizes of the output images.
+     * @param trans_matrix cpu pointer, 2×3 transformation matrix.
+     * @param flags Combination of interpolation methods(INTER_NEAREST or INTER_LINEAR) and the optional flag
+     * WARP_INVERSE_MAP, that sets trans_matrix as the inverse transformation ( dst→src ).
+     * @param borderMode pixel extrapolation method (BORDER_CONSTANT or BORDER_REPLICATE).
+     * @param borderValue used in case of a constant border.
+     * @param input_shape cpu pointer, shapes of the input images.
+     * @param format format of the input images, e.g. kNHWC.
+     * @param data_type data type of the input images, e.g. kCV_32F.
+     * @param stream for the asynchronous execution.
+     */
+    int infer(
+                    const void **inputs, void **outputs, void *gpu_workspace, void *cpu_workspace, const int batch,
+                    const size_t buffer_size, const cv::Size *dsize, const float *trans_matrix, const int flags,
+                    const int borderMode, const cv::Scalar borderValue, const DataShape *input_shape, DataFormat format,
+                    DataType data_type, cudaStream_t stream);
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param batch_size maximum input batch size
+     */
+    size_t calBufferSize(int batch_size);
+};
+
+
 } // namespace nv::cv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H
