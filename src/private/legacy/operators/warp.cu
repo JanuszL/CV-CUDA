@@ -135,7 +135,7 @@ static void invertMat(const float *M, float *h_aCoeffs)
 namespace nv::cv::legacy::cuda_op {
 
 ErrorCode WarpAffine::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
-                            const float *xform, const int flags, const NVCVBorderType borderMode,
+                            const float *xform, const int32_t flags, const NVCVBorderType borderMode,
                             const float4 borderValue, cudaStream_t stream)
 {
     DataFormat input_format  = GetLegacyDataFormat(inData.layout());

@@ -1871,7 +1871,8 @@ public:
      * @param stream for the asynchronous execution.
     */
     ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, const float *xform,
-                    const int flags, const NVCVBorderType borderMode, const float4 borderValue, cudaStream_t stream);
+                    const int32_t flags, const NVCVBorderType borderMode, const float4 borderValue,
+                    cudaStream_t stream);
 };
 
 class WarpPerspective : public CudaBaseOp
@@ -1960,10 +1961,10 @@ class WarpAffineVarShape : public CudaBaseOp
 {
 public:
     WarpAffineVarShape() = delete;
-    WarpAffineVarShape(DataShape max_input_shape, DataShape max_output_shape)
-        : CudaBaseOp(max_input_shape, max_output_shape)
-    {
-    }
+
+    WarpAffineVarShape(const int32_t maxBatchSize);
+
+    ~WarpAffineVarShape();
     /**
      * @brief Applies an affine transformation to an image. Same function as cv::warpAffine.
      * @param inputs gpu pointer, inputs[i] is input image where i ranges from 0 to batch-1, whose shape is
@@ -1986,18 +1987,14 @@ public:
      * @param data_type data type of the input images, e.g. kCV_32F.
      * @param stream for the asynchronous execution.
      */
-    int infer(
-                    const void **inputs, void **outputs, void *gpu_workspace, void *cpu_workspace, const int batch,
-                    const size_t buffer_size, const cv::Size *dsize, const float *trans_matrix, const int flags,
-                    const int borderMode, const cv::Scalar borderValue, const DataShape *input_shape, DataFormat format,
-                    DataType data_type, cudaStream_t stream);
-    /**
-     * @brief calculate the cpu/gpu buffer size needed by this operator
-     * @param batch_size maximum input batch size
-     */
-    size_t calBufferSize(int batch_size);
-};
+    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
+                    const ITensorDataPitchDevice &transMatrix, const int32_t flags, const NVCVBorderType borderMode,
+                    const float4 borderValue, cudaStream_t stream);
 
+protected:
+    const int m_maxBatchSize;
+    float    *m_transformationMatrix = nullptr;
+};
 
 } // namespace nv::cv::legacy::cuda_op
 
