@@ -2018,6 +2018,7 @@ NVCV_INSTANTIATE_TEST_SUITE_P(_,ImageFormatPlanePixelStrideBytesExecTests,
                                 {NVCV_IMAGE_FORMAT_NV12, 1, 2},
                                 {NVCV_IMAGE_FORMAT_RGB8, 0, 3},
                                 {NVCV_IMAGE_FORMAT_RGBA8, 0, 4},
+                                {NVCV_IMAGE_FORMAT_HSV8, 0, 3},
                                 {NVCV_IMAGE_FORMAT_U8, 0, 1},
                                 {NVCV_IMAGE_FORMAT_U16, 0, 2},
                               });
