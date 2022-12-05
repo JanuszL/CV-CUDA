@@ -265,7 +265,7 @@ Gaussian::Gaussian(DataShape max_input_shape, DataShape max_output_shape, Size2D
     : CudaBaseOp(max_input_shape, max_output_shape)
     , m_maxKernelSize(maxKernelSize)
 {
-    NVCV_CHECK_LOG(cudaMalloc(&m_kernel, maxKernelSize.w * maxKernelSize.h * sizeof(float)));
+    NVCV_CHECK_THROW(cudaMalloc(&m_kernel, maxKernelSize.w * maxKernelSize.h * sizeof(float)));
 }
 
 Gaussian::~Gaussian()
@@ -398,7 +398,7 @@ AverageBlur::AverageBlur(DataShape max_input_shape, DataShape max_output_shape, 
     : CudaBaseOp(max_input_shape, max_output_shape)
     , m_maxKernelSize(maxKernelSize)
 {
-    NVCV_CHECK_LOG(cudaMalloc(&m_kernel, maxKernelSize.w * maxKernelSize.h * sizeof(float)));
+    NVCV_CHECK_THROW(cudaMalloc(&m_kernel, maxKernelSize.w * maxKernelSize.h * sizeof(float)));
 }
 
 AverageBlur::~AverageBlur()
