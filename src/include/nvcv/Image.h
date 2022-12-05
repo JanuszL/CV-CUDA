@@ -73,6 +73,18 @@ typedef struct NVCVImageRequirementsRec
  * @param [in] format       Image format.
  *                          + Must not be \ref NVCV_IMAGE_FORMAT_NONE.
  *
+ * @param [in] baseAddrAlignment Alignment, in bytes, of the requested memory buffer.
+ *                               If 0, use a default suitable for optimized memory access.
+ *                               The used alignment is at least the given value.
+ *                               + If different from 0, it must be a power-of-two.
+ *
+ * @param [in] rowAddrAlignment Alignment, in bytes, of each image's row address.
+ *                              If 0, use a default suitable for optimized memory access.
+ *                              The used alignment is at least the given value.
+ *                              Pass 1 for fully packed rows, i.e., no padding
+ *                              at the end of each row.
+ *                              + If different from 0, it must be a power-of-two.
+ *
  * @param [out] reqs        Where the image requirements will be written to.
  *                          + Must not be NULL.
  *
@@ -80,6 +92,7 @@ typedef struct NVCVImageRequirementsRec
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvImageCalcRequirements(int32_t width, int32_t height, NVCVImageFormat format,
+                                                 int32_t baseAddrAlignment, int32_t rowAddrAlignment,
                                                  NVCVImageRequirements *reqs);
 
 /** Constructs and an image instance with given requirements in the given storage.

@@ -56,18 +56,24 @@ TEST(Image, wip_create_managed)
 {
     namespace nvcv = nv::cv;
 
+    int64_t setBufLen   = 0;
+    int32_t setBufAlign = 0;
+
     // clang-format off
     nvcv::CustomAllocator managedAlloc
     {
         nvcv::CustomDeviceMemAllocator
         {
-            [](int64_t size, int32_t)
+            [&setBufLen, &setBufAlign](int64_t size, int32_t bufAlign)
             {
+                setBufLen = size;
+                setBufAlign = bufAlign;
+
                  void *ptr = nullptr;
                  cudaMallocManaged(&ptr, size);
                  return ptr;
             },
-            [](void *ptr, int64_t, int32_t)
+            [](void *ptr, int64_t bufLen, int32_t bufAlign)
             {
                 cudaFree(ptr);
             }
@@ -75,7 +81,9 @@ TEST(Image, wip_create_managed)
     };
     // clang-format on
 
-    nvcv::Image img({163, 117}, nvcv::FMT_RGBA8, &managedAlloc);
+    nvcv::Image img({163, 117}, nvcv::FMT_RGBA8, &managedAlloc,
+                    nvcv::MemAlignment{}.rowAddr(1).baseAddr(32)); // packed rows
+    EXPECT_EQ(32, setBufAlign);
 
     const nvcv::IImageData *data = img.exportData();
     ASSERT_NE(nullptr, data);

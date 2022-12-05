@@ -24,7 +24,7 @@ public:
     explicit Image(NVCVImageRequirements reqs, IAllocator &alloc);
     ~Image();
 
-    static NVCVImageRequirements CalcRequirements(Size2D size, ImageFormat fmt);
+    static NVCVImageRequirements CalcRequirements(Size2D size, ImageFormat fmt, int32_t baseAlign, int32_t rowAlign);
 
     Size2D        size() const override;
     ImageFormat   format() const override;

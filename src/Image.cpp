@@ -22,8 +22,9 @@
 
 namespace priv = nv::cv::priv;
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageCalcRequirements,
-                (int32_t width, int32_t height, NVCVImageFormat format, NVCVImageRequirements *reqs))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageCalcRequirements,
+                (int32_t width, int32_t height, NVCVImageFormat format, int32_t baseAlign, int32_t rowAlign,
+                 NVCVImageRequirements *reqs))
 {
     return priv::ProtectCall(
         [&]
@@ -33,7 +34,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageCalcRequirements,
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output requirements must not be NULL");
             }
 
-            *reqs = priv::Image::CalcRequirements({width, height}, priv::ImageFormat{format});
+            *reqs = priv::Image::CalcRequirements({width, height}, priv::ImageFormat{format}, baseAlign, rowAlign);
         });
 }
 

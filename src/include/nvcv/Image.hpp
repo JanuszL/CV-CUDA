@@ -31,10 +31,10 @@ class Image : public IImage
 {
 public:
     using Requirements = NVCVImageRequirements;
-    static Requirements CalcRequirements(const Size2D &size, ImageFormat fmt);
+    static Requirements CalcRequirements(const Size2D &size, ImageFormat fmt, const MemAlignment &bufAlign = {});
 
     explicit Image(const Requirements &reqs, IAllocator *alloc = nullptr);
-    explicit Image(const Size2D &size, ImageFormat fmt, IAllocator *alloc = nullptr);
+    explicit Image(const Size2D &size, ImageFormat fmt, IAllocator *alloc = nullptr, const MemAlignment &bufAlign = {});
     ~Image();
 
     Image(const Image &) = delete;
@@ -77,9 +77,9 @@ public:
     ImageWrapHandle(const ImageWrapHandle &that);
 
 private:
-    NVCVImageHandle m_handle;
-
     NVCVImageHandle doGetHandle() const final;
+
+    NVCVImageHandle m_handle;
 };
 
 }} // namespace nv::cv
