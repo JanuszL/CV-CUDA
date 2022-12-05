@@ -1328,6 +1328,75 @@ public:
                     const ITensorDataPitchDevice &kernelAnchorData, NVCVBorderType borderMode, cudaStream_t stream);
 };
 
+class LaplacianVarShape : public CudaBaseOp
+{
+public:
+    LaplacianVarShape() = delete;
+
+    LaplacianVarShape(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * Limitations:
+     *
+     * Input:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | No
+     *      32bit Unsigned | No
+     *      32bit Signed   | No
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Output:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | No
+     *      32bit Unsigned | No
+     *      32bit Signed   | No
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Input/Output dependency
+     *
+     *      Property      |  Input == Output
+     *     -------------- | -------------
+     *      Data Layout   | Yes
+     *      Data Type     | Yes
+     *      Number        | Yes
+     *      Channels      | Yes
+     *      Width         | Yes
+     *      Height        | Yes
+     *
+     * @brief Calculates the Laplacian of an image.
+     * @param inData Input image batch var shape
+     * @param outData Output image batch var shape
+     * @param batch batch size of the input images.
+     * @param buffer_size size of the gpu_workspace/cpu_workspace.
+     * @param ksize aperture size used to compute the second-derivative filters
+     * @param scale optional scale factor for the computed Laplacian values. By default, no scaling is applied.
+     * @param borderMode pixel extrapolation method, e.g. cv::BORDER_CONSTANT
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
+                    const ITensorDataPitchDevice &ksize, const ITensorDataPitchDevice &scale, NVCVBorderType borderMode,
+                    cudaStream_t stream);
+};
+
 } // namespace nv::cv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H

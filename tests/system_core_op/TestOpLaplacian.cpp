@@ -16,6 +16,7 @@
 #include <common/ConvUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <nvcv/Image.hpp>
+#include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/cuda/TypeTraits.hpp>
@@ -127,4 +128,146 @@ TEST_P(OpLaplacian, correct_output)
                    borderValue);
 
     EXPECT_EQ(testVec, goldVec);
+}
+
+TEST_P(OpLaplacian, varshape_correct_output)
+{
+    cudaStream_t stream;
+    ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
+
+    int width   = GetParamValue<0>();
+    int height  = GetParamValue<1>();
+    int batches = GetParamValue<2>();
+
+    nvcv::ImageFormat format{GetParamValue<3>()};
+
+    int   ksize = GetParamValue<4>();
+    float scale = GetParamValue<5>();
+
+    NVCVBorderType borderMode = GetParamValue<6>();
+
+    float4 borderValue = cuda::SetAll<float4>(0);
+
+    // Create input varshape
+    std::default_random_engine         rng;
+    std::uniform_int_distribution<int> udistWidth(width * 0.8, width * 1.1);
+    std::uniform_int_distribution<int> udistHeight(height * 0.8, height * 1.1);
+
+    std::vector<std::unique_ptr<nv::cv::Image>> imgSrc;
+
+    std::vector<std::vector<uint8_t>> srcVec(batches);
+    std::vector<int>                  srcVecRowPitch(batches);
+
+    for (int i = 0; i < batches; ++i)
+    {
+        imgSrc.emplace_back(std::make_unique<nv::cv::Image>(nv::cv::Size2D{udistWidth(rng), udistHeight(rng)}, format));
+
+        int srcRowPitch   = imgSrc[i]->size().w * format.planePixelStrideBytes(0);
+        srcVecRowPitch[i] = srcRowPitch;
+
+        std::uniform_int_distribution<uint8_t> udist(0, 255);
+
+        srcVec[i].resize(imgSrc[i]->size().h * srcRowPitch);
+        std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
+
+        auto *imgData = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        ASSERT_NE(imgData, nullptr);
+
+        // Copy input data to the GPU
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2DAsync(imgData->plane(0).buffer, imgData->plane(0).pitchBytes, srcVec[i].data(),
+                                    srcRowPitch, srcRowPitch, imgSrc[i]->size().h, cudaMemcpyHostToDevice, stream));
+    }
+
+    nv::cv::ImageBatchVarShape batchSrc(batches);
+    batchSrc.pushBack(imgSrc.begin(), imgSrc.end());
+
+    // Create output varshape
+    std::vector<std::unique_ptr<nv::cv::Image>> imgDst;
+    for (int i = 0; i < batches; ++i)
+    {
+        imgDst.emplace_back(std::make_unique<nv::cv::Image>(imgSrc[i]->size(), imgSrc[i]->format()));
+    }
+    nv::cv::ImageBatchVarShape batchDst(batches);
+    batchDst.pushBack(imgDst.begin(), imgDst.end());
+
+    // Create kernel aperture size tensor
+    nv::cv::Tensor ksizeTensor({{batches}, "N"}, nv::cv::TYPE_S32);
+    {
+        auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(ksizeTensor.exportData());
+        ASSERT_NE(dev, nullptr);
+
+        std::vector<int> vec(batches, ksize);
+
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpyAsync(dev->data(), vec.data(), vec.size() * sizeof(int), cudaMemcpyHostToDevice, stream));
+    }
+
+    // Create scale tensor
+    nv::cv::Tensor scaleTensor({{batches}, "N"}, nv::cv::TYPE_F32);
+    {
+        auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(scaleTensor.exportData());
+        ASSERT_NE(dev, nullptr);
+
+        std::vector<float> vec(batches, scale);
+
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpyAsync(dev->data(), vec.data(), vec.size() * sizeof(float), cudaMemcpyHostToDevice, stream));
+    }
+
+    // Run operator
+    nv::cvop::Laplacian laplacianOp;
+
+    EXPECT_NO_THROW(laplacianOp(stream, batchSrc, batchDst, ksizeTensor, scaleTensor, borderMode));
+
+    ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
+    ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
+
+    // Check test data against gold
+    for (int i = 0; i < batches; ++i)
+    {
+        SCOPED_TRACE(i);
+
+        const auto *srcData = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        ASSERT_EQ(srcData->numPlanes(), 1);
+
+        const auto *dstData = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(imgDst[i]->exportData());
+        ASSERT_EQ(dstData->numPlanes(), 1);
+
+        int dstRowPitch = srcVecRowPitch[i];
+
+        int3  shape{srcData->plane(0).width, srcData->plane(0).height, 1};
+        long3 pitches{shape.y * dstRowPitch, dstRowPitch, format.planePixelStrideBytes(0)};
+
+        std::vector<uint8_t> testVec(shape.y * pitches.y);
+
+        // Copy output data to Host
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2D(testVec.data(), dstRowPitch, dstData->plane(0).buffer, dstData->plane(0).pitchBytes,
+                               dstRowPitch, shape.y, cudaMemcpyDeviceToHost));
+
+        // Generate gold result
+        std::vector<float> kernel(9);
+        nv::cv::Size2D     kernelSize{3, 3};
+        int2               kernelAnchor{kernelSize.w / 2, kernelSize.h / 2};
+
+        for (int i = 0; i < 9; ++i)
+        {
+            if (ksize == 1)
+            {
+                kernel[i] = kLaplacianKernel1[i] * scale;
+            }
+            else if (ksize == 3)
+            {
+                kernel[i] = kLaplacianKernel3[i] * scale;
+            }
+        }
+
+        std::vector<uint8_t> goldVec(shape.y * pitches.y);
+
+        test::Convolve(goldVec, pitches, srcVec[i], pitches, shape, format, kernel, kernelSize, kernelAnchor,
+                       borderMode, borderValue);
+
+        EXPECT_EQ(testVec, goldVec);
+    }
 }

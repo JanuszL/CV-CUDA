@@ -11,6 +11,7 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <operators/OpLaplacian.hpp>
 #include <private/core/Exception.hpp>
@@ -45,5 +46,18 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopLaplacianSubmit,
         {
             nv::cv::TensorWrapHandle output(out), input(in);
             priv::ToDynamicRef<priv_op::Laplacian>(handle)(stream, input, output, ksize, scale, borderMode);
+        });
+}
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopLaplacianVarShapeSubmit,
+                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                 NVCVTensorHandle ksize, NVCVTensorHandle scale, NVCVBorderType borderMode))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            nv::cv::ImageBatchVarShapeWrapHandle inWrap(in), outWrap(out);
+            nv::cv::TensorWrapHandle             ksizeWrap(ksize), scaleWrap(scale);
+            priv::ToDynamicRef<priv_op::Laplacian>(handle)(stream, inWrap, outWrap, ksizeWrap, scaleWrap, borderMode);
         });
 }

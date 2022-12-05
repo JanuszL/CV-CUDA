@@ -23,6 +23,7 @@
 #include "IOperator.hpp"
 
 #include <cuda_runtime.h>
+#include <nvcv/IImageBatch.hpp>
 #include <nvcv/ITensor.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 #include <private/core/Exception.hpp>
@@ -44,8 +45,12 @@ public:
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, const int ksize,
                     const float scale, const NVCVBorderType borderMode) const;
 
+    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
+                    const cv::ITensor &ksize, const cv::ITensor &scale, NVCVBorderType borderMode) const;
+
 private:
-    std::unique_ptr<cv::legacy::cuda_op::Laplacian> m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::Laplacian>         m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::LaplacianVarShape> m_legacyOpVarShape;
 };
 
 } // namespace nv::cvop::priv
