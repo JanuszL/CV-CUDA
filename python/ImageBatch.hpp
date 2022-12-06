@@ -35,6 +35,9 @@ public:
 
     static std::shared_ptr<ImageBatchVarShape> Create(int capacity);
 
+    std::shared_ptr<ImageBatchVarShape>       shared_from_this();
+    std::shared_ptr<const ImageBatchVarShape> shared_from_this() const;
+
     const cv::ImageBatchVarShape &impl() const;
     cv::ImageBatchVarShape       &impl();
 

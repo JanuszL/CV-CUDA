@@ -139,6 +139,16 @@ auto ImageBatchVarShape::end() const -> ImageList::const_iterator
     return m_list.end();
 }
 
+std::shared_ptr<ImageBatchVarShape> ImageBatchVarShape::shared_from_this()
+{
+    return std::static_pointer_cast<ImageBatchVarShape>(Container::shared_from_this());
+}
+
+std::shared_ptr<const ImageBatchVarShape> ImageBatchVarShape::shared_from_this() const
+{
+    return std::static_pointer_cast<const ImageBatchVarShape>(Container::shared_from_this());
+}
+
 void ImageBatchVarShape::Export(py::module &m)
 {
     using namespace py::literals;
