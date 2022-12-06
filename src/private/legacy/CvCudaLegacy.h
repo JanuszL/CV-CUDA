@@ -678,6 +678,39 @@ protected:
     double *d_aCoeffs;
 };
 
+class MedianBlur : public CudaBaseOp
+{
+public:
+    MedianBlur() = delete;
+
+    MedianBlur(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * @brief Blur an image using a median kernel.
+     * @param inputs gpu pointer, inputs[0] are batched input images, whose shape is input_shape and type is data_type.
+     * @param outputs gpu pointer, outputs[0] are batched output images that have the size dsize and the same type as
+     * data_type.
+     * @param workspace gpu pointer, gpu memory used to store the temporary variables.
+     * @param ksize median blur kernel size.
+     * @param input_shape shape of the input images.
+     * @param format format of the input images, e.g. kNHWC.
+     * @param data_type data type of the input images, e.g. kCV_32F.
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, const cv::Size2D ksize,
+                    cudaStream_t stream);
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param max_input_shape maximum input DataShape that may be used
+     * @param max_output_shape maximum output DataShape that may be used
+     * @param max_data_type DataType with the maximum size that may be used
+     */
+    size_t    calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
+};
+
 class NormalizeVarShape : public CudaBaseOp
 {
 public:

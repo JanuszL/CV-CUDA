@@ -25,6 +25,7 @@ add_library(nvcv_private_operators STATIC
     OpErase.cpp
     OpAverageBlur.cpp
     OpConv2D.cpp
+    OpMedianBlur.cpp
 )
 
 target_include_directories(nvcv_private_operators
