@@ -27,6 +27,7 @@
 #include "detail/Export.h"
 
 #include <cuda_runtime.h>
+#include <nvcv/ImageBatch.h>
 #include <nvcv/Status.h>
 #include <nvcv/Tensor.h>
 
@@ -43,12 +44,15 @@ extern "C"
  *                            + Positive value.
  * @param [in] maxKernelHeight The maximum kernel height that will be used by the operator.
  *                            + Positive value.
+ * @param [in] maxVarShapeBatchSize The maximum batch size that will be used by the var-shape operator.
+ *                                  + Positive value.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Handle is null.
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the operator.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_OP_PUBLIC NVCVStatus nvcvopAverageBlurCreate(NVCVOperatorHandle *handle, int maxKernelWidth, int maxKernelHeight);
+NVCV_OP_PUBLIC NVCVStatus nvcvopAverageBlurCreate(NVCVOperatorHandle *handle, int maxKernelWidth, int maxKernelHeight,
+                                                  int maxVarShapeBatchSize);
 
 /** Executes the AverageBlur operation on the given cuda stream.  This operation does not wait for completion.
  *
@@ -122,6 +126,22 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopAverageBlurCreate(NVCVOperatorHandle *handle, in
 NVCV_OP_PUBLIC NVCVStatus nvcvopAverageBlurSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
                                                   NVCVTensorHandle out, int kernelWidth, int kernelHeight,
                                                   int kernelAnchorX, int kernelAnchorY, NVCVBorderType borderMode);
+
+/**
+ * Executes the AverageBlur operation on a batch of images.
+ *
+ * @param[in] in Input image batch.
+ * @param[out] out Output image batch.
+ * @param[in] kernelSize Average blur kernel size as a Tensor of int2.
+ *                       + Must be of pixel type NVCV_PIXEL_TYPE_2S32
+ * @param[in] kernelAnchor Average blur kernel anchor as a Tensor of int2.
+ *                         + Must be of pixel type NVCV_PIXEL_TYPE_2S32
+ * @param[in] borderMode Border mode to be used when accessing elements outside input image, cf. \p NVCVBorderType.
+ */
+NVCV_OP_PUBLIC NVCVStatus nvcvopAverageBlurVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
+                                                          NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                                                          NVCVTensorHandle kernelSize, NVCVTensorHandle kernelAnchor,
+                                                          NVCVBorderType borderMode);
 
 #ifdef __cplusplus
 }

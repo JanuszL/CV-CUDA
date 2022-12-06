@@ -23,6 +23,7 @@
 #include "IOperator.hpp"
 
 #include <cuda_runtime.h>
+#include <nvcv/IImageBatch.hpp>
 #include <nvcv/ITensor.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 #include <private/core/Exception.hpp>
@@ -39,13 +40,17 @@ namespace nv::cvop::priv {
 class AverageBlur final : public OperatorBase
 {
 public:
-    explicit AverageBlur(cv::Size2D maxKernelSize);
+    explicit AverageBlur(cv::Size2D maxKernelSize, int maxBatchSize);
 
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, cv::Size2D kernelSize,
                     int2 kernelAnchor, NVCVBorderType borderMode) const;
 
+    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
+                    const cv::ITensor &kernelSize, const cv::ITensor &kernelAnchor, NVCVBorderType borderMode) const;
+
 private:
-    std::unique_ptr<cv::legacy::cuda_op::AverageBlur> m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::AverageBlur>         m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::AverageBlurVarShape> m_legacyOpVarShape;
 };
 
 } // namespace nv::cvop::priv
