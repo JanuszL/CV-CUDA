@@ -43,6 +43,9 @@ public:
     void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, cv::ITensor &anchor, cv::ITensor &erasing,
                     cv::ITensor &values, cv::ITensor &imgIdx, bool random, unsigned int seed);
 
+    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out, cv::ITensor &anchor,
+                    cv::ITensor &erasing, cv::ITensor &values, cv::ITensor &imgIdx, bool random, unsigned int seed);
+
     virtual NVCVOperatorHandle handle() const noexcept override;
 
 private:
@@ -67,6 +70,14 @@ inline void Erase::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor 
 {
     cv::detail::CheckThrow(nvcvopEraseSubmit(m_handle, stream, in.handle(), out.handle(), anchor.handle(),
                                              erasing.handle(), values.handle(), imgIdx.handle(), random, seed));
+}
+
+inline void Erase::operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
+                              cv::ITensor &anchor, cv::ITensor &erasing, cv::ITensor &values, cv::ITensor &imgIdx,
+                              bool random, unsigned int seed)
+{
+    cv::detail::CheckThrow(nvcvopEraseVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), anchor.handle(),
+                                                     erasing.handle(), values.handle(), imgIdx.handle(), random, seed));
 }
 
 inline NVCVOperatorHandle Erase::handle() const noexcept

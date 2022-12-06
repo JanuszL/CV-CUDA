@@ -51,3 +51,18 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopEraseSubmit,
                                                        imgIdxwrap, random, seed);
         });
 }
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopEraseVarShapeSubmit,
+                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                 NVCVTensorHandle anchor, NVCVTensorHandle erasing, NVCVTensorHandle values, NVCVTensorHandle imgIdx,
+                 bool random, unsigned int seed))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            nv::cv::ImageBatchVarShapeWrapHandle input(in), output(out);
+            nv::cv::TensorWrapHandle anchorwrap(anchor), erasingwrap(erasing), valueswrap(values), imgIdxwrap(imgIdx);
+            priv::ToDynamicRef<priv_op::Erase>(handle)(stream, input, output, anchorwrap, erasingwrap, valueswrap,
+                                                       imgIdxwrap, random, seed);
+        });
+}

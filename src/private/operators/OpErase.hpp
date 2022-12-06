@@ -47,8 +47,13 @@ public:
                     cv::ITensor &erasing, cv::ITensor &values, cv::ITensor &imgIdx, bool random,
                     unsigned int seed) const;
 
+    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
+                    cv::ITensor &anchor, cv::ITensor &erasing, cv::ITensor &values, cv::ITensor &imgIdx, bool random,
+                    unsigned int seed) const;
+
 private:
-    std::unique_ptr<cv::legacy::cuda_op::Erase> m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::Erase>         m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::EraseVarShape> m_legacyOpVarShape;
 };
 
 } // namespace nv::cvop::priv
