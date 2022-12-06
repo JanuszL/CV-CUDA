@@ -129,7 +129,7 @@ ErrorCode Reformat::infer(const nv::cv::ITensorDataPitchDevice &inData, const nv
             void *inSampData  = inAccess->sampleData(i);
             void *outSampData = outAccess->sampleData(i);
 
-            for (uint32_t p = 0; p < inAccess->numPlanes(); ++p)
+            for (int p = 0; p < inAccess->numPlanes(); ++p)
             {
                 checkCudaErrors(cudaMemcpy2DAsync(outAccess->planeData(p, outSampData), outAccess->rowPitchBytes(),
                                                   inAccess->planeData(p, inSampData), inAccess->rowPitchBytes(),
