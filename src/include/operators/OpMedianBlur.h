@@ -41,11 +41,13 @@ extern "C"
  * @param [out] handle Where the image instance handle will be written to.
  *                     + Must not be NULL.
  *
+ * @param [in] maxVarShapeBatchSize maximum batch size for var shape operator
+ *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Handle is null.
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the operator.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_OP_PUBLIC NVCVStatus nvcvopMedianBlurCreate(NVCVOperatorHandle *handle);
+NVCV_OP_PUBLIC NVCVStatus nvcvopMedianBlurCreate(NVCVOperatorHandle *handle, const int maxVarShapeBatchSize);
 
 /** Executes the median blur operation on the given cuda stream. This operation does not
  *  wait for completion.
@@ -112,6 +114,10 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopMedianBlurCreate(NVCVOperatorHandle *handle);
 /** @{ */
 NVCV_OP_PUBLIC NVCVStatus nvcvopMedianBlurSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
                                                  NVCVTensorHandle out, const int kernelWidth, const int KernelHeight);
+
+NVCV_OP_PUBLIC NVCVStatus nvcvopMedianBlurVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
+                                                         NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                                                         NVCVTensorHandle ksize);
 /** @} */
 
 #ifdef __cplusplus

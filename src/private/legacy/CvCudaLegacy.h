@@ -27,6 +27,8 @@
 #include <nvcv/Rect.h>
 #include <operators/Types.h>
 
+#include <vector>
+
 namespace nv::cv::legacy::cuda_op {
 
 enum ErrorCode
@@ -1627,10 +1629,9 @@ class MedianBlurVarShape : public CudaBaseOp
 {
 public:
     MedianBlurVarShape() = delete;
-    MedianBlurVarShape(DataShape max_input_shape, DataShape max_output_shape)
-        : CudaBaseOp(max_input_shape, max_output_shape)
-    {
-    }
+    MedianBlurVarShape(const int maxVarShapeBatchSize);
+
+    ~MedianBlurVarShape();
     /**
      * @brief Blur an image using a median kernel.
      * @param inputs gpu pointer, inputs[i] is input image where i ranges from 0 to batch-1, whose shape is
@@ -1647,15 +1648,12 @@ public:
      * @param data_type data type of the input images, e.g. kCV_32F.
      * @param stream for the asynchronous execution.
      */
-    int infer(
-                    const void **inputs, void **outputs, void *gpu_workspace, void *cpu_workspace, const int batch,
-                    const size_t buffer_size, cv::Size *ksize, DataShape *input_shape, DataFormat format, DataType data_type,
-                    cudaStream_t stream);
-    /**
-     * @brief calculate the cpu/gpu buffer size needed by this operator
-     * @param batch_size maximum input batch size
-     */
-    size_t calBufferSize(int batch_size);
+    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &in, const IImageBatchVarShapeDataPitchDevice &out,
+                    const ITensorDataPitchDevice &ksize, cudaStream_t stream);
+
+protected:
+    const int        m_maxBatchSize;
+    std::vector<int> m_kernelSizes;
 };
 
 } // namespace nv::cv::legacy::cuda_op
