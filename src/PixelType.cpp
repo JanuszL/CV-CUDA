@@ -178,3 +178,18 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvPixelTypeGetStrideBytes, (NVCVPixelType ty
             *pixStride = ptype.strideBytes();
         });
 }
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvPixelTypeGetAlignment, (NVCVPixelType type, int32_t *outAlignment))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            if (outAlignment == nullptr)
+            {
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to alignment cannot be NULL");
+            }
+
+            priv::PixelType ptype{type};
+            *outAlignment = ptype.alignment();
+        });
+}

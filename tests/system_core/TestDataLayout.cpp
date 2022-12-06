@@ -137,6 +137,7 @@ struct PackingTestParams
 
     bool operator==(const PackingTestParams &that) const
     {
+        // not comparing alignment on purpose
         if (params.byteOrder == that.params.byteOrder && params.swizzle == that.params.swizzle)
         {
             for (int i = 0; i < 4; ++i)
@@ -159,6 +160,7 @@ struct PackingTestParams
         out << p.params.byteOrder;
         out << ',' << p.packing;
         out << ',' << p.params.swizzle;
+        out << ",align=" << p.params.alignment;
         out << ",X" << p.params.bits[0];
         out << ",Y" << p.params.bits[1];
         out << ",Z" << p.params.bits[2];
@@ -184,6 +186,7 @@ struct HashPackingTestParams
     size_t operator()(const PackingTestParams &p) const
     {
         size_t h = 0x123;
+        // not hashing alignment on purpose
         hash_combine(h, (uint32_t)p.params.byteOrder, (uint32_t)p.params.swizzle, (unsigned char)p.params.bits[0],
                      (unsigned char)p.params.bits[1], (unsigned char)p.params.bits[2], (unsigned char)p.params.bits[3]);
         return h;
@@ -194,132 +197,140 @@ class PackingTests : public t::TestWithParam<PackingTestParams>
 {
 };
 
-#define DEF_PACK1(x)                             \
-    PackingTestParams                            \
-    {                                            \
-        NVCV_PACKING_X##x, {x},                  \
-        {                                        \
-            NVCV_ORDER_LSB, NVCV_SWIZZLE_X000, x \
-        }                                        \
+#define DEF_PACK1(x)                                      \
+    PackingTestParams                                     \
+    {                                                     \
+        NVCV_PACKING_X##x, {x},                           \
+        {                                                 \
+            NVCV_ORDER_LSB, (x / 8), NVCV_SWIZZLE_X000, x \
+        }                                                 \
     }
 
-#define DEF_PACK2(x, y)                             \
-    PackingTestParams                               \
-    {                                               \
-        NVCV_PACKING_X##x##Y##y, {x, y},            \
-        {                                           \
-            NVCV_ORDER_LSB, NVCV_SWIZZLE_XY00, x, y \
-        }                                           \
+#define DEF_PACK2(x, y)                                            \
+    PackingTestParams                                              \
+    {                                                              \
+        NVCV_PACKING_X##x##Y##y, {x, y},                           \
+        {                                                          \
+            NVCV_ORDER_LSB, ((x + y) / 8), NVCV_SWIZZLE_XY00, x, y \
+        }                                                          \
     }
 
-#define DEF_PACK3(x, y, z)                             \
-    PackingTestParams                                  \
-    {                                                  \
-        NVCV_PACKING_X##x##Y##y##Z##z, {x, y, z},      \
-        {                                              \
-            NVCV_ORDER_LSB, NVCV_SWIZZLE_XYZ0, x, y, z \
-        }                                              \
+#define DEF_PACK3(x, y, z)                                                \
+    PackingTestParams                                                     \
+    {                                                                     \
+        NVCV_PACKING_X##x##Y##y##Z##z, {x, y, z},                         \
+        {                                                                 \
+            NVCV_ORDER_LSB, ((x + y + z) / 8), NVCV_SWIZZLE_XYZ0, x, y, z \
+        }                                                                 \
     }
 
-#define DEF_PACK4(x, y, z, w)                              \
-    PackingTestParams                                      \
-    {                                                      \
-        NVCV_PACKING_X##x##Y##y##Z##z##W##w, {x, y, z, w}, \
-        {                                                  \
-            NVCV_ORDER_LSB, NVCV_SWIZZLE_XYZW, x, y, z, w  \
-        }                                                  \
+#define DEF_PACK4(x, y, z, w)                                                    \
+    PackingTestParams                                                            \
+    {                                                                            \
+        NVCV_PACKING_X##x##Y##y##Z##z##W##w, {x, y, z, w},                       \
+        {                                                                        \
+            NVCV_ORDER_LSB, ((x + y + z + w) / 8), NVCV_SWIZZLE_XYZW, x, y, z, w \
+        }                                                                        \
     }
 
-#define DEF_FIX_PACK1(x)                         \
-    PackingTestParams                            \
-    {                                            \
-        NVCV_PACKING_X##x, {x},                  \
-        {                                        \
-            NVCV_ORDER_MSB, NVCV_SWIZZLE_X000, x \
-        }                                        \
+#define DEF_FIX_PACK1(x)                                  \
+    PackingTestParams                                     \
+    {                                                     \
+        NVCV_PACKING_X##x, {x},                           \
+        {                                                 \
+            NVCV_ORDER_MSB, (x / 8), NVCV_SWIZZLE_X000, x \
+        }                                                 \
     }
 
-#define DEF_FIX_PACK2(x, y)                         \
-    PackingTestParams                               \
-    {                                               \
-        NVCV_PACKING_X##x##_Y##y, {x, y},           \
-        {                                           \
-            NVCV_ORDER_MSB, NVCV_SWIZZLE_XY00, x, y \
-        }                                           \
+#define DEF_FIX_PACK2(x, y)                                  \
+    PackingTestParams                                        \
+    {                                                        \
+        NVCV_PACKING_X##x##_Y##y, {x, y},                    \
+        {                                                    \
+            NVCV_ORDER_MSB, (x / 8), NVCV_SWIZZLE_XY00, x, y \
+        }                                                    \
     }
 
-#define DEF_FIX_PACK3(x, y, z)                         \
-    PackingTestParams                                  \
-    {                                                  \
-        NVCV_PACKING_X##x##_Y##y##_Z##z, {x, y, z},    \
-        {                                              \
-            NVCV_ORDER_MSB, NVCV_SWIZZLE_XYZ0, x, y, z \
-        }                                              \
+#define DEF_FIX_PACK3(x, y, z)                                  \
+    PackingTestParams                                           \
+    {                                                           \
+        NVCV_PACKING_X##x##_Y##y##_Z##z, {x, y, z},             \
+        {                                                       \
+            NVCV_ORDER_MSB, (x / 8), NVCV_SWIZZLE_XYZ0, x, y, z \
+        }                                                       \
     }
 
-#define DEF_FIX_PACK4(x, y, z, w)                             \
-    PackingTestParams                                         \
-    {                                                         \
-        NVCV_PACKING_X##x##_Y##y##_Z##z##_W##w, {x, y, z, w}, \
-        {                                                     \
-            NVCV_ORDER_MSB, NVCV_SWIZZLE_XYZW, x, y, z, w     \
-        }                                                     \
+#define DEF_FIX_PACK4(x, y, z, w)                                  \
+    PackingTestParams                                              \
+    {                                                              \
+        NVCV_PACKING_X##x##_Y##y##_Z##z##_W##w, {x, y, z, w},      \
+        {                                                          \
+            NVCV_ORDER_MSB, (x / 8), NVCV_SWIZZLE_XYZW, x, y, z, w \
+        }                                                          \
     }
 
-#define DEF_MSB_PACK1(x, bx)                         \
-    {                                                \
-        NVCV_PACKING_X##x##b##bx, {x},               \
-        {                                            \
-            NVCV_ORDER_MSB, NVCV_SWIZZLE_X000, x, bx \
-        }                                            \
+#define DEF_MSB_PACK1(x, bx)                                         \
+    {                                                                \
+        NVCV_PACKING_X##x##b##bx, {x},                               \
+        {                                                            \
+            NVCV_ORDER_MSB, ((x + bx) / 8), NVCV_SWIZZLE_X000, x, bx \
+        }                                                            \
     }
 
-#define DEF_LSB_PACK1(bx, x)                         \
-    {                                                \
-        NVCV_PACKING_b##bx##X##x, {x},               \
-        {                                            \
-            NVCV_ORDER_LSB, NVCV_SWIZZLE_Y000, bx, x \
-        }                                            \
+#define DEF_LSB_PACK1(bx, x)                                         \
+    {                                                                \
+        NVCV_PACKING_b##bx##X##x, {x},                               \
+        {                                                            \
+            NVCV_ORDER_LSB, ((bx + x) / 8), NVCV_SWIZZLE_Y000, bx, x \
+        }                                                            \
     }
 
-#define DEF_FIX_MSB_PACK2(x, bx, y, by)                     \
-    {                                                       \
-        NVCV_PACKING_X##x##b##bx##_Y##y##b##by, {x, y},     \
-        {                                                   \
-            NVCV_ORDER_MSB, NVCV_SWIZZLE_XZ00, x, bx, y, by \
-        }                                                   \
+#define DEF_FIX_MSB_PACK2(x, bx, y, by)                                     \
+    {                                                                       \
+        NVCV_PACKING_X##x##b##bx##_Y##y##b##by, {x, y},                     \
+        {                                                                   \
+            NVCV_ORDER_MSB, ((bx + x) / 8), NVCV_SWIZZLE_XZ00, x, bx, y, by \
+        }                                                                   \
     }
 
-#define DEF_FIX_LSB_PACK2(bx, x, by, y)                     \
-    {                                                       \
-        NVCV_PACKING_b##bx##X##x##_Y##y##b##by, {x, y},     \
-        {                                                   \
-            NVCV_ORDER_MSB, NVCV_SWIZZLE_YW00, bx, x, by, y \
-        }                                                   \
+#define DEF_FIX_LSB_PACK2(bx, x, by, y)                                     \
+    {                                                                       \
+        NVCV_PACKING_b##bx##X##x##_Y##y##b##by, {x, y},                     \
+        {                                                                   \
+            NVCV_ORDER_MSB, ((bx + x) / 8), NVCV_SWIZZLE_YW00, bx, x, by, y \
+        }                                                                   \
     }
 
-#define DEF_LSB_PACK3(bx, x, y, z)                         \
-    {                                                      \
-        NVCV_PACKING_b##bx##X##x##Y##y##Z##z, {x, y, z},   \
-        {                                                  \
-            NVCV_ORDER_LSB, NVCV_SWIZZLE_YZW0, bx, x, y, z \
-        }                                                  \
+#define DEF_LSB_PACK3(bx, x, y, z)                                                 \
+    {                                                                              \
+        NVCV_PACKING_b##bx##X##x##Y##y##Z##z, {x, y, z},                           \
+        {                                                                          \
+            NVCV_ORDER_LSB, ((bx + x + y + z) / 8), NVCV_SWIZZLE_YZW0, bx, x, y, z \
+        }                                                                          \
     }
 
-#define DEF_MSB_PACK3(x, y, z, bz)                         \
-    {                                                      \
-        NVCV_PACKING_X##x##Y##y##Z##z##b##bz, {x, y, z},   \
-        {                                                  \
-            NVCV_ORDER_MSB, NVCV_SWIZZLE_XYZ0, x, y, z, bz \
-        }                                                  \
+#define DEF_MSB_PACK3(x, y, z, bz)                                                 \
+    {                                                                              \
+        NVCV_PACKING_X##x##Y##y##Z##z##b##bz, {x, y, z},                           \
+        {                                                                          \
+            NVCV_ORDER_MSB, ((x + y + z + bz) / 8), NVCV_SWIZZLE_XYZ0, x, y, z, bz \
+        }                                                                          \
+    }
+
+#define DEF_LSB_PACK4(x, y, z, w)                                                \
+    {                                                                            \
+        NVCV_PACKING_X##x##Y##y##Z##z##W##w, {x, y, z, w},                       \
+        {                                                                        \
+            NVCV_ORDER_LSB, ((x + y + z + w) / 8), NVCV_SWIZZLE_XYZW, x, y, z, w \
+        }                                                                        \
     }
 
 const std::vector<PackingTestParams> g_packingParams = {
-    {           NVCV_PACKING_0,          {0},            {NVCV_ORDER_LSB, NVCV_SWIZZLE_0000, 0}},
-    {NVCV_PACKING_X8_Y8__X8_Z8, {8, 8, 8, 8},   {NVCV_ORDER_MSB, NVCV_SWIZZLE_XYXZ, 8, 8, 8, 8}},
-    {NVCV_PACKING_Y8_X8__Z8_X8, {8, 8, 8, 8},   {NVCV_ORDER_MSB, NVCV_SWIZZLE_YXZX, 8, 8, 8, 8}},
-    {    NVCV_PACKING_X5Y5b1Z5, {5, 5, 5, 0},   {NVCV_ORDER_LSB, NVCV_SWIZZLE_XYW0, 5, 5, 1, 5}},
-    {   NVCV_PACKING_X32_Y24b8,     {32, 24}, {NVCV_ORDER_MSB, NVCV_SWIZZLE_XY00, 32, 24, 8, 0}},
+    {           NVCV_PACKING_0,          {0},            {NVCV_ORDER_LSB, 0, NVCV_SWIZZLE_0000, 0}},
+    {NVCV_PACKING_X8_Y8__X8_Z8, {8, 8, 8, 8},   {NVCV_ORDER_MSB, 1, NVCV_SWIZZLE_XYXZ, 8, 8, 8, 8}},
+    {NVCV_PACKING_Y8_X8__Z8_X8, {8, 8, 8, 8},   {NVCV_ORDER_MSB, 1, NVCV_SWIZZLE_YXZX, 8, 8, 8, 8}},
+    {    NVCV_PACKING_X5Y5b1Z5, {5, 5, 5, 0},   {NVCV_ORDER_LSB, 2, NVCV_SWIZZLE_XYW0, 5, 5, 1, 5}},
+    {   NVCV_PACKING_X32_Y24b8,     {32, 24}, {NVCV_ORDER_MSB, 4, NVCV_SWIZZLE_XY00, 32, 24, 8, 0}},
 
     DEF_PACK1(1),
     DEF_FIX_PACK1(1),
@@ -351,8 +362,10 @@ const std::vector<PackingTestParams> g_packingParams = {
     DEF_PACK3(5, 6, 5),
     DEF_PACK3(6, 5, 5),
     DEF_LSB_PACK3(4, 4, 4, 4),
+    DEF_LSB_PACK4(4, 4, 4, 4),
     DEF_LSB_PACK3(1, 5, 5, 5),
     DEF_PACK4(1, 5, 5, 5),
+    DEF_PACK4(5, 1, 5, 5),
     DEF_PACK4(5, 5, 1, 5),
     DEF_PACK4(5, 5, 5, 1),
 
@@ -524,6 +537,7 @@ TEST(PackingTests, valid_values)
     size_t counter = 0;
 
     PackingTestParams p;
+    p.params.alignment = 0; // don't care
 
     NVCVChannel swc[4];
     for (int bitsX = 0; bitsX <= 256; bitsX < 32 ? ++bitsX : (bitsX < 128 ? (bitsX += 8) : (bitsX += 32)))
@@ -594,7 +608,7 @@ TEST(PackingTests, valid_values)
     auto testPacking = [&packingList](NVCVPacking packing, const std::array<int, 4> &bits, NVCVByteOrder byteOrder,
                                       NVCVSwizzle swizzle)
     {
-        PackingTestParams p;
+        PackingTestParams p = {};
 
         p.packing          = packing;
         p.params.byteOrder = byteOrder;
@@ -606,34 +620,38 @@ TEST(PackingTests, valid_values)
 
         auto it = packingList.find(p);
         ASSERT_TRUE(it != packingList.end()) << p.packing;
+        ASSERT_TRUE(it->packing == packing);
+
+        p.params.alignment = it->params.alignment;
+
         ASSERT_EQ(NVCV_SUCCESS, nvcvMakePacking(&packing, &p.params));
 
         EXPECT_EQ(it->packing, packing);
         packingList.erase(it);
     };
 
-    testPacking(NVCV_PACKING_X8_Y8__X8_Z8, {8, 8, 8, 8}, NVCV_ORDER_MSB, NVCV_SWIZZLE_XYXZ);
-    testPacking(NVCV_PACKING_Y8_X8__Z8_X8, {8, 8, 8, 8}, NVCV_ORDER_MSB, NVCV_SWIZZLE_YXZX);
-    testPacking(NVCV_PACKING_X12b4, {12, 4}, NVCV_ORDER_MSB, NVCV_SWIZZLE_X000);
-    testPacking(NVCV_PACKING_X10b6, {10, 6}, NVCV_ORDER_MSB, NVCV_SWIZZLE_X000);
-    testPacking(NVCV_PACKING_b4X12, {4, 12}, NVCV_ORDER_LSB, NVCV_SWIZZLE_Y000);
-    testPacking(NVCV_PACKING_b12X20, {12, 20}, NVCV_ORDER_LSB, NVCV_SWIZZLE_Y000);
-    testPacking(NVCV_PACKING_b6X10, {6, 10}, NVCV_ORDER_LSB, NVCV_SWIZZLE_Y000);
-    testPacking(NVCV_PACKING_X14b2, {14, 2}, NVCV_ORDER_MSB, NVCV_SWIZZLE_X000);
-    testPacking(NVCV_PACKING_b2X14, {2, 14}, NVCV_ORDER_LSB, NVCV_SWIZZLE_Y000);
-    testPacking(NVCV_PACKING_X10b6_Y10b6, {10, 6, 10, 6}, NVCV_ORDER_MSB, NVCV_SWIZZLE_XZ00);
-    testPacking(NVCV_PACKING_X12b4_Y12b4, {12, 4, 12, 4}, NVCV_ORDER_MSB, NVCV_SWIZZLE_XZ00);
-    testPacking(NVCV_PACKING_b4X4Y4Z4, {4, 4, 4, 4}, NVCV_ORDER_LSB, NVCV_SWIZZLE_YZW0);
-    testPacking(NVCV_PACKING_b1X5Y5Z5, {1, 5, 5, 5}, NVCV_ORDER_LSB, NVCV_SWIZZLE_YZW0);
-    testPacking(NVCV_PACKING_X5Y5b1Z5, {5, 5, 1, 5}, NVCV_ORDER_LSB, NVCV_SWIZZLE_XYW0);
-    testPacking(NVCV_PACKING_X4b4, {4, 4}, NVCV_ORDER_MSB, NVCV_SWIZZLE_X000);
-    testPacking(NVCV_PACKING_b4X4, {4, 4}, NVCV_ORDER_LSB, NVCV_SWIZZLE_Y000);
-    testPacking(NVCV_PACKING_X32_Y24b8, {32, 24, 8}, NVCV_ORDER_MSB, NVCV_SWIZZLE_XY00);
-    testPacking(NVCV_PACKING_b8X24, {8, 24}, NVCV_ORDER_LSB, NVCV_SWIZZLE_Y000);
-    testPacking(NVCV_PACKING_X20b12, {20, 12}, NVCV_ORDER_MSB, NVCV_SWIZZLE_X000);
-    testPacking(NVCV_PACKING_X20b12, {24, 8}, NVCV_ORDER_MSB, NVCV_SWIZZLE_X000);
-    testPacking(NVCV_PACKING_X10Y10Z10b2, {10, 10, 10, 2}, NVCV_ORDER_MSB, NVCV_SWIZZLE_XYZ0);
-    testPacking(NVCV_PACKING_b2X10Y10Z10, {2, 10, 10, 10}, NVCV_ORDER_LSB, NVCV_SWIZZLE_YZW0);
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_X8_Y8__X8_Z8, {8, 8, 8, 8}, NVCV_ORDER_MSB, NVCV_SWIZZLE_XYXZ));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_Y8_X8__Z8_X8, {8, 8, 8, 8}, NVCV_ORDER_MSB, NVCV_SWIZZLE_YXZX));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_X12b4, {12, 4}, NVCV_ORDER_MSB, NVCV_SWIZZLE_X000));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_X10b6, {10, 6}, NVCV_ORDER_MSB, NVCV_SWIZZLE_X000));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_b4X12, {4, 12}, NVCV_ORDER_LSB, NVCV_SWIZZLE_Y000));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_b12X20, {12, 20}, NVCV_ORDER_LSB, NVCV_SWIZZLE_Y000));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_b6X10, {6, 10}, NVCV_ORDER_LSB, NVCV_SWIZZLE_Y000));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_X14b2, {14, 2}, NVCV_ORDER_MSB, NVCV_SWIZZLE_X000));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_b2X14, {2, 14}, NVCV_ORDER_LSB, NVCV_SWIZZLE_Y000));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_X10b6_Y10b6, {10, 6, 10, 6}, NVCV_ORDER_MSB, NVCV_SWIZZLE_XZ00));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_X12b4_Y12b4, {12, 4, 12, 4}, NVCV_ORDER_MSB, NVCV_SWIZZLE_XZ00));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_b4X4Y4Z4, {4, 4, 4, 4}, NVCV_ORDER_LSB, NVCV_SWIZZLE_YZW0));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_b1X5Y5Z5, {1, 5, 5, 5}, NVCV_ORDER_LSB, NVCV_SWIZZLE_YZW0));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_X5Y5b1Z5, {5, 5, 1, 5}, NVCV_ORDER_LSB, NVCV_SWIZZLE_XYW0));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_X4b4, {4, 4}, NVCV_ORDER_MSB, NVCV_SWIZZLE_X000));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_b4X4, {4, 4}, NVCV_ORDER_LSB, NVCV_SWIZZLE_Y000));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_X32_Y24b8, {32, 24, 8}, NVCV_ORDER_MSB, NVCV_SWIZZLE_XY00));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_b8X24, {8, 24}, NVCV_ORDER_LSB, NVCV_SWIZZLE_Y000));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_X20b12, {20, 12}, NVCV_ORDER_MSB, NVCV_SWIZZLE_X000));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_X24b8, {24, 8}, NVCV_ORDER_MSB, NVCV_SWIZZLE_X000));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_X10Y10Z10b2, {10, 10, 10, 2}, NVCV_ORDER_MSB, NVCV_SWIZZLE_XYZ0));
+    ASSERT_NO_FATAL_FAILURE(testPacking(NVCV_PACKING_b2X10Y10Z10, {2, 10, 10, 10}, NVCV_ORDER_LSB, NVCV_SWIZZLE_YZW0));
 
     EXPECT_TRUE(packingList.empty());
 

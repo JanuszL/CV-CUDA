@@ -270,3 +270,36 @@ TEST_P(PixelTypeStrideTests, works)
     ASSERT_EQ(NVCV_SUCCESS, nvcvPixelTypeGetStrideBytes(pixType, &testStride));
     EXPECT_EQ(goldStride, testStride);
 }
+
+// clang-format off
+NVCV_TEST_SUITE_P(PixelTypeAlignmentTests,
+                              test::ValueList<test::Param<"pix", NVCVPixelType>, test::Param<"goldAlign", int>>
+                              {
+                                {NVCV_PIXEL_TYPE_U8, 1},
+                                {NVCV_PIXEL_TYPE_U16, 2},
+                                {NVCV_PIXEL_TYPE_3S8, 1},
+                                {NVCV_PIXEL_TYPE_2U16, 2},
+                                {MAKE_PIXEL_TYPE_ABBREV(SIGNED, X256), 32},
+                                {NVCV_PIXEL_TYPE_2F32, 4},
+                                {MAKE_PIXEL_TYPE_ABBREV(SIGNED, X5Y1Z5W5), 2},
+                                {MAKE_PIXEL_TYPE_ABBREV(SIGNED, X3Y3Z2), 1},
+                                {MAKE_PIXEL_TYPE_ABBREV(SIGNED, X4b4), 1},
+                                {MAKE_PIXEL_TYPE_ABBREV(SIGNED, b4X4), 1},
+                                {MAKE_PIXEL_TYPE_ABBREV(SIGNED, b4X12), 2},
+                                {MAKE_PIXEL_TYPE_ABBREV(SIGNED, X10b6), 2},
+                                {MAKE_PIXEL_TYPE_ABBREV(SIGNED, X4Y4Z4W4), 2},
+                                {MAKE_PIXEL_TYPE_ABBREV(SIGNED, X8_Y8__X8_Z8), 1},
+                                {MAKE_PIXEL_TYPE_ABBREV(SIGNED, X32_Y24b8), 4},
+                              });
+
+// clang-format on
+
+TEST_P(PixelTypeAlignmentTests, works)
+{
+    const NVCVPixelType pixType   = std::get<0>(GetParam());
+    const int           goldAlign = std::get<1>(GetParam());
+
+    int32_t testAlign;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvPixelTypeGetAlignment(pixType, &testAlign));
+    EXPECT_EQ(goldAlign, testAlign);
+}

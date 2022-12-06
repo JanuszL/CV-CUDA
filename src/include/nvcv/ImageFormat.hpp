@@ -116,6 +116,7 @@ public:
     PixelType   planePixelType(int plane) const noexcept;
     int         planeNumChannels(int plane) const noexcept;
     int         planeBitsPerPixel(int plane) const noexcept;
+    int         planeRowAlignment(int plane) const noexcept;
     Size2D      planeSize(Size2D imgSize, int plane) const noexcept;
     Swizzle     planeSwizzle(int plane) const noexcept;
     ImageFormat planeFormat(int plane) const noexcept;
@@ -656,6 +657,11 @@ inline int32_t ImageFormat::planeBitsPerPixel(int plane) const noexcept
     int32_t out;
     detail::CheckThrow(nvcvImageFormatGetPlaneBitsPerPixel(m_format, plane, &out));
     return out;
+}
+
+inline int32_t ImageFormat::planeRowAlignment(int plane) const noexcept
+{
+    return planePixelType(plane).alignment();
 }
 
 inline Size2D ImageFormat::planeSize(Size2D imgSize, int plane) const noexcept

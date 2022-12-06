@@ -349,6 +349,13 @@ inline int32_t GetBitsPerPixel(Packing packing)
     return out;
 }
 
+inline int32_t GetAlignment(Packing packing)
+{
+    int32_t out;
+    detail::CheckThrow(nvcvPackingGetAlignment(static_cast<NVCVPacking>(packing), &out));
+    return out;
+}
+
 inline std::ostream &operator<<(std::ostream &out, DataType dataType)
 {
     return out << nvcvDataTypeGetName(static_cast<NVCVDataType>(dataType));
