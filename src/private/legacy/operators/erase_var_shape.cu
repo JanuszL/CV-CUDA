@@ -32,7 +32,7 @@ using namespace nv::cv::legacy::cuda_op;
 
 namespace nvcv = nv::cv;
 
-__device__ int erase_var_shape_hash(unsigned int x)
+static __device__ int erase_var_shape_hash(unsigned int x)
 {
     x = ((x >> 16) ^ x) * 0x45d9f3b;
     x = ((x >> 16) ^ x) * 0x45d9f3b;
@@ -267,7 +267,6 @@ ErrorCode EraseVarShape::infer(const cv::IImageBatchVarShape &inbatch, const cv:
             auto                  *outimgdata = dynamic_cast<const IImageDataPitchDevice *>(outimg.exportData());
             const ImagePlanePitch &inplane    = inimgdata->plane(0);
             const ImagePlanePitch &outplane   = outimgdata->plane(0);
-            Size2D                 size       = inimg.size();
             checkCudaErrors(cudaMemcpy2DAsync(outplane.buffer, outplane.pitchBytes, inplane.buffer, inplane.pitchBytes,
                                               inplane.pitchBytes, inplane.height, cudaMemcpyDeviceToDevice, stream));
         }

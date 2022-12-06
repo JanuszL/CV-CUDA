@@ -152,7 +152,6 @@ void rotate(const IImageBatchVarShapeDataPitchDevice &in, const IImageBatchVarSh
 {
     dim3 blockSize(BLOCK, BLOCK / 4, 1);
 
-    Size2D inMaxSize  = in.maxSize();
     Size2D outMaxSize = out.maxSize();
 
     NVCV_ASSERT(in.numImages() == out.numImages());

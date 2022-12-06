@@ -30,7 +30,7 @@ using namespace nv::cv::legacy::cuda_op;
 
 namespace nvcv = nv::cv;
 
-__device__ int erase_hash(unsigned int x)
+static __device__ int erase_hash(unsigned int x)
 {
     x = ((x >> 16) ^ x) * 0x45d9f3b;
     x = ((x >> 16) ^ x) * 0x45d9f3b;
