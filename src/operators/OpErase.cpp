@@ -39,18 +39,30 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopEraseCreate, (NVCVOperatorHandle * handl
 
 NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopEraseSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                 NVCVTensorHandle anchor_x, NVCVTensorHandle anchor_y, NVCVTensorHandle erasing_w,
-                 NVCVTensorHandle erasing_h, NVCVTensorHandle erasing_c, NVCVTensorHandle values,
-                 NVCVTensorHandle imgIdx, bool random, unsigned int seed, bool inplace))
+                 NVCVTensorHandle anchor, NVCVTensorHandle erasing, NVCVTensorHandle values, NVCVTensorHandle imgIdx,
+                 bool random, unsigned int seed))
 {
     return priv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle input(in), output(out), anchorxwrap(anchor_x), anchorywrap(anchor_y),
-                erasingwwrap(erasing_w), erasinghwrap(erasing_h), erasingcwrap(erasing_c), valueswrap(values),
-                imgIdxwrap(imgIdx);
-            priv::ToDynamicRef<priv_op::Erase>(handle)(stream, input, output, anchorxwrap, anchorywrap, erasingwwrap,
-                                                       erasinghwrap, erasingcwrap, valueswrap, imgIdxwrap, random, seed,
-                                                       inplace);
+            nv::cv::TensorWrapHandle input(in), output(out), anchorwrap(anchor), erasingwrap(erasing),
+                valueswrap(values), imgIdxwrap(imgIdx);
+            priv::ToDynamicRef<priv_op::Erase>(handle)(stream, input, output, anchorwrap, erasingwrap, valueswrap,
+                                                       imgIdxwrap, random, seed);
+        });
+}
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopEraseVarShapeSubmit,
+                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                 NVCVTensorHandle anchor, NVCVTensorHandle erasing, NVCVTensorHandle values, NVCVTensorHandle imgIdx,
+                 bool random, unsigned int seed))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            nv::cv::ImageBatchVarShapeWrapHandle input(in), output(out);
+            nv::cv::TensorWrapHandle anchorwrap(anchor), erasingwrap(erasing), valueswrap(values), imgIdxwrap(imgIdx);
+            priv::ToDynamicRef<priv_op::Erase>(handle)(stream, input, output, anchorwrap, erasingwrap, valueswrap,
+                                                       imgIdxwrap, random, seed);
         });
 }

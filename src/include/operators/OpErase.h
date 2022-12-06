@@ -96,15 +96,29 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopEraseCreate(NVCVOperatorHandle *handle, int max_
  *       Width         | Yes
  *       Height        | Yes
  *
- *  anchor_x/anchor_y/erasing_w/erasing_h/erasing_c/imgIdx Tensors
+ *  anchor Tensor
  *
- *      Must be kNHWC where N=H=C=1 with W = number of eraing area.
+ *      Must be 'N' (dim = 1) with N = number of eraing area.
  *      Data Type must be 32bit Signed.
+ *      PixelType must be TYPE_2S32.
  *
- *  values Tensors
+ *  erasing Tensor
  *
- *      Must be kNHWC where N=H=C=1 with W = number of eraing area * 4.
+ *      Must be 'N' (dim = 1) with N = number of eraing area.
+ *      Data Type must be 32bit Signed.
+ *      PixelType must be TYPE_3S32.
+ *
+ *  imgIdx Tensor
+ *
+ *      Must be 'N' (dim = 1) with N = number of eraing area.
+ *      Data Type must be 32bit Signed.
+ *      PixelType must be TYPE_S32.
+ *
+ *  values Tensor
+ *
+ *      Must be 'N' (dim = 1) with W = number of eraing area * 4.
  *      Data Type must be 32bit Float.
+ *      PixelType must be TYPE_F32.
  *
  *
  * @param [in] handle Handle to the operator.
@@ -115,16 +129,10 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopEraseCreate(NVCVOperatorHandle *handle, int max_
  *
  * @param [out] out output tensor / image batch.
  *
- * @param [in] anchor_x an array of size num_erasing_area that gives the x coordinate of the top left point in the eraseing areas.
+ * @param [in] anchor an array of size num_erasing_area that gives the x coordinate and y coordinate of the top left point in the eraseing areas.
  *
- * @param [in] anchor_y an array of size num_erasing_area that gives the y coordinate of the top left point in the eraseing areas.
- *
- * @param [in] eraisng_w an array of size num_erasing_area that gives the widths of the eraseing areas.
- *
- * @param [in] erasing_h an array of size num_erasing_area that gives the heights of the eraseing areas.
- *
- * @param [in] erasing_c an array of size num_erasing_area that gives integers in range 0-15,
-            each of whose bits indicates whether or not the corresponding channel need to be erased.
+ * @param [in] eraisng an array of size num_erasing_area that gives the widths of the eraseing areas, the heights of the eraseing areas and
+ *              integers in range 0-15, each of whose bits indicates whether or not the corresponding channel need to be erased.
  *
  * @param [in] values an array of size num_erasing_area*4 that gives the filling value for each erase area.
  *
@@ -142,10 +150,15 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopEraseCreate(NVCVOperatorHandle *handle, int max_
 */
 /** @{ */
 NVCV_OP_PUBLIC NVCVStatus nvcvopEraseSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
-                                            NVCVTensorHandle out, NVCVTensorHandle anchor_x, NVCVTensorHandle anchor_y,
-                                            NVCVTensorHandle erasing_w, NVCVTensorHandle erasing_h,
-                                            NVCVTensorHandle erasing_c, NVCVTensorHandle values,
-                                            NVCVTensorHandle imgIdx, bool random, unsigned int seed, bool inplace);
+                                            NVCVTensorHandle out, NVCVTensorHandle anchor, NVCVTensorHandle erasing,
+                                            NVCVTensorHandle values, NVCVTensorHandle imgIdx, bool random,
+                                            unsigned int seed);
+
+NVCV_OP_PUBLIC NVCVStatus nvcvopEraseVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
+                                                    NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                                                    NVCVTensorHandle anchor, NVCVTensorHandle erasing,
+                                                    NVCVTensorHandle values, NVCVTensorHandle imgIdx, bool random,
+                                                    unsigned int seed);
 
 /** @} */
 
