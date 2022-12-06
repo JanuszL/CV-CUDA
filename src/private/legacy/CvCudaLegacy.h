@@ -1394,6 +1394,52 @@ public:
                     cudaStream_t stream);
 };
 
+class EraseVarShape : public CudaBaseOp
+{
+public:
+    EraseVarShape() = delete;
+
+    EraseVarShape(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+    * @brief erase areas of images. Different images in the same batch can be erased differently.
+    * @param inputs gpu pointer, inputs[0] are batched input images, whose shape is input_shape and type is data_type.
+    * @param outputs gpu pointer, outputs[0] are batched output images that have the same type as data_type.
+    * @param gpu_workspace gpu pointer, gpu memory used to store the temporary variables.
+    * @param cpu_workspace cpu pointer, cpu memory used to store the temporary variables.
+    * @param buffer_size size of the gpu_workspace/cpu_workspace.
+    * @param anchor_x an array of size num_erasing_area that gives the x coordinate of the top left point in the eraseing areas.
+    * @param anchor_y an array of size num_erasing_area that gives the y coordinate of the top left point in the eraseing areas.
+    * @param erasing_w an array of size num_erasing_area that gives the widths of the eraseing areas.
+    * @param erasing_h an array of size num_erasing_area that gives the heights of the eraseing areas.
+    * @param erasing_c an array of size num_erasing_area that gives integers in range 0-15,
+           each of whose bits indicates whether or not the corresponding channel need to be erased.
+    * @param values an array of size num_erasing_area*4 that gives the filling value for each erase area.
+    * @param imgIdx an array of size num_erasing_area that maps a erase area idx to img idx in the batch.
+    * @param num_erasing_area the total number of erase areas in a batch.
+    * @param random an boolean for random op.
+    * @param seed random seed for random filling erase area
+    * @param input_shape shape of the input images.
+    * @param format format of the input images, e.g. kNHWC.
+    * @param data_type data type of the input images, e.g. kCV_32F.
+    * @param stream for the asynchronous execution.
+    * @param inplace for perform inplace op.
+    */
+    int    infer(void **inputs, void **outputs, void *gpu_workspace, void *cpu_workspace, const int batch,
+                 const size_t buffer_size, int *anchor_x, int *anchor_y, int *erasing_w, int *erasing_h, int *erasing_c,
+                 float *values, int *imgIdx, int num_erasing_area, bool random, unsigned int seed, DataShape *input_shapes,
+                 DataFormat format, DataType data_type, cudaStream_t stream, bool inplace);
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param batch_size maximum input batch size
+     * @param num_erasing_area the total number of erase areas in a batch.
+     */
+    size_t calBufferSize(int batch_size, int num_erasing_area);
+};
+
 } // namespace nv::cv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H
