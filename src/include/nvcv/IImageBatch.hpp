@@ -26,10 +26,6 @@
 
 namespace nv { namespace cv {
 
-namespace detail {
-struct GetImageHandle;
-}
-
 class IImageBatch
 {
 public:
@@ -63,9 +59,9 @@ public:
     void pushBack(const IImage &img);
     void popBack(int32_t imgCount = 1);
 
-    // For any reference wrapper of any other accepted type
-    template<class F, class = decltype(std::declval<detail::GetImageHandle>()(std::declval<F>()()))>
-    void pushBack(F &&cv);
+    // For any invocable functor with zero parameters
+    template<class F, class = decltype(std::declval<F>()())>
+    void pushBack(F &&cb);
 
     void clear();
 
@@ -273,42 +269,39 @@ inline bool IImageBatchVarShape::Iterator::operator!=(const Iterator &that) cons
 }
 
 namespace detail {
-struct GetImageHandle
+
+// For any pointer-like type
+template<class T, class = typename std::enable_if<std::is_same<
+                      NVCVImageHandle, typename std::decay<decltype(std::declval<T>()->handle())>::type>::value>::type>
+NVCVImageHandle GetImageHandle(const T &ptr)
 {
-    // For any pointer-like type
-    template<class T,
-             class = typename std::enable_if<std::is_same<
-                 NVCVImageHandle, typename std::decay<decltype(std::declval<T>()->handle())>::type>::value>::type>
-    NVCVImageHandle operator()(const T &ptr) const
+    if (ptr == nullptr)
     {
-        if (ptr == nullptr)
-        {
-            throw Exception(Status::ERROR_INVALID_ARGUMENT, "Image must not be NULL");
-        }
-        return ptr->handle();
+        throw Exception(Status::ERROR_INVALID_ARGUMENT, "Image must not be NULL");
     }
+    return ptr->handle();
+}
 
-    NVCVImageHandle operator()(const IImage &img) const
-    {
-        return img.handle();
-    }
+inline NVCVImageHandle GetImageHandle(const IImage &img)
+{
+    return img.handle();
+}
 
-    NVCVImageHandle operator()(NVCVImageHandle h) const
+inline NVCVImageHandle GetImageHandle(NVCVImageHandle h)
+{
+    if (h == nullptr)
     {
-        if (h == nullptr)
-        {
-            throw Exception(Status::ERROR_INVALID_ARGUMENT, "Image handle must not be NULL");
-        }
-        return h;
+        throw Exception(Status::ERROR_INVALID_ARGUMENT, "Image handle must not be NULL");
     }
+    return h;
+}
 
-    // For any reference wrapper of any other accepted type
-    template<class T, class = decltype(std::declval<GetImageHandle>()(std::declval<T>()))>
-    NVCVImageHandle operator()(const std::reference_wrapper<T> &h) const
-    {
-        return h.get().handle();
-    }
-};
+template<class T>
+NVCVImageHandle GetImageHandle(const std::reference_wrapper<T> &h)
+{
+    return h.get().handle();
+}
+
 } // namespace detail
 
 template<class IT>
@@ -321,8 +314,7 @@ void IImageBatchVarShape::pushBack(IT itBeg, IT itEnd)
             return nullptr;
         }
 
-        detail::GetImageHandle imgHandle;
-        return imgHandle(*it++);
+        return detail::GetImageHandle(*it++);
     };
 
     // constructing a std::function with a reference_wrapper is guaranteed
@@ -331,15 +323,14 @@ void IImageBatchVarShape::pushBack(IT itBeg, IT itEnd)
 }
 
 // Functor must return a type that can be converted to an image handle
-template<class F, class SFINAE>
+template<class F, class>
 void IImageBatchVarShape::pushBack(F &&cb)
 {
     auto cb2 = [cb = std::move(cb)]() mutable -> NVCVImageHandle
     {
-        if (auto img = cb())
+        if (const auto &img = cb())
         {
-            detail::GetImageHandle imgHandle;
-            return imgHandle(img);
+            return detail::GetImageHandle(img);
         }
         else
         {
