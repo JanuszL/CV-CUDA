@@ -43,9 +43,9 @@ class Erase final : public OperatorBase
 public:
     explicit Erase(int num_erasing_area);
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, cv::ITensor &anchor_x,
-                    cv::ITensor &anchor_y, cv::ITensor &erasing_w, cv::ITensor &erasing_h, cv::ITensor &erasing_c,
-                    cv::ITensor &values, cv::ITensor &imgIdx, bool random, unsigned int seed, bool inplace) const;
+    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, cv::ITensor &anchor,
+                    cv::ITensor &erasing, cv::ITensor &values, cv::ITensor &imgIdx, bool random,
+                    unsigned int seed) const;
 
 private:
     std::unique_ptr<cv::legacy::cuda_op::Erase> m_legacyOp;

@@ -68,84 +68,47 @@ TEST(OpErase, OpErase_Tensor)
     EXPECT_EQ(cudaSuccess, cudaMemset(outAccess->sampleData(0), 0xFA, outBufferSize));
 
     //parameters
-    nvcv::Tensor anchor_x(1, {2, 1}, nvcv::FMT_S32);
-    nvcv::Tensor anchor_y(1, {2, 1}, nvcv::FMT_S32);
-    nvcv::Tensor erasing_w(1, {2, 1}, nvcv::FMT_S32);
-    nvcv::Tensor erasing_h(1, {2, 1}, nvcv::FMT_S32);
-    nvcv::Tensor erasing_c(1, {2, 1}, nvcv::FMT_S32);
-    nvcv::Tensor values(1, {2, 1}, nvcv::FMT_F32);
-    nvcv::Tensor imgIdx(1, {2, 1}, nvcv::FMT_S32);
+    int          num_erasing_area = 2;
+    nvcv::Tensor anchor({{num_erasing_area}, "N"}, nvcv::TYPE_2S32);
+    nvcv::Tensor erasing({{num_erasing_area}, "N"}, nvcv::TYPE_3S32);
+    nvcv::Tensor values({{num_erasing_area}, "N"}, nv::cv::TYPE_F32);
+    nvcv::Tensor imgIdx({{num_erasing_area}, "N"}, nv::cv::TYPE_S32);
 
-    const auto *anchorxData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(anchor_x.exportData());
-    const auto *anchoryData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(anchor_y.exportData());
-    const auto *erasingwData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(erasing_w.exportData());
-    const auto *erasinghData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(erasing_h.exportData());
-    const auto *erasingcData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(erasing_c.exportData());
-    const auto *valuesData   = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(values.exportData());
-    const auto *imgIdxData   = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgIdx.exportData());
+    const auto *anchorData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(anchor.exportData());
+    const auto *erasingData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(erasing.exportData());
+    const auto *valuesData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(values.exportData());
+    const auto *imgIdxData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgIdx.exportData());
 
-    ASSERT_NE(nullptr, anchorxData);
-    ASSERT_NE(nullptr, anchoryData);
-    ASSERT_NE(nullptr, erasingwData);
-    ASSERT_NE(nullptr, erasinghData);
-    ASSERT_NE(nullptr, erasingcData);
+    ASSERT_NE(nullptr, anchorData);
+    ASSERT_NE(nullptr, erasingData);
     ASSERT_NE(nullptr, valuesData);
     ASSERT_NE(nullptr, imgIdxData);
 
-    auto anchorxAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*anchorxData);
-    ASSERT_TRUE(anchorxAccess);
-    auto anchoryAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*anchoryData);
-    ASSERT_TRUE(anchoryAccess);
-    auto erasingwAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*erasingwData);
-    ASSERT_TRUE(erasingwAccess);
-    auto erasinghAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*erasinghData);
-    ASSERT_TRUE(erasinghAccess);
-    auto erasingcAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*erasingcData);
-    ASSERT_TRUE(erasingcAccess);
-    auto valuesAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*valuesData);
-    ASSERT_TRUE(valuesAccess);
-    auto imgIdxAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*imgIdxData);
-    ASSERT_TRUE(imgIdxAccess);
+    std::vector<int2>  anchorVec(num_erasing_area);
+    std::vector<int3>  erasingVec(num_erasing_area);
+    std::vector<int>   imgIdxVec(num_erasing_area);
+    std::vector<float> valuesVec(num_erasing_area);
 
-    int intBufSize   = (anchorxAccess->samplePitchBytes() / sizeof(int)) * anchorxAccess->numSamples();
-    int floatBufSize = (valuesAccess->samplePitchBytes() / sizeof(float)) * valuesAccess->numSamples();
+    anchorVec[0].x  = 0;
+    anchorVec[0].y  = 0;
+    erasingVec[0].x = 10;
+    erasingVec[0].y = 10;
+    erasingVec[0].z = 0x1;
+    imgIdxVec[0]    = 0;
+    valuesVec[0]    = 1.f;
 
-    ASSERT_EQ(intBufSize, floatBufSize);
-
-    std::vector<int>   anchorxVec(intBufSize);
-    std::vector<int>   anchoryVec(intBufSize);
-    std::vector<int>   erasingwVec(intBufSize);
-    std::vector<int>   erasinghVec(intBufSize);
-    std::vector<int>   erasingcVec(intBufSize);
-    std::vector<int>   imgIdxVec(intBufSize);
-    std::vector<float> valuesVec(floatBufSize);
-
-    anchorxVec[0]  = 0;
-    anchoryVec[0]  = 0;
-    erasingwVec[0] = 10;
-    erasinghVec[0] = 10;
-    erasingcVec[0] = 0x1;
-    imgIdxVec[0]   = 0;
-    valuesVec[0]   = 1.f;
-
-    anchorxVec[1]  = 10;
-    anchoryVec[1]  = 10;
-    erasingwVec[1] = 20;
-    erasinghVec[1] = 20;
-    erasingcVec[1] = 0x1;
-    imgIdxVec[1]   = 0;
-    valuesVec[1]   = 1.f;
+    anchorVec[1].x  = 10;
+    anchorVec[1].y  = 10;
+    erasingVec[1].x = 20;
+    erasingVec[1].y = 20;
+    erasingVec[1].z = 0x1;
+    imgIdxVec[1]    = 0;
+    valuesVec[1]    = 1.f;
 
     // Copy vectors to the GPU
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(anchorxData->data(), anchorxVec.data(), anchorxVec.size() * sizeof(int),
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(anchorData->data(), anchorVec.data(), anchorVec.size() * sizeof(int2),
                                            cudaMemcpyHostToDevice, stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(anchoryData->data(), anchoryVec.data(), anchoryVec.size() * sizeof(int),
-                                           cudaMemcpyHostToDevice, stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(erasingwData->data(), erasingwVec.data(), erasingwVec.size() * sizeof(int),
-                                           cudaMemcpyHostToDevice, stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(erasinghData->data(), erasinghVec.data(), erasinghVec.size() * sizeof(int),
-                                           cudaMemcpyHostToDevice, stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(erasingcData->data(), erasingcVec.data(), erasingcVec.size() * sizeof(int),
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(erasingData->data(), erasingVec.data(), erasingVec.size() * sizeof(int3),
                                            cudaMemcpyHostToDevice, stream));
     ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(imgIdxData->data(), imgIdxVec.data(), imgIdxVec.size() * sizeof(int),
                                            cudaMemcpyHostToDevice, stream));
@@ -153,12 +116,11 @@ TEST(OpErase, OpErase_Tensor)
                                            cudaMemcpyHostToDevice, stream));
 
     // Call operator
-    unsigned int    seed   = 0;
-    bool            random = false, inplace = false;
-    int             num_erasing_area = 2;
-    nv::cvop::Erase eraseOp(num_erasing_area);
-    EXPECT_NO_THROW(eraseOp(stream, imgIn, imgOut, anchor_x, anchor_y, erasing_w, erasing_h, erasing_c, values, imgIdx,
-                            random, seed, inplace));
+    unsigned int    seed                 = 0;
+    bool            random               = false;
+    int             max_num_erasing_area = 2;
+    nv::cvop::Erase eraseOp(max_num_erasing_area);
+    EXPECT_NO_THROW(eraseOp(stream, imgIn, imgOut, anchor, erasing, values, imgIdx, random, seed));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
 

@@ -1145,8 +1145,7 @@ public:
      * @brief erase areas of images. Different images in the same batch can be erased differently.
      * @param inData gpu pointer, inputs[0] are batched input images, whose shape is input_shape and type is data_type.
      * @param outData gpu pointer, outputs[0] are batched output images that have the same type as data_type.
-     * @param anchor_x an array of size num_erasing_area that gives the x coordinate of the top left point in the eraseing areas.
-     * @param anchor_y an array of size num_erasing_area that gives the y coordinate of the top left point in the eraseing areas.
+     * @param anchor an array of size num_erasing_area that gives the x coordinate and y coordinate of the top left point in the eraseing areas.
      * @param erasing_w an array of size num_erasing_area that gives the widths of the eraseing areas.
      * @param erasing_h an array of size num_erasing_area that gives the heights of the eraseing areas.
      * @param erasing_c an array of size num_erasing_area that gives integers in range 0-15,
@@ -1160,14 +1159,12 @@ public:
      *
      */
     ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
-                    const ITensorDataPitchDevice &anchor_x, const ITensorDataPitchDevice &anchor_y,
-                    const ITensorDataPitchDevice &erasing_w, const ITensorDataPitchDevice &erasing_h,
-                    const ITensorDataPitchDevice &erasing_c, const ITensorDataPitchDevice &values,
-                    const ITensorDataPitchDevice &imgIdx, bool random, unsigned int seed, bool inplace,
-                    cudaStream_t stream);
+                    const ITensorDataPitchDevice &anchor, const ITensorDataPitchDevice &erasing,
+                    const ITensorDataPitchDevice &values, const ITensorDataPitchDevice &imgIdx, bool random,
+                    unsigned int seed, bool inplace, cudaStream_t stream);
 
 protected:
-    int   *d_max_values;
+    int3  *d_max_values;
     void  *temp_storage;
     size_t storage_bytes;
     int    max_num_erasing_area;
