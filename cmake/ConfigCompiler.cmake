@@ -13,15 +13,15 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O3 -ggdb"
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -O3 -ggdb")
 
 # Match warning setup with GVS
-set(WARNING_FLAGS "-Wall -Werror -Wpointer-arith \
--Wmissing-declarations -Wredundant-decls -Wmultichar \
--Wno-unused-local-typedefs -Wunused -Wno-unknown-pragmas")
+set(C_WARNING_FLAGS "-Wall -Wno-unknown-pragmas -Wpointer-arith -Wmissing-declarations -Wredundant-decls -Wmultichar -Wno-unused-local-typedefs -Wunused ")
 
 # let the compiler help us marking virtual functions with override
-set(CXX_WARNING_FLAGS "${CXX_WARNING_FLAGS} -Wsuggest-override")
+set(CXX_WARNING_FLAGS "-Wsuggest-override")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS} ${CXX_WARNING_FLAGS}")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARNING_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror ${C_WARNING_FLAGS} ${CXX_WARNING_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror ${C_WARNING_FLAGS}")
+
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Werror all-warnings ${C_WARNING_FLAGS} ${CXX_WARNING_FLAGS}")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 11)
     message(FATAL_ERROR "Must use gcc>=11.0 to compile CV-CUDA, you're using ${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}")
