@@ -11,6 +11,7 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <operators/OpGaussian.hpp>
 #include <private/core/Exception.hpp>
@@ -23,7 +24,7 @@ namespace priv    = nv::cv::priv;
 namespace priv_op = nv::cvop::priv;
 
 NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopGaussianCreate,
-                (NVCVOperatorHandle * handle, int maxKernelWidth, int maxKernelHeight))
+                (NVCVOperatorHandle * handle, int maxKernelWidth, int maxKernelHeight, int maxVarShapeBatchSize))
 {
     return priv::ProtectCall(
         [&]
@@ -34,7 +35,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopGaussianCreate,
             }
 
             *handle = reinterpret_cast<NVCVOperatorHandle>(
-                new priv_op::Gaussian(nv::cv::Size2D{maxKernelWidth, maxKernelHeight}));
+                new priv_op::Gaussian(nv::cv::Size2D{maxKernelWidth, maxKernelHeight}, maxVarShapeBatchSize));
         });
 }
 
@@ -48,5 +49,19 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopGaussianSubmit,
             nv::cv::TensorWrapHandle output(out), input(in);
             priv::ToDynamicRef<priv_op::Gaussian>(handle)(
                 stream, input, output, nv::cv::Size2D{kernelWidth, kernelHeight}, double2{sigmaX, sigmaY}, borderMode);
+        });
+}
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopGaussianVarShapeSubmit,
+                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                 NVCVTensorHandle kernelSize, NVCVTensorHandle sigma, NVCVBorderType borderMode))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            nv::cv::ImageBatchVarShapeWrapHandle inWrap(in), outWrap(out);
+            nv::cv::TensorWrapHandle             kernelSizeWrap(kernelSize), sigmaWrap(sigma);
+            priv::ToDynamicRef<priv_op::Gaussian>(handle)(stream, inWrap, outWrap, kernelSizeWrap, sigmaWrap,
+                                                          borderMode);
         });
 }

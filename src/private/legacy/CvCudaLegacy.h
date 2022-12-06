@@ -1430,6 +1430,85 @@ protected:
     int    max_num_erasing_area;
 };
 
+class GaussianVarShape : public CudaBaseOp
+{
+public:
+    GaussianVarShape() = delete;
+
+    GaussianVarShape(DataShape max_input_shape, DataShape max_output_shape, Size2D maxKernelSize, int maxBatchSize);
+
+    ~GaussianVarShape();
+
+    /**
+     * Limitations:
+     *
+     * Input:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | Yes
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Output:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | Yes
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Input/Output dependency
+     *
+     *      Property      |  Input == Output
+     *     -------------- | -------------
+     *      Data Layout   | Yes
+     *      Data Type     | Yes
+     *      Number        | Yes
+     *      Channels      | Yes
+     *      Width         | Yes
+     *      Height        | Yes
+     *
+     * @brief Blurs each image using a Gaussian filter.
+     * @param inData Input images.
+     * @param outData Output images.
+     * @param kernelSize Gaussian kernel size.
+     * @param sigma Gaussian kernel standard deviation in X and Y directions.
+     *              If sigma.y is zero or negative, use sigma.y = sigma.x.
+     * @param borderMode pixel extrapolation method, e.g. NVCV_BORDER_CONSTANT
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
+                    const ITensorDataPitchDevice &kernelSize, const ITensorDataPitchDevice &sigma,
+                    NVCVBorderType borderMode, cudaStream_t stream);
+
+    /**
+     * @brief calculate the gpu buffer size needed by this operator
+     * @param maxKernelSize Maximum Gaussian kernel size that may be used
+     * @param maxBatchSize Maximum batch size that may be used
+     */
+    size_t calBufferSize(Size2D maxKernelSize, int maxBatchSize);
+
+private:
+    Size2D m_maxKernelSize = {0, 0};
+    int    m_maxBatchSize  = 0;
+    float *m_kernel        = nullptr;
+};
+
 } // namespace nv::cv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H
