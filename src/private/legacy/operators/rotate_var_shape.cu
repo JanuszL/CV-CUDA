@@ -216,7 +216,7 @@ ErrorCode RotateVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData
                                 const ITensorDataPitchDevice &angleDeg, const ITensorDataPitchDevice &shift,
                                 const NVCVInterpolationType interpolation, cudaStream_t stream)
 {
-    if (m_maxBatchSize < 0)
+    if (m_maxBatchSize <= 0)
     {
         LOG_ERROR("Operator rotate var shape is not initialized properly, maxVarShapeBatchSize: " << m_maxBatchSize);
         return ErrorCode::INVALID_PARAMETER;
