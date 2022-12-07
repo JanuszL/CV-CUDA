@@ -53,7 +53,7 @@ def classification(
     # A torch tensor can be wrapped into a CVCUDA Object using the "as_tensor"
     # function in the specified layout. The datatype and dimensions are derived
     # directly from the torch tensor.
-    nvcv_input_tensor = nvcv.as_tensor(input_image, "CHW")
+    nvcv_input_tensor = nvcv.as_tensor(input_image.cuda(), "CHW")
 
     # The input image is now ready to be used
 

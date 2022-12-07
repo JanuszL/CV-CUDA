@@ -23,4 +23,4 @@ update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 11
 update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 11
 update-alternatives --set gcc /usr/bin/gcc-11
 update-alternatives --set g++ /usr/bin/g++-11
-pip3 install torch torchvision
+pip3 install torch==1.10.1 torchvision==0.11.2
