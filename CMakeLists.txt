@@ -30,7 +30,7 @@ option(ENABLE_SANITIZER "Enabled sanitized build" OFF)
 
 # Configure build tree ======================
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" )
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" )
 
 include(ConfigVersion)
 include(ConfigBuildTree)
