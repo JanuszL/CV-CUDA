@@ -39,12 +39,12 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCompositeCreate, (NVCVOperatorHandle * h
 
 NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCompositeSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle fg, NVCVTensorHandle bg,
-                 NVCVTensorHandle mat, NVCVTensorHandle out))
+                 NVCVTensorHandle fgMask, NVCVTensorHandle out))
 {
     return priv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle foreground(fg), background(bg), mask(mat), output(out);
+            nv::cv::TensorWrapHandle foreground(fg), background(bg), mask(fgMask), output(out);
             priv::ToDynamicRef<priv_op::Composite>(handle)(stream, foreground, background, mask, output);
         });
 }

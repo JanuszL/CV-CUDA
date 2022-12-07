@@ -97,13 +97,13 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopCompositeCreate(NVCVOperatorHandle *handle);
  *                    + Must not be NULL.
  * @param [in] stream Handle to a valid CUDA stream.
  *
- * @param [in] foreground input foreground tensor
+ * @param [in] foreground input foreground tensor. Each image is BGR (3-channel) 8-bit.
  *
- * @param [in] background input background tensor
+ * @param [in] background input background tensor. Each image is BGR (3-channel) 8-bit.
  *
- * @param [in] mat input mask tensor
+ * @param [in] fgMask input foreground mask tensor. Each mask is grayscale 8-bit
  *
- * @param [out] output output tensor
+ * @param [out] output output tensor. Each output image is BGR(A) (3-channel for BGR, 4-channel for BGRA) 8-bit.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
  * @retval #NVCV_ERROR_INTERNAL         Internal error in the operator, invalid types passed in.
@@ -112,7 +112,7 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopCompositeCreate(NVCVOperatorHandle *handle);
 /** @{ */
 NVCV_OP_PUBLIC NVCVStatus nvcvopCompositeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
                                                 NVCVTensorHandle foreground, NVCVTensorHandle background,
-                                                NVCVTensorHandle mat, NVCVTensorHandle output);
+                                                NVCVTensorHandle fgMask, NVCVTensorHandle output);
 
 /** @} */
 

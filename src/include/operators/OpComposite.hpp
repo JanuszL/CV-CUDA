@@ -39,7 +39,7 @@ public:
 
     ~Composite();
 
-    void operator()(cudaStream_t stream, cv::ITensor &foreground, cv::ITensor &background, cv::ITensor &mat,
+    void operator()(cudaStream_t stream, cv::ITensor &foreground, cv::ITensor &background, cv::ITensor &fgMask,
                     cv::ITensor &output);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
@@ -61,10 +61,10 @@ inline Composite::~Composite()
 }
 
 inline void Composite::operator()(cudaStream_t stream, cv::ITensor &foreground, cv::ITensor &background,
-                                  cv::ITensor &mat, cv::ITensor &output)
+                                  cv::ITensor &fgMask, cv::ITensor &output)
 {
     cv::detail::CheckThrow(nvcvopCompositeSubmit(m_handle, stream, foreground.handle(), background.handle(),
-                                                 mat.handle(), output.handle()));
+                                                 fgMask.handle(), output.handle()));
 }
 
 inline NVCVOperatorHandle Composite::handle() const noexcept

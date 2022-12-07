@@ -30,7 +30,7 @@ Composite::Composite()
 }
 
 void Composite::operator()(cudaStream_t stream, const cv::ITensor &foreground, const cv::ITensor &background,
-                           const cv::ITensor &mat, const cv::ITensor &output) const
+                           const cv::ITensor &fgMask, const cv::ITensor &output) const
 {
     auto *foregroundData = dynamic_cast<const cv::ITensorDataPitchDevice *>(foreground.exportData());
     if (foregroundData == nullptr)
@@ -46,11 +46,11 @@ void Composite::operator()(cudaStream_t stream, const cv::ITensor &foreground, c
                             "Input background must be device-acessible, pitch-linear tensor");
     }
 
-    auto *matData = dynamic_cast<const cv::ITensorDataPitchDevice *>(mat.exportData());
-    if (matData == nullptr)
+    auto *fgMaskData = dynamic_cast<const cv::ITensorDataPitchDevice *>(fgMask.exportData());
+    if (fgMaskData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Input mat must be device-acessible, pitch-linear tensor");
+                            "Input fgMask must be device-acessible, pitch-linear tensor");
     }
 
     auto *outData = dynamic_cast<const cv::ITensorDataPitchDevice *>(output.exportData());
@@ -58,9 +58,8 @@ void Composite::operator()(cudaStream_t stream, const cv::ITensor &foreground, c
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be device-acessible, pitch-linear tensor");
     }
-    
-    NVCV_CHECK_THROW(
-    m_legacyOp->infer(*foregroundData, *backgroundData, *matData, *outData, stream));
+
+    NVCV_CHECK_THROW(m_legacyOp->infer(*foregroundData, *backgroundData, *fgMaskData, *outData, stream));
 }
 
 } // namespace nv::cvop::priv

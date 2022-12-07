@@ -43,7 +43,7 @@ public:
     explicit Composite();
 
     void operator()(cudaStream_t stream, const cv::ITensor &foreground, const cv::ITensor &background,
-                    const cv::ITensor &mat, const cv::ITensor &output) const;
+                    const cv::ITensor &fgMask, const cv::ITensor &output) const;
 
 private:
     std::unique_ptr<cv::legacy::cuda_op::Composite> m_legacyOp;

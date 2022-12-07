@@ -2021,7 +2021,7 @@ public:
      * @param batch_size maximum input batch size
      */
     size_t calBufferSize(int batch_size);
-}
+};
 
 class Composite : public CudaBaseOp
 {
@@ -2029,7 +2029,10 @@ public:
     Composite() = delete;
 
     Composite(DataShape max_input_shape, DataShape max_output_shape)
-    
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
     /*
      * @brief Composite perform the composite operation given a foreground, background and mat images
      *
@@ -2037,14 +2040,14 @@ public:
      *
      * @param background gpu tensor for background image
      *
-     * @param mat gpu tensor for mat image
+     * @param fgMask gpu tensor for mat image
      *
      * @param outData gpu tensor for the output image
      *
      * @param stream for the asynchronous execution.
      */
     ErrorCode infer(const ITensorDataPitchDevice &foreground, const ITensorDataPitchDevice &background,
-                    const ITensorDataPitchDevice &mat, const ITensorDataPitchDevice &outData, cudaStream_t stream);
+                    const ITensorDataPitchDevice &fgMask, const ITensorDataPitchDevice &outData, cudaStream_t stream);
 };
 
 } // namespace nv::cv::legacy::cuda_op

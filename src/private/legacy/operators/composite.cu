@@ -33,7 +33,8 @@ namespace nvcv = nv::cv;
 #define AlphaLerp(c0, c1, a) int(((int)c1 - (int)c0) * (int)a * Inv_255 + c0 + 0.5f)
 
 template<typename T, typename U, typename D>
-__global__ void composite_kernel(const Ptr2dNHWC<T> fg, const Ptr2dNHWC<T> bg, const Ptr2dNHWC<U> mat, Ptr2dNHWC<D> dst)
+__global__ void composite_kernel(const Ptr2dNHWC<T> fg, const Ptr2dNHWC<T> bg, const Ptr2dNHWC<U> fgMask,
+                                 Ptr2dNHWC<D> dst)
 {
     int dst_x = blockIdx.x * blockDim.x + threadIdx.x;
     int dst_y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -46,7 +47,7 @@ __global__ void composite_kernel(const Ptr2dNHWC<T> fg, const Ptr2dNHWC<T> bg, c
     int dst_ch = dst.ch;
     int src_ch = fg.ch;
 
-    U mask_val = *mat.ptr(batch_idx, dst_y, dst_x);
+    U mask_val = *fgMask.ptr(batch_idx, dst_y, dst_x);
     T bg_val   = *bg.ptr(batch_idx, dst_y, dst_x);
     T fg_val   = *fg.ptr(batch_idx, dst_y, dst_x);
     D out;
@@ -65,12 +66,10 @@ __global__ void composite_kernel(const Ptr2dNHWC<T> fg, const Ptr2dNHWC<T> bg, c
 template<typename T, int scn, int dcn> // uchar
 void composite(const nvcv::TensorDataAccessPitchImagePlanar &foregroundData,
                const nvcv::TensorDataAccessPitchImagePlanar &backgroundData,
-               const nvcv::TensorDataAccessPitchImagePlanar &matData,
+               const nvcv::TensorDataAccessPitchImagePlanar &fgMaskData,
                const nvcv::TensorDataAccessPitchImagePlanar &outData, cudaStream_t stream)
 {
     const int batch_size = foregroundData.numSamples();
-    const int in_width   = foregroundData.numCols();
-    const int in_height  = foregroundData.numRows();
     const int out_width  = outData.numCols();
     const int out_height = outData.numRows();
 
@@ -82,10 +81,10 @@ void composite(const nvcv::TensorDataAccessPitchImagePlanar &foregroundData,
 
     Ptr2dNHWC<src_type> fg_ptr(foregroundData);
     Ptr2dNHWC<src_type> bg_ptr(backgroundData);
-    Ptr2dNHWC<T>        mat_ptr(matData);
+    Ptr2dNHWC<T>        fgMask_ptr(fgMaskData);
     Ptr2dNHWC<dst_type> dst_ptr(outData);
 
-    composite_kernel<<<gridSize, blockSize, 0, stream>>>(fg_ptr, bg_ptr, mat_ptr, dst_ptr);
+    composite_kernel<<<gridSize, blockSize, 0, stream>>>(fg_ptr, bg_ptr, fgMask_ptr, dst_ptr);
     checkKernelErrors();
 
 #ifdef CUDA_DEBUG_LOG
@@ -97,20 +96,20 @@ void composite(const nvcv::TensorDataAccessPitchImagePlanar &foregroundData,
 namespace nv::cv::legacy::cuda_op {
 
 ErrorCode Composite::infer(const ITensorDataPitchDevice &foreground, const ITensorDataPitchDevice &background,
-                           const ITensorDataPitchDevice &mat, const ITensorDataPitchDevice &outData,
+                           const ITensorDataPitchDevice &fgMask, const ITensorDataPitchDevice &outData,
                            cudaStream_t stream)
 {
     DataFormat background_format = GetLegacyDataFormat(background.layout());
     DataFormat foreground_format = GetLegacyDataFormat(foreground.layout());
-    DataFormat mat_format        = GetLegacyDataFormat(mat.layout());
+    DataFormat fgMask_format     = GetLegacyDataFormat(fgMask.layout());
     DataFormat output_format     = GetLegacyDataFormat(outData.layout());
 
-    if (!((foreground_format == background_format) && (foreground_format == mat_format)
+    if (!((foreground_format == background_format) && (foreground_format == fgMask_format)
           && (foreground_format == output_format)))
     {
-        LOG_ERROR("Invalid DataFormat between foreground (" << foreground_format << "), background ("
-                                                            << background_format << "), mat (" << mat_format
-                                                            << ") and output (" << output_format << ")");
+        LOG_ERROR("Invalid DataFormat between foreground ("
+                  << foreground_format << "), background (" << background_format << "), foreground mask ("
+                  << fgMask_format << ") and output (" << output_format << ")");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -128,38 +127,36 @@ ErrorCode Composite::infer(const ITensorDataPitchDevice &foreground, const ITens
     auto backgroundAccess = TensorDataAccessPitchImagePlanar::Create(background);
     NVCV_ASSERT(backgroundAccess);
 
-    auto matAccess = TensorDataAccessPitchImagePlanar::Create(mat);
-    NVCV_ASSERT(matAccess);
+    auto fgMaskAccess = TensorDataAccessPitchImagePlanar::Create(fgMask);
+    NVCV_ASSERT(fgMaskAccess);
 
     auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     DataType foreground_data_type = GetLegacyDataType(foreground.dtype());
     DataType background_data_type = GetLegacyDataType(background.dtype());
-    DataType mat_data_type        = GetLegacyDataType(mat.dtype());
+    DataType fgMask_data_type     = GetLegacyDataType(fgMask.dtype());
     DataType output_data_type     = GetLegacyDataType(outData.dtype());
 
     DataShape foreground_shape = GetLegacyDataShape(foregroundAccess->infoShape());
     DataShape background_shape = GetLegacyDataShape(backgroundAccess->infoShape());
-    DataShape mat_shape        = GetLegacyDataShape(matAccess->infoShape());
+    DataShape fgMask_shape     = GetLegacyDataShape(fgMaskAccess->infoShape());
     DataShape output_shape     = GetLegacyDataShape(outAccess->infoShape());
 
     int foreground_channels = foreground_shape.C;
     int background_channels = background_shape.C;
-    int mat_channels        = mat_shape.C;
+    int fgMask_channels     = fgMask_shape.C;
     int output_channels     = output_shape.C;
-    int channels            = foreground_channels;
-    if (foreground_channels == 3 && output_channels == 4)
-        channels = 5;
+    int channels            = output_channels;
 
-    if (!(foreground_channels == 3) && (background_channels == 3) && (mat_channels == 1)
-        && (output_channels == 3 || output_channels == 4))
+    if (!((foreground_channels == 3) && (background_channels == 3) && (fgMask_channels == 1)
+          && (output_channels == 3 || output_channels == 4)))
     {
         LOG_ERROR("Invalid channel number " << channels);
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    if (!((foreground_data_type == kCV_8U) && (background_data_type == kCV_8U) && (mat_data_type == kCV_8U)
+    if (!((foreground_data_type == kCV_8U) && (background_data_type == kCV_8U) && (fgMask_data_type == kCV_8U)
           && (output_data_type == kCV_8U)))
     {
         LOG_ERROR("Invalid DataType " << foreground_data_type);
@@ -168,28 +165,26 @@ ErrorCode Composite::infer(const ITensorDataPitchDevice &foreground, const ITens
 
     typedef void (*func_t)(const nvcv::TensorDataAccessPitchImagePlanar &foregroundData,
                            const nvcv::TensorDataAccessPitchImagePlanar &backgroundData,
-                           const nvcv::TensorDataAccessPitchImagePlanar &matData,
+                           const nvcv::TensorDataAccessPitchImagePlanar &fgMaskData,
                            const nvcv::TensorDataAccessPitchImagePlanar &outData, cudaStream_t stream);
 
-    static const func_t funcs[6][5] = {
-        { 0 /*composite<uchar,1,1>*/,  0 /*composite<uchar,2,2>*/,           composite<uchar,3,3>, composite<uchar, 4, 4>,
-         composite<uchar, 3, 4>},
-        { 0 /*composite<schar,1,1>*/,  0 /*composite<schar,2,2>*/,  0 /*composite<schar,3>*/, 0 /*composite<schar,3,4>*/,
-         0 /*composite<schar,3,4>*/                },
-        {0 /*composite<ushort,1,1>*/, 0 /*composite<ushort,2,2>*/, 0 /*composite<ushort,3>*/,
-         0 /*composite<ushort,3,4>*/, 0 /*composite<ushort,3,4>*/                },
-        { 0 /*composite<short,1,1>*/,  0 /*composite<short,2,2>*/,  0 /*composite<short,3>*/, 0 /*composite<short,3,4>*/,
-         0 /*composite<short,3,4>*/                },
-        {   0 /*composite<int,1,1>*/,    0 /*composite<int,2,2>*/,    0 /*composite<int,3>*/,   0 /*composite<int,3,4>*/,
-         0 /*composite<int,3,4>*/                },
-        { 0 /*composite<float,1,1>*/,  0 /*composite<float,2,2>*/,  0 /*composite<float,3>*/, 0 /*composite<float,3,4>*/,
-         0 /*composite<float,3,4>*/                },
+    static const func_t funcs[6][4] = {
+        { 0 /*composite<uchar,1,1>*/,  0 /*composite<uchar,2,2>*/,             composite<uchar,3, 3>, composite<uchar, 3, 4>},
+        { 0 /*composite<schar,1,1>*/,  0 /*composite<schar,2,2>*/,  0 /*composite<schar,3,3>*/,
+         0 /*composite<schar,3,4>*/   },
+        {0 /*composite<ushort,1,1>*/, 0 /*composite<ushort,2,2>*/, 0 /*composite<ushort,3,3>*/,
+         0 /*composite<ushort,3,4>*/   },
+        { 0 /*composite<short,1,1>*/,  0 /*composite<short,2,2>*/,  0 /*composite<short,3,3>*/,
+         0 /*composite<short,3,4>*/   },
+        {   0 /*composite<int,1,1>*/,    0 /*composite<int,2,2>*/,    0 /*composite<int,3,3>*/, 0 /*composite<int,3,4>*/   },
+        { 0 /*composite<float,1,1>*/,  0 /*composite<float,2,2>*/,  0 /*composite<float,3,3>*/,
+         0 /*composite<float,3,4>*/   },
     };
 
     const func_t func = funcs[foreground_data_type][channels - 1];
     NVCV_ASSERT(func != 0);
 
-    func(*foregroundAccess, *backgroundAccess, *matAccess, *outAccess, stream);
+    func(*foregroundAccess, *backgroundAccess, *fgMaskAccess, *outAccess, stream);
 
     return SUCCESS;
 }
