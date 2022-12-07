@@ -10,6 +10,8 @@
 
 cmake_minimum_required(VERSION 3.22)
 
+# We need to check this variable before starting a CUDA project - otherwise it will appear
+# as set, with the default value pointing to the oldest supported architecture (52 as of CUDA 11.8)
 if(DEFINED CMAKE_CUDA_ARCHITECTURES)
     set(USE_CMAKE_CUDA_ARCHITECTURES TRUE)
 endif()
