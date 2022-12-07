@@ -21,11 +21,12 @@ namespace nv::cvop::priv {
 
 namespace leg = cv::legacy;
 
-MedianBlur::MedianBlur()
+MedianBlur::MedianBlur(const int maxVarShapeBatchSize)
 {
     leg::cuda_op::DataShape maxIn, maxOut;
     // maxIn/maxOut not used by op.
-    m_legacyOp = std::make_unique<leg::cuda_op::MedianBlur>(maxIn, maxOut);
+    m_legacyOp         = std::make_unique<leg::cuda_op::MedianBlur>(maxIn, maxOut);
+    m_legacyOpVarShape = std::make_unique<leg::cuda_op::MedianBlurVarShape>(maxVarShapeBatchSize);
 }
 
 void MedianBlur::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
@@ -44,6 +45,30 @@ void MedianBlur::operator()(cudaStream_t stream, const cv::ITensor &in, const cv
     }
 
     leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, ksize, stream));
+}
+
+void MedianBlur::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
+                            cv::ITensor &ksize) const
+{
+    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
+    if (inData == nullptr)
+    {
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be varshape image batch");
+    }
+
+    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(out.exportData(stream));
+    if (outData == nullptr)
+    {
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be varshape image batch");
+    }
+
+    auto *ksizeData = dynamic_cast<const cv::ITensorDataPitchDevice *>(ksize.exportData());
+    if (ksizeData == nullptr)
+    {
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "ksize must be a tensor");
+    }
+
+    leg::helpers::CheckOpErrThrow(m_legacyOpVarShape->infer(*inData, *outData, *ksizeData, stream));
 }
 
 } // namespace nv::cvop::priv

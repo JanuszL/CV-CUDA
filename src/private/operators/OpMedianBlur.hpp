@@ -41,12 +41,16 @@ namespace nv::cvop::priv {
 class MedianBlur final : public OperatorBase
 {
 public:
-    explicit MedianBlur();
+    explicit MedianBlur(const int maxVarShapeBatchSize);
 
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, const cv::Size2D ksize) const;
 
+    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
+                    cv::ITensor &ksize) const;
+
 private:
-    std::unique_ptr<cv::legacy::cuda_op::MedianBlur> m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::MedianBlur>         m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::MedianBlurVarShape> m_legacyOpVarShape;
 };
 
 } // namespace nv::cvop::priv
