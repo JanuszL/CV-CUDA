@@ -79,4 +79,5 @@ PYBIND11_MODULE(nvcv, m)
     ExportOpGaussian(m);
     ExportOpMedianBlur(m);
     ExportOpLaplacian(m);
+    ExportOpAverageBlur(m);
 }

@@ -76,6 +76,7 @@ pybind11_add_module(nvcv_python MODULE
     OpGaussian.cpp
     OpMedianBlur.cpp
     OpLaplacian.cpp
+    OpAverageBlur.cpp
 )
 
 target_include_directories(nvcv_python
