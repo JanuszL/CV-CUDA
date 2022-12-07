@@ -31,8 +31,9 @@
 
 namespace priv = nv::cv::priv;
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorCalcRequirementsForImages,
-                (int32_t batch, int32_t width, int32_t height, NVCVImageFormat format, NVCVTensorRequirements *reqs))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorCalcRequirementsForImages,
+                (int32_t batch, int32_t width, int32_t height, NVCVImageFormat format, int32_t baseAlign,
+                 int32_t rowAlign, NVCVTensorRequirements *reqs))
 {
     return priv::ProtectCall(
         [&]
@@ -44,13 +45,13 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorCalcRequirementsForImages,
 
             priv::ImageFormat fmt{format};
 
-            *reqs = priv::Tensor::CalcRequirements(batch, {width, height}, fmt);
+            *reqs = priv::Tensor::CalcRequirements(batch, {width, height}, fmt, baseAlign, rowAlign);
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorCalcRequirements,
-                (int32_t ndim, const int64_t *shape, NVCVPixelType dtype, NVCVTensorLayout layout,
-                 NVCVTensorRequirements *reqs))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorCalcRequirements,
+                (int32_t ndim, const int64_t *shape, NVCVPixelType dtype, NVCVTensorLayout layout, int32_t baseAlign,
+                 int32_t rowAlign, NVCVTensorRequirements *reqs))
 {
     return priv::ProtectCall(
         [&]
@@ -62,7 +63,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvTensorCalcRequirements,
 
             priv::PixelType pix{dtype};
 
-            *reqs = priv::Tensor::CalcRequirements(ndim, shape, pix, layout);
+            *reqs = priv::Tensor::CalcRequirements(ndim, shape, pix, layout, baseAlign, rowAlign);
         });
 }
 

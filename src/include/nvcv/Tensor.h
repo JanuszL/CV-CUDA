@@ -79,6 +79,17 @@ typedef struct NVCVTensorRequirementsRec
  *                    Pass NVCV_TENSOR_NONE is layout is not available.
  *                    + Number of dimensions in layout must be @p ndim.
  *
+ * @param [in] baseAddrAlignment Alignment, in bytes, of the requested memory buffer.
+ *                               If 0, use a default suitable for optimized memory access.
+ *                               The used alignment is at least the given value.
+ *                               + If different from 0, it must be a power-of-two.
+ *
+ * @param [in] rowAddrAlignment Alignment, in bytes, of the start of each second-to-last dimension address.
+ *                              If 0, use a default suitable for optimized memory access.
+ *                              The used alignment is at least the given value.
+ *                              Pass 1 for creation of fully packed tensors, i.e., no padding between dimensions.
+ *                              + If different from 0, it must be a power-of-two.
+ *
  * @param [out] reqs  Where the tensor requirements will be written to.
  *                    + Must not be NULL.
  *
@@ -86,7 +97,8 @@ typedef struct NVCVTensorRequirementsRec
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvTensorCalcRequirements(int32_t ndim, const int64_t *shape, NVCVPixelType dtype,
-                                                  NVCVTensorLayout layout, NVCVTensorRequirements *reqs);
+                                                  NVCVTensorLayout layout, int32_t baseAddrAlignment,
+                                                  int32_t rowAddrAlignment, NVCVTensorRequirements *reqs);
 
 /** Calculates the resource requirements needed to create a tensor that holds N images.
  *
@@ -101,6 +113,17 @@ NVCV_PUBLIC NVCVStatus nvcvTensorCalcRequirements(int32_t ndim, const int64_t *s
  *                    + All planes in must have the same number of channels.
  *                    + No subsampled planes are allowed.
  *
+ * @param [in] baseAddrAlignment Alignment, in bytes, of the requested memory buffer.
+ *                               If 0, use a default suitable for optimized memory access.
+ *                               The used alignment is at least the given value.
+ *                               + If different from 0, it must be a power-of-two.
+ *
+ * @param [in] rowAddrAlignment Alignment, in bytes, of the start of each second-to-last dimension address.
+ *                              If 0, use a default suitable for optimized memory access.
+ *                              The used alignment is at least the given value.
+ *                              Pass 1 for creation of fully packed tensors, i.e., no padding between dimensions.
+ *                              + If different from 0, it must be a power-of-two.
+ *
  * @param [out] reqs  Where the tensor requirements will be written to.
  *                    + Must not be NULL.
  *
@@ -108,7 +131,8 @@ NVCV_PUBLIC NVCVStatus nvcvTensorCalcRequirements(int32_t ndim, const int64_t *s
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvTensorCalcRequirementsForImages(int32_t numImages, int32_t width, int32_t height,
-                                                           NVCVImageFormat format, NVCVTensorRequirements *reqs);
+                                                           NVCVImageFormat format, int32_t baseAddrAlignment,
+                                                           int32_t rowAddrAlignment, NVCVTensorRequirements *reqs);
 
 /** Constructs a tensor instance with given requirements in the given storage.
  *
