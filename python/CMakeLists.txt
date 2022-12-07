@@ -74,6 +74,7 @@ pybind11_add_module(nvcv_python MODULE
     OpRotate.cpp
     OpErase.cpp
     OpGaussian.cpp
+    OpMedianBlur.cpp
 )
 
 target_include_directories(nvcv_python

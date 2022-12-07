@@ -77,4 +77,5 @@ PYBIND11_MODULE(nvcv, m)
     ExportOpRotate(m);
     ExportOpErase(m);
     ExportOpGaussian(m);
+    ExportOpMedianBlur(m);
 }
