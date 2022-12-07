@@ -233,7 +233,7 @@ __global__ void laplacianFilter2D(const BrdRd src, Ptr2dVarShapeNHWC<D> dst, cud
 
     const int ksizeVal = *ksize.ptr(batch_idx);
 
-    assert(ksizeVal == 1 || ksizeVal == 3);
+    NVCV_CUDA_ASSERT(ksizeVal == 1 || ksizeVal == 3, "E Wrong ksize = %d, expected: 1 or 3", ksizeVal);
     cuda::math::Vector<float, 9> kernel = ksizeVal == 1 ? kLaplacianKernel1 : kLaplacianKernel3;
 
     kernel *= *scale.ptr(batch_idx);
@@ -403,8 +403,10 @@ __global__ void CalculateGaussianKernel(cuda::Tensor3DWrap<float> kernel, int da
     if (kernelSize.y <= 0 && sigma.y > 0)
         kernelSize.y = cuda::round<int>(sigma.y * dataKernelSize * 2 + 1) | 1;
 
-    assert(kernelSize.x > 0 && (kernelSize.x % 2 == 1) && kernelSize.x <= maxKernelSize.w);
-    assert(kernelSize.y > 0 && (kernelSize.y % 2 == 1) && kernelSize.y <= maxKernelSize.h);
+    NVCV_CUDA_ASSERT(kernelSize.x > 0 && (kernelSize.x % 2 == 1) && kernelSize.x <= maxKernelSize.w,
+                     "E Wrong kernelSize.x = %d, expected > 0, odd and <= %d\n", kernelSize.x, maxKernelSize.w);
+    NVCV_CUDA_ASSERT(kernelSize.y > 0 && (kernelSize.y % 2 == 1) && kernelSize.y <= maxKernelSize.h,
+                     "E Wrong kernelSize.y = %d, expected > 0, odd and <= %d\n", kernelSize.y, maxKernelSize.h);
 
     int2 half{kernelSize.x / 2, kernelSize.y / 2};
 
