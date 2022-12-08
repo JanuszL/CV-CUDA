@@ -30,21 +30,10 @@ TEST(OpErase, OpErase_Tensor)
     cudaStream_t stream;
     EXPECT_EQ(cudaSuccess, cudaStreamCreate(&stream));
 
+    nvcv::Tensor imgIn(1, {640, 480}, nvcv::FMT_U8);
     nvcv::Tensor imgOut(1, {640, 480}, nvcv::FMT_U8);
 
-    nvcv::Tensor::Requirements reqsPlanar = nvcv::Tensor::CalcRequirements(1, {640, 480}, nvcv::FMT_U8);
-
-    int64_t inBufferSize = CalcTotalSizeBytes(nvcv::Requirements{reqsPlanar.mem}.deviceMem());
-    ASSERT_LT(0, inBufferSize);
-
-    nvcv::TensorDataPitchDevice::Buffer bufPlanar;
-    std::copy(reqsPlanar.pitchBytes, reqsPlanar.pitchBytes + NVCV_TENSOR_MAX_NDIM, bufPlanar.pitchBytes);
-    EXPECT_EQ(cudaSuccess, cudaMalloc(&bufPlanar.data, inBufferSize));
-
-    nvcv::TensorDataPitchDevice bufIn(nvcv::TensorShape{reqsPlanar.shape, reqsPlanar.ndim, reqsPlanar.layout},
-                                      nvcv::PixelType{reqsPlanar.dtype}, bufPlanar);
-
-    auto inAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(bufIn);
+    auto inAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*imgIn.exportData());
     ASSERT_TRUE(inAccess);
 
     ASSERT_EQ(1, inAccess->numSamples());
@@ -52,9 +41,6 @@ TEST(OpErase, OpErase_Tensor)
     // setup the buffer
     EXPECT_EQ(cudaSuccess, cudaMemset2D(inAccess->planeData(0), inAccess->rowPitchBytes(), 0,
                                         inAccess->numCols() * inAccess->colPitchBytes(), inAccess->numRows()));
-
-    // wrap the buffer
-    nvcv::TensorWrapData imgIn{bufIn};
 
     const auto *outData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgOut.exportData());
     ASSERT_NE(nullptr, outData);
@@ -138,7 +124,6 @@ TEST(OpErase, OpErase_Tensor)
     EXPECT_EQ(test[10 * 640], 0);
     EXPECT_EQ(test[10 * 640 + 10], 1);
 
-    EXPECT_EQ(cudaSuccess, cudaFree(bufPlanar.data));
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 }
 
