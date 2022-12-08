@@ -48,6 +48,7 @@ def test_op_customcrop(input, rc, out_shape):
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
+    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
     stream = nvcv.cuda.Stream()
     out = input.customcrop(rect=rc, stream=stream)
     assert out.layout == input.layout

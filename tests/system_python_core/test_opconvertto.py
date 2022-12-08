@@ -42,6 +42,7 @@ def test_op_convertto(input, dtype, scale, offset):
     tmp = input.convertto_into(out, scale)
     tmp = input.convertto_into(out, scale, offset)
 
+    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
     stream = nvcv.cuda.Stream()
     out = input.convertto(dtype=dtype, scale=scale, offset=offset, stream=stream)
     assert out.layout == input.layout

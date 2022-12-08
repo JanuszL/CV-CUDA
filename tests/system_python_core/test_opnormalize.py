@@ -69,6 +69,7 @@ def test_op_normalize(input, base, scale, globalscale, globalshift, epsilon, fla
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
+    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
     stream = nvcv.cuda.Stream()
     out = input.normalize(
         base=base,
