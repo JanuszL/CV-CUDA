@@ -71,7 +71,6 @@ from random import randint
 def test_op_copymakeborder(
     num_images, format, min_out_size, max_out_size, border_mode, border_value
 ):
-    stream = nvcv.cuda.Stream()
     max_out_w = randint(min_out_size[0], max_out_size[0])
     max_out_h = randint(min_out_size[1], max_out_size[1])
 
@@ -103,6 +102,8 @@ def test_op_copymakeborder(
     assert out.shape == tensor_out.shape
     assert out.dtype == tensor_out.dtype
 
+    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
+    stream = nvcv.cuda.Stream()
     tmp = input.copymakeborderstack_into(
         tensor_out,
         top=top_tensor,
@@ -114,7 +115,11 @@ def test_op_copymakeborder(
     assert tmp is tensor_out
 
     out = input.copymakeborder(
-        top=top_tensor, left=left_tensor, out_heights=out_heights, out_widths=out_widths
+        top=top_tensor,
+        left=left_tensor,
+        out_heights=out_heights,
+        out_widths=out_widths,
+        stream=stream,
     )
     assert out.uniqueformat is not None
     assert out.uniqueformat == varshape_out.uniqueformat
