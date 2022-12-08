@@ -11,7 +11,8 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "Container.hpp"
+#include "Image.hpp"
+#include "ImageBatch.hpp"
 #include "Operators.hpp"
 #include "PyUtil.hpp"
 #include "ResourceGuard.hpp"
@@ -58,6 +59,44 @@ std::shared_ptr<Tensor> Rotate(Tensor &input, double angleDeg, const std::tuple<
     return RotateInto(input, *output, angleDeg, shift, interpolation, pstream);
 }
 
+std::shared_ptr<ImageBatchVarShape> VarShapeRotateInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
+                                                       Tensor &angleDeg, Tensor &shift,
+                                                       NVCVInterpolationType   interpolation,
+                                                       std::shared_ptr<Stream> pstream)
+{
+    if (pstream == nullptr)
+    {
+        pstream = Stream::Current().shared_from_this();
+    }
+
+    auto rotate = CreateOperator<cvop::Rotate>(input.capacity());
+
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input, angleDeg, shift});
+    guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*rotate});
+
+    rotate->submit(pstream->handle(), input.impl(), output.impl(), angleDeg.impl(), shift.impl(), interpolation);
+
+    return output.shared_from_this();
+}
+
+std::shared_ptr<ImageBatchVarShape> VarShapeRotate(ImageBatchVarShape &input, Tensor &angleDeg, Tensor &shift,
+                                                   NVCVInterpolationType interpolation, std::shared_ptr<Stream> pstream)
+{
+    std::shared_ptr<ImageBatchVarShape> output = ImageBatchVarShape::Create(input.capacity());
+
+    for (int i = 0; i < input.numImages(); ++i)
+    {
+        cv::ImageFormat format = input.impl()[i].format();
+        cv::Size2D      size   = input.impl()[i].size();
+        auto            image  = Image::Create(std::tie(size.w, size.h), format);
+        output->pushBack(*image);
+    }
+
+    return VarShapeRotateInto(input, *output, angleDeg, shift, interpolation, pstream);
+}
+
 } // namespace
 
 void ExportOpRotate(py::module &m)
@@ -68,6 +107,10 @@ void ExportOpRotate(py::module &m)
                            "stream"_a = nullptr);
     DefClassMethod<Tensor>("rotate_into", &RotateInto, "output"_a, "angle_deg"_a, "shift"_a, "interpolation"_a,
                            py::kw_only(), "stream"_a = nullptr);
+    DefClassMethod<ImageBatchVarShape>("rotate", &VarShapeRotate, "angle_deg"_a, "shift"_a, "interpolation"_a,
+                                       py::kw_only(), "stream"_a = nullptr);
+    DefClassMethod<ImageBatchVarShape>("rotate_into", &VarShapeRotateInto, "output"_a, "angle_deg"_a, "shift"_a,
+                                       "interpolation"_a, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy
