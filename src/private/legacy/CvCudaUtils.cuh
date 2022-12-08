@@ -35,6 +35,7 @@
 #include <nvcv/cuda/TensorWrap.hpp>   // for TensorWrap, etc.
 #include <nvcv/cuda/TypeTraits.hpp>   // for BaseType, etc.
 #include <nvcv/cuda/math/LinAlg.hpp>  // for Vector, etc.
+#include <private/operators/Assert.h> // for NVCV_CUDA_ASSERT, etc.
 #include <util/Assert.h>              // for Status::ASSERT, etc.
 #include <util/CheckError.hpp>        // for NVCV_CHECK_LOG, etc.
 
