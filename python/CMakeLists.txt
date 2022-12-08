@@ -12,14 +12,17 @@
 
 cmake_minimum_required(VERSION 3.22)
 
-project(nvcv_python CXX)
+project(nvcv_python CXX C)
+
+set(CMAKE_CXX_STANDARD 20)
 
 set(PYBIND11_PYTHON_VERSION ${PYTHON_VERSION})
 add_subdirectory(${PYBIND11_SOURCE_DIR} pybind11)
 
+find_package(CUDAToolkit REQUIRED)
 find_package(nvcv REQUIRED)
 
-set(CMAKE_CXX_STANDARD 20)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../src/util nvcv_util)
 
 set(imgformat_defs ${CMAKE_CURRENT_BINARY_DIR}/NVCVPythonImageFormatDefs.inc)
 set(imgformat_script ${CMAKE_CURRENT_SOURCE_DIR}/gen_imgformat_list.sh)
@@ -83,12 +86,10 @@ set_target_properties(nvcv_python PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
 )
 
-
-find_package(CUDAToolkit REQUIRED)
-
 target_link_libraries(nvcv_python
     PRIVATE
         nvcv
+        nvcv_util_compat
         CUDA::cudart_static
         -static-libstdc++
 )

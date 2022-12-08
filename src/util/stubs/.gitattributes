@@ -10,29 +10,4 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-variables:
-    GIT_SUBMODULE_STRATEGY: normal
-    TAG_IMAGE: 2
-    INSIDE_CI: "true"
-
-stages:
-  - lint
-  - build
-  - deploy
-  - test
-  - compat
-
-.launch_rule:
-    interruptible: true
-    only:
-        - merge_request
-        - main
-        - /^rel\/.*$/
-
-include:
-    - ci/lint.yml
-    - ci/build.yml
-    - ci/build_docs.yml
-    - ci/test.yml
-    - ci/samples.yml
-    - ci/compat.yml
+*.so filter=lfs diff=lfs merge=lfs -text

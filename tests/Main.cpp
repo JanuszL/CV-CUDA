@@ -10,7 +10,6 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <cuda.h>
 #include <cuda_runtime.h>
 #include <gtest/gtest.h>
 
@@ -42,13 +41,10 @@ public:
 
     virtual void OnTestEnd(const t::TestInfo &tinfo) override
     {
-        bool usingCUDA = false;
-        {
-            int cnt;
-            usingCUDA = cuDeviceGetCount(&cnt) == CUDA_SUCCESS;
-        }
+        int devCount = 0;
+        cudaGetDeviceCount(&devCount);
 
-        if (usingCUDA)
+        if (devCount)
         {
             EXPECT_EQ(cudaSuccess, cudaGetLastError()) << "Some test leaked a cuda error";
 

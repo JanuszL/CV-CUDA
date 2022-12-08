@@ -18,9 +18,10 @@ target_link_libraries(nvcv_test_main
     PUBLIC
         GTest::gtest
         GTest::gmock
+        nvcv_util_compat
     PRIVATE
         nvcv
-        CUDA::cuda_driver
+        CUDA::cudart_static
 )
 
 # Now we want to create a script in the output directory that will run
