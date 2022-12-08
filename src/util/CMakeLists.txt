@@ -13,6 +13,11 @@
 set(OPENSSL_USE_STATIC_LIBS TRUE)
 find_package(OpenSSL COMPONENTS Crypto REQUIRED)
 
+# on some distros (e.g CentOS 7) we need to add libz when
+# linking against static libcrypto
+set(ZLIB_USE_STATIC_LIBS TRUE)
+find_package(ZLIB REQUIRED)
+
 set(CMAKE_POSITION_INDEPENDENT_CODE on)
 
 # nvcv_util_sanitizer ---------------------------------
@@ -157,6 +162,7 @@ target_link_libraries(nvcv_util
         CUDA::cudart_static
     PRIVATE
         OpenSSL::Crypto
+	ZLIB::ZLIB
         nvcv_util_compat
 )
 
