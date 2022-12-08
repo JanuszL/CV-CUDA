@@ -10,6 +10,12 @@
 
 cmake_minimum_required(VERSION 3.22)
 
+# We need to check this variable before starting a CUDA project - otherwise it will appear
+# as set, with the default value pointing to the oldest supported architecture (52 as of CUDA 11.8)
+if(DEFINED CMAKE_CUDA_ARCHITECTURES)
+    set(USE_CMAKE_CUDA_ARCHITECTURES TRUE)
+endif()
+
 project(cvcuda
         LANGUAGES C CXX CUDA
         VERSION 0.2.0
@@ -30,7 +36,7 @@ option(ENABLE_SANITIZER "Enabled sanitized build" OFF)
 
 # Configure build tree ======================
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" )
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" )
 
 include(ConfigVersion)
 include(ConfigBuildTree)

@@ -23,7 +23,9 @@ set(CMAKE_POSITION_INDEPENDENT_CODE on)
 set(INSTALL_GTEST off)
 set(BUILD_GMOCK on)
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-add_subdirectory(googletest)
+if(BUILD_TESTS)
+    add_subdirectory(googletest)
+endif()
 
 # pybind11 -----------------------------
 set(PYBIND11_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/pybind11" PARENT_SCOPE)
