@@ -14,7 +14,7 @@
 /**
  * @file OpNormalize.hpp
  *
- * @brief Defines the public C++ Class for the reformat operation.
+ * @brief Defines the public C++ Class for the normalize operation.
  * @defgroup NVCV_CPP_ALGORITHM_NORMALIZE Normalize
  * @{
  */

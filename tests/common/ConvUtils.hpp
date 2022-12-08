@@ -30,6 +30,10 @@ void Convolve(std::vector<uint8_t> &hDst, const long3 &dstPitches, const std::ve
               const Size2D &kernelSize, int2 &kernelAnchor, const NVCVBorderType &borderMode,
               const float4 &borderValue);
 
+void Morph(std::vector<uint8_t> &hDst, const long3 &dstPitches, const std::vector<uint8_t> &hSrc,
+           const long3 &srcPitches, const int3 &shape, const ImageFormat &format, const Size2D &kernelSize,
+           int2 &kernelAnchor, const NVCVBorderType &borderMode, NVCVMorphologyType type);
+
 } // namespace nv::cv::test
 
 #endif // NVCV_TEST_COMMON_CONV_UTILS_HPP

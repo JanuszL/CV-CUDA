@@ -26,6 +26,7 @@
 #include <nvcv/ITensorData.hpp>
 #include <nvcv/Rect.h>
 #include <operators/Types.h>
+#include <util/Assert.h>
 
 #include <vector>
 
@@ -469,6 +470,86 @@ public:
      * @param max_data_type DataType with the maximum size that may be used
      */
     size_t    calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
+};
+
+class Morphology : public CudaBaseOp
+{
+public:
+    Morphology() = delete;
+
+    Morphology(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * @brief Dilates/Erodes an image
+     *
+     * Input:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | No
+     *      32bit Unsigned | No
+     *      32bit Signed   | No
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Output:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | No
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | No
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Input/Output dependency
+     *
+     *      Property      |  Input == Output
+     *     -------------- | -------------
+     *      Data Layout   | Yes
+     *      Data Type     | Yes
+     *      Number        | Yes
+     *      Channels      | Yes
+     *      Width         | No
+     *      Height        | No
+     *
+     *
+     * @param inData gpuData to a tensor of one or more HWC images
+     * @param outData gpuData a tensor hosting the outputs of the operation
+     * @param morph_type Type of operation to perform on data Erode/Dilate
+     * @param mask_size shape and size of the mask to use for the operation
+     * @param anchor anchor to use for the kernel (-1,-1) will use center of kernel
+     * @param iteraton number of times to perform the kernel pass
+     * @param borderMode the border mode to use when acessing data outside of source
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+                    NVCVMorphologyType morph_type, Size2D mask_size, int2 anchor, int iteration,
+                    const NVCVBorderType borderMode, cudaStream_t stream);
+
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param max_input_shape maximum input DataShape that may be used
+     * @param max_output_shape maximum output DataShape that may be used
+     * @param max_data_type DataType with the maximum size that may be used
+     * @param max_mask_size maximum mask size that may be used
+     * @param max_iteration maximum iteration that may be used
+     */
+    size_t calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type,
+                         Size2D max_mask_size, int max_iteration);
 };
 
 class Normalize : public CudaBaseOp
