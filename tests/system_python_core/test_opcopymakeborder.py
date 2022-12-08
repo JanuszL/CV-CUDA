@@ -16,7 +16,7 @@ import numpy as np
 
 
 @t.mark.parametrize(
-    "input, top, buttom, left, right, border_mode, border_value",
+    "input, top, bottom, left, right, border_mode, border_value",
     [
         (
             nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
@@ -66,14 +66,14 @@ import numpy as np
         ),
     ],
 )
-def test_op_copymakeborder(input, top, buttom, left, right, border_mode, border_value):
+def test_op_copymakeborder(input, top, bottom, left, right, border_mode, border_value):
 
     stream = nvcv.cuda.Stream()
     out_shape = [i for i in input.shape]
     cdim = len(out_shape) - 1
-    out_shape[cdim - 2] += top + buttom
+    out_shape[cdim - 2] += top + bottom
     out_shape[cdim - 1] += left + right
-    out = input.copymakeborder(top=top, buttom=buttom, left=left, right=right)
+    out = input.copymakeborder(top=top, bottom=bottom, left=left, right=right)
     assert out.layout == input.layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype

@@ -228,7 +228,7 @@ static void CopyMakeBorder(std::vector<T> &hDst, const std::vector<std::vector<T
 
 NVCV_TEST_SUITE_P(OpCopyMakeBorder, test::ValueList<int, int, int, int, int, int, int, NVCVBorderType, float, float, float, float, nvcv::ImageFormat>
 {
-    // srcWidth, srcHeight, numBatches, topPad, buttomPad, leftPad, rightPad,         NVCVBorderType,    bValue1, bValue2, bValue3, bValue4, ImageFormat
+    // srcWidth, srcHeight, numBatches, topPad, bottomPad, leftPad, rightPad,         NVCVBorderType,    bValue1, bValue2, bValue3, bValue4, ImageFormat
     {       212,       113,          1,        0,         0,      0,       0,   NVCV_BORDER_CONSTANT,        0.f,     0.f,     0.f,     0.f, nvcv::FMT_RGB8},
     {        12,        13,          2,       12,        16,      0,       3,   NVCV_BORDER_CONSTANT,       12.f,   100.f,   245.f,     0.f, nvcv::FMT_RGB8},
     {       212,       113,          3,        0,       113,      5,       0,   NVCV_BORDER_CONSTANT,       13.f,     5.f,     4.f,     0.f, nvcv::FMT_RGB8},
@@ -244,14 +244,14 @@ NVCV_TEST_SUITE_P(OpCopyMakeBorder, test::ValueList<int, int, int, int, int, int
 // clang-format on
 
 template<typename T>
-void StartTest(int srcWidth, int srcHeight, int numBatches, int topPad, int buttomPad, int leftPad, int rightPad,
+void StartTest(int srcWidth, int srcHeight, int numBatches, int topPad, int bottomPad, int leftPad, int rightPad,
                NVCVBorderType borderType, float4 borderValue, nvcv::ImageFormat format)
 {
     cudaStream_t stream;
     ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
 
     int dstWidth  = srcWidth + leftPad + rightPad;
-    int dstHeight = srcHeight + topPad + buttomPad;
+    int dstHeight = srcHeight + topPad + bottomPad;
 
     std::vector<T> srcVec;
 
@@ -324,7 +324,7 @@ TEST_P(OpCopyMakeBorder, tensor_correct_output)
     int srcHeight  = GetParamValue<1>();
     int numBatches = GetParamValue<2>();
     int topPad     = GetParamValue<3>();
-    int buttomPad  = GetParamValue<4>();
+    int bottomPad  = GetParamValue<4>();
     int leftPad    = GetParamValue<5>();
     int rightPad   = GetParamValue<6>();
 
@@ -338,15 +338,15 @@ TEST_P(OpCopyMakeBorder, tensor_correct_output)
     nvcv::ImageFormat format = GetParamValue<12>();
 
     if (nvcv::FMT_RGB8 == format || nvcv::FMT_RGBA8 == format)
-        StartTest<uint8_t>(srcWidth, srcHeight, numBatches, topPad, buttomPad, leftPad, rightPad, borderType,
+        StartTest<uint8_t>(srcWidth, srcHeight, numBatches, topPad, bottomPad, leftPad, rightPad, borderType,
                            borderValue, format);
     else if (nvcv::FMT_RGBf32 == format || nvcv::FMT_RGBAf32 == format)
-        StartTest<float>(srcWidth, srcHeight, numBatches, topPad, buttomPad, leftPad, rightPad, borderType, borderValue,
+        StartTest<float>(srcWidth, srcHeight, numBatches, topPad, bottomPad, leftPad, rightPad, borderType, borderValue,
                          format);
 }
 
 template<typename T>
-void StartTestVarShape(int srcWidthBase, int srcHeightBase, int numBatches, int topPad, int buttomPad, int leftPad,
+void StartTestVarShape(int srcWidthBase, int srcHeightBase, int numBatches, int topPad, int bottomPad, int leftPad,
                        int rightPad, NVCVBorderType borderType, float4 borderValue, nvcv::ImageFormat format)
 {
     cudaStream_t stream;
@@ -357,7 +357,7 @@ void StartTestVarShape(int srcWidthBase, int srcHeightBase, int numBatches, int 
     std::uniform_int_distribution<int> rndSrcHeight(srcHeightBase * 0.8, srcHeightBase * 1.2);
 
     std::uniform_int_distribution<int> rndTop(topPad * 0.8, topPad * 1.2);
-    std::uniform_int_distribution<int> rndButtom(buttomPad * 0.8, buttomPad * 1.2);
+    std::uniform_int_distribution<int> rndBottom(bottomPad * 0.8, bottomPad * 1.2);
 
     std::uniform_int_distribution<int> rndLeft(leftPad * 0.8, leftPad * 1.2);
     std::uniform_int_distribution<int> rndRight(rightPad * 0.8, rightPad * 1.2);
@@ -373,11 +373,11 @@ void StartTestVarShape(int srcWidthBase, int srcHeightBase, int numBatches, int 
         int srcHeight = rndSrcHeight(randEng);
         int top       = rndTop(randEng);
         int left      = rndLeft(randEng);
-        int buttom    = rndButtom(randEng);
+        int bottom    = rndBottom(randEng);
         int right     = rndRight(randEng);
 
         int dstWidth  = srcWidth + left + right;
-        int dstHeight = srcHeight + top + buttom;
+        int dstHeight = srcHeight + top + bottom;
         topVec[i]     = top;
         leftVec[i]    = left;
         //prepare input buffers
@@ -483,7 +483,7 @@ TEST_P(OpCopyMakeBorder, varshape_correct_output)
     int srcHeight  = GetParamValue<1>();
     int numBatches = GetParamValue<2>();
     int topPad     = GetParamValue<3>();
-    int buttomPad  = GetParamValue<4>();
+    int bottomPad  = GetParamValue<4>();
     int leftPad    = GetParamValue<5>();
     int rightPad   = GetParamValue<6>();
 
@@ -497,15 +497,15 @@ TEST_P(OpCopyMakeBorder, varshape_correct_output)
     nvcv::ImageFormat format = GetParamValue<12>();
 
     if (nvcv::FMT_RGB8 == format || nvcv::FMT_RGBA8 == format)
-        StartTestVarShape<uint8_t>(srcWidth, srcHeight, numBatches, topPad, buttomPad, leftPad, rightPad, borderType,
+        StartTestVarShape<uint8_t>(srcWidth, srcHeight, numBatches, topPad, bottomPad, leftPad, rightPad, borderType,
                                    borderValue, format);
     else if (nvcv::FMT_RGBf32 == format || nvcv::FMT_RGBAf32 == format)
-        StartTestVarShape<float>(srcWidth, srcHeight, numBatches, topPad, buttomPad, leftPad, rightPad, borderType,
+        StartTestVarShape<float>(srcWidth, srcHeight, numBatches, topPad, bottomPad, leftPad, rightPad, borderType,
                                  borderValue, format);
 }
 
 template<typename T>
-void StartTestStack(int srcWidthBase, int srcHeightBase, int numBatches, int topPad, int buttomPad, int leftPad,
+void StartTestStack(int srcWidthBase, int srcHeightBase, int numBatches, int topPad, int bottomPad, int leftPad,
                     int rightPad, NVCVBorderType borderType, float4 borderValue, nvcv::ImageFormat format)
 {
     cudaStream_t stream;
@@ -513,7 +513,7 @@ void StartTestStack(int srcWidthBase, int srcHeightBase, int numBatches, int top
 
     //make sure the random pad settings did not exceed the limit.
     int dstWidth  = (srcWidthBase + leftPad + rightPad) * 1.2;
-    int dstHeight = (srcHeightBase + topPad + buttomPad) * 1.2;
+    int dstHeight = (srcHeightBase + topPad + bottomPad) * 1.2;
 
     std::default_random_engine         randEng{0};
     std::uniform_int_distribution<int> rndSrcWidth(srcWidthBase * 0.8, srcWidthBase * 1.2);
@@ -626,7 +626,7 @@ TEST_P(OpCopyMakeBorder, stack_correct_output)
     int srcHeight  = GetParamValue<1>();
     int numBatches = GetParamValue<2>();
     int topPad     = GetParamValue<3>();
-    int buttomPad  = GetParamValue<4>();
+    int bottomPad  = GetParamValue<4>();
     int leftPad    = GetParamValue<5>();
     int rightPad   = GetParamValue<6>();
 
@@ -640,9 +640,9 @@ TEST_P(OpCopyMakeBorder, stack_correct_output)
     nvcv::ImageFormat format = GetParamValue<12>();
 
     if (nvcv::FMT_RGB8 == format || nvcv::FMT_RGBA8 == format)
-        StartTestStack<uint8_t>(srcWidth, srcHeight, numBatches, topPad, buttomPad, leftPad, rightPad, borderType,
+        StartTestStack<uint8_t>(srcWidth, srcHeight, numBatches, topPad, bottomPad, leftPad, rightPad, borderType,
                                 borderValue, format);
     else if (nvcv::FMT_RGBf32 == format || nvcv::FMT_RGBAf32 == format)
-        StartTestStack<float>(srcWidth, srcHeight, numBatches, topPad, buttomPad, leftPad, rightPad, borderType,
+        StartTestStack<float>(srcWidth, srcHeight, numBatches, topPad, bottomPad, leftPad, rightPad, borderType,
                               borderValue, format);
 }
