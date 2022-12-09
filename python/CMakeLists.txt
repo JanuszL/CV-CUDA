@@ -77,6 +77,7 @@ pybind11_add_module(nvcv_python MODULE
     OpMedianBlur.cpp
     OpLaplacian.cpp
     OpAverageBlur.cpp
+    OpConv2D.cpp
 )
 
 target_include_directories(nvcv_python
