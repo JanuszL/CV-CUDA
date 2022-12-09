@@ -28,5 +28,6 @@ void ExportOpRotate(py::module &m);
 void ExportOpErase(py::module &m);
 void ExportOpGaussian(py::module &m);
 void ExportOpMedianBlur(py::module &m);
+void ExportOpLaplacian(py::module &m);
 
 } // namespace nv::cvpy
