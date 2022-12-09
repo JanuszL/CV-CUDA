@@ -48,7 +48,7 @@ extern "C"
  * @retval #NVCV_SUCCESS                Operation executed successfully.
 */
 
-NVCV_OP_PUBLIC NVCVStatus nvcvopEraseCreate(NVCVOperatorHandle *handle, int max_num_erasing_area);
+NVCV_OP_PUBLIC NVCVStatus nvcvopEraseCreate(NVCVOperatorHandle *handle, int32_t max_num_erasing_area);
 
 /* Executes the erase operation on the given cuda stream. This operation does not
  *  wait for completion.
@@ -152,13 +152,13 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopEraseCreate(NVCVOperatorHandle *handle, int max_
 NVCV_OP_PUBLIC NVCVStatus nvcvopEraseSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
                                             NVCVTensorHandle out, NVCVTensorHandle anchor, NVCVTensorHandle erasing,
                                             NVCVTensorHandle values, NVCVTensorHandle imgIdx, bool random,
-                                            unsigned int seed);
+                                            uint32_t seed);
 
 NVCV_OP_PUBLIC NVCVStatus nvcvopEraseVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
                                                     NVCVImageBatchHandle in, NVCVImageBatchHandle out,
                                                     NVCVTensorHandle anchor, NVCVTensorHandle erasing,
                                                     NVCVTensorHandle values, NVCVTensorHandle imgIdx, bool random,
-                                                    unsigned int seed);
+                                                    uint32_t seed);
 
 /** @} */
 

@@ -51,8 +51,8 @@ extern "C"
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the operator.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_OP_PUBLIC NVCVStatus nvcvopGaussianCreate(NVCVOperatorHandle *handle, int maxKernelWidth, int maxKernelHeight,
-                                               int maxVarShapeBatchSize);
+NVCV_OP_PUBLIC NVCVStatus nvcvopGaussianCreate(NVCVOperatorHandle *handle, int32_t maxKernelWidth,
+                                               int32_t maxKernelHeight, int32_t maxVarShapeBatchSize);
 
 /** Executes the Gaussian operation on the given cuda stream.  This operation does not wait for completion.
  *
@@ -122,8 +122,8 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopGaussianCreate(NVCVOperatorHandle *handle, int m
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_OP_PUBLIC NVCVStatus nvcvopGaussianSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
-                                               NVCVTensorHandle out, int kernelWidth, int kernelHeight, double sigmaX,
-                                               double sigmaY, NVCVBorderType borderMode);
+                                               NVCVTensorHandle out, int32_t kernelWidth, int32_t kernelHeight,
+                                               double sigmaX, double sigmaY, NVCVBorderType borderMode);
 
 /**
  * Executes the Gaussian operation on a batch of images.

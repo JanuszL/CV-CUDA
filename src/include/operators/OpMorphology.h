@@ -121,9 +121,9 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopMorphologyCreate(NVCVOperatorHandle *handle);
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_OP_PUBLIC NVCVStatus nvcvopMorphologySubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
-                                                 NVCVTensorHandle out, NVCVMorphologyType morphType, int maskWidth,
-                                                 int maskHeight, int anchorX, int anchorY, int iteration,
-                                                 const NVCVBorderType borderMode);
+                                                 NVCVTensorHandle out, NVCVMorphologyType morphType, int32_t maskWidth,
+                                                 int32_t maskHeight, int32_t anchorX, int32_t anchorY,
+                                                 int32_t iteration, const NVCVBorderType borderMode);
 
 #ifdef __cplusplus
 }

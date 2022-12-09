@@ -38,8 +38,8 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopLaplacianCreate, (NVCVOperatorHandle * h
 }
 
 NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopLaplacianSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out, int ksize,
-                 float scale, NVCVBorderType borderMode))
+                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
+                 int32_t ksize, float scale, NVCVBorderType borderMode))
 {
     return priv::ProtectCall(
         [&]

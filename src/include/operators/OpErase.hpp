@@ -36,15 +36,15 @@ namespace nv { namespace cvop {
 class Erase final : public IOperator
 {
 public:
-    explicit Erase(int max_num_erasing_area);
+    explicit Erase(int32_t max_num_erasing_area);
 
     ~Erase();
 
     void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, cv::ITensor &anchor, cv::ITensor &erasing,
-                    cv::ITensor &values, cv::ITensor &imgIdx, bool random, unsigned int seed);
+                    cv::ITensor &values, cv::ITensor &imgIdx, bool random, uint32_t seed);
 
     void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out, cv::ITensor &anchor,
-                    cv::ITensor &erasing, cv::ITensor &values, cv::ITensor &imgIdx, bool random, unsigned int seed);
+                    cv::ITensor &erasing, cv::ITensor &values, cv::ITensor &imgIdx, bool random, uint32_t seed);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -52,7 +52,7 @@ private:
     NVCVOperatorHandle m_handle;
 };
 
-inline Erase::Erase(int max_num_erasing_area)
+inline Erase::Erase(int32_t max_num_erasing_area)
 {
     cv::detail::CheckThrow(nvcvopEraseCreate(&m_handle, max_num_erasing_area));
     assert(m_handle);
@@ -66,7 +66,7 @@ inline Erase::~Erase()
 
 inline void Erase::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, cv::ITensor &anchor,
                               cv::ITensor &erasing, cv::ITensor &values, cv::ITensor &imgIdx, bool random,
-                              unsigned int seed)
+                              uint32_t seed)
 {
     cv::detail::CheckThrow(nvcvopEraseSubmit(m_handle, stream, in.handle(), out.handle(), anchor.handle(),
                                              erasing.handle(), values.handle(), imgIdx.handle(), random, seed));
@@ -74,7 +74,7 @@ inline void Erase::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor 
 
 inline void Erase::operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
                               cv::ITensor &anchor, cv::ITensor &erasing, cv::ITensor &values, cv::ITensor &imgIdx,
-                              bool random, unsigned int seed)
+                              bool random, uint32_t seed)
 {
     cv::detail::CheckThrow(nvcvopEraseVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), anchor.handle(),
                                                      erasing.handle(), values.handle(), imgIdx.handle(), random, seed));

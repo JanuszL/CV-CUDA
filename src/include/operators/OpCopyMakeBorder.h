@@ -120,8 +120,8 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopCopyMakeBorderCreate(NVCVOperatorHandle *handle)
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_OP_PUBLIC NVCVStatus nvcvopCopyMakeBorderSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
-                                                     NVCVTensorHandle in, NVCVTensorHandle out, int top, int left,
-                                                     NVCVBorderType borderMode, const float4 borderValue);
+                                                     NVCVTensorHandle in, NVCVTensorHandle out, int32_t top,
+                                                     int32_t left, NVCVBorderType borderMode, const float4 borderValue);
 
 NVCV_OP_PUBLIC NVCVStatus nvcvopCopyMakeBorderVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
                                                              NVCVImageBatchHandle in, NVCVImageBatchHandle out,

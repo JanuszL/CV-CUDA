@@ -47,7 +47,7 @@ extern "C"
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the operator.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_OP_PUBLIC NVCVStatus nvcvopRotateCreate(NVCVOperatorHandle *handle, const int maxVarShapeBatchSize);
+NVCV_OP_PUBLIC NVCVStatus nvcvopRotateCreate(NVCVOperatorHandle *handle, const int32_t maxVarShapeBatchSize);
 
 /** Executes the rotate operation on the given cuda stream. This operation does not
  *  wait for completion.

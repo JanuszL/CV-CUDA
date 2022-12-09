@@ -37,7 +37,7 @@ namespace nv { namespace cvop {
 class AverageBlur final : public IOperator
 {
 public:
-    explicit AverageBlur(cv::Size2D maxKernelSize, int maxVarShapeBatchSize);
+    explicit AverageBlur(cv::Size2D maxKernelSize, int32_t maxVarShapeBatchSize);
 
     ~AverageBlur();
 
@@ -53,7 +53,7 @@ private:
     NVCVOperatorHandle m_handle;
 };
 
-inline AverageBlur::AverageBlur(cv::Size2D maxKernelSize, int maxVarShapeBatchSize)
+inline AverageBlur::AverageBlur(cv::Size2D maxKernelSize, int32_t maxVarShapeBatchSize)
 {
     cv::detail::CheckThrow(nvcvopAverageBlurCreate(&m_handle, maxKernelSize.w, maxKernelSize.h, maxVarShapeBatchSize));
     assert(m_handle);

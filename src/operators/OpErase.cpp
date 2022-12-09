@@ -23,7 +23,7 @@
 namespace priv    = nv::cv::priv;
 namespace priv_op = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopEraseCreate, (NVCVOperatorHandle * handle, int max_num_erasing_area))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopEraseCreate, (NVCVOperatorHandle * handle, int32_t max_num_erasing_area))
 {
     return priv::ProtectCall(
         [&]
@@ -40,7 +40,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopEraseCreate, (NVCVOperatorHandle * handl
 NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopEraseSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
                  NVCVTensorHandle anchor, NVCVTensorHandle erasing, NVCVTensorHandle values, NVCVTensorHandle imgIdx,
-                 bool random, unsigned int seed))
+                 bool random, uint32_t seed))
 {
     return priv::ProtectCall(
         [&]
@@ -55,7 +55,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopEraseSubmit,
 NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopEraseVarShapeSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
                  NVCVTensorHandle anchor, NVCVTensorHandle erasing, NVCVTensorHandle values, NVCVTensorHandle imgIdx,
-                 bool random, unsigned int seed))
+                 bool random, uint32_t seed))
 {
     return priv::ProtectCall(
         [&]

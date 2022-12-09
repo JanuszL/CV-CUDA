@@ -51,8 +51,8 @@ extern "C"
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the operator.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_OP_PUBLIC NVCVStatus nvcvopAverageBlurCreate(NVCVOperatorHandle *handle, int maxKernelWidth, int maxKernelHeight,
-                                                  int maxVarShapeBatchSize);
+NVCV_OP_PUBLIC NVCVStatus nvcvopAverageBlurCreate(NVCVOperatorHandle *handle, int32_t maxKernelWidth,
+                                                  int32_t maxKernelHeight, int32_t maxVarShapeBatchSize);
 
 /** Executes the AverageBlur operation on the given cuda stream.  This operation does not wait for completion.
  *
@@ -124,8 +124,9 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopAverageBlurCreate(NVCVOperatorHandle *handle, in
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_OP_PUBLIC NVCVStatus nvcvopAverageBlurSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
-                                                  NVCVTensorHandle out, int kernelWidth, int kernelHeight,
-                                                  int kernelAnchorX, int kernelAnchorY, NVCVBorderType borderMode);
+                                                  NVCVTensorHandle out, int32_t kernelWidth, int32_t kernelHeight,
+                                                  int32_t kernelAnchorX, int32_t kernelAnchorY,
+                                                  NVCVBorderType borderMode);
 
 /**
  * Executes the AverageBlur operation on a batch of images.
