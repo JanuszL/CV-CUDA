@@ -24,7 +24,8 @@ namespace nvcv    = nv::cv;
 namespace priv    = nv::cv::priv;
 namespace priv_op = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopMorphologyCreate, (NVCVOperatorHandle * handle))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopMorphologyCreate,
+                (NVCVOperatorHandle * handle, const int32_t maxVarShapeBatchSize))
 {
     return nvcv::ProtectCall(
         [&]
@@ -34,7 +35,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopMorphologyCreate, (NVCVOperatorHandle * 
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
             }
 
-            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::Morphology());
+            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::Morphology(maxVarShapeBatchSize));
         });
 }
 
@@ -50,6 +51,21 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopMorphologySubmit,
             nv::cv::Size2D           maskSize = {maskWidth, maskHeight};
             int2                     anchor   = {anchorX, anchorY};
             priv::ToDynamicRef<priv_op::Morphology>(handle)(stream, input, output, morphType, maskSize, anchor,
+                                                            iteration, borderMode);
+        });
+}
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopMorphologyVarShapeSubmit,
+                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                 NVCVMorphologyType morphType, NVCVTensorHandle masks, NVCVTensorHandle anchors, int32_t iteration,
+                 const NVCVBorderType borderMode))
+{
+    return nvcv::ProtectCall(
+        [&]
+        {
+            nv::cv::ImageBatchVarShapeWrapHandle input(in), output(out);
+            nv::cv::TensorWrapHandle             masksWrap(masks), anchorsWrap(anchors);
+            priv::ToDynamicRef<priv_op::Morphology>(handle)(stream, input, output, morphType, masksWrap, anchorsWrap,
                                                             iteration, borderMode);
         });
 }

@@ -17,6 +17,7 @@
 #include <common/TensorDataUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <nvcv/Image.hpp>
+#include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/cuda/TypeTraits.hpp>
@@ -87,7 +88,7 @@ void checkTestVectors(cudaStream_t &stream, nvcv::Tensor &inTensor, nvcv::Tensor
         SetTensorToTestVector<uchar, rows, cols>(input, width, height, inTensor, i);
     }
 
-    nv::cvop::Morphology morphOp;
+    nv::cvop::Morphology morphOp(0);
     morphOp(stream, inTensor, outTensor, type, maskSize, anchor, iteration, borderMode);
 
     if (cudaSuccess != cudaStreamSynchronize(stream))
@@ -376,7 +377,7 @@ TEST_P(OpMorphology, morph_noop)
     EXPECT_NO_THROW(test::SetTensorToRandomValue<uint8_t>(inTensor.exportData(), 0, 0xFF));
     EXPECT_NO_THROW(test::SetTensorTo<uint8_t>(outTensor.exportData(), 0));
 
-    nv::cvop::Morphology morphOp;
+    nv::cvop::Morphology morphOp(0);
     int2                 anchor(0, 0);
 
     nvcv::Size2D maskSize(1, 1);
@@ -441,7 +442,7 @@ TEST_P(OpMorphology, morph_random)
     ASSERT_EQ(cudaSuccess, cudaMemcpy(inData->data(), inVec.data(), inBufSize, cudaMemcpyHostToDevice));
 
     // run operator
-    nv::cvop::Morphology morphOp;
+    nv::cvop::Morphology morphOp(0);
     int2                 anchor(-1, -1);
 
     EXPECT_NO_THROW(morphOp(stream, inTensor, outTensor, morphType, maskSize, anchor, iteration, borderMode));
@@ -460,4 +461,287 @@ TEST_P(OpMorphology, morph_random)
     test::Morph(goldVec, outPitches, inVec, inPitches, shape, format, maskSize, kernelAnchor, borderMode, morphType);
 
     EXPECT_EQ(testVec, goldVec);
+}
+
+// clang-format off
+NVCV_TEST_SUITE_P(OpMorphologyVarShape, test::ValueList<int, int, int, NVCVImageFormat, int, int, NVCVBorderType, NVCVMorphologyType>
+{
+    // width, height, batches,                    format,  maskWidth, maskHeight,            borderMode, morphType
+    {      5,      5,       5,      NVCV_IMAGE_FORMAT_U8,          3,        3,    NVCV_BORDER_CONSTANT, NVCV_ERODE},
+    {      5,      5,       1,      NVCV_IMAGE_FORMAT_RGBAf32,     3,         3,   NVCV_BORDER_CONSTANT, NVCV_DILATE},
+    {     25,     45,       2,      NVCV_IMAGE_FORMAT_U8,          2,         2,   NVCV_BORDER_CONSTANT, NVCV_DILATE},
+    {    125,     35,       1,      NVCV_IMAGE_FORMAT_RGBA8,       3,         3,   NVCV_BORDER_CONSTANT, NVCV_ERODE},
+    {     52,     45,       1,      NVCV_IMAGE_FORMAT_U16,         1,         2,   NVCV_BORDER_CONSTANT, NVCV_ERODE},
+    {    325,     45,       3,      NVCV_IMAGE_FORMAT_RGB8,        3,         4,   NVCV_BORDER_CONSTANT, NVCV_DILATE},
+    {     25,     45,       4,      NVCV_IMAGE_FORMAT_U8,          3,         3,   NVCV_BORDER_CONSTANT, NVCV_ERODE},
+    {     25,     45,       2,      NVCV_IMAGE_FORMAT_U8,          -1,       -1,   NVCV_BORDER_CONSTANT, NVCV_DILATE}
+
+});
+
+// clang-format on
+
+TEST_P(OpMorphologyVarShape, varshape_correct_output)
+{
+    cudaStream_t stream;
+    ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
+
+    int width   = GetParamValue<0>();
+    int height  = GetParamValue<1>();
+    int batches = GetParamValue<2>();
+
+    nvcv::ImageFormat format{GetParamValue<3>()};
+
+    int maskSizeX = GetParamValue<4>();
+    int maskSizeY = GetParamValue<5>();
+
+    int                anchorX    = -1;
+    int                anchorY    = -1;
+    int                iteration  = 1;
+    NVCVBorderType     borderMode = GetParamValue<6>();
+    NVCVMorphologyType morphType  = GetParamValue<7>();
+
+    // Create input varshape
+    std::default_random_engine         rng;
+    std::uniform_int_distribution<int> udistWidth(width * 0.8, width * 1.1);
+    std::uniform_int_distribution<int> udistHeight(height * 0.8, height * 1.1);
+
+    std::vector<std::unique_ptr<nv::cv::Image>> imgSrc;
+
+    std::vector<std::vector<uint8_t>> srcVec(batches);
+    std::vector<int>                  srcVecRowPitch(batches);
+
+    //setup the input images
+    for (int i = 0; i < batches; ++i)
+    {
+        imgSrc.emplace_back(std::make_unique<nv::cv::Image>(nv::cv::Size2D{udistWidth(rng), udistHeight(rng)}, format));
+
+        int srcRowPitch   = imgSrc[i]->size().w * format.planePixelStrideBytes(0);
+        srcVecRowPitch[i] = srcRowPitch;
+
+        std::uniform_int_distribution<uint8_t> udist(0, 255);
+
+        srcVec[i].resize(imgSrc[i]->size().h * srcRowPitch);
+        std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
+
+        auto *imgData = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        ASSERT_NE(imgData, nullptr);
+
+        // Copy input data to the GPU
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2DAsync(imgData->plane(0).buffer, imgData->plane(0).pitchBytes, srcVec[i].data(),
+                                    srcRowPitch, srcRowPitch, imgSrc[i]->size().h, cudaMemcpyHostToDevice, stream));
+    }
+
+    nv::cv::ImageBatchVarShape batchSrc(batches);
+    batchSrc.pushBack(imgSrc.begin(), imgSrc.end());
+
+    // Create output varshape
+    std::vector<std::unique_ptr<nv::cv::Image>> imgDst;
+    for (int i = 0; i < batches; ++i)
+    {
+        imgDst.emplace_back(std::make_unique<nv::cv::Image>(imgSrc[i]->size(), imgSrc[i]->format()));
+    }
+    nv::cv::ImageBatchVarShape batchDst(batches);
+    batchDst.pushBack(imgDst.begin(), imgDst.end());
+
+    // Create kernel mask size tensor
+    nv::cv::Tensor maskTensor({{batches}, "N"}, nv::cv::TYPE_2S32);
+    {
+        auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(maskTensor.exportData());
+        ASSERT_NE(dev, nullptr);
+
+        std::vector<int2> vec(batches, int2{maskSizeX, maskSizeY});
+
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpyAsync(dev->data(), vec.data(), vec.size() * sizeof(int2), cudaMemcpyHostToDevice, stream));
+    }
+
+    // Create Anchor tensor
+    nv::cv::Tensor anchorTensor({{batches}, "N"}, nv::cv::TYPE_2S32);
+    {
+        auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(anchorTensor.exportData());
+        ASSERT_NE(dev, nullptr);
+
+        std::vector<int2> vec(batches, int2{anchorX, anchorY});
+
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpyAsync(dev->data(), vec.data(), vec.size() * sizeof(int2), cudaMemcpyHostToDevice, stream));
+    }
+
+    // Run operator set the max batches
+    nv::cvop::Morphology morphOp(batches);
+
+    EXPECT_NO_THROW(morphOp(stream, batchSrc, batchDst, morphType, maskTensor, anchorTensor, iteration, borderMode));
+
+    ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
+    ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
+
+    // Check test data against gold
+    for (int i = 0; i < batches; ++i)
+    {
+        SCOPED_TRACE(i);
+
+        const auto *srcData = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        ASSERT_EQ(srcData->numPlanes(), 1);
+
+        const auto *dstData = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(imgDst[i]->exportData());
+        ASSERT_EQ(dstData->numPlanes(), 1);
+
+        int dstRowPitch = srcVecRowPitch[i];
+
+        int3  shape{srcData->plane(0).width, srcData->plane(0).height, 1};
+        long3 pitches{shape.y * dstRowPitch, dstRowPitch, format.planePixelStrideBytes(0)};
+
+        std::vector<uint8_t> testVec(shape.y * pitches.y);
+
+        // Copy output data to Host
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2D(testVec.data(), dstRowPitch, dstData->plane(0).buffer, dstData->plane(0).pitchBytes,
+                               dstRowPitch, shape.y, cudaMemcpyDeviceToHost));
+
+        // Generate gold result
+
+        if (maskSizeX == -1 || maskSizeY == -1)
+        {
+            maskSizeX = 3;
+            maskSizeY = 3;
+        }
+        nv::cv::Size2D       maskSize{maskSizeX, maskSizeY};
+        int2                 kernelAnchor{maskSize.w / 2, maskSize.h / 2};
+        std::vector<uint8_t> goldVec(shape.y * pitches.y);
+
+        //generate gold result
+        test::Morph(goldVec, pitches, srcVec[i], pitches, shape, format, maskSize, kernelAnchor, borderMode, morphType);
+
+        EXPECT_EQ(testVec, goldVec);
+    }
+}
+
+TEST_P(OpMorphologyVarShape, varshape_noop)
+{
+    cudaStream_t stream;
+    ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
+
+    int width   = GetParamValue<0>();
+    int height  = GetParamValue<1>();
+    int batches = GetParamValue<2>();
+
+    nvcv::ImageFormat format{GetParamValue<3>()};
+
+    int maskSizeX = GetParamValue<4>();
+    int maskSizeY = GetParamValue<5>();
+
+    int                anchorX    = -1;
+    int                anchorY    = -1;
+    int                iteration  = 0; // this will bypass and do a copy
+    NVCVBorderType     borderMode = GetParamValue<6>();
+    NVCVMorphologyType morphType  = GetParamValue<7>();
+
+    // Create input varshape
+    std::default_random_engine         rng;
+    std::uniform_int_distribution<int> udistWidth(width * 0.8, width * 1.1);
+    std::uniform_int_distribution<int> udistHeight(height * 0.8, height * 1.1);
+
+    std::vector<std::unique_ptr<nv::cv::Image>> imgSrc;
+
+    std::vector<std::vector<uint8_t>> srcVec(batches);
+    std::vector<int>                  srcVecRowPitch(batches);
+
+    //setup the input images
+    for (int i = 0; i < batches; ++i)
+    {
+        imgSrc.emplace_back(std::make_unique<nv::cv::Image>(nv::cv::Size2D{udistWidth(rng), udistHeight(rng)}, format));
+
+        int srcRowPitch   = imgSrc[i]->size().w * format.planePixelStrideBytes(0);
+        srcVecRowPitch[i] = srcRowPitch;
+
+        std::uniform_int_distribution<uint8_t> udist(0, 255);
+
+        srcVec[i].resize(imgSrc[i]->size().h * srcRowPitch);
+        std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
+
+        auto *imgData = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        ASSERT_NE(imgData, nullptr);
+
+        // Copy input data to the GPU
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2DAsync(imgData->plane(0).buffer, imgData->plane(0).pitchBytes, srcVec[i].data(),
+                                    srcRowPitch, srcRowPitch, imgSrc[i]->size().h, cudaMemcpyHostToDevice, stream));
+    }
+
+    nv::cv::ImageBatchVarShape batchSrc(batches);
+    batchSrc.pushBack(imgSrc.begin(), imgSrc.end());
+
+    // Create output varshape
+    std::vector<std::unique_ptr<nv::cv::Image>> imgDst;
+    for (int i = 0; i < batches; ++i)
+    {
+        imgDst.emplace_back(std::make_unique<nv::cv::Image>(imgSrc[i]->size(), imgSrc[i]->format()));
+    }
+    nv::cv::ImageBatchVarShape batchDst(batches);
+    batchDst.pushBack(imgDst.begin(), imgDst.end());
+
+    // Create kernel mask size tensor
+    nv::cv::Tensor maskTensor({{batches}, "N"}, nv::cv::TYPE_2S32);
+    {
+        auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(maskTensor.exportData());
+        ASSERT_NE(dev, nullptr);
+
+        std::vector<int2> vec(batches, int2{maskSizeX, maskSizeY});
+
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpyAsync(dev->data(), vec.data(), vec.size() * sizeof(int2), cudaMemcpyHostToDevice, stream));
+    }
+
+    // Create Anchor tensor
+    nv::cv::Tensor anchorTensor({{batches}, "N"}, nv::cv::TYPE_2S32);
+    {
+        auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(anchorTensor.exportData());
+        ASSERT_NE(dev, nullptr);
+
+        std::vector<int2> vec(batches, int2{anchorX, anchorY});
+
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpyAsync(dev->data(), vec.data(), vec.size() * sizeof(int2), cudaMemcpyHostToDevice, stream));
+    }
+
+    // Run operator set the max batches
+    nv::cvop::Morphology morphOp(batches);
+
+    EXPECT_NO_THROW(morphOp(stream, batchSrc, batchDst, morphType, maskTensor, anchorTensor, iteration, borderMode));
+
+    ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
+    ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
+
+    // Check test data against gold
+    for (int i = 0; i < batches; ++i)
+    {
+        SCOPED_TRACE(i);
+
+        const auto *srcData = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        ASSERT_EQ(srcData->numPlanes(), 1);
+
+        const auto *dstData = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(imgDst[i]->exportData());
+        ASSERT_EQ(dstData->numPlanes(), 1);
+
+        int dstRowPitch = srcVecRowPitch[i];
+
+        int3  shape{srcData->plane(0).width, srcData->plane(0).height, 1};
+        long3 pitches{shape.y * dstRowPitch, dstRowPitch, format.planePixelStrideBytes(0)};
+
+        std::vector<uint8_t> testVec(shape.y * pitches.y);
+        std::vector<uint8_t> goldVec(shape.y * pitches.y); // should be the same as source with iteration == 0
+
+        // Copy output data to Host
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2D(testVec.data(), dstRowPitch, dstData->plane(0).buffer, dstData->plane(0).pitchBytes,
+                               dstRowPitch, shape.y, cudaMemcpyDeviceToHost));
+
+        // Copy output data to Host
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2D(goldVec.data(), srcVecRowPitch[i], srcData->plane(0).buffer,
+                               srcData->plane(0).pitchBytes, srcVecRowPitch[i], shape.y, cudaMemcpyDeviceToHost));
+
+        EXPECT_EQ(testVec, goldVec);
+    }
 }
