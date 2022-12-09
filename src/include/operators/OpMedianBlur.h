@@ -47,7 +47,7 @@ extern "C"
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the operator.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_OP_PUBLIC NVCVStatus nvcvopMedianBlurCreate(NVCVOperatorHandle *handle, const int maxVarShapeBatchSize);
+NVCV_OP_PUBLIC NVCVStatus nvcvopMedianBlurCreate(NVCVOperatorHandle *handle, const int32_t maxVarShapeBatchSize);
 
 /** Executes the median blur operation on the given cuda stream. This operation does not
  *  wait for completion.
@@ -113,7 +113,8 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopMedianBlurCreate(NVCVOperatorHandle *handle, con
  */
 /** @{ */
 NVCV_OP_PUBLIC NVCVStatus nvcvopMedianBlurSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
-                                                 NVCVTensorHandle out, const int kernelWidth, const int KernelHeight);
+                                                 NVCVTensorHandle out, const int32_t kernelWidth,
+                                                 const int32_t KernelHeight);
 
 NVCV_OP_PUBLIC NVCVStatus nvcvopMedianBlurVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
                                                          NVCVImageBatchHandle in, NVCVImageBatchHandle out,

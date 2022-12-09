@@ -40,8 +40,8 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopMorphologyCreate, (NVCVOperatorHandle * 
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopMorphologySubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                 NVCVMorphologyType morphType, int maskWidth, int maskHeight, int anchorX, int anchorY, int iteration,
-                 const NVCVBorderType borderMode))
+                 NVCVMorphologyType morphType, int32_t maskWidth, int32_t maskHeight, int32_t anchorX, int32_t anchorY,
+                 int32_t iteration, const NVCVBorderType borderMode))
 {
     return nvcv::ProtectCall(
         [&]

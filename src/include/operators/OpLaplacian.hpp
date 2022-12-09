@@ -40,7 +40,7 @@ public:
 
     ~Laplacian();
 
-    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, int ksize, float scale,
+    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, int32_t ksize, float scale,
                     NVCVBorderType borderMode);
 
     void operator()(cudaStream_t stream, cv::IImageBatch &in, cv::IImageBatch &out, cv::ITensor &ksize,
@@ -64,7 +64,7 @@ inline Laplacian::~Laplacian()
     m_handle = nullptr;
 }
 
-inline void Laplacian::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, int ksize, float scale,
+inline void Laplacian::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, int32_t ksize, float scale,
                                   NVCVBorderType borderMode)
 {
     cv::detail::CheckThrow(

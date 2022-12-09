@@ -37,7 +37,7 @@ namespace nv { namespace cvop {
 class Gaussian final : public IOperator
 {
 public:
-    explicit Gaussian(cv::Size2D maxKernelSize, int maxVarShapeBatchSize);
+    explicit Gaussian(cv::Size2D maxKernelSize, int32_t maxVarShapeBatchSize);
 
     ~Gaussian();
 
@@ -53,7 +53,7 @@ private:
     NVCVOperatorHandle m_handle;
 };
 
-inline Gaussian::Gaussian(cv::Size2D maxKernelSize, int maxVarShapeBatchSize)
+inline Gaussian::Gaussian(cv::Size2D maxKernelSize, int32_t maxVarShapeBatchSize)
 {
     cv::detail::CheckThrow(nvcvopGaussianCreate(&m_handle, maxKernelSize.w, maxKernelSize.h, maxVarShapeBatchSize));
     assert(m_handle);

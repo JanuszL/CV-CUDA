@@ -40,7 +40,7 @@ public:
 
     ~CopyMakeBorder();
 
-    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, int top, int left,
+    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, int32_t top, int32_t left,
                     NVCVBorderType borderMode, const float4 borderValue);
     void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out, cv::ITensor &top,
                     cv::ITensor &left, NVCVBorderType borderMode, const float4 borderValue);
@@ -65,8 +65,8 @@ inline CopyMakeBorder::~CopyMakeBorder()
     m_handle = nullptr;
 }
 
-inline void CopyMakeBorder::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, int top, int left,
-                                       NVCVBorderType borderMode, const float4 borderValue)
+inline void CopyMakeBorder::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, int32_t top,
+                                       int32_t left, NVCVBorderType borderMode, const float4 borderValue)
 {
     cv::detail::CheckThrow(
         nvcvopCopyMakeBorderSubmit(m_handle, stream, in.handle(), out.handle(), top, left, borderMode, borderValue));

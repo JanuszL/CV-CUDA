@@ -111,7 +111,7 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopLaplacianCreate(NVCVOperatorHandle *handle);
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_OP_PUBLIC NVCVStatus nvcvopLaplacianSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
-                                                NVCVTensorHandle out, int ksize, float scale,
+                                                NVCVTensorHandle out, int32_t ksize, float scale,
                                                 NVCVBorderType borderMode);
 
 /**

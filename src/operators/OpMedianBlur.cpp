@@ -24,7 +24,8 @@ namespace nvcv    = nv::cv;
 namespace priv    = nv::cv::priv;
 namespace priv_op = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopMedianBlurCreate, (NVCVOperatorHandle * handle, const int maxVarShapeBatchSize))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopMedianBlurCreate,
+                (NVCVOperatorHandle * handle, const int32_t maxVarShapeBatchSize))
 {
     return nvcv::ProtectCall(
         [&]
@@ -40,7 +41,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopMedianBlurCreate, (NVCVOperatorHandle * 
 
 NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopMedianBlurSubmit,
                 (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                 const int kernelWidth, const int kernelHeight))
+                 const int32_t kernelWidth, const int32_t kernelHeight))
 {
     return nvcv::ProtectCall(
         [&]

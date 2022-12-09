@@ -42,7 +42,7 @@ public:
     ~Morphology();
 
     void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, NVCVMorphologyType morph_type,
-                    const cv::Size2D &maskSize, const int2 &anchor, int iteration, const NVCVBorderType borderMode);
+                    const cv::Size2D &maskSize, const int2 &anchor, int32_t iteration, const NVCVBorderType borderMode);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -63,7 +63,7 @@ inline Morphology::~Morphology()
 }
 
 inline void Morphology::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, NVCVMorphologyType morphType,
-                                   const cv::Size2D &maskSize, const int2 &anchor, int iteration,
+                                   const cv::Size2D &maskSize, const int2 &anchor, int32_t iteration,
                                    const NVCVBorderType borderMode)
 {
     cv::detail::CheckThrow(nvcvopMorphologySubmit(m_handle, stream, in.handle(), out.handle(), morphType, maskSize.w,
