@@ -11,6 +11,8 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "Image.hpp"
+#include "ImageBatch.hpp"
 #include "Operators.hpp"
 #include "PyUtil.hpp"
 #include "ResourceGuard.hpp"
@@ -57,6 +59,46 @@ std::shared_ptr<Tensor> AverageBlur(Tensor &input, const std::tuple<int, int> &k
     return AverageBlurInto(input, *output, kernel_size, kernel_anchor, border, pstream);
 }
 
+std::shared_ptr<ImageBatchVarShape> AverageBlurVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
+                                                            const std::tuple<int, int> &max_kernel_size,
+                                                            Tensor &kernel_size, Tensor &kernel_anchor,
+                                                            NVCVBorderType border, std::shared_ptr<Stream> pstream)
+{
+    if (pstream == nullptr)
+    {
+        pstream = Stream::Current().shared_from_this();
+    }
+
+    cv::Size2D maxKernelSizeArg{std::get<0>(max_kernel_size), std::get<1>(max_kernel_size)};
+
+    cvop::AverageBlur averageBlur(maxKernelSizeArg, input.capacity());
+
+    ResourceGuard roGuard(*pstream, LOCK_READ, {input});
+    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+
+    averageBlur(pstream->handle(), input.impl(), output.impl(), kernel_size.impl(), kernel_anchor.impl(), border);
+
+    return output.shared_from_this();
+}
+
+std::shared_ptr<ImageBatchVarShape> AverageBlurVarShape(ImageBatchVarShape         &input,
+                                                        const std::tuple<int, int> &max_kernel_size,
+                                                        Tensor &kernel_size, Tensor &kernel_anchor,
+                                                        NVCVBorderType border, std::shared_ptr<Stream> pstream)
+{
+    std::shared_ptr<ImageBatchVarShape> output = ImageBatchVarShape::Create(input.capacity());
+
+    for (int i = 0; i < input.numImages(); ++i)
+    {
+        cv::ImageFormat format = input.impl()[i].format();
+        cv::Size2D      size   = input.impl()[i].size();
+        auto            image  = Image::Create(std::tie(size.w, size.h), format);
+        output->pushBack(*image);
+    }
+
+    return AverageBlurVarShapeInto(input, *output, max_kernel_size, kernel_size, kernel_anchor, border, pstream);
+}
+
 } // namespace
 
 void ExportOpAverageBlur(py::module &m)
@@ -70,6 +112,13 @@ void ExportOpAverageBlur(py::module &m)
     DefClassMethod<Tensor>("averageblur_into", &AverageBlurInto, "output"_a, "kernel_size"_a,
                            "kernel_anchor"_a = def_anchor, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
                            py::kw_only(), "stream"_a                  = nullptr);
+
+    DefClassMethod<ImageBatchVarShape>("averageblur", &AverageBlurVarShape, "max_kernel_size"_a, "kernel_size"_a,
+                                       "kernel_anchor"_a, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
+                                       py::kw_only(), "stream"_a     = nullptr);
+    DefClassMethod<ImageBatchVarShape>(
+        "averageblur_into", &AverageBlurVarShapeInto, "output"_a, "max_kernel_size"_a, "kernel_size"_a,
+        "kernel_anchor"_a, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy
