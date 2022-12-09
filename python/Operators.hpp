@@ -25,5 +25,6 @@ void ExportOpConvertTo(py::module &m);
 void ExportOpPadAndStack(py::module &m);
 void ExportOpCopyMakeBorder(py::module &m);
 void ExportOpRotate(py::module &m);
+void ExportOpErase(py::module &m);
 
 } // namespace nv::cvpy
