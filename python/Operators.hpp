@@ -26,5 +26,6 @@ void ExportOpPadAndStack(py::module &m);
 void ExportOpCopyMakeBorder(py::module &m);
 void ExportOpRotate(py::module &m);
 void ExportOpErase(py::module &m);
+void ExportOpGaussian(py::module &m);
 
 } // namespace nv::cvpy
