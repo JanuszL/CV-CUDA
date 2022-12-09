@@ -13,6 +13,7 @@
 import nvcv
 import pytest as t
 import numpy as np
+import util
 
 
 @t.mark.parametrize(
@@ -70,3 +71,91 @@ def test_op_averageblur(input, kernel_size, kernel_anchor, border):
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
+
+
+@t.mark.parametrize(
+    "num_images, img_format, img_size, max_pixel, max_kernel_size, border",
+    [
+        (
+            10,
+            nvcv.Format.RGB8,
+            (123, 321),
+            256,
+            (3, 3),
+            nvcv.Border.CONSTANT,
+        ),
+        (
+            7,
+            nvcv.Format.RGBf32,
+            (62, 35),
+            1.0,
+            (5, 5),
+            nvcv.Border.REPLICATE,
+        ),
+        (
+            1,
+            nvcv.Format.U16,
+            (33, 48),
+            1234,
+            (7, 7),
+            nvcv.Border.REFLECT,
+        ),
+        (
+            13,
+            nvcv.Format.S16,
+            (26, 52),
+            1234,
+            (9, 9),
+            nvcv.Border.WRAP,
+        ),
+        (
+            6,
+            nvcv.Format.S32,
+            (77, 42),
+            123456,
+            (11, 11),
+            nvcv.Border.REFLECT101,
+        ),
+    ],
+)
+def test_op_averageblurvarshape(
+    num_images, img_format, img_size, max_pixel, max_kernel_size, border
+):
+
+    input = util.create_image_batch(num_images, img_format, img_size, max_pixel)
+
+    kernel_size = util.create_tensor(
+        (num_images, 2), np.int32, "NC", max_random=max_kernel_size, odd_only=True
+    )
+
+    kernel_anchor = util.create_tensor(
+        (num_images, 2), np.int32, "NC", max_random=max_kernel_size
+    )
+
+    out = input.averageblur(
+        max_kernel_size,
+        kernel_size,
+        kernel_anchor,
+        border,
+    )
+    assert len(out) == len(input)
+    assert out.capacity == input.capacity
+    assert out.uniqueformat == input.uniqueformat
+    assert out.maxsize == input.maxsize
+
+    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
+    stream = nvcv.cuda.Stream()
+    out = util.clone_image_batch(input)
+    tmp = input.averageblur_into(
+        output=out,
+        max_kernel_size=max_kernel_size,
+        kernel_size=kernel_size,
+        kernel_anchor=kernel_anchor,
+        border=border,
+        stream=stream,
+    )
+    assert tmp is out
+    assert len(out) == len(input)
+    assert out.capacity == input.capacity
+    assert out.uniqueformat == input.uniqueformat
+    assert out.maxsize == input.maxsize
