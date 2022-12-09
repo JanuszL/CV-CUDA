@@ -13,6 +13,7 @@
 import nvcv
 import pytest as t
 import numpy as np
+import util
 
 
 @t.mark.parametrize(
@@ -70,3 +71,98 @@ def test_op_laplacian(input, ksize, scale, border):
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
+
+
+@t.mark.parametrize(
+    "num_images, img_format, img_size, max_pixel, max_ksize, max_scale, border",
+    [
+        (
+            10,
+            nvcv.Format.RGB8,
+            (123, 321),
+            256,
+            3,
+            3.0,
+            nvcv.Border.CONSTANT,
+        ),
+        (
+            7,
+            nvcv.Format.RGBf32,
+            (62, 35),
+            1.0,
+            1,
+            2.0,
+            nvcv.Border.REPLICATE,
+        ),
+        (
+            1,
+            nvcv.Format.F32,
+            (33, 48),
+            1234,
+            3,
+            1.5,
+            nvcv.Border.REFLECT,
+        ),
+        (
+            1,
+            nvcv.Format.U8,
+            (23, 18),
+            1234,
+            1,
+            1.23,
+            nvcv.Border.WRAP,
+        ),
+        (
+            6,
+            nvcv.Format.F32,
+            (77, 42),
+            123456,
+            3,
+            3.21,
+            nvcv.Border.REFLECT101,
+        ),
+    ],
+)
+def test_op_laplacianvarshape(
+    num_images, img_format, img_size, max_pixel, max_ksize, max_scale, border
+):
+
+    input = util.create_image_batch(num_images, img_format, img_size, max_pixel)
+
+    ksize = util.create_tensor(
+        (num_images, 1), np.int32, "NC", max_random=max_ksize, odd_only=True
+    )
+
+    scale = nvcv.Tensor(
+        [
+            num_images,
+        ],
+        np.float32,
+        "N",
+    )
+
+    out = input.laplacian(
+        ksize,
+        scale,
+        border,
+    )
+    assert len(out) == len(input)
+    assert out.capacity == input.capacity
+    assert out.uniqueformat == input.uniqueformat
+    assert out.maxsize == input.maxsize
+
+    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
+    stream = nvcv.cuda.Stream()
+    out = util.clone_image_batch(input)
+    tmp = input.laplacian_into(
+        output=out,
+        ksize=ksize,
+        scale=scale,
+        border=border,
+        stream=stream,
+    )
+    assert tmp is out
+    assert len(out) == len(input)
+    assert out.capacity == input.capacity
+    assert out.uniqueformat == input.uniqueformat
+    assert out.maxsize == input.maxsize
