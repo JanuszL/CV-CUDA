@@ -42,8 +42,9 @@ std::shared_ptr<Tensor> AverageBlurInto(Tensor &input, Tensor &output, const std
 
     cvop::AverageBlur averageBlur(kernelSizeArg, 0);
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input});
+    guard.add(LOCK_WRITE, {output});
 
     averageBlur(pstream->handle(), input.impl(), output.impl(), kernelSizeArg, kernelAnchorArg, border);
 
@@ -73,8 +74,9 @@ std::shared_ptr<ImageBatchVarShape> AverageBlurVarShapeInto(ImageBatchVarShape &
 
     cvop::AverageBlur averageBlur(maxKernelSizeArg, input.capacity());
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input});
+    guard.add(LOCK_WRITE, {output});
 
     averageBlur(pstream->handle(), input.impl(), output.impl(), kernel_size.impl(), kernel_anchor.impl(), border);
 

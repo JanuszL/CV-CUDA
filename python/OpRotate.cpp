@@ -37,8 +37,9 @@ std::shared_ptr<Tensor> RotateInto(Tensor &input, Tensor &output, double angleDe
 
     cvop::Rotate rotate(0);
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input});
+    guard.add(LOCK_WRITE, {output});
 
     double2 shiftArg{std::get<0>(shift), std::get<1>(shift)};
 

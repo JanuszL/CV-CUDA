@@ -41,8 +41,9 @@ std::shared_ptr<Tensor> GaussianInto(Tensor &input, Tensor &output, const std::t
 
     cvop::Gaussian gaussian(kernelSizeArg, 0);
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input});
+    guard.add(LOCK_WRITE, {output});
 
     gaussian(pstream->handle(), input.impl(), output.impl(), kernelSizeArg, sigmaArg, border);
 

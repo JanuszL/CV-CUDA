@@ -17,6 +17,11 @@
 #include "Resource.hpp"
 #include "Stream.hpp"
 
+#include <initializer_list>
+#include <memory>
+#include <unordered_map>
+#include <vector>
+
 namespace nv::cvpy {
 
 class Resource;
@@ -24,17 +29,17 @@ class Resource;
 class ResourceGuard
 {
 public:
-    ResourceGuard(Stream &stream, LockMode mode,
-                  std::initializer_list<std::reference_wrapper<const Resource>> resources);
+    ResourceGuard(Stream &stream);
+    ResourceGuard &add(LockMode mode, std::initializer_list<std::reference_wrapper<const Resource>> resources);
 
     void commit();
 
     ~ResourceGuard();
 
 private:
-    Stream                                      &m_stream;
-    LockMode                                     m_lockMode;
-    std::vector<std::shared_ptr<const Resource>> m_resources;
+    Stream &m_stream;
+
+    LockResources m_resourcesPerLockMode;
 };
 
 } // namespace nv::cvpy

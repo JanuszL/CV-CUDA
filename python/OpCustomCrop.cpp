@@ -32,8 +32,9 @@ std::shared_ptr<Tensor> CustomCropInto(Tensor &input, Tensor &output, const NVCV
         pstream = Stream::Current().shared_from_this();
     }
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input});
+    guard.add(LOCK_WRITE, {output});
 
     cvop::CustomCrop crop;
     crop(pstream->handle(), input.impl(), output.impl(), rcCrop);

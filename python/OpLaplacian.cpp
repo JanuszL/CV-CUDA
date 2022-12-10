@@ -36,8 +36,9 @@ std::shared_ptr<Tensor> LaplacianInto(Tensor &input, Tensor &output, const int &
 
     cvop::Laplacian laplacian;
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input});
+    guard.add(LOCK_WRITE, {output});
 
     laplacian(pstream->handle(), input.impl(), output.impl(), ksize, scale, border);
 

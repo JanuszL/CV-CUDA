@@ -40,8 +40,9 @@ std::shared_ptr<ImageBatchVarShape> Conv2DVarShapeInto(ImageBatchVarShape &input
 
     cvop::Conv2D conv2D;
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input, kernel, kernel_anchor});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input, kernel, kernel_anchor});
+    guard.add(LOCK_WRITE, {output});
 
     conv2D(pstream->handle(), input.impl(), output.impl(), kernel.impl(), kernel_anchor.impl(), border);
 

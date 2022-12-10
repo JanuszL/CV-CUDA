@@ -49,8 +49,9 @@ std::shared_ptr<Tensor> CopyMakeBorderInto(Tensor &input, Tensor &output, NVCVBo
         nv::cv::cuda::GetElement(bValue, i) = bValueDims > i ? borderValue[i] : 0.f;
     }
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input});
+    guard.add(LOCK_WRITE, {output});
 
     cvop::CopyMakeBorder copyMakeBorder;
     copyMakeBorder(pstream->handle(), input.impl(), output.impl(), top, left, borderMode, bValue);
@@ -93,8 +94,9 @@ std::shared_ptr<Tensor> VarShapeCopyMakeBorderStackInto(ImageBatchVarShape &inpu
         nv::cv::cuda::GetElement(bValue, i) = bValueDims > i ? borderValue[i] : 0.f;
     }
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input, top, left});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input, top, left});
+    guard.add(LOCK_WRITE, {output});
 
     cvop::CopyMakeBorder copyMakeBorder;
     copyMakeBorder(pstream->handle(), input.impl(), output.impl(), top.impl(), left.impl(), borderMode, bValue);
@@ -138,8 +140,9 @@ std::shared_ptr<ImageBatchVarShape> VarShapeCopyMakeBorderInto(ImageBatchVarShap
         nv::cv::cuda::GetElement(bValue, i) = bValueDims > i ? borderValue[i] : 0.f;
     }
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input, top, left});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input, top, left});
+    guard.add(LOCK_WRITE, {output});
 
     cvop::CopyMakeBorder copyMakeBorder;
     copyMakeBorder(pstream->handle(), input.impl(), output.impl(), top.impl(), left.impl(), borderMode, bValue);

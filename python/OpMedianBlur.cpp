@@ -36,8 +36,9 @@ std::shared_ptr<Tensor> MedianBlurInto(Tensor &input, Tensor &output, const std:
 
     cvop::MedianBlur median_blur(0);
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input});
+    guard.add(LOCK_WRITE, {output});
 
     cv::Size2D ksizeArg{std::get<0>(ksize), std::get<1>(ksize)};
 

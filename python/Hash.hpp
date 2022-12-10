@@ -76,6 +76,11 @@ size_t ComputeHash(const std::tuple<TT...> &a)
     return detail::ComputeHashTupleHelper(std::index_sequence_for<TT...>(), a);
 }
 
+inline size_t ComputeHash()
+{
+    return ComputeHash(612 /* any value works */);
+}
+
 } // namespace nv::cvpy
 
 namespace nv::cv {

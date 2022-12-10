@@ -46,8 +46,9 @@ std::shared_ptr<Tensor> NormalizeInto(Tensor &input, Tensor &output, Tensor &bas
         flags = 0;
     }
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input, base, scale});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input, base, scale});
+    guard.add(LOCK_WRITE, {output});
 
     cvop::Normalize normalize;
 
