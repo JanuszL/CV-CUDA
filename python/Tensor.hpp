@@ -59,12 +59,18 @@ public:
     class Key final : public IKey
     {
     public:
+        explicit Key()
+            : m_wrapper(true)
+        {
+        }
+
         explicit Key(const cv::Tensor::Requirements &reqs);
         explicit Key(const cv::TensorShape &shape, cv::PixelType dtype);
 
     private:
         cv::TensorShape m_shape;
         cv::PixelType   m_dtype;
+        bool            m_wrapper;
 
         virtual size_t doGetHash() const override;
         virtual bool   doIsEqual(const IKey &that) const override;

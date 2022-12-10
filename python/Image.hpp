@@ -69,17 +69,22 @@ public:
     class Key final : public IKey
     {
     public:
-        Key() = default;
+        explicit Key()
+            : m_wrapper(true)
+        {
+        }
 
         explicit Key(Size2D size, cv::ImageFormat fmt)
             : m_size(size)
             , m_format(fmt)
+            , m_wrapper(false)
         {
         }
 
     private:
         Size2D          m_size;
         cv::ImageFormat m_format;
+        bool            m_wrapper;
 
         virtual size_t doGetHash() const override;
         virtual bool   doIsEqual(const IKey &that) const override;

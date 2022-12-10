@@ -77,7 +77,9 @@ std::shared_ptr<Tensor> Tensor::CreateFromReqs(const cv::Tensor::Requirements &r
     else
     {
         // Get the first one
-        return std::static_pointer_cast<Tensor>(vcont[0]);
+        auto tensor = std::static_pointer_cast<Tensor>(vcont[0]);
+        NVCV_ASSERT(tensor->dtype() == reqs.dtype);
+        return tensor;
     }
 }
 
@@ -163,12 +165,31 @@ std::shared_ptr<Tensor> Tensor::Wrap(CudaBuffer &buffer, std::optional<cv::Tenso
 
     NVCVTensorData data = FillNVCVTensorDataCUDA(info, std::move(layout));
 
-    return std::shared_ptr<Tensor>(new Tensor(data, py::cast(buffer.shared_from_this())));
+    // This is the key of a tensor wrapper.
+    // All tensor wrappers have the same key.
+    Tensor::Key key;
+    // We take this opportunity to remove from cache all wrappers that aren't
+    // being used. They aren't reusable anyway.
+    Cache::Instance().removeAllNotInUseMatching(key);
+
+    auto tensor = std::shared_ptr<Tensor>(new Tensor(data, py::cast(buffer.shared_from_this())));
+
+    // Need to add wrappers to cache so that they don't get destroyed by
+    // the cuda stream when they're last used, and python script isn't
+    // holding a reference to them. If we don't do it, things might break.
+    Cache::Instance().add(*tensor);
+    return tensor;
 }
 
 std::shared_ptr<Tensor> Tensor::WrapImage(Image &img)
 {
-    return std::shared_ptr<Tensor>(new Tensor(img));
+    Tensor::Key key;
+    Cache::Instance().removeAllNotInUseMatching(key);
+
+    auto tensor = std::shared_ptr<Tensor>(new Tensor(img));
+
+    Cache::Instance().add(*tensor);
+    return tensor;
 }
 
 Tensor::Tensor(const cv::Tensor::Requirements &reqs)
@@ -249,19 +270,41 @@ Tensor::Key::Key(const cv::Tensor::Requirements &reqs)
 Tensor::Key::Key(const cv::TensorShape &shape, cv::PixelType dtype)
     : m_shape(std::move(shape))
     , m_dtype(dtype)
+    , m_wrapper(false)
 {
 }
 
 size_t Tensor::Key::doGetHash() const
 {
-    return ComputeHash(m_shape, m_dtype);
+    if (m_wrapper)
+    {
+        return 0; // all wrappers are equal wrt. the cache
+    }
+    else
+    {
+        return ComputeHash(m_shape, m_dtype);
+    }
 }
 
 bool Tensor::Key::doIsEqual(const IKey &that_) const
 {
     const Key &that = static_cast<const Key &>(that_);
 
-    return std::tie(m_shape, m_dtype) == std::tie(that.m_shape, that.m_dtype);
+    // Wrapper key's all compare equal, are they can't be used
+    // and whenever we query the cache for wrappers, we really
+    // want to get them all (as long as they aren't being used).
+    if (m_wrapper && that.m_wrapper)
+    {
+        return true;
+    }
+    else if (m_wrapper || that.m_wrapper) // xor
+    {
+        return false;
+    }
+    else
+    {
+        return std::tie(m_shape, m_dtype) == std::tie(that.m_shape, that.m_dtype);
+    }
 }
 
 auto Tensor::key() const -> const Key &

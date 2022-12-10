@@ -65,6 +65,7 @@ public:
     static Cache &Instance();
 
     void add(CacheItem &container);
+    void removeAllNotInUseMatching(const IKey &key);
 
     std::vector<std::shared_ptr<CacheItem>> fetch(const IKey &key) const;
 
