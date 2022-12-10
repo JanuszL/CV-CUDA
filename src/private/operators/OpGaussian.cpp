@@ -13,9 +13,10 @@
 
 #include "OpGaussian.hpp"
 
-#include <nvcv/Exception.hpp>
+#include <private/core/Exception.hpp>
 #include <private/legacy/CvCudaLegacy.h>
 #include <private/legacy/CvCudaLegacyHelpers.hpp>
+#include <util/CheckError.hpp>
 
 namespace nv::cvop::priv {
 
@@ -34,17 +35,16 @@ void Gaussian::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::
     auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be device-accessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be device-accessible, pitch-linear tensor");
     }
 
     auto *outData = dynamic_cast<const cv::ITensorDataPitchDevice *>(out.exportData());
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Output must be device-accessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be device-accessible, pitch-linear tensor");
     }
 
-    leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, kernelSize, sigma, borderMode, stream));
+    NVCV_CHECK_THROW(m_legacyOp->infer(*inData, *outData, kernelSize, sigma, borderMode, stream));
 }
 
 void Gaussian::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
@@ -53,33 +53,32 @@ void Gaussian::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in
     auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Input must be device-acessible, varshape pitch-linear image batch");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                                  "Input must be device-acessible, varshape pitch-linear image batch");
     }
 
     auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(out.exportData(stream));
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Output must be device-acessible, varshape pitch-linear image batch");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                                  "Output must be device-acessible, varshape pitch-linear image batch");
     }
 
     auto *kernelSizeData = dynamic_cast<const cv::ITensorDataPitchDevice *>(kernelSize.exportData());
     if (kernelSizeData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Kernel size must be device-acessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                                  "Kernel size must be device-acessible, pitch-linear tensor");
     }
 
     auto *sigmaData = dynamic_cast<const cv::ITensorDataPitchDevice *>(sigma.exportData());
     if (sigmaData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Kernel sigma must be device-acessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                                  "Kernel sigma must be device-acessible, pitch-linear tensor");
     }
 
-    leg::helpers::CheckOpErrThrow(
-        m_legacyOpVarShape->infer(*inData, *outData, *kernelSizeData, *sigmaData, borderMode, stream));
+    NVCV_CHECK_THROW(m_legacyOpVarShape->infer(*inData, *outData, *kernelSizeData, *sigmaData, borderMode, stream));
 }
 
 } // namespace nv::cvop::priv

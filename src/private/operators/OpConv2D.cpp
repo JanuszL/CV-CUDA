@@ -13,9 +13,10 @@
 
 #include "OpConv2D.hpp"
 
-#include <nvcv/Exception.hpp>
+#include <private/core/Exception.hpp>
 #include <private/legacy/CvCudaLegacy.h>
 #include <private/legacy/CvCudaLegacyHelpers.hpp>
+#include <util/CheckError.hpp>
 
 namespace nv::cvop::priv {
 
@@ -34,33 +35,32 @@ void Conv2D::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, 
     auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Input must be device-acessible, varshape pitch-linear image batch");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                                  "Input must be device-acessible, varshape pitch-linear image batch");
     }
 
     auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(out.exportData(stream));
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Output must be device-acessible, varshape pitch-linear image batch");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                                  "Output must be device-acessible, varshape pitch-linear image batch");
     }
 
     auto *kernelData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(kernel.exportData(stream));
     if (kernelData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Kernel must be device-acessible, varshape pitch-linear image batch");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                                  "Kernel must be device-acessible, varshape pitch-linear image batch");
     }
 
     auto *kernelAnchorData = dynamic_cast<const cv::ITensorDataPitchDevice *>(kernelAnchor.exportData());
     if (kernelAnchorData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Kernel anchor must be device-acessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                                  "Kernel anchor must be device-acessible, pitch-linear tensor");
     }
 
-    leg::helpers::CheckOpErrThrow(
-        m_legacyOpVarShape->infer(*inData, *outData, *kernelData, *kernelAnchorData, borderMode, stream));
+    NVCV_CHECK_THROW(m_legacyOpVarShape->infer(*inData, *outData, *kernelData, *kernelAnchorData, borderMode, stream));
 }
 
 } // namespace nv::cvop::priv

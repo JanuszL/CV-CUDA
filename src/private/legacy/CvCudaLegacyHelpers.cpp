@@ -225,3 +225,63 @@ Size2D GetMaxImageSize(const IImageBatchVarShapeDataPitchDevice &imageBatch)
 }
 
 } // namespace nv::cv::legacy::helpers
+
+namespace nv::cv::util {
+
+NVCVStatus TranslateError(legacy::cuda_op::ErrorCode err)
+{
+    using legacy::cuda_op::ErrorCode;
+
+    switch (err)
+    {
+    case ErrorCode::INVALID_PARAMETER:
+    case ErrorCode::INVALID_DATA_FORMAT:
+    case ErrorCode::INVALID_DATA_SHAPE:
+    case ErrorCode::INVALID_DATA_TYPE:
+        return NVCV_ERROR_INVALID_ARGUMENT;
+    default:
+        return NVCV_ERROR_INTERNAL;
+    }
+}
+
+const char *ToString(legacy::cuda_op::ErrorCode err, const char **perrdescr)
+{
+    const char *errorName = "UNKNOWN", *errorDescr = "Unknown error";
+
+    using legacy::cuda_op::ErrorCode;
+
+    switch (err)
+    {
+    case ErrorCode::SUCCESS:
+        errorName  = "SUCCESS";
+        errorDescr = "Operation executed successfully";
+        break;
+    case ErrorCode::INVALID_PARAMETER:
+        errorName  = "INVALID_PARAMETER";
+        errorDescr = "Some parameter is outside its acceptable range";
+        break;
+    case ErrorCode::INVALID_DATA_FORMAT:
+        errorName  = "INVALID_DATA_FORMAT";
+        errorDescr = "Data format is outside its acceptable range";
+        break;
+
+    case ErrorCode::INVALID_DATA_SHAPE:
+        errorName  = "INVALID_DATA_SHAPE";
+        errorDescr = "Tensor shape is outside its acceptable range";
+        break;
+
+    case ErrorCode::INVALID_DATA_TYPE:
+        errorName  = "INVALID_DATA_TYPE";
+        errorDescr = "Data type is outside its acceptable range";
+        break;
+    }
+
+    if (perrdescr != nullptr)
+    {
+        *perrdescr = errorDescr;
+    }
+
+    return errorName;
+}
+
+} // namespace nv::cv::util

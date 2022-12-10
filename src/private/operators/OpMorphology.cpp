@@ -13,9 +13,10 @@
 
 #include "OpMorphology.hpp"
 
-#include <nvcv/Exception.hpp>
+#include <private/core/Exception.hpp>
 #include <private/legacy/CvCudaLegacy.h>
 #include <private/legacy/CvCudaLegacyHelpers.hpp>
+#include <util/CheckError.hpp>
 
 namespace nv::cvop::priv {
 
@@ -35,17 +36,16 @@ void Morphology::operator()(cudaStream_t stream, const cv::ITensor &in, const cv
     auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be device-accessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be device-accessible, pitch-linear tensor");
     }
 
     auto *outData = dynamic_cast<const cv::ITensorDataPitchDevice *>(out.exportData());
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Output must be device-accessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be device-accessible, pitch-linear tensor");
     }
 
-    leg::helpers::CheckOpErrThrow(
+    NVCV_CHECK_THROW(
         m_legacyOp->infer(*inData, *outData, morph_type, mask_size, anchor, iteration, borderMode, stream));
 }
 

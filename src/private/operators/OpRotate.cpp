@@ -13,9 +13,10 @@
 
 #include "OpRotate.hpp"
 
-#include <nvcv/Exception.hpp>
+#include <private/core/Exception.hpp>
 #include <private/legacy/CvCudaLegacy.h>
 #include <private/legacy/CvCudaLegacyHelpers.hpp>
+#include <util/CheckError.hpp>
 
 namespace nv::cvop::priv {
 
@@ -35,16 +36,16 @@ void Rotate::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::IT
     auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be device-acessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be device-acessible, pitch-linear tensor");
     }
 
     auto *outData = dynamic_cast<const cv::ITensorDataPitchDevice *>(out.exportData());
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be device-acessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be device-acessible, pitch-linear tensor");
     }
 
-    leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, angleDeg, shift, interpolation, stream));
+    NVCV_CHECK_THROW(m_legacyOp->infer(*inData, *outData, angleDeg, shift, interpolation, stream));
 }
 
 void Rotate::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
@@ -53,29 +54,28 @@ void Rotate::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, 
     auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be varshape image batch");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be varshape image batch");
     }
 
     auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(out.exportData(stream));
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be varshape image batch");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be varshape image batch");
     }
 
     auto *angleDegData = dynamic_cast<const cv::ITensorDataPitchDevice *>(angleDeg.exportData());
     if (angleDegData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "angleDeg must be a tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "angleDeg must be a tensor");
     }
 
     auto *shiftData = dynamic_cast<const cv::ITensorDataPitchDevice *>(shift.exportData());
     if (shiftData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "shift must be a tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "shift must be a tensor");
     }
 
-    leg::helpers::CheckOpErrThrow(
-        m_legacyOpVarShape->infer(*inData, *outData, *angleDegData, *shiftData, interpolation, stream));
+    NVCV_CHECK_THROW(m_legacyOpVarShape->infer(*inData, *outData, *angleDegData, *shiftData, interpolation, stream));
 }
 
 } // namespace nv::cvop::priv

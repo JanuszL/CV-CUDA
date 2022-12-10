@@ -13,9 +13,10 @@
 
 #include "OpCopyMakeBorder.hpp"
 
-#include <nvcv/Exception.hpp>
+#include <private/core/Exception.hpp>
 #include <private/legacy/CvCudaLegacy.h>
 #include <private/legacy/CvCudaLegacyHelpers.hpp>
+#include <util/CheckError.hpp>
 
 namespace nv::cvop::priv {
 
@@ -35,17 +36,16 @@ void CopyMakeBorder::operator()(cudaStream_t stream, const cv::ITensor &in, cons
     auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be device-accessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be device-accessible, pitch-linear tensor");
     }
 
     auto *outData = dynamic_cast<const cv::ITensorDataPitchDevice *>(out.exportData());
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Output must be device-accessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be device-accessible, pitch-linear tensor");
     }
 
-    leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, top, left, borderMode, borderValue, stream));
+    NVCV_CHECK_THROW(m_legacyOp->infer(*inData, *outData, top, left, borderMode, borderValue, stream));
 }
 
 void CopyMakeBorder::operator()(cudaStream_t stream, const cv::IImageBatch &in, const cv::ITensor &out,
@@ -55,29 +55,28 @@ void CopyMakeBorder::operator()(cudaStream_t stream, const cv::IImageBatch &in, 
     auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be varshape image batch");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be varshape image batch");
     }
 
     auto *outData = dynamic_cast<const cv::ITensorDataPitchDevice *>(out.exportData());
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Output must be device-accessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be device-accessible, pitch-linear tensor");
     }
 
     auto *topData = dynamic_cast<const cv::ITensorDataPitchDevice *>(top.exportData());
     if (topData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Top must be device-accessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Top must be device-accessible, pitch-linear tensor");
     }
 
     auto *leftData = dynamic_cast<const cv::ITensorDataPitchDevice *>(left.exportData());
     if (leftData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Left must be device-accessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Left must be device-accessible, pitch-linear tensor");
     }
 
-    leg::helpers::CheckOpErrThrow(
+    NVCV_CHECK_THROW(
         m_legacyOpVarShape->infer(*inData, *outData, *topData, *leftData, borderMode, borderValue, stream));
 }
 
@@ -88,28 +87,28 @@ void CopyMakeBorder::operator()(cudaStream_t stream, const cv::IImageBatch &in, 
     auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be varshape image batch");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be varshape image batch");
     }
 
     auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(out.exportData(stream));
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be varshape image batch");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be varshape image batch");
     }
 
     auto *topData = dynamic_cast<const cv::ITensorDataPitchDevice *>(top.exportData());
     if (topData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Top must be device-accessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Top must be device-accessible, pitch-linear tensor");
     }
 
     auto *leftData = dynamic_cast<const cv::ITensorDataPitchDevice *>(left.exportData());
     if (leftData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Left must be device-accessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Left must be device-accessible, pitch-linear tensor");
     }
 
-    leg::helpers::CheckOpErrThrow(
+    NVCV_CHECK_THROW(
         m_legacyOpVarShape->infer(*inData, *outData, *topData, *leftData, borderMode, borderValue, stream));
 }
 

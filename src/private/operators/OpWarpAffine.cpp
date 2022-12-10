@@ -17,6 +17,7 @@
 
 #include <private/legacy/CvCudaLegacy.h>
 #include <private/legacy/CvCudaLegacyHelpers.hpp>
+#include <util/CheckError.hpp>
 
 namespace nv::cvop::priv {
 
@@ -46,7 +47,7 @@ void WarpAffine::operator()(cudaStream_t stream, const cv::ITensor &in, const cv
                             "Output must be device-accessible, pitch-linear tensor");
     }
 
-    leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, xform, flags, borderMode, borderValue, stream));
+    NVCV_CHECK_THROW(m_legacyOp->infer(*inData, *outData, xform, flags, borderMode, borderValue, stream));
 }
 
 } // namespace nv::cvop::priv
