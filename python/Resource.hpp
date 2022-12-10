@@ -31,6 +31,7 @@ class Stream;
 
 enum LockMode
 {
+    LOCK_NONE      = 0,
     LOCK_READ      = 1,
     LOCK_WRITE     = 2,
     LOCK_READWRITE = LOCK_READ | LOCK_WRITE
