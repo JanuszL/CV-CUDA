@@ -27,6 +27,7 @@ add_library(nvcv_private_operators STATIC
     OpConv2D.cpp
     OpMedianBlur.cpp
     OpMorphology.cpp
+    OpCvtColor.cpp
 )
 
 target_include_directories(nvcv_private_operators
