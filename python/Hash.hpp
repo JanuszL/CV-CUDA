@@ -14,6 +14,8 @@
 #ifndef NVCV_PYTHON_HASH_HPP
 #define NVCV_PYTHON_HASH_HPP
 
+#include <nvcv/Size.hpp>
+
 #include <functional>
 #include <ranges>
 #include <tuple>
@@ -75,5 +77,15 @@ size_t ComputeHash(const std::tuple<TT...> &a)
 }
 
 } // namespace nv::cvpy
+
+namespace nv::cv {
+
+inline size_t ComputeHash(const Size2D &s)
+{
+    using cvpy::ComputeHash;
+    return ComputeHash(s.w, s.h);
+}
+
+} // namespace nv::cv
 
 #endif // NVCV_PYTHON_HASH_HPP
