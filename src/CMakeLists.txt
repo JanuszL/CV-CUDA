@@ -47,6 +47,7 @@ add_library(nvcv SHARED
     operators/OpAverageBlur.cpp
     operators/OpConv2D.cpp
     operators/OpMedianBlur.cpp
+    operators/OpBilateralFilter.cpp
     operators/OpMorphology.cpp
     operators/OpCvtColor.cpp
     operators/OpWarpAffine.cpp

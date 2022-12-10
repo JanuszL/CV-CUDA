@@ -29,6 +29,7 @@ add_library(cvcuda_legacy STATIC
     ./operators/erase_var_shape.cu
     ./operators/filter_var_shape.cu
     ./operators/median_blur.cu
+    ./operators/bilateral_filter.cu
     ./operators/median_blur_var_shape.cu
     ./operators/morphology.cu
     ./operators/cvt_color.cu
