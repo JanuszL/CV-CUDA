@@ -13,10 +13,10 @@
 
 #include "OpErase.hpp"
 
-#include "nvcv/Exception.hpp"
-
+#include <private/core/Exception.hpp>
 #include <private/legacy/CvCudaLegacy.h>
 #include <private/legacy/CvCudaLegacyHelpers.hpp>
+#include <util/CheckError.hpp>
 
 namespace nv::cvop::priv {
 
@@ -37,43 +37,42 @@ void Erase::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITe
     auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be device-acessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be device-acessible, pitch-linear tensor");
     }
 
     auto *outData = dynamic_cast<const cv::ITensorDataPitchDevice *>(out.exportData());
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be device-acessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be device-acessible, pitch-linear tensor");
     }
 
     auto *anchorData = dynamic_cast<const cv::ITensorDataPitchDevice *>(anchor.exportData());
     if (anchorData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "anchor must be device-acessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "anchor must be device-acessible, pitch-linear tensor");
     }
 
     auto *erasingData = dynamic_cast<const cv::ITensorDataPitchDevice *>(erasing.exportData());
     if (erasingData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "erasing must be device-acessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "erasing must be device-acessible, pitch-linear tensor");
     }
 
     auto *valuesData = dynamic_cast<const cv::ITensorDataPitchDevice *>(values.exportData());
     if (valuesData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "values must be device-acessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "values must be device-acessible, pitch-linear tensor");
     }
 
     auto *imgIdxData = dynamic_cast<const cv::ITensorDataPitchDevice *>(imgIdx.exportData());
     if (imgIdxData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "imgIdx must be device-acessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "imgIdx must be device-acessible, pitch-linear tensor");
     }
 
     bool inplace = (in.handle() == out.handle());
-    leg::helpers::CheckOpErrThrow(m_legacyOp->infer(*inData, *outData, *anchorData, *erasingData, *valuesData,
-                                                    *imgIdxData, random, seed, inplace, stream));
+    NVCV_CHECK_THROW(m_legacyOp->infer(*inData, *outData, *anchorData, *erasingData, *valuesData, *imgIdxData, random,
+                                       seed, inplace, stream));
 }
 
 void Erase::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
@@ -83,31 +82,30 @@ void Erase::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, c
     auto *anchorData = dynamic_cast<const cv::ITensorDataPitchDevice *>(anchor.exportData());
     if (anchorData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "anchor must be device-acessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "anchor must be device-acessible, pitch-linear tensor");
     }
 
     auto *erasingData = dynamic_cast<const cv::ITensorDataPitchDevice *>(erasing.exportData());
     if (erasingData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "erasing must be device-acessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "erasing must be device-acessible, pitch-linear tensor");
     }
 
     auto *valuesData = dynamic_cast<const cv::ITensorDataPitchDevice *>(values.exportData());
     if (valuesData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "values must be device-acessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "values must be device-acessible, pitch-linear tensor");
     }
 
     auto *imgIdxData = dynamic_cast<const cv::ITensorDataPitchDevice *>(imgIdx.exportData());
     if (imgIdxData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "imgIdx must be device-acessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "imgIdx must be device-acessible, pitch-linear tensor");
     }
 
     bool inplace = (in.handle() == out.handle());
-    leg::helpers::CheckOpErrThrow(m_legacyOpVarShape->infer(in, out, *anchorData, *erasingData, *valuesData,
-                                                            *imgIdxData, random, seed, inplace, stream));
+    NVCV_CHECK_THROW(m_legacyOpVarShape->infer(in, out, *anchorData, *erasingData, *valuesData, *imgIdxData, random,
+                                               seed, inplace, stream));
 }
 
 } // namespace nv::cvop::priv

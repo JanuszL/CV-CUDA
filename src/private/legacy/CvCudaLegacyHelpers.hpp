@@ -22,7 +22,7 @@
 
 #include "CvCudaLegacy.h"
 
-#include <nvcv/Exception.hpp>
+#include <core/Exception.hpp>
 #include <nvcv/IImage.hpp>
 #include <nvcv/TensorShapeInfo.hpp>
 
@@ -43,15 +43,18 @@ cuda_op::DataShape GetLegacyDataShape(const TensorShapeInfoImage &shapeInfo);
 Size2D GetMaxImageSize(const ITensorDataPitchDevice &tensor);
 Size2D GetMaxImageSize(const IImageBatchVarShapeDataPitchDevice &imageBatch);
 
-inline void CheckOpErrThrow(cuda_op::ErrorCode status)
+} // namespace nv::cv::legacy::helpers
+
+namespace nv::cv::util {
+
+inline bool CheckSucceeded(legacy::cuda_op::ErrorCode err)
 {
-    // This check gets inlined easier, and it's normal code path.
-    if (status != cuda_op::ErrorCode::SUCCESS)
-    {
-        throw Exception(Status::ERROR_INTERNAL, "Internal Error from operator =%d", status);
-    }
+    return err == legacy::cuda_op::SUCCESS;
 }
 
-} // namespace nv::cv::legacy::helpers
+NVCVStatus  TranslateError(legacy::cuda_op::ErrorCode err);
+const char *ToString(legacy::cuda_op::ErrorCode err, const char **perrdescr = nullptr);
+
+} // namespace nv::cv::util
 
 #endif // CV_CUDA_LEGACY_HELPERS_HPP

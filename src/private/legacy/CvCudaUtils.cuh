@@ -21,7 +21,6 @@
 #ifndef CV_CUDA_UTILS_CUH
 #define CV_CUDA_UTILS_CUH
 
-#include <nvcv/Exception.hpp>
 #include <nvcv/IImageBatchData.hpp>
 #include <nvcv/IImageData.hpp>  // for IImageDataPitchDevice, etc.
 #include <nvcv/ITensorData.hpp> // for ITensorDataPitchDevice, etc.
@@ -35,8 +34,9 @@
 #include <nvcv/cuda/TensorWrap.hpp>   // for TensorWrap, etc.
 #include <nvcv/cuda/TypeTraits.hpp>   // for BaseType, etc.
 #include <nvcv/cuda/math/LinAlg.hpp>  // for Vector, etc.
+#include <private/core/Exception.hpp>
 #include <private/operators/Assert.h> // for NVCV_CUDA_ASSERT, etc.
-#include <util/Assert.h>              // for Status::ASSERT, etc.
+#include <util/Assert.h>              // for NVCV_ASSERT, etc.
 #include <util/CheckError.hpp>        // for NVCV_CHECK_LOG, etc.
 
 #include <cassert>
@@ -152,7 +152,7 @@ struct Ptr2dNCHW
     {
         if (inData.format().numPlanes() != inData.format().numChannels())
         {
-            throw Exception(Status::ERROR_INVALID_ARGUMENT, "Image must be planar");
+            throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Image must be planar");
         }
 
         rowPitchBytes = inData.plane(0).pitchBytes;
@@ -167,22 +167,24 @@ struct Ptr2dNCHW
             {
                 if (plane.pitchBytes != rowPitchBytes)
                 {
-                    throw Exception(Status::ERROR_INVALID_ARGUMENT, "All image planes' row pitch must be the same");
+                    throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                                              "All image planes' row pitch must be the same");
                 }
 
                 if (plane.buffer != reinterpret_cast<const std::byte *>(data) + rowPitchBytes * plane.height * i)
                 {
-                    throw Exception(Status::ERROR_INVALID_ARGUMENT, "All image buffer must be packed");
+                    throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "All image buffer must be packed");
                 }
 
                 if (inData.format().planePixelType(i) != inData.format().planePixelType(0))
                 {
-                    throw Exception(Status::ERROR_INVALID_ARGUMENT, "All image planes must have the same pixel type");
+                    throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                                              "All image planes must have the same pixel type");
                 }
 
                 if (plane.width != inData.plane(0).width || plane.height != inData.plane(0).height)
                 {
-                    throw Exception(Status::ERROR_INVALID_ARGUMENT, "All image planes must have the same size");
+                    throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "All image planes must have the same size");
                 }
             }
         }
@@ -285,7 +287,7 @@ struct Ptr2dNHWC
     {
         if (inData.format().numPlanes() != 1)
         {
-            throw Exception(Status::ERROR_INVALID_ARGUMENT, "Image must have only one plane");
+            throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Image must have only one plane");
         }
 
         const ImagePlanePitch &plane = inData.plane(0);
