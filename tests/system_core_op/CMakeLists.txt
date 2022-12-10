@@ -31,6 +31,7 @@ add_executable(nvcv_test_system_core_op
     TestOpMorphology.cpp
     TestOpCvtColor.cpp
     TestOpWarpAffine.cpp
+    TestOpBilateralFilter.cpp
 )
 
 target_link_libraries(nvcv_test_system_core_op

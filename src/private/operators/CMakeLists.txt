@@ -27,6 +27,7 @@ add_library(nvcv_private_operators STATIC
     OpConv2D.cpp
     OpMedianBlur.cpp
     OpMorphology.cpp
+    OpBilateralFilter.cpp
     OpCvtColor.cpp
     OpWarpAffine.cpp
 )
