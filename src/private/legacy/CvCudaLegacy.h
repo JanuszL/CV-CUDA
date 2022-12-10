@@ -128,6 +128,20 @@ inline size_t DataSize(DataType data_type)
     return size;
 }
 
+struct WarpAffineTransform
+{
+    static __device__ __forceinline__ float2 calcCoord(const float *c_warpMat, int x, int y)
+    {
+        const float xcoo = c_warpMat[0] * x + c_warpMat[1] * y + c_warpMat[2];
+        const float ycoo = c_warpMat[3] * x + c_warpMat[4] * y + c_warpMat[5];
+
+        return make_float2(xcoo, ycoo);
+    }
+
+    // declare a 3x3 matrix/array to avoid conflicts in shared GPU kernel with warpPerspective
+    float xform[9];
+};
+
 // cuda base operator class
 class CudaBaseOp
 {
@@ -1781,6 +1795,31 @@ public:
      * @param max_data_type DataType with the maximum size that may be used
      */
     size_t calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
+};
+
+class WarpAffine : public CudaBaseOp
+{
+public:
+    WarpAffine() = delete;
+
+    WarpAffine(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /*
+     * @brief Applies an affine transformation to an image. Same function as cv::warpAffine.
+     * @param inData input tensor.
+     * @param outData output tensor.
+     * @param xform cpu pointer, 2x3 transformation matrix.
+     * @param flags Combination of interpolation methods(NVCV_INTERP_NEAREST, NVCV_INTERP_LINEAR or NVCV_INTERP_CUBIC)
+                     and the optional flag NVCV_WARP_INVERSE_MAP, that sets trans_matrix as the inverse transformation.
+     * @param borderMode pixel extrapolation method(NVCV_BORDER_CONSTANT or NVCV_BORDER_REPLICATE).
+     * @param borderValue used in case of a constant border.
+     * @param stream for the asynchronous execution.
+    */
+    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, const float *xform,
+                    const int flags, const NVCVBorderType borderMode, const float4 borderValue, cudaStream_t stream);
 };
 
 } // namespace nv::cv::legacy::cuda_op

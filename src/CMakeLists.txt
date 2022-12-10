@@ -49,6 +49,7 @@ add_library(nvcv SHARED
     operators/OpMedianBlur.cpp
     operators/OpMorphology.cpp
     operators/OpCvtColor.cpp
+    operators/OpWarpAffine.cpp
 )
 
 target_link_libraries(nvcv PRIVATE
