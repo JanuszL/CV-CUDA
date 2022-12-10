@@ -31,12 +31,14 @@ std::shared_ptr<Tensor> ConvertToInto(Tensor &input, Tensor &output, float scale
         pstream = Stream::Current().shared_from_this();
     }
 
+    auto cvt = CreateOperator<cvop::ConvertTo>();
+
     ResourceGuard guard(*pstream);
     guard.add(LOCK_READ, {input});
     guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*cvt});
 
-    cvop::ConvertTo cvt;
-    cvt(pstream->handle(), input.impl(), output.impl(), scale, offset);
+    cvt->submit(pstream->handle(), input.impl(), output.impl(), scale, offset);
 
     return output.shared_from_this();
 }

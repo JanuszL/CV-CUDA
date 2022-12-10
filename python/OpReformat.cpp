@@ -29,12 +29,14 @@ std::shared_ptr<Tensor> ReformatInto(Tensor &input, Tensor &output, std::shared_
         pstream = Stream::Current().shared_from_this();
     }
 
+    auto reformat = CreateOperator<cvop::Reformat>();
+
     ResourceGuard guard(*pstream);
     guard.add(LOCK_READ, {input});
     guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*reformat});
 
-    cvop::Reformat reformat;
-    reformat(pstream->handle(), input.impl(), output.impl());
+    reformat->submit(pstream->handle(), input.impl(), output.impl());
 
     return output.shared_from_this();
 }

@@ -38,13 +38,14 @@ std::shared_ptr<ImageBatchVarShape> Conv2DVarShapeInto(ImageBatchVarShape &input
         pstream = Stream::Current().shared_from_this();
     }
 
-    cvop::Conv2D conv2D;
+    auto conv2D = CreateOperator<cvop::Conv2D>();
 
     ResourceGuard guard(*pstream);
     guard.add(LOCK_READ, {input, kernel, kernel_anchor});
     guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*conv2D});
 
-    conv2D(pstream->handle(), input.impl(), output.impl(), kernel.impl(), kernel_anchor.impl(), border);
+    conv2D->submit(pstream->handle(), input.impl(), output.impl(), kernel.impl(), kernel_anchor.impl(), border);
 
     return output.shared_from_this();
 }

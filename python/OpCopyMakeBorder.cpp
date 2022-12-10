@@ -49,12 +49,14 @@ std::shared_ptr<Tensor> CopyMakeBorderInto(Tensor &input, Tensor &output, NVCVBo
         nv::cv::cuda::GetElement(bValue, i) = bValueDims > i ? borderValue[i] : 0.f;
     }
 
+    auto copyMakeBorder = CreateOperator<cvop::CopyMakeBorder>();
+
     ResourceGuard guard(*pstream);
     guard.add(LOCK_READ, {input});
     guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*copyMakeBorder});
 
-    cvop::CopyMakeBorder copyMakeBorder;
-    copyMakeBorder(pstream->handle(), input.impl(), output.impl(), top, left, borderMode, bValue);
+    copyMakeBorder->submit(pstream->handle(), input.impl(), output.impl(), top, left, borderMode, bValue);
 
     return output.shared_from_this();
 }
@@ -94,12 +96,14 @@ std::shared_ptr<Tensor> VarShapeCopyMakeBorderStackInto(ImageBatchVarShape &inpu
         nv::cv::cuda::GetElement(bValue, i) = bValueDims > i ? borderValue[i] : 0.f;
     }
 
+    auto copyMakeBorder = CreateOperator<cvop::CopyMakeBorder>();
+
     ResourceGuard guard(*pstream);
     guard.add(LOCK_READ, {input, top, left});
     guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*copyMakeBorder});
 
-    cvop::CopyMakeBorder copyMakeBorder;
-    copyMakeBorder(pstream->handle(), input.impl(), output.impl(), top.impl(), left.impl(), borderMode, bValue);
+    copyMakeBorder->submit(pstream->handle(), input.impl(), output.impl(), top.impl(), left.impl(), borderMode, bValue);
 
     return output.shared_from_this();
 }
@@ -140,12 +144,14 @@ std::shared_ptr<ImageBatchVarShape> VarShapeCopyMakeBorderInto(ImageBatchVarShap
         nv::cv::cuda::GetElement(bValue, i) = bValueDims > i ? borderValue[i] : 0.f;
     }
 
+    auto copyMakeBorder = CreateOperator<cvop::CopyMakeBorder>();
+
     ResourceGuard guard(*pstream);
     guard.add(LOCK_READ, {input, top, left});
     guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*copyMakeBorder});
 
-    cvop::CopyMakeBorder copyMakeBorder;
-    copyMakeBorder(pstream->handle(), input.impl(), output.impl(), top.impl(), left.impl(), borderMode, bValue);
+    copyMakeBorder->submit(pstream->handle(), input.impl(), output.impl(), top.impl(), left.impl(), borderMode, bValue);
 
     return output.shared_from_this();
 }

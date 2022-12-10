@@ -40,13 +40,14 @@ std::shared_ptr<Tensor> AverageBlurInto(Tensor &input, Tensor &output, const std
     cv::Size2D kernelSizeArg{std::get<0>(kernel_size), std::get<1>(kernel_size)};
     int2       kernelAnchorArg{std::get<0>(kernel_anchor), std::get<1>(kernel_anchor)};
 
-    cvop::AverageBlur averageBlur(kernelSizeArg, 0);
+    auto averageBlur = CreateOperator<cvop::AverageBlur>(kernelSizeArg, 0);
 
     ResourceGuard guard(*pstream);
     guard.add(LOCK_READ, {input});
     guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*averageBlur});
 
-    averageBlur(pstream->handle(), input.impl(), output.impl(), kernelSizeArg, kernelAnchorArg, border);
+    averageBlur->submit(pstream->handle(), input.impl(), output.impl(), kernelSizeArg, kernelAnchorArg, border);
 
     return output.shared_from_this();
 }
@@ -72,13 +73,15 @@ std::shared_ptr<ImageBatchVarShape> AverageBlurVarShapeInto(ImageBatchVarShape &
 
     cv::Size2D maxKernelSizeArg{std::get<0>(max_kernel_size), std::get<1>(max_kernel_size)};
 
-    cvop::AverageBlur averageBlur(maxKernelSizeArg, input.capacity());
+    auto averageBlur = CreateOperator<cvop::AverageBlur>(maxKernelSizeArg, input.capacity());
 
     ResourceGuard guard(*pstream);
-    guard.add(LOCK_READ, {input});
+    guard.add(LOCK_READ, {input, kernel_size, kernel_anchor});
     guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*averageBlur});
 
-    averageBlur(pstream->handle(), input.impl(), output.impl(), kernel_size.impl(), kernel_anchor.impl(), border);
+    averageBlur->submit(pstream->handle(), input.impl(), output.impl(), kernel_size.impl(), kernel_anchor.impl(),
+                        border);
 
     return output.shared_from_this();
 }

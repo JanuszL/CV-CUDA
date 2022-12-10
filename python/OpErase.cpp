@@ -37,15 +37,17 @@ std::shared_ptr<Tensor> EraseInto(Tensor &input, Tensor &output, Tensor &anchor,
         throw std::runtime_error(FormatString("Layout of anchor must be 'N'."));
     }
 
+    Shape shape = anchor.shape();
+
+    auto erase = CreateOperator<cvop::Erase>((int)shape[0]);
+
     ResourceGuard guard(*pstream);
     guard.add(LOCK_READ, {input, anchor, erasing, values, imgIdx});
     guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*erase});
 
-    Shape       shape = anchor.shape();
-    cvop::Erase erase((int)shape[0]);
-
-    erase(pstream->handle(), input.impl(), output.impl(), anchor.impl(), erasing.impl(), values.impl(), imgIdx.impl(),
-          random, seed);
+    erase->submit(pstream->handle(), input.impl(), output.impl(), anchor.impl(), erasing.impl(), values.impl(),
+                  imgIdx.impl(), random, seed);
 
     return output.shared_from_this();
 }
