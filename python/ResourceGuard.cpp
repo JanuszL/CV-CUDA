@@ -31,10 +31,18 @@ ResourceGuard::ResourceGuard(Stream &stream, LockMode mode,
 
 void ResourceGuard::commit()
 {
-    m_stream.holdResources(std::move(m_resources));
-    for (const std::shared_ptr<const Resource> &r : m_resources)
+    try
     {
-        r->submitSignal(m_stream, m_lockMode);
+        for (const std::shared_ptr<const Resource> &r : m_resources)
+        {
+            r->submitSignal(m_stream, m_lockMode);
+        }
+        m_stream.holdResources(std::move(m_resources));
+    }
+    catch (...)
+    {
+        m_stream.holdResources(std::move(m_resources));
+        throw;
     }
 }
 
