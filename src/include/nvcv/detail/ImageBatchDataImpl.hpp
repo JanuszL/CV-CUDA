@@ -11,26 +11,25 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef NVCV_IMAGEBATCHDATA_HPP
-#define NVCV_IMAGEBATCHDATA_HPP
+#ifndef NVCV_IMAGEBATCHDATA_IMPL_HPP
+#define NVCV_IMAGEBATCHDATA_IMPL_HPP
 
-#include "IImageBatchData.hpp"
+#ifndef NVCV_IMAGEBATCHDATA_HPP
+#    error "You must not include this header directly"
+#endif
 
 namespace nv { namespace cv {
 
-// ImageBatchVarShapeDataPitchDevice definition -----------------------
-
-class ImageBatchVarShapeDataPitchDevice : public IImageBatchVarShapeDataPitchDevice
+// ImageBatchVarShapeDataPitchDevice implementation -----------------------
+inline ImageBatchVarShapeDataPitchDevice::ImageBatchVarShapeDataPitchDevice(int32_t numImages, const Buffer &buffer)
 {
-public:
-    using Buffer = NVCVImageBatchVarShapeBufferPitch;
+    NVCVImageBatchData &data = this->cdata();
 
-    explicit ImageBatchVarShapeDataPitchDevice(int32_t numImages, const Buffer &buffer);
-    explicit ImageBatchVarShapeDataPitchDevice(const NVCVImageBatchData &data);
-};
+    data.numImages            = numImages;
+    data.bufferType           = NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_PITCH_DEVICE;
+    data.buffer.varShapePitch = buffer;
+}
 
 }} // namespace nv::cv
 
-#include "detail/ImageBatchDataImpl.hpp"
-
-#endif // NVCV_IMAGEBATCHDATA_HPP
+#endif // NVCV_IMAGEBATCHDATA_IMPL_HPP
