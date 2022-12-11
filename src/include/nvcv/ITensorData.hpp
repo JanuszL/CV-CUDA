@@ -17,6 +17,7 @@
 #include "PixelType.hpp"
 #include "TensorData.h"
 #include "TensorShape.hpp"
+#include "detail/Optional.hpp"
 
 namespace nv { namespace cv {
 
@@ -24,11 +25,10 @@ namespace nv { namespace cv {
 class ITensorData
 {
 public:
-    virtual ~ITensorData() = default;
+    virtual ~ITensorData() = 0;
 
-    int                ndim() const;
-    const TensorShape &shape() const;
-
+    int                         ndim() const;
+    const TensorShape          &shape() const;
     const TensorShape::DimType &shape(int d) const;
 
     const TensorLayout &layout() const;
@@ -37,82 +37,41 @@ public:
 
     const NVCVTensorData &cdata() const;
 
+protected:
+    ITensorData() = default;
+    ITensorData(const NVCVTensorData &data);
+
+    NVCVTensorData &cdata();
+
 private:
-    // NVI idiom
-    virtual int                         doGetNumDim() const        = 0;
-    virtual const TensorShape          &doGetShape() const         = 0;
-    virtual const TensorShape::DimType &doGetShapeDim(int d) const = 0;
-
-    virtual PixelType doGetPixelType() const = 0;
-
-    virtual const NVCVTensorData &doGetCData() const = 0;
+    NVCVTensorData                        m_data;
+    mutable detail::Optional<TensorShape> m_cacheShape;
 };
 
-class ITensorDataPitch : public virtual ITensorData
+class ITensorDataPitch : public ITensorData
 {
 public:
-    void          *data() const;
+    virtual ~ITensorDataPitch() = 0;
+
+    void *data() const;
+
     const int64_t &pitchBytes(int d) const;
 
-private:
-    virtual void *doGetData() const = 0;
-
-    virtual const int64_t &doGetPitchBytes(int d) const = 0;
+protected:
+    using ITensorData::ITensorData;
 };
 
 class ITensorDataPitchDevice : public ITensorDataPitch
 {
+public:
+    virtual ~ITensorDataPitchDevice() = 0;
+
+protected:
+    using ITensorDataPitch::ITensorDataPitch;
 };
 
-// Implementation - ITensorData
-inline int ITensorData::ndim() const
-{
-    int r = doGetNumDim();
-    assert(1 <= r && r <= NVCV_TENSOR_MAX_NDIM);
-    return r;
-}
-
-inline const TensorShape &ITensorData::shape() const
-{
-    return doGetShape();
-}
-
-inline auto ITensorData::shape(int d) const -> const TensorShape::DimType &
-{
-    return doGetShapeDim(d);
-}
-
-inline const TensorLayout &ITensorData::layout() const
-{
-    return doGetShape().layout();
-}
-
-inline PixelType ITensorData::dtype() const
-{
-    return doGetPixelType();
-}
-
-inline const NVCVTensorData &ITensorData::cdata() const
-{
-    return doGetCData();
-}
-
-// Implementation - ITensorDataPitch
-
-inline void *ITensorDataPitch::data() const
-{
-    void *data = doGetData();
-    assert(data != nullptr);
-    return data;
-}
-
-inline const int64_t &ITensorDataPitch::pitchBytes(int d) const
-{
-    const int64_t &p = doGetPitchBytes(d);
-    assert(p > 0 && "Post-condition failed");
-    return p;
-}
-
 }} // namespace nv::cv
+
+#include "detail/ITensorDataImpl.hpp"
 
 #endif // NVCV_ITENSORDATA_HPP
