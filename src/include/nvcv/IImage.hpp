@@ -16,18 +16,18 @@
 
 #include "IImageData.hpp"
 #include "Image.h"
+#include "ImageData.hpp"
 #include "ImageFormat.hpp"
 #include "Size.hpp"
-#include "alloc/IAllocator.hpp"
 
-#include <functional>
+#include <type_traits>
 
 namespace nv { namespace cv {
 
 class IImage
 {
 public:
-    virtual ~IImage() = default;
+    virtual ~IImage();
 
     NVCVImageHandle handle() const;
 
@@ -36,43 +36,26 @@ public:
 
     const IImageData *exportData() const;
 
+protected:
+    IImage();
+
 private:
-    // NVI idiom
-    virtual NVCVImageHandle   doGetHandle() const  = 0;
-    virtual Size2D            doGetSize() const    = 0;
-    virtual ImageFormat       doGetFormat() const  = 0;
-    virtual const IImageData *doExportData() const = 0;
+    virtual NVCVImageHandle doGetHandle() const = 0;
+
+    // Where the concrete class for exported image data will be allocated
+    // Should be an std::variant in C++17.
+    union Arena
+    {
+        ImageDataCudaArray   cudaArray;
+        ImageDataPitchDevice devPitch;
+    };
+
+    mutable std::aligned_storage<sizeof(Arena), alignof(Arena)>::type m_cacheDataArena;
+    mutable IImageData                                               *m_cacheDataPtr;
 };
 
-// Implementation ------------------------------------
-
-inline NVCVImageHandle IImage::handle() const
-{
-    NVCVImageHandle h = doGetHandle();
-    assert(h != nullptr && "Post-condition failed");
-    return h;
-}
-
-inline Size2D IImage::size() const
-{
-    Size2D size = doGetSize();
-
-    assert(size.w >= 0 && "Post-condition failed");
-    assert(size.h >= 0 && "Post-condition failed");
-
-    return size;
-}
-
-inline ImageFormat IImage::format() const
-{
-    return doGetFormat();
-}
-
-inline const IImageData *IImage::exportData() const
-{
-    return doExportData();
-}
-
 }} // namespace nv::cv
+
+#include "detail/IImageImpl.hpp"
 
 #endif // NVCV_IIMAGE_HPP
