@@ -49,6 +49,7 @@ public:
     using Buffer = NVCVTensorBufferPitch;
 
     explicit TensorDataPitchDevice(const TensorShape &shape, const PixelType &dtype, const Buffer &data);
+    explicit TensorDataPitchDevice(const NVCVTensorData &data);
 
 private:
     using MemberTensorData = detail::BaseFromMember<NVCVTensorData>;
@@ -113,6 +114,16 @@ inline TensorDataPitchDevice::TensorDataPitchDevice(const TensorShape &tshape, c
                        }()}
     , TensorDataWrap(MemberTensorData::member)
 {
+}
+
+inline TensorDataPitchDevice::TensorDataPitchDevice(const NVCVTensorData &data)
+    : MemberTensorData{data}
+    , TensorDataWrap(MemberTensorData::member)
+{
+    if (data.bufferType != NVCV_TENSOR_BUFFER_PITCH_DEVICE)
+    {
+        throw Exception(Status::ERROR_INVALID_ARGUMENT, "Tensor data buffer must be pitch-linear device");
+    }
 }
 
 inline void *TensorDataPitchDevice::doGetData() const
