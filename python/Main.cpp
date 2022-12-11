@@ -83,4 +83,5 @@ PYBIND11_MODULE(nvcv, m)
     ExportOpConv2D(m);
     ExportOpBilateralFilter(m);
     ExportOpCenterCrop(m);
+    ExportOpWarpAffine(m);
 }
