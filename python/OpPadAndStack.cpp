@@ -32,11 +32,14 @@ std::shared_ptr<Tensor> PadAndStackInto(ImageBatchVarShape &input, Tensor &outpu
         pstream = Stream::Current().shared_from_this();
     }
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input, top, left});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    auto padstack = CreateOperator<cvop::PadAndStack>();
 
-    cvop::PadAndStack padstack;
-    padstack(pstream->handle(), input.impl(), output.impl(), top.impl(), left.impl(), border, borderValue);
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input, top, left});
+    guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*padstack});
+
+    padstack->submit(pstream->handle(), input.impl(), output.impl(), top.impl(), left.impl(), border, borderValue);
 
     return output.shared_from_this();
 }

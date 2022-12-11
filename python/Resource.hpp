@@ -14,6 +14,7 @@
 #ifndef NVCV_PYTHON_RESOURCE_HPP
 #define NVCV_PYTHON_RESOURCE_HPP
 
+#include "LockMode.hpp"
 #include "Object.hpp"
 
 #include <nvcv/detail/CudaFwd.h>
@@ -28,13 +29,6 @@ namespace nv::cvpy {
 namespace py = pybind11;
 
 class Stream;
-
-enum LockMode
-{
-    LOCK_READ      = 1,
-    LOCK_WRITE     = 2,
-    LOCK_READWRITE = LOCK_READ | LOCK_WRITE
-};
 
 class Resource : public virtual Object
 {

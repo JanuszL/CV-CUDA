@@ -11,6 +11,7 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "Container.hpp"
 #include "Operators.hpp"
 #include "PyUtil.hpp"
 #include "ResourceGuard.hpp"
@@ -35,14 +36,16 @@ std::shared_ptr<Tensor> RotateInto(Tensor &input, Tensor &output, double angleDe
         pstream = Stream::Current().shared_from_this();
     }
 
-    cvop::Rotate rotate(0);
+    auto rotate = CreateOperator<cvop::Rotate>(0);
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input});
+    guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*rotate});
 
     double2 shiftArg{std::get<0>(shift), std::get<1>(shift)};
 
-    rotate(pstream->handle(), input.impl(), output.impl(), angleDeg, shiftArg, interpolation);
+    rotate->submit(pstream->handle(), input.impl(), output.impl(), angleDeg, shiftArg, interpolation);
 
     return output.shared_from_this();
 }

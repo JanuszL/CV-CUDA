@@ -278,13 +278,13 @@ void Stream::deactivate(py::object exc_type, py::object exc_value, py::object ex
     StreamStack::Instance().pop();
 }
 
-void Stream::holdResources(std::vector<std::shared_ptr<const Resource>> usedResources)
+void Stream::holdResources(LockResources usedResources)
 {
     struct HostFunctionClosure
     {
         // Also hold the stream reference so that it isn't destroyed before the processing is done.
-        std::shared_ptr<const Stream>                stream;
-        std::vector<std::shared_ptr<const Resource>> resources;
+        std::shared_ptr<const Stream> stream;
+        LockResources                 resources;
     };
 
     if (!usedResources.empty())

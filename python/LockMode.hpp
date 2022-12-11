@@ -11,37 +11,19 @@
  * its affiliates is strictly prohibited.
  */
 
-#ifndef CVCUDA_PYTHON_RESOURCE_GUARD_HPP
-#define CVCUDA_PYTHON_RESOURCE_GUARD_HPP
-
-#include "Resource.hpp"
-#include "Stream.hpp"
-
-#include <initializer_list>
-#include <memory>
-#include <unordered_map>
-#include <vector>
+#ifndef NVCV_PYTHON_LOCKMODE_HPP
+#define NVCV_PYTHON_LOCKMODE_HPP
 
 namespace nv::cvpy {
 
-class Resource;
-
-class ResourceGuard
+enum LockMode
 {
-public:
-    ResourceGuard(Stream &stream);
-    ResourceGuard &add(LockMode mode, std::initializer_list<std::reference_wrapper<const Resource>> resources);
-
-    void commit();
-
-    ~ResourceGuard();
-
-private:
-    Stream &m_stream;
-
-    LockResources m_resourcesPerLockMode;
+    LOCK_NONE      = 0,
+    LOCK_READ      = 1,
+    LOCK_WRITE     = 2,
+    LOCK_READWRITE = LOCK_READ | LOCK_WRITE
 };
 
 } // namespace nv::cvpy
 
-#endif // CVCUDA_PYTHON_RESOURCE_GUARD_HPP
+#endif // NVCV_PYTHON_LOCKMODE_HPP

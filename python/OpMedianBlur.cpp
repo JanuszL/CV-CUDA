@@ -34,14 +34,16 @@ std::shared_ptr<Tensor> MedianBlurInto(Tensor &input, Tensor &output, const std:
         pstream = Stream::Current().shared_from_this();
     }
 
-    cvop::MedianBlur median_blur(0);
+    auto median_blur = CreateOperator<cvop::MedianBlur>(0);
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input});
+    guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*median_blur});
 
     cv::Size2D ksizeArg{std::get<0>(ksize), std::get<1>(ksize)};
 
-    median_blur(pstream->handle(), input.impl(), output.impl(), ksizeArg);
+    median_blur->submit(pstream->handle(), input.impl(), output.impl(), ksizeArg);
 
     return output.shared_from_this();
 }

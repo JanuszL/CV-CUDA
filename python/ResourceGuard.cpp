@@ -17,24 +17,36 @@
 
 namespace nv::cvpy {
 
-ResourceGuard::ResourceGuard(Stream &stream, LockMode mode,
-                             std::initializer_list<std::reference_wrapper<const Resource>> resources)
+ResourceGuard::ResourceGuard(Stream &stream)
     : m_stream(stream)
-    , m_lockMode(mode)
+{
+}
+
+ResourceGuard &ResourceGuard::add(LockMode                                                      mode,
+                                  std::initializer_list<std::reference_wrapper<const Resource>> resources)
 {
     for (const std::reference_wrapper<const Resource> &r : resources)
     {
-        r.get().submitSync(stream, mode);
-        m_resources.push_back(r.get().shared_from_this());
+        r.get().submitSync(m_stream, mode);
+        m_resourcesPerLockMode.emplace(mode, r.get().shared_from_this());
     }
+    return *this;
 }
 
 void ResourceGuard::commit()
 {
-    m_stream.holdResources(std::move(m_resources));
-    for (const std::shared_ptr<const Resource> &r : m_resources)
+    try
     {
-        r->submitSignal(m_stream, m_lockMode);
+        for (auto &[lockMode, res] : m_resourcesPerLockMode)
+        {
+            res->submitSignal(m_stream, lockMode);
+        }
+        m_stream.holdResources(std::move(m_resourcesPerLockMode));
+    }
+    catch (...)
+    {
+        m_stream.holdResources(std::move(m_resourcesPerLockMode));
+        throw;
     }
 }
 

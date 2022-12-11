@@ -17,16 +17,63 @@
 #include "String.hpp"
 
 #include <cstdlib>
+#include <list>
 
 namespace nv::cvpy {
 
+namespace {
+// Class that holds cleanup functions that are called when python is shutting down.
+class Cleanup
+{
+public:
+    Cleanup()
+    {
+        NVCV_ASSERT(m_instance == nullptr && "Only one instance of Cleanup can be instantiated");
+        m_instance = this;
+
+        // Functions registered with python's atexit will be executed after
+        // the script ends without fatal errors, but before python interpreter is torn down.
+        // That's a good place for our cleanup.
+        auto py_atexit = py::module_::import("atexit");
+        py_atexit.attr("register")(py::cpp_function(&doCleanup));
+    }
+
+    ~Cleanup()
+    {
+        doCleanup(); // last chance for cleaning up
+        m_instance = nullptr;
+    }
+
+    void addHandler(std::function<void()> fn)
+    {
+        m_handlers.emplace_back(std::move(fn));
+    }
+
+private:
+    static Cleanup                  *m_instance;
+    std::list<std::function<void()>> m_handlers;
+
+    static void doCleanup()
+    {
+        NVCV_ASSERT(m_instance != nullptr);
+
+        while (!m_instance->m_handlers.empty())
+        {
+            std::function<void()> handler = m_instance->m_handlers.back();
+            m_instance->m_handlers.pop_back();
+
+            handler();
+        }
+    }
+};
+
+Cleanup *Cleanup::m_instance = nullptr;
+} // namespace
+
 void RegisterCleanup(py::module &m, std::function<void()> fn)
 {
-    // Functions registered with python's atexit will be executed after
-    // the script ends, but before python interpreter is torn down. That's
-    // a good place for our cleanup.
-    auto atexit = py::module_::import("atexit");
-    atexit.attr("register")(py::cpp_function(std::move(fn)));
+    static Cleanup cleanup;
+    cleanup.addHandler(std::move(fn));
 }
 
 std::string GetFullyQualifiedName(py::handle h)

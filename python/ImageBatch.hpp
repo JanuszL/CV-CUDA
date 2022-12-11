@@ -59,8 +59,6 @@ public:
     class Key final : public IKey
     {
     public:
-        Key() = default;
-
         explicit Key(int capacity)
             : m_capacity(capacity)
         {

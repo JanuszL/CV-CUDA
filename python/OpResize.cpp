@@ -31,11 +31,14 @@ std::shared_ptr<Tensor> ResizeInto(Tensor &input, Tensor &output, NVCVInterpolat
         pstream = Stream::Current().shared_from_this();
     }
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    auto resize = CreateOperator<cvop::Resize>();
 
-    cvop::Resize resize;
-    resize(pstream->handle(), input.impl(), output.impl(), interp);
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input});
+    guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*resize});
+
+    resize->submit(pstream->handle(), input.impl(), output.impl(), interp);
 
     return output.shared_from_this();
 }

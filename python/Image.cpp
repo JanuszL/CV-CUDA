@@ -33,12 +33,34 @@ namespace nv::cvpy {
 bool Image::Key::doIsEqual(const IKey &ithat) const
 {
     auto &that = static_cast<const Key &>(ithat);
-    return std::tie(m_size, m_format) == std::tie(that.m_size, that.m_format);
+
+    // Wrapper key's all compare equal, are they can't be used
+    // and whenever we query the cache for wrappers, we really
+    // want to get them all (as long as they aren't being used).
+    if (m_wrapper && that.m_wrapper)
+    {
+        return true;
+    }
+    else if (m_wrapper || that.m_wrapper) // xor
+    {
+        return false;
+    }
+    else
+    {
+        return std::tie(m_size, m_format) == std::tie(that.m_size, that.m_format);
+    }
 }
 
 size_t Image::Key::doGetHash() const
 {
-    return ComputeHash(m_size, m_format);
+    if (m_wrapper)
+    {
+        return 0; // all wrappers are equal wrt. the cache
+    }
+    else
+    {
+        return ComputeHash(m_size, m_format);
+    }
 }
 
 namespace {
@@ -544,7 +566,20 @@ std::shared_ptr<Image> Image::WrapDeviceVector(std::vector<std::shared_ptr<CudaB
     }
 
     cv::ImageDataPitchDevice imgData = CreateNVCVImageDataDevice(std::move(bufinfos), fmt);
-    return std::shared_ptr<Image>(new Image(std::move(buffers), imgData));
+
+    // This is the key of an image wrapper.
+    // All image wrappers have the same key.
+    Image::Key key;
+    // We take this opportunity to remove from cache all wrappers that aren't
+    // being used. They aren't reusable anyway.
+    Cache::Instance().removeAllNotInUseMatching(key);
+
+    // Need to add wrappers to cache so that they don't get destroyed by
+    // the cuda stream when they're last used, and python script isn't
+    // holding a reference to them. If we don't do it, things might break.
+    std::shared_ptr<Image> img(new Image(std::move(buffers), imgData));
+    Cache::Instance().add(*img);
+    return img;
 }
 
 std::shared_ptr<Image> Image::CreateHost(py::buffer buffer, cv::ImageFormat fmt)
@@ -561,7 +596,15 @@ std::shared_ptr<Image> Image::CreateHostVector(std::vector<py::buffer> buffers, 
     }
 
     cv::ImageDataPitchHost imgData = CreateNVCVImageDataHost(std::move(bufinfos), fmt);
-    return std::shared_ptr<Image>(new Image(std::move(buffers), imgData));
+
+    // We take this opportunity to remove all wrappers from cache.
+    // They aren't reusable anyway.
+    Image::Key key;
+    Cache::Instance().removeAllNotInUseMatching(key);
+
+    std::shared_ptr<Image> img(new Image(std::move(buffers), imgData));
+    Cache::Instance().add(*img);
+    return img;
 }
 
 Size2D Image::size() const

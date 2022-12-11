@@ -15,11 +15,14 @@
 #define NVCV_PYTHON_STREAM_HPP
 
 #include "Cache.hpp"
+#include "LockMode.hpp"
 #include "Object.hpp"
 
 #include <cuda_runtime.h>
 
+#include <initializer_list>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 namespace nv::cvpy {
@@ -32,6 +35,8 @@ public:
     virtual cudaStream_t handle() const        = 0;
     virtual py::object   wrappedObject() const = 0;
 };
+
+using LockResources = std::unordered_multimap<LockMode, std::shared_ptr<const Resource>>;
 
 class Stream : public CacheItem
 {
@@ -50,7 +55,7 @@ public:
     void activate();
     void deactivate(py::object exc_type, py::object exc_value, py::object exc_tb);
 
-    void holdResources(std::vector<std::shared_ptr<const Resource>> usedResources);
+    void holdResources(LockResources usedResources);
 
     void         sync();
     cudaStream_t handle() const;

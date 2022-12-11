@@ -49,11 +49,14 @@ std::shared_ptr<Tensor> CopyMakeBorderInto(Tensor &input, Tensor &output, NVCVBo
         nv::cv::cuda::GetElement(bValue, i) = bValueDims > i ? borderValue[i] : 0.f;
     }
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    auto copyMakeBorder = CreateOperator<cvop::CopyMakeBorder>();
 
-    cvop::CopyMakeBorder copyMakeBorder;
-    copyMakeBorder(pstream->handle(), input.impl(), output.impl(), top, left, borderMode, bValue);
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input});
+    guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*copyMakeBorder});
+
+    copyMakeBorder->submit(pstream->handle(), input.impl(), output.impl(), top, left, borderMode, bValue);
 
     return output.shared_from_this();
 }
@@ -93,11 +96,14 @@ std::shared_ptr<Tensor> VarShapeCopyMakeBorderStackInto(ImageBatchVarShape &inpu
         nv::cv::cuda::GetElement(bValue, i) = bValueDims > i ? borderValue[i] : 0.f;
     }
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input, top, left});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    auto copyMakeBorder = CreateOperator<cvop::CopyMakeBorder>();
 
-    cvop::CopyMakeBorder copyMakeBorder;
-    copyMakeBorder(pstream->handle(), input.impl(), output.impl(), top.impl(), left.impl(), borderMode, bValue);
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input, top, left});
+    guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*copyMakeBorder});
+
+    copyMakeBorder->submit(pstream->handle(), input.impl(), output.impl(), top.impl(), left.impl(), borderMode, bValue);
 
     return output.shared_from_this();
 }
@@ -138,11 +144,14 @@ std::shared_ptr<ImageBatchVarShape> VarShapeCopyMakeBorderInto(ImageBatchVarShap
         nv::cv::cuda::GetElement(bValue, i) = bValueDims > i ? borderValue[i] : 0.f;
     }
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input, top, left});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    auto copyMakeBorder = CreateOperator<cvop::CopyMakeBorder>();
 
-    cvop::CopyMakeBorder copyMakeBorder;
-    copyMakeBorder(pstream->handle(), input.impl(), output.impl(), top.impl(), left.impl(), borderMode, bValue);
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input, top, left});
+    guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*copyMakeBorder});
+
+    copyMakeBorder->submit(pstream->handle(), input.impl(), output.impl(), top.impl(), left.impl(), borderMode, bValue);
 
     return output.shared_from_this();
 }

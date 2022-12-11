@@ -46,13 +46,15 @@ std::shared_ptr<Tensor> NormalizeInto(Tensor &input, Tensor &output, Tensor &bas
         flags = 0;
     }
 
-    ResourceGuard roGuard(*pstream, LOCK_READ, {input, base, scale});
-    ResourceGuard rwGuard(*pstream, LOCK_WRITE, {output});
+    auto normalize = CreateOperator<cvop::Normalize>();
 
-    cvop::Normalize normalize;
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input, base, scale});
+    guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*normalize});
 
-    normalize(pstream->handle(), input.impl(), base.impl(), scale.impl(), output.impl(), globalScale, globalShift,
-              epsilon, *flags);
+    normalize->submit(pstream->handle(), input.impl(), base.impl(), scale.impl(), output.impl(), globalScale,
+                      globalShift, epsilon, *flags);
 
     return output.shared_from_this();
 }

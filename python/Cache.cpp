@@ -109,6 +109,25 @@ void Cache::add(CacheItem &item)
     pimpl->items.emplace(&item.key(), item.shared_from_this());
 }
 
+void Cache::removeAllNotInUseMatching(const IKey &key)
+{
+    std::unique_lock<std::mutex> lk(pimpl->mtx);
+
+    auto itrange = pimpl->items.equal_range(&key);
+
+    for (auto it = itrange.first; it != itrange.second;)
+    {
+        if (!it->second->isInUse())
+        {
+            pimpl->items.erase(it++);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+}
+
 std::vector<std::shared_ptr<CacheItem>> Cache::fetch(const IKey &key) const
 {
     std::unique_lock<std::mutex> lk(pimpl->mtx);
