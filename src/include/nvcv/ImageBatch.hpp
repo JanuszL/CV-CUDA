@@ -33,8 +33,6 @@ protected:
 
     const IImageBatchData *doExportData(CUstream stream) const override;
 
-    IAllocator &doGetAlloc() const override;
-
     NVCVImageBatchHandle doGetHandle() const override;
 
 private:
@@ -42,8 +40,6 @@ private:
 
     // Only one leaf, we can use an optional for now.
     mutable detail::Optional<ImageBatchVarShapeDataPitchDevice> m_data;
-
-    mutable detail::Optional<AllocatorWrapHandle> m_alloc;
 
     int32_t doGetCapacity() const override;
     int32_t doGetNumImages() const override;
@@ -59,9 +55,6 @@ public:
     ImageBatchVarShapeWrapHandle(const ImageBatchVarShapeWrapHandle &that);
 
     explicit ImageBatchVarShapeWrapHandle(NVCVImageBatchHandle handle);
-
-protected:
-    using ImageBatchWrapHandle::doGetAlloc;
 
 private:
     void doPushBack(std::function<NVCVImageHandle()> &&cb) override;
@@ -89,11 +82,6 @@ public:
     explicit ImageBatchVarShape(const Requirements &reqs, IAllocator *alloc = nullptr);
     explicit ImageBatchVarShape(int32_t capacity, IAllocator *alloc = nullptr);
     ~ImageBatchVarShape();
-
-private:
-    IAllocator *m_alloc;
-
-    IAllocator &doGetAlloc() const override;
 };
 
 // ImageBatchWrapHandle implementation -------------------------------------
@@ -125,18 +113,6 @@ inline int32_t ImageBatchWrapHandle::doGetCapacity() const
     int32_t out;
     detail::CheckThrow(nvcvImageBatchGetCapacity(m_handle, &out));
     return out;
-}
-
-inline IAllocator &ImageBatchWrapHandle::doGetAlloc() const
-{
-    if (!m_alloc)
-    {
-        NVCVAllocatorHandle halloc;
-        detail::CheckThrow(nvcvImageBatchGetAllocator(m_handle, &halloc));
-        m_alloc.emplace(halloc);
-    }
-
-    return *m_alloc;
 }
 
 inline const IImageBatchData *ImageBatchWrapHandle::doExportData(CUstream stream) const
@@ -240,7 +216,6 @@ inline ImageBatchVarShape::ImageBatchVarShape(const Requirements &reqs, IAllocat
             detail::CheckThrow(nvcvImageBatchVarShapeConstruct(&reqs, alloc ? alloc->handle() : nullptr, &handle));
             return handle;
         }())
-    , m_alloc(alloc)
 {
 }
 
@@ -256,18 +231,6 @@ inline ImageBatchVarShape::~ImageBatchVarShape()
     // touch the handle, it's ok, or else we'd have to use some sort of
     // base-from-member idiom to get the destruction order right.
     nvcvImageBatchDestroy(this->handle());
-}
-
-inline IAllocator &ImageBatchVarShape::doGetAlloc() const
-{
-    if (m_alloc != nullptr)
-    {
-        return *m_alloc;
-    }
-    else
-    {
-        return ImageBatchVarShapeWrapHandle::doGetAlloc();
-    }
 }
 
 }} // namespace nv::cv

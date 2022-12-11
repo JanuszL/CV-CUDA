@@ -39,8 +39,6 @@ public:
     PixelType    dtype() const;
     TensorLayout layout() const;
 
-    IAllocator &alloc() const;
-
     const ITensorData *exportData() const;
 
 private:
@@ -50,8 +48,6 @@ private:
     virtual TensorLayout doGetLayout() const   = 0;
     virtual TensorShape  doGetShape() const    = 0;
     virtual PixelType    doGetDataType() const = 0;
-
-    virtual IAllocator &doGetAlloc() const = 0;
 
     virtual const ITensorData *doExportData() const = 0;
 };
@@ -81,11 +77,6 @@ inline TensorLayout ITensor::layout() const
 inline PixelType ITensor::dtype() const
 {
     return doGetDataType();
-}
-
-inline IAllocator &ITensor::alloc() const
-{
-    return doGetAlloc();
 }
 
 inline const ITensorData *ITensor::exportData() const

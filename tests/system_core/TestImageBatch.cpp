@@ -80,8 +80,6 @@ TEST(ImageBatchVarShape, wip_create)
     ASSERT_EQ(NVCV_SUCCESS, nvcvImageBatchGetType(batch.handle(), &type));
     EXPECT_EQ(NVCV_TYPE_IMAGEBATCH_VARSHAPE, type);
 
-    EXPECT_NE(nullptr, dynamic_cast<nvcv::AllocatorWrapHandle *>(&batch.alloc()));
-
     // empty data
     {
         const nvcv::IImageBatchData *data = batch.exportData(0);

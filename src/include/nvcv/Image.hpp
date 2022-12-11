@@ -18,8 +18,6 @@
 #include "ImageData.hpp"
 #include "ImageFormat.hpp"
 #include "Size.hpp"
-#include "alloc/AllocatorWrapHandle.hpp"
-#include "detail/Optional.hpp"
 
 #include <type_traits>
 
@@ -38,7 +36,6 @@ public:
 protected:
     mutable IImageData *m_ptrData;
 
-    IAllocator       &doGetAlloc() const override;
     const IImageData *doExportData() const override;
     NVCVImageHandle   doGetHandle() const override;
 
@@ -54,8 +51,6 @@ private:
     };
 
     mutable std::aligned_storage<sizeof(Arena), alignof(Arena)>::type m_dataArena;
-
-    mutable detail::Optional<AllocatorWrapHandle> m_alloc;
 
     Size2D      doGetSize() const override;
     ImageFormat doGetFormat() const override;
@@ -78,10 +73,7 @@ public:
     ~Image();
 
 private:
-    IAllocator *m_alloc;
-
     const IImageData *doExportData() const override;
-    IAllocator       &doGetAlloc() const override;
 };
 
 using ImageDataCleanupFunc = void(const IImageData &);
@@ -145,18 +137,6 @@ inline ImageFormat ImageWrapHandle::doGetFormat() const
     return ImageFormat{out};
 }
 
-inline IAllocator &ImageWrapHandle::doGetAlloc() const
-{
-    if (!m_alloc)
-    {
-        NVCVAllocatorHandle halloc;
-        detail::CheckThrow(nvcvImageGetAllocator(m_handle, &halloc));
-        m_alloc.emplace(halloc);
-    }
-
-    return *m_alloc;
-}
-
 inline const IImageData *ImageWrapHandle::doExportData() const
 {
     NVCVImageData imgData;
@@ -203,7 +183,6 @@ inline Image::Image(const Requirements &reqs, IAllocator *alloc)
             detail::CheckThrow(nvcvImageConstruct(&reqs, alloc ? alloc->handle() : nullptr, &handle));
             return handle;
         }())
-    , m_alloc(alloc)
 {
 }
 
@@ -219,18 +198,6 @@ inline Image::~Image()
     // touch the handle, it's ok, or else we'd have to use some sort of
     // base-from-member idiom to get the destruction order right.
     nvcvImageDestroy(ImageWrapHandle::doGetHandle());
-}
-
-inline IAllocator &Image::doGetAlloc() const
-{
-    if (m_alloc != nullptr)
-    {
-        return *m_alloc;
-    }
-    else
-    {
-        return ImageWrapHandle::doGetAlloc();
-    }
 }
 
 inline const IImageData *Image::doExportData() const

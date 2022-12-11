@@ -64,8 +64,6 @@ TEST_P(TensorTests, wip_create)
     EXPECT_EQ(GOLD_SHAPE.layout(), tensor.layout());
     ASSERT_NE(nullptr, tensor.handle());
 
-    EXPECT_NE(nullptr, dynamic_cast<nvcv::AllocatorWrapHandle *>(&tensor.alloc()));
-
     {
         const nvcv::ITensorData *data = tensor.exportData();
         ASSERT_NE(nullptr, data);
@@ -163,8 +161,6 @@ TEST(TensorWrapData, wip_create)
     nvcv::TensorWrapData tensor{tdata};
 
     ASSERT_NE(nullptr, tensor.handle());
-
-    EXPECT_NE(nullptr, dynamic_cast<nvcv::AllocatorWrapHandle *>(&tensor.alloc()));
 
     EXPECT_EQ(tdata.shape(), tensor.shape());
     EXPECT_EQ(tdata.layout(), tensor.layout());
