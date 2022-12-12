@@ -23,6 +23,7 @@
 #include "IOperator.hpp"
 
 #include <cuda_runtime.h>
+#include <nvcv/IImageBatch.hpp>
 #include <nvcv/ITensor.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 #include <private/core/Exception.hpp>
@@ -39,12 +40,15 @@ namespace nv::cvop::priv {
 class Flip final : public OperatorBase
 {
 public:
-    explicit Flip();
+    explicit Flip(int32_t maxBatchSize);
 
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, int32_t flipCode) const;
+    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
+                    const cv::ITensor &flipCode) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::Flip> m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::Flip>               m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::FlipOrCopyVarShape> m_legacyOpVarShape;
 };
 
 } // namespace nv::cvop::priv

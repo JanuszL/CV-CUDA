@@ -39,12 +39,15 @@ extern "C"
  *
  * @param [out] handle Where the operator instance handle will be written to.
  *                     + Must not be NULL.
+ * @param [in] maxVarShapeBatchSize The maximum batch size that will be used by
+ *                                  the var-shape operator.
+ *                                  + Positive value.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Handle is null.
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the operator.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_OP_PUBLIC NVCVStatus nvcvopFlipCreate(NVCVOperatorHandle *handle);
+NVCV_OP_PUBLIC NVCVStatus nvcvopFlipCreate(NVCVOperatorHandle *handle, int32_t maxVarShapeBatchSize);
 
 /** Executes the Flip operation on the given cuda stream.
  *
@@ -94,6 +97,8 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopFlipCreate(NVCVOperatorHandle *handle);
  * @param [in] handle Handle to the operator.
  *                    + Must not be NULL.
  * @param [in] stream Handle to a valid CUDA stream.
+ * @param [in] in Input tensor.
+ * @param [out] out Output tensor.
  * @param [in] flipCode a flag to specify how to flip the array; 0 means flipping
  *      around the x-axis and positive value (for example, 1) means flipping
  *      around y-axis. Negative value (for example, -1) means flipping around
@@ -105,6 +110,69 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopFlipCreate(NVCVOperatorHandle *handle);
  */
 NVCV_OP_PUBLIC NVCVStatus nvcvopFlipSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
                                            NVCVTensorHandle out, int32_t flipCode);
+
+/** Executes the Flip operation on the given cuda stream.
+ *
+ * Limitations:
+ *
+ * Input:
+ *      Data Layout:    [kNHWC, kHWC]
+ *      Channels:       [1, 3, 4]
+ *
+ *      Data Type      | Allowed
+ *      -------------- | -------------
+ *      8bit  Unsigned | Yes
+ *      8bit  Signed   | No
+ *      16bit Unsigned | Yes
+ *      16bit Signed   | Yes
+ *      32bit Unsigned | No
+ *      32bit Signed   | Yes
+ *      32bit Float    | Yes
+ *      64bit Float    | No
+ *
+ * Output:
+ *      Data Layout:    [kNHWC, kHWC]
+ *      Channels:       [1, 3, 4]
+ *
+ *      Data Type      | Allowed
+ *      -------------- | -------------
+ *      8bit  Unsigned | Yes
+ *      8bit  Signed   | No
+ *      16bit Unsigned | Yes
+ *      16bit Signed   | Yes
+ *      32bit Unsigned | No
+ *      32bit Signed   | Yes
+ *      32bit Float    | Yes
+ *      64bit Float    | No
+ *
+ * Input/Output dependency
+ *
+ *      Property      |  Input == Output
+ *     -------------- | -------------
+ *      Data Layout   | Yes
+ *      Data Type     | Yes
+ *      Number        | Yes
+ *      Channels      | Yes
+ *      Width         | Yes
+ *      Height        | Yes
+ *
+ * @param [in] handle Handle to the operator.
+ *                    + Must not be NULL.
+ * @param [in] stream Handle to a valid CUDA stream.
+ * @param [in] in Input image batch.
+ * @param [out] out Output image batch.
+ * @param [in] flipCode a tensor flag to specify how to flip the array; 0 means flipping
+ *      around the x-axis and positive value (for example, 1) means flipping
+ *      around y-axis. Negative value (for example, -1) means flipping around
+ *      both axes.
+ *
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
+ * @retval #NVCV_ERROR_INTERNAL         Internal error in the operator, invalid types passed in.
+ * @retval #NVCV_SUCCESS                Operation executed successfully.
+ */
+NVCV_OP_PUBLIC NVCVStatus nvcvopFlipVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
+                                                   NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                                                   NVCVTensorHandle flipCode);
 
 #ifdef __cplusplus
 }

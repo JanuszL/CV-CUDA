@@ -450,6 +450,77 @@ public:
     size_t calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
 };
 
+class FlipOrCopyVarShape : public CudaBaseOp
+{
+public:
+    FlipOrCopyVarShape() = delete;
+
+    FlipOrCopyVarShape(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * Limitations:
+     *
+     * Input:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | Yes
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Output:
+     *      Data Layout:    [kNHWC, kHWC]
+     *      Channels:       [1, 3, 4]
+     *
+     *      Data Type      | Allowed
+     *      -------------- | -------------
+     *      8bit  Unsigned | Yes
+     *      8bit  Signed   | No
+     *      16bit Unsigned | Yes
+     *      16bit Signed   | Yes
+     *      32bit Unsigned | No
+     *      32bit Signed   | Yes
+     *      32bit Float    | Yes
+     *      64bit Float    | No
+     *
+     * Input/Output dependency
+     *
+     *      Property      |  Input == Output
+     *     -------------- | -------------
+     *      Data Layout   | Yes
+     *      Data Type     | Yes
+     *      Number        | Yes
+     *      Channels      | Yes
+     *      Width         | Yes
+     *      Height        | Yes
+     *
+     * @brief Flips a 2D array around vertical, horizontal, or both axes.
+     * @param flipCode a flag to specify how to flip the array; 0 means flipping
+     *      around the x-axis and positive value (for example, 1) means flipping
+     *      around y-axis. Negative value (for example, -1) means flipping around
+     *      both axes.
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &input, const IImageBatchVarShapeDataPitchDevice &output,
+                    const ITensorDataPitchDevice &flipCode, cudaStream_t stream);
+
+    /**
+     * @brief calculate the gpu buffer size needed by this operator
+     * @param maxBatchSize Maximum batch size that may be used
+     */
+    size_t calBufferSize(int maxBatchSize);
+};
+
 class Reformat : public CudaBaseOp
 {
 public:
