@@ -329,7 +329,7 @@ TEST_P(OpRotate, varshape_correct_output)
 
     double angleDegBase = GetParamValue<6>();
 
-    const nvcv::ImageFormat fmt = nvcv::FMT_Y8;
+    const nvcv::ImageFormat fmt = nvcv::FMT_RGB8;
 
     // Create input and output
     std::default_random_engine         randEng;

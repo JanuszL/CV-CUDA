@@ -27,6 +27,7 @@
 #include "detail/Export.h"
 
 #include <cuda_runtime.h>
+#include <nvcv/ImageBatch.h>
 #include <nvcv/Status.h>
 #include <nvcv/Tensor.h>
 #include <nvcv/cuda/math/LinAlg.hpp>
@@ -48,7 +49,7 @@ extern "C"
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the operator.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_OP_PUBLIC NVCVStatus nvcvopWarpPerspectiveCreate(NVCVOperatorHandle *handle);
+NVCV_OP_PUBLIC NVCVStatus nvcvopWarpPerspectiveCreate(NVCVOperatorHandle *handle, const int32_t maxVarShapeBatchSize);
 
 /** Executes the WarpPerspective operation on the given cuda stream. This operation does not
  *  wait for completion.
@@ -125,6 +126,12 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopWarpPerspectiveSubmit(NVCVOperatorHandle handle,
                                                       NVCVTensorHandle in, NVCVTensorHandle out,
                                                       const NVCVPerspectiveTransform transMatrix, const int32_t flags,
                                                       const NVCVBorderType borderMode, const float4 borderValue);
+
+NVCV_OP_PUBLIC NVCVStatus nvcvopWarpPerspectiveVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
+                                                              NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                                                              NVCVTensorHandle transMatrix, const int32_t flags,
+                                                              const NVCVBorderType borderMode,
+                                                              const float4         borderValue);
 
 #ifdef __cplusplus
 }

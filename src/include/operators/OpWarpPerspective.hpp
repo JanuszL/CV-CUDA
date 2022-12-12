@@ -27,6 +27,7 @@
 #include "Types.h"
 
 #include <cuda_runtime.h>
+#include <nvcv/IImageBatch.hpp>
 #include <nvcv/ITensor.hpp>
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/alloc/Requirements.hpp>
@@ -39,12 +40,16 @@ namespace nv { namespace cvop {
 class WarpPerspective final : public IOperator
 {
 public:
-    explicit WarpPerspective();
+    explicit WarpPerspective(const int32_t maxVarShapeBatchSize);
 
     ~WarpPerspective();
 
     void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const NVCVPerspectiveTransform transMatrix,
                     const int32_t flags, const NVCVBorderType borderMode, const float4 borderValue);
+
+    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
+                    cv::ITensor &transMatrix, const int32_t flags, const NVCVBorderType borderMode,
+                    const float4 borderValue);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -52,9 +57,9 @@ private:
     NVCVOperatorHandle m_handle;
 };
 
-inline WarpPerspective::WarpPerspective()
+inline WarpPerspective::WarpPerspective(const int32_t maxVarShapeBatchSize)
 {
-    cv::detail::CheckThrow(nvcvopWarpPerspectiveCreate(&m_handle));
+    cv::detail::CheckThrow(nvcvopWarpPerspectiveCreate(&m_handle, maxVarShapeBatchSize));
     assert(m_handle);
 }
 
@@ -70,6 +75,14 @@ inline void WarpPerspective::operator()(cudaStream_t stream, cv::ITensor &in, cv
 {
     cv::detail::CheckThrow(nvcvopWarpPerspectiveSubmit(m_handle, stream, in.handle(), out.handle(), transMatrix, flags,
                                                        borderMode, borderValue));
+}
+
+inline void WarpPerspective::operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
+                                        cv::ITensor &transMatrix, const int32_t flags, const NVCVBorderType borderMode,
+                                        const float4 borderValue)
+{
+    cv::detail::CheckThrow(nvcvopWarpPerspectiveVarShapeSubmit(m_handle, stream, in.handle(), out.handle(),
+                                                               transMatrix.handle(), flags, borderMode, borderValue));
 }
 
 inline NVCVOperatorHandle WarpPerspective::handle() const noexcept
