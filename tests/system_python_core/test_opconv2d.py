@@ -34,7 +34,7 @@ import util
             nvcv.Border.REPLICATE,
         ),
         (
-            util.create_image_batch(1, nvcv.Format.U16, max_random=1234),
+            util.create_image_batch(1, nvcv.Format.U8, max_random=1234),
             util.create_image_batch(1, nvcv.Format.F32, size=(7, 7), max_random=2),
             util.create_tensor((1, 2), np.int32, "NC", max_random=(7, 7)),
             nvcv.Border.REFLECT,
