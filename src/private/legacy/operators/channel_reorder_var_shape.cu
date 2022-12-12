@@ -18,49 +18,62 @@
  * limitations under the License.
 */
 
-#include "cv_cuda.h"
+#include "../CvCudaLegacy.h"
+#include "../CvCudaLegacyHelpers.hpp"
 
-#include "border.cuh"
-#include "cuda_utils.cuh"
+#include "../CvCudaUtils.cuh"
+
+#include <util/Assert.h>
+#include <util/CheckError.hpp>
+
 #define BLOCK 32
+
+namespace nv::cv::legacy::cuda_op {
 
 template<typename T>
 __global__ void channel_reorder_kernel(const cuda_op::Ptr2dVarShapeNHWC<T> src, cuda_op::Ptr2dVarShapeNHWC<T> dst,
-                                       const int *orders)
+                                       const cuda::Tensor2DWrap<int> orders)
 {
     const int dst_x      = blockIdx.x * blockDim.x + threadIdx.x;
     const int dst_y      = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx  = get_batch_idx();
-    int       out_height = dst.rows[batch_idx], out_width = dst.cols[batch_idx];
+    int       out_height = dst.at_rows(batch_idx), out_width = dst.at_cols(batch_idx);
     if (dst_x >= out_width || dst_y >= out_height)
         return;
-    int order_idx = dst.ch * batch_idx;
-    for (int ch = 0; ch < dst.ch; ch++)
+
+    const int *chOrder = orders.ptr(batch_idx);
+
+    for (int ch = 0; ch < dst.nch; ch++)
     {
-        int src_ch = orders[order_idx + ch];
+        int src_ch = chOrder[ch];
         if (src_ch < 0)
         {
             *dst.ptr(batch_idx, dst_y, dst_x, ch) = 0;
         }
         else
         {
+            NVCV_CUDA_ASSERT(0 <= src_ch && src_ch < src.nch, "Index to source channel %d is out of bounds (%d)",
+                             src_ch, src.nch);
             *dst.ptr(batch_idx, dst_y, dst_x, ch) = *src.ptr(batch_idx, dst_y, dst_x, src_ch);
         }
     }
 }
 
 template<typename T>
-void reorder(const void **d_in, void **d_out, const int batch_size, const int *height, const int *width,
-             const int max_height, const int max_width, int in_channels, int out_channels, const int *orders,
-             cudaStream_t stream)
+void reorder(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
+             const ITensorDataPitchDevice &orderData, int numChannels, cudaStream_t stream)
 {
+    int batch_size = inData.numImages();
+
     dim3 blockSize(BLOCK, BLOCK / 4, 1);
-    dim3 gridSize(divUp(max_width, blockSize.x), divUp(max_height, blockSize.y), batch_size);
+    dim3 gridSize(divUp(inData.maxSize().w, blockSize.x), divUp(inData.maxSize().h, blockSize.y), batch_size);
 
-    cuda_op::Ptr2dVarShapeNHWC<T> src_ptr(batch_size, height, width, in_channels, (T **)d_in);
-    cuda_op::Ptr2dVarShapeNHWC<T> dst_ptr(batch_size, height, width, out_channels, (T **)d_out);
+    cuda_op::Ptr2dVarShapeNHWC<T> src_ptr(inData, numChannels);
+    cuda_op::Ptr2dVarShapeNHWC<T> dst_ptr(outData, numChannels);
+    cuda::Tensor2DWrap<int>       order_ptr(orderData);
 
-    channel_reorder_kernel<T><<<gridSize, blockSize, 0, stream>>>(src_ptr, dst_ptr, orders);
+    channel_reorder_kernel<T><<<gridSize, blockSize, 0, stream>>>(src_ptr, dst_ptr, order_ptr);
+
     checkKernelErrors();
 
 #ifdef CUDA_DEBUG_LOG
@@ -69,35 +82,22 @@ void reorder(const void **d_in, void **d_out, const int batch_size, const int *h
 #endif
 }
 
-namespace cuda_op {
-
-size_t ChannelReorderVarShape::calBufferSize(int batch_size, int channel_size)
+ErrorCode ChannelReorderVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData,
+                                        const IImageBatchVarShapeDataPitchDevice &outData,
+                                        const ITensorDataPitchDevice &orderData, cudaStream_t stream)
 {
-    return (sizeof(void *) * 2 + sizeof(int) * (2 + channel_size)) * batch_size;
-}
-
-int ChannelReorderVarShape::infer(const void **data_in, void **data_out, void *gpu_workspace, void *cpu_workspace,
-                                  const int batch, const size_t buffer_size, const int *orders_in, int out_channels,
-                                  DataShape *input_shape, DataFormat format, DataType data_type, cudaStream_t stream)
-{
-    if (!(format == kNHWC || format == kHWC))
+    if (inData.numImages() != outData.numImages())
     {
-        LOG_ERROR("Invalid DataFormat " << format);
-        return ErrorCode::INVALID_DATA_FORMAT;
-    }
-
-    int channels = input_shape[0].C;
-
-    if (channels > 4)
-    {
-        LOG_ERROR("Invalid channel number " << channels);
+        LOG_ERROR("Input and output batches must have the same number of images");
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    if (out_channels > 4)
+    DataType data_type;
+    int      channels;
     {
-        printf("Invalid channel number %d\n", out_channels);
-        return ErrorCode::INVALID_DATA_SHAPE;
+        cv::ImageFormat fmt(inData.hostFormatList()[0]);
+        data_type = helpers::GetLegacyDataType(fmt);
+        channels  = fmt.numChannels();
     }
 
     if (!(data_type == kCV_8U || data_type == kCV_16U || data_type == kCV_16S || data_type == kCV_32S
@@ -107,63 +107,101 @@ int ChannelReorderVarShape::infer(const void **data_in, void **data_out, void *g
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    const void **inputs  = (const void **)cpu_workspace;
-    void       **outputs = (void **)((char *)inputs + sizeof(void *) * batch);
-    int         *rows    = (int *)((char *)outputs + sizeof(void *) * batch);
-    int         *cols    = (int *)((char *)rows + sizeof(int) * batch);
-    int         *orders  = (int *)((char *)cols + sizeof(int) * batch);
-
-    int max_height = 0, max_width = 0;
-
-    for (int i = 0; i < batch; ++i)
+    if (orderData.ndim() != 2)
     {
-        if (channels != input_shape[i].C)
-        {
-            LOG_ERROR("Invalid Input");
-            return ErrorCode::INVALID_DATA_SHAPE;
-        }
-        inputs[i]  = data_in[i];
-        outputs[i] = data_out[i];
-        rows[i]    = input_shape[i].H;
-        cols[i]    = input_shape[i].W;
-        for (int ch = 0; ch < out_channels; ch++)
-        {
-            int tmp_idx = out_channels * i + ch;
-            if (orders_in[tmp_idx] >= channels)
-            {
-                printf("Invliad channel order %d\n", orders_in[tmp_idx]);
-                return ErrorCode::INVALID_DATA_SHAPE;
-            }
-            orders[tmp_idx] = orders_in[tmp_idx];
-        }
-
-        if (cols[i] > max_width)
-            max_width = cols[i];
-        if (rows[i] > max_height)
-            max_height = rows[i];
+        LOG_ERROR("order tensor must have 2 dimensions, not " << orderData.ndim());
+        return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    const void **inputs_gpu  = (const void **)gpu_workspace;
-    void       **outputs_gpu = (void **)((char *)inputs_gpu + sizeof(void *) * batch);
-    int         *rows_gpu    = (int *)((char *)outputs_gpu + sizeof(void *) * batch);
-    int         *cols_gpu    = (int *)((char *)rows_gpu + sizeof(int) * batch);
-    int         *orders_gpu  = (int *)((char *)cols_gpu + sizeof(int) * batch);
+    if (orderData.layout()[0] != cv::LABEL_BATCH)
+    {
+        LOG_ERROR("Label of the first dimension of order tensor must be " << cv::LABEL_BATCH);
+        return ErrorCode::INVALID_DATA_SHAPE;
+    }
 
-    checkCudaErrors(
-        cudaMemcpyAsync((void *)gpu_workspace, (void *)cpu_workspace, buffer_size, cudaMemcpyHostToDevice, stream));
+    if (orderData.shape(0) != inData.numImages())
+    {
+        LOG_ERROR("Order tensor must have same number of samples as number of input images");
+        return ErrorCode::INVALID_DATA_SHAPE;
+    }
 
-    typedef void (*func_t)(const void **d_in, void **d_out, const int batch_size, const int *height, const int *width,
-                           const int max_width, const int max_height, int in_channels, int out_channels,
-                           const int *orders, cudaStream_t stream);
+    if (orderData.shape(1) > 4)
+    {
+        LOG_ERROR("Second dimension of order tensor must be at most 4, not " << orderData.shape(1));
+        return ErrorCode::INVALID_DATA_SHAPE;
+    }
+
+    for (int i = 0; i < inData.numImages(); ++i)
+    {
+        cv::ImageFormat inFmt(inData.hostFormatList()[i]);
+        cv::ImageFormat outFmt(outData.hostFormatList()[i]);
+
+        if (inFmt.numPlanes() != 1)
+        {
+            LOG_ERROR("Format of input image #" << i << " must have only 1 plane");
+            return ErrorCode::INVALID_DATA_FORMAT;
+        }
+
+        if (outFmt.numPlanes() != 1)
+        {
+            LOG_ERROR("Format of input image #" << i << " must have only 1 plane");
+            return ErrorCode::INVALID_DATA_FORMAT;
+        }
+
+        // Legacy code has this check, let's stick to it.
+        if (inFmt.numChannels() != channels)
+        {
+            LOG_ERROR("Invalid input");
+            return ErrorCode::INVALID_DATA_SHAPE;
+        }
+
+        if (inFmt.numChannels() > 4)
+        {
+            LOG_ERROR("Invalid input channel number " << inFmt.numChannels());
+            return ErrorCode::INVALID_DATA_SHAPE;
+        }
+
+        if (outFmt.numChannels() > orderData.shape(1))
+        {
+            LOG_ERROR("Invalid output channel number " << outFmt.numChannels() << ", must be at most "
+                                                       << orderData.shape(1));
+            return ErrorCode::INVALID_DATA_SHAPE;
+        }
+        // TODO: we can't check if order index is < channels, like legacy does. It'd incur in
+        // perf penalty as the data is currently on device. Instead, we added an assertion in
+        // the cuda kernel, but it's only triggered in debug builds, and leads to an unrecoverable
+        // error (cuda kernel errors are sticky), process must be restarted.
+
+        if (helpers::GetLegacyDataType(inFmt) != data_type)
+        {
+            LOG_ERROR("Format of input images must all have the same data type");
+            return ErrorCode::INVALID_DATA_TYPE;
+        }
+
+        if (helpers::GetLegacyDataType(outFmt) != data_type)
+        {
+            LOG_ERROR("Format of output images must all have the same data type");
+            return ErrorCode::INVALID_DATA_TYPE;
+        }
+    }
+
+    if (inData.numImages() == 0)
+    {
+        // nothing to do
+        return ErrorCode::SUCCESS;
+    }
+
+    typedef void (*func_t)(const IImageBatchVarShapeDataPitchDevice &inData,
+                           const IImageBatchVarShapeDataPitchDevice &outData, const ITensorDataPitchDevice &orderData,
+                           int numChannels, cudaStream_t stream);
 
     static const func_t funcs[6] = {reorder<uchar>, 0, reorder<ushort>, reorder<short>, reorder<int>, reorder<float>};
 
     const func_t func = funcs[data_type];
-    CV_Assert(func != 0);
+    NVCV_ASSERT(func != 0);
 
-    func(inputs_gpu, outputs_gpu, batch, rows_gpu, cols_gpu, max_height, max_width, channels, out_channels, orders_gpu,
-         stream);
-    return 0;
+    func(inData, outData, orderData, channels, stream);
+    return ErrorCode::SUCCESS;
 }
 
-} // namespace cuda_op
+} // namespace nv::cv::legacy::cuda_op

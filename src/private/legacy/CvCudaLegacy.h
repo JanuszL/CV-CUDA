@@ -2141,7 +2141,7 @@ public:
      */
 
     ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
-                    const ITensorDataPitchDevice *order, cudaStream_t stream);
+                    const ITensorDataPitchDevice &order, cudaStream_t stream);
 };
 
 } // namespace nv::cv::legacy::cuda_op
