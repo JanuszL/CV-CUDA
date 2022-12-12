@@ -32,7 +32,6 @@ public:
     virtual ~IImageBatch() = default;
 
     NVCVImageBatchHandle handle() const;
-    IAllocator          &alloc() const;
 
     int32_t capacity() const;
     int32_t numImages() const;
@@ -47,8 +46,6 @@ private:
 
     virtual int32_t doGetCapacity() const  = 0;
     virtual int32_t doGetNumImages() const = 0;
-
-    virtual IAllocator &doGetAlloc() const = 0;
 };
 
 class IImageBatchVarShape : public virtual IImageBatch
@@ -128,11 +125,6 @@ private:
 inline NVCVImageBatchHandle IImageBatch::handle() const
 {
     return doGetHandle();
-}
-
-inline IAllocator &IImageBatch::alloc() const
-{
-    return doGetAlloc();
 }
 
 inline int32_t IImageBatch::capacity() const

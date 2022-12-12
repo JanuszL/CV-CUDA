@@ -34,8 +34,6 @@ public:
     Size2D      size() const;
     ImageFormat format() const;
 
-    IAllocator &alloc() const;
-
     const IImageData *exportData() const;
 
 private:
@@ -43,7 +41,6 @@ private:
     virtual NVCVImageHandle   doGetHandle() const  = 0;
     virtual Size2D            doGetSize() const    = 0;
     virtual ImageFormat       doGetFormat() const  = 0;
-    virtual IAllocator       &doGetAlloc() const   = 0;
     virtual const IImageData *doExportData() const = 0;
 };
 
@@ -69,11 +66,6 @@ inline Size2D IImage::size() const
 inline ImageFormat IImage::format() const
 {
     return doGetFormat();
-}
-
-inline IAllocator &IImage::alloc() const
-{
-    return doGetAlloc();
 }
 
 inline const IImageData *IImage::exportData() const

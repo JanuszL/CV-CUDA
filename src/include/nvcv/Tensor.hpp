@@ -29,15 +29,12 @@ public:
 
 protected:
     const ITensorData *doExportData() const override;
-    IAllocator        &doGetAlloc() const override;
     NVCVTensorHandle   doGetHandle() const override;
 
     mutable detail::Optional<TensorDataPitchDevice> m_optData;
 
 private:
     NVCVTensorHandle m_handle;
-
-    mutable detail::Optional<AllocatorWrapHandle> m_alloc;
 
     int          doGetNumDim() const override;
     TensorShape  doGetShape() const override;
@@ -61,11 +58,6 @@ public:
     explicit Tensor(const TensorShape &shape, PixelType dtype, IAllocator *alloc = nullptr);
     explicit Tensor(int numImages, Size2D imgSize, ImageFormat fmt, IAllocator *alloc = nullptr);
     ~Tensor();
-
-private:
-    IAllocator *m_alloc;
-
-    IAllocator &doGetAlloc() const override;
 };
 
 // TensorWrapData definition -------------------------------------
@@ -154,18 +146,6 @@ inline PixelType TensorWrapHandle::doGetDataType() const
     return PixelType{out};
 }
 
-inline IAllocator &TensorWrapHandle::doGetAlloc() const
-{
-    if (!m_alloc)
-    {
-        NVCVAllocatorHandle halloc;
-        detail::CheckThrow(nvcvTensorGetAllocator(m_handle, &halloc));
-        m_alloc.emplace(halloc);
-    }
-
-    return *m_alloc;
-}
-
 inline const ITensorData *TensorWrapHandle::doExportData() const
 {
     NVCVTensorData data;
@@ -206,7 +186,6 @@ inline Tensor::Tensor(const Requirements &reqs, IAllocator *alloc)
             detail::CheckThrow(nvcvTensorConstruct(&reqs, alloc ? alloc->handle() : nullptr, &handle));
             return handle;
         }())
-    , m_alloc(alloc)
 {
 }
 
@@ -227,18 +206,6 @@ inline Tensor::~Tensor()
     // touch the handle, it's ok, or else we'd have to use some sort of
     // base-from-member idiom to get the destruction order right.
     nvcvTensorDestroy(TensorWrapHandle::doGetHandle());
-}
-
-inline IAllocator &Tensor::doGetAlloc() const
-{
-    if (m_alloc != nullptr)
-    {
-        return *m_alloc;
-    }
-    else
-    {
-        return TensorWrapHandle::doGetAlloc();
-    }
 }
 
 // TensorWrapData implementation -------------------------------------

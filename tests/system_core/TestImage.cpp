@@ -36,8 +36,6 @@ TEST(Image, wip_create)
     const nvcv::IImageData *data = img.exportData();
     ASSERT_NE(nullptr, data);
 
-    EXPECT_NE(nullptr, dynamic_cast<nvcv::AllocatorWrapHandle *>(&img.alloc()));
-
     auto *devdata = dynamic_cast<const nvcv::IImageDataPitchDevice *>(data);
     ASSERT_NE(nullptr, devdata);
 
@@ -79,8 +77,6 @@ TEST(Image, wip_create_managed)
 
     nvcv::Image img({163, 117}, nvcv::FMT_RGBA8, &managedAlloc);
 
-    EXPECT_EQ(&managedAlloc, &img.alloc());
-
     const nvcv::IImageData *data = img.exportData();
     ASSERT_NE(nullptr, data);
 
@@ -117,8 +113,6 @@ TEST(ImageWrapData, wip_create)
     nvcv::ImageWrapData img{
         nvcv::ImageDataPitchDevice{nvcv::FMT_U8, buf}
     };
-
-    EXPECT_NE(nullptr, dynamic_cast<nvcv::AllocatorWrapHandle *>(&img.alloc()));
 
     EXPECT_EQ(nvcv::Size2D(173, 79), img.size());
     EXPECT_EQ(nvcv::FMT_U8, img.format());
