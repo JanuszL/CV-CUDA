@@ -392,20 +392,32 @@ struct Ptr2dVarShapeNHWC
     {
     }
 
-    __host__ __forceinline__ Ptr2dVarShapeNHWC(const cv::IImageBatchVarShapeDataPitchDevice &data)
+    __host__ __forceinline__ Ptr2dVarShapeNHWC(const cv::IImageBatchVarShapeDataPitchDevice &data, int nch_ = -1)
         : batches(data.numImages())
         , imgList(data.imageList())
         , nch(
               [&]
               {
-                  if (!data.uniqueFormat())
+                  // If not using number of channels,
+                  if (nch_ < 0)
                   {
-                      throw std::runtime_error("Images in a batch must all have the same format");
+                      // Require that all images have the same format (it'd be better if we had data.uniquePixelType)
+                      if (!data.uniqueFormat())
+                      {
+                          throw std::runtime_error("Images in a batch must all have the same format");
+                      }
+
+                      assert(1 == data.uniqueFormat().numPlanes() && "This class is only for NHWC");
+
+                      return data.uniqueFormat().numChannels();
                   }
-
-                  assert(1 == data.uniqueFormat().numPlanes() && "This class is only for NHWC");
-
-                  return data.uniqueFormat().numChannels();
+                  else
+                  {
+                      // Use the given number of channels.
+                      // The assumption here is that all formats have one plane and this number of channels,
+                      // although they can be swizzled.
+                      return nch_;
+                  }
               }())
     {
     }
