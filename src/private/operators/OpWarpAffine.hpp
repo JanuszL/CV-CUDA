@@ -23,6 +23,7 @@
 #include "IOperator.hpp"
 
 #include <cuda_runtime.h>
+#include <nvcv/IImageBatch.hpp>
 #include <nvcv/ITensor.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 #include <operators/OpWarpAffine.h>
@@ -41,13 +42,18 @@ namespace nv::cvop::priv {
 class WarpAffine final : public OperatorBase
 {
 public:
-    explicit WarpAffine();
+    explicit WarpAffine(const int32_t maxVarShapeBatchSize);
 
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, const NVCVAffineTransform xform,
-                    const int flags, const NVCVBorderType borderMode, const float4 borderValueconst) const;
+                    const int32_t flags, const NVCVBorderType borderMode, const float4 borderValueconst) const;
+
+    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
+                    const cv::ITensor &transMatrix, const int32_t flags, const NVCVBorderType borderMode,
+                    const float4 borderValue) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::WarpAffine> m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::WarpAffine>         m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::WarpAffineVarShape> m_legacyOpVarShape;
 };
 
 } // namespace nv::cvop::priv

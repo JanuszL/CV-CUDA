@@ -27,6 +27,7 @@
 #include "detail/Export.h"
 
 #include <cuda_runtime.h>
+#include <nvcv/ImageBatch.h>
 #include <nvcv/Status.h>
 #include <nvcv/Tensor.h>
 
@@ -42,11 +43,13 @@ extern "C"
  * @param [out] handle Where the image instance handle will be written to.
  *                     + Must not be NULL.
  *
+ * @param [in] maxVarShapeBatchSize maximum batch size for var shape operator
+ *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Handle is null.
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the operator.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_OP_PUBLIC NVCVStatus nvcvopWarpAffineCreate(NVCVOperatorHandle *handle);
+NVCV_OP_PUBLIC NVCVStatus nvcvopWarpAffineCreate(NVCVOperatorHandle *handle, const int32_t maxVarShapeBatchSize);
 
 /** Executes the WarpAffine operation on the given cuda stream. This operation does not
  *  wait for completion.
@@ -120,8 +123,14 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopWarpAffineCreate(NVCVOperatorHandle *handle);
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_OP_PUBLIC NVCVStatus nvcvopWarpAffineSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
-                                                 NVCVTensorHandle out, const NVCVAffineTransform xform, const int flags,
-                                                 const NVCVBorderType borderMode, const float4 borderValue);
+                                                 NVCVTensorHandle out, const NVCVAffineTransform xform,
+                                                 const int32_t flags, const NVCVBorderType borderMode,
+                                                 const float4 borderValue);
+
+NVCV_OP_PUBLIC NVCVStatus nvcvopWarpAffineVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
+                                                         NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                                                         NVCVTensorHandle transMatrix, const int32_t flags,
+                                                         const NVCVBorderType borderMode, const float4 borderValue);
 
 #ifdef __cplusplus
 }

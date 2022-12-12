@@ -23,15 +23,16 @@ namespace nv::cvop::priv {
 
 namespace leg = cv::legacy;
 
-WarpAffine::WarpAffine()
+WarpAffine::WarpAffine(const int32_t maxVarShapeBatchSize)
 {
     leg::cuda_op::DataShape maxIn, maxOut;
     //maxIn/maxOut not used by op.
-    m_legacyOp = std::make_unique<leg::cuda_op::WarpAffine>(maxIn, maxOut);
+    m_legacyOp         = std::make_unique<leg::cuda_op::WarpAffine>(maxIn, maxOut);
+    m_legacyOpVarShape = std::make_unique<leg::cuda_op::WarpAffineVarShape>(maxVarShapeBatchSize);
 }
 
 void WarpAffine::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
-                            const NVCVAffineTransform xform, const int flags, const NVCVBorderType borderMode,
+                            const NVCVAffineTransform xform, const int32_t flags, const NVCVBorderType borderMode,
                             const float4 borderValue) const
 {
     auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
@@ -48,6 +49,33 @@ void WarpAffine::operator()(cudaStream_t stream, const cv::ITensor &in, const cv
     }
 
     NVCV_CHECK_THROW(m_legacyOp->infer(*inData, *outData, xform, flags, borderMode, borderValue, stream));
+}
+
+void WarpAffine::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
+                            const cv::ITensor &transMatrix, const int32_t flags, const NVCVBorderType borderMode,
+                            const float4 borderValue) const
+{
+    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
+    if (inData == nullptr)
+    {
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be varshape image batch");
+    }
+
+    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(out.exportData(stream));
+    if (outData == nullptr)
+    {
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be varshape image batch");
+    }
+
+    auto *transMatrixData = dynamic_cast<const cv::ITensorDataPitchDevice *>(transMatrix.exportData());
+    if (outData == nullptr)
+    {
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
+                            "transformation matrix must be device-accessible, pitch-linear tensor");
+    }
+
+    NVCV_CHECK_THROW(
+        m_legacyOpVarShape->infer(*inData, *outData, *transMatrixData, flags, borderMode, borderValue, stream));
 }
 
 } // namespace nv::cvop::priv

@@ -1871,7 +1871,8 @@ public:
      * @param stream for the asynchronous execution.
     */
     ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, const float *xform,
-                    const int flags, const NVCVBorderType borderMode, const float4 borderValue, cudaStream_t stream);
+                    const int32_t flags, const NVCVBorderType borderMode, const float4 borderValue,
+                    cudaStream_t stream);
 };
 
 class WarpPerspective : public CudaBaseOp
@@ -1946,6 +1947,45 @@ public:
      * @param data_type data type of the input images, e.g. kCV_32F.
      * @param stream for the asynchronous execution.
      *
+     */
+    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
+                    const ITensorDataPitchDevice &transMatrix, const int32_t flags, const NVCVBorderType borderMode,
+                    const float4 borderValue, cudaStream_t stream);
+
+protected:
+    const int m_maxBatchSize;
+    float    *m_transformationMatrix = nullptr;
+};
+
+class WarpAffineVarShape : public CudaBaseOp
+{
+public:
+    WarpAffineVarShape() = delete;
+
+    WarpAffineVarShape(const int32_t maxBatchSize);
+
+    ~WarpAffineVarShape();
+    /**
+     * @brief Applies an affine transformation to an image. Same function as cv::warpAffine.
+     * @param inputs gpu pointer, inputs[i] is input image where i ranges from 0 to batch-1, whose shape is
+     * input_shape[i] and type is data_type.
+     * @param outputs gpu pointer, outputs[i] is output image where i ranges from 0 to batch-1, whose size is dsize[i]
+     * and type is data_type.
+     * @param gpu_workspace gpu pointer, gpu memory used to store the temporary variable.
+     * @param cpu_workspace cpu pointer, storage transformation matrix or inverse transformation matrix. It has the same
+     * size as trans_matrix, e.g. 3x3.
+     * @param batch batch size of the input images.
+     * @param buffer_size size of the gpu_workspace/cpu_workspace.
+     * @param dsize cpu pointer, sizes of the output images.
+     * @param trans_matrix cpu pointer, 2×3 transformation matrix.
+     * @param flags Combination of interpolation methods(INTER_NEAREST or INTER_LINEAR) and the optional flag
+     * WARP_INVERSE_MAP, that sets trans_matrix as the inverse transformation ( dst→src ).
+     * @param borderMode pixel extrapolation method (BORDER_CONSTANT or BORDER_REPLICATE).
+     * @param borderValue used in case of a constant border.
+     * @param input_shape cpu pointer, shapes of the input images.
+     * @param format format of the input images, e.g. kNHWC.
+     * @param data_type data type of the input images, e.g. kCV_32F.
+     * @param stream for the asynchronous execution.
      */
     ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
                     const ITensorDataPitchDevice &transMatrix, const int32_t flags, const NVCVBorderType borderMode,
