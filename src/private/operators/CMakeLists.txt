@@ -33,6 +33,7 @@ add_library(nvcv_private_operators STATIC
     OpWarpPerspective.cpp
     OpComposite.cpp
     OpChannelReorder.cpp
+    OpFlip.cpp
 )
 
 target_include_directories(nvcv_private_operators
