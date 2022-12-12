@@ -36,7 +36,7 @@ std::shared_ptr<Tensor> EraseInto(Tensor &input, Tensor &output, Tensor &anchor,
 
     if (anchor.layout()->ndim() != 1 || (*anchor.layout())[0] != 'N')
     {
-        throw std::runtime_error(FormatString("Layout of anchor must be 'N'."));
+        throw std::runtime_error("Layout of anchor must be 'N'.");
     }
 
     Shape shape = anchor.shape();
