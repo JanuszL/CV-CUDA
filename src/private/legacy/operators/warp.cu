@@ -109,6 +109,16 @@ void warpAffine(const nvcv::TensorDataAccessPitchImagePlanar &inData,
     warp_caller<WarpAffineTransform, T>(src_ptr, dst_ptr, transform, interpolation, borderMode, borderValue, stream);
 }
 
+template<typename T>
+void warpPerspective(const nvcv::TensorDataAccessPitchImagePlanar &inData,
+                     const nvcv::TensorDataAccessPitchImagePlanar &outData, PerspectiveTransform transform,
+                     const int interpolation, int borderMode, const float4 borderValue, cudaStream_t stream)
+{
+    Ptr2dNHWC<T> src_ptr(inData);
+    Ptr2dNHWC<T> dst_ptr(outData);
+    warp_caller<PerspectiveTransform, T>(src_ptr, dst_ptr, transform, interpolation, borderMode, borderValue, stream);
+}
+
 static void invertMat(const float *M, float *h_aCoeffs)
 {
     // M is stored in row-major format M[0,0], M[0,1], M[0,2], M[1,0], M[1,1], M[1,2]
@@ -203,6 +213,115 @@ ErrorCode WarpAffine::infer(const ITensorDataPitchDevice &inData, const ITensorD
     if (flags & NVCV_WARP_INVERSE_MAP)
     {
         invertMat(xform, transform.xform);
+    }
+
+    func(*inAccess, *outAccess, transform, interpolation, borderMode, borderValue, stream);
+
+    return ErrorCode::SUCCESS;
+}
+
+size_t WarpPerspective::calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type)
+{
+    return 9 * sizeof(float);
+}
+
+ErrorCode WarpPerspective::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+                                 const float *transMatrix, const int32_t flags, const NVCVBorderType borderMode,
+                                 const float4 borderValue, cudaStream_t stream)
+{
+    DataFormat input_format  = GetLegacyDataFormat(inData.layout());
+    DataFormat output_format = GetLegacyDataFormat(outData.layout());
+
+    if (input_format != output_format)
+    {
+        LOG_ERROR("Invalid DataFormat between input (" << input_format << ") and output (" << output_format << ")");
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    DataFormat format = input_format;
+
+    if (!(format == kNHWC || format == kHWC))
+    {
+        LOG_ERROR("Invalid DataFormat " << format);
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    NVCV_ASSERT(inAccess);
+
+    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    NVCV_ASSERT(outAccess);
+
+    cuda_op::DataType  data_type   = GetLegacyDataType(inData.dtype());
+    cuda_op::DataShape input_shape = GetLegacyDataShape(inAccess->infoShape());
+
+    int       channels      = input_shape.C;
+    const int interpolation = flags & NVCV_INTERP_MAX;
+
+    if (channels > 4)
+    {
+        LOG_ERROR("Invalid channel number " << channels);
+        return ErrorCode::INVALID_DATA_SHAPE;
+    }
+
+    if (!(data_type == kCV_8U || data_type == kCV_8S || data_type == kCV_16U || data_type == kCV_16S
+          || data_type == kCV_32S || data_type == kCV_32F))
+    {
+        LOG_ERROR("Invalid DataType " << data_type);
+        return ErrorCode::INVALID_DATA_TYPE;
+    }
+
+    NVCV_ASSERT(interpolation == NVCV_INTERP_NEAREST || interpolation == NVCV_INTERP_LINEAR
+                || interpolation == NVCV_INTERP_CUBIC);
+    NVCV_ASSERT(borderMode == NVCV_BORDER_REFLECT101 || borderMode == NVCV_BORDER_REPLICATE
+                || borderMode == NVCV_BORDER_CONSTANT || borderMode == NVCV_BORDER_REFLECT
+                || borderMode == NVCV_BORDER_WRAP);
+
+    typedef void (*func_t)(const nvcv::TensorDataAccessPitchImagePlanar &inData,
+                           const nvcv::TensorDataAccessPitchImagePlanar &outData, PerspectiveTransform transform,
+                           const int interpolation, int borderMode, const float4 borderValue, cudaStream_t stream);
+
+    static const func_t funcs[6][4] = {
+        {      warpPerspective<uchar>,  0 /*warpPerspective<uchar2>*/,      warpPerspective<uchar3>,warpPerspective<uchar4>                                                                                                    },
+        {0 /*warpPerspective<schar>*/,   0 /*warpPerspective<char2>*/, 0 /*warpPerspective<char3>*/,
+         0 /*warpPerspective<char4>*/                                                                                        },
+        {     warpPerspective<ushort>, 0 /*warpPerspective<ushort2>*/,     warpPerspective<ushort3>, warpPerspective<ushort4>},
+        {      warpPerspective<short>,  0 /*warpPerspective<short2>*/,      warpPerspective<short3>,  warpPerspective<short4>},
+        {  0 /*warpPerspective<int>*/,    0 /*warpPerspective<int2>*/,  0 /*warpPerspective<int3>*/,
+         0 /*warpPerspective<int4>*/                                                                                         },
+        {      warpPerspective<float>,  0 /*warpPerspective<float2>*/,      warpPerspective<float3>,  warpPerspective<float4>}
+    };
+
+    const func_t func = funcs[data_type][channels - 1];
+    NVCV_ASSERT(func != 0);
+
+    PerspectiveTransform transform(transMatrix);
+
+    if (flags & NVCV_WARP_INVERSE_MAP)
+    {
+        cuda::math::Matrix<float, 3, 3> tempMatrixForInverse;
+
+        tempMatrixForInverse[0][0] = (float)(transMatrix[0]);
+        tempMatrixForInverse[0][1] = (float)(transMatrix[1]);
+        tempMatrixForInverse[0][2] = (float)(transMatrix[2]);
+        tempMatrixForInverse[1][0] = (float)(transMatrix[3]);
+        tempMatrixForInverse[1][1] = (float)(transMatrix[4]);
+        tempMatrixForInverse[1][2] = (float)(transMatrix[5]);
+        tempMatrixForInverse[2][0] = (float)(transMatrix[6]);
+        tempMatrixForInverse[2][1] = (float)(transMatrix[7]);
+        tempMatrixForInverse[2][2] = (float)(transMatrix[8]);
+
+        math::inv_inplace(tempMatrixForInverse);
+
+        transform.xform[0] = tempMatrixForInverse[0][0];
+        transform.xform[1] = tempMatrixForInverse[0][1];
+        transform.xform[2] = tempMatrixForInverse[0][2];
+        transform.xform[3] = tempMatrixForInverse[1][0];
+        transform.xform[4] = tempMatrixForInverse[1][1];
+        transform.xform[5] = tempMatrixForInverse[1][2];
+        transform.xform[6] = tempMatrixForInverse[2][0];
+        transform.xform[7] = tempMatrixForInverse[2][1];
+        transform.xform[8] = tempMatrixForInverse[2][2];
     }
 
     func(*inAccess, *outAccess, transform, interpolation, borderMode, borderValue, stream);

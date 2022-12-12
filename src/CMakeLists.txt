@@ -51,6 +51,7 @@ add_library(nvcv SHARED
     operators/OpMorphology.cpp
     operators/OpCvtColor.cpp
     operators/OpWarpAffine.cpp
+    operators/OpWarpPerspective.cpp
 )
 
 target_link_libraries(nvcv PRIVATE

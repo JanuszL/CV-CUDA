@@ -142,6 +142,34 @@ struct WarpAffineTransform
     float xform[9];
 };
 
+struct PerspectiveTransform
+{
+    PerspectiveTransform(const float *transMatrix)
+    {
+        xform[0] = transMatrix[0];
+        xform[1] = transMatrix[1];
+        xform[2] = transMatrix[2];
+        xform[3] = transMatrix[3];
+        xform[4] = transMatrix[4];
+        xform[5] = transMatrix[5];
+        xform[6] = transMatrix[6];
+        xform[7] = transMatrix[7];
+        xform[8] = transMatrix[8];
+    }
+
+    static __device__ __forceinline__ float2 calcCoord(const float *c_warpMat, int x, int y)
+    {
+        const float coeff = 1.0f / (c_warpMat[6] * x + c_warpMat[7] * y + c_warpMat[8]);
+
+        const float xcoo = coeff * (c_warpMat[0] * x + c_warpMat[1] * y + c_warpMat[2]);
+        const float ycoo = coeff * (c_warpMat[3] * x + c_warpMat[4] * y + c_warpMat[5]);
+
+        return make_float2(xcoo, ycoo);
+    }
+
+    float xform[9];
+};
+
 // cuda base operator class
 class CudaBaseOp
 {
@@ -1844,6 +1872,47 @@ public:
     */
     ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, const float *xform,
                     const int flags, const NVCVBorderType borderMode, const float4 borderValue, cudaStream_t stream);
+};
+
+class WarpPerspective : public CudaBaseOp
+{
+public:
+    WarpPerspective() = delete;
+
+    WarpPerspective(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * @brief Applies a perspective transformation to an image. Same function as cv::warpPerspective.
+     * @param inputs gpu pointer, inputs[0] are batched input images, whose shape is input_shape and type is data_type.
+     * @param outputs gpu pointer, outputs[0] are batched output images that have the size dsize and the same type as
+     * data_type.
+     * @param workspace gpu pointer, gpu memory used to store the temporary variables.
+     * @param trans_matrix cpu pointer, 3×3 transformation matrix.
+     * @param cpu_workspace cpu pointer, storage transformation matrix or inverse transformation matrix. It has the same
+     * size as trans_matrix, e.g. 3x3.
+     * @param dsize size of the output images.
+     * @param flags Combination of interpolation methods(INTER_NEAREST or INTER_LINEAR) and the optional flag
+     * WARP_INVERSE_MAP, that sets trans_matrix as the inverse transformation ( dst→src ).
+     * @param borderMode pixel extrapolation method (BORDER_CONSTANT or BORDER_REPLICATE).
+     * @param borderValue used in case of a constant border.
+     * @param input_shape shape of the input images.
+     * @param format format of the input images, e.g. kNHWC.
+     * @param data_type data type of the input images, e.g. kCV_32F.
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+                    const float *transMatrix, const int32_t flags, const NVCVBorderType borderMode,
+                    const float4 borderValue, cudaStream_t stream);
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param max_input_shape maximum input DataShape that may be used
+     * @param max_output_shape maximum output DataShape that may be used
+     * @param max_data_type DataType with the maximum size that may be used
+     */
+    size_t    calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
 };
 
 } // namespace nv::cv::legacy::cuda_op
