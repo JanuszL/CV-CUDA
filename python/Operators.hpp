@@ -34,6 +34,7 @@ void ExportOpLaplacian(py::module &m);
 void ExportOpAverageBlur(py::module &m);
 void ExportOpConv2D(py::module &m);
 void ExportOpBilateralFilter(py::module &m);
+void ExportOpCenterCrop(py::module &m);
 
 // Helper class that serves as python-side operator class.
 // OP: native operator class
