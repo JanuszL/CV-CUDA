@@ -22,8 +22,12 @@ python3 ./scripts/export_resnet.py
 # Serialize models
 ./scripts/serialize_models.sh
 
-# Run python sample
+# Run classification sample for single image with batch size 1
 python3 ./classification/python/inference.py -i ./assets/tabby_tiger_cat.jpg -l ./models/imagenet-classes.txt -b 1
+# Run classification sample for single image with batch size 4, Uses Same image multiple times
+python3 ./classification/python/inference.py -i ./assets/tabby_tiger_cat.jpg -l ./models/imagenet-classes.txt -b 4
+# Run classification sample for image directory as input with batch size 2
+python3 ./classification/python/inference.py -i ./assets -l ./models/imagenet-classes.txt -b 2
 
 # Classification sample
 # Batch size 1
