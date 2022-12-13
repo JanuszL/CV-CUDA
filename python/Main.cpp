@@ -81,4 +81,5 @@ PYBIND11_MODULE(nvcv, m)
     ExportOpLaplacian(m);
     ExportOpAverageBlur(m);
     ExportOpConv2D(m);
+    ExportOpBilateralFilter(m);
 }
