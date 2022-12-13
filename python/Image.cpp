@@ -455,6 +455,7 @@ Image::Image(const Size2D &size, cv::ImageFormat fmt)
 }
 
 Image::Image(std::vector<std::shared_ptr<CudaBuffer>> bufs, const cv::IImageDataPitchDevice &imgData)
+    : m_key{} // it's a wrap!
 {
     if (bufs.size() == 1)
     {
@@ -467,10 +468,6 @@ Image::Image(std::vector<std::shared_ptr<CudaBuffer>> bufs, const cv::IImageData
     }
 
     m_impl = std::make_unique<cv::ImageWrapData>(imgData);
-    m_key  = Key{
-        {m_impl->size().w, m_impl->size().h},
-        m_impl->format()
-    };
 }
 
 Image::Image(std::vector<py::buffer> bufs, const cv::IImageDataPitchHost &hostData)
