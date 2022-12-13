@@ -200,14 +200,14 @@ Tensor::Tensor(const cv::Tensor::Requirements &reqs)
 
 Tensor::Tensor(const NVCVTensorData &data, py::object wrappedObject)
     : m_impl{std::make_unique<cv::TensorWrapData>(cv::TensorDataWrap{data})}
-    , m_key{m_impl->shape(), m_impl->dtype()}
+    , m_key{}
     , m_wrappedObject(wrappedObject)
 {
 }
 
 Tensor::Tensor(Image &img)
     : m_impl{std::make_unique<cv::TensorWrapImage>(img.impl())}
-    , m_key{m_impl->shape(), m_impl->dtype()}
+    , m_key{}
     , m_wrappedObject(py::cast(img))
 {
 }
