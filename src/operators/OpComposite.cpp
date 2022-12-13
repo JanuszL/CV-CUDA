@@ -52,3 +52,15 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCompositeSubmit,
             priv::ToDynamicRef<priv_op::Composite>(handle)(stream, foreground, background, mask, output);
         });
 }
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCompositeVarShapeSubmit,
+                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle fg, NVCVImageBatchHandle bg,
+                 NVCVImageBatchHandle fgMask, NVCVImageBatchHandle out))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            nv::cv::ImageBatchVarShapeWrapHandle foreground(fg), background(bg), mask(fgMask), output(out);
+            priv::ToDynamicRef<priv_op::Composite>(handle)(stream, foreground, background, mask, output);
+        });
+}

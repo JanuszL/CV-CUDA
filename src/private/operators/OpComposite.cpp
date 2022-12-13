@@ -30,7 +30,8 @@ Composite::Composite()
 {
     leg::cuda_op::DataShape maxIn, maxOut;
     //maxIn/maxOut not used by op.
-    m_legacyOp = std::make_unique<leg::cuda_op::Composite>(maxIn, maxOut);
+    m_legacyOp         = std::make_unique<leg::cuda_op::Composite>(maxIn, maxOut);
+    m_legacyOpVarShape = std::make_unique<leg::cuda_op::CompositeVarShape>(maxIn, maxOut);
 }
 
 void Composite::operator()(cudaStream_t stream, const cv::ITensor &foreground, const cv::ITensor &background,
@@ -64,6 +65,41 @@ void Composite::operator()(cudaStream_t stream, const cv::ITensor &foreground, c
     }
 
     NVCV_CHECK_THROW(m_legacyOp->infer(*foregroundData, *backgroundData, *fgMaskData, *outData, stream));
+}
+
+void Composite::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &foreground,
+                           const cv::IImageBatchVarShape &background, const cv::IImageBatchVarShape &fgMask,
+                           const cv::IImageBatchVarShape &output) const
+{
+    auto *foregroundData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(foreground.exportData(stream));
+    if (foregroundData == nullptr)
+    {
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
+                            "Input foreground must be device-acessible, varshape image batch");
+    }
+
+    auto *backgroundData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(background.exportData(stream));
+    if (backgroundData == nullptr)
+    {
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
+                            "Input background must be device-acessible, varshape image batch");
+    }
+
+    auto *fgMaskData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(fgMask.exportData(stream));
+    if (fgMaskData == nullptr)
+    {
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
+                            "Input fgMask must be device-acessible, varshape image batch");
+    }
+
+    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(output.exportData(stream));
+    if (outData == nullptr)
+    {
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
+                            "Output must be device-acessible, varshape image batch");
+    }
+
+    NVCV_CHECK_THROW(m_legacyOpVarShape->infer(*foregroundData, *backgroundData, *fgMaskData, *outData, stream));
 }
 
 } // namespace nv::cvop::priv

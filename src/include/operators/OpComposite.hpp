@@ -30,6 +30,7 @@
 #include "OpComposite.h"
 
 #include <cuda_runtime.h>
+#include <nvcv/IImageBatch.hpp>
 #include <nvcv/ITensor.hpp>
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/alloc/Requirements.hpp>
@@ -45,6 +46,9 @@ public:
 
     void operator()(cudaStream_t stream, cv::ITensor &foreground, cv::ITensor &background, cv::ITensor &fgMask,
                     cv::ITensor &output);
+
+    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &foreground, cv::IImageBatchVarShape &background,
+                    cv::IImageBatchVarShape &fgMask, cv::IImageBatchVarShape &output);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -69,6 +73,14 @@ inline void Composite::operator()(cudaStream_t stream, cv::ITensor &foreground, 
 {
     cv::detail::CheckThrow(nvcvopCompositeSubmit(m_handle, stream, foreground.handle(), background.handle(),
                                                  fgMask.handle(), output.handle()));
+}
+
+inline void Composite::operator()(cudaStream_t stream, cv::IImageBatchVarShape &foreground,
+                                  cv::IImageBatchVarShape &background, cv::IImageBatchVarShape &fgMask,
+                                  cv::IImageBatchVarShape &output)
+{
+    cv::detail::CheckThrow(nvcvopCompositeVarShapeSubmit(m_handle, stream, foreground.handle(), background.handle(),
+                                                         fgMask.handle(), output.handle()));
 }
 
 inline NVCVOperatorHandle Composite::handle() const noexcept

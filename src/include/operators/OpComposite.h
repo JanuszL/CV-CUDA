@@ -118,6 +118,10 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopCompositeSubmit(NVCVOperatorHandle handle, cudaS
                                                 NVCVTensorHandle foreground, NVCVTensorHandle background,
                                                 NVCVTensorHandle fgMask, NVCVTensorHandle output);
 
+NVCV_OP_PUBLIC NVCVStatus nvcvopCompositeVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
+                                                        NVCVImageBatchHandle foreground,
+                                                        NVCVImageBatchHandle background, NVCVImageBatchHandle fgMask,
+                                                        NVCVImageBatchHandle output);
 /** @} */
 
 #ifdef __cplusplus

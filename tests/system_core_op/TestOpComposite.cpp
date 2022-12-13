@@ -19,6 +19,7 @@
 
 #include <common/ValueTests.hpp>
 #include <nvcv/Image.hpp>
+#include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
@@ -83,16 +84,16 @@ static void setGoldBuffer(std::vector<uint8_t> &gold, std::vector<uint8_t> &fg, 
 NVCV_TEST_SUITE_P(OpComposite, test::ValueList<int, int, int, int, int>
 {
     //inWidth, inHeight, in_channels, out_channels, numberImages
-    {       5,        4,          3,             3,          1},
-    {       5,        4,          3,             3,          4},
-    {       5,        4,          3,             4,          1},
-    {       5,        4,          3,             4,          4},
+    {       8,        6,          3,             3,          1},
+    {       8,        6,          3,             3,          4},
+    {       8,        6,          3,             4,          1},
+    {       8,        6,          3,             4,          4},
 
     //inWidth, inHeight, in_channels, out_channels, numberImages
-    {       4,        4,          3,             3,          1},
-    {       4,        4,          3,             3,          4},
-    {       4,        4,          3,             4,          1},
-    {       4,        4,          3,             4,          4},
+    {      16,       16,           3,            3,          1},
+    {      16,       16,           3,            3,          4},
+    {      16,       16,           3,            4,          1},
+    {      16,       16,           3,            4,          4},
 });
 
 // clang-format on
@@ -227,6 +228,156 @@ TEST_P(OpComposite, tensor_correct_output)
         print_img<uint8_t>(goldVec, outVecRowPitch, outHeight, "Golden output");
         print_img<uint8_t>(testVec, outVecRowPitch, outHeight, "Test output");
 #endif
+        EXPECT_EQ(goldVec, testVec);
+    }
+}
+
+TEST_P(OpComposite, varshape_correct_output)
+{
+    cudaStream_t stream;
+    EXPECT_EQ(cudaSuccess, cudaStreamCreate(&stream));
+
+    int inWidth        = GetParamValue<0>();
+    int inHeight       = GetParamValue<1>();
+    int inChannels     = GetParamValue<2>();
+    int outChannels    = GetParamValue<3>();
+    int numberOfImages = GetParamValue<4>();
+
+    nvcv::ImageFormat inFormat, outFormat;
+    nvcv::ImageFormat maskFormat = nvcv::FMT_U8;
+
+    if (inChannels == 3)
+        inFormat = nvcv::FMT_RGB8;
+    if (inChannels == 4)
+        inFormat = nvcv::FMT_RGBA8;
+    if (outChannels == 3)
+        outFormat = nvcv::FMT_RGB8;
+    if (outChannels == 4)
+        outFormat = nvcv::FMT_RGBA8;
+
+    assert(inChannels <= outChannels);
+
+    std::default_random_engine rng;
+
+    // Create input varshape
+
+    std::uniform_int_distribution<int> udistWidth(inWidth * 0.8, inWidth * 1.1);
+    std::uniform_int_distribution<int> udistHeight(inHeight * 0.8, inHeight * 1.1);
+
+    std::vector<std::unique_ptr<nvcv::Image>> imgForeground;
+    std::vector<std::unique_ptr<nvcv::Image>> imgBackground;
+    std::vector<std::unique_ptr<nvcv::Image>> imgFgMask;
+    std::vector<std::unique_ptr<nvcv::Image>> imgOut;
+
+    std::vector<std::vector<uint8_t>> foregroundVec(numberOfImages);
+    std::vector<std::vector<uint8_t>> backgroundVec(numberOfImages);
+    std::vector<std::vector<uint8_t>> fgMaskVec(numberOfImages);
+
+    std::vector<nvcv::Size2D> sizeVec(numberOfImages);
+
+    std::vector<int> inVecRowPitch(numberOfImages);
+    std::vector<int> fgMaskVecRowPitch(numberOfImages);
+
+    for (int i = 0; i < numberOfImages; i++)
+    {
+        nvcv::Size2D size{udistWidth(rng), udistHeight(rng)};
+        sizeVec[i] = size;
+
+        imgForeground.emplace_back(std::make_unique<nvcv::Image>(size, inFormat));
+        imgBackground.emplace_back(std::make_unique<nvcv::Image>(size, inFormat));
+        imgFgMask.emplace_back(std::make_unique<nvcv::Image>(size, maskFormat));
+        imgOut.emplace_back(std::make_unique<nvcv::Image>(size, outFormat));
+
+        int foregroundRowPitch = size.w * inFormat.numChannels();
+        int fgMaskRowPitch     = size.w * maskFormat.numChannels();
+
+        inVecRowPitch[i]     = foregroundRowPitch;
+        fgMaskVecRowPitch[i] = fgMaskRowPitch;
+
+        std::uniform_int_distribution<uint8_t> udist(0, 255);
+
+        // resize the vectors to proper size
+        foregroundVec[i].resize(size.h * foregroundRowPitch);
+        backgroundVec[i].resize(size.h * foregroundRowPitch);
+        fgMaskVec[i].resize(size.h * fgMaskRowPitch);
+
+        // populate the vector entries
+        generate(foregroundVec[i].begin(), foregroundVec[i].end(), [&]() { return udist(rng); });
+        generate(backgroundVec[i].begin(), backgroundVec[i].end(), [&]() { return udist(rng); });
+        generate(fgMaskVec[i].begin(), fgMaskVec[i].end(), [&]() { return udist(rng); });
+
+        auto *imgDataForeground = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgForeground[i]->exportData());
+        assert(imgDataForeground != nullptr);
+
+        auto *imgDataBackground = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgBackground[i]->exportData());
+        assert(imgDataBackground != nullptr);
+
+        auto *imgDataFgMask = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgFgMask[i]->exportData());
+        assert(imgDataFgMask != nullptr);
+
+        // Copy foreground image data to the GPU
+        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(imgDataForeground->plane(0).buffer, imgDataForeground->plane(0).pitchBytes,
+                                            foregroundVec[i].data(), foregroundRowPitch, foregroundRowPitch, size.h,
+                                            cudaMemcpyHostToDevice));
+
+        // Copy background image data to the GPU
+        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(imgDataBackground->plane(0).buffer, imgDataBackground->plane(0).pitchBytes,
+                                            backgroundVec[i].data(), foregroundRowPitch, foregroundRowPitch, size.h,
+                                            cudaMemcpyHostToDevice));
+
+        // Copy foreground mask image data to the GPU
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2D(imgDataFgMask->plane(0).buffer, imgDataFgMask->plane(0).pitchBytes, fgMaskVec[i].data(),
+                               fgMaskRowPitch, fgMaskRowPitch, size.h, cudaMemcpyHostToDevice));
+    }
+
+    nvcv::ImageBatchVarShape batchForeground(numberOfImages);
+    nvcv::ImageBatchVarShape batchBackground(numberOfImages);
+    nvcv::ImageBatchVarShape batchFgMask(numberOfImages);
+    nvcv::ImageBatchVarShape batchOutput(numberOfImages);
+
+    batchForeground.pushBack(imgForeground.begin(), imgForeground.end());
+    batchBackground.pushBack(imgBackground.begin(), imgBackground.end());
+    batchFgMask.pushBack(imgFgMask.begin(), imgFgMask.end());
+    batchOutput.pushBack(imgOut.begin(), imgOut.end());
+
+    // Generate test result
+    nv::cvop::Composite compositeOp;
+    EXPECT_NO_THROW(compositeOp(stream, batchForeground, batchBackground, batchFgMask, batchOutput));
+
+    // Get test data back
+    EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
+    EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
+
+    // Check test data against gold
+    for (int i = 0; i < numberOfImages; ++i)
+    {
+        SCOPED_TRACE(i);
+
+        int width  = sizeVec[i].w;
+        int height = sizeVec[i].h;
+
+        const auto *outData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgOut[i]->exportData());
+        assert(outData->numPlanes() == 1);
+
+        int outRowPitch        = width * outFormat.numChannels();
+        int foregroundRowPitch = width * inFormat.numChannels();
+        int fgMaskRowPitch     = width * maskFormat.numChannels();
+
+        std::vector<uint8_t> testVec(height * outRowPitch);
+
+        // Copy output data to Host
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2D(testVec.data(), outRowPitch, outData->plane(0).buffer, outData->plane(0).pitchBytes,
+                               outRowPitch, // vec has no padding
+                               height, cudaMemcpyDeviceToHost));
+
+        std::vector<uint8_t> goldVec(height * outRowPitch);
+
+        // generate gold result
+        setGoldBuffer(goldVec, foregroundVec[i], backgroundVec[i], fgMaskVec[i], width, height, foregroundRowPitch,
+                      fgMaskRowPitch, outRowPitch, inChannels, outChannels);
+
         EXPECT_EQ(goldVec, testVec);
     }
 }
