@@ -328,7 +328,7 @@ inline PackingParams GetParams(Packing packing)
     return out;
 }
 
-inline int GetNumComponents(Packing packing)
+inline int32_t GetNumComponents(Packing packing)
 {
     int32_t out;
     detail::CheckThrow(nvcvPackingGetNumComponents(static_cast<NVCVPacking>(packing), &out));
