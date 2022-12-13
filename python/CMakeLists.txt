@@ -80,6 +80,7 @@ pybind11_add_module(nvcv_python MODULE
     OpConv2D.cpp
     OpBilateralFilter.cpp
     OpCenterCrop.cpp
+    OpWarpAffine.cpp
 )
 
 target_include_directories(nvcv_python
