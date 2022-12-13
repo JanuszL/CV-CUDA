@@ -94,7 +94,7 @@ def test_op_averageblur(input, kernel_size, kernel_anchor, border):
         ),
         (
             1,
-            nvcv.Format.U16,
+            nvcv.Format.U8,
             (33, 48),
             1234,
             (7, 7),

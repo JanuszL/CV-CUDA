@@ -12,17 +12,15 @@
 
 import nvcv
 import numpy as np
-from numba import cuda
 import numbers
+import torch
 
-
-NUMBA_STREAM = cuda.stream()
 
 DTYPE = {
     nvcv.Format.RGB8: np.uint8,
     nvcv.Format.RGBf32: np.float32,
     nvcv.Format.F32: np.float32,
-    nvcv.Format.U16: np.uint16,
+    nvcv.Format.U8: np.uint8,
     nvcv.Format.S16: np.int16,
     nvcv.Format.S32: np.int32,
 }
@@ -43,8 +41,7 @@ def create_tensor(shape, dtype, layout, max_random, odd_only=False):
     elif issubclass(dtype, numbers.Real):
         h_data = np.random.random_sample(shape) * np.array(max_random)
     h_data = h_data.astype(dtype)
-    d_data = cuda.to_device(h_data, stream=NUMBA_STREAM)
-    NUMBA_STREAM.synchronize()
+    d_data = torch.from_numpy(h_data).cuda()
     tensor = nvcv.as_tensor(d_data, layout=layout)
     return tensor
 
@@ -54,8 +51,8 @@ def create_image(size, img_format, max_random):
     max_random as the maximum random value (exclusive) inside the image
     """
     h_data = np.random.rand(size[1], size[0], img_format.channels) * max_random
-    d_data = cuda.to_device(h_data.astype(DTYPE[img_format]), stream=NUMBA_STREAM)
-    NUMBA_STREAM.synchronize()
+    h_data = h_data.astype(DTYPE[img_format])
+    d_data = torch.from_numpy(h_data).cuda()
     image = nvcv.as_image(d_data)
     return image
 
