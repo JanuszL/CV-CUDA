@@ -26,76 +26,52 @@ namespace {
 class MyTensorDataPitch : public nvcv::ITensorDataPitch
 {
 public:
-    MyTensorDataPitch(nvcv::TensorShape tshape, nvcv::TensorShape::ShapeType pitchBytes, void *data = nullptr)
+    MyTensorDataPitch(nvcv::TensorShape tshape, nvcv::TensorShape::ShapeType pitchBytes, void *mem = nullptr)
         : m_tshape(std::move(tshape))
-        , m_data(data)
+        , m_mem(mem)
         , m_pitchBytes(std::move(pitchBytes))
     {
-        assert((int)m_pitchBytes.size() == m_tshape.ndim());
+        assert((int)pitchBytes.size() == tshape.ndim());
+
+        NVCVTensorData &data = this->cdata();
+        data.bufferType      = NVCV_TENSOR_BUFFER_PITCH_DEVICE;
+        data.ndim            = tshape.size();
+        data.dtype           = NVCV_PIXEL_TYPE_U8;
+        data.layout          = tshape.layout();
+
+        const nvcv::TensorShape::ShapeType &shape = tshape.shape();
+        std::copy(shape.begin(), shape.end(), data.shape);
+
+        NVCVTensorBufferPitch &buffer = data.buffer.pitch;
+        buffer.data                   = mem;
+
+        std::copy(pitchBytes.begin(), pitchBytes.end(), buffer.pitchBytes);
     }
 
     bool operator==(const MyTensorDataPitch &that) const
     {
-        return std::tie(m_tshape, m_data, m_pitchBytes) == std::tie(that.m_tshape, that.m_data, that.m_pitchBytes);
+        return std::tie(m_tshape, m_mem, m_pitchBytes) == std::tie(that.m_tshape, that.m_mem, that.m_pitchBytes);
     }
 
     bool operator<(const MyTensorDataPitch &that) const
     {
-        return std::tie(m_tshape, m_data, m_pitchBytes) < std::tie(that.m_tshape, that.m_data, that.m_pitchBytes);
+        return std::tie(m_tshape, m_mem, m_pitchBytes) < std::tie(that.m_tshape, that.m_mem, that.m_pitchBytes);
     }
 
     friend void Update(nv::cv::util::HashMD5 &hash, const MyTensorDataPitch &d)
     {
-        Update(hash, d.m_tshape, d.m_data, d.m_pitchBytes);
+        Update(hash, d.m_tshape, d.m_mem, d.m_pitchBytes);
     }
 
     friend std::ostream &operator<<(std::ostream &out, const MyTensorDataPitch &d)
     {
-        return out << d.m_tshape << ",pitch=" << d.m_pitchBytes << ",data=" << d.m_data;
+        return out << d.m_tshape << ",pitch=" << d.m_pitchBytes << ",mem=" << d.m_mem;
     }
 
 private:
     nvcv::TensorShape            m_tshape;
-    void                        *m_data;
+    void                        *m_mem;
     nvcv::TensorShape::ShapeType m_pitchBytes;
-
-    int doGetNumDim() const override
-    {
-        return m_tshape.ndim();
-    }
-
-    const nvcv::TensorShape &doGetShape() const override
-    {
-        return m_tshape;
-    }
-
-    const nvcv::TensorShape::DimType &doGetShapeDim(int d) const override
-    {
-        return m_tshape[d];
-    }
-
-    nvcv::PixelType doGetPixelType() const override
-    {
-        return nvcv::TYPE_U8;
-    }
-
-    void *doGetData() const override
-    {
-        return m_data;
-    }
-
-    const int64_t &doGetPitchBytes(int d) const override
-    {
-        assert(0 <= d && d < m_pitchBytes.size());
-        return m_pitchBytes[d];
-    }
-
-    const NVCVTensorData &doGetCData() const override
-    {
-        assert(false && !"should not be needed");
-        static NVCVTensorData tdata;
-        return tdata;
-    }
 };
 
 } // namespace

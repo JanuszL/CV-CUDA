@@ -14,14 +14,11 @@
 #ifndef NVCV_IIMAGEBATCH_HPP
 #define NVCV_IIMAGEBATCH_HPP
 
-#include "IImageBatchData.hpp"
 #include "Image.hpp"
 #include "ImageBatch.h"
-#include "detail/CudaFwd.h"
+#include "ImageBatchData.hpp"
 #include "detail/Optional.hpp"
 
-#include <cassert>
-#include <functional>
 #include <iterator>
 
 namespace nv { namespace cv {
@@ -38,17 +35,14 @@ public:
 
     const IImageBatchData *exportData(CUstream stream) const;
 
-protected:
-    virtual const IImageBatchData *doExportData(CUstream stream) const = 0;
-
 private:
     virtual NVCVImageBatchHandle doGetHandle() const = 0;
 
-    virtual int32_t doGetCapacity() const  = 0;
-    virtual int32_t doGetNumImages() const = 0;
+    // Only one leaf, we can use an optional for now.
+    mutable detail::Optional<ImageBatchVarShapeDataPitchDevice> m_cacheData;
 };
 
-class IImageBatchVarShape : public virtual IImageBatch
+class IImageBatchVarShape : public IImageBatch
 {
 public:
     template<class IT>
@@ -65,40 +59,11 @@ public:
     Size2D      maxSize() const;
     ImageFormat uniqueFormat() const;
 
-    ImageWrapHandle operator[](ptrdiff_t n) const;
-
     const IImageBatchVarShapeData *exportData(CUstream stream) const;
 
-    class Iterator
-    {
-    public:
-        using value_type        = ImageWrapHandle;
-        using reference         = const value_type &;
-        using pointer           = const value_type *;
-        using iterator_category = std::forward_iterator_tag;
-        using difference_type   = ptrdiff_t;
+    ImageWrapHandle operator[](ptrdiff_t n) const;
 
-        Iterator();
-        Iterator(const Iterator &that);
-        Iterator &operator=(const Iterator &that);
-
-        reference operator*() const;
-        Iterator  operator++(int);
-        Iterator &operator++();
-        pointer   operator->() const;
-
-        bool operator==(const Iterator &that) const;
-        bool operator!=(const Iterator &that) const;
-
-    private:
-        const IImageBatchVarShape *m_batch;
-        int                        m_curIndex;
-
-        mutable detail::Optional<ImageWrapHandle> m_opImage;
-
-        friend class IImageBatchVarShape;
-        Iterator(const IImageBatchVarShape &batch, int32_t idxImage);
-    };
+    class Iterator;
 
     using ConstIterator = Iterator;
 
@@ -107,262 +72,41 @@ public:
 
     ConstIterator cbegin() const;
     ConstIterator cend() const;
-
-private:
-    virtual void doPushBack(std::function<NVCVImageHandle()> &&cb) = 0;
-    virtual void doPushBack(const IImage &img)                     = 0;
-    virtual void doPopBack(int32_t imgCount)                       = 0;
-    virtual void doClear()                                         = 0;
-
-    virtual Size2D      doGetMaxSize() const      = 0;
-    virtual ImageFormat doGetUniqueFormat() const = 0;
-
-    virtual NVCVImageHandle doGetImage(int32_t idx) const = 0;
 };
 
-// IImageBatch implementation
-
-inline NVCVImageBatchHandle IImageBatch::handle() const
+class IImageBatchVarShape::Iterator
 {
-    return doGetHandle();
-}
+public:
+    using value_type        = ImageWrapHandle;
+    using reference         = const value_type &;
+    using pointer           = const value_type *;
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type   = ptrdiff_t;
 
-inline int32_t IImageBatch::capacity() const
-{
-    int32_t c = doGetCapacity();
-    assert(c >= 0);
-    return c;
-}
+    Iterator();
+    Iterator(const Iterator &that);
+    Iterator &operator=(const Iterator &that);
 
-inline int32_t IImageBatch::numImages() const
-{
-    int32_t s = doGetNumImages();
-    assert(s >= 0);
-    assert(s <= this->capacity());
-    return s;
-}
+    reference operator*() const;
+    Iterator  operator++(int);
+    Iterator &operator++();
+    pointer   operator->() const;
 
-inline const IImageBatchData *IImageBatch::exportData(CUstream stream) const
-{
-    return doExportData(stream);
-}
+    bool operator==(const Iterator &that) const;
+    bool operator!=(const Iterator &that) const;
 
-// IImageBatchVarShape implementation
+private:
+    const IImageBatchVarShape *m_batch;
+    int                        m_curIndex;
 
-inline auto IImageBatchVarShape::begin() const -> ConstIterator
-{
-    return ConstIterator(*this, 0);
-}
+    mutable detail::Optional<ImageWrapHandle> m_opImage;
 
-inline auto IImageBatchVarShape::end() const -> ConstIterator
-{
-    return ConstIterator(*this, this->numImages());
-}
-
-inline auto IImageBatchVarShape::cbegin() const -> ConstIterator
-{
-    return this->begin();
-}
-
-inline auto IImageBatchVarShape::cend() const -> ConstIterator
-{
-    return this->end();
-}
-
-inline const IImageBatchVarShapeData *IImageBatchVarShape::exportData(CUstream stream) const
-{
-    return static_cast<const IImageBatchVarShapeData *>(doExportData(stream));
-}
-
-inline IImageBatchVarShape::Iterator::Iterator(const IImageBatchVarShape &batch, int32_t idxImage)
-    : m_batch(&batch)
-    , m_curIndex(idxImage)
-{
-}
-
-inline IImageBatchVarShape::Iterator::Iterator()
-    : m_batch(nullptr)
-    , m_curIndex(0)
-{
-}
-
-inline IImageBatchVarShape::Iterator::Iterator(const Iterator &that)
-    : m_batch(that.m_batch)
-    , m_curIndex(that.m_curIndex)
-{
-}
-
-inline auto IImageBatchVarShape::Iterator::operator=(const Iterator &that) -> Iterator &
-{
-    if (this != &that)
-    {
-        m_batch    = that.m_batch;
-        m_curIndex = that.m_curIndex;
-    }
-    return *this;
-}
-
-inline auto IImageBatchVarShape::Iterator::operator*() const -> reference
-{
-    if (m_batch == nullptr)
-    {
-        throw Exception(Status::ERROR_INVALID_OPERATION, "Iterator doesn't point to an image batch object");
-    }
-    if (m_curIndex >= m_batch->numImages())
-    {
-        throw Exception(Status::ERROR_INVALID_OPERATION, "Iterator points to an invalid image in the image batch");
-    }
-
-    if (!m_opImage)
-    {
-        m_opImage.emplace(m_batch->doGetImage(m_curIndex));
-    }
-    return *m_opImage;
-}
-
-inline auto IImageBatchVarShape::Iterator::operator->() const -> pointer
-{
-    return &*(*this);
-}
-
-inline auto IImageBatchVarShape::Iterator::operator++(int) -> Iterator
-{
-    Iterator cur(*this);
-    ++(*this);
-    return cur;
-}
-
-inline auto IImageBatchVarShape::Iterator::operator++() -> Iterator &
-{
-    ++m_curIndex;
-    m_opImage.reset();
-    return *this;
-}
-
-inline bool IImageBatchVarShape::Iterator::operator==(const Iterator &that) const
-{
-    if (m_batch == nullptr && that.m_batch == nullptr)
-    {
-        return true;
-    }
-    else if (m_batch == that.m_batch)
-    {
-        return m_curIndex == that.m_curIndex;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-inline bool IImageBatchVarShape::Iterator::operator!=(const Iterator &that) const
-{
-    return !(*this == that);
-}
-
-namespace detail {
-
-// For any pointer-like type
-template<class T, class = typename std::enable_if<std::is_same<
-                      NVCVImageHandle, typename std::decay<decltype(std::declval<T>()->handle())>::type>::value>::type>
-NVCVImageHandle GetImageHandle(const T &ptr)
-{
-    if (ptr == nullptr)
-    {
-        throw Exception(Status::ERROR_INVALID_ARGUMENT, "Image must not be NULL");
-    }
-    return ptr->handle();
-}
-
-inline NVCVImageHandle GetImageHandle(const IImage &img)
-{
-    return img.handle();
-}
-
-inline NVCVImageHandle GetImageHandle(NVCVImageHandle h)
-{
-    if (h == nullptr)
-    {
-        throw Exception(Status::ERROR_INVALID_ARGUMENT, "Image handle must not be NULL");
-    }
-    return h;
-}
-
-template<class T>
-NVCVImageHandle GetImageHandle(const std::reference_wrapper<T> &h)
-{
-    return h.get().handle();
-}
-
-} // namespace detail
-
-template<class IT>
-void IImageBatchVarShape::pushBack(IT itBeg, IT itEnd)
-{
-    auto cb = [it = itBeg, &itEnd]() mutable -> NVCVImageHandle
-    {
-        if (it == itEnd)
-        {
-            return nullptr;
-        }
-
-        return detail::GetImageHandle(*it++);
-    };
-
-    // constructing a std::function with a reference_wrapper is guaranteed
-    // not to allocate memory from heap.
-    doPushBack(std::ref(cb));
-}
-
-// Functor must return a type that can be converted to an image handle
-template<class F, class>
-void IImageBatchVarShape::pushBack(F &&cb)
-{
-    auto cb2 = [cb = std::move(cb)]() mutable -> NVCVImageHandle
-    {
-        if (const auto &img = cb())
-        {
-            return detail::GetImageHandle(img);
-        }
-        else
-        {
-            return nullptr;
-        }
-    };
-
-    doPushBack(std::ref(cb2));
-}
-
-inline void IImageBatchVarShape::pushBack(const IImage &img)
-{
-    doPushBack(img);
-}
-
-inline void IImageBatchVarShape::popBack(int32_t imgCount)
-{
-    doPopBack(imgCount);
-}
-
-inline ImageWrapHandle IImageBatchVarShape::operator[](ptrdiff_t n) const
-{
-    return ImageWrapHandle(doGetImage(n));
-}
-
-inline void IImageBatchVarShape::clear()
-{
-    doClear();
-}
-
-inline Size2D IImageBatchVarShape::maxSize() const
-{
-    return doGetMaxSize();
-}
-
-inline ImageFormat IImageBatchVarShape::uniqueFormat() const
-{
-    return doGetUniqueFormat();
-}
+    friend class IImageBatchVarShape;
+    Iterator(const IImageBatchVarShape &batch, int32_t idxImage);
+};
 
 }} // namespace nv::cv
+
+#include "detail/IImageBatchImpl.hpp"
 
 #endif // NVCV_IIMAGEBATCH_HPP

@@ -14,16 +14,12 @@
 #ifndef NVCV_ITENSOR_HPP
 #define NVCV_ITENSOR_HPP
 
-#include "ITensorData.hpp"
-#include "Image.hpp"
+#include "PixelType.hpp"
 #include "Tensor.h"
-#include "detail/CudaFwd.h"
+#include "TensorData.hpp"
+#include "TensorLayout.hpp"
+#include "TensorShape.hpp"
 #include "detail/Optional.hpp"
-
-#include <array>
-#include <cassert>
-#include <functional>
-#include <iterator>
 
 namespace nv { namespace cv {
 
@@ -44,46 +40,11 @@ public:
 private:
     virtual NVCVTensorHandle doGetHandle() const = 0;
 
-    virtual int          doGetNumDim() const   = 0;
-    virtual TensorLayout doGetLayout() const   = 0;
-    virtual TensorShape  doGetShape() const    = 0;
-    virtual PixelType    doGetDataType() const = 0;
-
-    virtual const ITensorData *doExportData() const = 0;
+    mutable detail::Optional<TensorDataPitchDevice> m_cacheData;
 };
 
-// Implementation
-
-inline NVCVTensorHandle ITensor::handle() const
-{
-    return doGetHandle();
-}
-
-inline TensorShape ITensor::shape() const
-{
-    return doGetShape();
-}
-
-inline int ITensor::ndim() const
-{
-    return doGetNumDim();
-}
-
-inline TensorLayout ITensor::layout() const
-{
-    return doGetLayout();
-}
-
-inline PixelType ITensor::dtype() const
-{
-    return doGetDataType();
-}
-
-inline const ITensorData *ITensor::exportData() const
-{
-    return doExportData();
-}
-
 }} // namespace nv::cv
+
+#include "detail/ITensorImpl.hpp"
 
 #endif // NVCV_ITENSOR_HPP

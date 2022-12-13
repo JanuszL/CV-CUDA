@@ -25,86 +25,58 @@ namespace nv { namespace cv {
 class IImageBatchData
 {
 public:
-    virtual ~IImageBatchData() = default;
+    virtual ~IImageBatchData() = 0;
 
     int32_t numImages() const;
 
     const NVCVImageBatchData &cdata() const;
 
+protected:
+    IImageBatchData() = default;
+    IImageBatchData(const NVCVImageBatchData &data);
+
+    NVCVImageBatchData &cdata();
+
 private:
-    // NVI idiom
-    virtual int32_t                   doGetNumImages() const = 0;
-    virtual const NVCVImageBatchData &doGetCData() const     = 0;
+    NVCVImageBatchData m_data;
 };
 
 class IImageBatchVarShapeData : public IImageBatchData
 {
 public:
+    virtual ~IImageBatchVarShapeData() = 0;
+
     const NVCVImageFormat *formatList() const;
     const NVCVImageFormat *hostFormatList() const;
     Size2D                 maxSize() const;
     ImageFormat            uniqueFormat() const;
 
-private:
-    virtual const NVCVImageFormat *doGetFormatList() const     = 0;
-    virtual const NVCVImageFormat *doGetHostFormatList() const = 0;
-    virtual Size2D                 doGetMaxSize() const        = 0;
-    virtual ImageFormat            doGetUniqueFormat() const   = 0;
+protected:
+    using IImageBatchData::IImageBatchData;
 };
 
 class IImageBatchVarShapeDataPitch : public IImageBatchVarShapeData
 {
 public:
+    virtual ~IImageBatchVarShapeDataPitch() = 0;
+
     const NVCVImageBufferPitch *imageList() const;
 
-private:
-    virtual const NVCVImageBufferPitch *doGetImageList() const = 0;
+protected:
+    using IImageBatchVarShapeData::IImageBatchVarShapeData;
 };
 
 class IImageBatchVarShapeDataPitchDevice : public IImageBatchVarShapeDataPitch
 {
+public:
+    virtual ~IImageBatchVarShapeDataPitchDevice() = 0;
+
+protected:
+    using IImageBatchVarShapeDataPitch::IImageBatchVarShapeDataPitch;
 };
 
-// Implementation - IImageBatchData
-inline int32_t IImageBatchData::numImages() const
-{
-    int32_t size = doGetNumImages();
-    assert(size >= 0 && "Post-condition failed");
-    return size;
-}
-
-inline const NVCVImageBatchData &IImageBatchData::cdata() const
-{
-    return doGetCData();
-}
-
-// Implementation - IImageBatchVarShapeData
-inline const NVCVImageFormat *IImageBatchVarShapeData::formatList() const
-{
-    return doGetFormatList();
-}
-
-inline const NVCVImageFormat *IImageBatchVarShapeData::hostFormatList() const
-{
-    return doGetHostFormatList();
-}
-
-inline Size2D IImageBatchVarShapeData::maxSize() const
-{
-    return doGetMaxSize();
-}
-
-inline ImageFormat IImageBatchVarShapeData::uniqueFormat() const
-{
-    return doGetUniqueFormat();
-}
-
-// Implementation - IImageBatchVarShapeDataPitch
-inline const NVCVImageBufferPitch *IImageBatchVarShapeDataPitch::imageList() const
-{
-    return doGetImageList();
-}
-
 }} // namespace nv::cv
+
+#include "detail/IImageBatchDataImpl.hpp"
 
 #endif // NVCV_IIMAGEBATCHDATA_HPP

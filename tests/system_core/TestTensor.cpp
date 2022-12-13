@@ -15,6 +15,7 @@
 
 #include <common/HashUtils.hpp>
 #include <common/ValueTests.hpp>
+#include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 

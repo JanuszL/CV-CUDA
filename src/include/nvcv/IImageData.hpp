@@ -17,7 +17,6 @@
 #include "ImageData.h"
 #include "ImageFormat.hpp"
 #include "Size.hpp"
-#include "detail/CudaFwd.h"
 
 namespace nv { namespace cv {
 
@@ -25,27 +24,32 @@ namespace nv { namespace cv {
 class IImageData
 {
 public:
-    virtual ~IImageData() = default;
+    virtual ~IImageData() = 0;
 
     ImageFormat format() const;
 
     const NVCVImageData &cdata() const;
 
+protected:
+    IImageData() = default;
+    IImageData(const NVCVImageData &data);
+
+    NVCVImageData &cdata();
+
 private:
-    // NVI idiom
-    virtual ImageFormat          doGetFormat() const = 0;
-    virtual const NVCVImageData &doGetCData() const  = 0;
+    NVCVImageData m_data;
 };
 
 class IImageDataCudaArray : public IImageData
 {
 public:
+    virtual ~IImageDataCudaArray() = 0;
+
     int         numPlanes() const;
     cudaArray_t plane(int p) const;
 
-private:
-    virtual int         doGetNumPlanes() const  = 0;
-    virtual cudaArray_t doGetPlane(int p) const = 0;
+protected:
+    using IImageData::IImageData;
 };
 
 using ImagePlanePitch = NVCVImagePlanePitch;
@@ -53,79 +57,37 @@ using ImagePlanePitch = NVCVImagePlanePitch;
 class IImageDataPitch : public IImageData
 {
 public:
+    virtual ~IImageDataPitch() = 0;
+
     Size2D size() const;
 
     int                    numPlanes() const;
     const ImagePlanePitch &plane(int p) const;
 
-private:
-    virtual Size2D doGetSize() const = 0;
-
-    virtual int                    doGetNumPlanes() const  = 0;
-    virtual const ImagePlanePitch &doGetPlane(int p) const = 0;
+protected:
+    using IImageData::IImageData;
 };
 
-class IImageDataPitchDevice : public virtual IImageDataPitch
+class IImageDataPitchDevice : public IImageDataPitch
 {
+public:
+    virtual ~IImageDataPitchDevice() = 0;
+
+protected:
+    using IImageDataPitch::IImageDataPitch;
 };
 
-class IImageDataPitchHost : public virtual IImageDataPitch
+class IImageDataPitchHost : public IImageDataPitch
 {
+public:
+    virtual ~IImageDataPitchHost() = 0;
+
+protected:
+    using IImageDataPitch::IImageDataPitch;
 };
-
-// Implementation - IImageData
-inline ImageFormat IImageData::format() const
-{
-    return doGetFormat();
-}
-
-inline const NVCVImageData &IImageData::cdata() const
-{
-    return doGetCData();
-}
-
-// Implementation - IImageDataCudaArray
-inline int32_t IImageDataCudaArray::numPlanes() const
-{
-    int32_t planes = doGetNumPlanes();
-    assert(planes == this->format().numPlanes() && "Post-condition failed");
-    return planes;
-}
-
-inline cudaArray_t IImageDataCudaArray::plane(int p) const
-{
-    if (p < 0 || p >= this->numPlanes())
-    {
-        throw Exception(Status::ERROR_INVALID_ARGUMENT, "Plane out of bounds");
-    }
-    return doGetPlane(p);
-}
-
-// Implementation - IImageDataPitch
-inline Size2D IImageDataPitch::size() const
-{
-    Size2D size = doGetSize();
-    assert(size.w >= 0 && "Post-condition failed");
-    assert(size.h >= 0 && "Post-condition failed");
-    return size;
-}
-
-inline int32_t IImageDataPitch::numPlanes() const
-{
-    int32_t np = doGetNumPlanes();
-    assert(np >= 0 && "Post-condition failed");
-    return np;
-}
-
-inline const ImagePlanePitch &IImageDataPitch::plane(int p) const
-{
-    if (p < 0 || p >= this->numPlanes())
-    {
-        throw Exception(Status::ERROR_INVALID_ARGUMENT, "Plane out of bounds");
-    }
-    return doGetPlane(p);
-}
 
 }} // namespace nv::cv
+
+#include "detail/IImageDataImpl.hpp"
 
 #endif // NVCV_IIMAGEDATA_HPP

@@ -163,7 +163,7 @@ std::shared_ptr<Tensor> Tensor::Wrap(CudaBuffer &buffer, std::optional<cv::Tenso
 {
     py::buffer_info info = buffer.request(true);
 
-    NVCVTensorData data = FillNVCVTensorDataCUDA(info, std::move(layout));
+    cv::TensorDataPitchDevice data{FillNVCVTensorDataCUDA(info, std::move(layout))};
 
     // This is the key of a tensor wrapper.
     // All tensor wrappers have the same key.
@@ -198,8 +198,8 @@ Tensor::Tensor(const cv::Tensor::Requirements &reqs)
 {
 }
 
-Tensor::Tensor(const NVCVTensorData &data, py::object wrappedObject)
-    : m_impl{std::make_unique<cv::TensorWrapData>(cv::TensorDataWrap{data})}
+Tensor::Tensor(const cv::ITensorData &data, py::object wrappedObject)
+    : m_impl{std::make_unique<cv::TensorWrapData>(data)}
     , m_key{}
     , m_wrappedObject(wrappedObject)
 {
