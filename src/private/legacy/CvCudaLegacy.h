@@ -2377,6 +2377,45 @@ public:
                     cudaStream_t stream);
 };
 
+class PillowResize : public CudaBaseOp
+{
+public:
+    PillowResize() = delete;
+
+    PillowResize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
+
+    ~PillowResize();
+
+    /**
+     * @brief Resizes the input images. The function resize resizes the image down to or up to the specified size.
+     * @param inputs gpu pointer, inputs[0] are batched input images, whose shape is input_shape and type is data_type.
+     * @param outputs gpu pointer, outputs[0] are batched output images that have the same type as data_type. The output
+     * sizes are derived from the dsize,fx, and fy.
+     * @param workspace gpu pointer, gpu memory used to store the temporary variables.
+     * @param dsize size of the output images.if it equals zero, it is computed as:
+     * @param interpolation interpolation method. See InterpolationMethods below
+     * @param input_shape shape of the input images.
+     * @param format format of the input images, e.g. kNHWC.
+     * @param data_type data type of the input images, e.g. kCV_32F.
+     * @param stream for the asynchronous execution.
+     *
+     */
+    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+                    const NVCVInterpolationType interpolation, cudaStream_t stream);
+
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param max_input_shape maximum input DataShape that may be used
+     * @param max_output_shape maximum output DataShape that may be used
+     * @param max_data_type DataType with the maximum size that may be used
+     */
+    size_t calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
+
+private:
+    void *gpu_workspace;
+};
+
+
 } // namespace nv::cv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H

@@ -61,6 +61,7 @@ add_library(nvcv SHARED
     operators/OpChannelReorder.cpp
     operators/OpFlip.cpp
     operators/OpGammaContrast.cpp
+    operators/OpPillowResize.cpp
 )
 
 target_link_libraries(nvcv PRIVATE

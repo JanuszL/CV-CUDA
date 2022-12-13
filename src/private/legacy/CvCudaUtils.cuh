@@ -58,6 +58,25 @@ inline int divUp(int a, int b)
     return ceil((float)a / b);
 };
 
+template<typename _Tp>
+struct Rect
+{
+    __host__ __device__ Rect() {}
+
+    __host__ __device__ Rect(_Tp _x, _Tp _y, _Tp _width, _Tp _height)
+        : x(_x)
+        , y(_y)
+        , width(_width)
+        , height(_height)
+    {
+    }
+
+    _Tp x;      //!< x coordinate of the top-left corner
+    _Tp y;      //!< y coordinate of the top-left corner
+    _Tp width;  //!< width of the rectangle
+    _Tp height; //!< height of the rectangle
+};
+
 struct DefaultTransformPolicy
 {
     enum
