@@ -107,7 +107,7 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopBilateralFilterCreate(NVCVOperatorHandle *handle
  *
  * @param [out] out output tensor.
  *
- * @param [in] d bilateral filter distance.
+ * @param [in] diameter bilateral filter diameter.
  *
  * @param [in] sigmaColor Gaussian exponent for color difference
  *
@@ -123,6 +123,12 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopBilateralFilterSubmit(NVCVOperatorHandle handle,
                                                       NVCVTensorHandle in, NVCVTensorHandle out, int diameter,
                                                       float sigmaColor, float sigmaSpace, NVCVBorderType borderMode);
 
+NVCV_OP_PUBLIC NVCVStatus nvcvopBilateralFilterVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
+                                                              NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                                                              NVCVTensorHandle diameterData,
+                                                              NVCVTensorHandle sigmaColorData,
+                                                              NVCVTensorHandle sigmaSpaceData,
+                                                              NVCVBorderType   borderMode);
 #ifdef __cplusplus
 }
 #endif

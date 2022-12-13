@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <operators/OpBilateralFilter.hpp>
 #include <private/core/Exception.hpp>
@@ -51,5 +52,20 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopBilateralFilterSubmit,
             nv::cv::TensorWrapHandle input(in), output(out);
             priv::ToDynamicRef<priv_op::BilateralFilter>(handle)(stream, input, output, diameter, sigmaColor,
                                                                  sigmaSpace, borderMode);
+        });
+}
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopBilateralFilterVarShapeSubmit,
+                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                 NVCVTensorHandle diameter, NVCVTensorHandle sigmaColor, NVCVTensorHandle sigmaSpace,
+                 NVCVBorderType borderMode))
+{
+    return nvcv::ProtectCall(
+        [&]
+        {
+            nv::cv::ImageBatchVarShapeWrapHandle input(in), output(out);
+            nv::cv::TensorWrapHandle diameterData(diameter), sigmaColorData(sigmaColor), sigmaSpaceData(sigmaSpace);
+            priv::ToDynamicRef<priv_op::BilateralFilter>(handle)(stream, input, output, diameterData, sigmaColorData,
+                                                                 sigmaSpaceData, borderMode);
         });
 }

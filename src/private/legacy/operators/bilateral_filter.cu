@@ -248,6 +248,7 @@ ErrorCode BilateralFilter::infer(const ITensorDataPitchDevice &inData, const ITe
     {
         radius = 1;
     }
+    assert(radius < 10000);
 
     auto inAccess = cv::TensorDataAccessPitchImagePlanar::Create(inData);
     if (!inAccess)

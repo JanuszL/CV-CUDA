@@ -30,6 +30,7 @@
 #include "OpBilateralFilter.h"
 
 #include <cuda_runtime.h>
+#include <nvcv/IImageBatch.hpp>
 #include <nvcv/ITensor.hpp>
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/Size.hpp>
@@ -46,6 +47,9 @@ public:
 
     void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, int diameter, float sigmaColor,
                     float sigmaSpace, NVCVBorderType borderMode);
+
+    void operator()(cudaStream_t stream, cv::IImageBatch &in, cv::IImageBatch &out, cv::ITensor &diameterData,
+                    cv::ITensor &sigmaColorData, cv::ITensor &sigmaSpace, NVCVBorderType borderMode);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -70,6 +74,15 @@ inline void BilateralFilter::operator()(cudaStream_t stream, cv::ITensor &in, cv
 {
     cv::detail::CheckThrow(nvcvopBilateralFilterSubmit(m_handle, stream, in.handle(), out.handle(), diameter,
                                                        sigmaColor, sigmaSpace, borderMode));
+}
+
+inline void BilateralFilter::operator()(cudaStream_t stream, cv::IImageBatch &in, cv::IImageBatch &out,
+                                        cv::ITensor &diameterData, cv::ITensor &sigmaColorData,
+                                        cv::ITensor &sigmaSpaceData, NVCVBorderType borderMode)
+{
+    cv::detail::CheckThrow(nvcvopBilateralFilterVarShapeSubmit(m_handle, stream, in.handle(), out.handle(),
+                                                               diameterData.handle(), sigmaColorData.handle(),
+                                                               sigmaSpaceData.handle(), borderMode));
 }
 
 inline NVCVOperatorHandle BilateralFilter::handle() const noexcept

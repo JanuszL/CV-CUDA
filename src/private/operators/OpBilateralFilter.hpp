@@ -50,8 +50,13 @@ public:
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, int diameter, float sigmaColor,
                     float sigmaSpace, NVCVBorderType borderMode) const;
 
+    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
+                    const cv::ITensor &diameter, const cv::ITensor &sigmaColor, const cv::ITensor &sigmaSpace,
+                    NVCVBorderType borderMode) const;
+
 private:
-    std::unique_ptr<cv::legacy::cuda_op::BilateralFilter> m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::BilateralFilter>         m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::BilateralFilterVarShape> m_legacyOpVarShape;
 };
 
 } // namespace nv::cvop::priv
