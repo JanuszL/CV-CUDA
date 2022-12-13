@@ -28,6 +28,14 @@ python3 ./classification/python/inference.py -i ./assets/tabby_tiger_cat.jpg -l 
 python3 ./classification/python/inference.py -i ./assets/tabby_tiger_cat.jpg -l ./models/imagenet-classes.txt -b 4
 # Run classification sample for image directory as input with batch size 2
 python3 ./classification/python/inference.py -i ./assets -l ./models/imagenet-classes.txt -b 2
+# Run the segmentation sample with default settings, without any command-line args.
+python3 ./segmentation/python/inference.py
+# Run it on a single image with high batch size for the background class writing to a specific directory
+python3 segmentation/python/inference.py -i assets/tabby_tiger_cat.jpg -o /tmp -b 5 -c __background__
+# Run it on a folder worth of images
+python3 segmentation/python/inference.py -i assets/ -o /tmp -b 5 -c __background__
+# Run on a single image with custom resized input given to the sample for the dog class
+python3 segmentation/python/inference.py -i assets/Weimaraner.jpg -o /tmp -b 1 -c dog -th 224 -tw 224
 
 # Classification sample
 # Batch size 1
