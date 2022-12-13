@@ -18,6 +18,7 @@
 
 #include <core/Exception.hpp>
 #include <util/Assert.h>
+#include <util/Math.hpp>
 
 #include <sstream>
 
@@ -70,6 +71,11 @@ PixelType PixelType::channelType(int ch) const
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Channel type cannot be represented");
     }
+}
+
+int PixelType::alignment() const noexcept
+{
+    return GetAlignment(packing());
 }
 
 std::ostream &operator<<(std::ostream &out, PixelType type)

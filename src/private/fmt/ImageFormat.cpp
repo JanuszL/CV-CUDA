@@ -551,6 +551,11 @@ int ImageFormat::planeNumChannels(int plane) const noexcept
     return GetNumChannels(this->planePacking(plane));
 }
 
+int ImageFormat::planeRowAlignment(int plane) const noexcept
+{
+    return planePixelType(plane).alignment();
+}
+
 int ImageFormat::numPlanes() const noexcept
 {
     return (this->planeNumChannels(0) != 0 ? 1 : 0) + (this->planeNumChannels(1) != 0 ? 1 : 0)

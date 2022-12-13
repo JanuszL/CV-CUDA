@@ -18,6 +18,7 @@
 
 #include <core/Exception.hpp>
 #include <util/Assert.h>
+#include <util/Math.hpp>
 #include <util/String.hpp>
 
 #include <map>
@@ -45,6 +46,7 @@ struct PackingData
 
 bool operator<(const PackingData &a, const PackingData &b)
 {
+    // Not comparing alignment on purpose. User might not know it.
     if (a.params.swizzle == b.params.swizzle)
     {
         for (int i = 0; i < 4; ++i)
@@ -65,146 +67,164 @@ bool operator<(const PackingData &a, const PackingData &b)
 #define STRINGIZE(x) #x
 
 const std::map<NVCVPacking, PackingData> g_packingToData = {
-#define DEF_PACK1(x)                                 \
-    {                                                \
-        NVCV_PACKING_X##x,                           \
-        {                                            \
-            STRINGIZE(NVCV_PACKING_X##x),            \
-            {                                        \
-                NVCV_ORDER_LSB, NVCV_SWIZZLE_0000, x \
-            }                                        \
-        }                                            \
+#define DEF_PACK1(x)                                                                     \
+    {                                                                                    \
+        NVCV_PACKING_X##x,                                                               \
+        {                                                                                \
+            STRINGIZE(NVCV_PACKING_X##x),                                                \
+            {                                                                            \
+                NVCV_ORDER_LSB, util::RoundUpNextPowerOfTwo(x / 8), NVCV_SWIZZLE_0000, x \
+            }                                                                            \
+        }                                                                                \
     }
 
-#define DEF_PACK2(x, y)                                 \
-    {                                                   \
-        NVCV_PACKING_X##x##Y##y,                        \
-        {                                               \
-            STRINGIZE(NVCV_PACKING_X##x##Y##y),         \
-            {                                           \
-                NVCV_ORDER_LSB, NVCV_SWIZZLE_0000, x, y \
-            }                                           \
-        }                                               \
+#define DEF_PACK2(x, y)                                                                           \
+    {                                                                                             \
+        NVCV_PACKING_X##x##Y##y,                                                                  \
+        {                                                                                         \
+            STRINGIZE(NVCV_PACKING_X##x##Y##y),                                                   \
+            {                                                                                     \
+                NVCV_ORDER_LSB, util::RoundUpNextPowerOfTwo((x + y) / 8), NVCV_SWIZZLE_0000, x, y \
+            }                                                                                     \
+        }                                                                                         \
     }
 
-#define DEF_PACK3(x, y, z)                                 \
-    {                                                      \
-        NVCV_PACKING_X##x##Y##y##Z##z,                     \
-        {                                                  \
-            STRINGIZE(NVCV_PACKING_X##x##Y##y##Z##z),      \
-            {                                              \
-                NVCV_ORDER_LSB, NVCV_SWIZZLE_0000, x, y, z \
-            }                                              \
-        }                                                  \
+#define DEF_PACK3(x, y, z)                                                                               \
+    {                                                                                                    \
+        NVCV_PACKING_X##x##Y##y##Z##z,                                                                   \
+        {                                                                                                \
+            STRINGIZE(NVCV_PACKING_X##x##Y##y##Z##z),                                                    \
+            {                                                                                            \
+                NVCV_ORDER_LSB, util::RoundUpNextPowerOfTwo((x + y + z) / 8), NVCV_SWIZZLE_0000, x, y, z \
+            }                                                                                            \
+        }                                                                                                \
     }
 
-#define DEF_PACK4(x, y, z, w)                                 \
-    {                                                         \
-        NVCV_PACKING_X##x##Y##y##Z##z##W##w,                  \
-        {                                                     \
-            STRINGIZE(NVCV_PACKING_X##x##Y##y##Z##z##W##w),   \
-            {                                                 \
-                NVCV_ORDER_LSB, NVCV_SWIZZLE_0000, x, y, z, w \
-            }                                                 \
-        }                                                     \
+#define DEF_PACK4(x, y, z, w)                                                                                   \
+    {                                                                                                           \
+        NVCV_PACKING_X##x##Y##y##Z##z##W##w,                                                                    \
+        {                                                                                                       \
+            STRINGIZE(NVCV_PACKING_X##x##Y##y##Z##z##W##w),                                                     \
+            {                                                                                                   \
+                NVCV_ORDER_LSB, util::RoundUpNextPowerOfTwo((x + y + z + w) / 8), NVCV_SWIZZLE_0000, x, y, z, w \
+            }                                                                                                   \
+        }                                                                                                       \
     }
 
-#define DEF_FIX_PACK2(x, y)                             \
-    {                                                   \
-        NVCV_PACKING_X##x##_Y##y,                       \
-        {                                               \
-            STRINGIZE(NVCV_PACKING_X##x##_Y##y),        \
-            {                                           \
-                NVCV_ORDER_MSB, NVCV_SWIZZLE_0000, x, y \
-            }                                           \
-        }                                               \
+#define DEF_FIX_PACK2(x, y)                                                                                            \
+    {                                                                                                                  \
+        NVCV_PACKING_X##x##_Y##y,                                                                                      \
+        {                                                                                                              \
+            STRINGIZE(NVCV_PACKING_X##x##_Y##y),                                                                       \
+            {                                                                                                          \
+                NVCV_ORDER_MSB, util::RoundUpNextPowerOfTwo((x == y) ? (x / 8) : (x + y) / 8), NVCV_SWIZZLE_0000, x, y \
+            }                                                                                                          \
+        }                                                                                                              \
     }
-#define DEF_FIX_PACK3(x, y, z)                             \
-    {                                                      \
-        NVCV_PACKING_X##x##_Y##y##_Z##z,                   \
-        {                                                  \
-            STRINGIZE(NVCV_PACKING_X##x##_Y##y##_Z##z),    \
-            {                                              \
-                NVCV_ORDER_MSB, NVCV_SWIZZLE_0000, x, y, z \
-            }                                              \
-        }                                                  \
-    }
-
-#define DEF_FIX_PACK4(x, y, z, w)                              \
-    {                                                          \
-        NVCV_PACKING_X##x##_Y##y##_Z##z##_W##w,                \
-        {                                                      \
-            STRINGIZE(NVCV_PACKING_X##x##_Y##y##_Z##z##_W##w), \
-            {                                                  \
-                NVCV_ORDER_MSB, NVCV_SWIZZLE_0000, x, y, z, w  \
-            }                                                  \
-        }                                                      \
+#define DEF_FIX_PACK3(x, y, z)                                                                               \
+    {                                                                                                        \
+        NVCV_PACKING_X##x##_Y##y##_Z##z,                                                                     \
+        {                                                                                                    \
+            STRINGIZE(NVCV_PACKING_X##x##_Y##y##_Z##z),                                                      \
+            {                                                                                                \
+                NVCV_ORDER_MSB, util::RoundUpNextPowerOfTwo((x == y && y == z) ? (x / 8) : (x + y + z) / 8), \
+                    NVCV_SWIZZLE_0000, x, y, z                                                               \
+            }                                                                                                \
+        }                                                                                                    \
     }
 
-#define DEF_MSB_PACK1(x, bx)                             \
-    {                                                    \
-        NVCV_PACKING_X##x##b##bx,                        \
-        {                                                \
-            STRINGIZE(NVCV_PACKING_X##x##b##bx),         \
-            {                                            \
-                NVCV_ORDER_MSB, NVCV_SWIZZLE_X000, x, bx \
-            }                                            \
-        }                                                \
+#define DEF_FIX_PACK4(x, y, z, w)                                                                              \
+    {                                                                                                          \
+        NVCV_PACKING_X##x##_Y##y##_Z##z##_W##w,                                                                \
+        {                                                                                                      \
+            STRINGIZE(NVCV_PACKING_X##x##_Y##y##_Z##z##_W##w),                                                 \
+            {                                                                                                  \
+                NVCV_ORDER_MSB,                                                                                \
+                    util::RoundUpNextPowerOfTwo((x == y && y == z && z == w) ? (x / 8) : (x + y + z + w) / 8), \
+                    NVCV_SWIZZLE_0000, x, y, z, w                                                              \
+            }                                                                                                  \
+        }                                                                                                      \
     }
 
-#define DEF_LSB_PACK1(bx, x)                             \
-    {                                                    \
-        NVCV_PACKING_b##bx##X##x,                        \
-        {                                                \
-            STRINGIZE(NVCV_PACKING_b##bx##X##x),         \
-            {                                            \
-                NVCV_ORDER_LSB, NVCV_SWIZZLE_Y000, bx, x \
-            }                                            \
-        }                                                \
+#define DEF_MSB_PACK1(x, bx)                                                                        \
+    {                                                                                               \
+        NVCV_PACKING_X##x##b##bx,                                                                   \
+        {                                                                                           \
+            STRINGIZE(NVCV_PACKING_X##x##b##bx),                                                    \
+            {                                                                                       \
+                NVCV_ORDER_MSB, util::RoundUpNextPowerOfTwo((x + bx) / 8), NVCV_SWIZZLE_X000, x, bx \
+            }                                                                                       \
+        }                                                                                           \
     }
 
-#define DEF_FIX_MSB_PACK2(x, bx, y, by)                         \
-    {                                                           \
-        NVCV_PACKING_X##x##b##bx##_Y##y##b##by,                 \
-        {                                                       \
-            STRINGIZE(NVCV_PACKING_X##x##b##bx##_Y##y##b##by),  \
-            {                                                   \
-                NVCV_ORDER_MSB, NVCV_SWIZZLE_XZ00, x, bx, y, by \
-            }                                                   \
-        }                                                       \
+#define DEF_LSB_PACK1(bx, x)                                                                        \
+    {                                                                                               \
+        NVCV_PACKING_b##bx##X##x,                                                                   \
+        {                                                                                           \
+            STRINGIZE(NVCV_PACKING_b##bx##X##x),                                                    \
+            {                                                                                       \
+                NVCV_ORDER_LSB, util::RoundUpNextPowerOfTwo((x + bx) / 8), NVCV_SWIZZLE_Y000, bx, x \
+            }                                                                                       \
+        }                                                                                           \
     }
 
-#define DEF_FIX_LSB_PACK2(bx, x, by, y)                         \
-    {                                                           \
-        NVCV_PACKING_b##bx##X##x##_Y##y##b##by,                 \
-        {                                                       \
-            STRINGIZE(NVCV_PACKING_b##bx##X##x##_Y##y##b##by),  \
-            {                                                   \
-                NVCV_ORDER_LSB, NVCV_SWIZZLE_YW00, bx, x, by, y \
-            }                                                   \
-        }                                                       \
+#define DEF_FIX_MSB_PACK2(x, bx, y, by)                                                                       \
+    {                                                                                                         \
+        NVCV_PACKING_X##x##b##bx##_Y##y##b##by,                                                               \
+        {                                                                                                     \
+            STRINGIZE(NVCV_PACKING_X##x##b##bx##_Y##y##b##by),                                                \
+            {                                                                                                 \
+                NVCV_ORDER_MSB,                                                                               \
+                    util::RoundUpNextPowerOfTwo((x + bx) == (y + by) ? (x + bx) / 8 : (x + bx + y + by) / 8), \
+                    NVCV_SWIZZLE_XZ00, x, bx, y, by                                                           \
+            }                                                                                                 \
+        }                                                                                                     \
     }
 
-#define DEF_LSB_PACK3(bx, x, y, z)                             \
-    {                                                          \
-        NVCV_PACKING_b##bx##X##x##Y##y##Z##z,                  \
-        {                                                      \
-            STRINGIZE(NVCV_PACKING_b##bx##X##x##Y##y##Z##z),   \
-            {                                                  \
-                NVCV_ORDER_LSB, NVCV_SWIZZLE_YZW0, bx, x, y, z \
-            }                                                  \
-        }                                                      \
+#define DEF_FIX_LSB_PACK2(bx, x, by, y)                                                                       \
+    {                                                                                                         \
+        NVCV_PACKING_b##bx##X##x##_Y##y##b##by,                                                               \
+        {                                                                                                     \
+            STRINGIZE(NVCV_PACKING_b##bx##X##x##_Y##y##b##by),                                                \
+            {                                                                                                 \
+                NVCV_ORDER_LSB,                                                                               \
+                    util::RoundUpNextPowerOfTwo((x + bx) == (y + by) ? (x + bx) / 8 : (x + bx + y + by) / 8), \
+                    NVCV_SWIZZLE_YW00, bx, x, by, y                                                           \
+            }                                                                                                 \
+        }                                                                                                     \
     }
 
-#define DEF_MSB_PACK3(x, y, z, bz)                             \
-    {                                                          \
-        NVCV_PACKING_X##x##Y##y##Z##z##b##bz,                  \
-        {                                                      \
-            STRINGIZE(NVCV_PACKING_b##bx##X##x##Y##y##Z##z),   \
-            {                                                  \
-                NVCV_ORDER_MSB, NVCV_SWIZZLE_XYZ0, x, y, z, bz \
-            }                                                  \
-        }                                                      \
+#define DEF_LSB_PACK3(bx, x, y, z)                                                                                \
+    {                                                                                                             \
+        NVCV_PACKING_b##bx##X##x##Y##y##Z##z,                                                                     \
+        {                                                                                                         \
+            STRINGIZE(NVCV_PACKING_b##bx##X##x##Y##y##Z##z),                                                      \
+            {                                                                                                     \
+                NVCV_ORDER_LSB, util::RoundUpNextPowerOfTwo((bx + x + y + z) / 8), NVCV_SWIZZLE_YZW0, bx, x, y, z \
+            }                                                                                                     \
+        }                                                                                                         \
+    }
+
+#define DEF_MSB_PACK3(x, y, z, bz)                                                                                \
+    {                                                                                                             \
+        NVCV_PACKING_X##x##Y##y##Z##z##b##bz,                                                                     \
+        {                                                                                                         \
+            STRINGIZE(NVCV_PACKING_b##bx##X##x##Y##y##Z##z),                                                      \
+            {                                                                                                     \
+                NVCV_ORDER_MSB, util::RoundUpNextPowerOfTwo((x + y + z + bz) / 8), NVCV_SWIZZLE_XYZ0, x, y, z, bz \
+            }                                                                                                     \
+        }                                                                                                         \
+    }
+
+#define DEF_LSB_PACK4(x, y, z, w)                                                                               \
+    {                                                                                                           \
+        NVCV_PACKING_X##x##Y##y##Z##z##W##w,                                                                    \
+        {                                                                                                       \
+            STRINGIZE(NVCV_PACKING_X##x##Y##y##Z##z##W##w),                                                     \
+            {                                                                                                   \
+                NVCV_ORDER_LSB, util::RoundUpNextPowerOfTwo((x + y + z + w) / 8), NVCV_SWIZZLE_0000, x, y, z, w \
+            }                                                                                                   \
+        }                                                                                                       \
     }
 
     DEF_PACK1(1),
@@ -232,8 +252,10 @@ const std::map<NVCVPacking, PackingData> g_packingToData = {
     DEF_PACK3(5, 6, 5),
     DEF_PACK3(6, 5, 5),
     DEF_LSB_PACK3(4, 4, 4, 4),
+    DEF_LSB_PACK4(4, 4, 4, 4),
     DEF_LSB_PACK3(1, 5, 5, 5),
     DEF_PACK4(1, 5, 5, 5),
+    DEF_PACK4(5, 1, 5, 5),
     DEF_PACK4(5, 5, 1, 5),
     DEF_PACK4(5, 5, 5, 1),
 
@@ -282,18 +304,18 @@ const std::map<NVCVPacking, PackingData> g_packingToData = {
 // mark them with clang-format off
 // clang-format off
 #define CLANGFORMAT_WAR                                                             \
-    {NVCV_PACKING_0,            {"NVCV_PACKING_0",            {NVCV_ORDER_LSB, NVCV_SWIZZLE_0000}}},          \
-    {NVCV_PACKING_X8_Y8__X8_Z8, {"NVCV_PACKING_X8_Y8__X8_Z8", {NVCV_ORDER_MSB,  NVCV_SWIZZLE_XYXZ, 8, 8, 8, 8}}}, \
-    {NVCV_PACKING_Y8_X8__Z8_X8, {"NVCV_PACKING_Y8_X8__Z8_X8", {NVCV_ORDER_MSB,  NVCV_SWIZZLE_YXZX, 8, 8, 8, 8}}}, \
-    {NVCV_PACKING_X5Y5b1Z5,     {"NVCV_PACKING_X5Y5b1Z5",     {NVCV_ORDER_LSB, NVCV_SWIZZLE_XYW0, 5, 5, 1, 5}}}, \
-    {NVCV_PACKING_X32_Y24b8,     {"NVCV_PACKING_X32_Y24b8",     {NVCV_ORDER_MSB, NVCV_SWIZZLE_XY00, 32, 24, 8, 0}}}
+    {NVCV_PACKING_0,            {"NVCV_PACKING_0",            {NVCV_ORDER_LSB, 0,NVCV_SWIZZLE_0000}}},          \
+    {NVCV_PACKING_X8_Y8__X8_Z8, {"NVCV_PACKING_X8_Y8__X8_Z8", {NVCV_ORDER_MSB, 1, NVCV_SWIZZLE_XYXZ, 8, 8, 8, 8}}}, \
+    {NVCV_PACKING_Y8_X8__Z8_X8, {"NVCV_PACKING_Y8_X8__Z8_X8", {NVCV_ORDER_MSB, 1, NVCV_SWIZZLE_YXZX, 8, 8, 8, 8}}}, \
+    {NVCV_PACKING_X5Y5b1Z5,     {"NVCV_PACKING_X5Y5b1Z5",     {NVCV_ORDER_LSB, 2,NVCV_SWIZZLE_XYW0, 5, 5, 1, 5}}}, \
+    {NVCV_PACKING_X32_Y24b8,    {"NVCV_PACKING_X32_Y24b8",     {NVCV_ORDER_MSB,4, NVCV_SWIZZLE_XY00, 32, 24, 8, 0}}}
     CLANGFORMAT_WAR,
     // clang-format on
 };
 
-const std::map<PackingData, NVCVPacking> g_dataToPacking = []
+const std::multimap<PackingData, NVCVPacking> g_dataToPacking = []
 {
-    std::map<PackingData, NVCVPacking> map;
+    std::multimap<PackingData, NVCVPacking> map;
 
     for (const auto &item : g_packingToData)
     {
@@ -372,9 +394,39 @@ std::optional<NVCVPacking> MakeNVCVPacking(const NVCVPackingParams &params) noex
         key.params.swizzle = NVCV_SWIZZLE_0000;
     }
 
-    auto it = g_dataToPacking.find(key);
-    if (it != g_dataToPacking.end())
+    auto [itbegin, itend] = g_dataToPacking.equal_range(key);
+    if (itbegin != itend)
     {
+        auto it = itbegin;
+        if (params.alignment == 0)
+        {
+            for (; itbegin != itend; ++itbegin)
+            {
+                // choose smallest alignment
+                if (itbegin->first.params.alignment < it->first.params.alignment)
+                {
+                    it = itbegin;
+                }
+            }
+        }
+        else
+        {
+            for (; itbegin != itend; ++itbegin)
+            {
+                // Smaller alignments are valid.
+                if (it->first.params.alignment >= itbegin->first.params.alignment)
+                {
+                    it = itbegin;
+                    break;
+                }
+            }
+            // packing with needed alignment not found
+            if (itbegin == itend)
+            {
+                return std::nullopt;
+            }
+        }
+
         // if 0 or one channel, packing is both host and big endian, so don't need to filter out.
         if (GetNumChannels(params.swizzle) >= 2)
         {
@@ -627,6 +679,11 @@ std::array<int32_t, 4> GetBitsPerComponent(NVCVPacking packing) noexcept
     }
 
     return bits;
+}
+
+int GetAlignment(NVCVPacking packing) noexcept
+{
+    return GetPackingParams(packing).alignment;
 }
 
 NVCVSwizzle MergePlaneSwizzles(NVCVSwizzle sw0, NVCVSwizzle sw1, NVCVSwizzle sw2, NVCVSwizzle sw3)

@@ -328,7 +328,7 @@ inline PackingParams GetParams(Packing packing)
     return out;
 }
 
-inline int GetNumComponents(Packing packing)
+inline int32_t GetNumComponents(Packing packing)
 {
     int32_t out;
     detail::CheckThrow(nvcvPackingGetNumComponents(static_cast<NVCVPacking>(packing), &out));
@@ -346,6 +346,13 @@ inline int32_t GetBitsPerPixel(Packing packing)
 {
     int32_t out;
     detail::CheckThrow(nvcvPackingGetBitsPerPixel(static_cast<NVCVPacking>(packing), &out));
+    return out;
+}
+
+inline int32_t GetAlignment(Packing packing)
+{
+    int32_t out;
+    detail::CheckThrow(nvcvPackingGetAlignment(static_cast<NVCVPacking>(packing), &out));
     return out;
 }
 

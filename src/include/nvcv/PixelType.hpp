@@ -52,6 +52,7 @@ public:
     PixelType              channelType(int32_t channel) const;
     int32_t                strideBytes() const;
     int32_t                bitsPerPixel() const;
+    int32_t                alignment() const;
 
 private:
     NVCVPixelType m_type;
@@ -221,6 +222,13 @@ inline int32_t PixelType::strideBytes() const
 {
     int32_t out;
     detail::CheckThrow(nvcvPixelTypeGetStrideBytes(m_type, &out));
+    return out;
+}
+
+inline int32_t PixelType::alignment() const
+{
+    int32_t out;
+    detail::CheckThrow(nvcvPixelTypeGetAlignment(m_type, &out));
     return out;
 }
 

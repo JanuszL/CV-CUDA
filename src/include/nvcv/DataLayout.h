@@ -465,6 +465,9 @@ typedef struct
     /** Component ordering in a word. */
     NVCVByteOrder byteOrder;
 
+    /** Address alignment requirement, in bytes */
+    int32_t alignment;
+
     /** Channel ordering. */
     NVCVSwizzle swizzle;
 
@@ -483,7 +486,10 @@ typedef struct
  *
  * @param[in] params Packing parameters.
  *                   If \ref NVCVPackingParams::swizzle is set to \ref NVCV_SWIZZLE_0000
- *                   the swizzle will be inferred from \ref NVCVPackingParams::bits
+ *                   the swizzle will be inferred from \ref NVCVPackingParams::bits.
+ *                   It'll return the packing with the largest alignment that is smaller
+ *                   or equal the requested alignment. If requested alignment is 0, it'll return
+ *                   the packing with smallest alignment.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some argument is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
@@ -536,6 +542,20 @@ NVCV_PUBLIC NVCVStatus nvcvPackingGetBitsPerComponent(NVCVPacking packing, int32
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvPackingGetBitsPerPixel(NVCVPacking packing, int32_t *outBPP);
+
+/** Get the required address alignment for the packing.
+ *
+ * The returned alignment is guaranteed to be a power-of-two.
+ *
+ * @param[in] type Packing to be queried.
+ *
+ * @param[out] outAlignment Pointer to an int32_t where the required alignment is to be stored.
+ *                          + Cannot be NULL.
+ *
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT Some argument is outside its valid range.
+ * @retval #NVCV_SUCCESS                Operation executed successfully.
+ */
+NVCV_PUBLIC NVCVStatus nvcvPackingGetAlignment(NVCVPacking packing, int32_t *outAlignment);
 
 /** Returns a string representation of a packing.
  *

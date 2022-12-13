@@ -65,6 +65,7 @@ public:
     std::array<int32_t, 4> bpc() const noexcept;
     int                    numChannels() const noexcept;
     int                    strideBytes() const noexcept;
+    int                    alignment() const noexcept;
     PixelType              channelType(int ch) const;
 
 private:

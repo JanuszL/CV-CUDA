@@ -34,6 +34,8 @@ int GetBitsPerPixel(NVCVPacking packing) noexcept;
 
 NVCVPackingParams GetPackingParams(NVCVPacking packing) noexcept;
 
+int GetAlignment(NVCVPacking packing) noexcept;
+
 NVCVChannel GetSwizzleChannel(NVCVSwizzle swizzle, int idx) noexcept;
 
 std::array<NVCVChannel, 4> GetChannels(NVCVSwizzle swizzle) noexcept;

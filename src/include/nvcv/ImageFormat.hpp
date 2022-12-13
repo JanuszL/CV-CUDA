@@ -75,7 +75,7 @@ public:
                                              Swizzle swizzle, Packing packing0, Packing packing1 = Packing::NONE,
                                              Packing packing2 = Packing::NONE, Packing packing3 = Packing::NONE);
 
-    static ImageFormat FromFourCC(uint fourcc, ColorSpec colorSpec, MemLayout memLayout);
+    static ImageFormat FromFourCC(uint32_t fourcc, ColorSpec colorSpec, MemLayout memLayout);
 
     static ImageFormat FromPlanes(ImageFormat plane0, ImageFormat plane1 = {}, ImageFormat plane2 = {},
                                   ImageFormat plane3 = {});
@@ -101,24 +101,25 @@ public:
     ImageFormat rawPattern(RawPattern newRawPattern) const;
     RawPattern  rawPattern() const noexcept;
 
-    Swizzle            swizzle() const noexcept;
-    ColorModel         colorModel() const noexcept;
-    int                numChannels() const noexcept;
-    std::array<int, 4> bitsPerChannel() const noexcept;
-    uint               fourCC() const;
-    int                numPlanes() const noexcept;
+    Swizzle                swizzle() const noexcept;
+    ColorModel             colorModel() const noexcept;
+    int32_t                numChannels() const noexcept;
+    std::array<int32_t, 4> bitsPerChannel() const noexcept;
+    uint32_t               fourCC() const;
+    int32_t                numPlanes() const noexcept;
 
     ImageFormat swizzleAndPacking(Swizzle newSwizzle, Packing newPacking0, Packing newPacking1, Packing newPacking2,
                                   Packing newPacking3) const;
 
-    Packing     planePacking(int plane) const noexcept;
-    int         planePixelStrideBytes(int plane) const noexcept;
-    PixelType   planePixelType(int plane) const noexcept;
-    int         planeNumChannels(int plane) const noexcept;
-    int         planeBitsPerPixel(int plane) const noexcept;
-    Size2D      planeSize(Size2D imgSize, int plane) const noexcept;
-    Swizzle     planeSwizzle(int plane) const noexcept;
-    ImageFormat planeFormat(int plane) const noexcept;
+    Packing     planePacking(int32_t plane) const noexcept;
+    int32_t     planePixelStrideBytes(int32_t plane) const noexcept;
+    PixelType   planePixelType(int32_t plane) const noexcept;
+    int32_t     planeNumChannels(int32_t plane) const noexcept;
+    int32_t     planeBitsPerPixel(int32_t plane) const noexcept;
+    int32_t     planeRowAlignment(int32_t plane) const noexcept;
+    Size2D      planeSize(Size2D imgSize, int32_t plane) const noexcept;
+    Swizzle     planeSwizzle(int32_t plane) const noexcept;
+    ImageFormat planeFormat(int32_t plane) const noexcept;
 
 private:
     NVCVImageFormat m_format;
@@ -463,7 +464,7 @@ constexpr ImageFormat ImageFormat::ConstCreate(RawPattern rawPattern, MemLayout 
         static_cast<NVCVPacking>(packing1), static_cast<NVCVPacking>(packing2), static_cast<NVCVPacking>(packing3))};
 }
 
-inline ImageFormat ImageFormat::FromFourCC(uint fourcc, ColorSpec colorSpec, MemLayout memLayout)
+inline ImageFormat ImageFormat::FromFourCC(uint32_t fourcc, ColorSpec colorSpec, MemLayout memLayout)
 {
     NVCVImageFormat out;
     detail::CheckThrow(nvcvMakeImageFormatFromFourCC(&out, fourcc, static_cast<NVCVColorSpec>(colorSpec),
@@ -623,56 +624,61 @@ inline ImageFormat ImageFormat::swizzleAndPacking(Swizzle newSwizzle, Packing ne
     return ImageFormat{out};
 }
 
-inline Packing ImageFormat::planePacking(int plane) const noexcept
+inline Packing ImageFormat::planePacking(int32_t plane) const noexcept
 {
     NVCVPacking out;
     detail::CheckThrow(nvcvImageFormatGetPlanePacking(m_format, plane, &out));
     return static_cast<Packing>(out);
 }
 
-inline PixelType ImageFormat::planePixelType(int plane) const noexcept
+inline PixelType ImageFormat::planePixelType(int32_t plane) const noexcept
 {
     NVCVPixelType out;
     detail::CheckThrow(nvcvImageFormatGetPlanePixelType(m_format, plane, &out));
     return static_cast<PixelType>(out);
 }
 
-inline int32_t ImageFormat::planePixelStrideBytes(int plane) const noexcept
+inline int32_t ImageFormat::planePixelStrideBytes(int32_t plane) const noexcept
 {
     int32_t out;
     detail::CheckThrow(nvcvImageFormatGetPlanePixelStrideBytes(m_format, plane, &out));
     return out;
 }
 
-inline int32_t ImageFormat::planeNumChannels(int plane) const noexcept
+inline int32_t ImageFormat::planeNumChannels(int32_t plane) const noexcept
 {
     int32_t out;
     detail::CheckThrow(nvcvImageFormatGetPlaneNumChannels(m_format, plane, &out));
     return out;
 }
 
-inline int32_t ImageFormat::planeBitsPerPixel(int plane) const noexcept
+inline int32_t ImageFormat::planeBitsPerPixel(int32_t plane) const noexcept
 {
     int32_t out;
     detail::CheckThrow(nvcvImageFormatGetPlaneBitsPerPixel(m_format, plane, &out));
     return out;
 }
 
-inline Size2D ImageFormat::planeSize(Size2D imgSize, int plane) const noexcept
+inline int32_t ImageFormat::planeRowAlignment(int32_t plane) const noexcept
+{
+    return planePixelType(plane).alignment();
+}
+
+inline Size2D ImageFormat::planeSize(Size2D imgSize, int32_t plane) const noexcept
 {
     Size2D psize;
     detail::CheckThrow(nvcvImageFormatGetPlaneSize(m_format, plane, imgSize.w, imgSize.h, &psize.w, &psize.h));
     return psize;
 }
 
-inline Swizzle ImageFormat::planeSwizzle(int plane) const noexcept
+inline Swizzle ImageFormat::planeSwizzle(int32_t plane) const noexcept
 {
     NVCVSwizzle out;
     detail::CheckThrow(nvcvImageFormatGetPlaneSwizzle(m_format, plane, &out));
     return static_cast<Swizzle>(out);
 }
 
-inline ImageFormat ImageFormat::planeFormat(int plane) const noexcept
+inline ImageFormat ImageFormat::planeFormat(int32_t plane) const noexcept
 {
     NVCVImageFormat out;
     detail::CheckThrow(nvcvImageFormatGetPlaneFormat(m_format, plane, &out));

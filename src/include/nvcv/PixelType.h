@@ -199,13 +199,26 @@ NVCV_PUBLIC NVCVStatus nvcvPixelTypeGetBitsPerPixel(NVCVPixelType type, int32_t 
  * @param[in] type Pixel type to be queried.
  *
  * @param[out] outBits Pointer to an int32_t array with 4 elements where output will be stored.
- *                     If it is NULL, the function is a no-op, i.e., buffer pointed by \p bits is unchanged.
  *                     + Cannot be NULL.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some argument is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvPixelTypeGetBitsPerChannel(NVCVPixelType type, int32_t *outBits);
+
+/** Get the required address alignment for each pixel element.
+ *
+ * The returned alignment is guaranteed to be a power-of-two.
+ *
+ * @param[in] type Pixel type to be queried.
+ *
+ * @param[out] outAlignment Pointer to an int32_t where the required alignment is to be stored.
+ *                          + Cannot be NULL.
+ *
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT Some argument is outside its valid range.
+ * @retval #NVCV_SUCCESS                Operation executed successfully.
+ */
+NVCV_PUBLIC NVCVStatus nvcvPixelTypeGetAlignment(NVCVPixelType type, int32_t *outAlignment);
 
 /** Get the data type of a pixel type.
  *
