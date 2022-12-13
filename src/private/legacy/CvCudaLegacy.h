@@ -1885,7 +1885,7 @@ public:
     {
     }
 
-    /**
+    /*
      * @brief Applies a perspective transformation to an image. Same function as cv::warpPerspective.
      * @param inputs gpu pointer, inputs[0] are batched input images, whose shape is input_shape and type is data_type.
      * @param outputs gpu pointer, outputs[0] are batched output images that have the size dsize and the same type as
@@ -1994,6 +1994,33 @@ public:
 protected:
     const int m_maxBatchSize;
     float    *m_transformationMatrix = nullptr;
+};
+
+class CvtColorVarShape : public CudaBaseOp
+{
+public:
+    CvtColorVarShape() = delete;
+
+    CvtColorVarShape(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * @brief Converts each image from one color space to another.
+     * @param inData Input batch.
+     * @param outData Output batch.
+     * @param code color space conversion code
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
+                    NVCVColorConversionCode code, cudaStream_t stream);
+
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param batch_size maximum input batch size
+     */
+    size_t calBufferSize(int batch_size);
 };
 
 } // namespace nv::cv::legacy::cuda_op

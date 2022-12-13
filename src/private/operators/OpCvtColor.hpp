@@ -23,6 +23,7 @@
 #include "IOperator.hpp"
 
 #include <cuda_runtime.h>
+#include <nvcv/IImageBatch.hpp>
 #include <nvcv/ITensor.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 #include <private/core/Exception.hpp>
@@ -44,8 +45,12 @@ public:
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
                     NVCVColorConversionCode code) const;
 
+    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
+                    NVCVColorConversionCode code) const;
+
 private:
-    std::unique_ptr<cv::legacy::cuda_op::CvtColor> m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::CvtColor>         m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::CvtColorVarShape> m_legacyOpVarShape;
 };
 
 } // namespace nv::cvop::priv

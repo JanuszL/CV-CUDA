@@ -27,6 +27,7 @@
 #include "detail/Export.h"
 
 #include <cuda_runtime.h>
+#include <nvcv/ImageBatch.h>
 #include <nvcv/Status.h>
 #include <nvcv/Tensor.h>
 
@@ -64,6 +65,10 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopCvtColorCreate(NVCVOperatorHandle *handle);
  */
 NVCV_OP_PUBLIC NVCVStatus nvcvopCvtColorSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
                                                NVCVTensorHandle out, NVCVColorConversionCode code);
+
+NVCV_OP_PUBLIC NVCVStatus nvcvopCvtColorVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
+                                                       NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                                                       NVCVColorConversionCode code);
 
 #ifdef __cplusplus
 }

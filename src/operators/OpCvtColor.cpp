@@ -11,6 +11,7 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <operators/OpCvtColor.hpp>
 #include <private/core/Exception.hpp>
@@ -45,5 +46,17 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCvtColorSubmit,
         {
             nv::cv::TensorWrapHandle output(out), input(in);
             priv::ToDynamicRef<priv_op::CvtColor>(handle)(stream, input, output, code);
+        });
+}
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCvtColorVarShapeSubmit,
+                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                 NVCVColorConversionCode code))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            nv::cv::ImageBatchVarShapeWrapHandle inWrap(in), outWrap(out);
+            priv::ToDynamicRef<priv_op::CvtColor>(handle)(stream, inWrap, outWrap, code);
         });
 }
