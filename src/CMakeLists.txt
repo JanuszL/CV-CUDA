@@ -53,6 +53,7 @@ add_library(nvcv SHARED
     operators/OpWarpAffine.cpp
     operators/OpWarpPerspective.cpp
     operators/OpComposite.cpp
+    operators/OpChannelReorder.cpp
 )
 
 target_link_libraries(nvcv PRIVATE

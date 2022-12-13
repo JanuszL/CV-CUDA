@@ -208,12 +208,12 @@ class TensorWrapImageTests
 NVCV_INSTANTIATE_TEST_SUITE_P(_, TensorWrapImageTests,
     test::ValueList<nvcv::Size2D, nvcv::ImageFormat, nvcv::TensorShape, nvcv::PixelType>
     {
-        {{61,23}, nvcv::FMT_RGBA8p, nvcv::TensorShape{{4,23,61},nvcv::TensorLayout::CHW}, nvcv::TYPE_U8},
-        {{61,23}, nvcv::FMT_RGBA8, nvcv::TensorShape{{23,61,4},nvcv::TensorLayout::HWC}, nvcv::TYPE_U8},
-        {{61,23}, nvcv::FMT_RGB8, nvcv::TensorShape{{23,61,3},nvcv::TensorLayout::HWC}, nvcv::TYPE_U8},
-        {{61,23}, nvcv::FMT_RGB8p, nvcv::TensorShape{{3,23,61},nvcv::TensorLayout::CHW}, nvcv::TYPE_U8},
-        {{61,23}, nvcv::FMT_F32, nvcv::TensorShape{{1,23,61},nvcv::TensorLayout::CHW}, nvcv::TYPE_F32},
-        {{61,23}, nvcv::FMT_2F32, nvcv::TensorShape{{23,61,2},nvcv::TensorLayout::HWC}, nvcv::TYPE_F32},
+        {{61,23}, nvcv::FMT_RGBA8p, nvcv::TensorShape{{1,4,23,61},nvcv::TensorLayout::NCHW}, nvcv::TYPE_U8},
+        {{61,23}, nvcv::FMT_RGBA8, nvcv::TensorShape{{1,23,61,4},nvcv::TensorLayout::NHWC}, nvcv::TYPE_U8},
+        {{61,23}, nvcv::FMT_RGB8, nvcv::TensorShape{{1,23,61,3},nvcv::TensorLayout::NHWC}, nvcv::TYPE_U8},
+        {{61,23}, nvcv::FMT_RGB8p, nvcv::TensorShape{{1,3,23,61},nvcv::TensorLayout::NCHW}, nvcv::TYPE_U8},
+        {{61,23}, nvcv::FMT_F32, nvcv::TensorShape{{1,1,23,61},nvcv::TensorLayout::NCHW}, nvcv::TYPE_F32},
+        {{61,23}, nvcv::FMT_2F32, nvcv::TensorShape{{1,23,61,2},nvcv::TensorLayout::NHWC}, nvcv::TYPE_F32},
     }
 );
 

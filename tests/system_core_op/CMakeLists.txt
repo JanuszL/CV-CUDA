@@ -34,6 +34,7 @@ add_executable(nvcv_test_system_core_op
     TestOpBilateralFilter.cpp
     TestOpWarpPerspective.cpp
     TestOpComposite.cpp
+    TestOpChannelReorder.cpp
 )
 
 target_link_libraries(nvcv_test_system_core_op

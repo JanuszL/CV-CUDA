@@ -134,42 +134,46 @@ void FillTensorData(IImage &img, NVCVTensorData &tensorData)
         {
             // If same BPC, we can have channels as its own dimension,
             // as all channels have the same type.
-            tensorData.layout = NVCV_TENSOR_HWC;
+            tensorData.layout = NVCV_TENSOR_NHWC;
         }
         else
         {
-            tensorData.layout = NVCV_TENSOR_CHW;
+            tensorData.layout = NVCV_TENSOR_NCHW;
         }
     }
     else
     {
-        tensorData.layout = NVCV_TENSOR_CHW;
+        tensorData.layout = NVCV_TENSOR_NCHW;
     }
 
-    tensorData.ndim = 3;
-    if (tensorData.layout == NVCV_TENSOR_HWC)
+    tensorData.ndim = 4;
+    if (tensorData.layout == NVCV_TENSOR_NHWC)
     {
-        tensorData.shape[0] = imgPitch.planes[0].height;
-        tensorData.shape[1] = imgPitch.planes[0].width;
-        tensorData.shape[2] = fmt.numChannels();
+        tensorData.shape[0] = 1;
+        tensorData.shape[1] = imgPitch.planes[0].height;
+        tensorData.shape[2] = imgPitch.planes[0].width;
+        tensorData.shape[3] = fmt.numChannels();
 
-        tensorPitch.pitchBytes[0] = imgPitch.planes[0].pitchBytes;
-        tensorPitch.pitchBytes[1] = fmt.planePixelStrideBytes(0);
-        tensorPitch.pitchBytes[2] = fmt.planePixelStrideBytes(0) / fmt.numChannels();
+        tensorPitch.pitchBytes[3] = fmt.planePixelStrideBytes(0) / fmt.numChannels();
+        tensorPitch.pitchBytes[2] = fmt.planePixelStrideBytes(0);
+        tensorPitch.pitchBytes[1] = imgPitch.planes[0].pitchBytes;
+        tensorPitch.pitchBytes[0] = tensorPitch.pitchBytes[1] * tensorData.shape[1];
 
         tensorData.dtype = fmt.planePixelType(0).channelType(0).value();
     }
     else
     {
-        NVCV_ASSERT(tensorData.layout == NVCV_TENSOR_CHW);
+        NVCV_ASSERT(tensorData.layout == NVCV_TENSOR_NCHW);
 
-        tensorData.shape[0] = imgPitch.numPlanes;
-        tensorData.shape[1] = imgPitch.planes[0].height;
-        tensorData.shape[2] = imgPitch.planes[0].width;
+        tensorData.shape[0] = 1;
+        tensorData.shape[1] = imgPitch.numPlanes;
+        tensorData.shape[2] = imgPitch.planes[0].height;
+        tensorData.shape[3] = imgPitch.planes[0].width;
 
-        tensorPitch.pitchBytes[0] = imgPitch.planes[0].pitchBytes * imgPitch.planes[0].height;
-        tensorPitch.pitchBytes[1] = imgPitch.planes[0].pitchBytes;
-        tensorPitch.pitchBytes[2] = fmt.planePixelStrideBytes(0);
+        tensorPitch.pitchBytes[3] = fmt.planePixelStrideBytes(0);
+        tensorPitch.pitchBytes[2] = imgPitch.planes[0].pitchBytes;
+        tensorPitch.pitchBytes[1] = tensorPitch.pitchBytes[2] * tensorData.shape[2];
+        tensorPitch.pitchBytes[0] = tensorPitch.pitchBytes[1] * tensorData.shape[1];
 
         tensorData.dtype = fmt.planePixelType(0).value();
     }

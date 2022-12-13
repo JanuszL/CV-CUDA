@@ -2111,6 +2111,39 @@ public:
                     const ITensorDataPitchDevice &fgMask, const ITensorDataPitchDevice &outData, cudaStream_t stream);
 };
 
+class ChannelReorderVarShape : public CudaBaseOp
+{
+public:
+    ChannelReorderVarShape() = delete;
+
+    ChannelReorderVarShape(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * @brief Reorder the channel of the input images with the given orders.
+     * @param inputs gpu pointer, inputs[i] is input image where i ranges from 0 to batch-1, whose shape is
+     * input_shape[i] and type is data_type.
+     * @param outputs gpu pointer, outputs[i] is output image where i ranges from 0 to batch-1, whose size is
+     * input_shape[i] and type is data_type.
+     * @param gpu_workspace gpu pointer, gpu memory used to store the temporary variable.
+     * @param cpu_workspace cpu pointer, cpu memory used to store the temporary variable.
+     * @param batch batch size of the input images.
+     * @param buffer_size size of the gpu_workspace/cpu_workspace.
+     * @param orders the new channel order represented by the channel index. All the values are flatted into a 1d array.
+     * @param output_channels the channel size of each output image. The value can be different from the original
+     * channel size.
+     * @param input_shapes shape of the input images.
+     * @param format format of the input images, e.g. kNHWC.
+     * @param data_type data type of the input images, e.g. kCV_32F.
+     * @param stream for the asynchronous execution.
+     */
+
+    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
+                    const ITensorDataPitchDevice &order, cudaStream_t stream);
+};
+
 } // namespace nv::cv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H
