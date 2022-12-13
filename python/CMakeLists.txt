@@ -52,6 +52,7 @@ pybind11_add_module(nvcv_python MODULE
     ImageFormat.cpp
     PixelType.cpp
     BorderType.cpp
+    MorphologyType.cpp
     Object.cpp
     Stream.cpp
     StreamStack.cpp
@@ -83,6 +84,7 @@ pybind11_add_module(nvcv_python MODULE
     OpWarpAffine.cpp
     OpWarpPerspective.cpp
     OpChannelReorder.cpp
+    OpMorphology.cpp
 )
 
 target_include_directories(nvcv_python

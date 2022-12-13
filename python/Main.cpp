@@ -19,6 +19,7 @@
 #include "ImageBatch.hpp"
 #include "ImageFormat.hpp"
 #include "InterpolationType.hpp"
+#include "MorphologyType.hpp"
 #include "Operators.hpp"
 #include "PixelType.hpp"
 #include "Rect.hpp"
@@ -57,6 +58,7 @@ PYBIND11_MODULE(nvcv, m)
     ExportPixelType(m);
     ExportRect(m);
     ExportBorderType(m);
+    ExportMorphologyType(m);
     Resource::Export(m);
     Container::Export(m);
     Tensor::Export(m);
@@ -86,4 +88,5 @@ PYBIND11_MODULE(nvcv, m)
     ExportOpWarpAffine(m);
     ExportOpWarpPerspective(m);
     ExportOpChannelReorder(m);
+    ExportOpMorphology(m);
 }
