@@ -41,13 +41,18 @@ namespace nv::cvop::priv {
 class Morphology final : public OperatorBase
 {
 public:
-    explicit Morphology();
+    explicit Morphology(const int32_t maxVarShapeBatchSize);
 
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, NVCVMorphologyType morph_type,
-                    cv::Size2D mask_size, int2 anchor, int iteration, const NVCVBorderType borderMode) const;
+                    cv::Size2D mask_size, int2 anchor, int32_t iteration, const NVCVBorderType borderMode) const;
+
+    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
+                    NVCVMorphologyType morph_type, cv::ITensor &masks, cv::ITensor &anchors, int32_t iteration,
+                    NVCVBorderType borderMode) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::Morphology> m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::Morphology>         m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::MorphologyVarShape> m_legacyOpVarShape;
 };
 
 } // namespace nv::cvop::priv

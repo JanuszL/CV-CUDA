@@ -37,12 +37,16 @@ namespace nv { namespace cvop {
 class Morphology final : public IOperator
 {
 public:
-    explicit Morphology();
+    explicit Morphology(int32_t maxVarShapeBatchSize);
 
     ~Morphology();
 
-    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, NVCVMorphologyType morph_type,
+    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, NVCVMorphologyType morphType,
                     const cv::Size2D &maskSize, const int2 &anchor, int32_t iteration, const NVCVBorderType borderMode);
+
+    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
+                    NVCVMorphologyType morphType, cv::ITensor &masks, const cv::ITensor &anchors, int32_t iteration,
+                    const NVCVBorderType borderMode);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -50,9 +54,9 @@ private:
     NVCVOperatorHandle m_handle;
 };
 
-inline Morphology::Morphology()
+inline Morphology::Morphology(int32_t maxVarShapeBatchSize)
 {
-    cv::detail::CheckThrow(nvcvopMorphologyCreate(&m_handle));
+    cv::detail::CheckThrow(nvcvopMorphologyCreate(&m_handle, maxVarShapeBatchSize));
     assert(m_handle);
 }
 
@@ -68,6 +72,14 @@ inline void Morphology::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITe
 {
     cv::detail::CheckThrow(nvcvopMorphologySubmit(m_handle, stream, in.handle(), out.handle(), morphType, maskSize.w,
                                                   maskSize.h, anchor.x, anchor.y, iteration, borderMode));
+}
+
+inline void Morphology::operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
+                                   NVCVMorphologyType morphType, cv::ITensor &masks, const cv::ITensor &anchors,
+                                   int32_t iteration, const NVCVBorderType borderMode)
+{
+    cv::detail::CheckThrow(nvcvopMorphologyVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), morphType,
+                                                          masks.handle(), anchors.handle(), iteration, borderMode));
 }
 
 inline NVCVOperatorHandle Morphology::handle() const noexcept

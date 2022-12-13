@@ -149,12 +149,6 @@ void MorphFilter2D(const ITensorDataPitchDevice &inData, const ITensorDataPitchD
     }
 }
 
-size_t Morphology::calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type,
-                                 Size2D max_mask_size, int max_iteration)
-{
-    return 0;
-}
-
 ErrorCode Morphology::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
                             NVCVMorphologyType morph_type, Size2D mask_size, int2 anchor, int iteration,
                             const NVCVBorderType borderMode, cudaStream_t stream)
