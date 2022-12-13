@@ -26,9 +26,10 @@ public:
     explicit Tensor(NVCVTensorRequirements reqs, IAllocator &alloc);
     ~Tensor();
 
-    static NVCVTensorRequirements CalcRequirements(int32_t numImages, Size2D imgSize, ImageFormat fmt);
+    static NVCVTensorRequirements CalcRequirements(int32_t numImages, Size2D imgSize, ImageFormat fmt,
+                                                   int32_t baseAlign, int32_t rowAlign);
     static NVCVTensorRequirements CalcRequirements(int ndim, const int64_t *shape, const PixelType &dtype,
-                                                   NVCVTensorLayout layout);
+                                                   NVCVTensorLayout layout, int32_t baseAlign, int32_t rowAlign);
 
     int32_t        ndim() const override;
     const int64_t *shape() const override;

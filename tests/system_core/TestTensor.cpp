@@ -18,6 +18,8 @@
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
+#include <nvcv/alloc/CustomAllocator.hpp>
+#include <nvcv/alloc/CustomResourceAllocator.hpp>
 
 #include <list>
 #include <random>
@@ -125,6 +127,51 @@ TEST_P(TensorTests, wip_create)
     }
 }
 
+TEST(TensorTests, wip_create_allocator)
+{
+    namespace nvcv = nv::cv;
+
+    int64_t setBufLen   = 0;
+    int32_t setBufAlign = 0;
+
+    // clang-format off
+    nvcv::CustomAllocator myAlloc
+    {
+        nvcv::CustomDeviceMemAllocator
+        {
+            [&setBufLen, &setBufAlign](int64_t size, int32_t bufAlign)
+            {
+                setBufLen = size;
+                setBufAlign = bufAlign;
+
+                void *ptr = nullptr;
+                cudaMalloc(&ptr, size);
+                return ptr;
+            },
+            [](void *ptr, int64_t bufLen, int32_t bufAlign)
+            {
+                cudaFree(ptr);
+            }
+        }
+    };
+    // clang-format on
+
+    nvcv::Tensor tensor(5, {163, 117}, nvcv::FMT_RGBA8, nvcv::MemAlignment{}.rowAddr(1).baseAddr(32),
+                        &myAlloc); // packed rows
+    EXPECT_EQ(32, setBufAlign);
+
+    const nvcv::ITensorData *data = tensor.exportData();
+    ASSERT_NE(nullptr, data);
+
+    auto *devdata = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(data);
+    ASSERT_NE(nullptr, devdata);
+
+    EXPECT_EQ(1, devdata->pitchBytes(3));
+    EXPECT_EQ(4 * 1, devdata->pitchBytes(2));
+    EXPECT_EQ(163 * 4 * 1, devdata->pitchBytes(1));
+    EXPECT_EQ(117 * 163 * 4 * 1, devdata->pitchBytes(0));
+}
+
 TEST(TensorWrapData, wip_create)
 {
     nvcv::ImageFormat fmt
@@ -132,40 +179,35 @@ TEST(TensorWrapData, wip_create)
                             nvcv::Swizzle::S_XY00, nvcv::Packing::X16, nvcv::Packing::X16);
     nvcv::PixelType GOLD_DTYPE = fmt.planePixelType(0);
 
-    nvcv::Tensor::Requirements reqs = nvcv::Tensor::CalcRequirements(5, {173, 79}, fmt);
+    nvcv::Tensor origTensor(5, {173, 79}, fmt, nvcv::MemAlignment{}.rowAddr(1).baseAddr(32)); // packed rows
 
-    nvcv::TensorDataPitchDevice::Buffer buf;
-    std::copy(reqs.pitchBytes, reqs.pitchBytes + NVCV_TENSOR_MAX_NDIM, buf.pitchBytes);
-    // dummy value, just to check if memory won't be accessed internally. If it does,
-    // it'll segfault.
-    buf.data = reinterpret_cast<void *>(678);
+    auto *tdata = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(origTensor.exportData());
 
-    nvcv::TensorDataPitchDevice tdata(nvcv::TensorShape{reqs.shape, reqs.ndim, reqs.layout},
-                                      nvcv::PixelType{reqs.dtype}, buf);
-
-    auto access = nvcv::TensorDataAccessPitchImagePlanar::Create(tdata);
+    auto access = nvcv::TensorDataAccessPitchImagePlanar::Create(*tdata);
     ASSERT_TRUE(access);
 
-    EXPECT_EQ(nvcv::TensorLayout::NCHW, tdata.layout());
+    EXPECT_EQ(nvcv::TensorLayout::NCHW, tdata->layout());
     EXPECT_EQ(5, access->numSamples());
     EXPECT_EQ(173, access->numCols());
     EXPECT_EQ(79, access->numRows());
     EXPECT_EQ(2, access->numChannels());
 
-    EXPECT_EQ(5, tdata.shape()[0]);
-    EXPECT_EQ(173, tdata.shape()[3]);
-    EXPECT_EQ(79, tdata.shape()[2]);
-    EXPECT_EQ(2, tdata.shape()[1]);
-    EXPECT_EQ(reinterpret_cast<void *>(678), tdata.data());
-    EXPECT_EQ(4, tdata.ndim());
+    EXPECT_EQ(5, tdata->shape()[0]);
+    EXPECT_EQ(173, tdata->shape()[3]);
+    EXPECT_EQ(79, tdata->shape()[2]);
+    EXPECT_EQ(2, tdata->shape()[1]);
+    EXPECT_EQ(4, tdata->ndim());
 
-    nvcv::TensorWrapData tensor{tdata};
+    EXPECT_EQ(2, tdata->pitchBytes(3));
+    EXPECT_EQ(173 * 2, tdata->pitchBytes(2));
+
+    nvcv::TensorWrapData tensor{*tdata};
 
     ASSERT_NE(nullptr, tensor.handle());
 
-    EXPECT_EQ(tdata.shape(), tensor.shape());
-    EXPECT_EQ(tdata.layout(), tensor.layout());
-    EXPECT_EQ(tdata.ndim(), tensor.ndim());
+    EXPECT_EQ(tdata->shape(), tensor.shape());
+    EXPECT_EQ(tdata->layout(), tensor.layout());
+    EXPECT_EQ(tdata->ndim(), tensor.ndim());
     EXPECT_EQ(GOLD_DTYPE, tensor.dtype());
 
     const nvcv::ITensorData *data = tensor.exportData();
@@ -177,13 +219,13 @@ TEST(TensorWrapData, wip_create)
     auto accessRef = nvcv::TensorDataAccessPitchImagePlanar::Create(*devdata);
     ASSERT_TRUE(access);
 
-    EXPECT_EQ(tdata.dtype(), devdata->dtype());
-    EXPECT_EQ(tdata.shape(), devdata->shape());
-    EXPECT_EQ(tdata.ndim(), devdata->ndim());
+    EXPECT_EQ(tdata->dtype(), devdata->dtype());
+    EXPECT_EQ(tdata->shape(), devdata->shape());
+    EXPECT_EQ(tdata->ndim(), devdata->ndim());
 
-    EXPECT_EQ(tdata.data(), devdata->data());
+    EXPECT_EQ(tdata->data(), devdata->data());
 
-    auto *mem = reinterpret_cast<std::byte *>(tdata.data());
+    auto *mem = reinterpret_cast<std::byte *>(tdata->data());
 
     EXPECT_LE(mem + access->samplePitchBytes() * 4, accessRef->sampleData(4));
     EXPECT_LE(mem + access->samplePitchBytes() * 3, accessRef->sampleData(3));

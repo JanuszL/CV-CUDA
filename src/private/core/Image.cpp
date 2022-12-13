@@ -28,7 +28,7 @@ namespace nv::cv::priv {
 
 // Image implementation -------------------------------------------
 
-NVCVImageRequirements Image::CalcRequirements(Size2D size, ImageFormat fmt)
+NVCVImageRequirements Image::CalcRequirements(Size2D size, ImageFormat fmt, int32_t userBaseAlign, int32_t userRowAlign)
 {
     NVCVImageRequirements reqs;
     reqs.width  = size.w;
@@ -39,26 +39,66 @@ NVCVImageRequirements Image::CalcRequirements(Size2D size, ImageFormat fmt)
     int dev;
     NVCV_CHECK_THROW(cudaGetDevice(&dev));
 
-    int pitchAlign;
-    int addrAlign;
-    NVCV_CHECK_THROW(cudaDeviceGetAttribute(&pitchAlign, cudaDevAttrTexturePitchAlignment, dev));
-    NVCV_CHECK_THROW(cudaDeviceGetAttribute(&addrAlign, cudaDevAttrTextureAlignment, dev));
+    int rowAlign;
+    if (userRowAlign == 0)
+    {
+        NVCV_CHECK_THROW(cudaDeviceGetAttribute(&rowAlign, cudaDevAttrTexturePitchAlignment, dev));
+    }
+    else
+    {
+        if (!util::IsPowerOfTwo(userRowAlign))
+        {
+            throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
+                << "Invalid pitch alignment of " << userRowAlign << ", it must be a power-of-two";
+        }
+        rowAlign = userRowAlign;
+    }
 
-    reqs.alignBytes = addrAlign;
+    // Pitch alignment must be compatible with each plane's pixel stride.
+    for (int p = 0; p < fmt.numPlanes(); ++p)
+    {
+        int rowAlign;
+        if (userRowAlign == 0)
+        {
+            // Safest thing we can do
+            rowAlign = fmt.planePixelStrideBytes(p);
+        }
+        else
+        {
+            // Strictest thing we can do
+            rowAlign = fmt.planeRowAlignment(p);
+        }
+
+        rowAlign = std::lcm(rowAlign, rowAlign);
+    }
+
+    rowAlign = util::RoundUpNextPowerOfTwo(rowAlign);
+
+    int baseAlign;
+    if (userBaseAlign == 0)
+    {
+        NVCV_CHECK_THROW(cudaDeviceGetAttribute(&baseAlign, cudaDevAttrTextureAlignment, dev));
+    }
+    else
+    {
+        if (!util::IsPowerOfTwo(userBaseAlign))
+        {
+            throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
+                << "Invalid buffer address alignment of " << userBaseAlign << ", it must be a power-of-two";
+        }
+        baseAlign = userBaseAlign;
+    }
+
+    // buffer address alignment must be at least the row alignment
+    baseAlign = std::lcm(baseAlign, rowAlign);
+
+    reqs.alignBytes = baseAlign;
     if (reqs.alignBytes > NVCV_MAX_MEM_REQUIREMENTS_BLOCK_SIZE)
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT,
                         "Alignment requirement of %d is larger than the maximum allowed %ld", reqs.alignBytes,
                         NVCV_MAX_MEM_REQUIREMENTS_BLOCK_SIZE);
     }
-
-    // Pitch alignment must be compatible with each plane's pixel stride.
-    for (int p = 0; p < fmt.numPlanes(); ++p)
-    {
-        int pixStride = fmt.planePixelStrideBytes(p);
-        pitchAlign    = std::lcm(pitchAlign, pixStride);
-    }
-    pitchAlign = util::RoundUpNextPowerOfTwo(pitchAlign);
 
     // Calculate total device memory needed in blocks
     for (int p = 0; p < fmt.numPlanes(); ++p)
@@ -68,9 +108,9 @@ NVCVImageRequirements Image::CalcRequirements(Size2D size, ImageFormat fmt)
         NVCV_ASSERT((size_t)p < sizeof(reqs.planeRowPitchBytes) / sizeof(reqs.planeRowPitchBytes[0]));
 
         reqs.planeRowPitchBytes[p]
-            = util::RoundUpPowerOfTwo((int64_t)planeSize.w * fmt.planePixelStrideBytes(p), pitchAlign);
+            = util::RoundUpPowerOfTwo((int64_t)planeSize.w * fmt.planePixelStrideBytes(p), rowAlign);
 
-        AddBuffer(reqs.mem.deviceMem, reqs.planeRowPitchBytes[p] * planeSize.h, addrAlign);
+        AddBuffer(reqs.mem.deviceMem, reqs.planeRowPitchBytes[p] * planeSize.h, baseAlign);
     }
 
     return reqs;

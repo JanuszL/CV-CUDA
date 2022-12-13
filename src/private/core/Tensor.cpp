@@ -33,7 +33,8 @@ namespace nv::cv::priv {
 
 // Tensor implementation -------------------------------------------
 
-NVCVTensorRequirements Tensor::CalcRequirements(int32_t numImages, Size2D imgSize, ImageFormat fmt)
+NVCVTensorRequirements Tensor::CalcRequirements(int32_t numImages, Size2D imgSize, ImageFormat fmt,
+                                                int32_t userBaseAlign, int32_t userRowAlign)
 {
     // Check if format is compatible with tensor representation
     if (fmt.memLayout() != NVCV_MEM_LAYOUT_PL)
@@ -83,11 +84,11 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t numImages, Size2D imgSiz
 
     PixelType dtype{fmt.dataType(), *chPacking};
 
-    return CalcRequirements(layout.ndim, shape, dtype, layout);
+    return CalcRequirements(layout.ndim, shape, dtype, layout, userBaseAlign, userRowAlign);
 }
 
 NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int64_t *shape, const PixelType &dtype,
-                                                NVCVTensorLayout layout)
+                                                NVCVTensorLayout layout, int32_t userBaseAlign, int32_t userRowAlign)
 {
     NVCVTensorRequirements reqs;
 
@@ -109,29 +110,52 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int64_t *sha
     NVCV_CHECK_THROW(cudaGetDevice(&dev));
 
     // Calculate row pitch alignment
-    int rowPitchAlign;
+    int rowAlign;
     {
-        // it usually returns 32 bytes
-        NVCV_CHECK_THROW(cudaDeviceGetAttribute(&rowPitchAlign, cudaDevAttrTexturePitchAlignment, dev));
-
-        // Makes sure it's aligned to the pixel stride
-        rowPitchAlign = std::lcm(rowPitchAlign, dtype.strideBytes());
-        rowPitchAlign = util::RoundUpNextPowerOfTwo(rowPitchAlign);
+        if (userRowAlign == 0)
+        {
+            // it usually returns 32 bytes
+            NVCV_CHECK_THROW(cudaDeviceGetAttribute(&rowAlign, cudaDevAttrTexturePitchAlignment, dev));
+            rowAlign = std::lcm(rowAlign, util::RoundUpNextPowerOfTwo(dtype.strideBytes()));
+        }
+        else
+        {
+            if (!util::IsPowerOfTwo(userRowAlign))
+            {
+                throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
+                    << "Invalid pitch alignment of " << userRowAlign << ", it must be a power-of-two";
+            }
+            // must at least satisfy dtype alignment
+            rowAlign = std::lcm(userRowAlign, dtype.alignment());
+        }
     }
 
     // Calculate base address alignment
     {
-        int addrAlign;
-        // it usually returns 512 bytes
-        NVCV_CHECK_THROW(cudaDeviceGetAttribute(&addrAlign, cudaDevAttrTextureAlignment, dev));
-        reqs.alignBytes = std::lcm(addrAlign, rowPitchAlign);
-        reqs.alignBytes = util::RoundUpNextPowerOfTwo(reqs.alignBytes);
-
-        if (reqs.alignBytes > NVCV_MAX_MEM_REQUIREMENTS_BLOCK_SIZE)
+        if (userBaseAlign == 0)
         {
-            throw Exception(NVCV_ERROR_INVALID_ARGUMENT,
-                            "Alignment requirement of %d is larger than the maximum allowed %ld", reqs.alignBytes,
-                            NVCV_MAX_MEM_REQUIREMENTS_BLOCK_SIZE);
+            int addrAlign;
+            // it usually returns 512 bytes
+            NVCV_CHECK_THROW(cudaDeviceGetAttribute(&addrAlign, cudaDevAttrTextureAlignment, dev));
+            reqs.alignBytes = std::lcm(addrAlign, rowAlign);
+            reqs.alignBytes = util::RoundUpNextPowerOfTwo(reqs.alignBytes);
+
+            if (reqs.alignBytes > NVCV_MAX_MEM_REQUIREMENTS_BLOCK_SIZE)
+            {
+                throw Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                                "Alignment requirement of %d is larger than the maximum allowed %ld", reqs.alignBytes,
+                                NVCV_MAX_MEM_REQUIREMENTS_BLOCK_SIZE);
+            }
+        }
+        else
+        {
+            if (!util::IsPowerOfTwo(userBaseAlign))
+            {
+                throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
+                    << "Invalid base address alignment of " << userBaseAlign << ", it must be a power-of-two";
+            }
+
+            reqs.alignBytes = std::lcm(rowAlign, userBaseAlign);
         }
     }
 
@@ -142,7 +166,7 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int64_t *sha
     {
         if (d == firstPacked - 1)
         {
-            reqs.pitchBytes[d] = util::RoundUpPowerOfTwo(reqs.shape[d + 1] * reqs.pitchBytes[d + 1], rowPitchAlign);
+            reqs.pitchBytes[d] = util::RoundUpPowerOfTwo(reqs.shape[d + 1] * reqs.pitchBytes[d + 1], rowAlign);
         }
         else
         {

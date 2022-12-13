@@ -20,9 +20,45 @@
 #ifndef NVCV_ALLOC_IALLOCATOR_HPP
 #define NVCV_ALLOC_IALLOCATOR_HPP
 
+#include <cstdint>
+
 #include "Fwd.hpp" // for NVCVAllocator
 
 namespace nv { namespace cv {
+
+// Helper class to explicitly assign
+// address alignments.
+class MemAlignment
+{
+public:
+    MemAlignment() = default;
+
+    int32_t baseAddr() const
+    {
+        return m_baseAddrAlignment;
+    }
+
+    int32_t rowAddr() const
+    {
+        return m_rowAddrAlignment;
+    }
+
+    MemAlignment &baseAddr(int32_t alignment)
+    {
+        m_baseAddrAlignment = alignment;
+        return *this;
+    }
+
+    MemAlignment &rowAddr(int32_t alignment)
+    {
+        m_rowAddrAlignment = alignment;
+        return *this;
+    }
+
+private:
+    int32_t m_baseAddrAlignment = 0;
+    int32_t m_rowAddrAlignment  = 0;
+};
 
 class IAllocator
 {

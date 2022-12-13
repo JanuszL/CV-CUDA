@@ -98,10 +98,10 @@ TEST(StatusTest, peek_at_last_status_msg_success_has_correct_message)
 
 TEST(StatusTest, function_success_doesnt_reset_status)
 {
-    ASSERT_EQ(NVCV_ERROR_INVALID_ARGUMENT, nvcvImageCalcRequirements(640, 480, NVCV_IMAGE_FORMAT_U8, nullptr));
+    ASSERT_EQ(NVCV_ERROR_INVALID_ARGUMENT, nvcvImageCalcRequirements(640, 480, NVCV_IMAGE_FORMAT_U8, 0, 0, nullptr));
 
     NVCVImageRequirements reqs;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvImageCalcRequirements(640, 480, NVCV_IMAGE_FORMAT_U8, &reqs));
+    ASSERT_EQ(NVCV_SUCCESS, nvcvImageCalcRequirements(640, 480, NVCV_IMAGE_FORMAT_U8, 0, 0, &reqs));
 
     EXPECT_EQ(NVCV_ERROR_INVALID_ARGUMENT, nvcvGetLastError());
 }

@@ -22,18 +22,22 @@ namespace nv { namespace cv {
 
 // Tensor implementation -------------------------------------
 
-inline auto Tensor::CalcRequirements(const TensorShape &shape, PixelType dtype) -> Requirements
+inline auto Tensor::CalcRequirements(const TensorShape &shape, PixelType dtype, const MemAlignment &bufAlign)
+    -> Requirements
 {
     Requirements reqs;
     detail::CheckThrow(nvcvTensorCalcRequirements(shape.size(), &shape[0], dtype,
-                                                  static_cast<NVCVTensorLayout>(shape.layout()), &reqs));
+                                                  static_cast<NVCVTensorLayout>(shape.layout()), bufAlign.baseAddr(),
+                                                  bufAlign.rowAddr(), &reqs));
     return reqs;
 }
 
-inline auto Tensor::CalcRequirements(int numImages, Size2D imgSize, ImageFormat fmt) -> Requirements
+inline auto Tensor::CalcRequirements(int numImages, Size2D imgSize, ImageFormat fmt, const MemAlignment &bufAlign)
+    -> Requirements
 {
     Requirements reqs;
-    detail::CheckThrow(nvcvTensorCalcRequirementsForImages(numImages, imgSize.w, imgSize.h, fmt, &reqs));
+    detail::CheckThrow(nvcvTensorCalcRequirementsForImages(numImages, imgSize.w, imgSize.h, fmt, bufAlign.baseAddr(),
+                                                           bufAlign.rowAddr(), &reqs));
     return reqs;
 }
 
@@ -42,13 +46,13 @@ inline Tensor::Tensor(const Requirements &reqs, IAllocator *alloc)
     detail::CheckThrow(nvcvTensorConstruct(&reqs, alloc ? alloc->handle() : nullptr, &m_handle));
 }
 
-inline Tensor::Tensor(int numImages, Size2D imgSize, ImageFormat fmt, IAllocator *alloc)
-    : Tensor(CalcRequirements(numImages, imgSize, fmt), alloc)
+inline Tensor::Tensor(int numImages, Size2D imgSize, ImageFormat fmt, const MemAlignment &bufAlign, IAllocator *alloc)
+    : Tensor(CalcRequirements(numImages, imgSize, fmt, bufAlign), alloc)
 {
 }
 
-inline Tensor::Tensor(const TensorShape &shape, PixelType dtype, IAllocator *alloc)
-    : Tensor(CalcRequirements(shape, dtype), alloc)
+inline Tensor::Tensor(const TensorShape &shape, PixelType dtype, const MemAlignment &bufAlign, IAllocator *alloc)
+    : Tensor(CalcRequirements(shape, dtype, bufAlign), alloc)
 {
 }
 

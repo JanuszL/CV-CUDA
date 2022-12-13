@@ -22,10 +22,10 @@ namespace nv { namespace cv {
 
 // Image implementation -------------------------------------
 
-inline auto Image::CalcRequirements(const Size2D &size, ImageFormat fmt) -> Requirements
+inline auto Image::CalcRequirements(const Size2D &size, ImageFormat fmt, const MemAlignment &bufAlign) -> Requirements
 {
     Requirements reqs;
-    detail::CheckThrow(nvcvImageCalcRequirements(size.w, size.h, fmt, &reqs));
+    detail::CheckThrow(nvcvImageCalcRequirements(size.w, size.h, fmt, bufAlign.baseAddr(), bufAlign.rowAddr(), &reqs));
     return reqs;
 }
 
@@ -34,8 +34,8 @@ inline Image::Image(const Requirements &reqs, IAllocator *alloc)
     detail::CheckThrow(nvcvImageConstruct(&reqs, alloc ? alloc->handle() : nullptr, &m_handle));
 }
 
-inline Image::Image(const Size2D &size, ImageFormat fmt, IAllocator *alloc)
-    : Image(CalcRequirements(size, fmt), alloc)
+inline Image::Image(const Size2D &size, ImageFormat fmt, IAllocator *alloc, const MemAlignment &bufAlign)
+    : Image(CalcRequirements(size, fmt, bufAlign), alloc)
 {
 }
 
