@@ -134,6 +134,7 @@ private:
     void       doGrow();
     Resource  *doFetchFreeResource();
     void       doReturnResource(Resource *r);
+    uint8_t    doGetHandleGeneration(HandleType handle) const;
     HandleType doGetHandleFromResource(Resource *r) const;
     Resource  *doGetResourceFromHandle(HandleType handle) const;
     bool       isManagedResource(Resource *r) const;

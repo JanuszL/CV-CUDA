@@ -184,8 +184,7 @@ Interface *HandleManager<Interface, Storage>::validate(HandleType handle) const
 
     Resource *res = doGetResourceFromHandle(handle);
 
-    if (this->isManagedResource(res) && res->live()
-        && res->generation == ((uintptr_t)handle & (kResourceAlignment - 1)))
+    if (this->isManagedResource(res) && res->live() && res->generation == doGetHandleGeneration(handle))
     {
         return res->obj();
     }
@@ -331,6 +330,12 @@ void HandleManager<Interface, Storage>::doReturnResource(Resource *r)
 {
     pimpl->freeResources.push(r);
     pimpl->usedCount--;
+}
+
+template<typename Interface, typename Storage>
+uint8_t HandleManager<Interface, Storage>::doGetHandleGeneration(HandleType handle) const
+{
+    return (uintptr_t)handle & (kResourceAlignment - 1);
 }
 
 template<typename Interface, typename Storage>
