@@ -39,6 +39,7 @@ add_library(cvcuda_legacy STATIC
     ./operators/composite.cu
     ./operators/morphology_var_shape.cu
     ./operators/channel_reorder_var_shape.cu
+    ./operators/flip.cu
     CvCudaLegacyHelpers.cpp
 )
 
