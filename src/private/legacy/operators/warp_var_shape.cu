@@ -1,7 +1,7 @@
 /* Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
- * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+ * SPDX-License-Identifier: Apache-2.0
  *
  * Copyright (C) 2021-2022, Bytedance Inc. All rights reserved.
  * Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
