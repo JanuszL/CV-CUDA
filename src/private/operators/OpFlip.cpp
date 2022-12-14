@@ -22,10 +22,11 @@ namespace nv::cvop::priv {
 
 namespace leg = cv::legacy;
 
-Flip::Flip()
+Flip::Flip(int32_t maxBatchSize)
 {
     leg::cuda_op::DataShape maxIn, maxOut; //maxIn/maxOut not used by op.
-    m_legacyOp = std::make_unique<leg::cuda_op::Flip>(maxIn, maxOut);
+    m_legacyOp         = std::make_unique<leg::cuda_op::Flip>(maxIn, maxOut);
+    m_legacyOpVarShape = std::make_unique<leg::cuda_op::FlipOrCopyVarShape>(maxIn, maxOut);
 }
 
 void Flip::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, int32_t flipCode) const
@@ -44,6 +45,35 @@ void Flip::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITen
     }
 
     NVCV_CHECK_THROW(m_legacyOp->infer(*input, *output, flipCode, stream));
+}
+
+void Flip::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
+                      const cv::ITensor &flipCode) const
+{
+    auto *input = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
+    if (input == nullptr)
+    {
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
+                            "Input must be device-acessible, varshape pitch-linear "
+                            "image batch");
+    }
+
+    auto *output = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(out.exportData(stream));
+    if (output == nullptr)
+    {
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
+                            "Output must be device-acessible, varshape pitch-linear"
+                            " image batch");
+    }
+
+    auto *flip_code = dynamic_cast<const cv::ITensorDataPitchDevice *>(flipCode.exportData());
+    if (flip_code == nullptr)
+    {
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
+                            "Flip Code must be device-acessible, pitch-linear tensor");
+    }
+
+    NVCV_CHECK_THROW(m_legacyOpVarShape->infer(*input, *output, *flip_code, stream));
 }
 
 } // namespace nv::cvop::priv

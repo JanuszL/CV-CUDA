@@ -40,6 +40,7 @@ add_library(cvcuda_legacy STATIC
     ./operators/morphology_var_shape.cu
     ./operators/channel_reorder_var_shape.cu
     ./operators/flip.cu
+    ./operators/flip_or_copy_var_shape.cu
     CvCudaLegacyHelpers.cpp
 )
 
