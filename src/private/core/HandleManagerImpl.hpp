@@ -335,7 +335,7 @@ void HandleManager<Interface, Storage>::doReturnResource(Resource *r)
 template<typename Interface, typename Storage>
 uint8_t HandleManager<Interface, Storage>::doGetHandleGeneration(HandleType handle) const
 {
-    return (uintptr_t)handle & (kResourceAlignment - 1);
+    return ((uintptr_t)handle & (kResourceAlignment - 1)) >> 1;
 }
 
 template<typename Interface, typename Storage>
@@ -343,7 +343,8 @@ auto HandleManager<Interface, Storage>::doGetHandleFromResource(Resource *r) con
 {
     if (r)
     {
-        return reinterpret_cast<HandleType>((uintptr_t)r | r->generation);
+        // generation corresponds to 2th,3th and 4th LSBs (3 bits, max 2^3==8 generations)
+        return reinterpret_cast<HandleType>((uintptr_t)r | (r->generation << 1));
     }
     else
     {

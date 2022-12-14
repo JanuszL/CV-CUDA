@@ -46,21 +46,25 @@ struct GetHandleType<T, std::void_t<decltype(sizeof(typename T::HandleType))>>
 template<class T>
 using GetHandleType = typename detail::GetHandleType<T>::type;
 
-// Must be a power of two
-// We use the 4 LSB of the Resource address to store the handle generation.
-// For that to work, Resource object address must be aligned to 16 bytes.
-static constexpr int kResourceAlignment = 16;
+// We use the 1st LSB of the Resource address to enable special (private) API
+// processing, which dependent on the C function the handle is passed to.
+// The next 3 bits are used to store the handle generation.
+// For all of this  to work, Resource object address must be aligned to 16 bytes.
+// Handle:        RRRR.RRRR.RRRR.GGGP
+// Resource addr: RRRR.RRRR.RRRR.0000
+// R=resource address, G=generation, P=private API bit
+static constexpr int kResourceAlignment = 16; // Must be a power of two.
 
 template<typename Interface, typename Storage>
 class HandleManager
 {
     struct alignas(kResourceAlignment) Resource
     {
-        // We allow the resource to be reused up to 16 times,
+        // We allow the resource to be reused up to 8 times,
         // the corresponding handle will have a different value each time.
         // After that, a handle to an object that was already destroyed might
         // refer to a different object.
-        uint8_t generation : 4; // must be log2(kResourceAlignment)
+        uint8_t generation : 3; // must be log2(kResourceAlignment-1)
 
         Resource *next = nullptr;
 
