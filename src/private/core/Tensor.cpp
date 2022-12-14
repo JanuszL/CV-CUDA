@@ -101,6 +101,11 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int64_t *sha
             << "Number of shape dimensions " << ndim << " must be equal to layout dimensions " << layout.ndim;
     }
 
+    if (ndim <= 0)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Number of dimensions must be >= 1, not %d", ndim);
+    }
+
     std::copy_n(shape, ndim, reqs.shape);
     reqs.ndim = ndim;
 
@@ -159,7 +164,7 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int64_t *sha
         }
     }
 
-    int firstPacked = reqs.layout == NVCV_TENSOR_NHWC ? ndim - 2 : ndim - 1;
+    int firstPacked = reqs.layout == NVCV_TENSOR_NHWC ? std::max(0, ndim - 2) : ndim - 1;
 
     reqs.pitchBytes[ndim - 1] = dtype.strideBytes();
     for (int d = ndim - 2; d >= 0; --d)

@@ -190,7 +190,7 @@ bool CudaBuffer::load(PyObject *o)
             vshape.push_back(o.cast<long>());
         }
 
-        if(vshape.size() >= 2)
+        if(vshape.size() >= 1)
         {
             m_cudaArrayInterface = std::move(iface);
             return true;
