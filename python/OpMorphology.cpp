@@ -1,0 +1,128 @@
+/* Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *
+ * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+ *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
+ */
+
+#include "Image.hpp"
+#include "ImageBatch.hpp"
+#include "Operators.hpp"
+#include "PyUtil.hpp"
+#include "ResourceGuard.hpp"
+#include "Stream.hpp"
+#include "String.hpp"
+#include "Tensor.hpp"
+#include "operators/Types.h"
+
+#include <nvcv/cuda/TypeTraits.hpp>
+#include <operators/OpMorphology.hpp>
+#include <pybind11/stl.h>
+
+namespace nv::cvpy {
+
+namespace {
+std::shared_ptr<Tensor> MorphologyInto(Tensor &input, Tensor &output, NVCVMorphologyType morph_type,
+                                       const std::tuple<int, int> &maskSize, const std::tuple<int, int> &anchor,
+                                       int32_t iteration, NVCVBorderType border, std::shared_ptr<Stream> pstream)
+{
+    if (pstream == nullptr)
+    {
+        pstream = Stream::Current().shared_from_this();
+    }
+
+    auto morphology = CreateOperator<cvop::Morphology>(0);
+
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input});
+    guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*morphology});
+
+    cv::Size2D maskSizeArg{std::get<0>(maskSize), std::get<1>(maskSize)};
+    int2       anchorArg;
+    anchorArg.x = std::get<0>(anchor);
+    anchorArg.y = std::get<1>(anchor);
+
+    morphology->submit(pstream->handle(), input.impl(), output.impl(), morph_type, maskSizeArg, anchorArg, iteration,
+                       border);
+
+    return output.shared_from_this();
+}
+
+std::shared_ptr<Tensor> Morphology(Tensor &input, NVCVMorphologyType morph_type, const std::tuple<int, int> &maskSize,
+                                   const std::tuple<int, int> &anchor, int32_t iteration, NVCVBorderType border,
+                                   std::shared_ptr<Stream> pstream)
+{
+    std::shared_ptr<Tensor> output = Tensor::Create(input.shape(), input.dtype(), input.layout());
+
+    return MorphologyInto(input, *output, morph_type, maskSize, anchor, iteration, border, pstream);
+}
+
+std::shared_ptr<ImageBatchVarShape> MorphologyVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
+                                                           NVCVMorphologyType morph_type, Tensor &masks,
+                                                           Tensor &anchors, const int32_t iteration,
+                                                           const NVCVBorderType    borderMode,
+                                                           std::shared_ptr<Stream> pstream)
+{
+    if (pstream == nullptr)
+    {
+        pstream = Stream::Current().shared_from_this();
+    }
+
+    auto morphology = CreateOperator<cvop::Morphology>(input.capacity());
+
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input, masks, anchors});
+    guard.add(LOCK_WRITE, {output});
+
+    morphology->submit(pstream->handle(), input.impl(), output.impl(), morph_type, masks.impl(), anchors.impl(),
+                       iteration, borderMode);
+
+    return output.shared_from_this();
+}
+
+std::shared_ptr<ImageBatchVarShape> MorphologyVarShape(ImageBatchVarShape &input, NVCVMorphologyType morph_type,
+                                                       Tensor &masks, Tensor &anchors, const int32_t iteration,
+                                                       const NVCVBorderType borderMode, std::shared_ptr<Stream> pstream)
+{
+    std::shared_ptr<ImageBatchVarShape> output = ImageBatchVarShape::Create(input.capacity());
+
+    for (int i = 0; i < input.numImages(); ++i)
+    {
+        cv::ImageFormat format = input.impl()[i].format();
+        cv::Size2D      size   = input.impl()[i].size();
+        auto            image  = Image::Create(std::tie(size.w, size.h), format);
+        output->pushBack(*image);
+    }
+
+    return MorphologyVarShapeInto(input, *output, morph_type, masks, anchors, iteration, borderMode, pstream);
+}
+
+} // namespace
+
+void ExportOpMorphology(py::module &m)
+{
+    using namespace pybind11::literals;
+
+    DefClassMethod<Tensor>("morphology", &Morphology, "morphologyType"_a, "maskSize"_a, "anchor"_a, py::kw_only(),
+                           "iteration"_a = 1, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
+
+    DefClassMethod<Tensor>("morphology_into", &MorphologyInto, "output"_a, "morphologyType"_a, "maskSize"_a, "anchor"_a,
+                           py::kw_only(), "iteration"_a = 1, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
+                           "stream"_a = nullptr);
+
+    DefClassMethod<ImageBatchVarShape>("morphology", &MorphologyVarShape, "morphologyType"_a, "masks"_a, "anchors"_a,
+                                       py::kw_only(), "iteration"_a = 1,
+                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
+
+    DefClassMethod<ImageBatchVarShape>("morphology_into", &MorphologyVarShapeInto, "output"_a, "morphologyType"_a,
+                                       "masks"_a, "anchors"_a, py::kw_only(), "iteration"_a = 1,
+                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
+}
+} // namespace nv::cvpy

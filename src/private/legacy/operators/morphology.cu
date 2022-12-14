@@ -198,7 +198,7 @@ ErrorCode Morphology::infer(const ITensorDataPitchDevice &inData, const ITensorD
         return ErrorCode::INVALID_PARAMETER;
     }
     Size2D mask_size_ = mask_size;
-    if (mask_size.w == -1 || mask_size.w == -1)
+    if (mask_size.w == -1 || mask_size.h == -1)
     {
         mask_size_.w = 3;
         mask_size_.h = 3;
