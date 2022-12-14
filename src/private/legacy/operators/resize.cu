@@ -23,7 +23,7 @@
 using namespace nv::cv::legacy::cuda_op;
 using namespace nv::cv::legacy::helpers;
 
-namespace nvcv = nv::cv;
+namespace nv::cv::legacy::cuda_op {
 
 //private internal API
 
@@ -41,10 +41,11 @@ namespace nvcv = nv::cv;
 //  3:  32-bit alignment (word)
 //  0:  disable buffering
 template<typename T, size_t M>
-inline __device__ T *_cacheAlignedBufferedRead(const Ptr2dNHWC<T> srcImage, uint *pReadBuffer, uint nReadBufferWordsMax,
-                                               int nBatch, int nYPos, int nXPosMin, int nXPosMax)
+inline __device__ T *_cacheAlignedBufferedRead(cuda::Tensor3DWrap<const T> srcImage, int2 srcSize, uint *pReadBuffer,
+                                               uint nReadBufferWordsMax, int nBatch, int nYPos, int nXPosMin,
+                                               int nXPosMax)
 {
-    const T *lineStartPtr = srcImage.ptr(nBatch, nYPos, 0); //do not access prior to this address
+    const T *lineStartPtr = srcImage.ptr(nBatch, nYPos); //do not access prior to this address
     const T *pixSrcPtr    = &lineStartPtr[nXPosMin];
     if (M == 0)
         return (T *)pixSrcPtr; //return GMEM pointer instead
@@ -55,7 +56,7 @@ inline __device__ T *_cacheAlignedBufferedRead(const Ptr2dNHWC<T> srcImage, uint
         const int functionalWidth = ((size_t)pixBeyondPtr + M) & (~M) - ((size_t)lineStartPtr);
         const int nWordsToRead    = (((size_t)pixBeyondPtr + M) & (~M) - (size_t)memSrcPtr) / 4;
 
-        if (((size_t)memSrcPtr < (size_t)lineStartPtr) || (srcImage.cols * sizeof(T) < functionalWidth)
+        if (((size_t)memSrcPtr < (size_t)lineStartPtr) || (srcSize.x * sizeof(T) < functionalWidth)
             || (nWordsToRead > nReadBufferWordsMax))
             return (T *)pixSrcPtr; //return GMEM pointer instead if running off the image
         else
@@ -91,41 +92,42 @@ inline void __device__ _alignedDeviceMemcpyQuad(T *pDst, T *pSrc)
 //******************** NN = Nearest Neighbor
 
 template<typename T>
-__global__ void resize_NN(const Ptr2dNHWC<T> src, Ptr2dNHWC<T> dst, const float scale_x, const float scale_y)
+__global__ void resize_NN(cuda::Tensor3DWrap<const T> src, cuda::Tensor3DWrap<T> dst, int2 srcSize, int2 dstSize,
+                          const float scale_x, const float scale_y)
 {
     const int dst_x      = blockIdx.x * blockDim.x + threadIdx.x;
     const int dst_y      = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx  = get_batch_idx();
-    int       out_height = dst.rows, out_width = dst.cols;
+    int       out_height = dstSize.y, out_width = dstSize.x;
 
     if ((dst_x < out_width) && (dst_y < out_height))
     { //generic copy pixel to pixel
-        const int sx                      = min(__float2int_rd(dst_x * scale_x), src.cols - 1);
-        const int sy                      = min(__float2int_rd(dst_y * scale_y), src.rows - 1);
+        const int sx                      = cuda::min(__float2int_rd(dst_x * scale_x), srcSize.x - 1);
+        const int sy                      = cuda::min(__float2int_rd(dst_y * scale_y), srcSize.y - 1);
         *dst.ptr(batch_idx, dst_y, dst_x) = *src.ptr(batch_idx, sy, sx);
     }
 } //resize_NN
 
 template<typename T>
-__global__ void resize_NN_quad_alignread(const Ptr2dNHWC<T> src, Ptr2dNHWC<T> dst, const float scale_x,
-                                         const float scale_y)
+__global__ void resize_NN_quad_alignread(cuda::Tensor3DWrap<const T> src, cuda::Tensor3DWrap<T> dst, int2 srcSize,
+                                         int2 dstSize, const float scale_x, const float scale_y)
 {
     const float MAX_BUFFERED_X_SCALE = 4.0f; //probably more efficient all the way up to 4.0
 
     const int dst_x      = (blockIdx.x * blockDim.x + threadIdx.x) * 4; //quad
     const int dst_y      = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx  = get_batch_idx();
-    int       out_height = dst.rows, out_width = dst.cols;
+    int       out_height = dstSize.y, out_width = dstSize.x;
 
     //0 - quad-aligned so if one pixel is out, they're all out
     if ((dst_x >= out_width) | (dst_y >= out_height))
         return;
 
-    const int sx0 = min(__float2int_rd(dst_x * scale_x), src.cols - 1);
-    const int sx1 = min(__float2int_rd(dst_x * scale_x + scale_x), src.cols - 1);
-    const int sx2 = min(__float2int_rd((dst_x + 2) * scale_x), src.cols - 1);
-    const int sx3 = min(__float2int_rd((dst_x + 3) * scale_x), src.cols - 1);
-    const int sy  = min(__float2int_rd(dst_y * scale_y), src.rows - 1);
+    const int sx0 = cuda::min(__float2int_rd(dst_x * scale_x), srcSize.x - 1);
+    const int sx1 = cuda::min(__float2int_rd(dst_x * scale_x + scale_x), srcSize.x - 1);
+    const int sx2 = cuda::min(__float2int_rd((dst_x + 2) * scale_x), srcSize.x - 1);
+    const int sx3 = cuda::min(__float2int_rd((dst_x + 3) * scale_x), srcSize.x - 1);
+    const int sy  = cuda::min(__float2int_rd(dst_y * scale_y), srcSize.y - 1);
 
     //1 - optimized case if scale_x < some finite limit
     if ((scale_x <= MAX_BUFFERED_X_SCALE)) //local buffering is more efficient
@@ -133,8 +135,8 @@ __global__ void resize_NN_quad_alignread(const Ptr2dNHWC<T> src, Ptr2dNHWC<T> ds
         uint readBuffer[MAX_BUFFER_WORDS];
 
         //2 - copy out source data, 32-bit aligned aligned
-        T *aPtr = _cacheAlignedBufferedRead<T, CACHE_MEMORY_ALIGNMENT>(src, &readBuffer[0], MAX_BUFFER_WORDS, batch_idx,
-                                                                       sy, sx0, sx3);
+        T *aPtr = _cacheAlignedBufferedRead<T, CACHE_MEMORY_ALIGNMENT>(src, srcSize, &readBuffer[0], MAX_BUFFER_WORDS,
+                                                                       batch_idx, sy, sx0, sx3);
 
         //3 - NN sampling
         T gather[4] = {aPtr[0], aPtr[sx1 - sx0], aPtr[sx2 - sx0], aPtr[sx3 - sx0]};
@@ -156,23 +158,24 @@ __global__ void resize_NN_quad_alignread(const Ptr2dNHWC<T> src, Ptr2dNHWC<T> ds
 //******************** Bilinear
 
 template<typename T>
-__global__ void resize_bilinear(const Ptr2dNHWC<T> src, Ptr2dNHWC<T> dst, const float scale_x, const float scale_y)
+__global__ void resize_bilinear(cuda::Tensor3DWrap<const T> src, cuda::Tensor3DWrap<T> dst, int2 srcSize, int2 dstSize,
+                                const float scale_x, const float scale_y)
 {
     const int dst_x     = blockIdx.x * blockDim.x + threadIdx.x;
     const int dst_y     = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx = get_batch_idx();
-    int       height = src.rows, width = src.cols, out_height = dst.rows, out_width = dst.cols;
+    int       height = srcSize.y, width = srcSize.x, out_height = dstSize.y, out_width = dstSize.x;
 
     if ((dst_x < out_width) && (dst_y < out_height))
     {
         //float space for weighted addition
-        using work_type = nv::cv::cuda::ConvertBaseTypeTo<float, T>;
+        using work_type = cuda::ConvertBaseTypeTo<float, T>;
 
         //y coordinate
         float fy = (float)((dst_y + 0.5f) * scale_y - 0.5f);
         int   sy = __float2int_rd(fy);
         fy -= sy;
-        sy = max(0, min(sy, height - 2));
+        sy = cuda::max(0, cuda::min(sy, height - 2));
 
         //row pointers
         const T *aPtr = src.ptr(batch_idx, sy, 0);     //start of upper row
@@ -183,66 +186,66 @@ __global__ void resize_bilinear(const Ptr2dNHWC<T> src, Ptr2dNHWC<T> dst, const 
             int   sx = __float2int_rd(fx);
             fx -= sx;
             fx *= ((sx >= 0) && (sx < width - 1));
-            sx = max(0, min(sx, width - 2));
+            sx = cuda::max(0, cuda::min(sx, width - 2));
 
-            *dst.ptr(batch_idx, dst_y, dst_x) = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<T>>(
-                (1.0f - fx) * (aPtr[sx] * (1.0f - fy) + bPtr[sx] * fy)
-                + fx * (aPtr[sx + 1] * (1.0f - fy) + bPtr[sx + 1] * fy));
+            *dst.ptr(batch_idx, dst_y, dst_x)
+                = cuda::SaturateCast<cuda::BaseType<T>>((1.0f - fx) * (aPtr[sx] * (1.0f - fy) + bPtr[sx] * fy)
+                                                        + fx * (aPtr[sx + 1] * (1.0f - fy) + bPtr[sx + 1] * fy));
         }
     }
 } //resize_bilinear
 
 template<typename T>
-__global__ void resize_bilinear_quad_alignread(const Ptr2dNHWC<T> src, Ptr2dNHWC<T> dst, const float scale_x,
-                                               const float scale_y)
+__global__ void resize_bilinear_quad_alignread(cuda::Tensor3DWrap<const T> src, cuda::Tensor3DWrap<T> dst, int2 srcSize,
+                                               int2 dstSize, const float scale_x, const float scale_y)
 {
     const float MAX_BUFFERED_X_SCALE = 4.0f; //probably more efficient all the way up to 4.0
 
     const int dst_x     = (blockIdx.x * blockDim.x + threadIdx.x) * 4; //quad
     const int dst_y     = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx = get_batch_idx();
-    int       height = src.rows, width = src.cols, out_height = dst.rows, out_width = dst.cols;
+    int       height = srcSize.y, width = srcSize.x, out_height = dstSize.y, out_width = dstSize.x;
 
     //0 - quad-aligned so if one pixel is out, they're all out
     if ((dst_x >= out_width) | (dst_y >= out_height))
         return;
 
     //float space for weighted addition
-    using work_type = nv::cv::cuda::ConvertBaseTypeTo<float, T>;
+    using work_type = cuda::ConvertBaseTypeTo<float, T>;
 
     //y coordinate math is the same for all points
     float fy = (float)((dst_y + 0.5f) * scale_y - 0.5f);
     int   sy = __float2int_rd(fy);
     fy -= sy;
-    sy = max(0, min(sy, height - 2));
+    sy = cuda::max(0, cuda::min(sy, height - 2));
 
     //sx0
     float fx0 = (float)((dst_x + 0.5f) * scale_x - 0.5f);
     int   sx0 = __float2int_rd(fx0);
     fx0 -= sx0;
     fx0 *= ((sx0 >= 0) && (sx0 < width - 1));
-    sx0 = max(0, min(sx0, width - 2));
+    sx0 = cuda::max(0, cuda::min(sx0, width - 2));
 
     //sx1
     float fx1 = (float)((dst_x + 1.5) * scale_x - 0.5f);
     int   sx1 = __float2int_rd(fx1);
     fx1 -= sx1;
     fx1 *= ((sx1 >= 0) && (sx1 < width - 1));
-    sx1 = max(0, min(sx1, width - 2));
+    sx1 = cuda::max(0, cuda::min(sx1, width - 2));
 
     //sx2
     float fx2 = (float)((dst_x + 2.5f) * scale_x - 0.5f);
     int   sx2 = __float2int_rd(fx2);
     fx2 -= sx2;
     fx2 *= ((sx2 >= 0) && (sx2 < width - 1));
-    sx2 = max(0, min(sx2, width - 2));
+    sx2 = cuda::max(0, cuda::min(sx2, width - 2));
 
     //sx3
     float fx3 = (float)((dst_x + 3.5f) * scale_x - 0.5f);
     int   sx3 = __float2int_rd(fx3);
     fx3 -= sx3;
     fx3 *= ((sx3 >= 0) && (sx3 < width - 1));
-    sx3 = max(0, min(sx3, width - 2));
+    sx3 = cuda::max(0, cuda::min(sx3, width - 2));
 
     uint readBuffer[MAX_BUFFER_WORDS];
 
@@ -254,8 +257,8 @@ __global__ void resize_bilinear_quad_alignread(const Ptr2dNHWC<T> src, Ptr2dNHWC
         work_type accum[4];
 
         //2 - aligned load a-row and add partial product
-        T *aPtr = _cacheAlignedBufferedRead<T, CACHE_MEMORY_ALIGNMENT>(src, readBuffer, MAX_BUFFER_WORDS, batch_idx, sy,
-                                                                       sx0, sx3 + 1);
+        T *aPtr = _cacheAlignedBufferedRead<T, CACHE_MEMORY_ALIGNMENT>(src, srcSize, readBuffer, MAX_BUFFER_WORDS,
+                                                                       batch_idx, sy, sx0, sx3 + 1);
         //const T * aPtr = src.ptr(batch_idx, sy,   sx0); //start of upper row
 
         accum[0] = (1.0f - fy) * (aPtr[sx0 - sx0] * (1.0f - fx0) + aPtr[sx0 - sx0 + 1] * fx0);
@@ -264,18 +267,18 @@ __global__ void resize_bilinear_quad_alignread(const Ptr2dNHWC<T> src, Ptr2dNHWC
         accum[3] = (1.0f - fy) * (aPtr[sx3 - sx0] * (1.0f - fx3) + aPtr[sx3 - sx0 + 1] * fx3);
 
         //3 - aligned load b-row and add remaining partial product
-        T *bPtr = _cacheAlignedBufferedRead<T, CACHE_MEMORY_ALIGNMENT>(src, readBuffer, MAX_BUFFER_WORDS, batch_idx,
-                                                                       sy + 1, sx0, sx3 + 1);
+        T *bPtr = _cacheAlignedBufferedRead<T, CACHE_MEMORY_ALIGNMENT>(src, srcSize, readBuffer, MAX_BUFFER_WORDS,
+                                                                       batch_idx, sy + 1, sx0, sx3 + 1);
         //const T * bPtr = src.ptr(batch_idx, sy+1, sx0); //start of lower row
 
         //$$$ only need to cast, not saturatecast
-        result[0] = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<T>>(
+        result[0] = cuda::SaturateCast<cuda::BaseType<T>>(
             accum[0] + fy * (bPtr[sx0 - sx0] * (1.0f - fx0) + bPtr[sx0 - sx0 + 1] * fx0));
-        result[1] = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<T>>(
+        result[1] = cuda::SaturateCast<cuda::BaseType<T>>(
             accum[1] + fy * (bPtr[sx1 - sx0] * (1.0f - fx1) + bPtr[sx1 - sx0 + 1] * fx1));
-        result[2] = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<T>>(
+        result[2] = cuda::SaturateCast<cuda::BaseType<T>>(
             accum[2] + fy * (bPtr[sx2 - sx0] * (1.0f - fx2) + bPtr[sx2 - sx0 + 1] * fx2));
-        result[3] = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<T>>(
+        result[3] = cuda::SaturateCast<cuda::BaseType<T>>(
             accum[3] + fy * (bPtr[sx3 - sx0] * (1.0f - fx3) + bPtr[sx3 - sx0 + 1] * fx3));
     }
     else //unbuffered
@@ -285,19 +288,19 @@ __global__ void resize_bilinear_quad_alignread(const Ptr2dNHWC<T> src, Ptr2dNHWC
         const T *bPtr = src.ptr(batch_idx, sy + 1, 0); //start of lower row
 
         //$$$ only need to cast, not saturatecast
-        result[0] = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<T>>(
+        result[0] = cuda::SaturateCast<cuda::BaseType<T>>(
             aPtr[sx0] * (1.0f - fx0) * (1.0f - fy) + bPtr[sx0] * (1.0f - fx0) * fy + aPtr[sx0 + 1] * fx0 * (1.0f - fy)
             + bPtr[sx0 + 1] * fx0 * fy);
 
-        result[1] = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<T>>(
+        result[1] = cuda::SaturateCast<cuda::BaseType<T>>(
             aPtr[sx1] * (1.0f - fx1) * (1.0f - fy) + bPtr[sx1] * (1.0f - fx1) * fy + aPtr[sx1 + 1] * fx1 * (1.0f - fy)
             + bPtr[sx1 + 1] * fx1 * fy);
 
-        result[2] = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<T>>(
+        result[2] = cuda::SaturateCast<cuda::BaseType<T>>(
             aPtr[sx2] * (1.0f - fx2) * (1.0f - fy) + bPtr[sx2] * (1.0f - fx2) * fy + aPtr[sx2 + 1] * fx2 * (1.0f - fy)
             + bPtr[sx2 + 1] * fx2 * fy);
 
-        result[3] = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<T>>(
+        result[3] = cuda::SaturateCast<cuda::BaseType<T>>(
             aPtr[sx3] * (1.0f - fx3) * (1.0f - fy) + bPtr[sx3] * (1.0f - fx3) * fy + aPtr[sx3 + 1] * fx3 * (1.0f - fy)
             + bPtr[sx3 + 1] * fx3 * fy);
     }
@@ -309,17 +312,18 @@ __global__ void resize_bilinear_quad_alignread(const Ptr2dNHWC<T> src, Ptr2dNHWC
 //******************** Bicubic
 
 template<typename T>
-__global__ void resize_bicubic(const Ptr2dNHWC<T> src, Ptr2dNHWC<T> dst, const float scale_x, const float scale_y)
+__global__ void resize_bicubic(cuda::Tensor3DWrap<const T> src, cuda::Tensor3DWrap<T> dst, int2 srcSize, int2 dstSize,
+                               const float scale_x, const float scale_y)
 { //optimized for aligned read
     const int dst_x     = blockIdx.x * blockDim.x + threadIdx.x;
     const int dst_y     = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx = get_batch_idx();
-    int       height = src.rows, width = src.cols, out_height = dst.rows, out_width = dst.cols;
+    int       height = srcSize.y, width = srcSize.x, out_height = dstSize.y, out_width = dstSize.x;
 
     if ((dst_x < out_width) & (dst_y < out_height))
     {
         //float space for weighted addition
-        using work_type = nv::cv::cuda::ConvertBaseTypeTo<float, T>;
+        using work_type = cuda::ConvertBaseTypeTo<float, T>;
 
         uint readBuffer[MAX_BUFFER_WORDS];
 
@@ -327,7 +331,7 @@ __global__ void resize_bicubic(const Ptr2dNHWC<T> src, Ptr2dNHWC<T> dst, const f
         float fy = (float)((dst_y + 0.5f) * scale_y - 0.5f);
         int   sy = __float2int_rd(fy);
         fy -= sy;
-        sy = max(1, min(sy, height - 3));
+        sy = cuda::max(1, cuda::min(sy, height - 3));
 
         const float A = -0.75f;
 
@@ -337,13 +341,13 @@ __global__ void resize_bicubic(const Ptr2dNHWC<T> src, Ptr2dNHWC<T> dst, const f
         cY[2] = ((A + 2) * (1 - fy) - (A + 3)) * (1 - fy) * (1 - fy) + 1;
         cY[3] = 1.f - cY[0] - cY[1] - cY[2];
 
-        work_type accum = nv::cv::cuda::SetAll<work_type>(0);
+        work_type accum = cuda::SetAll<work_type>(0);
 
         float fx = (float)((dst_x + 0.5f) * scale_x - 0.5f);
         int   sx = __float2int_rd(fx);
         fx -= sx;
         fx *= ((sx >= 1) && (sx < width - 3));
-        sx = max(1, min(sx, width - 3));
+        sx = cuda::max(1, cuda::min(sx, width - 3));
 
         float cX[4];
         cX[0] = ((A * (fx + 1.0f) - 5.0f * A) * (fx + 1.0f) + 8.0f * A) * (fx + 1.0f) - 4.0f * A;
@@ -355,33 +359,32 @@ __global__ void resize_bicubic(const Ptr2dNHWC<T> src, Ptr2dNHWC<T> dst, const f
         {
             //1 - load each sub row from sx-1 to sx+3 inclusive, aligned
             //const T * aPtr = src.ptr(batch_idx, sy + row - 1, sx-1);
-            T *aPtr = _cacheAlignedBufferedRead<T, CACHE_MEMORY_ALIGNMENT>(src, readBuffer, MAX_BUFFER_WORDS, batch_idx,
-                                                                           sy + row - 1, sx - 1, sx + 2);
+            T *aPtr = _cacheAlignedBufferedRead<T, CACHE_MEMORY_ALIGNMENT>(src, srcSize, readBuffer, MAX_BUFFER_WORDS,
+                                                                           batch_idx, sy + row - 1, sx - 1, sx + 2);
 
             //2 - do a pixel's partial on this row
             accum += cY[row] * (cX[0] * aPtr[0] + cX[1] * aPtr[1] + cX[2] * aPtr[2] + cX[3] * aPtr[3]);
         } //for row
 #ifndef LEGACY_BICUBIC_MATH
         //correct math
-        *dst.ptr(batch_idx, dst_y, dst_x) = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<T>>(accum);
+        *dst.ptr(batch_idx, dst_y, dst_x) = cuda::SaturateCast<cuda::BaseType<T>>(accum);
 #else
         //abs() needed to match legacy operator.
-        *dst.ptr(batch_idx, dst_y, dst_x)
-            = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<T>>(nv::cv::cuda::abs(accum));
+        *dst.ptr(batch_idx, dst_y, dst_x) = cuda::SaturateCast<cuda::BaseType<T>>(cuda::abs(accum));
 #endif
     }
 } //resize_bicubic
 
 template<typename T>
-__global__ void resize_bicubic_quad_alignread(const Ptr2dNHWC<T> src, Ptr2dNHWC<T> dst, const float scale_x,
-                                              const float scale_y)
+__global__ void resize_bicubic_quad_alignread(cuda::Tensor3DWrap<const T> src, cuda::Tensor3DWrap<T> dst, int2 srcSize,
+                                              int2 dstSize, const float scale_x, const float scale_y)
 {                                            //optimized for aligned read and write, plus buffering
     const float MAX_BUFFERED_X_SCALE = 4.0f; //probably more efficient all the way up to 4.0
 
     const int dst_x     = (blockIdx.x * blockDim.x + threadIdx.x) * 4; //quad
     const int dst_y     = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx = get_batch_idx();
-    int       height = src.rows, width = src.cols, out_height = dst.rows, out_width = dst.cols;
+    int       height = srcSize.y, width = srcSize.x, out_height = dstSize.y, out_width = dstSize.x;
 
     //0 - quad-aligned so if one pixel is out, they're all out
     if ((dst_x >= out_width) | (dst_y >= out_height))
@@ -391,13 +394,13 @@ __global__ void resize_bicubic_quad_alignread(const Ptr2dNHWC<T> src, Ptr2dNHWC<
     T    result[4];
 
     //float space for weighted addition
-    using work_type = nv::cv::cuda::ConvertBaseTypeTo<float, T>;
+    using work_type = cuda::ConvertBaseTypeTo<float, T>;
 
     //y coordinate
     float fy = (float)((dst_y + 0.5f) * scale_y - 0.5f);
     int   sy = __float2int_rd(fy);
     fy -= sy;
-    sy = max(1, min(sy, height - 3));
+    sy = cuda::max(1, cuda::min(sy, height - 3));
 
     const float A = -0.75f;
 
@@ -419,14 +422,14 @@ __global__ void resize_bicubic_quad_alignread(const Ptr2dNHWC<T> src, Ptr2dNHWC<
         //initialize data for each pixel position
         for (int pix = 0; pix < 4; ++pix)
         {
-            accum[pix] = nv::cv::cuda::SetAll<work_type>(0);
+            accum[pix] = cuda::SetAll<work_type>(0);
 
             //1 - precalc sx's ahead of time to get range from sx0-1..sx3+2
             fx[pix] = (float)((dst_x + pix + 0.5f) * scale_x - 0.5f);
             sx[pix] = __float2int_rd(fx[pix]);
             fx[pix] -= sx[pix];
             fx[pix] *= ((sx[pix] >= 1) && (sx[pix] < width - 3));
-            sx[pix] = max(1, min(sx[pix], width - 3));
+            sx[pix] = cuda::max(1, cuda::min(sx[pix], width - 3));
 
             //2 - precalc cX[][] 2D array
             cX[pix][0]
@@ -441,8 +444,8 @@ __global__ void resize_bicubic_quad_alignread(const Ptr2dNHWC<T> src, Ptr2dNHWC<
         for (int row = 0; row < 4; ++row)
         {
             //1 - load each row from sx[0]-1 to sx[3]+3 inclusive, aligned
-            T *aPtr = _cacheAlignedBufferedRead<T, CACHE_MEMORY_ALIGNMENT>(src, readBuffer, MAX_BUFFER_WORDS, batch_idx,
-                                                                           sy + row - 1, sx[0] - 1, sx[3] + 2);
+            T *aPtr = _cacheAlignedBufferedRead<T, CACHE_MEMORY_ALIGNMENT>(
+                src, srcSize, readBuffer, MAX_BUFFER_WORDS, batch_idx, sy + row - 1, sx[0] - 1, sx[3] + 2);
 
 //2 - do each pixel's partial on this row
 #pragma unroll
@@ -457,22 +460,22 @@ __global__ void resize_bicubic_quad_alignread(const Ptr2dNHWC<T> src, Ptr2dNHWC<
 
         for (int pix = 0; pix < 4; ++pix)
 #ifndef LEGACY_BICUBIC_MATH
-            result[pix] = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<T>>(accum[pix]);
+            result[pix] = cuda::SaturateCast<cuda::BaseType<T>>(accum[pix]);
 #else
-            result[pix] = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<T>>(nv::cv::cuda::abs(accum[pix]));
+            result[pix] = cuda::SaturateCast<cuda::BaseType<T>>(cuda::abs(accum[pix]));
 #endif
     }
     else
     { //partially buffered read 4 pixels at a time across each bicubic: 16 coalesced reads instead of 64
         for (int pix = 0; pix < 4; ++pix)
         {
-            work_type accum = nv::cv::cuda::SetAll<work_type>(0);
+            work_type accum = cuda::SetAll<work_type>(0);
 
             float fx = (float)((dst_x + pix + 0.5f) * scale_x - 0.5f);
             int   sx = __float2int_rd(fx);
             fx -= sx;
             fx *= ((sx >= 1) && (sx < width - 3));
-            sx = max(1, min(sx, width - 3));
+            sx = cuda::max(1, cuda::min(sx, width - 3));
 
             float cX[4];
             cX[0] = ((A * (fx + 1.0f) - 5.0f * A) * (fx + 1.0f) + 8.0f * A) * (fx + 1.0f) - 4.0f * A;
@@ -485,15 +488,15 @@ __global__ void resize_bicubic_quad_alignread(const Ptr2dNHWC<T> src, Ptr2dNHWC<
                 //1 - load each sub row from sx[pix]-1 to sx[pix]+2 inclusive, aligned
                 //const T * aPtr = src.ptr(batch_idx, sy + row - 1, sx-1);
                 const T *aPtr = _cacheAlignedBufferedRead<T, CACHE_MEMORY_ALIGNMENT>(
-                    src, readBuffer, MAX_BUFFER_WORDS, batch_idx, sy + row - 1, sx - 1, sx + 2);
+                    src, srcSize, readBuffer, MAX_BUFFER_WORDS, batch_idx, sy + row - 1, sx - 1, sx + 2);
 
                 //2 - do a pixel's partial on this row
                 accum += cY[row] * (cX[0] * aPtr[0] + cX[1] * aPtr[1] + cX[2] * aPtr[2] + cX[3] * aPtr[3]);
             } //for row
 #ifndef LEGACY_BICUBIC_MATH
-            result[pix] = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<T>>(accum);
+            result[pix] = cuda::SaturateCast<cuda::BaseType<T>>(accum);
 #else
-            result[pix] = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<T>>(nv::cv::cuda::abs(accum));
+            result[pix] = cuda::SaturateCast<cuda::BaseType<T>>(cuda::abs(accum));
 #endif
         } //for pix
     }
@@ -515,12 +518,11 @@ __global__ void resize_area_ocv_align(const Ptr2dNHWC<T> src, const IntegerAreaF
     if (x >= out_width || y >= out_height)
         return;
 
-    double inv_scale_x = 1. / scale_x;
-    double inv_scale_y = 1. / scale_y;
-    int    iscale_x    = nv::cv::cuda::SaturateCast<int>(scale_x);
-    int    iscale_y    = nv::cv::cuda::SaturateCast<int>(scale_y);
-    bool   is_area_fast
-        = nv::cv::cuda::abs(scale_x - iscale_x) < DBL_EPSILON && nv::cv::cuda::abs(scale_y - iscale_y) < DBL_EPSILON;
+    double inv_scale_x  = 1. / scale_x;
+    double inv_scale_y  = 1. / scale_y;
+    int    iscale_x     = cuda::SaturateCast<int>(scale_x);
+    int    iscale_y     = cuda::SaturateCast<int>(scale_y);
+    bool   is_area_fast = cuda::abs(scale_x - iscale_x) < DBL_EPSILON && cuda::abs(scale_y - iscale_y) < DBL_EPSILON;
 
     if (scale_x >= 1.0f && scale_y >= 1.0f) // zoom out
     {
@@ -565,28 +567,37 @@ __global__ void resize_area_ocv_align(const Ptr2dNHWC<T> src, const IntegerAreaF
     cbufx[0] = 1.f - fx;
     cbufx[1] = fx;
 
-    *dst.ptr(batch_idx, y, x) = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<T>>(
+    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<cuda::BaseType<T>>(
         (*src.ptr(batch_idx, sy, sx) * cbufx[0] * cbufy[0] + *src.ptr(batch_idx, sy + 1, sx) * cbufx[0] * cbufy[1]
          + *src.ptr(batch_idx, sy, sx + 1) * cbufx[1] * cbufy[0]
          + *src.ptr(batch_idx, sy + 1, sx + 1) * cbufx[1] * cbufy[1]));
 }
 
 template<typename T>
-void resize(const nvcv::TensorDataAccessPitchImagePlanar &inData, const nvcv::TensorDataAccessPitchImagePlanar &outData,
+void resize(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
             NVCVInterpolationType interpolation, cudaStream_t stream)
 
 {
-    const int batch_size = inData.numSamples();
-    const int in_width   = inData.numCols();
-    const int in_height  = inData.numRows();
-    const int out_width  = outData.numCols();
-    const int out_height = outData.numRows();
+    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    NVCV_ASSERT(inAccess);
+
+    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    NVCV_ASSERT(outAccess);
+
+    const int batch_size = inAccess->numSamples();
+    const int in_width   = inAccess->numCols();
+    const int in_height  = inAccess->numRows();
+    const int out_width  = outAccess->numCols();
+    const int out_height = outAccess->numRows();
 
     float scale_x = ((float)in_width) / out_width;
     float scale_y = ((float)in_height) / out_height;
 
-    Ptr2dNHWC<T> src_ptr(inData);  //batch_size, height, width, channels, (T *)d_in);
-    Ptr2dNHWC<T> dst_ptr(outData); //batch_size, out_height, out_width, channels, (T *)d_out);
+    int2 srcSize{in_width, in_height};
+    int2 dstSize{out_width, out_height};
+
+    cuda::Tensor3DWrap<const T> src(inData);
+    cuda::Tensor3DWrap<T>       dst(outData);
 
     const int THREADS_PER_BLOCK = 128; //256?  64?
     const int BLOCK_WIDTH       = 16;  //as in 32x4 or 32x8.  16x8 and 16x16 are also viable
@@ -610,11 +621,12 @@ void resize(const nvcv::TensorDataAccessPitchImagePlanar &inData, const nvcv::Te
 
         if (can_quad)
         { //thread does 4 pixels horizontally for aligned read and write
-            resize_NN_quad_alignread<T><<<quadGridSize, blockSize, 0, stream>>>(src_ptr, dst_ptr, scale_x, scale_y);
+            resize_NN_quad_alignread<T>
+                <<<quadGridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x, scale_y);
         }
         else
         { //generic single pixel per thread case
-            resize_NN<T><<<gridSize, blockSize, 0, stream>>>(src_ptr, dst_ptr, scale_x, scale_y);
+            resize_NN<T><<<gridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x, scale_y);
         }
         break;
 
@@ -622,11 +634,11 @@ void resize(const nvcv::TensorDataAccessPitchImagePlanar &inData, const nvcv::Te
         if (can_quad)
         { //thread does 4 pixels horizontally for aligned read and write
             resize_bilinear_quad_alignread<T>
-                <<<quadGridSize, blockSize, 0, stream>>>(src_ptr, dst_ptr, scale_x, scale_y);
+                <<<quadGridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x, scale_y);
         }
         else
         { //generic single pixel per thread case
-            resize_bilinear<T><<<gridSize, blockSize, 0, stream>>>(src_ptr, dst_ptr, scale_x, scale_y);
+            resize_bilinear<T><<<gridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x, scale_y);
         }
         break;
 
@@ -634,16 +646,18 @@ void resize(const nvcv::TensorDataAccessPitchImagePlanar &inData, const nvcv::Te
         if (can_quad)
         { //thread does 4 pixels horizontally for aligned read and write
             resize_bicubic_quad_alignread<T>
-                <<<quadGridSize, blockSize, 0, stream>>>(src_ptr, dst_ptr, scale_x, scale_y);
+                <<<quadGridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x, scale_y);
         }
         else
         { //generic single pixel per thread case
-            resize_bicubic<T><<<gridSize, blockSize, 0, stream>>>(src_ptr, dst_ptr, scale_x, scale_y);
+            resize_bicubic<T><<<gridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x, scale_y);
         }
         break;
 
     case NVCV_INTERP_AREA:
     {
+        Ptr2dNHWC<T>                                                  src_ptr(*inAccess);
+        Ptr2dNHWC<T>                                                  dst_ptr(*outAccess);
         BrdConstant<T>                                                brd(src_ptr.rows, src_ptr.cols);
         BorderReader<Ptr2dNHWC<T>, BrdConstant<T>>                    brdSrc(src_ptr, brd);
         IntegerAreaFilter<BorderReader<Ptr2dNHWC<T>, BrdConstant<T>>> integer_filter(brdSrc, scale_x, scale_y);
@@ -664,8 +678,6 @@ void resize(const nvcv::TensorDataAccessPitchImagePlanar &inData, const nvcv::Te
     checkCudaErrors(cudaGetLastError());
 #endif
 } //resize
-
-namespace nv::cv::legacy::cuda_op {
 
 size_t Resize::calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type)
 {
@@ -695,9 +707,6 @@ ErrorCode Resize::infer(const ITensorDataPitchDevice &inData, const ITensorDataP
     auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
-    NVCV_ASSERT(outAccess);
-
     cuda_op::DataType  data_type   = GetLegacyDataType(inData.dtype());
     cuda_op::DataShape input_shape = GetLegacyDataShape(inAccess->infoShape());
 
@@ -715,8 +724,7 @@ ErrorCode Resize::infer(const ITensorDataPitchDevice &inData, const ITensorDataP
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    typedef void (*func_t)(const nvcv::TensorDataAccessPitchImagePlanar &inData,
-                           const nvcv::TensorDataAccessPitchImagePlanar &outData,
+    typedef void (*func_t)(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
                            const NVCVInterpolationType interpolation, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {
@@ -736,7 +744,7 @@ ErrorCode Resize::infer(const ITensorDataPitchDevice &inData, const ITensorDataP
         const func_t func = funcs[data_type][channels - 1];
         NVCV_ASSERT(func != 0);
 
-        func(*inAccess, *outAccess, interpolation, stream);
+        func(inData, outData, interpolation, stream);
     }
     else
     {
