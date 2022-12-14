@@ -20,11 +20,14 @@ set(CMAKE_FOLDER samples)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 include(ConfigTensorRT)
 
-set(SAMPLES common
+set(CPPSAMPLES common
 	    classification
-	    cropandresize)
+        cropandresize)
 
-foreach(sample ${SAMPLES})
+set(PYSAMPLES classification
+    segmentation)
+
+foreach(sample ${CPPSAMPLES})
     add_subdirectory(${sample})
 endforeach()
 
@@ -40,6 +43,10 @@ install(FILES "CMakeLists.txt" "ConfigTensorRT.cmake" "README.md"
     COMPONENT samples
     DESTINATION samples)
 
-install(DIRECTORY ${SAMPLES}
+install(DIRECTORY ${CPPSAMPLES}
+    COMPONENT samples
+    DESTINATION samples)
+
+install(DIRECTORY ${PYSAMPLES}
     COMPONENT samples
     DESTINATION samples)

@@ -14,7 +14,7 @@ ARG VER_TRT=?
 
 FROM nvcr.io/nvidia/tensorrt:$VER_TRT-py3
 RUN apt-get update && apt-get install -y --no-install-recommends build-essential \
-    build-essential software-properties-common \
+    software-properties-common \
     && rm -rf /var/lib/apt/lists/*
 
 RUN add-apt-repository ppa:ubuntu-toolchain-r/test
@@ -29,6 +29,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends libgtest-dev li
     mlocate && updatedb \
     && rm -rf /var/lib/apt/lists/*
 RUN pip3 install --upgrade pip
-RUN pip install torch torchvision
+RUN pip3 install torch torchvision
+RUN git clone https://github.com/itsliupeng/torchnvjpeg.git
+RUN cd torchnvjpeg && python setup.py bdist_wheel && cd dist && pip3 install torchnvjpeg-0.1.0-cp38-cp38-linux_x86_64.whl
 RUN echo "export PATH=$PATH:/opt/tensorrt/bin" >> ~/.bashrc
 RUN echo $PATH
