@@ -36,6 +36,7 @@ void ExportOpConv2D(py::module &m);
 void ExportOpBilateralFilter(py::module &m);
 void ExportOpCenterCrop(py::module &m);
 void ExportOpWarpAffine(py::module &m);
+void ExportOpWarpPerspective(py::module &m);
 
 // Helper class that serves as python-side operator class.
 // OP: native operator class
