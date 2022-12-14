@@ -1773,6 +1773,43 @@ public:
                     cudaStream_t stream);
 };
 
+class GammaContrastVarShape : public CudaBaseOp
+{
+public:
+    GammaContrastVarShape() = delete;
+
+    GammaContrastVarShape(const int32_t maxVarShapeBatchSize, const int32_t maxVarShapeChannelCount);
+
+    ~GammaContrastVarShape();
+
+    /**
+     * @brief Adjust image contrast by scaling pixel values to 255*((v/255)**gamma)
+     * @param inputs gpu pointer, inputs[i] is input image where i ranges from 0 to batch-1, whose shape is
+     * input_shape[i] and type is data_type.
+     * @param outputs gpu pointer, outputs[i] is output image where i ranges from 0 to batch-1, whose size is
+     * input_shape[i] and type is data_type.
+     * @param gpu_workspace gpu pointer, gpu memory used to store the temporary variable.
+     * @param cpu_workspace cpu pointer, cpu memory used to store the temporary variable.
+     * @param batch batch size of the input images.
+     * @param buffer_size size of the gpu_workspace/cpu_workspace.
+     * @param gammas the gamma value for each image / image channel. If per_channel is true, the length of gammas should
+     * be equal to batch * channel_size.
+     * @param per_channel whether to use the same value for all channels.
+     * @param input_shapes shape of the input images.
+     * @param format format of the input images, e.g. kNHWC.
+     * @param data_type data type of the input images, e.g. kCV_32F.
+     * @param stream for the asynchronous execution.
+     */
+
+    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
+                    const ITensorDataPitchDevice &gammas, cudaStream_t stream);
+
+private:
+    int    m_maxBatchSize    = 0;
+    int    m_maxChannelCount = 0;
+    float *m_gammaArray      = nullptr;
+};
+
 class EraseVarShape : public CudaBaseOp
 {
 public:

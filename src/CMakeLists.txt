@@ -60,6 +60,7 @@ add_library(nvcv SHARED
     operators/OpComposite.cpp
     operators/OpChannelReorder.cpp
     operators/OpFlip.cpp
+    operators/OpGammaContrast.cpp
 )
 
 target_link_libraries(nvcv PRIVATE
