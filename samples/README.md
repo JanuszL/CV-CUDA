@@ -10,9 +10,10 @@ Sample applications to show how use some of CV-CUDA's functionalities.
     - Ubuntu >= 20.04 (tested with 20.04 and 22.04)
     - WSL2 with Ubuntu >= 20.04 (tested with 20.04)
 - CUDA driver >= 11.7
-- TensorRT
-- torch
-- torchvision
+- TensorRT == 8.5.2.2
+- torch == 1.13.0
+- torchvision == 0.14.0
+- torchnvjpeg (https://github.com/itsliupeng/torchnvjpeg)
 
 ## Setup to compile the sample from source.
 

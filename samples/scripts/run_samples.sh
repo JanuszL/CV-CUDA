@@ -36,6 +36,10 @@ python3 segmentation/python/inference.py -i assets/tabby_tiger_cat.jpg -o /tmp -
 python3 segmentation/python/inference.py -i assets/ -o /tmp -b 5 -c __background__
 # Run on a single image with custom resized input given to the sample for the dog class
 python3 segmentation/python/inference.py -i assets/Weimaraner.jpg -o /tmp -b 1 -c dog -th 224 -tw 224
+# Run the segmentation sample with default settings for TensorRT backend.
+python3 ./segmentation/python/inference.py -bk tensorrt
+# Run it on a folder worth of images with TensorRT
+python3 segmentation/python/inference.py -i assets/ -o /tmp -b 5 -c __background__ -bk tensorrt
 
 # Classification sample
 # Batch size 1

@@ -17,10 +17,12 @@ The semantic segmentation sample uses DeepLabv3 model from the torchvision
 repository and shows the usage of CVCUDA by implementing a complete end-to-end
 pipeline which can read images from the disk, pre-process them, run the inference
 on them and save the overlay outputs back to the disk. This sample also gives an
-overview of the interoperability of PyTorch with CVCUDA tensors and operators.
+overview of the interoperability of PyTorch and TensorRT with CVCUDA tensors and
+operators.
 """
 
 import os
+import sys
 import glob
 import argparse
 import torch
@@ -29,6 +31,17 @@ import torchvision.transforms.functional as F
 from torchvision.models import segmentation as segmentation_models
 import numpy as np
 import nvcv
+import tensorrt as trt
+
+# Bring the commons folder from the samples directory into our path so that
+# we can import modules from it.
+common_dir = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    "common",
+    "python",
+)
+sys.path.insert(0, common_dir)
+from trt_utils import convert_onnx_to_tensorrt, setup_tensort_bindings  # noqa: E402
 
 
 class SemanticSegmentationSample:
@@ -51,11 +64,12 @@ class SemanticSegmentationSample:
         self.target_img_width = target_img_width
         self.device_id = device_id
         self.backend = backend
+        self.class_to_idx_dict = None
 
-        if self.backend not in ["pytorch"]:
+        if self.backend not in ["pytorch", "tensorrt"]:
             print(
-                "Invalid backend option specified: %s. Currently supports: pytorch"
-                % self.backend
+                "Invalid backend option specified: %s. "
+                "Currently supports: pytorch, tensorrt" % self.backend
             )
             exit(1)
 
@@ -105,18 +119,18 @@ class SemanticSegmentationSample:
             weights_info = segmentation_models.DeepLabV3_ResNet101_Weights
 
             weights = weights_info.DEFAULT
-            class_to_idx_dict = {
+            self.class_to_idx_dict = {
                 cls: idx for (idx, cls) in enumerate(weights.meta["categories"])
             }
 
-            if self.visualization_class_name not in class_to_idx_dict:
+            if self.visualization_class_name not in self.class_to_idx_dict:
                 print(
                     "Requested segmentation class '%s' is not supported by the "
                     "DeepLabV3 model." % self.visualization_class_name
                 )
                 print(
                     "All supported class names are: %s"
-                    % ", ".join(class_to_idx_dict.keys())
+                    % ", ".join(self.class_to_idx_dict.keys())
                 )
                 exit(1)
 
@@ -126,32 +140,185 @@ class SemanticSegmentationSample:
             model.cuda(self.device_id)
             model.eval()
 
-            return model, class_to_idx_dict
+            return model
+
+        elif self.backend == "tensorrt":
+            # For TensorRT, the process is the following:
+            # We check if there already exists a TensorRT engine generated
+            # previously. If not, we check if there exists an ONNX model generated
+            # previously. If not, we will generate both of the one by one
+            # and then use those.
+            # The underlying pytorch model that we use in case of TensorRT
+            # inference is the FCN model from torchvision. It is only used during
+            # the conversion process and not during the inference.
+            onnx_file_path = os.path.join(self.results_dir, "model.onnx")
+            trt_engine_file_path = os.path.join(
+                self.results_dir, "model.%d.trtmodel" % self.batch_size
+            )
+
+            torch_model = segmentation_models.fcn_resnet101
+            weights_info = segmentation_models.FCN_ResNet101_Weights
+
+            weights = weights_info.DEFAULT
+            self.class_to_idx_dict = {
+                cls: idx for (idx, cls) in enumerate(weights.meta["categories"])
+            }
+
+            if self.visualization_class_name not in self.class_to_idx_dict:
+                print(
+                    "Requested segmentation class '%s' is not supported by the "
+                    "FCN model." % self.visualization_class_name
+                )
+                print(
+                    "All supported class names are: %s"
+                    % ", ".join(self.class_to_idx_dict.keys())
+                )
+                exit(1)
+
+            # Check if we have a previously generated model.
+            if not os.path.isfile(trt_engine_file_path):
+                if not os.path.isfile(onnx_file_path):
+                    # First we use PyTorch to create a segmentation model.
+                    pyt_model = torch_model(weights=weights)
+                    pyt_model.to("cuda")
+                    pyt_model.eval()
+
+                    # Allocate a dummy input to help generate an ONNX model.
+                    dummy_x_in = torch.randn(
+                        self.batch_size,
+                        3,
+                        self.target_img_height,
+                        self.target_img_width,
+                        requires_grad=False,
+                    ).cuda()
+
+                    # Generate an ONNX model using the PyTorch's onnx export.
+                    torch.onnx.export(
+                        pyt_model,
+                        args=dummy_x_in,
+                        f=onnx_file_path,
+                        export_params=True,
+                        opset_version=11,
+                        do_constant_folding=True,
+                        input_names=["input"],
+                        output_names=["output"],
+                        dynamic_axes={
+                            "input": {0: "batch_size"},
+                            "output": {0: "batch_size"},
+                        },
+                    )
+
+                    print("Generated an ONNX model and saved at: %s" % onnx_file_path)
+                else:
+                    print("Using a pre-built ONNX model from: %s" % onnx_file_path)
+
+                # Now that we have an ONNX model, we will continue generating a
+                # serialized TensorRT engine from it.
+                success = convert_onnx_to_tensorrt(
+                    onnx_file_path,
+                    trt_engine_file_path,
+                    max_batch_size=self.batch_size,
+                    max_workspace_size=5,
+                )
+                if success:
+                    print("Generated TensorRT engine in: %s" % trt_engine_file_path)
+                else:
+                    print("Failed to generate the TensorRT engine.")
+                    exit(1)
+
+            else:
+                print(
+                    "Using a pre-built TensorRT engine from: %s" % trt_engine_file_path
+                )
+
+            # Once the TensorRT engine generation is all done, we load it.
+            trt_logger = trt.Logger(trt.Logger.INFO)
+            with open(trt_engine_file_path, "rb") as f, trt.Runtime(
+                trt_logger
+            ) as runtime:
+                trt_model = runtime.deserialize_cuda_engine(f.read())
+
+            # Create execution context.
+            context = trt_model.create_execution_context()
+
+            # Allocate the output bindings.
+            output_tensors, output_idx = setup_tensort_bindings(
+                trt_model, self.device_id
+            )
+
+            return context, output_tensors, output_idx
 
         else:
             print(
-                "Invalid backend option specified: %s. Currently supports: pytorch"
-                % self.backend
+                "Invalid backend option specified: %s. "
+                "Currently supports: pytorch, tensorrt" % self.backend
             )
             exit(1)
 
-    def execute_inference(self, model, nvcv_preprocessed_tensor):
+    def execute_inference(self, model_info, torch_preprocessed_tensor):
         # Executes inference depending on the type of the backend.
         if self.backend == "pytorch":
-            # Run inference on the pre-processed input.
-            torch_preprocessed_tensor = torch.as_tensor(
-                nvcv_preprocessed_tensor.cuda(),
-                device=torch.device("cuda", self.device_id),
-            )
             with torch.no_grad():
-                infer_output = model(torch_preprocessed_tensor)["out"]
+                infer_output = model_info(torch_preprocessed_tensor)["out"]
+
+            return infer_output
+
+        elif self.backend == "tensorrt":
+            # Setup TensorRT IO binding pointers.
+            context, output_tensors, output_idx = model_info  # Un-pack this.
+
+            # We need to check the allocated batch size and the required batch
+            # size. Sometimes, during to batching, the last batch may be of
+            # less size than the batch size. In those cases, we would simply
+            # pad that with zero inputs and discard its output later on.
+            allocated_batch_size = output_tensors[output_idx].shape[0]
+            required_batch_size = torch_preprocessed_tensor.shape[0]
+
+            if allocated_batch_size != required_batch_size:
+                # Need to pad the input with extra zeros tensors.
+                new_input_shape = [allocated_batch_size - required_batch_size] + list(
+                    torch_preprocessed_tensor.shape[1:]
+                )
+
+                # Allocate just the extra input required.
+                extra_input = torch.zeros(
+                    size=new_input_shape,
+                    dtype=torch_preprocessed_tensor.dtype,
+                    device=self.device_id,
+                )
+
+                # Update the existing input tensor by joining it with the newly
+                # created input.
+                torch_preprocessed_tensor = torch.cat(
+                    (torch_preprocessed_tensor, extra_input)
+                )
+
+            # Prepare the TensorRT I/O bindings.
+            input_bindings = [torch_preprocessed_tensor.data_ptr()]
+            output_bindings = []
+            for t in output_tensors:
+                output_bindings.append(t.data_ptr())
+            io_bindings = input_bindings + output_bindings
+
+            # Execute synchronously.
+            context.execute_v2(bindings=io_bindings)
+            infer_output = output_tensors[output_idx]
+
+            # Finally, check if we had padded the input. If so, we need to
+            # discard the extra output.
+            if allocated_batch_size != required_batch_size:
+                # We need remove the padded output.
+                infer_output = torch.split(
+                    infer_output,
+                    [required_batch_size, allocated_batch_size - required_batch_size],
+                )[0]
 
             return infer_output
 
         else:
             print(
-                "Invalid backend option specified: %s. Currently supports: pytorch"
-                % self.backend
+                "Invalid backend option specified: %s. "
+                "Currently supports: pytorch, tensorrt" % self.backend
             )
             exit(1)
 
@@ -160,7 +327,7 @@ class SemanticSegmentationSample:
         max_image_size = 1024 * 1024 * 3  # Maximum possible image size.
 
         # First setup the model.
-        model, class_to_idx_dict = self.setup_model()
+        model_info = self.setup_model()
 
         # Next, we would batchify the file_list and data_list based on the
         # batch size and start processing these batches one by one.
@@ -174,21 +341,27 @@ class SemanticSegmentationSample:
         ]
         batch_idx = 0
 
+        # We will use the torchnvjpeg based decoder on the GPU. This will be
+        # allocated once during the first run or whenever a batch size change
+        # happens.
+        decoder = None
+
         for file_name_batch, data_batch in zip(file_name_batches, data_batches):
             print("Processing batch %d of %d" % (batch_idx + 1, len(file_name_batches)))
             effective_batch_size = len(file_name_batch)
 
             # Decode in batch using torchnvjpeg decoder on the GPU.
-            decoder = torchnvjpeg.Decoder(
-                0,
-                0,
-                True,
-                self.device_id,
-                effective_batch_size,
-                8,  # this is max_cpu_threads parameter. Not used internally.
-                max_image_size,
-                torch.cuda.current_stream(self.device_id),
-            )
+            if not decoder or effective_batch_size != self.batch_size:
+                decoder = torchnvjpeg.Decoder(
+                    0,
+                    0,
+                    True,
+                    self.device_id,
+                    effective_batch_size,
+                    8,  # this is max_cpu_threads parameter. Not used internally.
+                    max_image_size,
+                    torch.cuda.current_stream(self.device_id),
+                )
             image_tensor_list = decoder.batch_decode(data_batch)
 
             # Convert the list of tensors to a tensor itself.
@@ -243,8 +416,12 @@ class SemanticSegmentationSample:
             # buffer into a NCHW buffer.
             nvcv_preprocessed_tensor = nvcv_normalized_tensor.reformat("NCHW")
 
-            # Execute the inference.
-            infer_output = self.execute_inference(model, nvcv_preprocessed_tensor)
+            # Execute the inference after converting the tensor back to Torch.
+            torch_preprocessed_tensor = torch.as_tensor(
+                nvcv_preprocessed_tensor.cuda(),
+                device=torch.device("cuda", self.device_id),
+            )
+            infer_output = self.execute_inference(model_info, torch_preprocessed_tensor)
 
             # Once the inference is over we would start the post-processing steps.
             # First, we normalize the probability scores from the network.
@@ -254,7 +431,7 @@ class SemanticSegmentationSample:
             # interest
             class_masks = (
                 normalized_masks.argmax(dim=1)
-                == class_to_idx_dict[self.visualization_class_name]
+                == self.class_to_idx_dict[self.visualization_class_name]
             )
             class_masks = torch.unsqueeze(class_masks, dim=-1)  # Makes it NHWC
             class_masks = class_masks.type(torch.uint8)  # Make it uint8 from bool
@@ -392,14 +569,14 @@ def main():
         "--backend",
         default="pytorch",
         type=str,
-        help="The inference backend to use. Currently supports pytorch.",
+        help="The inference backend to use. Currently supports pytorch, tensorrt.",
     )
 
     # Parse the command line arguments.
     args = parser.parse_args()
 
     # Run the sample.
-    runner = SemanticSegmentationSample(
+    sample = SemanticSegmentationSample(
         args.input_path,
         args.output_dir,
         args.class_name,
@@ -410,7 +587,7 @@ def main():
         args.backend,
     )
 
-    runner.run()
+    sample.run()
 
 
 if __name__ == "__main__":
