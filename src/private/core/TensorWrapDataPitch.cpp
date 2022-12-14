@@ -41,6 +41,11 @@ static void ValidateTensorBufferPitch(const NVCVTensorData &tdata)
 
     int ndim = tdata.ndim;
 
+    if (ndim <= 0)
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Number of dimensions must be >= 1, not %d", ndim);
+    }
+
     for (int i = 0; i < ndim; ++i)
     {
         if (tdata.shape[i] < 1)
@@ -51,7 +56,7 @@ static void ValidateTensorBufferPitch(const NVCVTensorData &tdata)
 
     PixelType dtype{tdata.dtype};
 
-    int firstPacked = IsChannelLast(tdata.layout) ? ndim - 2 : ndim - 1;
+    int firstPacked = IsChannelLast(tdata.layout) ? std::max(0, ndim - 2) : ndim - 1;
 
     // Test packed dimensions
     int dim;

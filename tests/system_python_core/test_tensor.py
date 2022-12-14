@@ -65,6 +65,7 @@ def test_tensor_creation_imagebatch_works(
         ([16, 32, 4], np.float32, nvcv.TensorLayout.HWC),
         ([32, 4], np.float32, nvcv.TensorLayout.WC),
         ([4, 32], np.float32, nvcv.TensorLayout.CW),
+        ([32], np.float32, nvcv.TensorLayout.W),
     ],
 )
 def test_tensor_creation_shape_works(shape, dtype, layout):
@@ -94,6 +95,7 @@ def test_tensor_creation_shape_works(shape, dtype, layout):
         ([3, 5, 7, 3], np.uint8),
         ([3, 5, 7, 4], np.uint8),
         ([3, 5, 7], np.csingle),
+        ([3], np.int8),
     ],
 )
 def test_wrap_numba_buffer(shape, dtype):
@@ -112,8 +114,7 @@ def test_wrap_numba_buffer(shape, dtype):
         ([3, 5, 7, 2], np.int16, "NHWC"),
         ([3, 5, 7, 2, 4, 2, 5], np.int16, "abcdefg"),
         ([3, 5], np.uint8, "HW"),
-        # pybind11 has issues converting single characters to TensorLayout
-        # ([5], np.uint8,"W"),
+        ([5], np.uint8, "W"),
     ],
 )
 def test_wrap_numba_buffer_with_layout(shape, dtype, layout):
@@ -160,6 +161,7 @@ def test_tensor_wrap_image_works(size, fmt, gold_layout, gold_shape, gold_dtype)
         ([65, 3], np.int16),
         ([243, 65, 3], np.uint16),
         ([1, 1], np.uint16),
+        ([10], np.uint8),
     ],
 )
 def test_tensor_export_cuda_buffer(shape, dtype):
