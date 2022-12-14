@@ -72,7 +72,7 @@ public:
 
     const IImageBatchVarShapeData *exportData(CUstream stream) const;
 
-    ImageWrapHandle operator[](ptrdiff_t n) const;
+    IImage &operator[](ptrdiff_t n) const;
 
     class Iterator;
 
@@ -88,7 +88,7 @@ public:
 class IImageBatchVarShape::Iterator
 {
 public:
-    using value_type        = ImageWrapHandle;
+    using value_type        = IImage;
     using reference         = const value_type &;
     using pointer           = const value_type *;
     using iterator_category = std::forward_iterator_tag;
@@ -109,8 +109,6 @@ public:
 private:
     const IImageBatchVarShape *m_batch;
     int                        m_curIndex;
-
-    mutable detail::Optional<ImageWrapHandle> m_opImage;
 
     friend class IImageBatchVarShape;
     Iterator(const IImageBatchVarShape &batch, int32_t idxImage);
