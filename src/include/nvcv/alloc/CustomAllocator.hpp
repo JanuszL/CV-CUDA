@@ -46,6 +46,7 @@ public:
         : m_resAllocators{std::forward_as_tuple(allocators...)}
         , m_wrap{doCreateAllocator()}
     {
+        detail::SetObjectAssociation(nvcvAllocatorSetUserPointer, this, this->handle());
     }
 
     ~CustomAllocator()

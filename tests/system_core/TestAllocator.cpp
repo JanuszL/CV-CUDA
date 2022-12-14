@@ -327,6 +327,57 @@ TEST(Allocator, wip_user_pointer)
     EXPECT_EQ(nullptr, alloc.userPointer());
 }
 
+TEST(Allocator, wip_cast)
+{
+    nvcv::CustomAllocator alloc;
+
+    EXPECT_EQ(&alloc, nvcv::StaticCast<nvcv::CustomAllocator<> *>(alloc.handle()));
+    EXPECT_EQ(&alloc, nvcv::StaticCast<nvcv::IAllocator *>(alloc.handle()));
+
+    EXPECT_EQ(&alloc, &nvcv::StaticCast<nvcv::CustomAllocator<>>(alloc.handle()));
+    EXPECT_EQ(&alloc, &nvcv::StaticCast<nvcv::IAllocator>(alloc.handle()));
+
+    EXPECT_EQ(&alloc, nvcv::DynamicCast<nvcv::CustomAllocator<> *>(alloc.handle()));
+    EXPECT_EQ(&alloc, nvcv::DynamicCast<nvcv::IAllocator *>(alloc.handle()));
+
+    EXPECT_EQ(&alloc, &nvcv::DynamicCast<nvcv::CustomAllocator<>>(alloc.handle()));
+    EXPECT_EQ(&alloc, &nvcv::DynamicCast<nvcv::IAllocator>(alloc.handle()));
+
+    EXPECT_EQ(nullptr, nvcv::DynamicCast<nvcv::IAllocator *>(nullptr));
+    EXPECT_THROW(nvcv::DynamicCast<nvcv::IAllocator>(nullptr), std::bad_cast);
+
+    // Now when we create the object via C API
+
+    NVCVAllocatorHandle handle;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvAllocatorConstructCustom(nullptr, 0, &handle));
+
+    // Size of the internal buffer used to store the WrapHandle object
+    // we might have to create for containers allocated via C API.
+    // This value must never decrease, or else it'll break ABI compatibility.
+    uintptr_t max = 512;
+
+    EXPECT_GE(max, sizeof(nvcv::detail::WrapHandle<nvcv::IAllocator>)) << "Must be big enough for the WrapHandle";
+
+    void *cxxPtr = &max;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvAllocatorGetUserPointer((NVCVAllocatorHandle)(((uintptr_t)handle) | 1), &cxxPtr));
+    ASSERT_NE(&max, cxxPtr) << "Pointer must have been changed";
+
+    // Buffer too big, bail.
+    max    = 513;
+    cxxPtr = &max;
+    ASSERT_EQ(NVCV_ERROR_INTERNAL, nvcvAllocatorGetUserPointer((NVCVAllocatorHandle)(((uintptr_t)handle) | 1), &cxxPtr))
+        << "Required WrapHandle buffer storage should have been too big";
+
+    nvcv::IAllocator *palloc = nvcv::StaticCast<nvcv::IAllocator *>(handle);
+    ASSERT_NE(nullptr, palloc);
+    EXPECT_EQ(handle, palloc->handle());
+
+    EXPECT_EQ(palloc, nvcv::DynamicCast<nvcv::IAllocator *>(handle));
+    EXPECT_EQ(nullptr, nvcv::DynamicCast<nvcv::CustomAllocator<> *>(handle));
+
+    nvcvAllocatorDestroy(handle);
+}
+
 // disabled temporary while the API isn't stable
 #if 0
 

@@ -144,6 +144,13 @@ private:
     bool       isManagedResource(Resource *r) const;
 };
 
+inline bool MustProvideHiddenFunctionality(void *h)
+{
+    // Handle LSB tells us whether C public function that receives it
+    // must provide special/hidden functionality.
+    return ((uintptr_t)h) & 1;
+}
+
 template<class... AA>
 struct alignas(util::Max(alignof(AA)...)) CompatibleStorage
 {

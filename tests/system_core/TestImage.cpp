@@ -17,6 +17,7 @@
 
 #include "Definitions.hpp"
 
+#include <nvcv/Casts.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
@@ -56,16 +57,85 @@ TEST(Image, wip_create)
     EXPECT_EQ(cudaSuccess, cudaMemset2D(plane.buffer, plane.pitchBytes, 123, plane.width * 4, plane.height));
 }
 
+TEST(Image, wip_cast)
+{
+    nvcv::Image img({163, 117}, nvcv::FMT_RGBA8);
+
+    EXPECT_EQ(&img, nvcv::StaticCast<nvcv::Image *>(img.handle()));
+    EXPECT_EQ(&img, &nvcv::StaticCast<nvcv::Image>(img.handle()));
+
+    EXPECT_EQ(&img, nvcv::StaticCast<nvcv::IImage *>(img.handle()));
+    EXPECT_EQ(&img, &nvcv::StaticCast<nvcv::IImage>(img.handle()));
+
+    EXPECT_EQ(&img, nvcv::DynamicCast<nvcv::Image *>(img.handle()));
+    EXPECT_EQ(&img, &nvcv::DynamicCast<nvcv::Image>(img.handle()));
+
+    EXPECT_EQ(&img, nvcv::DynamicCast<nvcv::IImage *>(img.handle()));
+    EXPECT_EQ(&img, &nvcv::DynamicCast<nvcv::IImage>(img.handle()));
+
+    EXPECT_EQ(nullptr, nvcv::DynamicCast<nvcv::ImageWrapData *>(img.handle()));
+
+    EXPECT_EQ(nullptr, nvcv::StaticCast<nvcv::IImage *>(nullptr));
+    EXPECT_EQ(nullptr, nvcv::DynamicCast<nvcv::IImage *>(nullptr));
+    EXPECT_THROW(nvcv::DynamicCast<nvcv::IImage>(nullptr), std::bad_cast);
+
+    // Now when we create the object via C API
+
+    NVCVImageHandle       handle;
+    NVCVImageRequirements reqs;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvImageCalcRequirements(163, 117, NVCV_IMAGE_FORMAT_RGBA8, 0, 0, &reqs));
+    ASSERT_EQ(NVCV_SUCCESS, nvcvImageConstruct(&reqs, nullptr, &handle));
+
+    // Size of the internal buffer used to store the WrapHandle object
+    // we might have to create for containers allocated via C API.
+    // This value must never decrease, or else it'll break ABI compatibility.
+    uintptr_t max = 512;
+
+    EXPECT_GE(max, sizeof(nvcv::detail::WrapHandle<nvcv::IImage>)) << "Must be big enough for the WrapHandle";
+
+    void *cxxPtr = &max;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvImageGetUserPointer((NVCVImageHandle)(((uintptr_t)handle) | 1), &cxxPtr));
+    ASSERT_NE(&max, cxxPtr) << "Pointer must have been changed";
+
+    // Buffer too big, bail.
+    max    = 513;
+    cxxPtr = &max;
+    ASSERT_EQ(NVCV_ERROR_INTERNAL, nvcvImageGetUserPointer((NVCVImageHandle)(((uintptr_t)handle) | 1), &cxxPtr))
+        << "Required WrapHandle buffer storage should have been too big";
+
+    nvcv::IImage *pimg = nvcv::StaticCast<nvcv::IImage *>(handle);
+    ASSERT_NE(nullptr, pimg);
+    EXPECT_EQ(handle, pimg->handle());
+    EXPECT_EQ(163, pimg->size().w);
+    EXPECT_EQ(117, pimg->size().h);
+    EXPECT_EQ(nvcv::FMT_RGBA8, pimg->format());
+
+    EXPECT_EQ(pimg, nvcv::DynamicCast<nvcv::IImage *>(handle));
+    EXPECT_EQ(nullptr, nvcv::DynamicCast<nvcv::Image *>(handle));
+
+    nvcvImageDestroy(handle);
+}
+
 TEST(Image, wip_user_pointer)
 {
     nvcv::Image img({163, 117}, nvcv::FMT_RGBA8);
     EXPECT_EQ(nullptr, img.userPointer());
 
+    void *cxxPtr;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvImageGetUserPointer((NVCVImageHandle)(((uintptr_t)img.handle()) | 1), &cxxPtr));
+    ASSERT_EQ(&img, cxxPtr) << "cxx object pointer must always be associated with the corresponding handle";
+
     img.setUserPointer((void *)0x123);
     EXPECT_EQ((void *)0x123, img.userPointer());
 
+    ASSERT_EQ(NVCV_SUCCESS, nvcvImageGetUserPointer((NVCVImageHandle)(((uintptr_t)img.handle()) | 1), &cxxPtr));
+    ASSERT_EQ(&img, cxxPtr) << "cxx object pointer must always be associated with the corresponding handle";
+
     img.setUserPointer(nullptr);
     EXPECT_EQ(nullptr, img.userPointer());
+
+    ASSERT_EQ(NVCV_SUCCESS, nvcvImageGetUserPointer((NVCVImageHandle)(((uintptr_t)img.handle()) | 1), &cxxPtr));
+    ASSERT_EQ(&img, cxxPtr) << "cxx object pointer must always be associated with the corresponding handle";
 }
 
 TEST(Image, wip_create_managed)

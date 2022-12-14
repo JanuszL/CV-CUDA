@@ -36,6 +36,7 @@ inline auto ImageBatchVarShape::CalcRequirements(int32_t capacity) -> Requiremen
 inline ImageBatchVarShape::ImageBatchVarShape(const Requirements &reqs, IAllocator *alloc)
 {
     detail::CheckThrow(nvcvImageBatchVarShapeConstruct(&reqs, alloc ? alloc->handle() : nullptr, &m_handle));
+    detail::SetObjectAssociation(nvcvImageBatchSetUserPointer, this, m_handle);
 }
 
 inline ImageBatchVarShape::ImageBatchVarShape(int32_t capacity, IAllocator *alloc)
@@ -49,46 +50,6 @@ inline ImageBatchVarShape::~ImageBatchVarShape()
 }
 
 inline NVCVImageBatchHandle ImageBatchVarShape::doGetHandle() const
-{
-    return m_handle;
-}
-
-// ImageBatchWrapHandle implementation -------------------------------------
-
-inline ImageBatchWrapHandle::ImageBatchWrapHandle(NVCVImageBatchHandle handle)
-    : m_handle(handle)
-{
-}
-
-inline ImageBatchWrapHandle::ImageBatchWrapHandle(const ImageBatchWrapHandle &that)
-    : m_handle(that.m_handle)
-{
-}
-
-inline NVCVImageBatchHandle ImageBatchWrapHandle::doGetHandle() const
-{
-    return m_handle;
-}
-
-// ImageBatchVarShapeWrapHandle implementation -------------------------------------
-
-inline ImageBatchVarShapeWrapHandle::ImageBatchVarShapeWrapHandle(NVCVImageBatchHandle handle)
-    : m_handle(handle)
-{
-    NVCVTypeImageBatch type;
-    detail::CheckThrow(nvcvImageBatchGetType(m_handle, &type));
-    if (type != NVCV_TYPE_IMAGEBATCH_VARSHAPE)
-    {
-        throw Exception(Status::ERROR_INVALID_ARGUMENT, "Image batch handle doesn't correspond to a varshape object");
-    }
-}
-
-inline ImageBatchVarShapeWrapHandle::ImageBatchVarShapeWrapHandle(const ImageBatchVarShapeWrapHandle &that)
-    : m_handle(that.m_handle)
-{
-}
-
-inline NVCVImageBatchHandle ImageBatchVarShapeWrapHandle::doGetHandle() const
 {
     return m_handle;
 }

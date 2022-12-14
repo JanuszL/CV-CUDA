@@ -87,20 +87,8 @@ private:
     NVCVTensorHandle m_handle;
 };
 
-// TensorWrapHandle definition -------------------------------------
-// Refers to an external NVCVTensor handle. It doesn't own it.
-class TensorWrapHandle : public ITensor
-{
-public:
-    explicit TensorWrapHandle(NVCVTensorHandle handle);
-
-    TensorWrapHandle(const TensorWrapHandle &that);
-
-private:
-    NVCVTensorHandle doGetHandle() const final;
-
-    NVCVTensorHandle m_handle;
-};
+// For API backward-compatibility
+using TensorWrapHandle = detail::WrapHandle<ITensor>;
 
 }} // namespace nv::cv
 

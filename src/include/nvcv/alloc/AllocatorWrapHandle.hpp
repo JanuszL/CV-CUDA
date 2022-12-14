@@ -34,14 +34,16 @@
 
 namespace nv { namespace cv {
 
-// Used to wrap an existing NVCVAllocator into a C++ class.
-// The class doesn't own the handle.
-// Used when interfacing with other libraries that use NVCV C objects.
-// Does the opposite of "IAllocator::handle()"
-class AllocatorWrapHandle final : public virtual IAllocator
+namespace detail {
+
+template<class IFACE>
+class WrapHandle;
+
+template<>
+class WrapHandle<IAllocator> final : public virtual IAllocator
 {
 public:
-    explicit AllocatorWrapHandle(NVCVAllocatorHandle handle)
+    explicit WrapHandle(NVCVAllocatorHandle handle)
         : m_handle(handle)
         , m_allocHostMem(handle)
         , m_allocHostPinnedMem(handle)
@@ -148,6 +150,11 @@ private:
         return m_allocDeviceMem;
     }
 };
+
+} // namespace detail
+
+// For API backward-compatibility
+using AllocatorWrapHandle = detail::WrapHandle<IAllocator>;
 
 }} // namespace nv::cv
 

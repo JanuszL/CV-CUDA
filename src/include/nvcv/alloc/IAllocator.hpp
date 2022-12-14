@@ -24,6 +24,8 @@
 #ifndef NVCV_ALLOC_IALLOCATOR_HPP
 #define NVCV_ALLOC_IALLOCATOR_HPP
 
+#include "../Casts.hpp"
+
 #include <cstdint>
 
 #include "Fwd.hpp" // for NVCVAllocator
@@ -67,9 +69,13 @@ private:
 class IAllocator
 {
 public:
+    using HandleType    = NVCVAllocatorHandle;
+    using BaseInterface = IAllocator;
+
     virtual ~IAllocator() = default;
 
     NVCVAllocatorHandle handle() const noexcept;
+    static IAllocator  *cast(HandleType h);
 
     IHostMemAllocator       &hostMem();
     IHostPinnedMemAllocator &hostPinnedMem();
@@ -80,7 +86,7 @@ public:
 
 private:
     // Using the NVI pattern.
-    virtual NVCVAllocatorHandle doGetHandle() const noexcept = 0;
+    virtual NVCVAllocatorHandle doGetHandle() const = 0;
 
     virtual IHostMemAllocator       &doGetHostMemAllocator()       = 0;
     virtual IHostPinnedMemAllocator &doGetHostPinnedMemAllocator() = 0;
@@ -119,6 +125,14 @@ inline void *IAllocator::userPointer() const
     return ptr;
 }
 
+inline IAllocator *IAllocator::cast(HandleType h)
+{
+    return detail::CastImpl<IAllocator>(&nvcvAllocatorGetUserPointer, &nvcvAllocatorSetUserPointer, h);
+}
+
 }} // namespace nv::cv
+
+// Needed for casts
+#include "AllocatorWrapHandle.hpp"
 
 #endif // NVCV_ALLOC_IMEMALLOCATOR_HPP

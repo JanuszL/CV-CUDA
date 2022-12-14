@@ -36,6 +36,7 @@ inline auto Image::CalcRequirements(const Size2D &size, ImageFormat fmt, const M
 inline Image::Image(const Requirements &reqs, IAllocator *alloc)
 {
     detail::CheckThrow(nvcvImageConstruct(&reqs, alloc ? alloc->handle() : nullptr, &m_handle));
+    detail::SetObjectAssociation(nvcvImageSetUserPointer, this, m_handle);
 }
 
 inline Image::Image(const Size2D &size, ImageFormat fmt, IAllocator *alloc, const MemAlignment &bufAlign)
@@ -59,6 +60,7 @@ inline ImageWrapData::ImageWrapData(const IImageData &data, std::function<ImageD
     : m_cleanup(std::move(cleanup))
 {
     detail::CheckThrow(nvcvImageWrapDataConstruct(&data.cdata(), m_cleanup ? &doCleanup : nullptr, this, &m_handle));
+    detail::SetObjectAssociation(nvcvImageSetUserPointer, this, m_handle);
 }
 
 inline ImageWrapData::~ImageWrapData()
@@ -84,24 +86,6 @@ inline void ImageWrapData::doCleanup(void *ctx, const NVCVImageData *data)
 
     assert(this_->m_cleanup != nullptr);
     this_->m_cleanup(*imgData);
-}
-
-// ImageWrapHandle implementation -------------------------------------
-
-inline ImageWrapHandle::ImageWrapHandle(NVCVImageHandle handle)
-    : m_handle(handle)
-{
-    assert(handle != nullptr);
-}
-
-inline ImageWrapHandle::ImageWrapHandle(const ImageWrapHandle &that)
-    : m_handle(that.m_handle)
-{
-}
-
-inline NVCVImageHandle ImageWrapHandle::doGetHandle() const
-{
-    return m_handle;
 }
 
 }} // namespace nv::cv
