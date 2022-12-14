@@ -63,6 +63,18 @@ inline const IImageBatchData *IImageBatch::exportData(CUstream stream) const
     return &*m_cacheData;
 }
 
+inline void IImageBatch::setUserPointer(void *ptr)
+{
+    detail::CheckThrow(nvcvImageBatchSetUserPointer(this->handle(), ptr));
+}
+
+inline void *IImageBatch::userPointer() const
+{
+    void *ptr;
+    detail::CheckThrow(nvcvImageBatchGetUserPointer(this->handle(), &ptr));
+    return ptr;
+}
+
 // IImageBatchVarShape implementation ----------------------------------
 
 inline const IImageBatchVarShapeData *IImageBatchVarShape::exportData(CUstream stream) const

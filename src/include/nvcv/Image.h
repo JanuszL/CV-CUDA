@@ -160,6 +160,33 @@ NVCV_PUBLIC NVCVStatus nvcvImageWrapDataConstruct(const NVCVImageData *data, NVC
  */
 NVCV_PUBLIC void nvcvImageDestroy(NVCVImageHandle handle);
 
+/** Associates a user pointer to the image handle.
+ *
+ * This pointer can be used to associate any kind of data with the image object.
+ *
+ * @param [in] handle Image to be associated with the user pointer.
+ *
+ * @param [in] userPtr User pointer.
+ *
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
+ * @retval #NVCV_SUCCESS                Operation executed successfully.
+ */
+NVCV_PUBLIC NVCVStatus nvcvImageSetUserPointer(NVCVImageHandle handle, void *userPtr);
+
+/** Returns the user pointer associated with the image handle.
+ *
+ * If no user pointer was associated, it'll return a pointer to NULL.
+ *
+ * @param [in] handle Image to be queried.
+ *
+ * @param [in] outUserPtr Pointer to where the user pointer will be stored.
+ *                        + Cannot be NULL.
+ *
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
+ * @retval #NVCV_SUCCESS                Operation executed successfully.
+ */
+NVCV_PUBLIC NVCVStatus nvcvImageGetUserPointer(NVCVImageHandle handle, void **outUserPtr);
+
 /** Returns the underlying image type.
  *
  * @param [in] handle Image to be queried.

@@ -359,3 +359,15 @@ TEST(ImageBatchVarShape, wip_sync)
 
     ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 }
+
+TEST(ImageBatch, wip_user_pointer)
+{
+    nvcv::ImageBatchVarShape batch(3);
+    EXPECT_EQ(nullptr, batch.userPointer());
+
+    batch.setUserPointer((void *)0x123);
+    EXPECT_EQ((void *)0x123, batch.userPointer());
+
+    batch.setUserPointer(nullptr);
+    EXPECT_EQ(nullptr, batch.userPointer());
+}

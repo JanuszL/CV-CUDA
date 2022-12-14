@@ -53,6 +53,9 @@ public:
 
     virtual Version version() const = 0;
 
+    virtual void  setUserPointer(void *ptr) = 0;
+    virtual void *userPointer() const       = 0;
+
 protected:
     ICoreObject() = default;
 };
@@ -101,8 +104,19 @@ public:
         return cv::priv::CURRENT_VERSION;
     }
 
+    void setUserPointer(void *ptr) final
+    {
+        m_userPtr = ptr;
+    }
+
+    void *userPointer() const final
+    {
+        return m_userPtr;
+    }
+
 private:
-    HandleType m_handle = {};
+    HandleType m_handle  = {};
+    void      *m_userPtr = nullptr;
 };
 
 template<class HandleType>

@@ -246,3 +246,28 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorGetDataType, (NVCVTensorHandle handl
             *dtype       = tensor.dtype().value();
         });
 }
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorSetUserPointer, (NVCVTensorHandle handle, void *userPtr))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            auto &img = priv::ToStaticRef<priv::ITensor>(handle);
+            img.setUserPointer(userPtr);
+        });
+}
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorGetUserPointer, (NVCVTensorHandle handle, void **outUserPtr))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            if (outUserPtr == nullptr)
+            {
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output user pointer cannot be NULL");
+            }
+
+            auto &img   = priv::ToStaticRef<const priv::ITensor>(handle);
+            *outUserPtr = img.userPointer();
+        });
+}

@@ -40,6 +40,9 @@ public:
 
     const IImageData *exportData() const;
 
+    void  setUserPointer(void *ptr);
+    void *userPointer() const;
+
 protected:
     IImage();
 

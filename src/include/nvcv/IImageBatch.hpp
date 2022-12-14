@@ -39,6 +39,9 @@ public:
 
     const IImageBatchData *exportData(CUstream stream) const;
 
+    void  setUserPointer(void *ptr);
+    void *userPointer() const;
+
 private:
     virtual NVCVImageBatchHandle doGetHandle() const = 0;
 

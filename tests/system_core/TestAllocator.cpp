@@ -315,6 +315,18 @@ TEST(Allocator, wip_double_destroy_noop)
     nvcvAllocatorDestroy(handle); // no-op, already destroyed
 }
 
+TEST(Allocator, wip_user_pointer)
+{
+    nvcv::CustomAllocator alloc;
+    EXPECT_EQ(nullptr, alloc.userPointer());
+
+    alloc.setUserPointer((void *)0x123);
+    EXPECT_EQ((void *)0x123, alloc.userPointer());
+
+    alloc.setUserPointer(nullptr);
+    EXPECT_EQ(nullptr, alloc.userPointer());
+}
+
 // disabled temporary while the API isn't stable
 #if 0
 

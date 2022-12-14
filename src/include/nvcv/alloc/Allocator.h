@@ -168,6 +168,33 @@ NVCV_PUBLIC NVCVStatus nvcvAllocatorConstructCustom(const NVCVCustomAllocator *c
  */
 NVCV_PUBLIC void nvcvAllocatorDestroy(NVCVAllocatorHandle halloc);
 
+/** Associates a user pointer to the allocator handle.
+ *
+ * This pointer can be used to associate any kind of data with the allocator object.
+ *
+ * @param [in] handle Allocator to be associated with the user pointer.
+ *
+ * @param [in] userPtr User pointer.
+ *
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
+ * @retval #NVCV_SUCCESS                Operation executed successfully.
+ */
+NVCV_PUBLIC NVCVStatus nvcvAllocatorSetUserPointer(NVCVAllocatorHandle handle, void *userPtr);
+
+/** Returns the user pointer associated with the allocator handle.
+ *
+ * If no user pointer was associated, it'll return a pointer to NULL.
+ *
+ * @param [in] handle Allocator to be queried.
+ *
+ * @param [in] outUserPtr Pointer to where the user pointer will be stored.
+ *                        + Cannot be NULL.
+ *
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
+ * @retval #NVCV_SUCCESS                Operation executed successfully.
+ */
+NVCV_PUBLIC NVCVStatus nvcvAllocatorGetUserPointer(NVCVAllocatorHandle handle, void **outUserPtr);
+
 /** Allocates a memory buffer of a host-accessible memory.
  *
  * It's usually used when implementing operators.
