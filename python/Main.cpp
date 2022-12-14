@@ -98,4 +98,5 @@ PYBIND11_MODULE(nvcv, m)
     ExportOpMorphology(m);
     ExportOpFlip(m);
     ExportOpCvtColor(m);
+    ExportOpComposite(m);
 }
