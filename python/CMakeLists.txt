@@ -88,6 +88,7 @@ pybind11_add_module(nvcv_python MODULE
     OpWarpPerspective.cpp
     OpChannelReorder.cpp
     OpMorphology.cpp
+    OpFlip.cpp
 )
 
 target_include_directories(nvcv_python
