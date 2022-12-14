@@ -100,4 +100,5 @@ PYBIND11_MODULE(nvcv, m)
     ExportOpCvtColor(m);
     ExportOpComposite(m);
     ExportOpGammaContrast(m);
+    ExportOpPillowResize(m);
 }

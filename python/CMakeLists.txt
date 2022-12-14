@@ -93,6 +93,7 @@ pybind11_add_module(nvcv_python MODULE
     OpCvtColor.cpp
     OpComposite.cpp
     OpGammaContrast.cpp
+    OpPillowResize.cpp
 )
 
 target_include_directories(nvcv_python
