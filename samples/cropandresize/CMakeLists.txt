@@ -17,12 +17,15 @@ find_package(CUDA REQUIRED)
 
 set(CMAKE_CXX_FLAGS "-Wno-deprecated-enum-enum-conversion")
 
+# tag: Build crop and resize sample
+
 add_executable(nvcv_samples_cropandresize Main.cpp)
 target_link_libraries(nvcv_samples_cropandresize nvcv CUDA::cudart_static nvcv_samples_common)
 
 target_include_directories(nvcv_samples_cropandresize
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
+# tag: Install binaries
 install(TARGETS nvcv_samples_cropandresize
         EXPORT nvcv_samples_cropandresize
         COMPONENT samples

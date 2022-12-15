@@ -29,7 +29,9 @@ Create the cmake project to build the application as follows. The <samples/commo
 
 .. literalinclude:: ../../../samples/cropandresize/CMakeLists.txt
    :language: cpp
-   :lines: 15-19
+   :start-after: Build crop and resize sample
+   :end-before: Install binaries
+   :dedent:
 
 Writing the Sample App
 ----------------------
@@ -39,20 +41,33 @@ A cuda stream is created to enqueue all the tasks
 
 .. literalinclude:: ../../../samples/cropandresize/Main.cpp
    :language: cpp
-   :lines: 114-115
+   :start-after: Create the cuda stream
+   :end-before: Allocate input tensor
+   :dedent:
 
-We will use NvJpeg library to decode the images into the required color format and create a buffer on the device.
 Since we need a contiguous buffer for a batch, we will preallocate the Tensor buffer for the input batch.
 
 .. literalinclude:: ../../../samples/cropandresize/Main.cpp
    :language: cpp
-   :lines: 117-126
+   :start-after: Allocate input tensor
+   :end-before: Tensor Requirements
+   :dedent:
 
 The Tensor Buffer is then wrapped to create a Tensor Object for which we will calculate the requirements of the buffer such as pitch bytes and alignment
 
 .. literalinclude:: ../../../samples/cropandresize/Main.cpp
    :language: cpp
-   :lines: 128-138
+   :start-after: Tensor Requirements
+   :end-before: Image Loading
+   :dedent:
+
+We will use NvJpeg library to decode the images into the required color format and create a buffer on the device.
+
+.. literalinclude:: ../../../samples/cropandresize/Main.cpp
+   :language: cpp
+   :start-after: Image Loading
+   :end-before: The input buffer is now ready to be used
+   :dedent:
 
 The CVCUDA Tensor is now ready to be used by the operators.
 
@@ -60,32 +75,42 @@ We will allocate the Tensors required for Resize and Crop using CVCUDA Allocator
 
 .. literalinclude:: ../../../samples/cropandresize/Main.cpp
    :language: cpp
-   :lines: 165-168
+   :start-after: Allocate Tensors for Crop and Resize
+   :end-before: Initialize operators for Crop and Resize
+   :dedent:
 
 Initialize the resize and crop operators
 
 .. literalinclude:: ../../../samples/cropandresize/Main.cpp
    :language: cpp
-   :lines: 176-179
+   :start-after: Initialize operators for Crop and Resize
+   :end-before: Executes the CustomCrop operation
+   :dedent:
 
 We can now enqueue both the operations in the stream
 
 .. literalinclude:: ../../../samples/cropandresize/Main.cpp
    :language: cpp
-   :lines: 181-185
+   :start-after: Executes the CustomCrop operation
+   :end-before: Profile section
+   :dedent:
 
 To access the output we will synchronize the stream and copy to the CPU Output buffer
 We will use the utility below to sync and write the CPU output buffer into a bitmap file
 
 .. literalinclude:: ../../../samples/cropandresize/Main.cpp
+   :start-after: Copy the buffer to CPU
+   :end-before: Clean up
    :language: cpp
-   :lines: 195-196
+   :dedent:
 
 Destroy the cuda stream created
 
 .. literalinclude:: ../../../samples/cropandresize/Main.cpp
    :language: cpp
-   :lines: 198-199
+   :start-after: Clean up
+   :end-before: End of Sample
+   :dedent:
 
 Build and Run the Sample
 ------------------------

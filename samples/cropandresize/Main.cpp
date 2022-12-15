@@ -114,10 +114,11 @@ int main(int argc, char *argv[])
     int maxImageHeight = 720;
     int maxChannels    = 3;
 
-    // Create the cuda stream
+    // tag: Create the cuda stream
     cudaStream_t stream;
     CHECK_CUDA_ERROR(cudaStreamCreate(&stream));
 
+    // tag: Allocate input tensor
     // Allocating memory for RGBI input image batch of uint8_t data type
     // without padding since NvDecode utility currently doesnt support
     // Padded buffers.
@@ -129,6 +130,7 @@ int main(int argc, char *argv[])
     inBuf.pitchBytes[0] = maxImageHeight * inBuf.pitchBytes[1];
     CHECK_CUDA_ERROR(cudaMallocAsync(&inBuf.data, batchSize * inBuf.pitchBytes[0], stream));
 
+    // tag: Tensor Requirements
     // Calculate the requirements for the RGBI uint8_t Tensor which include
     // pitch bytes, alignment, shape  and tensor layout
     nv::cv::Tensor::Requirements inReqs
@@ -141,6 +143,7 @@ int main(int argc, char *argv[])
     // TensorWrapData allows for interoperation of external tensor representations with CVCUDA Tensor.
     nv::cv::TensorWrapData inTensor(inData);
 
+    // tag: Image Loading
     // NvJpeg is used to load the images to create a batched input device buffer.
     uint8_t             *gpuInput = static_cast<uint8_t *>(inBuf.data);
     // The total images is set to the same value as batch size for testing
@@ -150,7 +153,7 @@ int main(int argc, char *argv[])
 
     NvDecode(imagePath, batchSize, totalImages, outputFormat, gpuInput);
 
-    // The input buffer is now ready to be used by the operators
+    // tag: The input buffer is now ready to be used by the operators
 
     // Set parameters for Crop and Resize
     // ROI dimensions to crop in the input image
@@ -166,6 +169,7 @@ int main(int argc, char *argv[])
     //  Initialize the CVCUDA ROI struct
     NVCVRectI crpRect = {cropX, cropY, cropWidth, cropHeight};
 
+    // tag: Allocate Tensors for Crop and Resize
     // Create a CVCUDA Tensor based on the crop window size.
     nv::cv::Tensor cropTensor(batchSize, {cropWidth, cropHeight}, nv::cv::FMT_RGB8);
     // Create a CVCUDA Tensor based on resize dimensions
@@ -177,17 +181,17 @@ int main(int argc, char *argv[])
     cudaEventCreate(&stop);
     cudaEventRecord(start);
 #endif
-    // Initialize crop operator
+    // tag: Initialize operators for Crop and Resize
     nv::cvop::CustomCrop cropOp;
-    // Initialize resize operator
     nv::cvop::Resize     resizeOp;
 
-    // Executes the CustomCrop operation on the given cuda stream
+    // tag: Executes the CustomCrop operation on the given cuda stream
     cropOp(stream, inTensor, cropTensor, crpRect);
 
     // Resize operator can now be enqueued into the same stream
     resizeOp(stream, cropTensor, resizedTensor, NVCV_INTERP_LINEAR);
 
+    // tag: Profile section
 #ifdef PROFILE_SAMPLE
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
@@ -196,9 +200,11 @@ int main(int argc, char *argv[])
     std::cout << "Time for Crop and Resize : " << operatorms << " ms" << std::endl;
 #endif
 
-    // Copy the buffer to CPU and write resized image into .bmp file
+    // tag: Copy the buffer to CPU and write resized image into .bmp file
     WriteRGBITensor(resizedTensor, stream);
 
-    // Clean up
+    // tag: Clean up
     CHECK_CUDA_ERROR(cudaStreamDestroy(stream));
+
+    // tag: End of Sample
 }

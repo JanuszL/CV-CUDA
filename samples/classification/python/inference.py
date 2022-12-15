@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Import python modules
+
 import os
 import glob
 import torch
@@ -21,8 +23,10 @@ import torchnvjpeg
 import numpy as np
 import argparse
 
-# Import CVCUDA module
+# tag: Import CVCUDA module
 import nvcv
+
+# tag: Classification Sample
 
 """
 Image Classification python sample
@@ -54,6 +58,7 @@ class ClassificationSample:
         self.device_id = device_id
         self.labels_file = labels_file
 
+        # tag: Image Loading
         # Start by parsing the input_path expression first.
         if os.path.isfile(self.input_path):
             # Read the input image file.
@@ -75,6 +80,7 @@ class ClassificationSample:
             )
             exit(1)
 
+        # tag: Validate other inputs
         if not os.path.isfile(self.labels_file):
             print("Labels file not found: %s" % self.results_dir)
             exit(1)
@@ -95,7 +101,8 @@ class ClassificationSample:
         # Runs the complete sample end-to-end.
         max_image_size = 1024 * 1024 * 3  # Maximum possible image size.
 
-        # Next, we would batchify the file_list and data_list based on the
+        # tag: NvJpeg Decoder
+        # We will batchify the file_list and data_list based on the
         # batch size and start processing these batches one by one.
         file_name_batches = [
             self.file_names[i : i + self.batch_size]  # noqa: E203
@@ -127,11 +134,13 @@ class ClassificationSample:
             # Convert the list of tensors to a tensor itself.
             image_tensors = torch.stack(image_tensor_list)
 
+            # tag: Wrapping into Tensor
             # A torch tensor can be wrapped into a CVCUDA Object using the "as_tensor"
             # function in the specified layout. The datatype and dimensions are derived
             # directly from the torch tensor.
             nvcv_input_tensor = nvcv.as_tensor(image_tensors, "NHWC")
 
+            # tag: Preprocess
             """
             Preprocessing includes the following sequence of operations.
             Resize -> DataType Convert(U8->F32) -> Normalize
@@ -190,6 +199,7 @@ class ClassificationSample:
             # buffer into a planar buffer
             nvcv_preprocessed_tensor = nvcv_norm_tensor.reformat("NCHW")
 
+            # tag: Inference
             # Inference uses pytorch to run a resnet50 model on the preprocessed
             # input and outputs the classification scores for 1000 classes
             # Load Resnet model pretrained on Imagenet
@@ -205,27 +215,29 @@ class ClassificationSample:
             with torch.no_grad():
                 infer_output = resnet50(torch_preprocessed_tensor)
 
+            # tag: Postprocess
             """
             Postprocessing function normalizes the classification score from the network
             and sorts the scores to get the TopN classification scores.
             """
-            # top results to print out
-            topN = 5
+            # Apply softmax to Normalize scores between 0-1
+            scores = torch.nn.functional.softmax(infer_output, dim=1)
 
+            # Sort output scores in descending order
+            _, indices = torch.sort(infer_output, descending=True)
+
+            # tag: Display Top N Results
             # Read and parse the classes
             with open(self.labels_file, "r") as f:
                 classes = [line.strip() for line in f.readlines()]
 
-            # Apply softmax to Normalize scores between 0-1
-            scores = torch.nn.functional.softmax(infer_output, dim=1)
-
+            # top results to print out
+            topN = 5
             for img_idx in range(effective_batch_size):
                 print(
                     "Result for the image: %d of %d"
                     % (img_idx + 1, effective_batch_size)
                 )
-                # Sort output scores in descending order
-                _, indices = torch.sort(infer_output, descending=True)
 
                 # Display Top N Results
                 for idx in indices[img_idx][:topN]:
