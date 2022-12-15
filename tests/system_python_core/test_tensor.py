@@ -18,6 +18,7 @@ import pytest as t
 import numba
 import numpy as np
 from numba import cuda
+import torch
 
 assert numba.cuda.is_available()
 
@@ -180,3 +181,18 @@ def test_tensor_export_cuda_buffer(shape, dtype):
     assert devMem.shape == shape
 
     assert (hostGold == cuda.as_cuda_array(devMem).copy_to_host()).all()
+
+
+def test_tensor_hold_reference_of_wrapped_buffer():
+    ttensor = torch.as_tensor(np.ndarray([10], np.int8), device="cuda")
+    ptr0 = ttensor.data_ptr()
+
+    cvtensor = nvcv.as_tensor(ttensor)  # noqa: F841 assigned but never used
+
+    del ttensor  # cvtensor must have held ttensor object
+
+    ttensor = torch.as_tensor(np.ndarray([10], np.int8), device="cuda")
+
+    # since "cvtensor" must have held the reference to the first "ttensor",
+    # the second "ttensor" must be a different buffer
+    assert ptr0 != ttensor.data_ptr()

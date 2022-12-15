@@ -83,7 +83,8 @@ CudaBuffer::CudaBuffer()
 {
 }
 
-CudaBuffer::CudaBuffer(const py::buffer_info &info, bool copy)
+CudaBuffer::CudaBuffer(const py::buffer_info &info, bool copy, py::object wrappedObj)
+    : m_wrappedObj(wrappedObj)
 {
     if (info.ptr != nullptr)
     {
@@ -196,6 +197,7 @@ bool CudaBuffer::load(PyObject *o)
 
         if(vshape.size() >= 1)
         {
+            m_wrappedObj = tmp; // hold the reference to the wrapped object
             m_cudaArrayInterface = std::move(iface);
             return true;
         }
