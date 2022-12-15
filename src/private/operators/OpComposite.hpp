@@ -49,8 +49,13 @@ public:
     void operator()(cudaStream_t stream, const cv::ITensor &foreground, const cv::ITensor &background,
                     const cv::ITensor &fgMask, const cv::ITensor &output) const;
 
+    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &foreground,
+                    const cv::IImageBatchVarShape &background, const cv::IImageBatchVarShape &fgMask,
+                    const cv::IImageBatchVarShape &output) const;
+
 private:
-    std::unique_ptr<cv::legacy::cuda_op::Composite> m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::Composite>         m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::CompositeVarShape> m_legacyOpVarShape;
 };
 
 } // namespace nv::cvop::priv

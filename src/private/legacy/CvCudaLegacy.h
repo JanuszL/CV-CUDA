@@ -2286,6 +2286,35 @@ public:
                     const ITensorDataPitchDevice &order, cudaStream_t stream);
 };
 
+class CompositeVarShape : public CudaBaseOp
+{
+public:
+    CompositeVarShape() = delete;
+
+    CompositeVarShape(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * @brief Composite perform the composite operation given a foreground, background and mat images
+     *
+     * @param foreground gpu tensor for foreground image
+     *
+     * @param background gpu tensor for background image
+     *
+     * @param fgMask gpu tensor for foreground mask image
+     *
+     * @param outData gpu tensor for the output image
+     *
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &forground,
+                    const IImageBatchVarShapeDataPitchDevice &background,
+                    const IImageBatchVarShapeDataPitchDevice &fgMask, const IImageBatchVarShapeDataPitchDevice &outData,
+                    cudaStream_t stream);
+};
+
 } // namespace nv::cv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H

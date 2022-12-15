@@ -105,7 +105,7 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopCompositeCreate(NVCVOperatorHandle *handle);
  *
  * @param [in] background input background tensor. Each image is BGR (3-channel) 8-bit.
  *
- * @param [in] fgMask input foreground mask tensor. Each mask is grayscale 8-bit
+ * @param [in] fgMask input foreground mask tensor. Each mask image is grayscale 8-bit
  *
  * @param [out] output output tensor. Each output image is BGR(A) (3-channel for BGR, 4-channel for BGRA) 8-bit.
  *
@@ -118,6 +118,10 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopCompositeSubmit(NVCVOperatorHandle handle, cudaS
                                                 NVCVTensorHandle foreground, NVCVTensorHandle background,
                                                 NVCVTensorHandle fgMask, NVCVTensorHandle output);
 
+NVCV_OP_PUBLIC NVCVStatus nvcvopCompositeVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
+                                                        NVCVImageBatchHandle foreground,
+                                                        NVCVImageBatchHandle background, NVCVImageBatchHandle fgMask,
+                                                        NVCVImageBatchHandle output);
 /** @} */
 
 #ifdef __cplusplus
