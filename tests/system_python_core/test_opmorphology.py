@@ -19,6 +19,9 @@ import numpy as np
 import util
 
 
+RNG = np.random.default_rng(0)
+
+
 @t.mark.parametrize(
     "input, morphologyType, maskSize, anchor, iteration, border ",
     [
@@ -163,22 +166,16 @@ def test_op_morphology_varshape(
     border,
 ):
 
-    input = util.create_image_batch(num_images, img_format, img_size, max_pixel)
+    input = util.create_image_batch(
+        num_images, img_format, size=img_size, max_random=max_pixel, rng=RNG
+    )
 
     masks = util.create_tensor(
-        (num_images, 2),
-        np.int32,
-        "NC",
-        max_random=max_mask,
-        odd_only=True,
+        (num_images, 2), np.int32, "NC", max_random=max_mask, rng=RNG
     )
 
     anchors = util.create_tensor(
-        (num_images, 2),
-        np.int32,
-        "NC",
-        max_random=max_anchor,
-        odd_only=True,
+        (num_images, 2), np.int32, "NC", max_random=max_anchor, rng=RNG
     )
 
     out = input.morphology(

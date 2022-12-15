@@ -19,6 +19,9 @@ import numpy as np
 import util
 
 
+RNG = np.random.default_rng(0)
+
+
 @t.mark.parametrize(
     "input, xform, flags, border_mode, border_value",
     [
@@ -190,10 +193,12 @@ def test_op_warp_perspectivevarshape(
 ):
 
     input = util.create_image_batch(
-        nimages, format, max_size=max_size, max_random=max_pixel
+        nimages, format, max_size=max_size, max_random=max_pixel, rng=RNG
     )
 
-    xform = util.create_tensor((nimages, 9), np.float32, "NC", max_xval)
+    xform = util.create_tensor(
+        (nimages, 9), np.float32, "NC", max_random=max_xval, rng=RNG
+    )
 
     out = input.warp_perspective(
         xform, flags, border_mode=bmode, border_value=border_value

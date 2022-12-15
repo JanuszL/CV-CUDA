@@ -19,6 +19,9 @@ import numpy as np
 import util
 
 
+RNG = np.random.default_rng(0)
+
+
 @t.mark.parametrize(
     "input, flip_code",
     [
@@ -106,10 +109,12 @@ def test_op_flip(input, flip_code):
 )
 def test_op_flipvarshape(num_images, img_format, img_size, max_pixel, flip_code):
 
-    input = util.create_image_batch(num_images, img_format, img_size, max_pixel)
+    input = util.create_image_batch(
+        num_images, img_format, size=img_size, max_random=max_pixel, rng=RNG
+    )
 
     flipCode = util.create_tensor(
-        (num_images, 1), np.int32, "NC", max_random=flip_code, odd_only=True
+        (num_images, 1), np.int32, "NC", max_random=flip_code, rng=RNG
     )
 
     out = input.flip(flipCode)

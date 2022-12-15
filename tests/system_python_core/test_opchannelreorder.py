@@ -18,10 +18,13 @@ import numpy as np
 import util
 
 
+RNG = np.random.default_rng(0)
+
+
 def test_op_channelreorder_varshape():
 
-    input = util.create_image_batch(10, nvcv.Format.RGB8, size=(123, 321))
-    order = util.create_tensor((10, 3), np.int32, "NC", max_random=(2, 2, 2))
+    input = util.create_image_batch(10, nvcv.Format.RGB8, size=(123, 321), rng=RNG)
+    order = util.create_tensor((10, 3), np.int32, "NC", max_random=(2, 2, 2), rng=RNG)
 
     out = input.channelreorder(order)
     assert len(out) == len(input)
@@ -29,7 +32,9 @@ def test_op_channelreorder_varshape():
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == input.maxsize
 
-    order = util.create_tensor((10, 4), np.int32, "NC", max_random=(3, 3, 3, 3))
+    order = util.create_tensor(
+        (10, 4), np.int32, "NC", max_random=(3, 3, 3, 3), rng=RNG
+    )
     out = input.channelreorder(order, format=nvcv.Format.BGRA8)
 
     assert len(out) == len(input)

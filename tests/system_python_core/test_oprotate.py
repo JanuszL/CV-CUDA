@@ -19,6 +19,9 @@ import numpy as np
 import util
 
 
+RNG = np.random.default_rng(0)
+
+
 @t.mark.parametrize(
     "input, angle_deg, shift, interpolation",
     [
@@ -126,21 +129,15 @@ def test_op_rotatevarshape(
 ):
 
     input = util.create_image_batch(
-        nimages, format, max_size=max_size, max_random=max_pixel
+        nimages, format, max_size=max_size, max_random=max_pixel, rng=RNG
     )
 
     angle_deg = util.create_tensor(
-        (nimages, 1),
-        np.float64,
-        "NC",
-        max_random=max_angle_deg,
+        (nimages, 1), np.float64, "NC", max_random=max_angle_deg, rng=RNG
     )
 
     shift = util.create_tensor(
-        (nimages, 2),
-        np.float64,
-        "NC",
-        max_random=max_shift,
+        (nimages, 2), np.float64, "NC", max_random=max_shift, rng=RNG
     )
 
     out = input.rotate(
