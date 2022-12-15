@@ -155,9 +155,9 @@ ErrorCode Flip::infer(const ITensorDataPitchDevice &input, const ITensorDataPitc
     NVCV_ASSERT(inputWrapper);
 
     cuda_op::DataShape inputShape = GetLegacyDataShape(inputWrapper->infoShape());
-    if (inputShape.N > 4)
+    if (inputShape.C > 4)
     {
-        LOG_ERROR("Invalid channel number " << inputShape.N);
+        LOG_ERROR("Invalid channel number " << inputShape.C);
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 

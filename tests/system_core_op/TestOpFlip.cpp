@@ -38,7 +38,7 @@ NVCV_TEST_SUITE_P(OpFlip, test::ValueList<int, int, int, NVCVImageFormat, int>
 {
     // width, height, batches,                  format, flipCode
     {    176,    113,       1,    NVCV_IMAGE_FORMAT_U8,  0},
-    {    123,     66,       2,    NVCV_IMAGE_FORMAT_U8,  1},
+    {    123,     66,       5,    NVCV_IMAGE_FORMAT_U8,  1},
     {    123,     33,       3,  NVCV_IMAGE_FORMAT_RGB8, -1},
     {     42,     53,       4, NVCV_IMAGE_FORMAT_RGBA8,  1},
     {     13,     42,       3,  NVCV_IMAGE_FORMAT_RGB8,  0},
