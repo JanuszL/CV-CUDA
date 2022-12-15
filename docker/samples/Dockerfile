@@ -30,7 +30,7 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 11
 RUN update-alternatives --set gcc /usr/bin/gcc-11
 RUN update-alternatives --set g++ /usr/bin/g++-11
 
-RUN apt-get update && apt-get install -y --no-install-recommends libgtest-dev libgmock-dev python3-pip \
+RUN apt-get update && apt-get install -y --no-install-recommends libgtest-dev libgmock-dev python3-pip ninja-build ccache \
     mlocate && updatedb \
     && rm -rf /var/lib/apt/lists/*
 RUN pip3 install --upgrade pip
