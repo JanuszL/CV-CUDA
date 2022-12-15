@@ -99,4 +99,5 @@ PYBIND11_MODULE(nvcv, m)
     ExportOpFlip(m);
     ExportOpCvtColor(m);
     ExportOpComposite(m);
+    ExportOpGammaContrast(m);
 }
