@@ -39,7 +39,6 @@ def test_op_reformat(input, out_shape, out_layout):
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
-    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
     stream = nvcv.cuda.Stream()
     out = input.reformat(layout=out_layout, stream=stream)
     assert out.layout == out_layout

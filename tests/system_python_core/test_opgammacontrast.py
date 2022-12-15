@@ -75,7 +75,6 @@ def test_op_gamma_contrastvarshape(
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == input.maxsize
 
-    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
     stream = nvcv.cuda.Stream()
 
     out = util.clone_image_batch(input)

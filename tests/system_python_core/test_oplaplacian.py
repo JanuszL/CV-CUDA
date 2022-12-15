@@ -63,7 +63,6 @@ def test_op_laplacian(input, ksize, scale, border):
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
-    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
     stream = nvcv.cuda.Stream()
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
     tmp = input.laplacian_into(
@@ -164,7 +163,6 @@ def test_op_laplacianvarshape(
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == input.maxsize
 
-    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
     stream = nvcv.cuda.Stream()
     out = util.clone_image_batch(input)
     tmp = input.laplacian_into(

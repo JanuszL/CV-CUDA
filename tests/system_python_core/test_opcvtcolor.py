@@ -57,7 +57,6 @@ def test_op_cvtcolor(input, code, output):
     assert out.shape == output.shape
     assert out.dtype == output.dtype
 
-    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
     stream = nvcv.cuda.Stream()
     tmp = input.cvtcolor_into(
         output=output,
@@ -127,7 +126,6 @@ def test_op_cvtcolorvarshape(
     assert out.capacity == output.capacity
     assert out.maxsize == output.maxsize
 
-    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
     stream = nvcv.cuda.Stream()
     tmp = input.cvtcolor_into(
         output=output,

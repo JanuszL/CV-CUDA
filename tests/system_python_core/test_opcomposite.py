@@ -54,7 +54,6 @@ def test_op_composite(foreground, background, fgMask, outChannels):
         assert out.shape[0:2] == foreground.shape[0:2]
     assert out.dtype == foreground.dtype
 
-    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
     stream = nvcv.cuda.Stream()
 
     out_shape = foreground.shape
@@ -103,7 +102,6 @@ def test_op_compositevarshape(nimages, max_size, outChannels):
     assert len(out) == len(foreground)
     assert out.capacity == foreground.capacity
 
-    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
     stream = nvcv.cuda.Stream()
 
     if outChannels == 3:

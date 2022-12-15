@@ -33,7 +33,6 @@ def test_op_center_crop(input, crop_size, gold_shape):
     assert out.shape == gold_shape
     assert out.dtype == input.dtype
 
-    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
     stream = nvcv.cuda.Stream()
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
     tmp = input.center_crop_into(
