@@ -17,6 +17,7 @@
 
 #include "BorderType.hpp"
 #include "Cache.hpp"
+#include "ColorConversionCode.hpp"
 #include "Container.hpp"
 #include "CudaBuffer.hpp"
 #include "Image.hpp"
@@ -63,6 +64,8 @@ PYBIND11_MODULE(nvcv, m)
     ExportRect(m);
     ExportBorderType(m);
     ExportMorphologyType(m);
+    ExportColorConversionCode(m);
+
     Resource::Export(m);
     Container::Export(m);
     Tensor::Export(m);
@@ -94,4 +97,5 @@ PYBIND11_MODULE(nvcv, m)
     ExportOpChannelReorder(m);
     ExportOpMorphology(m);
     ExportOpFlip(m);
+    ExportOpCvtColor(m);
 }

@@ -44,6 +44,7 @@ void ExportOpWarpPerspective(py::module &m);
 void ExportOpChannelReorder(py::module &m);
 void ExportOpMorphology(py::module &m);
 void ExportOpFlip(py::module &m);
+void ExportOpCvtColor(py::module &m);
 
 // Helper class that serves as python-side operator class.
 // OP: native operator class
