@@ -93,4 +93,5 @@ PYBIND11_MODULE(nvcv, m)
     ExportOpWarpPerspective(m);
     ExportOpChannelReorder(m);
     ExportOpMorphology(m);
+    ExportOpFlip(m);
 }
