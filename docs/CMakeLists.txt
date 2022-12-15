@@ -50,7 +50,7 @@ add_custom_target(cvcuda_groups ALL
 # Generate Sphinx
 add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
                    COMMAND
-                   ${SPHINX_EXECUTABLE} -b html
+                   ${SPHINX_EXECUTABLE} -j auto -b html
                    # Tell Breathe where to find the Doxygen output
                    -Dbreathe_projects.cvcuda=${DOXYGEN_OUTPUT_DIR}/xml
                    ${SPHINX_SOURCE} ${SPHINX_BUILD}
