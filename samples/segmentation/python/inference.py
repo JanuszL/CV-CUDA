@@ -221,7 +221,7 @@ class SemanticSegmentationSample:
                     onnx_file_path,
                     trt_engine_file_path,
                     max_batch_size=self.batch_size,
-                    max_workspace_size=5,
+                    max_workspace_size=1,
                 )
                 if success:
                     print("Generated TensorRT engine in: %s" % trt_engine_file_path)
