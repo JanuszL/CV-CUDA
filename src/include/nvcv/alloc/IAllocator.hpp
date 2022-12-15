@@ -75,6 +75,9 @@ public:
     IHostPinnedMemAllocator &hostPinnedMem();
     IDeviceMemAllocator     &deviceMem();
 
+    void  setUserPointer(void *ptr);
+    void *userPointer() const;
+
 private:
     // Using the NVI pattern.
     virtual NVCVAllocatorHandle doGetHandle() const noexcept = 0;
@@ -102,6 +105,18 @@ inline IHostPinnedMemAllocator &IAllocator::hostPinnedMem()
 inline IDeviceMemAllocator &IAllocator::deviceMem()
 {
     return doGetDeviceMemAllocator();
+}
+
+inline void IAllocator::setUserPointer(void *ptr)
+{
+    detail::CheckThrow(nvcvAllocatorSetUserPointer(this->handle(), ptr));
+}
+
+inline void *IAllocator::userPointer() const
+{
+    void *ptr;
+    detail::CheckThrow(nvcvAllocatorGetUserPointer(this->handle(), &ptr));
+    return ptr;
 }
 
 }} // namespace nv::cv

@@ -89,6 +89,18 @@ inline const IImageData *IImage::exportData() const
     return m_cacheDataPtr;
 }
 
+inline void IImage::setUserPointer(void *ptr)
+{
+    detail::CheckThrow(nvcvImageSetUserPointer(this->handle(), ptr));
+}
+
+inline void *IImage::userPointer() const
+{
+    void *ptr;
+    detail::CheckThrow(nvcvImageGetUserPointer(this->handle(), &ptr));
+    return ptr;
+}
+
 }} // namespace nv::cv
 
 #endif // NVCV_IIMAGE_IMPL_HPP

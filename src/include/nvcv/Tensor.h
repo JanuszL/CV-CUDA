@@ -228,6 +228,33 @@ NVCV_PUBLIC NVCVStatus nvcvTensorWrapImageConstruct(NVCVImageHandle img, NVCVTen
  */
 NVCV_PUBLIC void nvcvTensorDestroy(NVCVTensorHandle handle);
 
+/** Associates a user pointer to the tensor handle.
+ *
+ * This pointer can be used to associate any kind of data with the tensor object.
+ *
+ * @param [in] handle Tensor to be associated with the user pointer.
+ *
+ * @param [in] userPtr User pointer.
+ *
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
+ * @retval #NVCV_SUCCESS                Operation executed successfully.
+ */
+NVCV_PUBLIC NVCVStatus nvcvTensorSetUserPointer(NVCVTensorHandle handle, void *userPtr);
+
+/** Returns the user pointer associated with the tensor handle.
+ *
+ * If no user pointer was associated, it'll return a pointer to NULL.
+ *
+ * @param [in] handle Tensor to be queried.
+ *
+ * @param [in] outUserPtr Pointer to where the user pointer will be stored.
+ *                        + Cannot be NULL.
+ *
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
+ * @retval #NVCV_SUCCESS                Operation executed successfully.
+ */
+NVCV_PUBLIC NVCVStatus nvcvTensorGetUserPointer(NVCVTensorHandle handle, void **outUserPtr);
+
 /**
  * Get the type of the tensor elements (its data type).
  *

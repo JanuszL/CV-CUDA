@@ -56,6 +56,18 @@ TEST(Image, wip_create)
     EXPECT_EQ(cudaSuccess, cudaMemset2D(plane.buffer, plane.pitchBytes, 123, plane.width * 4, plane.height));
 }
 
+TEST(Image, wip_user_pointer)
+{
+    nvcv::Image img({163, 117}, nvcv::FMT_RGBA8);
+    EXPECT_EQ(nullptr, img.userPointer());
+
+    img.setUserPointer((void *)0x123);
+    EXPECT_EQ((void *)0x123, img.userPointer());
+
+    img.setUserPointer(nullptr);
+    EXPECT_EQ(nullptr, img.userPointer());
+}
+
 TEST(Image, wip_create_managed)
 {
     namespace nvcv = nv::cv;
@@ -147,6 +159,28 @@ TEST(ImageWrapData, wip_create)
     EXPECT_EQ(img.size().h, devdata->plane(0).height);
     EXPECT_LE(190, devdata->plane(0).pitchBytes);
     EXPECT_EQ(buf.planes[0].buffer, devdata->plane(0).buffer);
+}
+
+TEST(ImageWrapData, wip_user_pointer)
+{
+    nvcv::ImageDataPitchDevice::Buffer buf;
+    buf.numPlanes            = 1;
+    buf.planes[0].width      = 173;
+    buf.planes[0].height     = 79;
+    buf.planes[0].pitchBytes = 190;
+    buf.planes[0].buffer     = reinterpret_cast<void *>(678);
+
+    nvcv::ImageWrapData img{
+        nvcv::ImageDataPitchDevice{nvcv::FMT_U8, buf}
+    };
+
+    EXPECT_EQ(nullptr, img.userPointer());
+
+    img.setUserPointer((void *)0x123);
+    EXPECT_EQ((void *)0x123, img.userPointer());
+
+    img.setUserPointer(nullptr);
+    EXPECT_EQ(nullptr, img.userPointer());
 }
 
 TEST(Image, wip_operator)

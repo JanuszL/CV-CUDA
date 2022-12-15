@@ -113,6 +113,33 @@ NVCV_PUBLIC NVCVStatus nvcvImageBatchVarShapeConstruct(const NVCVImageBatchVarSh
  */
 NVCV_PUBLIC void nvcvImageBatchDestroy(NVCVImageBatchHandle handle);
 
+/** Associates a user pointer to the image batch handle.
+ *
+ * This pointer can be used to associate any kind of data with the image batch object.
+ *
+ * @param [in] handle Image batch to be associated with the user pointer.
+ *
+ * @param [in] userPtr User pointer.
+ *
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
+ * @retval #NVCV_SUCCESS                Operation executed successfully.
+ */
+NVCV_PUBLIC NVCVStatus nvcvImageBatchSetUserPointer(NVCVImageBatchHandle handle, void *userPtr);
+
+/** Returns the user pointer associated with the image batch handle.
+ *
+ * If no user pointer was associated, it'll return a pointer to NULL.
+ *
+ * @param [in] handle Image batch to be queried.
+ *
+ * @param [in] outUserPtr Pointer to where the user pointer will be stored.
+ *                        + Cannot be NULL.
+ *
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
+ * @retval #NVCV_SUCCESS                Operation executed successfully.
+ */
+NVCV_PUBLIC NVCVStatus nvcvImageBatchGetUserPointer(NVCVImageBatchHandle handle, void **outUserPtr);
+
 /** Returns the underlying type of the image batch.
  *
  * @param [in] handle Image batch to be queried.

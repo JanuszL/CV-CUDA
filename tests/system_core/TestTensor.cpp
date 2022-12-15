@@ -176,6 +176,18 @@ TEST(TensorTests, wip_create_allocator)
     EXPECT_EQ(117 * 163 * 4 * 1, devdata->pitchBytes(0));
 }
 
+TEST(Tensor, wip_user_pointer)
+{
+    nvcv::Tensor tensor(3, {163, 117}, nvcv::FMT_RGBA8);
+    EXPECT_EQ(nullptr, tensor.userPointer());
+
+    tensor.setUserPointer((void *)0x123);
+    EXPECT_EQ((void *)0x123, tensor.userPointer());
+
+    tensor.setUserPointer(nullptr);
+    EXPECT_EQ(nullptr, tensor.userPointer());
+}
+
 TEST(TensorWrapData, wip_create)
 {
     nvcv::ImageFormat fmt

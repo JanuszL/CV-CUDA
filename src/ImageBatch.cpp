@@ -70,6 +70,31 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchDestroy, (NVCVImageBatchHandle h
     return priv::ProtectCall([&] { priv::DestroyCoreObject(handle); });
 }
 
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchSetUserPointer, (NVCVImageBatchHandle handle, void *userPtr))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            auto &img = priv::ToStaticRef<priv::IImageBatch>(handle);
+            img.setUserPointer(userPtr);
+        });
+}
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchGetUserPointer, (NVCVImageBatchHandle handle, void **outUserPtr))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            if (outUserPtr == nullptr)
+            {
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output user pointer cannot be NULL");
+            }
+
+            auto &img   = priv::ToStaticRef<const priv::IImageBatch>(handle);
+            *outUserPtr = img.userPointer();
+        });
+}
+
 NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchGetNumImages, (NVCVImageBatchHandle handle, int32_t *size))
 {
     return priv::ProtectCall(

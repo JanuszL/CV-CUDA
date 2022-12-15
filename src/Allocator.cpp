@@ -55,6 +55,31 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvAllocatorDestroy, (NVCVAllocatorHandle hal
     return priv::ProtectCall([&] { priv::DestroyCoreObject(halloc); });
 }
 
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvAllocatorSetUserPointer, (NVCVAllocatorHandle handle, void *userPtr))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            auto &img = priv::ToStaticRef<priv::IAllocator>(handle);
+            img.setUserPointer(userPtr);
+        });
+}
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvAllocatorGetUserPointer, (NVCVAllocatorHandle handle, void **outUserPtr))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            if (outUserPtr == nullptr)
+            {
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output user pointer cannot be NULL");
+            }
+
+            auto &img   = priv::ToStaticRef<const priv::IAllocator>(handle);
+            *outUserPtr = img.userPointer();
+        });
+}
+
 NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvAllocatorAllocHostMemory,
                 (NVCVAllocatorHandle halloc, void **ptr, int64_t sizeBytes, int32_t alignBytes))
 {

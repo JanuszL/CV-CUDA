@@ -41,6 +41,9 @@ public:
 
     const ITensorData *exportData() const;
 
+    void  setUserPointer(void *ptr);
+    void *userPointer() const;
+
 private:
     virtual NVCVTensorHandle doGetHandle() const = 0;
 

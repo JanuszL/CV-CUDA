@@ -82,6 +82,18 @@ inline const ITensorData *ITensor::exportData() const
     return &*m_cacheData;
 }
 
+inline void ITensor::setUserPointer(void *ptr)
+{
+    detail::CheckThrow(nvcvTensorSetUserPointer(this->handle(), ptr));
+}
+
+inline void *ITensor::userPointer() const
+{
+    void *ptr;
+    detail::CheckThrow(nvcvTensorGetUserPointer(this->handle(), &ptr));
+    return ptr;
+}
+
 }} // namespace nv::cv
 
 #endif // NVCV_ITENSOR_IMPL_HPP

@@ -175,3 +175,28 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageExportData, (NVCVImageHandle handle, 
             img.exportData(*data);
         });
 }
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageSetUserPointer, (NVCVImageHandle handle, void *userPtr))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            auto &img = priv::ToStaticRef<priv::IImage>(handle);
+            img.setUserPointer(userPtr);
+        });
+}
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageGetUserPointer, (NVCVImageHandle handle, void **outUserPtr))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            if (outUserPtr == nullptr)
+            {
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output user pointer cannot be NULL");
+            }
+
+            auto &img   = priv::ToStaticRef<const priv::IImage>(handle);
+            *outUserPtr = img.userPointer();
+        });
+}
