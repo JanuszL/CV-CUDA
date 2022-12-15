@@ -62,6 +62,46 @@ std::shared_ptr<Tensor> BilateralFilter(Tensor &input, int diameter, float sigma
     return BilateralFilterInto(input, *output, diameter, sigmaColor, sigmaSpace, borderMode, pstream);
 }
 
+std::shared_ptr<ImageBatchVarShape> VarShapeBilateralFilterInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
+                                                                Tensor &diameter, Tensor &sigmaColor,
+                                                                Tensor &sigmaSpace, NVCVBorderType borderMode,
+                                                                std::shared_ptr<Stream> pstream)
+{
+    if (pstream == nullptr)
+    {
+        pstream = Stream::Current().shared_from_this();
+    }
+
+    auto bilateral_filter = CreateOperator<cvop::BilateralFilter>();
+
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input, diameter, sigmaColor, sigmaSpace});
+    guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*bilateral_filter});
+
+    bilateral_filter->submit(pstream->handle(), input.impl(), output.impl(), diameter.impl(), sigmaColor.impl(),
+                             sigmaSpace.impl(), borderMode);
+
+    return output.shared_from_this();
+}
+
+std::shared_ptr<ImageBatchVarShape> VarShapeBilateralFilter(ImageBatchVarShape &input, Tensor &diameter,
+                                                            Tensor &sigmaColor, Tensor &sigmaSpace,
+                                                            NVCVBorderType borderMode, std::shared_ptr<Stream> pstream)
+{
+    std::shared_ptr<ImageBatchVarShape> output = ImageBatchVarShape::Create(input.capacity());
+
+    for (int i = 0; i < input.numImages(); ++i)
+    {
+        cv::ImageFormat format = input.impl()[i].format();
+        cv::Size2D      size   = input.impl()[i].size();
+        auto            image  = Image::Create(std::tie(size.w, size.h), format);
+        output->pushBack(*image);
+    }
+
+    return VarShapeBilateralFilterInto(input, *output, diameter, sigmaColor, sigmaSpace, borderMode, pstream);
+}
+
 } // namespace
 
 void ExportOpBilateralFilter(py::module &m)
@@ -69,10 +109,17 @@ void ExportOpBilateralFilter(py::module &m)
     using namespace pybind11::literals;
 
     DefClassMethod<Tensor>("bilateral_filter", &BilateralFilter, "diameter"_a, "sigma_color"_a, "sigma_space"_a,
-                           "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
+                           py::kw_only(), "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
     DefClassMethod<Tensor>("bilateral_filter_into", &BilateralFilterInto, "output"_a, "diameter"_a, "sigma_color"_a,
-                           "sigma_space"_a, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
+                           "sigma_space"_a, py::kw_only(), "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
                            "stream"_a = nullptr);
+
+    DefClassMethod<ImageBatchVarShape>("bilateral_filter", &VarShapeBilateralFilter, "diameter"_a, "sigma_color"_a,
+                                       "sigma_space"_a, py::kw_only(),
+                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
+    DefClassMethod<ImageBatchVarShape>("bilateral_filter_into", &VarShapeBilateralFilterInto, "output"_a, "diameter"_a,
+                                       "sigma_color"_a, "sigma_space"_a, py::kw_only(),
+                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

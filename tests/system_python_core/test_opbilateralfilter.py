@@ -16,6 +16,9 @@
 import nvcv
 import pytest as t
 import numpy as np
+import util
+
+RNG = np.random.default_rng(0)
 
 
 @t.mark.parametrize(
@@ -52,7 +55,7 @@ import numpy as np
     ],
 )
 def test_op_bilateral_filter(input, diameter, sigma_color, sigma_space, border):
-    out = input.bilateral_filter(diameter, sigma_color, sigma_space, border)
+    out = input.bilateral_filter(diameter, sigma_color, sigma_space, border=border)
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
@@ -72,3 +75,101 @@ def test_op_bilateral_filter(input, diameter, sigma_color, sigma_space, border):
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
+
+
+@t.mark.parametrize(
+    "nimages, format, max_size, max_pixel, max_diameter, max_sc, max_ss, border",
+    [
+        (
+            5,
+            nvcv.Format.RGB8,
+            (16, 23),
+            128.0,
+            12,
+            2,
+            5,
+            nvcv.Border.REFLECT,
+        ),
+        (
+            5,
+            nvcv.Format.RGB8,
+            (16, 23),
+            256.0,
+            6,
+            15,
+            9,
+            nvcv.Border.REPLICATE,
+        ),
+        (
+            5,
+            nvcv.Format.RGB8,
+            (16, 23),
+            256.0,
+            7,
+            3,
+            10,
+            nvcv.Border.WRAP,
+        ),
+        (
+            4,
+            nvcv.Format.RGB8,
+            (11, 23),
+            256.0,
+            9,
+            1,
+            1,
+            nvcv.Border.CONSTANT,
+        ),
+    ],
+)
+def test_op_bilateral_filtervarshape(
+    nimages,
+    format,
+    max_size,
+    max_pixel,
+    max_diameter,
+    max_sc,
+    max_ss,
+    border,
+):
+
+    input = util.create_image_batch(
+        nimages, format, max_size=max_size, max_random=max_pixel, rng=RNG
+    )
+
+    diameter = util.create_tensor(
+        (nimages), np.int32, "N", max_random=max_diameter, rng=RNG
+    )
+
+    sigma_color = util.create_tensor(
+        (nimages), np.float32, "N", max_random=max_sc, rng=RNG
+    )
+
+    sigma_space = util.create_tensor(
+        (nimages), np.float32, "N", max_random=max_ss, rng=RNG
+    )
+    out = input.bilateral_filter(diameter, sigma_color, sigma_space, border=border)
+
+    assert len(out) == len(input)
+    assert out.capacity == input.capacity
+    assert out.uniqueformat == input.uniqueformat
+    assert out.maxsize == input.maxsize
+
+    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
+    stream = nvcv.cuda.Stream()
+
+    out = util.clone_image_batch(input)
+
+    tmp = input.bilateral_filter_into(
+        output=out,
+        diameter=diameter,
+        sigma_color=sigma_color,
+        sigma_space=sigma_space,
+        border=border,
+        stream=stream,
+    )
+    assert tmp is out
+    assert len(out) == len(input)
+    assert out.capacity == input.capacity
+    assert out.uniqueformat == input.uniqueformat
+    assert out.maxsize == input.maxsize
