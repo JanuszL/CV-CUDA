@@ -136,8 +136,8 @@ TEST_P(OpCustomCrop, CustomCrop_packed)
     nvcv::Tensor imgOut(numberOfImages, {outWidth, outHeight}, nvcv::FMT_RGBA8);
     nvcv::Tensor imgIn(numberOfImages, {inWidth, inHeight}, nvcv::FMT_RGBA8);
 
-    const auto *inData  = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgIn.exportData());
-    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgOut.exportData());
+    const auto *inData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgIn.exportData());
+    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgOut.exportData());
 
     ASSERT_NE(nullptr, inData);
     ASSERT_NE(nullptr, outData);

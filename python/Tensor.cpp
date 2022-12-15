@@ -132,7 +132,7 @@ NVCVTensorData FillNVCVTensorData(const py::buffer_info &info, std::optional<cv:
 
     // buffer type ------------
     tensorData.bufferType = bufType;
-    NVCV_ASSERT(bufType == NVCV_TENSOR_BUFFER_STRIDED_DEVICE && "Only pitch-linear device buffer supported for now");
+    NVCV_ASSERT(bufType == NVCV_TENSOR_BUFFER_STRIDED_CUDA && "Only pitch-linear device buffer supported for now");
 
     NVCVTensorBufferStrided &dataStrided = tensorData.buffer.strided;
 
@@ -158,7 +158,7 @@ NVCVTensorData FillNVCVTensorData(const py::buffer_info &info, std::optional<cv:
 
 NVCVTensorData FillNVCVTensorDataCUDA(const py::buffer_info &info, std::optional<cv::TensorLayout> layout)
 {
-    return FillNVCVTensorData(info, std::move(layout), NVCV_TENSOR_BUFFER_STRIDED_DEVICE);
+    return FillNVCVTensorData(info, std::move(layout), NVCV_TENSOR_BUFFER_STRIDED_CUDA);
 }
 
 } // namespace
@@ -167,7 +167,7 @@ std::shared_ptr<Tensor> Tensor::Wrap(CudaBuffer &buffer, std::optional<cv::Tenso
 {
     py::buffer_info info = buffer.request(true);
 
-    cv::TensorDataStridedDevice data{FillNVCVTensorDataCUDA(info, std::move(layout))};
+    cv::TensorDataStridedCuda data{FillNVCVTensorDataCUDA(info, std::move(layout))};
 
     // This is the key of a tensor wrapper.
     // All tensor wrappers have the same key.
@@ -345,7 +345,7 @@ static py::object ToPython(const cv::ITensorData &imgData, py::object owner)
     }
 
     py::buffer_info info = ToPyBufferInfo(*stridedData);
-    if (dynamic_cast<const cv::ITensorDataStridedDevice *>(stridedData))
+    if (dynamic_cast<const cv::ITensorDataStridedCuda *>(stridedData))
     {
         if (owner)
         {

@@ -61,7 +61,7 @@ __global__ void convertFormat(Ptr2DSrc src, Ptr2DDst dst, UnOp op, int2 size)
 }
 
 template<typename DT_SOURCE, typename DT_DEST, int NC>
-void convertToScaleCN(const nvcv::ITensorDataStridedDevice &inData, const nvcv::ITensorDataStridedDevice &outData,
+void convertToScaleCN(const nvcv::ITensorDataStridedCuda &inData, const nvcv::ITensorDataStridedCuda &outData,
                       const double alpha, const double beta, cudaStream_t stream)
 {
     auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(inData);
@@ -87,7 +87,7 @@ void convertToScaleCN(const nvcv::ITensorDataStridedDevice &inData, const nvcv::
 }
 
 template<typename DT_SOURCE, typename DT_DEST> // <uchar, float> <float double>
-void convertToScale(const nvcv::ITensorDataStridedDevice &inData, const nvcv::ITensorDataStridedDevice &outData,
+void convertToScale(const nvcv::ITensorDataStridedCuda &inData, const nvcv::ITensorDataStridedCuda &outData,
                     int numChannels, const double alpha, const double beta, cudaStream_t stream)
 {
     switch (numChannels)
@@ -126,7 +126,7 @@ size_t ConvertTo::calBufferSize(DataShape max_input_shape, DataShape max_output_
     return 0;
 }
 
-ErrorCode ConvertTo::infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
+ErrorCode ConvertTo::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                            const double alpha, const double beta, cudaStream_t stream)
 {
     cuda_op::DataFormat input_format    = GetLegacyDataFormat(inData.layout());
@@ -169,7 +169,7 @@ ErrorCode ConvertTo::infer(const ITensorDataStridedDevice &inData, const ITensor
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    typedef void (*func_t)(const nvcv::ITensorDataStridedDevice &inData, const nvcv::ITensorDataStridedDevice &outData,
+    typedef void (*func_t)(const nvcv::ITensorDataStridedCuda &inData, const nvcv::ITensorDataStridedCuda &outData,
                            int numChannels, const double alpha, const double beta, cudaStream_t stream);
 
     // clang-format off

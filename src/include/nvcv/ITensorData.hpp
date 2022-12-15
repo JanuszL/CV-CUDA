@@ -65,10 +65,10 @@ protected:
     using ITensorData::ITensorData;
 };
 
-class ITensorDataStridedDevice : public ITensorDataStrided
+class ITensorDataStridedCuda : public ITensorDataStrided
 {
 public:
-    virtual ~ITensorDataStridedDevice() = 0;
+    virtual ~ITensorDataStridedCuda() = 0;
 
 protected:
     using ITensorDataStrided::ITensorDataStrided;

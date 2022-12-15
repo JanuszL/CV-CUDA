@@ -95,8 +95,8 @@ void composite(const nvcv::TensorDataAccessStridedImagePlanar &foregroundData,
 
 namespace nv::cv::legacy::cuda_op {
 
-ErrorCode Composite::infer(const ITensorDataStridedDevice &foreground, const ITensorDataStridedDevice &background,
-                           const ITensorDataStridedDevice &fgMask, const ITensorDataStridedDevice &outData,
+ErrorCode Composite::infer(const ITensorDataStridedCuda &foreground, const ITensorDataStridedCuda &background,
+                           const ITensorDataStridedCuda &fgMask, const ITensorDataStridedCuda &outData,
                            cudaStream_t stream)
 {
     DataFormat background_format = GetLegacyDataFormat(background.layout());

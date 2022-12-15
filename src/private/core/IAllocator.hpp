@@ -35,8 +35,8 @@ public:
     void *allocHostPinnedMem(int64_t size, int32_t align);
     void  freeHostPinnedMem(void *ptr, int64_t size, int32_t align) noexcept;
 
-    void *allocDeviceMem(int64_t size, int32_t align);
-    void  freeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept;
+    void *allocCudaMem(int64_t size, int32_t align);
+    void  freeCudaMem(void *ptr, int64_t size, int32_t align) noexcept;
 
 private:
     // NVI idiom
@@ -46,8 +46,8 @@ private:
     virtual void *doAllocHostPinnedMem(int64_t size, int32_t align)                    = 0;
     virtual void  doFreeHostPinnedMem(void *ptr, int64_t size, int32_t align) noexcept = 0;
 
-    virtual void *doAllocDeviceMem(int64_t size, int32_t align)                    = 0;
-    virtual void  doFreeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept = 0;
+    virtual void *doAllocCudaMem(int64_t size, int32_t align)                    = 0;
+    virtual void  doFreeCudaMem(void *ptr, int64_t size, int32_t align) noexcept = 0;
 };
 
 template<class T, class... ARGS>

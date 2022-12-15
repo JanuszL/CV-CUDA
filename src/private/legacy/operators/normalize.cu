@@ -93,7 +93,7 @@ __global__ void normalizeInvStdDevKernel(const input_type src, const base_type b
 
 template<typename base_type, typename scale_type, typename PtrInput, typename PtrOutput>
 void normalizeWrap(PtrInput src_ptr, PtrOutput dst_ptr, DataShape input_shape,
-                   const nvcv::ITensorDataStridedDevice &baseData, const nvcv::ITensorDataStridedDevice &scaleData,
+                   const nvcv::ITensorDataStridedCuda &baseData, const nvcv::ITensorDataStridedCuda &scaleData,
                    float global_scale, float shift, cudaStream_t stream)
 {
     dim3 block(32, 8);
@@ -121,9 +121,8 @@ void normalizeWrap(PtrInput src_ptr, PtrOutput dst_ptr, DataShape input_shape,
 
 template<typename base_type, typename scale_type, typename PtrInput, typename PtrOutput>
 void normalizeInvStdDevWrap(PtrInput src_ptr, PtrOutput dst_ptr, DataShape input_shape,
-                            const nvcv::ITensorDataStridedDevice &baseData,
-                            const nvcv::ITensorDataStridedDevice &scaleData, float global_scale, float shift,
-                            float epsilon, cudaStream_t stream)
+                            const nvcv::ITensorDataStridedCuda &baseData, const nvcv::ITensorDataStridedCuda &scaleData,
+                            float global_scale, float shift, float epsilon, cudaStream_t stream)
 {
     dim3 block(32, 8);
     dim3 grid(divUp(input_shape.W, block.x), divUp(input_shape.H, block.y), input_shape.N);
@@ -149,8 +148,8 @@ void normalizeInvStdDevWrap(PtrInput src_ptr, PtrOutput dst_ptr, DataShape input
 }
 
 template<typename input_type>
-void normalize(const nvcv::ITensorDataStridedDevice &inData, const nvcv::ITensorDataStridedDevice &baseData,
-               const nvcv::ITensorDataStridedDevice &scaleData, const nvcv::ITensorDataStridedDevice &outData,
+void normalize(const nvcv::ITensorDataStridedCuda &inData, const nvcv::ITensorDataStridedCuda &baseData,
+               const nvcv::ITensorDataStridedCuda &scaleData, const nvcv::ITensorDataStridedCuda &outData,
                float global_scale, float shift, cudaStream_t stream)
 {
     nvcv::cuda::Tensor3DWrap<input_type> src_ptr(inData);
@@ -200,8 +199,8 @@ void normalize(const nvcv::ITensorDataStridedDevice &inData, const nvcv::ITensor
 }
 
 template<typename input_type>
-void normalizeInvStdDev(const nvcv::ITensorDataStridedDevice &inData, const nvcv::ITensorDataStridedDevice &baseData,
-                        const nvcv::ITensorDataStridedDevice &scaleData, const nvcv::ITensorDataStridedDevice &outData,
+void normalizeInvStdDev(const nvcv::ITensorDataStridedCuda &inData, const nvcv::ITensorDataStridedCuda &baseData,
+                        const nvcv::ITensorDataStridedCuda &scaleData, const nvcv::ITensorDataStridedCuda &outData,
                         float global_scale, float shift, float epsilon, cudaStream_t stream)
 {
     nvcv::cuda::Tensor3DWrap<input_type> src_ptr(inData);
@@ -265,10 +264,9 @@ size_t Normalize::calBufferSize(DataShape max_input_shape, DataShape max_output_
     return 0;
 }
 
-ErrorCode Normalize::infer(const nv::cv::ITensorDataStridedDevice &inData,
-                           const nv::cv::ITensorDataStridedDevice &baseData,
-                           const nv::cv::ITensorDataStridedDevice &scaleData,
-                           const nv::cv::ITensorDataStridedDevice &outData, const float global_scale, const float shift,
+ErrorCode Normalize::infer(const nv::cv::ITensorDataStridedCuda &inData, const nv::cv::ITensorDataStridedCuda &baseData,
+                           const nv::cv::ITensorDataStridedCuda &scaleData,
+                           const nv::cv::ITensorDataStridedCuda &outData, const float global_scale, const float shift,
                            const float epsilon, const uint32_t flags, cudaStream_t stream)
 {
     DataFormat format = GetLegacyDataFormat(inData.layout());
@@ -330,14 +328,13 @@ ErrorCode Normalize::infer(const nv::cv::ITensorDataStridedDevice &inData,
     checkParamShape(input_shape, base_param_shape);
     checkParamShape(input_shape, scale_param_shape);
 
-    typedef void (*normalize_t)(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &baseData,
-                                const ITensorDataStridedDevice &scaleData, const ITensorDataStridedDevice &outData,
+    typedef void (*normalize_t)(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &baseData,
+                                const ITensorDataStridedCuda &scaleData, const ITensorDataStridedCuda &outData,
                                 float global_scale, float shift, cudaStream_t stream);
 
-    typedef void (*normalizeInvStdDev_t)(
-        const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &baseData,
-        const ITensorDataStridedDevice &scaleData, const ITensorDataStridedDevice &outData, float global_scale,
-        float shift, float epsilon, cudaStream_t stream);
+    typedef void (*normalizeInvStdDev_t)(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &baseData,
+                                         const ITensorDataStridedCuda &scaleData, const ITensorDataStridedCuda &outData,
+                                         float global_scale, float shift, float epsilon, cudaStream_t stream);
 
     static const normalize_t funcs_normalize[6][4] = {
         { normalize<uchar>,  0 /*normalize<uchar2>*/,  normalize<uchar3>,  normalize<uchar4>},

@@ -76,10 +76,10 @@ __global__ void erase(nvcv::cuda::Tensor4DWrap<D> img, int imgH, int imgW, nvcv:
 }
 
 template<typename D>
-void eraseCaller(const nvcv::ITensorDataStridedDevice &imgs, const nvcv::ITensorDataStridedDevice &anchor,
-                 const nvcv::ITensorDataStridedDevice &erasing, const nvcv::ITensorDataStridedDevice &imgIdx,
-                 const nvcv::ITensorDataStridedDevice &values, int max_eh, int max_ew, int num_erasing_area,
-                 bool random, unsigned int seed, int rows, int cols, int channels, cudaStream_t stream)
+void eraseCaller(const nvcv::ITensorDataStridedCuda &imgs, const nvcv::ITensorDataStridedCuda &anchor,
+                 const nvcv::ITensorDataStridedCuda &erasing, const nvcv::ITensorDataStridedCuda &imgIdx,
+                 const nvcv::ITensorDataStridedCuda &values, int max_eh, int max_ew, int num_erasing_area, bool random,
+                 unsigned int seed, int rows, int cols, int channels, cudaStream_t stream)
 {
     nvcv::cuda::Tensor4DWrap<D> src(imgs);
 
@@ -153,9 +153,9 @@ Erase::~Erase()
     temp_storage = nullptr;
 }
 
-ErrorCode Erase::infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
-                       const ITensorDataStridedDevice &anchor, const ITensorDataStridedDevice &erasing,
-                       const ITensorDataStridedDevice &values, const ITensorDataStridedDevice &imgIdx, bool random,
+ErrorCode Erase::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
+                       const ITensorDataStridedCuda &anchor, const ITensorDataStridedCuda &erasing,
+                       const ITensorDataStridedCuda &values, const ITensorDataStridedCuda &imgIdx, bool random,
                        unsigned int seed, bool inplace, cudaStream_t stream)
 {
     DataFormat format    = GetLegacyDataFormat(inData.layout());
@@ -281,9 +281,9 @@ ErrorCode Erase::infer(const ITensorDataStridedDevice &inData, const ITensorData
         return SUCCESS;
     }
 
-    typedef void (*erase_t)(const ITensorDataStridedDevice &imgs, const ITensorDataStridedDevice &anchor,
-                            const ITensorDataStridedDevice &erasing, const ITensorDataStridedDevice &imgIdx,
-                            const ITensorDataStridedDevice &values, int max_eh, int max_ew, int num_erasing_area,
+    typedef void (*erase_t)(const ITensorDataStridedCuda &imgs, const ITensorDataStridedCuda &anchor,
+                            const ITensorDataStridedCuda &erasing, const ITensorDataStridedCuda &imgIdx,
+                            const ITensorDataStridedCuda &values, int max_eh, int max_ew, int num_erasing_area,
                             bool random, unsigned int seed, int rows, int cols, int channels, cudaStream_t stream);
 
     static const erase_t funcs[6] = {eraseCaller<uchar>, eraseCaller<char>, eraseCaller<ushort>,

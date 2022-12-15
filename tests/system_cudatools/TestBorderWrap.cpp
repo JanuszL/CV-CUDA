@@ -137,8 +137,8 @@ TYPED_TEST(BorderWrapNHWTest, correct_fill)
     nv::cv::Tensor srcTensor(batches, {width, height}, format);
     nv::cv::Tensor dstTensor(batches, {width + borderSize * 2, height + borderSize * 2}, format);
 
-    const auto *srcDev = dynamic_cast<const nv::cv::ITensorDataStridedDevice *>(srcTensor.exportData());
-    const auto *dstDev = dynamic_cast<const nv::cv::ITensorDataStridedDevice *>(dstTensor.exportData());
+    const auto *srcDev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(srcTensor.exportData());
+    const auto *dstDev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(dstTensor.exportData());
 
     ASSERT_NE(srcDev, nullptr);
     ASSERT_NE(dstDev, nullptr);
@@ -243,8 +243,8 @@ TYPED_TEST(BorderWrapNHWCTest, correct_fill)
     nv::cv::Tensor srcTensor(batches, {width, height}, format);
     nv::cv::Tensor dstTensor(batches, {width + borderSize * 2, height + borderSize * 2}, format);
 
-    const auto *srcDev = dynamic_cast<const nv::cv::ITensorDataStridedDevice *>(srcTensor.exportData());
-    const auto *dstDev = dynamic_cast<const nv::cv::ITensorDataStridedDevice *>(dstTensor.exportData());
+    const auto *srcDev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(srcTensor.exportData());
+    const auto *dstDev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(dstTensor.exportData());
 
     ASSERT_NE(srcDev, nullptr);
     ASSERT_NE(dstDev, nullptr);

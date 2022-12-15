@@ -111,8 +111,8 @@ inline const int64_t &ITensorDataStrided::stride(int d) const
     return data.buffer.strided.strides[d];
 }
 
-// Implementation - ITensorDataStridedDevice ----------------------------
-inline ITensorDataStridedDevice::~ITensorDataStridedDevice()
+// Implementation - ITensorDataStridedCuda ----------------------------
+inline ITensorDataStridedCuda::~ITensorDataStridedCuda()
 {
     // required dtor implementation
 }

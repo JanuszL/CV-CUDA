@@ -145,7 +145,7 @@ NVCV_PUBLIC NVCVStatus nvcvTensorCalcRequirementsForImages(int32_t numImages, in
  *
  * @param [in] alloc Allocator to be used to allocate needed memory buffers.
  *                   The following resources are used:
- *                   - device memory
+ *                   - cuda memory
  *                   If NULL, it'll use the internal default allocator.
  *                   + Allocator must not be destroyed while an tensor still refers to it.
  *
@@ -166,7 +166,7 @@ NVCV_PUBLIC NVCVStatus nvcvTensorConstruct(const NVCVTensorRequirements *reqs, N
  * @param [in] data Tensor contents.
  *                  + Must not be NULL.
  *                  + Allowed buffer types:
- *                    - \ref NVCV_TENSOR_BUFFER_STRIDED_DEVICE
+ *                    - \ref NVCV_TENSOR_BUFFER_STRIDED_CUDA
  *
  * @param [in] cleanup Cleanup function to be called when the tensor is destroyed
  *                     via @ref nvcvTensorDestroy.
@@ -203,7 +203,7 @@ NVCV_PUBLIC NVCVStatus nvcvTensorWrapDataConstruct(const NVCVTensorData *data, N
  *                 + Distance in memory between consecutive planes must be > 0.
  *                 + Row pitch of all planes must be the same.
  *                 + Image must not be destroyed while it's referenced by a tensor.
- *                 + Image contents must be device-accessible
+ *                 + Image contents must be cuda-accessible
  *                 + Image format must be pitch-linear.
  *                 + All planes must have the same dimensions.
  *

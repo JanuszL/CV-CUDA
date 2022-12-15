@@ -55,7 +55,7 @@ __global__ void transformFormat(const Ptr2DSrc src, Ptr2DDst dst, int3 inout_siz
 }
 
 template<typename data_type> // uchar float
-void transform(const nv::cv::ITensorDataStridedDevice &inData, const nv::cv::ITensorDataStridedDevice &outData,
+void transform(const nv::cv::ITensorDataStridedCuda &inData, const nv::cv::ITensorDataStridedCuda &outData,
                cuda_op::DataFormat input_format, cuda_op::DataFormat output_format, cudaStream_t stream)
 {
     auto inAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(inData);
@@ -103,8 +103,8 @@ size_t Reformat::calBufferSize(DataShape max_input_shape, DataShape max_output_s
     return 0;
 }
 
-ErrorCode Reformat::infer(const nv::cv::ITensorDataStridedDevice &inData,
-                          const nv::cv::ITensorDataStridedDevice &outData, cudaStream_t stream)
+ErrorCode Reformat::infer(const nv::cv::ITensorDataStridedCuda &inData, const nv::cv::ITensorDataStridedCuda &outData,
+                          cudaStream_t stream)
 {
     DataFormat input_format  = helpers::GetLegacyDataFormat(inData.layout());
     DataFormat output_format = helpers::GetLegacyDataFormat(outData.layout());
@@ -158,7 +158,7 @@ ErrorCode Reformat::infer(const nv::cv::ITensorDataStridedDevice &inData,
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    typedef void (*transform_t)(const ITensorDataStridedDevice &input, const ITensorDataStridedDevice &output,
+    typedef void (*transform_t)(const ITensorDataStridedCuda &input, const ITensorDataStridedCuda &output,
                                 DataFormat in_format, DataFormat out_format, cudaStream_t stream);
 
     static const transform_t funcs[7] = {transform<uchar>, transform<schar>, transform<ushort>, transform<short>,

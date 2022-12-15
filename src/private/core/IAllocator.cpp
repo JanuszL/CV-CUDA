@@ -79,7 +79,7 @@ void IAllocator::freeHostPinnedMem(void *ptr, int64_t size, int32_t align) noexc
     doFreeHostPinnedMem(ptr, size, align);
 }
 
-void *IAllocator::allocDeviceMem(int64_t size, int32_t align)
+void *IAllocator::allocCudaMem(int64_t size, int32_t align)
 {
     if (size < 0)
     {
@@ -99,12 +99,12 @@ void *IAllocator::allocDeviceMem(int64_t size, int32_t align)
                         size);
     }
 
-    return doAllocDeviceMem(size, align);
+    return doAllocCudaMem(size, align);
 }
 
-void IAllocator::freeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept
+void IAllocator::freeCudaMem(void *ptr, int64_t size, int32_t align) noexcept
 {
-    doFreeDeviceMem(ptr, size, align);
+    doFreeCudaMem(ptr, size, align);
 }
 
 priv::IAllocator &GetDefaultAllocator()

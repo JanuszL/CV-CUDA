@@ -22,15 +22,15 @@
 
 namespace nv { namespace cv {
 
-// ImageBatchVarShapeDataStridedDevice definition -----------------------
+// ImageBatchVarShapeDataStridedCuda definition -----------------------
 
-class ImageBatchVarShapeDataStridedDevice : public IImageBatchVarShapeDataStridedDevice
+class ImageBatchVarShapeDataStridedCuda : public IImageBatchVarShapeDataStridedCuda
 {
 public:
     using Buffer = NVCVImageBatchVarShapeBufferStrided;
 
-    explicit ImageBatchVarShapeDataStridedDevice(int32_t numImages, const Buffer &buffer);
-    explicit ImageBatchVarShapeDataStridedDevice(const NVCVImageBatchData &data);
+    explicit ImageBatchVarShapeDataStridedCuda(int32_t numImages, const Buffer &buffer);
+    explicit ImageBatchVarShapeDataStridedCuda(const NVCVImageBatchData &data);
 };
 
 }} // namespace nv::cv

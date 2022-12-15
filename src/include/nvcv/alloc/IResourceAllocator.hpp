@@ -62,7 +62,7 @@ class IHostPinnedMemAllocator : public virtual IMemAllocator
 {
 };
 
-class IDeviceMemAllocator : public virtual IMemAllocator
+class ICudaMemAllocator : public virtual IMemAllocator
 {
 };
 

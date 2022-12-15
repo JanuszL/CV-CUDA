@@ -47,7 +47,7 @@ public:
         : m_handle(handle)
         , m_allocHostMem(handle)
         , m_allocHostPinnedMem(handle)
-        , m_allocDeviceMem(handle)
+        , m_allocCudaMem(handle)
     {
     }
 
@@ -100,10 +100,10 @@ private:
         }
     };
 
-    class DeviceMemAllocator final : public IDeviceMemAllocator
+    class CudaMemAllocator final : public ICudaMemAllocator
     {
     public:
-        DeviceMemAllocator(NVCVAllocatorHandle handle)
+        CudaMemAllocator(NVCVAllocatorHandle handle)
             : m_handle(handle)
         {
         }
@@ -114,13 +114,13 @@ private:
         void *doAlloc(int64_t size, int32_t align) override
         {
             void *ptr;
-            detail::CheckThrow(nvcvAllocatorAllocDeviceMemory(m_handle, &ptr, size, align));
+            detail::CheckThrow(nvcvAllocatorAllocCudaMemory(m_handle, &ptr, size, align));
             return ptr;
         }
 
         void doFree(void *ptr, int64_t size, int32_t align) noexcept override
         {
-            nvcvAllocatorFreeDeviceMemory(m_handle, ptr, size, align);
+            nvcvAllocatorFreeCudaMemory(m_handle, ptr, size, align);
         }
     };
 
@@ -128,7 +128,7 @@ private:
 
     HostMemAllocator       m_allocHostMem;
     HostPinnedMemAllocator m_allocHostPinnedMem;
-    DeviceMemAllocator     m_allocDeviceMem;
+    CudaMemAllocator       m_allocCudaMem;
 
     NVCVAllocatorHandle doGetHandle() const noexcept override
     {
@@ -145,9 +145,9 @@ private:
         return m_allocHostPinnedMem;
     }
 
-    IDeviceMemAllocator &doGetDeviceMemAllocator() override
+    ICudaMemAllocator &doGetCudaMemAllocator() override
     {
-        return m_allocDeviceMem;
+        return m_allocCudaMem;
     }
 };
 

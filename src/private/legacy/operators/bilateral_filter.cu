@@ -162,9 +162,9 @@ __global__ void BilateralFilterKernel(SrcWrapper src, DstWrapper dst, const int 
 }
 
 template<typename T, NVCVBorderType B>
-void BilateralFilterCaller(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
-                           const int batch, int rows, int columns, int radius, float sigmaColor, float sigmaSpace,
-                           float borderValue, cudaStream_t stream)
+void BilateralFilterCaller(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData, const int batch,
+                           int rows, int columns, int radius, float sigmaColor, float sigmaSpace, float borderValue,
+                           cudaStream_t stream)
 {
     dim3 block(8, 8);
     dim3 grid(divUp(columns, block.x * 2), divUp(rows, block.y * 2), batch);
@@ -185,7 +185,7 @@ void BilateralFilterCaller(const ITensorDataStridedDevice &inData, const ITensor
 #endif
 }
 
-ErrorCode BilateralFilter::infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData, int d,
+ErrorCode BilateralFilter::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData, int d,
                                  float sigmaColor, float sigmaSpace, NVCVBorderType borderMode, cudaStream_t stream)
 {
     cuda_op::DataFormat input_format  = GetLegacyDataFormat(inData.layout());
@@ -267,7 +267,7 @@ ErrorCode BilateralFilter::infer(const ITensorDataStridedDevice &inData, const I
 
     float borderValue = .0f;
 
-    typedef void (*bilateral_filter_t)(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
+    typedef void (*bilateral_filter_t)(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                                        int batch, int rows, int columns, int radius, float sigmaColor, float sigmaSpace,
                                        float borderValue, cudaStream_t stream);
 

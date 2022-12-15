@@ -61,8 +61,8 @@ const void testConvertTo(nvcv::ImageFormat fmtIn, nvcv::ImageFormat fmtOut, int 
     nvcv::Tensor imgOut(batch, {width, height}, fmtOut);
     nvcv::Tensor imgIn(batch, {width, height}, fmtIn);
 
-    const auto *inData  = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgIn.exportData());
-    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgOut.exportData());
+    const auto *inData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgIn.exportData());
+    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgOut.exportData());
 
     ASSERT_NE(nullptr, inData);
     ASSERT_NE(nullptr, outData);

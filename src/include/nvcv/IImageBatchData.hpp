@@ -70,10 +70,10 @@ protected:
     using IImageBatchVarShapeData::IImageBatchVarShapeData;
 };
 
-class IImageBatchVarShapeDataStridedDevice : public IImageBatchVarShapeDataStrided
+class IImageBatchVarShapeDataStridedCuda : public IImageBatchVarShapeDataStrided
 {
 public:
-    virtual ~IImageBatchVarShapeDataStridedDevice() = 0;
+    virtual ~IImageBatchVarShapeDataStridedCuda() = 0;
 
 protected:
     using IImageBatchVarShapeDataStrided::IImageBatchVarShapeDataStrided;

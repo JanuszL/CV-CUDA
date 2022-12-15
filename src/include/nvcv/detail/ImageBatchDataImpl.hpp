@@ -24,13 +24,13 @@
 
 namespace nv { namespace cv {
 
-// ImageBatchVarShapeDataStridedDevice implementation -----------------------
-inline ImageBatchVarShapeDataStridedDevice::ImageBatchVarShapeDataStridedDevice(int32_t numImages, const Buffer &buffer)
+// ImageBatchVarShapeDataStridedCuda implementation -----------------------
+inline ImageBatchVarShapeDataStridedCuda::ImageBatchVarShapeDataStridedCuda(int32_t numImages, const Buffer &buffer)
 {
     NVCVImageBatchData &data = this->cdata();
 
     data.numImages              = numImages;
-    data.bufferType             = NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_STRIDED_DEVICE;
+    data.bufferType             = NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_STRIDED_CUDA;
     data.buffer.varShapeStrided = buffer;
 }
 

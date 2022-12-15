@@ -147,7 +147,7 @@ __global__ void rotate_cubic(CubicFilter<BorderReader<Ptr2dVarShapeNHWC<T>, BrdR
 }
 
 template<typename T> // uchar3 float3 uchar1 float3
-void rotate(const IImageBatchVarShapeDataStridedDevice &in, const IImageBatchVarShapeDataStridedDevice &out,
+void rotate(const IImageBatchVarShapeDataStridedCuda &in, const IImageBatchVarShapeDataStridedCuda &out,
             double *d_aCoeffs, const NVCVInterpolationType interpolation, cudaStream_t stream)
 {
     dim3 blockSize(BLOCK, BLOCK / 4, 1);
@@ -211,9 +211,9 @@ RotateVarShape::~RotateVarShape()
     d_aCoeffs = nullptr;
 }
 
-ErrorCode RotateVarShape::infer(const IImageBatchVarShapeDataStridedDevice &inData,
-                                const IImageBatchVarShapeDataStridedDevice &outData,
-                                const ITensorDataStridedDevice &angleDeg, const ITensorDataStridedDevice &shift,
+ErrorCode RotateVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData,
+                                const IImageBatchVarShapeDataStridedCuda &outData,
+                                const ITensorDataStridedCuda &angleDeg, const ITensorDataStridedCuda &shift,
                                 const NVCVInterpolationType interpolation, cudaStream_t stream)
 {
     if (m_maxBatchSize <= 0)
@@ -280,9 +280,8 @@ ErrorCode RotateVarShape::infer(const IImageBatchVarShapeDataStridedDevice &inDa
     compute_warpAffine<<<1, inData.numImages(), 0, stream>>>(inData.numImages(), angleDecPtr, shiftPtr, d_aCoeffs);
     checkKernelErrors();
 
-    typedef void (*func_t)(const IImageBatchVarShapeDataStridedDevice &in,
-                           const IImageBatchVarShapeDataStridedDevice &out, double *d_aCoeffs,
-                           const NVCVInterpolationType interpolation, cudaStream_t stream);
+    typedef void (*func_t)(const IImageBatchVarShapeDataStridedCuda &in, const IImageBatchVarShapeDataStridedCuda &out,
+                           double *d_aCoeffs, const NVCVInterpolationType interpolation, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {
         {      rotate<uchar>,  0 /*rotate<uchar2>*/,      rotate<uchar3>,      rotate<uchar4>},

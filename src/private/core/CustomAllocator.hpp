@@ -38,8 +38,8 @@ private:
     void *doAllocHostPinnedMem(int64_t size, int32_t align) override;
     void  doFreeHostPinnedMem(void *ptr, int64_t size, int32_t align) noexcept override;
 
-    void *doAllocDeviceMem(int64_t size, int32_t align) override;
-    void  doFreeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept override;
+    void *doAllocCudaMem(int64_t size, int32_t align) override;
+    void  doFreeCudaMem(void *ptr, int64_t size, int32_t align) noexcept override;
 };
 
 } // namespace nv::cv::priv

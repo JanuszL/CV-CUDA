@@ -32,14 +32,14 @@ public:
     explicit ImageDataCudaArray(const NVCVImageData &data);
 };
 
-// ImageDataStridedDevice definition -----------------------
-class ImageDataStridedDevice : public IImageDataStridedDevice
+// ImageDataStridedCuda definition -----------------------
+class ImageDataStridedCuda : public IImageDataStridedCuda
 {
 public:
     using Buffer = NVCVImageBufferStrided;
 
-    explicit ImageDataStridedDevice(ImageFormat format, const Buffer &buffer);
-    explicit ImageDataStridedDevice(const NVCVImageData &data);
+    explicit ImageDataStridedCuda(ImageFormat format, const Buffer &buffer);
+    explicit ImageDataStridedCuda(const NVCVImageData &data);
 };
 
 // ImageDataStridedHost definition -----------------------

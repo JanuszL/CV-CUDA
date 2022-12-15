@@ -27,7 +27,7 @@
 #include "TensorWrap.hpp" // for TensorWrap, etc.
 #include "TypeTraits.hpp" // for NumElements, etc.
 
-#include <nvcv/ITensorData.hpp> // for ITensorDataStridedDevice, etc.
+#include <nvcv/ITensorData.hpp> // for ITensorDataStridedCuda, etc.
 #include <operators/Types.h>    // for NVCVBorderType, etc.
 
 namespace nv::cv::cuda {
@@ -160,7 +160,7 @@ public:
         static_assert(sizeof...(Args) == kNumActiveDimensions);
     }
 
-    explicit __host__ BorderWrapImpl(const ITensorDataStridedDevice &tensor)
+    explicit __host__ BorderWrapImpl(const ITensorDataStridedCuda &tensor)
         : m_tensorWrap(tensor)
     {
         int j = 0;
@@ -261,10 +261,10 @@ public:
     /**
      * Constructs a BorderWrap by wrapping a \p tensor
      *
-     * @param[in] tensor A \ref ITensorDataStridedDevice object to be wrapped
+     * @param[in] tensor A \ref ITensorDataStridedCuda object to be wrapped
      * @param[in] borderValue The border value is ignored in non-constant border types
      */
-    explicit __host__ BorderWrap(const ITensorDataStridedDevice &tensor, ValueType borderValue = {})
+    explicit __host__ BorderWrap(const ITensorDataStridedCuda &tensor, ValueType borderValue = {})
         : Base(tensor)
     {
     }
@@ -374,10 +374,10 @@ public:
     /**
      * Constructs a BorderWrap by wrapping a \p tensor
      *
-     * @param[in] tensor A \ref ITensorDataStridedDevice object to be wrapped
+     * @param[in] tensor A \ref ITensorDataStridedCuda object to be wrapped
      * @param[in] borderValue The border value to be used when accessing outside the tensor
      */
-    explicit __host__ BorderWrap(const ITensorDataStridedDevice &tensor, ValueType borderValue = {})
+    explicit __host__ BorderWrap(const ITensorDataStridedCuda &tensor, ValueType borderValue = {})
         : Base(tensor)
         , m_borderValue(borderValue)
     {

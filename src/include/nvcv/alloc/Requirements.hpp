@@ -66,8 +66,8 @@ public:
     Requirements();
     explicit Requirements(NVCVRequirements reqs);
 
-    ConstMemory deviceMem() const;
-    Memory      deviceMem();
+    ConstMemory cudaMem() const;
+    Memory      cudaMem();
 
     ConstMemory hostMem() const;
     Memory      hostMem();
@@ -145,14 +145,14 @@ inline Requirements::Requirements(NVCVRequirements reqs)
 {
 }
 
-inline auto Requirements::deviceMem() const -> ConstMemory
+inline auto Requirements::cudaMem() const -> ConstMemory
 {
-    return ConstMemory{m_reqs.deviceMem};
+    return ConstMemory{m_reqs.cudaMem};
 }
 
-inline auto Requirements::deviceMem() -> Memory
+inline auto Requirements::cudaMem() -> Memory
 {
-    return Memory{m_reqs.deviceMem};
+    return Memory{m_reqs.cudaMem};
 }
 
 inline auto Requirements::hostMem() const -> ConstMemory

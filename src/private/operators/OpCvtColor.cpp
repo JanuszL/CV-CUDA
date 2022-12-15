@@ -36,16 +36,16 @@ CvtColor::CvtColor()
 void CvtColor::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
                           NVCVColorConversionCode code) const
 {
-    auto *inData = dynamic_cast<const cv::ITensorDataStridedDevice *>(in.exportData());
+    auto *inData = dynamic_cast<const cv::ITensorDataStridedCuda *>(in.exportData());
     if (inData == nullptr)
     {
-        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be device-accessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be cuda-accessible, pitch-linear tensor");
     }
 
-    auto *outData = dynamic_cast<const cv::ITensorDataStridedDevice *>(out.exportData());
+    auto *outData = dynamic_cast<const cv::ITensorDataStridedCuda *>(out.exportData());
     if (outData == nullptr)
     {
-        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be device-accessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be cuda-accessible, pitch-linear tensor");
     }
 
     NVCV_CHECK_THROW(m_legacyOp->infer(*inData, *outData, code, stream));
@@ -54,18 +54,18 @@ void CvtColor::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::
 void CvtColor::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
                           NVCVColorConversionCode code) const
 {
-    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(in.exportData(stream));
+    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(in.exportData(stream));
     if (inData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Input must be device-acessible, varshape pitch-linear image batch");
+                            "Input must be cuda-accessible, varshape pitch-linear image batch");
     }
 
-    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(out.exportData(stream));
+    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(out.exportData(stream));
     if (outData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Output must be device-acessible, varshape pitch-linear image batch");
+                            "Output must be cuda-accessible, varshape pitch-linear image batch");
     }
 
     NVCV_CHECK_THROW(m_legacyOpVarShape->infer(*inData, *outData, code, stream));

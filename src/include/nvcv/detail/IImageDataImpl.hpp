@@ -110,8 +110,8 @@ inline const ImagePlaneStrided &IImageDataStrided::plane(int p) const
     return data.planes[p];
 }
 
-// Implementation - IImageDataStridedDevice ------------------------------
-inline IImageDataStridedDevice::~IImageDataStridedDevice()
+// Implementation - IImageDataStridedCuda ------------------------------
+inline IImageDataStridedCuda::~IImageDataStridedCuda()
 {
     // required dtor implementation
 }

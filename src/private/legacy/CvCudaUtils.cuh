@@ -19,8 +19,8 @@
 #define CV_CUDA_UTILS_CUH
 
 #include <nvcv/IImageBatchData.hpp>
-#include <nvcv/IImageData.hpp>  // for IImageDataStridedDevice, etc.
-#include <nvcv/ITensorData.hpp> // for ITensorDataStridedDevice, etc.
+#include <nvcv/IImageData.hpp>  // for IImageDataStridedCuda, etc.
+#include <nvcv/ITensorData.hpp> // for ITensorDataStridedCuda, etc.
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/cuda/BorderWrap.hpp>   // for BorderWrap, etc.
 #include <nvcv/cuda/DropCast.hpp>     // for DropCast, etc.
@@ -140,7 +140,7 @@ struct Ptr2dNCHW
         chStride = rowStride * rows_;
     }
 
-    __host__ __forceinline__ Ptr2dNCHW(const IImageDataStridedDevice &inData)
+    __host__ __forceinline__ Ptr2dNCHW(const IImageDataStridedCuda &inData)
         : batches(1)
         , rows(inData.size().h)
         , cols(inData.size().w)
@@ -274,7 +274,7 @@ struct Ptr2dNHWC
     {
     }
 
-    __host__ __forceinline__ Ptr2dNHWC(const IImageDataStridedDevice &inData)
+    __host__ __forceinline__ Ptr2dNHWC(const IImageDataStridedCuda &inData)
         : batches(1)
         , rows(inData.size().h)
         , cols(inData.size().w)
@@ -386,7 +386,7 @@ struct Ptr2dVarShapeNHWC
     {
     }
 
-    __host__ __forceinline__ Ptr2dVarShapeNHWC(const cv::IImageBatchVarShapeDataStridedDevice &data, int nch_ = -1)
+    __host__ __forceinline__ Ptr2dVarShapeNHWC(const cv::IImageBatchVarShapeDataStridedCuda &data, int nch_ = -1)
         : batches(data.numImages())
         , imgList(data.imageList())
         , nch(

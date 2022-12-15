@@ -25,11 +25,11 @@ interface IMemAllocator extends IResourceAllocator
 
 interface IHostMemAllocator
 interface IHostPinnedMemAllocator
-interface IDeviceMemAllocator
+interface ICudaMemAllocator
 
 IMemAllocator <|..# IHostMemAllocator: virtual
 IMemAllocator <|..# IHostPinnedMemAllocator: virtual
-IMemAllocator <|..# IDeviceMemAllocator: virtual
+IMemAllocator <|..# ICudaMemAllocator: virtual
 
 interface ICudaArrayAllocator extends IResourceAllocator
 {
@@ -79,16 +79,16 @@ class CustomHostPinnedMemAllocator implements IHostPinnedMemAllocator
                                    FreeFunc free)
 }
 
-class CustomDeviceMemAllocator implements IDeviceMemAllocator
+class CustomCudaMemAllocator implements ICudaMemAllocator
 {
-    + {field} Interface: IDeviceMemAllocator;
+    + {field} Interface: ICudaMemAllocator;
 
-    + CustomDeviceMemAllocator(AllocFunc alloc,
+    + CustomCudaMemAllocator(AllocFunc alloc,
                                FreeFunc free)
 }
 
 CustomMemAllocatorImpl <|..* CustomHostMemAllocator: private
 CustomMemAllocatorImpl <|..* CustomHostPinnedMemAllocator: private
-CustomMemAllocatorImpl <|..* CustomDeviceMemAllocator: private
+CustomMemAllocatorImpl <|..* CustomCudaMemAllocator: private
 
 @enduml

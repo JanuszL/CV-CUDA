@@ -36,32 +36,32 @@ void Conv2D::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, 
                         const cv::IImageBatchVarShape &kernel, const cv::ITensor &kernelAnchor,
                         NVCVBorderType borderMode) const
 {
-    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(in.exportData(stream));
+    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(in.exportData(stream));
     if (inData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
-                                  "Input must be device-acessible, varshape pitch-linear image batch");
+                                  "Input must be cuda-accessible, varshape pitch-linear image batch");
     }
 
-    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(out.exportData(stream));
+    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(out.exportData(stream));
     if (outData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
-                                  "Output must be device-acessible, varshape pitch-linear image batch");
+                                  "Output must be cuda-accessible, varshape pitch-linear image batch");
     }
 
-    auto *kernelData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(kernel.exportData(stream));
+    auto *kernelData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(kernel.exportData(stream));
     if (kernelData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
-                                  "Kernel must be device-acessible, varshape pitch-linear image batch");
+                                  "Kernel must be cuda-accessible, varshape pitch-linear image batch");
     }
 
-    auto *kernelAnchorData = dynamic_cast<const cv::ITensorDataStridedDevice *>(kernelAnchor.exportData());
+    auto *kernelAnchorData = dynamic_cast<const cv::ITensorDataStridedCuda *>(kernelAnchor.exportData());
     if (kernelAnchorData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
-                                  "Kernel anchor must be device-acessible, pitch-linear tensor");
+                                  "Kernel anchor must be cuda-accessible, pitch-linear tensor");
     }
 
     NVCV_CHECK_THROW(m_legacyOpVarShape->infer(*inData, *outData, *kernelData, *kernelAnchorData, borderMode, stream));

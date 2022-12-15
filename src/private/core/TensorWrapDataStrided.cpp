@@ -34,7 +34,7 @@ namespace nv::cv::priv {
 
 static void ValidateTensorBufferStrided(const NVCVTensorData &tdata)
 {
-    NVCV_ASSERT(tdata.bufferType == NVCV_TENSOR_BUFFER_STRIDED_DEVICE);
+    NVCV_ASSERT(tdata.bufferType == NVCV_TENSOR_BUFFER_STRIDED_CUDA);
 
     const NVCVTensorBufferStrided &buffer = tdata.buffer.strided;
 

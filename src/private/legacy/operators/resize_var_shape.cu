@@ -457,7 +457,7 @@ __global__ void resize_area_v2(const Filter src, cuda_op::Ptr2dVarShapeNHWC<T> d
 }
 
 template<typename T>
-void resize(const IImageBatchVarShapeDataStridedDevice &in, const IImageBatchVarShapeDataStridedDevice &out,
+void resize(const IImageBatchVarShapeDataStridedCuda &in, const IImageBatchVarShapeDataStridedCuda &out,
             const int interpolation, cudaStream_t stream)
 {
     dim3 blockSize(BLOCK, BLOCK / 4, 1);
@@ -519,8 +519,8 @@ void resize(const IImageBatchVarShapeDataStridedDevice &in, const IImageBatchVar
 
 } // namespace
 
-ErrorCode ResizeVarShape::infer(const IImageBatchVarShapeDataStridedDevice &inData,
-                                const IImageBatchVarShapeDataStridedDevice &outData,
+ErrorCode ResizeVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData,
+                                const IImageBatchVarShapeDataStridedCuda &outData,
                                 const NVCVInterpolationType interpolation, cudaStream_t stream)
 {
     DataFormat input_format  = helpers::GetLegacyDataFormat(inData);
@@ -569,9 +569,8 @@ ErrorCode ResizeVarShape::infer(const IImageBatchVarShapeDataStridedDevice &inDa
         return ErrorCode::INVALID_PARAMETER;
     }
 
-    typedef void (*func_t)(const IImageBatchVarShapeDataStridedDevice &in,
-                           const IImageBatchVarShapeDataStridedDevice &out, const int interpolation,
-                           cudaStream_t stream);
+    typedef void (*func_t)(const IImageBatchVarShapeDataStridedCuda &in, const IImageBatchVarShapeDataStridedCuda &out,
+                           const int interpolation, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {
         {      resize<uchar>,  0 /*resize<uchar2>*/,      resize<uchar3>,      resize<uchar4>},

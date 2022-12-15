@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
     // without padding since NvDecode utility currently doesnt support
     // Padded buffers.
 
-    nv::cv::TensorDataStridedDevice::Buffer inBuf;
+    nv::cv::TensorDataStridedCuda::Buffer inBuf;
     inBuf.strides[3] = sizeof(uint8_t);
     inBuf.strides[2] = maxChannels * inBuf.strides[3];
     inBuf.strides[1] = maxImageWidth * inBuf.strides[2];
@@ -137,8 +137,8 @@ int main(int argc, char *argv[])
         = nv::cv::Tensor::CalcRequirements(batchSize, {maxImageWidth, maxImageHeight}, nv::cv::FMT_RGB8);
 
     // Create a tensor buffer to store the data pointer and pitch bytes for each plane
-    nv::cv::TensorDataStridedDevice inData(nv::cv::TensorShape{inReqs.shape, inReqs.ndim, inReqs.layout},
-                                           nv::cv::DataType{inReqs.dtype}, inBuf);
+    nv::cv::TensorDataStridedCuda inData(nv::cv::TensorShape{inReqs.shape, inReqs.ndim, inReqs.layout},
+                                         nv::cv::DataType{inReqs.dtype}, inBuf);
 
     // TensorWrapData allows for interoperation of external tensor representations with CVCUDA Tensor.
     nv::cv::TensorWrapData inTensor(inData);

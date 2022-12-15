@@ -47,8 +47,8 @@ __global__ void custom_crop_kernel(const Ptr2D src, Ptr2D dst, int start_x, int 
 }
 
 template<typename T>
-void customCrop(const nvcv::ITensorDataStridedDevice &inData, const nvcv::ITensorDataStridedDevice &outData,
-                NVCVRectI roi, cudaStream_t stream)
+void customCrop(const nvcv::ITensorDataStridedCuda &inData, const nvcv::ITensorDataStridedCuda &outData, NVCVRectI roi,
+                cudaStream_t stream)
 {
     auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
@@ -70,8 +70,8 @@ size_t CustomCrop::calBufferSize(DataShape max_input_shape, DataShape max_output
     return 0;
 }
 
-ErrorCode CustomCrop::infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
-                            NVCVRectI roi, cudaStream_t stream)
+ErrorCode CustomCrop::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData, NVCVRectI roi,
+                            cudaStream_t stream)
 {
     cuda_op::DataFormat input_format  = GetLegacyDataFormat(inData.layout());
     cuda_op::DataFormat output_format = GetLegacyDataFormat(outData.layout());
@@ -134,7 +134,7 @@ ErrorCode CustomCrop::infer(const ITensorDataStridedDevice &inData, const ITenso
         return ErrorCode::INVALID_PARAMETER;
     }
 
-    typedef void (*func_t)(const cv::ITensorDataStridedDevice &inData, const cv::ITensorDataStridedDevice &outData,
+    typedef void (*func_t)(const cv::ITensorDataStridedCuda &inData, const cv::ITensorDataStridedCuda &outData,
                            NVCVRectI roi, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {

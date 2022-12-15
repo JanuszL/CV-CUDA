@@ -24,15 +24,15 @@
 
 namespace nv { namespace cv {
 
-// TensorDataStridedDevice definition -----------------------
+// TensorDataStridedCuda definition -----------------------
 
-class TensorDataStridedDevice : public ITensorDataStridedDevice
+class TensorDataStridedCuda : public ITensorDataStridedCuda
 {
 public:
     using Buffer = NVCVTensorBufferStrided;
 
-    explicit TensorDataStridedDevice(const TensorShape &shape, const DataType &dtype, const Buffer &data);
-    explicit TensorDataStridedDevice(const NVCVTensorData &data);
+    explicit TensorDataStridedCuda(const TensorShape &shape, const DataType &dtype, const Buffer &data);
+    explicit TensorDataStridedCuda(const NVCVTensorData &data);
 };
 
 }} // namespace nv::cv

@@ -36,16 +36,16 @@ CenterCrop::CenterCrop()
 void CenterCrop::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
                             const cv::Size2D &cropSize) const
 {
-    auto *inData = dynamic_cast<const cv::ITensorDataStridedDevice *>(in.exportData());
+    auto *inData = dynamic_cast<const cv::ITensorDataStridedCuda *>(in.exportData());
     if (inData == nullptr)
     {
-        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be device-acessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be cuda-accessible, pitch-linear tensor");
     }
 
-    auto *outData = dynamic_cast<const cv::ITensorDataStridedDevice *>(out.exportData());
+    auto *outData = dynamic_cast<const cv::ITensorDataStridedCuda *>(out.exportData());
     if (outData == nullptr)
     {
-        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be device-accessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be cuda-accessible, pitch-linear tensor");
     }
 
     NVCV_CHECK_THROW(m_legacyOp->infer(*inData, *outData, cropSize.h, cropSize.w, stream));

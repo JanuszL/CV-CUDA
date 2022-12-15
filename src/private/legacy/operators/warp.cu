@@ -131,7 +131,7 @@ static void invertMat(const float *M, float *h_aCoeffs)
 
 namespace nv::cv::legacy::cuda_op {
 
-ErrorCode WarpAffine::infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
+ErrorCode WarpAffine::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                             const float *xform, const int32_t flags, const NVCVBorderType borderMode,
                             const float4 borderValue, cudaStream_t stream)
 {
@@ -222,7 +222,7 @@ size_t WarpPerspective::calBufferSize(DataShape max_input_shape, DataShape max_o
     return 9 * sizeof(float);
 }
 
-ErrorCode WarpPerspective::infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
+ErrorCode WarpPerspective::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                                  const float *transMatrix, const int32_t flags, const NVCVBorderType borderMode,
                                  const float4 borderValue, cudaStream_t stream)
 {

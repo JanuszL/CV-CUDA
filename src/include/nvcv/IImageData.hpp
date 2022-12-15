@@ -72,10 +72,10 @@ protected:
     using IImageData::IImageData;
 };
 
-class IImageDataStridedDevice : public IImageDataStrided
+class IImageDataStridedCuda : public IImageDataStrided
 {
 public:
-    virtual ~IImageDataStridedDevice() = 0;
+    virtual ~IImageDataStridedCuda() = 0;
 
 protected:
     using IImageDataStrided::IImageDataStrided;

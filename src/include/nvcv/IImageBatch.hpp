@@ -50,7 +50,7 @@ private:
     virtual NVCVImageBatchHandle doGetHandle() const = 0;
 
     // Only one leaf, we can use an optional for now.
-    mutable detail::Optional<ImageBatchVarShapeDataStridedDevice> m_cacheData;
+    mutable detail::Optional<ImageBatchVarShapeDataStridedCuda> m_cacheData;
 };
 
 class IImageBatchVarShape : public IImageBatch

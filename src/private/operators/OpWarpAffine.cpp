@@ -39,17 +39,16 @@ void WarpAffine::operator()(cudaStream_t stream, const cv::ITensor &in, const cv
                             const NVCVAffineTransform xform, const int32_t flags, const NVCVBorderType borderMode,
                             const float4 borderValue) const
 {
-    auto *inData = dynamic_cast<const cv::ITensorDataStridedDevice *>(in.exportData());
+    auto *inData = dynamic_cast<const cv::ITensorDataStridedCuda *>(in.exportData());
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be device-accessible, pitch-linear tensor");
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be cuda-accessible, pitch-linear tensor");
     }
 
-    auto *outData = dynamic_cast<const cv::ITensorDataStridedDevice *>(out.exportData());
+    auto *outData = dynamic_cast<const cv::ITensorDataStridedCuda *>(out.exportData());
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Output must be device-accessible, pitch-linear tensor");
+        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be cuda-accessible, pitch-linear tensor");
     }
 
     NVCV_CHECK_THROW(m_legacyOp->infer(*inData, *outData, xform, flags, borderMode, borderValue, stream));
@@ -59,23 +58,23 @@ void WarpAffine::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &
                             const cv::ITensor &transMatrix, const int32_t flags, const NVCVBorderType borderMode,
                             const float4 borderValue) const
 {
-    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(in.exportData(stream));
+    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(in.exportData(stream));
     if (inData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be varshape image batch");
     }
 
-    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(out.exportData(stream));
+    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(out.exportData(stream));
     if (outData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be varshape image batch");
     }
 
-    auto *transMatrixData = dynamic_cast<const cv::ITensorDataStridedDevice *>(transMatrix.exportData());
+    auto *transMatrixData = dynamic_cast<const cv::ITensorDataStridedCuda *>(transMatrix.exportData());
     if (outData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "transformation matrix must be device-accessible, pitch-linear tensor");
+                            "transformation matrix must be cuda-accessible, pitch-linear tensor");
     }
 
     NVCV_CHECK_THROW(

@@ -435,7 +435,7 @@ size_t PillowResize::calBufferSize(DataShape max_input_shape, DataShape max_outp
     return size;
 }
 
-ErrorCode PillowResize::infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
+ErrorCode PillowResize::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                               const NVCVInterpolationType interpolation, cudaStream_t stream)
 {
     DataFormat format        = GetLegacyDataFormat(inData.layout());

@@ -72,10 +72,10 @@ void FillTensorData(IImage &img, NVCVTensorData &tensorData)
     NVCVImageData imgData;
     img.exportData(imgData);
 
-    if (imgData.bufferType != NVCV_IMAGE_BUFFER_STRIDED_DEVICE)
+    if (imgData.bufferType != NVCV_IMAGE_BUFFER_STRIDED_CUDA)
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
-            << "Only device-accessible images with pitch-linear data are accepted";
+            << "Only cuda-accessible images with pitch-linear data are accepted";
     }
 
     NVCVImageBufferStrided &imgStrided = imgData.buffer.strided;
@@ -116,7 +116,7 @@ void FillTensorData(IImage &img, NVCVTensorData &tensorData)
     // Now fill up tensor data with image data
 
     tensorData            = {}; // start everything afresh
-    tensorData.bufferType = NVCV_TENSOR_BUFFER_STRIDED_DEVICE;
+    tensorData.bufferType = NVCV_TENSOR_BUFFER_STRIDED_CUDA;
 
     NVCVTensorBufferStrided &tensorStrided = tensorData.buffer.strided;
 

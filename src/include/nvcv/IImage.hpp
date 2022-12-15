@@ -58,8 +58,8 @@ private:
     // Should be an std::variant in C++17.
     union Arena
     {
-        ImageDataCudaArray     cudaArray;
-        ImageDataStridedDevice devStrided;
+        ImageDataCudaArray   cudaArray;
+        ImageDataStridedCuda devStrided;
     };
 
     mutable std::aligned_storage<sizeof(Arena), alignof(Arena)>::type m_cacheDataArena;

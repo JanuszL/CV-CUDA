@@ -48,7 +48,7 @@ typedef enum
     NVCV_TENSOR_BUFFER_NONE = 0,
 
     /** GPU-accessible with equal-shape planes in pitch-linear layout. */
-    NVCV_TENSOR_BUFFER_STRIDED_DEVICE,
+    NVCV_TENSOR_BUFFER_STRIDED_CUDA,
 } NVCVTensorBufferType;
 
 /** Represents the available methods to access image batch contents.
@@ -57,7 +57,7 @@ typedef union NVCVTensorBufferRec
 {
     /** Tensor image batch stored in pitch-linear layout.
      * To be used when \ref NVCVTensorData::bufferType is:
-     * - \ref NVCV_TENSOR_BUFFER_STRIDED_DEVICE
+     * - \ref NVCV_TENSOR_BUFFER_STRIDED_CUDA
      */
     NVCVTensorBufferStrided strided;
 } NVCVTensorBuffer;

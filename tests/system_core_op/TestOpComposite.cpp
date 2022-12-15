@@ -128,9 +128,9 @@ TEST_P(OpComposite, tensor_correct_output)
     nvcv::Tensor fgMaskImg(numberOfImages, {inWidth, inHeight}, nvcv::FMT_U8);
     nvcv::Tensor outImg(numberOfImages, {outWidth, outHeight}, outFormat);
 
-    const auto *foregroundData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(foregroundImg.exportData());
-    const auto *backgroundData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(backgroundImg.exportData());
-    const auto *fgMaskData     = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(fgMaskImg.exportData());
+    const auto *foregroundData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(foregroundImg.exportData());
+    const auto *backgroundData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(backgroundImg.exportData());
+    const auto *fgMaskData     = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(fgMaskImg.exportData());
 
     ASSERT_NE(nullptr, foregroundData);
     ASSERT_NE(nullptr, backgroundData);
@@ -195,7 +195,7 @@ TEST_P(OpComposite, tensor_correct_output)
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
     // check cdata
-    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(outImg.exportData());
+    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(outImg.exportData());
     ASSERT_NE(nullptr, outData);
 
     auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*outData);
@@ -305,13 +305,13 @@ TEST_P(OpComposite, varshape_correct_output)
         generate(backgroundVec[i].begin(), backgroundVec[i].end(), [&]() { return udist(rng); });
         generate(fgMaskVec[i].begin(), fgMaskVec[i].end(), [&]() { return udist(rng); });
 
-        auto *imgDataForeground = dynamic_cast<const nvcv::IImageDataStridedDevice *>(imgForeground[i]->exportData());
+        auto *imgDataForeground = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgForeground[i]->exportData());
         assert(imgDataForeground != nullptr);
 
-        auto *imgDataBackground = dynamic_cast<const nvcv::IImageDataStridedDevice *>(imgBackground[i]->exportData());
+        auto *imgDataBackground = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgBackground[i]->exportData());
         assert(imgDataBackground != nullptr);
 
-        auto *imgDataFgMask = dynamic_cast<const nvcv::IImageDataStridedDevice *>(imgFgMask[i]->exportData());
+        auto *imgDataFgMask = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgFgMask[i]->exportData());
         assert(imgDataFgMask != nullptr);
 
         // Copy foreground image data to the GPU
@@ -356,7 +356,7 @@ TEST_P(OpComposite, varshape_correct_output)
         int width  = sizeVec[i].w;
         int height = sizeVec[i].h;
 
-        const auto *outData = dynamic_cast<const nvcv::IImageDataStridedDevice *>(imgOut[i]->exportData());
+        const auto *outData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgOut[i]->exportData());
         assert(outData->numPlanes() == 1);
 
         int outRowStride        = width * outFormat.numChannels();

@@ -92,9 +92,9 @@ inline const NVCVImageBufferStrided *IImageBatchVarShapeDataStrided::imageList()
     return this->cdata().buffer.varShapeStrided.imageList;
 }
 
-// Implementation - IImageBatchVarShapeDataStridedDevice
+// Implementation - IImageBatchVarShapeDataStridedCuda
 
-inline IImageBatchVarShapeDataStridedDevice::~IImageBatchVarShapeDataStridedDevice()
+inline IImageBatchVarShapeDataStridedCuda::~IImageBatchVarShapeDataStridedCuda()
 {
     // required dtor implementation
 }

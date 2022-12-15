@@ -140,7 +140,7 @@ TEST_P(OpGammaContrast, varshape_correct_output)
         srcVec[i].resize(imgSrc[i]->size().h * srcRowStride);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
 
-        auto *imgData = dynamic_cast<const nv::cv::IImageDataStridedDevice *>(imgSrc[i]->exportData());
+        auto *imgData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_NE(imgData, nullptr);
 
         printVec(srcVec[i], imgSrc[i]->size().h, srcVecRowStride[i], format.numChannels(), "input");
@@ -178,7 +178,7 @@ TEST_P(OpGammaContrast, varshape_correct_output)
     int            nElements = gammaVec.size();
     nv::cv::Tensor gammaTensor({{nElements}, "N"}, nv::cv::TYPE_F32);
     {
-        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedDevice *>(gammaTensor.exportData());
+        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(gammaTensor.exportData());
         ASSERT_NE(dev, nullptr);
 
         ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(dev->basePtr(), gammaVec.data(), gammaVec.size() * sizeof(float),
@@ -198,12 +198,12 @@ TEST_P(OpGammaContrast, varshape_correct_output)
     {
         SCOPED_TRACE(i);
 
-        const auto *srcData = dynamic_cast<const nv::cv::IImageDataStridedDevice *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_EQ(srcData->numPlanes(), 1);
         int srcWidth  = srcData->plane(0).width;
         int srcHeight = srcData->plane(0).height;
 
-        const auto *dstData = dynamic_cast<const nv::cv::IImageDataStridedDevice *>(imgDst[i]->exportData());
+        const auto *dstData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgDst[i]->exportData());
         ASSERT_EQ(dstData->numPlanes(), 1);
 
         int dstWidth  = dstData->plane(0).width;

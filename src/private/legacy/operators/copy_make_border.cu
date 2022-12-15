@@ -94,7 +94,7 @@ void copyMakeBorder(const TensorDataAccessStridedImagePlanar &d_in, const Tensor
 
 namespace nv::cv::legacy::cuda_op {
 
-ErrorCode CopyMakeBorder::infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
+ErrorCode CopyMakeBorder::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                                 const int top, const int left, const NVCVBorderType border_type, const float4 value,
                                 cudaStream_t stream)
 {

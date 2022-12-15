@@ -53,8 +53,8 @@ NVCVImageBatchVarShapeRequirements ImageBatchVarShape::CalcRequirements(int32_t 
                         NVCV_MAX_MEM_REQUIREMENTS_BLOCK_SIZE);
     }
 
-    AddBuffer(reqs.mem.deviceMem, capacity * sizeof(NVCVImageBufferStrided), reqs.alignBytes);
-    AddBuffer(reqs.mem.deviceMem, capacity * sizeof(NVCVImageFormat), reqs.alignBytes);
+    AddBuffer(reqs.mem.cudaMem, capacity * sizeof(NVCVImageBufferStrided), reqs.alignBytes);
+    AddBuffer(reqs.mem.cudaMem, capacity * sizeof(NVCVImageFormat), reqs.alignBytes);
 
     AddBuffer(reqs.mem.hostMem, capacity * sizeof(NVCVImageBufferStrided), reqs.alignBytes);
     AddBuffer(reqs.mem.hostMem, capacity * sizeof(NVCVImageFormat), reqs.alignBytes);
@@ -83,7 +83,7 @@ ImageBatchVarShape::ImageBatchVarShape(NVCVImageBatchVarShapeRequirements reqs, 
     try
     {
         m_devImagesBuffer
-            = reinterpret_cast<NVCVImageBufferStrided *>(m_alloc.allocDeviceMem(bufImagesSize, m_reqs.alignBytes));
+            = reinterpret_cast<NVCVImageBufferStrided *>(m_alloc.allocCudaMem(bufImagesSize, m_reqs.alignBytes));
         NVCV_ASSERT(m_devImagesBuffer != nullptr);
 
         m_hostImagesBuffer
@@ -91,7 +91,7 @@ ImageBatchVarShape::ImageBatchVarShape(NVCVImageBatchVarShapeRequirements reqs, 
         NVCV_ASSERT(m_devImagesBuffer != nullptr);
 
         m_devFormatsBuffer
-            = reinterpret_cast<NVCVImageFormat *>(m_alloc.allocDeviceMem(bufFormatsSize, m_reqs.alignBytes));
+            = reinterpret_cast<NVCVImageFormat *>(m_alloc.allocCudaMem(bufFormatsSize, m_reqs.alignBytes));
         NVCV_ASSERT(m_devFormatsBuffer != nullptr);
 
         m_hostFormatsBuffer
@@ -111,10 +111,10 @@ ImageBatchVarShape::ImageBatchVarShape(NVCVImageBatchVarShapeRequirements reqs, 
             NVCV_CHECK_LOG(cudaEventDestroy(m_evPostFence));
         }
 
-        m_alloc.freeDeviceMem(m_devImagesBuffer, bufImagesSize, m_reqs.alignBytes);
+        m_alloc.freeCudaMem(m_devImagesBuffer, bufImagesSize, m_reqs.alignBytes);
         m_alloc.freeHostMem(m_hostImagesBuffer, bufImagesSize, m_reqs.alignBytes);
 
-        m_alloc.freeDeviceMem(m_devFormatsBuffer, bufFormatsSize, m_reqs.alignBytes);
+        m_alloc.freeCudaMem(m_devFormatsBuffer, bufFormatsSize, m_reqs.alignBytes);
         m_alloc.freeHostMem(m_hostFormatsBuffer, bufFormatsSize, m_reqs.alignBytes);
 
         m_alloc.freeHostMem(m_imgHandleBuffer, imgHandlesSize, m_reqs.alignBytes);
@@ -130,10 +130,10 @@ ImageBatchVarShape::~ImageBatchVarShape()
     int64_t bufFormatsSize = m_reqs.capacity * sizeof(NVCVImageFormat);
     int64_t imgHandlesSize = m_reqs.capacity * sizeof(NVCVImageHandle);
 
-    m_alloc.freeDeviceMem(m_devImagesBuffer, bufImagesSize, m_reqs.alignBytes);
+    m_alloc.freeCudaMem(m_devImagesBuffer, bufImagesSize, m_reqs.alignBytes);
     m_alloc.freeHostMem(m_hostImagesBuffer, bufImagesSize, m_reqs.alignBytes);
 
-    m_alloc.freeDeviceMem(m_devFormatsBuffer, bufFormatsSize, m_reqs.alignBytes);
+    m_alloc.freeCudaMem(m_devFormatsBuffer, bufFormatsSize, m_reqs.alignBytes);
     m_alloc.freeHostMem(m_hostFormatsBuffer, bufFormatsSize, m_reqs.alignBytes);
 
     m_alloc.freeHostMem(m_imgHandleBuffer, imgHandlesSize, m_reqs.alignBytes);
@@ -216,7 +216,7 @@ void ImageBatchVarShape::doUpdateCache() const
 void ImageBatchVarShape::exportData(CUstream stream, NVCVImageBatchData &data) const
 {
     data.numImages  = m_numImages;
-    data.bufferType = NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_STRIDED_DEVICE;
+    data.bufferType = NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_STRIDED_CUDA;
 
     NVCVImageBatchVarShapeBufferStrided &buf = data.buffer.varShapeStrided;
     buf.imageList                            = m_devImagesBuffer;
@@ -334,7 +334,7 @@ void ImageBatchVarShape::doPushImage(NVCVImageHandle imgHandle)
     NVCVImageData imgData;
     img.exportData(imgData);
 
-    if (imgData.bufferType != NVCV_IMAGE_BUFFER_STRIDED_DEVICE)
+    if (imgData.bufferType != NVCV_IMAGE_BUFFER_STRIDED_CUDA)
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Data buffer of image to be added isn't gpu-accessible";
     }

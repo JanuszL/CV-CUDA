@@ -113,7 +113,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorWrapDataConstruct,
 
             switch (data->bufferType)
             {
-            case NVCV_TENSOR_BUFFER_STRIDED_DEVICE:
+            case NVCV_TENSOR_BUFFER_STRIDED_CUDA:
                 *handle = priv::CreateCoreObject<priv::TensorWrapDataStrided>(*data, cleanup, ctxCleanup);
                 break;
 

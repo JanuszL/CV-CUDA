@@ -370,7 +370,7 @@ size_t MedianBlur::calBufferSize(DataShape max_input_shape, DataShape max_output
     return 0;
 }
 
-ErrorCode MedianBlur::infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
+ErrorCode MedianBlur::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                             const cv::Size2D ksize, cudaStream_t stream)
 {
     DataFormat input_format  = GetLegacyDataFormat(inData.layout());

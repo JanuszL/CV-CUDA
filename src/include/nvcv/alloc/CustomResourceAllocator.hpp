@@ -83,12 +83,12 @@ public:
     using detail::CustomMemAllocatorImpl::CustomMemAllocatorImpl;
 };
 
-class CustomDeviceMemAllocator final
-    : public virtual IDeviceMemAllocator
+class CustomCudaMemAllocator final
+    : public virtual ICudaMemAllocator
     , private detail::CustomMemAllocatorImpl
 {
 public:
-    using Interface = IDeviceMemAllocator;
+    using Interface = ICudaMemAllocator;
 
     using detail::CustomMemAllocatorImpl::CustomMemAllocatorImpl;
 };

@@ -25,7 +25,7 @@ interface IVisitorImageData
 {
     + {abstract} visit(IImageDataHostMem &data): bool
     + {abstract} visit(IImageDataHostPinnedMem &data): bool
-    + {abstract} visit(IImageDataDeviceMem &data): bool
+    + {abstract} visit(IImageDataCudaMem &data): bool
     + {abstract} visit(IImageDataCudaArray &data): bool
 }
 
@@ -64,10 +64,10 @@ interface IImageDataHostPinnedMem
 }
 IImageDataStridedMem <|--# IImageDataHostPinnedMem: virtual
 
-interface IImageDataDeviceMem
+interface IImageDataCudaMem
 {
 }
-IImageDataStridedMem <|--# IImageDataDeviceMem: virtual
+IImageDataStridedMem <|--# IImageDataCudaMem: virtual
 
 class ImageDataCudaArray implements IImageDataCudaArray
 {
@@ -88,11 +88,11 @@ class ImageDataHostPinnedMem implements IImageDataHostPinnedMem
 }
 ImageDataStridedMem <|--* ImageDataHostPinnedMem: private
 
-class ImageDataDeviceMem implements IImageDataDeviceMem
+class ImageDataCudaMem implements IImageDataCudaMem
 {
 }
-ImageDataStridedMem <|--* ImageDataDeviceMem: private
+ImageDataStridedMem <|--* ImageDataCudaMem: private
 
-ImageDataCudaArray -[hidden]left- ImageDataDeviceMem
+ImageDataCudaArray -[hidden]left- ImageDataCudaMem
 
 @enduml

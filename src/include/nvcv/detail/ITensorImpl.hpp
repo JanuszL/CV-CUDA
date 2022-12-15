@@ -72,7 +72,7 @@ inline const ITensorData *ITensor::exportData() const
     NVCVTensorData data;
     detail::CheckThrow(nvcvTensorExportData(this->handle(), &data));
 
-    if (data.bufferType != NVCV_TENSOR_BUFFER_STRIDED_DEVICE)
+    if (data.bufferType != NVCV_TENSOR_BUFFER_STRIDED_CUDA)
     {
         throw Exception(Status::ERROR_INVALID_OPERATION, "Tensor data cannot be exported, buffer type not supported");
     }

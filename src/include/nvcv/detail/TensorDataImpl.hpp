@@ -26,10 +26,10 @@
 
 namespace nv { namespace cv {
 
-// TensorDataStridedDevice implementation -----------------------
+// TensorDataStridedCuda implementation -----------------------
 
-inline TensorDataStridedDevice::TensorDataStridedDevice(const TensorShape &tshape, const DataType &dtype,
-                                                        const Buffer &buffer)
+inline TensorDataStridedCuda::TensorDataStridedCuda(const TensorShape &tshape, const DataType &dtype,
+                                                    const Buffer &buffer)
 {
     NVCVTensorData &data = this->cdata();
 
@@ -38,12 +38,12 @@ inline TensorDataStridedDevice::TensorDataStridedDevice(const TensorShape &tshap
     data.dtype  = dtype;
     data.layout = tshape.layout();
 
-    data.bufferType     = NVCV_TENSOR_BUFFER_STRIDED_DEVICE;
+    data.bufferType     = NVCV_TENSOR_BUFFER_STRIDED_CUDA;
     data.buffer.strided = buffer;
 }
 
-inline TensorDataStridedDevice::TensorDataStridedDevice(const NVCVTensorData &data)
-    : ITensorDataStridedDevice(data)
+inline TensorDataStridedCuda::TensorDataStridedCuda(const NVCVTensorData &data)
+    : ITensorDataStridedCuda(data)
 {
 }
 

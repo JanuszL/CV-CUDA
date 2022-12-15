@@ -31,7 +31,7 @@ static void AssertEq(const NVCVRequirements &reqGold, const nvcv::Requirements &
     {
         SCOPED_TRACE("log2 BlockSize: " + std::to_string(i));
 
-        ASSERT_EQ(reqGold.deviceMem.numBlocks[i], req.deviceMem().numBlocks(i));
+        ASSERT_EQ(reqGold.cudaMem.numBlocks[i], req.cudaMem().numBlocks(i));
         ASSERT_EQ(reqGold.hostMem.numBlocks[i], req.hostMem().numBlocks(i));
         ASSERT_EQ(reqGold.hostPinnedMem.numBlocks[i], req.hostPinnedMem().numBlocks(i));
     }
@@ -48,7 +48,7 @@ TEST(Requirements, init)
 
     ASSERT_NO_FATAL_FAILURE(AssertEq(reqGold, *reqs));
 
-    EXPECT_EQ(0, CalcTotalSizeBytes(reqs->deviceMem()));
+    EXPECT_EQ(0, CalcTotalSizeBytes(reqs->cudaMem()));
     EXPECT_EQ(0, CalcTotalSizeBytes(reqs->hostMem()));
     EXPECT_EQ(0, CalcTotalSizeBytes(reqs->hostPinnedMem()));
 
@@ -61,29 +61,29 @@ TEST(MemRequirements, add_buffer)
 
     int bufAlign1 = 256;
     int bufSize1  = 3 * bufAlign1 - 5;
-    ASSERT_NO_THROW(reqs.deviceMem().addBuffer(bufSize1, bufAlign1));
+    ASSERT_NO_THROW(reqs.cudaMem().addBuffer(bufSize1, bufAlign1));
 
     int bufAlign2 = 16384;
     int bufSize2  = 6 * bufAlign2 - 17;
-    ASSERT_NO_THROW(reqs.deviceMem().addBuffer(bufSize2, bufAlign2));
+    ASSERT_NO_THROW(reqs.cudaMem().addBuffer(bufSize2, bufAlign2));
 
-    ASSERT_NO_THROW(reqs.deviceMem().addBuffer(bufAlign2 / 3, bufAlign2));
+    ASSERT_NO_THROW(reqs.cudaMem().addBuffer(bufAlign2 / 3, bufAlign2));
 
     bufSize2 += bufAlign2 / 3;
 
-    for (int i = 0; i < reqs.deviceMem().size(); ++i)
+    for (int i = 0; i < reqs.cudaMem().size(); ++i)
     {
         if (i == std::log2(bufAlign1))
         {
-            EXPECT_EQ(util::DivUp(bufSize1, bufAlign1), reqs.deviceMem().numBlocks(i));
+            EXPECT_EQ(util::DivUp(bufSize1, bufAlign1), reqs.cudaMem().numBlocks(i));
         }
         else if (i == std::log2(bufAlign2))
         {
-            EXPECT_EQ(util::DivUp(bufSize2, bufAlign2), reqs.deviceMem().numBlocks(i));
+            EXPECT_EQ(util::DivUp(bufSize2, bufAlign2), reqs.cudaMem().numBlocks(i));
         }
         else
         {
-            EXPECT_EQ(0, reqs.deviceMem().numBlocks(i));
+            EXPECT_EQ(0, reqs.cudaMem().numBlocks(i));
         }
     }
 }
@@ -94,27 +94,27 @@ TEST(MemRequirements, sub_buffer)
 
     int bufAlign1 = 256;
     int bufSize1  = 3 * bufAlign1 - 5;
-    ASSERT_NO_THROW(reqs.deviceMem().addBuffer(bufSize1, bufAlign1));
+    ASSERT_NO_THROW(reqs.cudaMem().addBuffer(bufSize1, bufAlign1));
 
-    ASSERT_NO_THROW(reqs.deviceMem().addBuffer(-511, bufAlign1));
+    ASSERT_NO_THROW(reqs.cudaMem().addBuffer(-511, bufAlign1));
     bufSize1 -= 512;
 
     int bufAlign2 = 16384;
     int bufSize2  = 6 * bufAlign2 - 17;
-    ASSERT_NO_THROW(reqs.deviceMem().addBuffer(bufSize2, bufAlign2));
+    ASSERT_NO_THROW(reqs.cudaMem().addBuffer(bufSize2, bufAlign2));
 
-    ASSERT_NO_THROW(reqs.deviceMem().addBuffer(-bufSize2 * 5, bufAlign2));
+    ASSERT_NO_THROW(reqs.cudaMem().addBuffer(-bufSize2 * 5, bufAlign2));
     bufSize2 = 0;
 
-    for (int i = 0; i < reqs.deviceMem().size(); ++i)
+    for (int i = 0; i < reqs.cudaMem().size(); ++i)
     {
         if (i == std::log2(bufAlign1))
         {
-            EXPECT_EQ(util::DivUp(bufSize1, bufAlign1), reqs.deviceMem().numBlocks(i));
+            EXPECT_EQ(util::DivUp(bufSize1, bufAlign1), reqs.cudaMem().numBlocks(i));
         }
         else
         {
-            EXPECT_EQ(0, reqs.deviceMem().numBlocks(i));
+            EXPECT_EQ(0, reqs.cudaMem().numBlocks(i));
         }
     }
 }
@@ -130,8 +130,8 @@ TEST(Requirements, add)
         int64_t bufAlign = ((int64_t)1) << i;
 
         int64_t bufSize = 3 * (i + 1) * bufAlign - 1;
-        ASSERT_NO_THROW(reqA.deviceMem().addBuffer(bufSize, bufAlign));
-        reqGold.deviceMem.numBlocks[i] += util::DivUp(bufSize, bufAlign);
+        ASSERT_NO_THROW(reqA.cudaMem().addBuffer(bufSize, bufAlign));
+        reqGold.cudaMem.numBlocks[i] += util::DivUp(bufSize, bufAlign);
 
         bufSize = 5 * (i + 1) * bufAlign - 2;
         ASSERT_NO_THROW(reqA.hostMem().addBuffer(bufSize, bufAlign));
@@ -152,8 +152,8 @@ TEST(Requirements, add)
         int64_t bufAlign = ((int64_t)1) << i;
 
         int64_t bufSize = 17 * (i + 1) * bufAlign - 1;
-        ASSERT_NO_THROW(reqB.deviceMem().addBuffer(bufSize, bufAlign));
-        reqGold.deviceMem.numBlocks[i] += util::DivUp(bufSize, bufAlign);
+        ASSERT_NO_THROW(reqB.cudaMem().addBuffer(bufSize, bufAlign));
+        reqGold.cudaMem.numBlocks[i] += util::DivUp(bufSize, bufAlign);
 
         bufSize = 21 * (i + 1) * bufAlign - 2;
         ASSERT_NO_THROW(reqB.hostMem().addBuffer(bufSize, bufAlign));
@@ -170,7 +170,7 @@ TEST(Requirements, add)
 
     for (int i = 0; i < nvcv::Requirements::Memory::size(); ++i)
     {
-        reqGold.deviceMem.numBlocks[i] *= 2;
+        reqGold.cudaMem.numBlocks[i] *= 2;
         reqGold.hostMem.numBlocks[i] *= 2;
         reqGold.hostPinnedMem.numBlocks[i] *= 2;
     }
@@ -193,7 +193,7 @@ TEST(Requirements, total_size_bytes)
         int64_t bufAlign = ((int64_t)1) << i;
 
         int64_t bufSize = 3 * (i + 1) * bufAlign - 1;
-        req.deviceMem().addBuffer(bufSize, bufAlign);
+        req.cudaMem().addBuffer(bufSize, bufAlign);
         totSizeDevice += util::RoundUp(bufSize, bufAlign);
 
         bufSize = 5 * (i + 1) * bufAlign - 2;
@@ -205,7 +205,7 @@ TEST(Requirements, total_size_bytes)
         totSizeHost += util::RoundUp(bufSize, bufAlign);
     }
 
-    EXPECT_EQ(totSizeDevice, CalcTotalSizeBytes(req.deviceMem()));
+    EXPECT_EQ(totSizeDevice, CalcTotalSizeBytes(req.cudaMem()));
     EXPECT_EQ(totSizeHost, CalcTotalSizeBytes(req.hostMem()));
     EXPECT_EQ(totSizeHostPinned, CalcTotalSizeBytes(req.hostPinnedMem()));
 }

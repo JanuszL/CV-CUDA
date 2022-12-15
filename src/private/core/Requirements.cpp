@@ -34,13 +34,13 @@ void Init(NVCVRequirements &reqs)
 void Add(NVCVRequirements &reqSum, const NVCVRequirements &req)
 {
     // just to make sure those have the types we expect
-    const NVCVMemRequirements &reqDeviceMem     = req.deviceMem;
+    const NVCVMemRequirements &reqCudaMem       = req.cudaMem;
     const NVCVMemRequirements &reqHostMem       = req.hostMem;
     const NVCVMemRequirements &reqHostPinnedMem = req.hostPinnedMem;
 
     for (size_t i = 0; i < sizeof(NVCVMemRequirements::numBlocks) / sizeof(NVCVMemRequirements::numBlocks[0]); ++i)
     {
-        reqSum.deviceMem.numBlocks[i] += reqDeviceMem.numBlocks[i];
+        reqSum.cudaMem.numBlocks[i] += reqCudaMem.numBlocks[i];
         reqSum.hostMem.numBlocks[i] += reqHostMem.numBlocks[i];
         reqSum.hostPinnedMem.numBlocks[i] += reqHostPinnedMem.numBlocks[i];
     }

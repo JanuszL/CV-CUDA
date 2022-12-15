@@ -47,7 +47,7 @@ interface IImageDataStrided extends IImageData
     + {abstract} plane(int p) const: const ImagePlaneStrided &
 }
 
-interface IImageDataStridedDevice implements IImageDataStrided
+interface IImageDataStridedCuda implements IImageDataStrided
 {
 }
 
@@ -73,9 +73,9 @@ struct ImageBufferStrided
     + planes: ImagePlaneStrided[MAX_PLANES]
 }
 
-class ImageDataStridedDevice implements IImageDataStridedDevice
+class ImageDataStridedCuda implements IImageDataStridedCuda
 {
-    + ImageDataStridedDevice(ImageFormat fmt,
+    + ImageDataStridedCuda(ImageFormat fmt,
                            const ImageBufferStrided &buffer)
 }
 
@@ -86,7 +86,7 @@ class ImageDataStridedHost implements IImageDataStridedHost
 }
 
 ImageBufferStrided -up-o ImageDataStridedHost: contains <
-ImageBufferStrided -up-o ImageDataStridedDevice: contains <
+ImageBufferStrided -up-o ImageDataStridedCuda: contains <
 ImagePlaneStrided -right-o ImageBufferStrided: contains <
 
 ImageBufferCudaArray -up-o ImageDataCudaArray: contains <

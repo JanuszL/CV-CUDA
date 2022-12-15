@@ -113,7 +113,7 @@ NVCVImageRequirements Image::CalcRequirements(Size2D size, ImageFormat fmt, int3
 
         reqs.planeRowStride[p] = util::RoundUpPowerOfTwo((int64_t)planeSize.w * fmt.planePixelStrideBytes(p), rowAlign);
 
-        AddBuffer(reqs.mem.deviceMem, reqs.planeRowStride[p] * planeSize.h, baseAlign);
+        AddBuffer(reqs.mem.cudaMem, reqs.planeRowStride[p] * planeSize.h, baseAlign);
     }
 
     return reqs;
@@ -128,14 +128,14 @@ Image::Image(NVCVImageRequirements reqs, IAllocator &alloc)
         throw Exception(NVCV_ERROR_NOT_IMPLEMENTED, "Image with block-linear format is not currently supported.");
     }
 
-    int64_t bufSize = CalcTotalSizeBytes(m_reqs.mem.deviceMem);
-    m_memBuffer     = m_alloc.allocDeviceMem(bufSize, m_reqs.alignBytes);
+    int64_t bufSize = CalcTotalSizeBytes(m_reqs.mem.cudaMem);
+    m_memBuffer     = m_alloc.allocCudaMem(bufSize, m_reqs.alignBytes);
     NVCV_ASSERT(m_memBuffer != nullptr);
 }
 
 Image::~Image()
 {
-    m_alloc.freeDeviceMem(m_memBuffer, CalcTotalSizeBytes(m_reqs.mem.deviceMem), m_reqs.alignBytes);
+    m_alloc.freeCudaMem(m_memBuffer, CalcTotalSizeBytes(m_reqs.mem.cudaMem), m_reqs.alignBytes);
 }
 
 NVCVTypeImage Image::type() const
@@ -165,7 +165,7 @@ void Image::exportData(NVCVImageData &data) const
     NVCV_ASSERT(fmt.memLayout() == NVCV_MEM_LAYOUT_PL);
 
     data.format     = m_reqs.format;
-    data.bufferType = NVCV_IMAGE_BUFFER_STRIDED_DEVICE;
+    data.bufferType = NVCV_IMAGE_BUFFER_STRIDED_CUDA;
 
     NVCVImageBufferStrided &buf = data.buffer.strided;
 
@@ -187,7 +187,7 @@ void Image::exportData(NVCVImageData &data) const
 
     // Due to addr alignment, the allocated buffer could be larger than what we need,
     // but it can't be smaller.
-    NVCV_ASSERT(planeOffsetBytes <= CalcTotalSizeBytes(m_reqs.mem.deviceMem));
+    NVCV_ASSERT(planeOffsetBytes <= CalcTotalSizeBytes(m_reqs.mem.cudaMem));
 }
 
 // ImageWrap implementation -------------------------------------------
@@ -213,7 +213,7 @@ void ImageWrapData::doValidateData(const NVCVImageData &data) const
     bool success = false;
     switch (data.bufferType)
     {
-    case NVCV_IMAGE_BUFFER_STRIDED_DEVICE:
+    case NVCV_IMAGE_BUFFER_STRIDED_CUDA:
         if (format.memLayout() != NVCV_MEM_LAYOUT_PL)
         {
             throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
@@ -267,7 +267,7 @@ IAllocator &ImageWrapData::alloc() const
 
 Size2D ImageWrapData::size() const
 {
-    if (m_data.bufferType == NVCV_IMAGE_BUFFER_STRIDED_DEVICE)
+    if (m_data.bufferType == NVCV_IMAGE_BUFFER_STRIDED_CUDA)
     {
         return {m_data.buffer.strided.planes[0].width, m_data.buffer.strided.planes[0].height};
     }

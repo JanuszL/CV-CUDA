@@ -183,7 +183,7 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int64_t *sha
         }
     }
 
-    AddBuffer(reqs.mem.deviceMem, reqs.strides[0] * reqs.shape[0], reqs.alignBytes);
+    AddBuffer(reqs.mem.cudaMem, reqs.strides[0] * reqs.shape[0], reqs.alignBytes);
 
     return reqs;
 }
@@ -194,14 +194,14 @@ Tensor::Tensor(NVCVTensorRequirements reqs, IAllocator &alloc)
 {
     // Assuming reqs are already validated during its creation
 
-    int64_t bufSize = CalcTotalSizeBytes(m_reqs.mem.deviceMem);
-    m_memBuffer     = m_alloc.allocDeviceMem(bufSize, m_reqs.alignBytes);
+    int64_t bufSize = CalcTotalSizeBytes(m_reqs.mem.cudaMem);
+    m_memBuffer     = m_alloc.allocCudaMem(bufSize, m_reqs.alignBytes);
     NVCV_ASSERT(m_memBuffer != nullptr);
 }
 
 Tensor::~Tensor()
 {
-    m_alloc.freeDeviceMem(m_memBuffer, CalcTotalSizeBytes(m_reqs.mem.deviceMem), m_reqs.alignBytes);
+    m_alloc.freeCudaMem(m_memBuffer, CalcTotalSizeBytes(m_reqs.mem.cudaMem), m_reqs.alignBytes);
 }
 
 int32_t Tensor::ndim() const
@@ -231,7 +231,7 @@ IAllocator &Tensor::alloc() const
 
 void Tensor::exportData(NVCVTensorData &data) const
 {
-    data.bufferType = NVCV_TENSOR_BUFFER_STRIDED_DEVICE;
+    data.bufferType = NVCV_TENSOR_BUFFER_STRIDED_CUDA;
 
     data.dtype  = m_reqs.dtype;
     data.layout = m_reqs.layout;

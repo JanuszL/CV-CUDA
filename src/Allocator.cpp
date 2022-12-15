@@ -152,7 +152,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvAllocatorFreeHostPinnedMemory,
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvAllocatorAllocDeviceMemory,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvAllocatorAllocCudaMemory,
                 (NVCVAllocatorHandle halloc, void **ptr, int64_t sizeBytes, int32_t alignBytes))
 {
     return priv::ProtectCall(
@@ -163,11 +163,11 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvAllocatorAllocDeviceMemory,
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output buffer must not be NULL");
             }
 
-            *ptr = priv::ToStaticRef<priv::IAllocator>(halloc).allocDeviceMem(sizeBytes, alignBytes);
+            *ptr = priv::ToStaticRef<priv::IAllocator>(halloc).allocCudaMem(sizeBytes, alignBytes);
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvAllocatorFreeDeviceMemory,
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvAllocatorFreeCudaMemory,
                 (NVCVAllocatorHandle halloc, void *ptr, int64_t sizeBytes, int32_t alignBytes))
 {
     return priv::ProtectCall(
@@ -175,7 +175,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvAllocatorFreeDeviceMemory,
         {
             if (ptr != nullptr)
             {
-                priv::ToStaticRef<priv::IAllocator>(halloc).freeDeviceMem(ptr, sizeBytes, alignBytes);
+                priv::ToStaticRef<priv::IAllocator>(halloc).freeCudaMem(ptr, sizeBytes, alignBytes);
             }
         });
 }

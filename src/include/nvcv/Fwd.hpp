@@ -33,7 +33,7 @@ class IImage;
 class IImageData;
 class IImageDataCudaArray;
 class IImageDataStrided;
-class IImageDataStridedDevice;
+class IImageDataStridedCuda;
 class IImageDataStridedHost;
 
 class IImageBatch;
@@ -42,12 +42,12 @@ class IImageBatchData;
 class IImageBatchVarShape;
 class IImageBatchVarShapeData;
 class IImageBatchVarShapeDataStrided;
-class IImageBatchVarShapeDataStridedDevice;
+class IImageBatchVarShapeDataStridedCuda;
 
 class ITensor;
 class ITensorData;
 class ITensorDataStrided;
-class ITensorDataStridedDevice;
+class ITensorDataStridedCuda;
 
 } // namespace nv::cv
 

@@ -103,8 +103,8 @@ TYPED_TEST(OpReformat, correct_output)
     nvcv::Tensor inTensor(batches, {width, height}, inFormat);
     nvcv::Tensor outTensor(batches, {width, height}, outFormat);
 
-    const auto *inData  = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(inTensor.exportData());
-    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(outTensor.exportData());
+    const auto *inData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inTensor.exportData());
+    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(outTensor.exportData());
 
     ASSERT_NE(inData, nullptr);
     ASSERT_NE(outData, nullptr);

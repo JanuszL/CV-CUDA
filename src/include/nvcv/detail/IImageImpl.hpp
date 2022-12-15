@@ -80,9 +80,9 @@ inline const IImageData *IImage::exportData() const
     case NVCV_IMAGE_BUFFER_NONE:
         break; // will return nullptr as per current semantics
 
-    case NVCV_IMAGE_BUFFER_STRIDED_DEVICE:
+    case NVCV_IMAGE_BUFFER_STRIDED_CUDA:
         m_cacheDataPtr
-            = ::new (&m_cacheDataArena) ImageDataStridedDevice(ImageFormat{imgData.format}, imgData.buffer.strided);
+            = ::new (&m_cacheDataArena) ImageDataStridedCuda(ImageFormat{imgData.format}, imgData.buffer.strided);
         break;
 
     case NVCV_IMAGE_BUFFER_CUDA_ARRAY:

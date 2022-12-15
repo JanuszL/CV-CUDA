@@ -76,7 +76,7 @@ TEST_P(TensorTests, wip_create)
 
         ASSERT_EQ(tensor.dtype(), data->dtype());
 
-        auto *devdata = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(data);
+        auto *devdata = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(data);
         ASSERT_NE(nullptr, devdata);
 
         EXPECT_EQ(GOLD_NDIM, devdata->ndim());
@@ -139,7 +139,7 @@ TEST(TensorTests, wip_create_allocator)
     // clang-format off
     nvcv::CustomAllocator myAlloc
     {
-        nvcv::CustomDeviceMemAllocator
+        nvcv::CustomCudaMemAllocator
         {
             [&setBufLen, &setBufAlign](int64_t size, int32_t bufAlign)
             {
@@ -165,7 +165,7 @@ TEST(TensorTests, wip_create_allocator)
     const nvcv::ITensorData *data = tensor.exportData();
     ASSERT_NE(nullptr, data);
 
-    auto *devdata = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(data);
+    auto *devdata = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(data);
     ASSERT_NE(nullptr, devdata);
 
     EXPECT_EQ(1, devdata->stride(3));
@@ -264,7 +264,7 @@ TEST(TensorWrapData, wip_create)
 
     nvcv::Tensor origTensor(5, {173, 79}, fmt, nvcv::MemAlignment{}.rowAddr(1).baseAddr(32)); // packed rows
 
-    auto *tdata = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(origTensor.exportData());
+    auto *tdata = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(origTensor.exportData());
 
     auto access = nvcv::TensorDataAccessStridedImagePlanar::Create(*tdata);
     ASSERT_TRUE(access);
@@ -296,7 +296,7 @@ TEST(TensorWrapData, wip_create)
     const nvcv::ITensorData *data = tensor.exportData();
     ASSERT_NE(nullptr, data);
 
-    auto *devdata = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(data);
+    auto *devdata = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(data);
     ASSERT_NE(nullptr, devdata);
 
     auto accessRef = nvcv::TensorDataAccessStridedImagePlanar::Create(*devdata);
@@ -358,8 +358,8 @@ TEST_P(TensorWrapImageTests, wip_create)
     EXPECT_EQ(GOLD_SHAPE, tensor.shape());
     EXPECT_EQ(GOLD_DTYPE, tensor.dtype());
 
-    auto *imgData    = dynamic_cast<const nvcv::IImageDataStridedDevice *>(img.exportData());
-    auto *tensorData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(tensor.exportData());
+    auto *imgData    = dynamic_cast<const nvcv::IImageDataStridedCuda *>(img.exportData());
+    auto *tensorData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(tensor.exportData());
 
     auto tensorAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*tensorData);
     EXPECT_TRUE(tensorAccess);

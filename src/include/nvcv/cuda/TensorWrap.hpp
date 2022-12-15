@@ -26,8 +26,8 @@
 
 #include "TypeTraits.hpp" // for HasTypeTraits, etc.
 
-#include <nvcv/IImageData.hpp>  // for IImageDataStridedDevice, etc.
-#include <nvcv/ITensorData.hpp> // for ITensorDataStridedDevice, etc.
+#include <nvcv/IImageData.hpp>  // for IImageDataStridedCuda, etc.
+#include <nvcv/ITensorData.hpp> // for ITensorDataStridedCuda, etc.
 
 #include <utility>
 
@@ -113,7 +113,7 @@ public:
      *
      * @param[in] image Image reference to the image that will be wrapped
      */
-    __host__ TensorWrap(const IImageDataStridedDevice &image)
+    __host__ TensorWrap(const IImageDataStridedCuda &image)
     {
         static_assert(kVariableStrides == 1 && kNumDimensions == 2);
 
@@ -127,7 +127,7 @@ public:
      *
      * @param[in] tensor Tensor reference to the tensor that will be wrapped
      */
-    __host__ TensorWrap(const ITensorDataStridedDevice &tensor)
+    __host__ TensorWrap(const ITensorDataStridedCuda &tensor)
     {
         m_data = reinterpret_cast<const void *>(tensor.basePtr());
 
@@ -283,7 +283,7 @@ public:
      *
      * @param[in] image Image reference to the image that will be wrapped
      */
-    __host__ TensorWrap(const IImageDataStridedDevice &image)
+    __host__ TensorWrap(const IImageDataStridedCuda &image)
         : Base(image)
     {
     }
@@ -293,7 +293,7 @@ public:
      *
      * @param[in] tensor Tensor reference to the tensor that will be wrapped
      */
-    __host__ TensorWrap(const ITensorDataStridedDevice &tensor)
+    __host__ TensorWrap(const ITensorDataStridedCuda &tensor)
         : Base(tensor)
     {
     }

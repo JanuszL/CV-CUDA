@@ -46,7 +46,7 @@ TEST(OpErase, OpErase_Tensor)
     EXPECT_EQ(cudaSuccess, cudaMemset2D(inAccess->planeData(0), inAccess->rowStride(), 0,
                                         inAccess->numCols() * inAccess->colStride(), inAccess->numRows()));
 
-    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgOut.exportData());
+    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgOut.exportData());
     ASSERT_NE(nullptr, outData);
 
     auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*outData);
@@ -64,10 +64,10 @@ TEST(OpErase, OpErase_Tensor)
     nvcv::Tensor values({{num_erasing_area}, "N"}, nv::cv::TYPE_F32);
     nvcv::Tensor imgIdx({{num_erasing_area}, "N"}, nv::cv::TYPE_S32);
 
-    const auto *anchorData  = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(anchor.exportData());
-    const auto *erasingData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(erasing.exportData());
-    const auto *valuesData  = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(values.exportData());
-    const auto *imgIdxData  = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgIdx.exportData());
+    const auto *anchorData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(anchor.exportData());
+    const auto *erasingData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(erasing.exportData());
+    const auto *valuesData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(values.exportData());
+    const auto *imgIdxData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgIdx.exportData());
 
     ASSERT_NE(nullptr, anchorData);
     ASSERT_NE(nullptr, erasingData);
@@ -144,7 +144,7 @@ TEST(OpErase, OpErase_Varshape)
 
     for (int i = 0; i < 1; ++i)
     {
-        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedDevice *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         assert(srcData->numPlanes() == 1);
 
         int srcWidth  = srcData->plane(0).width;
@@ -162,10 +162,10 @@ TEST(OpErase, OpErase_Varshape)
     nvcv::Tensor values({{num_erasing_area}, "N"}, nv::cv::TYPE_F32);
     nvcv::Tensor imgIdx({{num_erasing_area}, "N"}, nv::cv::TYPE_S32);
 
-    const auto *anchorData  = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(anchor.exportData());
-    const auto *erasingData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(erasing.exportData());
-    const auto *valuesData  = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(values.exportData());
-    const auto *imgIdxData  = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgIdx.exportData());
+    const auto *anchorData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(anchor.exportData());
+    const auto *erasingData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(erasing.exportData());
+    const auto *valuesData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(values.exportData());
+    const auto *imgIdxData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgIdx.exportData());
 
     ASSERT_NE(nullptr, anchorData);
     ASSERT_NE(nullptr, erasingData);
@@ -212,7 +212,7 @@ TEST(OpErase, OpErase_Varshape)
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
 
-    const auto *dstData = dynamic_cast<const nvcv::IImageDataStridedDevice *>(imgSrc[0]->exportData());
+    const auto *dstData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[0]->exportData());
     assert(dstData->numPlanes() == 1);
 
     int dstWidth  = dstData->plane(0).width;

@@ -433,12 +433,12 @@ void FillNVCVImageBufferStrided(NVCVImageData &imgData, const std::vector<py::bu
     }
 }
 
-cv::ImageDataStridedDevice CreateNVCVImageDataDevice(const std::vector<py::buffer_info> &infos, cv::ImageFormat fmt)
+cv::ImageDataStridedCuda CreateNVCVImageDataDevice(const std::vector<py::buffer_info> &infos, cv::ImageFormat fmt)
 {
     NVCVImageData imgData;
     FillNVCVImageBufferStrided(imgData, infos, fmt);
 
-    return cv::ImageDataStridedDevice(cv::ImageFormat{imgData.format}, imgData.buffer.strided);
+    return cv::ImageDataStridedCuda(cv::ImageFormat{imgData.format}, imgData.buffer.strided);
 }
 
 cv::ImageDataStridedHost CreateNVCVImageDataHost(const std::vector<py::buffer_info> &infos, cv::ImageFormat fmt)
@@ -457,7 +457,7 @@ Image::Image(const Size2D &size, cv::ImageFormat fmt)
 {
 }
 
-Image::Image(std::vector<std::shared_ptr<CudaBuffer>> bufs, const cv::IImageDataStridedDevice &imgData)
+Image::Image(std::vector<std::shared_ptr<CudaBuffer>> bufs, const cv::IImageDataStridedCuda &imgData)
     : m_key{} // it's a wrap!
 {
     if (bufs.size() == 1)
@@ -481,7 +481,7 @@ Image::Image(std::vector<py::buffer> bufs, const cv::IImageDataStridedHost &host
     // Create the image with same size and format as host data
     m_impl = std::make_unique<cv::Image>(hostData.size(), hostData.format());
 
-    auto *devData = dynamic_cast<const cv::IImageDataStridedDevice *>(m_impl->exportData());
+    auto *devData = dynamic_cast<const cv::IImageDataStridedCuda *>(m_impl->exportData());
     NVCV_ASSERT(devData != nullptr);
     NVCV_ASSERT(hostData.format() == devData->format());
     NVCV_ASSERT(hostData.numPlanes() == devData->numPlanes());
@@ -538,7 +538,7 @@ std::shared_ptr<Image> Image::Zeros(const Size2D &size, cv::ImageFormat fmt)
 {
     auto img = Image::Create(size, fmt);
 
-    auto *data = dynamic_cast<const cv::IImageDataStridedDevice *>(img->impl().exportData());
+    auto *data = dynamic_cast<const cv::IImageDataStridedCuda *>(img->impl().exportData());
     NVCV_ASSERT(data);
 
     for (int p = 0; p < data->numPlanes(); ++p)
@@ -552,12 +552,12 @@ std::shared_ptr<Image> Image::Zeros(const Size2D &size, cv::ImageFormat fmt)
     return img;
 }
 
-std::shared_ptr<Image> Image::WrapDevice(CudaBuffer &buffer, cv::ImageFormat fmt)
+std::shared_ptr<Image> Image::WrapCuda(CudaBuffer &buffer, cv::ImageFormat fmt)
 {
-    return WrapDeviceVector(std::vector{buffer.shared_from_this()}, fmt);
+    return WrapCudaVector(std::vector{buffer.shared_from_this()}, fmt);
 }
 
-std::shared_ptr<Image> Image::WrapDeviceVector(std::vector<std::shared_ptr<CudaBuffer>> buffers, cv::ImageFormat fmt)
+std::shared_ptr<Image> Image::WrapCudaVector(std::vector<std::shared_ptr<CudaBuffer>> buffers, cv::ImageFormat fmt)
 {
     std::vector<py::buffer_info> bufinfos;
     for (size_t i = 0; i < buffers.size(); ++i)
@@ -565,7 +565,7 @@ std::shared_ptr<Image> Image::WrapDeviceVector(std::vector<std::shared_ptr<CudaB
         bufinfos.emplace_back(buffers[i]->request());
     }
 
-    cv::ImageDataStridedDevice imgData = CreateNVCVImageDataDevice(std::move(bufinfos), fmt);
+    cv::ImageDataStridedCuda imgData = CreateNVCVImageDataDevice(std::move(bufinfos), fmt);
 
     // This is the key of an image wrapper.
     // All image wrappers have the same key.
@@ -845,7 +845,7 @@ std::vector<py::object> ToPython(const cv::IImageData &imgData, std::optional<cv
 
     for (const auto &[info, layout] : ToPyBufferInfo(*pitchData, userLayout))
     {
-        if (dynamic_cast<const cv::IImageDataStridedDevice *>(pitchData))
+        if (dynamic_cast<const cv::IImageDataStridedCuda *>(pitchData))
         {
             if (owner)
             {
@@ -919,7 +919,7 @@ py::object Image::cpu(std::optional<cv::TensorLayout> layout) const
         throw std::runtime_error("Image data can't be exported");
     }
 
-    auto *devStrided = dynamic_cast<const cv::IImageDataStridedDevice *>(devData);
+    auto *devStrided = dynamic_cast<const cv::IImageDataStridedCuda *>(devData);
     if (!devStrided)
     {
         throw std::runtime_error("Only images with pitch-linear formats can be exported");
@@ -1002,8 +1002,8 @@ void Image::Export(py::module &m)
         .def_property_readonly("format", &Image::format);
 
     // Make sure buffer lifetime is tied to image's (keep_alive)
-    m.def("as_image", &Image::WrapDevice, "buffer"_a, "format"_a = cv::FMT_NONE, py::keep_alive<0, 1>());
-    m.def("as_image", &Image::WrapDeviceVector, "buffer"_a, "format"_a = cv::FMT_NONE, py::keep_alive<0, 1>());
+    m.def("as_image", &Image::WrapCuda, "buffer"_a, "format"_a = cv::FMT_NONE, py::keep_alive<0, 1>());
+    m.def("as_image", &Image::WrapCudaVector, "buffer"_a, "format"_a = cv::FMT_NONE, py::keep_alive<0, 1>());
 }
 
 } // namespace nv::cvpy

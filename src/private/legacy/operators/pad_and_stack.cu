@@ -50,9 +50,9 @@ __global__ void padAndStack(const BrdRd src, Ptr2D dst, const Ptr2DVec topVec, c
 }
 
 template<typename D, template<typename> class Brd>
-void padAndStackCaller(const nvcv::IImageBatchVarShapeDataStridedDevice &inData,
-                       const nvcv::TensorDataAccessStridedImagePlanar   &outData,
-                       const nvcv::TensorDataAccessStridedImagePlanar   &top,
+void padAndStackCaller(const nvcv::IImageBatchVarShapeDataStridedCuda &inData,
+                       const nvcv::TensorDataAccessStridedImagePlanar &outData,
+                       const nvcv::TensorDataAccessStridedImagePlanar &top,
                        const nvcv::TensorDataAccessStridedImagePlanar &left, const float borderValue,
                        cudaStream_t stream)
 {
@@ -85,16 +85,16 @@ void padAndStackCaller(const nvcv::IImageBatchVarShapeDataStridedDevice &inData,
 }
 
 template<typename D>
-void padAndStack(const nvcv::IImageBatchVarShapeDataStridedDevice &inData,
-                 const nvcv::TensorDataAccessStridedImagePlanar   &outData,
-                 const nvcv::TensorDataAccessStridedImagePlanar   &top,
+void padAndStack(const nvcv::IImageBatchVarShapeDataStridedCuda &inData,
+                 const nvcv::TensorDataAccessStridedImagePlanar &outData,
+                 const nvcv::TensorDataAccessStridedImagePlanar &top,
                  const nvcv::TensorDataAccessStridedImagePlanar &left, const NVCVBorderType borderMode,
                  const float borderValue, cudaStream_t stream)
 {
     typedef void (*padAndStack_caller)(
-        const nvcv::IImageBatchVarShapeDataStridedDevice &inData,
-        const nvcv::TensorDataAccessStridedImagePlanar &outData, const nvcv::TensorDataAccessStridedImagePlanar &top,
-        const nvcv::TensorDataAccessStridedImagePlanar &left, const float borderValue, cudaStream_t stream);
+        const nvcv::IImageBatchVarShapeDataStridedCuda &inData, const nvcv::TensorDataAccessStridedImagePlanar &outData,
+        const nvcv::TensorDataAccessStridedImagePlanar &top, const nvcv::TensorDataAccessStridedImagePlanar &left,
+        const float borderValue, cudaStream_t stream);
 
     static const padAndStack_caller funcs[]
         = {padAndStackCaller<D, BrdConstant>, padAndStackCaller<D, BrdReplicate>, padAndStackCaller<D, BrdReflect>,
@@ -110,10 +110,9 @@ size_t PadAndStack::calBufferSize(int batch_size)
     return 0;
 }
 
-ErrorCode PadAndStack::infer(const IImageBatchVarShapeDataStridedDevice &inData,
-                             const ITensorDataStridedDevice &outData, const ITensorDataStridedDevice &top,
-                             const ITensorDataStridedDevice &left, const NVCVBorderType borderMode,
-                             const float borderValue, cudaStream_t stream)
+ErrorCode PadAndStack::infer(const IImageBatchVarShapeDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
+                             const ITensorDataStridedCuda &top, const ITensorDataStridedCuda &left,
+                             const NVCVBorderType borderMode, const float borderValue, cudaStream_t stream)
 {
     DataFormat format    = GetLegacyDataFormat(outData.layout());
     DataType   data_type = GetLegacyDataType(outData.dtype());
@@ -188,7 +187,7 @@ ErrorCode PadAndStack::infer(const IImageBatchVarShapeDataStridedDevice &inData,
     }
 
     typedef void (*func_t)(
-        const nvcv::IImageBatchVarShapeDataStridedDevice &inData, const TensorDataAccessStridedImagePlanar &outData,
+        const nvcv::IImageBatchVarShapeDataStridedCuda &inData, const TensorDataAccessStridedImagePlanar &outData,
         const TensorDataAccessStridedImagePlanar &top, const TensorDataAccessStridedImagePlanar &left,
         const NVCVBorderType borderMode, const float borderValue, cudaStream_t stream);
 

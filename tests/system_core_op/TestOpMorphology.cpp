@@ -423,8 +423,8 @@ TEST_P(OpMorphology, morph_random)
     nvcv::Tensor inTensor(batches, {width, height}, format);
     nvcv::Tensor outTensor(batches, {width, height}, format);
 
-    const auto *inData  = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(inTensor.exportData());
-    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(outTensor.exportData());
+    const auto *inData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inTensor.exportData());
+    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(outTensor.exportData());
 
     ASSERT_NE(inData, nullptr);
     ASSERT_NE(outData, nullptr);
@@ -527,7 +527,7 @@ TEST_P(OpMorphologyVarShape, varshape_correct_output)
         srcVec[i].resize(imgSrc[i]->size().h * srcRowStride);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
 
-        auto *imgData = dynamic_cast<const nv::cv::IImageDataStridedDevice *>(imgSrc[i]->exportData());
+        auto *imgData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_NE(imgData, nullptr);
 
         // Copy input data to the GPU
@@ -551,7 +551,7 @@ TEST_P(OpMorphologyVarShape, varshape_correct_output)
     // Create kernel mask size tensor
     nv::cv::Tensor maskTensor({{batches}, "N"}, nv::cv::TYPE_2S32);
     {
-        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedDevice *>(maskTensor.exportData());
+        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(maskTensor.exportData());
         ASSERT_NE(dev, nullptr);
 
         std::vector<int2> vec(batches, int2{maskSizeX, maskSizeY});
@@ -563,7 +563,7 @@ TEST_P(OpMorphologyVarShape, varshape_correct_output)
     // Create Anchor tensor
     nv::cv::Tensor anchorTensor({{batches}, "N"}, nv::cv::TYPE_2S32);
     {
-        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedDevice *>(anchorTensor.exportData());
+        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(anchorTensor.exportData());
         ASSERT_NE(dev, nullptr);
 
         std::vector<int2> vec(batches, int2{anchorX, anchorY});
@@ -585,10 +585,10 @@ TEST_P(OpMorphologyVarShape, varshape_correct_output)
     {
         SCOPED_TRACE(i);
 
-        const auto *srcData = dynamic_cast<const nv::cv::IImageDataStridedDevice *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_EQ(srcData->numPlanes(), 1);
 
-        const auto *dstData = dynamic_cast<const nv::cv::IImageDataStridedDevice *>(imgDst[i]->exportData());
+        const auto *dstData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgDst[i]->exportData());
         ASSERT_EQ(dstData->numPlanes(), 1);
 
         int dstRowStride = srcVecRowStride[i];
@@ -664,7 +664,7 @@ TEST_P(OpMorphologyVarShape, varshape_noop)
         srcVec[i].resize(imgSrc[i]->size().h * srcRowStride);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
 
-        auto *imgData = dynamic_cast<const nv::cv::IImageDataStridedDevice *>(imgSrc[i]->exportData());
+        auto *imgData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_NE(imgData, nullptr);
 
         // Copy input data to the GPU
@@ -688,7 +688,7 @@ TEST_P(OpMorphologyVarShape, varshape_noop)
     // Create kernel mask size tensor
     nv::cv::Tensor maskTensor({{batches}, "N"}, nv::cv::TYPE_2S32);
     {
-        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedDevice *>(maskTensor.exportData());
+        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(maskTensor.exportData());
         ASSERT_NE(dev, nullptr);
 
         std::vector<int2> vec(batches, int2{maskSizeX, maskSizeY});
@@ -700,7 +700,7 @@ TEST_P(OpMorphologyVarShape, varshape_noop)
     // Create Anchor tensor
     nv::cv::Tensor anchorTensor({{batches}, "N"}, nv::cv::TYPE_2S32);
     {
-        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedDevice *>(anchorTensor.exportData());
+        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(anchorTensor.exportData());
         ASSERT_NE(dev, nullptr);
 
         std::vector<int2> vec(batches, int2{anchorX, anchorY});
@@ -722,10 +722,10 @@ TEST_P(OpMorphologyVarShape, varshape_noop)
     {
         SCOPED_TRACE(i);
 
-        const auto *srcData = dynamic_cast<const nv::cv::IImageDataStridedDevice *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_EQ(srcData->numPlanes(), 1);
 
-        const auto *dstData = dynamic_cast<const nv::cv::IImageDataStridedDevice *>(imgDst[i]->exportData());
+        const auto *dstData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgDst[i]->exportData());
         ASSERT_EQ(dstData->numPlanes(), 1);
 
         int dstRowStride = srcVecRowStride[i];
