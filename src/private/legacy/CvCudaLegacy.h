@@ -2013,7 +2013,7 @@ public:
      * @brief apply bilateral filter on images.
      * @param inputs gpu pointer, inputs[0] are batched input images, whose shape is input_shape and type is data_type.
      * @param outputs gpu pointer, outputs[0] are batched output images that have the size dsize and the same type as data_type.
-     * @param d diameter of each pixel neighborhood that is used during filtering
+     * @param diameter pixel neighborhood diameter that is used during filtering
      * @param sigmaColor filter sigma in the color space
      * @param sigmaSpace filter sigma in the coordinate space
      * @param borderMode pixel extrapolation method, e.g. cv::BORDER_CONSTANT
@@ -2021,6 +2021,31 @@ public:
      */
     ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, int diameter,
                     float sigmaColor, float sigmaSpace, NVCVBorderType borderMode, cudaStream_t stream);
+};
+
+class BilateralFilterVarShape : public CudaBaseOp
+{
+public:
+    BilateralFilterVarShape() = delete;
+
+    BilateralFilterVarShape(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * @brief apply bilateral filter on images.
+     * @param inputs gpu pointer, inputs[0] are batched input images, whose shape is input_shape and type is data_type.
+     * @param outputs gpu pointer, outputs[0] are batched output images that have the size dsize and the same type as data_type.
+     * @param diameterData tensor of each pixel neighborhood that is used during filtering
+     * @param sigmaColorData tensor filter sigmas in the color space
+     * @param sigmaSpaceData tensor filter sigmas in the coordinate space
+     * @param borderMode pixel extrapolation method, e.g. cv::BORDER_CONSTANT
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
+                    const ITensorDataPitchDevice &diameterData, const ITensorDataPitchDevice &sigmaColorData,
+                    const ITensorDataPitchDevice &sigmaSpaceData, NVCVBorderType borderMode, cudaStream_t stream);
 };
 
 class CvtColor : public CudaBaseOp

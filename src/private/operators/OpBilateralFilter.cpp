@@ -30,7 +30,8 @@ BilateralFilter::BilateralFilter()
 {
     leg::cuda_op::DataShape maxIn, maxOut;
     //maxIn/maxOut not used by op.
-    m_legacyOp = std::make_unique<leg::cuda_op::BilateralFilter>(maxIn, maxOut);
+    m_legacyOp         = std::make_unique<leg::cuda_op::BilateralFilter>(maxIn, maxOut);
+    m_legacyOpVarShape = std::make_unique<leg::cuda_op::BilateralFilterVarShape>(maxIn, maxOut);
 }
 
 void BilateralFilter::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, int diameter,
@@ -39,17 +40,59 @@ void BilateralFilter::operator()(cudaStream_t stream, const cv::ITensor &in, con
     auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be device-acessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be device-accessible, pitch-linear tensor");
     }
 
     auto *outData = dynamic_cast<const cv::ITensorDataPitchDevice *>(out.exportData());
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Output must be device-accessible, pitch-linear tensor");
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be device-accessible, pitch-linear tensor");
     }
 
     NVCV_CHECK_THROW(m_legacyOp->infer(*inData, *outData, diameter, sigmaColor, sigmaSpace, borderMode, stream));
+}
+
+void BilateralFilter::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in,
+                                 const cv::IImageBatchVarShape &out, const cv::ITensor &diameter,
+                                 const cv::ITensor &sigmaColor, const cv::ITensor &sigmaSpace,
+                                 NVCVBorderType borderMode) const
+{
+    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
+    if (inData == nullptr)
+    {
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be device-accessible, varshape image batch");
+    }
+
+    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(out.exportData(stream));
+    if (outData == nullptr)
+    {
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                                  "Output must be device-accessible,  varshape image batch");
+    }
+
+    auto *diameterData = dynamic_cast<const cv::ITensorDataPitchDevice *>(diameter.exportData());
+    if (diameterData == nullptr)
+    {
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                                  "Diameter must be device-accessible, pitch-linear tensor");
+    }
+
+    auto *sigmaColorData = dynamic_cast<const cv::ITensorDataPitchDevice *>(sigmaColor.exportData());
+    if (sigmaColorData == nullptr)
+    {
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                                  "sigmaColor must be device-accessible, pitch-linear tensor");
+    }
+
+    auto *sigmaSpaceData = dynamic_cast<const cv::ITensorDataPitchDevice *>(sigmaSpace.exportData());
+    if (sigmaSpaceData == nullptr)
+    {
+        throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
+                                  "sigmaSpace must be device-accessible, pitch-linear tensor");
+    }
+
+    NVCV_CHECK_THROW(m_legacyOpVarShape->infer(*inData, *outData, *diameterData, *sigmaColorData, *sigmaSpaceData,
+                                               borderMode, stream));
 }
 
 } // namespace nv::cvop::priv
