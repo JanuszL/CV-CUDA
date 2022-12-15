@@ -33,6 +33,12 @@ extern "C"
 {
 #endif
 
+/** Definition of a byte type. */
+struct NVCVByte
+{
+    uint8_t value;
+};
+
 /**
  * Pre-defined data types.
  * Data types defines the geometry of value elements, i.e., pixels in a image plane without taking into account what the value represents.

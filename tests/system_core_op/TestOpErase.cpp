@@ -37,22 +37,22 @@ TEST(OpErase, OpErase_Tensor)
     nvcv::Tensor imgIn(1, {640, 480}, nvcv::FMT_U8);
     nvcv::Tensor imgOut(1, {640, 480}, nvcv::FMT_U8);
 
-    auto inAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*imgIn.exportData());
+    auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*imgIn.exportData());
     ASSERT_TRUE(inAccess);
 
     ASSERT_EQ(1, inAccess->numSamples());
 
     // setup the buffer
-    EXPECT_EQ(cudaSuccess, cudaMemset2D(inAccess->planeData(0), inAccess->rowPitchBytes(), 0,
-                                        inAccess->numCols() * inAccess->colPitchBytes(), inAccess->numRows()));
+    EXPECT_EQ(cudaSuccess, cudaMemset2D(inAccess->planeData(0), inAccess->rowStride(), 0,
+                                        inAccess->numCols() * inAccess->colStride(), inAccess->numRows()));
 
-    const auto *outData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgOut.exportData());
+    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgOut.exportData());
     ASSERT_NE(nullptr, outData);
 
-    auto outAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*outData);
+    auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*outData);
     ASSERT_TRUE(outAccess);
 
-    int64_t outBufferSize = outAccess->samplePitchBytes() * outAccess->numSamples();
+    int64_t outBufferSize = outAccess->sampleStride() * outAccess->numSamples();
 
     // Set output buffer to dummy value
     EXPECT_EQ(cudaSuccess, cudaMemset(outAccess->sampleData(0), 0xFA, outBufferSize));
@@ -64,10 +64,10 @@ TEST(OpErase, OpErase_Tensor)
     nvcv::Tensor values({{num_erasing_area}, "N"}, nv::cv::TYPE_F32);
     nvcv::Tensor imgIdx({{num_erasing_area}, "N"}, nv::cv::TYPE_S32);
 
-    const auto *anchorData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(anchor.exportData());
-    const auto *erasingData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(erasing.exportData());
-    const auto *valuesData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(values.exportData());
-    const auto *imgIdxData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgIdx.exportData());
+    const auto *anchorData  = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(anchor.exportData());
+    const auto *erasingData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(erasing.exportData());
+    const auto *valuesData  = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(values.exportData());
+    const auto *imgIdxData  = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgIdx.exportData());
 
     ASSERT_NE(nullptr, anchorData);
     ASSERT_NE(nullptr, erasingData);
@@ -96,13 +96,13 @@ TEST(OpErase, OpErase_Tensor)
     valuesVec[1]    = 1.f;
 
     // Copy vectors to the GPU
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(anchorData->data(), anchorVec.data(), anchorVec.size() * sizeof(int2),
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(anchorData->basePtr(), anchorVec.data(), anchorVec.size() * sizeof(int2),
                                            cudaMemcpyHostToDevice, stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(erasingData->data(), erasingVec.data(), erasingVec.size() * sizeof(int3),
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(erasingData->basePtr(), erasingVec.data(), erasingVec.size() * sizeof(int3),
                                            cudaMemcpyHostToDevice, stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(imgIdxData->data(), imgIdxVec.data(), imgIdxVec.size() * sizeof(int),
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(imgIdxData->basePtr(), imgIdxVec.data(), imgIdxVec.size() * sizeof(int),
                                            cudaMemcpyHostToDevice, stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(valuesData->data(), valuesVec.data(), valuesVec.size() * sizeof(float),
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(valuesData->basePtr(), valuesVec.data(), valuesVec.size() * sizeof(float),
                                            cudaMemcpyHostToDevice, stream));
 
     // Call operator
@@ -117,7 +117,7 @@ TEST(OpErase, OpErase_Tensor)
     std::vector<uint8_t> test(outBufferSize, 0xA);
 
     //Check data
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), outData->data(), outBufferSize, cudaMemcpyDeviceToHost));
+    EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), outData->basePtr(), outBufferSize, cudaMemcpyDeviceToHost));
 
     EXPECT_EQ(test[0], 1);
     EXPECT_EQ(test[9], 1);
@@ -144,15 +144,15 @@ TEST(OpErase, OpErase_Varshape)
 
     for (int i = 0; i < 1; ++i)
     {
-        const auto *srcData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedDevice *>(imgSrc[i]->exportData());
         assert(srcData->numPlanes() == 1);
 
         int srcWidth  = srcData->plane(0).width;
         int srcHeight = srcData->plane(0).height;
 
-        int srcRowPitch = srcWidth * nvcv::FMT_U8.planePixelStrideBytes(0);
+        int srcRowStride = srcWidth * nvcv::FMT_U8.planePixelStrideBytes(0);
 
-        EXPECT_EQ(cudaSuccess, cudaMemset2D(srcData->plane(0).buffer, srcRowPitch, 0, srcRowPitch, srcHeight));
+        EXPECT_EQ(cudaSuccess, cudaMemset2D(srcData->plane(0).basePtr, srcRowStride, 0, srcRowStride, srcHeight));
     }
 
     //parameters
@@ -162,10 +162,10 @@ TEST(OpErase, OpErase_Varshape)
     nvcv::Tensor values({{num_erasing_area}, "N"}, nv::cv::TYPE_F32);
     nvcv::Tensor imgIdx({{num_erasing_area}, "N"}, nv::cv::TYPE_S32);
 
-    const auto *anchorData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(anchor.exportData());
-    const auto *erasingData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(erasing.exportData());
-    const auto *valuesData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(values.exportData());
-    const auto *imgIdxData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgIdx.exportData());
+    const auto *anchorData  = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(anchor.exportData());
+    const auto *erasingData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(erasing.exportData());
+    const auto *valuesData  = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(values.exportData());
+    const auto *imgIdxData  = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgIdx.exportData());
 
     ASSERT_NE(nullptr, anchorData);
     ASSERT_NE(nullptr, erasingData);
@@ -194,13 +194,13 @@ TEST(OpErase, OpErase_Varshape)
     valuesVec[1]    = 1.f;
 
     // Copy vectors to the GPU
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(anchorData->data(), anchorVec.data(), anchorVec.size() * sizeof(int2),
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(anchorData->basePtr(), anchorVec.data(), anchorVec.size() * sizeof(int2),
                                            cudaMemcpyHostToDevice, stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(erasingData->data(), erasingVec.data(), erasingVec.size() * sizeof(int3),
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(erasingData->basePtr(), erasingVec.data(), erasingVec.size() * sizeof(int3),
                                            cudaMemcpyHostToDevice, stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(imgIdxData->data(), imgIdxVec.data(), imgIdxVec.size() * sizeof(int),
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(imgIdxData->basePtr(), imgIdxVec.data(), imgIdxVec.size() * sizeof(int),
                                            cudaMemcpyHostToDevice, stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(valuesData->data(), valuesVec.data(), valuesVec.size() * sizeof(float),
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(valuesData->basePtr(), valuesVec.data(), valuesVec.size() * sizeof(float),
                                            cudaMemcpyHostToDevice, stream));
 
     // Call operator
@@ -212,19 +212,19 @@ TEST(OpErase, OpErase_Varshape)
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
 
-    const auto *dstData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrc[0]->exportData());
+    const auto *dstData = dynamic_cast<const nvcv::IImageDataStridedDevice *>(imgSrc[0]->exportData());
     assert(dstData->numPlanes() == 1);
 
     int dstWidth  = dstData->plane(0).width;
     int dstHeight = dstData->plane(0).height;
 
-    int dstRowPitch = dstWidth * nvcv::FMT_U8.planePixelStrideBytes(0);
+    int dstRowStride = dstWidth * nvcv::FMT_U8.planePixelStrideBytes(0);
 
-    std::vector<uint8_t> test(dstHeight * dstRowPitch, 0xFF);
+    std::vector<uint8_t> test(dstHeight * dstRowStride, 0xFF);
 
     // Copy output data to Host
-    ASSERT_EQ(cudaSuccess, cudaMemcpy2D(test.data(), dstRowPitch, dstData->plane(0).buffer,
-                                        dstData->plane(0).pitchBytes, dstRowPitch, dstHeight, cudaMemcpyDeviceToHost));
+    ASSERT_EQ(cudaSuccess, cudaMemcpy2D(test.data(), dstRowStride, dstData->plane(0).basePtr,
+                                        dstData->plane(0).rowStride, dstRowStride, dstHeight, cudaMemcpyDeviceToHost));
 
     EXPECT_EQ(test[0], 1);
     EXPECT_EQ(test[9], 1);

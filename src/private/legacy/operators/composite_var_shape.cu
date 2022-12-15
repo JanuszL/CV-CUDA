@@ -63,10 +63,10 @@ __global__ void composite_kernel(const Ptr2dVarShapeNHWC<T> fg, const Ptr2dVarSh
 }
 
 template<typename T, int scn, int dcn> // uchar
-void composite(const nvcv::IImageBatchVarShapeDataPitchDevice &foregroundData,
-               const nvcv::IImageBatchVarShapeDataPitchDevice &backgroundData,
-               const nvcv::IImageBatchVarShapeDataPitchDevice &fgMaskData,
-               const nvcv::IImageBatchVarShapeDataPitchDevice &outData, cudaStream_t stream)
+void composite(const nvcv::IImageBatchVarShapeDataStridedDevice &foregroundData,
+               const nvcv::IImageBatchVarShapeDataStridedDevice &backgroundData,
+               const nvcv::IImageBatchVarShapeDataStridedDevice &fgMaskData,
+               const nvcv::IImageBatchVarShapeDataStridedDevice &outData, cudaStream_t stream)
 {
     typedef typename cuda::MakeType<T, scn> src_type;
     typedef typename cuda::MakeType<T, dcn> dst_type;
@@ -93,10 +93,10 @@ void composite(const nvcv::IImageBatchVarShapeDataPitchDevice &foregroundData,
 
 namespace nv::cv::legacy::cuda_op {
 
-ErrorCode CompositeVarShape::infer(const IImageBatchVarShapeDataPitchDevice &foreground,
-                                   const IImageBatchVarShapeDataPitchDevice &background,
-                                   const IImageBatchVarShapeDataPitchDevice &fgMask,
-                                   const IImageBatchVarShapeDataPitchDevice &outData, cudaStream_t stream)
+ErrorCode CompositeVarShape::infer(const IImageBatchVarShapeDataStridedDevice &foreground,
+                                   const IImageBatchVarShapeDataStridedDevice &background,
+                                   const IImageBatchVarShapeDataStridedDevice &fgMask,
+                                   const IImageBatchVarShapeDataStridedDevice &outData, cudaStream_t stream)
 {
     DataFormat background_format = helpers::GetLegacyDataFormat(background);
     DataFormat foreground_format = helpers::GetLegacyDataFormat(foreground);
@@ -151,10 +151,10 @@ ErrorCode CompositeVarShape::infer(const IImageBatchVarShapeDataPitchDevice &for
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    typedef void (*func_t)(const nvcv::IImageBatchVarShapeDataPitchDevice &foregroundData,
-                           const nvcv::IImageBatchVarShapeDataPitchDevice &backgroundData,
-                           const nvcv::IImageBatchVarShapeDataPitchDevice &fgMaskData,
-                           const nvcv::IImageBatchVarShapeDataPitchDevice &outData, cudaStream_t stream);
+    typedef void (*func_t)(const nvcv::IImageBatchVarShapeDataStridedDevice &foregroundData,
+                           const nvcv::IImageBatchVarShapeDataStridedDevice &backgroundData,
+                           const nvcv::IImageBatchVarShapeDataStridedDevice &fgMaskData,
+                           const nvcv::IImageBatchVarShapeDataStridedDevice &outData, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {
         { 0 /*composite<uchar,1,1>*/,  0 /*composite<uchar,2,2>*/,             composite<uchar,3, 3>, composite<uchar, 3, 4>},

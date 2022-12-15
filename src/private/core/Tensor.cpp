@@ -170,20 +170,20 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int64_t *sha
 
     int firstPacked = reqs.layout == NVCV_TENSOR_NHWC ? std::max(0, ndim - 2) : ndim - 1;
 
-    reqs.pitchBytes[ndim - 1] = dtype.strideBytes();
+    reqs.strides[ndim - 1] = dtype.strideBytes();
     for (int d = ndim - 2; d >= 0; --d)
     {
         if (d == firstPacked - 1)
         {
-            reqs.pitchBytes[d] = util::RoundUpPowerOfTwo(reqs.shape[d + 1] * reqs.pitchBytes[d + 1], rowAlign);
+            reqs.strides[d] = util::RoundUpPowerOfTwo(reqs.shape[d + 1] * reqs.strides[d + 1], rowAlign);
         }
         else
         {
-            reqs.pitchBytes[d] = reqs.pitchBytes[d + 1] * reqs.shape[d + 1];
+            reqs.strides[d] = reqs.strides[d + 1] * reqs.shape[d + 1];
         }
     }
 
-    AddBuffer(reqs.mem.deviceMem, reqs.pitchBytes[0] * reqs.shape[0], reqs.alignBytes);
+    AddBuffer(reqs.mem.deviceMem, reqs.strides[0] * reqs.shape[0], reqs.alignBytes);
 
     return reqs;
 }
@@ -195,13 +195,13 @@ Tensor::Tensor(NVCVTensorRequirements reqs, IAllocator &alloc)
     // Assuming reqs are already validated during its creation
 
     int64_t bufSize = CalcTotalSizeBytes(m_reqs.mem.deviceMem);
-    m_buffer        = m_alloc.allocDeviceMem(bufSize, m_reqs.alignBytes);
-    NVCV_ASSERT(m_buffer != nullptr);
+    m_memBuffer     = m_alloc.allocDeviceMem(bufSize, m_reqs.alignBytes);
+    NVCV_ASSERT(m_memBuffer != nullptr);
 }
 
 Tensor::~Tensor()
 {
-    m_alloc.freeDeviceMem(m_buffer, CalcTotalSizeBytes(m_reqs.mem.deviceMem), m_reqs.alignBytes);
+    m_alloc.freeDeviceMem(m_memBuffer, CalcTotalSizeBytes(m_reqs.mem.deviceMem), m_reqs.alignBytes);
 }
 
 int32_t Tensor::ndim() const
@@ -231,7 +231,7 @@ IAllocator &Tensor::alloc() const
 
 void Tensor::exportData(NVCVTensorData &data) const
 {
-    data.bufferType = NVCV_TENSOR_BUFFER_PITCH_DEVICE;
+    data.bufferType = NVCV_TENSOR_BUFFER_STRIDED_DEVICE;
 
     data.dtype  = m_reqs.dtype;
     data.layout = m_reqs.layout;
@@ -239,14 +239,14 @@ void Tensor::exportData(NVCVTensorData &data) const
 
     memcpy(data.shape, m_reqs.shape, sizeof(data.shape));
 
-    NVCVTensorBufferPitch &buf = data.buffer.pitch;
+    NVCVTensorBufferStrided &buf = data.buffer.strided;
     {
-        static_assert(sizeof(buf.pitchBytes) == sizeof(m_reqs.pitchBytes));
+        static_assert(sizeof(buf.strides) == sizeof(m_reqs.strides));
         static_assert(
-            std::is_same_v<std::decay_t<decltype(buf.pitchBytes[0])>, std::decay_t<decltype(m_reqs.pitchBytes[0])>>);
-        memcpy(buf.pitchBytes, m_reqs.pitchBytes, sizeof(buf.pitchBytes));
+            std::is_same_v<std::decay_t<decltype(buf.strides[0])>, std::decay_t<decltype(m_reqs.strides[0])>>);
+        memcpy(buf.strides, m_reqs.strides, sizeof(buf.strides));
 
-        buf.data = m_buffer;
+        buf.basePtr = reinterpret_cast<NVCVByte *>(m_memBuffer);
     }
 }
 

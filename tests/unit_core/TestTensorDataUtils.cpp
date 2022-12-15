@@ -59,14 +59,13 @@ NVCV_TEST_SUITE_P(TensorDataUtils, test::ValueList<int, int, int, uint8_t, nvcv:
 template<typename DT>
 static void compareTensor(nvcv::Tensor &tensor, DT fillVal)
 {
-    auto            ac       = nvcv::TensorDataAccessPitch::Create(*tensor.exportData());
-    int             elements = ac->samplePitchBytes() / sizeof(DT);
+    auto            ac       = nvcv::TensorDataAccessStrided::Create(*tensor.exportData());
+    int             elements = ac->sampleStride() / sizeof(DT);
     std::vector<DT> goldVec(elements, static_cast<DT>(fillVal));
     for (int i = 0; i < ac->numSamples(); ++i)
     {
         std::vector<DT> readVec(elements);
-        if (cudaMemcpy(readVec.data(), ac->sampleData(i), ac->samplePitchBytes(), cudaMemcpyDeviceToHost)
-            != cudaSuccess)
+        if (cudaMemcpy(readVec.data(), ac->sampleData(i), ac->sampleStride(), cudaMemcpyDeviceToHost) != cudaSuccess)
             throw std::runtime_error("CudaMemcpy failed");
         if (goldVec != readVec)
             throw std::runtime_error("Vectors not equal");
@@ -78,8 +77,8 @@ static void compareTensor(nvcv::Tensor &tensor, DT fillVal)
 template<typename DT>
 static void GetSetTensor(nvcv::Tensor &tensor)
 {
-    auto                          ac          = nvcv::TensorDataAccessPitch::Create(*tensor.exportData());
-    int                           numElements = ac->samplePitchBytes() / sizeof(DT);
+    auto                          ac          = nvcv::TensorDataAccessStrided::Create(*tensor.exportData());
+    int                           numElements = ac->sampleStride() / sizeof(DT);
     std::vector<DT>               vec(numElements);
     std::default_random_engine    rng;
     std::uniform_int_distribution rand;
@@ -97,7 +96,7 @@ static void GetSetTensor(nvcv::Tensor &tensor)
 template<typename DT>
 static void checkRndRange(nvcv::Tensor &tensor, DT lowBound, DT highBound)
 {
-    auto tDataAc = nvcv::TensorDataAccessPitch::Create(*tensor.exportData());
+    auto tDataAc = nvcv::TensorDataAccessStrided::Create(*tensor.exportData());
 
     for (int sample = 0; sample < tDataAc->numSamples(); sample++)
     {
@@ -196,9 +195,9 @@ TEST(TensorDataUtils, SanityCvImageData)
     EXPECT_NE(cvImage2, cvImage3);
     EXPECT_NE(cvImage3, cvImage4);
 
-    auto tDataAc1 = nvcv::TensorDataAccessPitchImagePlanar::Create(*tensor1.exportData());
-    EXPECT_EQ(tDataAc1->rowPitchBytes(), cvImage1.rowPitchBytes());
-    EXPECT_EQ(tDataAc1->planePitchBytes(), cvImage1.planePitchBytes());
+    auto tDataAc1 = nvcv::TensorDataAccessStridedImagePlanar::Create(*tensor1.exportData());
+    EXPECT_EQ(tDataAc1->rowStride(), cvImage1.rowStride());
+    EXPECT_EQ(tDataAc1->planeStride(), cvImage1.planeStride());
     EXPECT_EQ(cvImage1.size().w, width);
     EXPECT_EQ(cvImage1.size().h, height);
     EXPECT_EQ(cvImage1.bytesPerC(), 4);
@@ -243,7 +242,7 @@ TEST(TensorDataUtils, SetCvImageData)
     EXPECT_EQ(*dataPtr, 0xCA);
 
     //last row
-    dataPtr = cvTensor.getVector().data() + (cvTensor.size().h - 1) * cvTensor.rowPitchBytes();
+    dataPtr = cvTensor.getVector().data() + (cvTensor.size().h - 1) * cvTensor.rowStride();
     EXPECT_EQ(*dataPtr, 0xCA);
     dataPtr += sizeof(uint8_t);
     EXPECT_EQ(*dataPtr, 0xCA);
@@ -281,23 +280,23 @@ TEST(TensorDataUtils, SetCvImageDataP)
 
     float *dataPtr = (float *)cvTensorFp.getVector().data();
     EXPECT_EQ(*dataPtr, .5f);
-    EXPECT_EQ(*(dataPtr + cvTensorFp.planePitchBytes() / sizeof(float)), 1.0f);
-    EXPECT_EQ(*(dataPtr + 2 * cvTensorFp.planePitchBytes() / sizeof(float)), .5f);
-    EXPECT_EQ(*(dataPtr + 3 * cvTensorFp.planePitchBytes() / sizeof(float)), .5f);
+    EXPECT_EQ(*(dataPtr + cvTensorFp.planeStride() / sizeof(float)), 1.0f);
+    EXPECT_EQ(*(dataPtr + 2 * cvTensorFp.planeStride() / sizeof(float)), .5f);
+    EXPECT_EQ(*(dataPtr + 3 * cvTensorFp.planeStride() / sizeof(float)), .5f);
 
     // last col should be 1.0
     float *lastCol = (float *)(cvTensorFp.getVector().data() + (cvTensorFp.size().w - 1) * sizeof(float));
     EXPECT_EQ(*lastCol, 1.0f);
-    EXPECT_EQ(*(lastCol + cvTensorFp.planePitchBytes() / sizeof(float)), 1.0f);
-    EXPECT_EQ(*(lastCol + 2 * cvTensorFp.planePitchBytes() / sizeof(float)), 1.0f);
-    EXPECT_EQ(*(lastCol + 3 * cvTensorFp.planePitchBytes() / sizeof(float)), 1.0f);
+    EXPECT_EQ(*(lastCol + cvTensorFp.planeStride() / sizeof(float)), 1.0f);
+    EXPECT_EQ(*(lastCol + 2 * cvTensorFp.planeStride() / sizeof(float)), 1.0f);
+    EXPECT_EQ(*(lastCol + 3 * cvTensorFp.planeStride() / sizeof(float)), 1.0f);
 
     // last row should be 1.0
-    float *lastRow = (float *)(cvTensorFp.getVector().data() + (cvTensorFp.size().h - 1) * cvTensorFp.rowPitchBytes());
+    float *lastRow = (float *)(cvTensorFp.getVector().data() + (cvTensorFp.size().h - 1) * cvTensorFp.rowStride());
     EXPECT_EQ((float)*lastRow, 1.0f);
-    EXPECT_EQ(*(lastRow + cvTensorFp.planePitchBytes() / sizeof(float)), 1.0f);
-    EXPECT_EQ(*(lastRow + 2 * cvTensorFp.planePitchBytes() / sizeof(float)), 1.0f);
-    EXPECT_EQ(*(lastRow + 3 * cvTensorFp.planePitchBytes() / sizeof(float)), 1.0f);
+    EXPECT_EQ(*(lastRow + cvTensorFp.planeStride() / sizeof(float)), 1.0f);
+    EXPECT_EQ(*(lastRow + 2 * cvTensorFp.planeStride() / sizeof(float)), 1.0f);
+    EXPECT_EQ(*(lastRow + 3 * cvTensorFp.planeStride() / sizeof(float)), 1.0f);
 
     EXPECT_EQ(*cvTensorFp.item<float>(0, 0, 0), .5f);
     EXPECT_EQ(*cvTensorFp.item<float>(0, 0, 1), 1.0f);

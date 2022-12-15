@@ -57,9 +57,9 @@ private:
 
     mutable int32_t m_dirtyStartingFromIndex;
 
-    int32_t               m_numImages;
-    NVCVImageBufferPitch *m_hostImagesBuffer;
-    NVCVImageBufferPitch *m_devImagesBuffer;
+    int32_t                 m_numImages;
+    NVCVImageBufferStrided *m_hostImagesBuffer;
+    NVCVImageBufferStrided *m_devImagesBuffer;
 
     NVCVImageFormat *m_hostFormatsBuffer;
     NVCVImageFormat *m_devFormatsBuffer;

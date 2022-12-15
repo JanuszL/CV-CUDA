@@ -40,8 +40,8 @@ inline T &ValueAt(std::vector<uint8_t> &vec, long3 pitches, int b, int y, int x)
 }
 
 template<typename T>
-inline void flip(std::vector<uint8_t> &hDst, const long3 &dstPitches, const std::vector<uint8_t> &hSrc,
-                 const long3 &srcPitches, const int3 &shape, int flipCode)
+inline void flip(std::vector<uint8_t> &hDst, const long3 &dstStrides, const std::vector<uint8_t> &hSrc,
+                 const long3 &srcStrides, const int3 &shape, int flipCode)
 {
     using BT  = cuda::BaseType<T>;
     int2 size = cuda::DropCast<2>(shape);
@@ -55,18 +55,18 @@ inline void flip(std::vector<uint8_t> &hDst, const long3 &dstPitches, const std:
                 T srcValue;
                 if (flipCode > 0)
                 {
-                    srcValue = ValueAt<T>(hSrc, srcPitches, b, y, (size.x - 1 - x));
+                    srcValue = ValueAt<T>(hSrc, srcStrides, b, y, (size.x - 1 - x));
                 }
                 else if (flipCode == 0)
                 {
-                    srcValue = ValueAt<T>(hSrc, srcPitches, b, (size.y - 1 - y), x);
+                    srcValue = ValueAt<T>(hSrc, srcStrides, b, (size.y - 1 - y), x);
                 }
                 else
                 {
-                    srcValue = ValueAt<T>(hSrc, srcPitches, b, (size.y - 1 - y), (size.x - 1 - x));
+                    srcValue = ValueAt<T>(hSrc, srcStrides, b, (size.y - 1 - y), (size.x - 1 - x));
                 }
 
-                ValueAt<T>(hDst, dstPitches, b, y, x) = cuda::SaturateCast<BT>(srcValue);
+                ValueAt<T>(hDst, dstStrides, b, y, x) = cuda::SaturateCast<BT>(srcValue);
             }
         }
     }
@@ -75,8 +75,8 @@ inline void flip(std::vector<uint8_t> &hDst, const long3 &dstPitches, const std:
 #define NVCV_TEST_INST(TYPE)                                                                                         \
     template const TYPE &ValueAt<TYPE>(const std::vector<uint8_t> &, long3, int, int, int);                          \
     template TYPE       &ValueAt<TYPE>(std::vector<uint8_t> &, long3, int, int, int);                                \
-    template void flip<TYPE>(std::vector<uint8_t> & hDst, const long3 &dstPitches, const std::vector<uint8_t> &hSrc, \
-                             const long3 &srcPitches, const int3 &shape, int flipCode)
+    template void flip<TYPE>(std::vector<uint8_t> & hDst, const long3 &dstStrides, const std::vector<uint8_t> &hSrc, \
+                             const long3 &srcStrides, const int3 &shape, int flipCode)
 
 NVCV_TEST_INST(uint8_t);
 NVCV_TEST_INST(ushort);
@@ -89,8 +89,8 @@ NVCV_TEST_INST(float3);
 
 } // namespace detail
 
-void FlipCPU(std::vector<uint8_t> &hDst, const long3 &dstPitches, const std::vector<uint8_t> &hSrc,
-             const long3 &srcPitches, const int3 &shape, const ImageFormat &format, int flipCode)
+void FlipCPU(std::vector<uint8_t> &hDst, const long3 &dstStrides, const std::vector<uint8_t> &hSrc,
+             const long3 &srcStrides, const int3 &shape, const ImageFormat &format, int flipCode)
 {
     NVCV_ASSERT(format.numPlanes() == 1);
 
@@ -98,7 +98,7 @@ void FlipCPU(std::vector<uint8_t> &hDst, const long3 &dstPitches, const std::vec
     {
 #define NVCV_TEST_CASE(DATATYPE, TYPE)                                           \
     case NVCV_DATA_TYPE_##DATATYPE:                                              \
-        detail::flip<TYPE>(hDst, dstPitches, hSrc, srcPitches, shape, flipCode); \
+        detail::flip<TYPE>(hDst, dstStrides, hSrc, srcStrides, shape, flipCode); \
         break
 
         NVCV_TEST_CASE(U8, uint8_t);

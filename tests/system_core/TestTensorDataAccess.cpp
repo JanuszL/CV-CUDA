@@ -27,18 +27,18 @@ namespace nvcv = nv::cv;
 
 namespace {
 
-class MyTensorDataPitch : public nvcv::ITensorDataPitch
+class MyTensorDataStrided : public nvcv::ITensorDataStrided
 {
 public:
-    MyTensorDataPitch(nvcv::TensorShape tshape, nvcv::TensorShape::ShapeType pitchBytes, void *mem = nullptr)
+    MyTensorDataStrided(nvcv::TensorShape tshape, nvcv::TensorShape::ShapeType strides, void *basePtr = nullptr)
         : m_tshape(std::move(tshape))
-        , m_mem(mem)
-        , m_pitchBytes(std::move(pitchBytes))
+        , m_basePtr(basePtr)
+        , m_strides(std::move(strides))
     {
-        assert((int)pitchBytes.size() == tshape.ndim());
+        assert((int)strides.size() == tshape.ndim());
 
         NVCVTensorData &data = this->cdata();
-        data.bufferType      = NVCV_TENSOR_BUFFER_PITCH_DEVICE;
+        data.bufferType      = NVCV_TENSOR_BUFFER_STRIDED_DEVICE;
         data.ndim            = tshape.size();
         data.dtype           = NVCV_DATA_TYPE_U8;
         data.layout          = tshape.layout();
@@ -46,235 +46,235 @@ public:
         const nvcv::TensorShape::ShapeType &shape = tshape.shape();
         std::copy(shape.begin(), shape.end(), data.shape);
 
-        NVCVTensorBufferPitch &buffer = data.buffer.pitch;
-        buffer.data                   = mem;
+        NVCVTensorBufferStrided &buffer = data.buffer.strided;
+        buffer.basePtr                  = reinterpret_cast<NVCVByte *>(basePtr);
 
-        std::copy(pitchBytes.begin(), pitchBytes.end(), buffer.pitchBytes);
+        std::copy(strides.begin(), strides.end(), buffer.strides);
     }
 
-    bool operator==(const MyTensorDataPitch &that) const
+    bool operator==(const MyTensorDataStrided &that) const
     {
-        return std::tie(m_tshape, m_mem, m_pitchBytes) == std::tie(that.m_tshape, that.m_mem, that.m_pitchBytes);
+        return std::tie(m_tshape, m_basePtr, m_strides) == std::tie(that.m_tshape, that.m_basePtr, that.m_strides);
     }
 
-    bool operator<(const MyTensorDataPitch &that) const
+    bool operator<(const MyTensorDataStrided &that) const
     {
-        return std::tie(m_tshape, m_mem, m_pitchBytes) < std::tie(that.m_tshape, that.m_mem, that.m_pitchBytes);
+        return std::tie(m_tshape, m_basePtr, m_strides) < std::tie(that.m_tshape, that.m_basePtr, that.m_strides);
     }
 
-    friend void Update(nv::cv::util::HashMD5 &hash, const MyTensorDataPitch &d)
+    friend void Update(nv::cv::util::HashMD5 &hash, const MyTensorDataStrided &d)
     {
-        Update(hash, d.m_tshape, d.m_mem, d.m_pitchBytes);
+        Update(hash, d.m_tshape, d.m_basePtr, d.m_strides);
     }
 
-    friend std::ostream &operator<<(std::ostream &out, const MyTensorDataPitch &d)
+    friend std::ostream &operator<<(std::ostream &out, const MyTensorDataStrided &d)
     {
-        return out << d.m_tshape << ",pitch=" << d.m_pitchBytes << ",mem=" << d.m_mem;
+        return out << d.m_tshape << ",strides=" << d.m_strides << ",basePtr=" << d.m_basePtr;
     }
 
 private:
     nvcv::TensorShape            m_tshape;
-    void                        *m_mem;
-    nvcv::TensorShape::ShapeType m_pitchBytes;
+    void                        *m_basePtr;
+    nvcv::TensorShape::ShapeType m_strides;
 };
 
 } // namespace
 
-// TensorDataAccessPitch::samplePitchBytes ========================
+// TensorDataAccessStrided::sampleStride ========================
 
 // clang-format off
-NVCV_TEST_SUITE_P(TensorDataAccessPitch_SamplePitchBytes_ExecTests,
-      test::ValueList<test::Param<"tdata",MyTensorDataPitch>,
+NVCV_TEST_SUITE_P(TensorDataAccessStrided_SampleStride_ExecTests,
+      test::ValueList<test::Param<"tdata",MyTensorDataStrided>,
                       test::Param<"gold",int64_t>>
       {
-        {MyTensorDataPitch({{4,34,2},"NxC"},{160,4,2}),160},
-        {MyTensorDataPitch({{4,34},"xN"},{10,4}),0},
+        {MyTensorDataStrided({{4,34,2},"NxC"},{160,4,2}),160},
+        {MyTensorDataStrided({{4,34},"xN"},{10,4}),0},
       });
 
 // clang-format on
 
-TEST_P(TensorDataAccessPitch_SamplePitchBytes_ExecTests, works)
+TEST_P(TensorDataAccessStrided_SampleStride_ExecTests, works)
 {
-    const MyTensorDataPitch &input = std::get<0>(GetParam());
-    const int64_t           &gold  = std::get<1>(GetParam());
+    const MyTensorDataStrided &input = std::get<0>(GetParam());
+    const int64_t             &gold  = std::get<1>(GetParam());
 
-    auto info = nvcv::TensorDataAccessPitch::Create(input);
+    auto info = nvcv::TensorDataAccessStrided::Create(input);
     ASSERT_TRUE(info);
-    EXPECT_EQ(gold, info->samplePitchBytes());
+    EXPECT_EQ(gold, info->sampleStride());
 }
 
-// TensorDataAccessPitch::sampleData ========================
+// TensorDataAccessStrided::sampleData ========================
 
 static std::byte *TEST_BASE_ADDR = reinterpret_cast<std::byte *>(0x123);
 
 // clang-format off
-NVCV_TEST_SUITE_P(TensorDataAccessPitch_SampleData_ExecTests,
-      test::ValueList<test::Param<"tdata",MyTensorDataPitch>,
+NVCV_TEST_SUITE_P(TensorDataAccessStrided_SampleData_ExecTests,
+      test::ValueList<test::Param<"tdata",MyTensorDataStrided>,
                       test::Param<"idx",int>,
                       test::Param<"gold",void *>>
       {
-        {MyTensorDataPitch({{4,34,2},"NxC"},{160,4,2},TEST_BASE_ADDR),0,TEST_BASE_ADDR+0},
-        {MyTensorDataPitch({{4,34,2},"NxC"},{160,4,2},TEST_BASE_ADDR),1,TEST_BASE_ADDR+160},
-        {MyTensorDataPitch({{4,34,2},"NxC"},{160,4,2},TEST_BASE_ADDR),2,TEST_BASE_ADDR+2*160},
+        {MyTensorDataStrided({{4,34,2},"NxC"},{160,4,2},TEST_BASE_ADDR),0,TEST_BASE_ADDR+0},
+        {MyTensorDataStrided({{4,34,2},"NxC"},{160,4,2},TEST_BASE_ADDR),1,TEST_BASE_ADDR+160},
+        {MyTensorDataStrided({{4,34,2},"NxC"},{160,4,2},TEST_BASE_ADDR),2,TEST_BASE_ADDR+2*160},
       });
 
 // clang-format on
 
-TEST_P(TensorDataAccessPitch_SampleData_ExecTests, works)
+TEST_P(TensorDataAccessStrided_SampleData_ExecTests, works)
 {
-    const MyTensorDataPitch &input = std::get<0>(GetParam());
-    const int               &idx   = std::get<1>(GetParam());
-    void                    *gold  = std::get<2>(GetParam());
+    const MyTensorDataStrided &input = std::get<0>(GetParam());
+    const int                 &idx   = std::get<1>(GetParam());
+    void                      *gold  = std::get<2>(GetParam());
 
-    auto info = nvcv::TensorDataAccessPitch::Create(input);
+    auto info = nvcv::TensorDataAccessStrided::Create(input);
     ASSERT_TRUE(info);
     EXPECT_EQ(gold, info->sampleData(idx));
 }
 
-// TensorDataAccessPitchImage::chPitchBytes ========================
+// TensorDataAccessStridedImage::chStride ========================
 
 // clang-format off
-NVCV_TEST_SUITE_P(TensorDataAccessPitchImage_ChannelPitchBytes_ExecTests,
-      test::ValueList<test::Param<"tdata",MyTensorDataPitch>,
+NVCV_TEST_SUITE_P(TensorDataAccessStridedImage_ChannelStride_ExecTests,
+      test::ValueList<test::Param<"tdata",MyTensorDataStrided>,
                       test::Param<"gold",int64_t>>
       {
-        {MyTensorDataPitch({{4,34,2},"NWC"},{160,4,2}),2},
-        {MyTensorDataPitch({{4,34},"NW"},{160,2}),0},
-        {MyTensorDataPitch({{4,34,3,6},"NCHW"},{1042,324,29,12}),324},
+        {MyTensorDataStrided({{4,34,2},"NWC"},{160,4,2}),2},
+        {MyTensorDataStrided({{4,34},"NW"},{160,2}),0},
+        {MyTensorDataStrided({{4,34,3,6},"NCHW"},{1042,324,29,12}),324},
       });
 
 // clang-format on
 
-TEST_P(TensorDataAccessPitchImage_ChannelPitchBytes_ExecTests, works)
+TEST_P(TensorDataAccessStridedImage_ChannelStride_ExecTests, works)
 {
-    const MyTensorDataPitch &input = std::get<0>(GetParam());
-    const int64_t           &gold  = std::get<1>(GetParam());
+    const MyTensorDataStrided &input = std::get<0>(GetParam());
+    const int64_t             &gold  = std::get<1>(GetParam());
 
-    auto info = nvcv::TensorDataAccessPitchImage::Create(input);
+    auto info = nvcv::TensorDataAccessStridedImage::Create(input);
     ASSERT_TRUE(info);
-    EXPECT_EQ(gold, info->chPitchBytes());
+    EXPECT_EQ(gold, info->chStride());
 }
 
-// TensorDataAccessPitchImage::chData ========================
+// TensorDataAccessStridedImage::chData ========================
 
 // clang-format off
-NVCV_TEST_SUITE_P(TensorDataAccessPitch_ChannelData_ExecTests,
-      test::ValueList<test::Param<"tdata",MyTensorDataPitch>,
+NVCV_TEST_SUITE_P(TensorDataAccessStrided_ChannelData_ExecTests,
+      test::ValueList<test::Param<"tdata",MyTensorDataStrided>,
                       test::Param<"idx",int>,
                       test::Param<"gold",void *>>
       {
-        {MyTensorDataPitch({{4,34,3},"NWC"},{160,4,2}, TEST_BASE_ADDR),0, TEST_BASE_ADDR+0},
-        {MyTensorDataPitch({{4,34,3},"NWC"},{160,4,2}, TEST_BASE_ADDR),1, TEST_BASE_ADDR+2},
-        {MyTensorDataPitch({{4,34,3},"NWC"},{160,4,2}, TEST_BASE_ADDR),2, TEST_BASE_ADDR+4},
+        {MyTensorDataStrided({{4,34,3},"NWC"},{160,4,2}, TEST_BASE_ADDR),0, TEST_BASE_ADDR+0},
+        {MyTensorDataStrided({{4,34,3},"NWC"},{160,4,2}, TEST_BASE_ADDR),1, TEST_BASE_ADDR+2},
+        {MyTensorDataStrided({{4,34,3},"NWC"},{160,4,2}, TEST_BASE_ADDR),2, TEST_BASE_ADDR+4},
       });
 
 // clang-format on
 
-TEST_P(TensorDataAccessPitch_ChannelData_ExecTests, works)
+TEST_P(TensorDataAccessStrided_ChannelData_ExecTests, works)
 {
-    const MyTensorDataPitch &input = std::get<0>(GetParam());
-    const int               &idx   = std::get<1>(GetParam());
-    void                    *gold  = std::get<2>(GetParam());
+    const MyTensorDataStrided &input = std::get<0>(GetParam());
+    const int                 &idx   = std::get<1>(GetParam());
+    void                      *gold  = std::get<2>(GetParam());
 
-    auto info = nvcv::TensorDataAccessPitchImage::Create(input);
+    auto info = nvcv::TensorDataAccessStridedImage::Create(input);
     ASSERT_TRUE(info);
     EXPECT_EQ(gold, info->chData(idx));
 }
 
-// TensorDataAccessPitchImage::rowPitchBytes ========================
+// TensorDataAccessStridedImage::rowStride ========================
 
 // clang-format off
-NVCV_TEST_SUITE_P(TensorDataAccessPitchImage_RowPitchBytes_ExecTests,
-      test::ValueList<test::Param<"tdata",MyTensorDataPitch>,
+NVCV_TEST_SUITE_P(TensorDataAccessStridedImage_RowStride_ExecTests,
+      test::ValueList<test::Param<"tdata",MyTensorDataStrided>,
                       test::Param<"gold",int64_t>>
       {
-        {MyTensorDataPitch({{4,6,34,2},"NHWC"},{160,32,4,2}),32},
-        {MyTensorDataPitch({{4,6,2},"NWC"},{160,32,2}),0},
+        {MyTensorDataStrided({{4,6,34,2},"NHWC"},{160,32,4,2}),32},
+        {MyTensorDataStrided({{4,6,2},"NWC"},{160,32,2}),0},
       });
 
 // clang-format on
 
-TEST_P(TensorDataAccessPitchImage_RowPitchBytes_ExecTests, works)
+TEST_P(TensorDataAccessStridedImage_RowStride_ExecTests, works)
 {
-    const MyTensorDataPitch &input = std::get<0>(GetParam());
-    const int64_t           &gold  = std::get<1>(GetParam());
+    const MyTensorDataStrided &input = std::get<0>(GetParam());
+    const int64_t             &gold  = std::get<1>(GetParam());
 
-    auto info = nvcv::TensorDataAccessPitchImage::Create(input);
+    auto info = nvcv::TensorDataAccessStridedImage::Create(input);
     ASSERT_TRUE(info);
-    EXPECT_EQ(gold, info->rowPitchBytes());
+    EXPECT_EQ(gold, info->rowStride());
 }
 
-// TensorDataAccessPitchImage::rowData ========================
+// TensorDataAccessStridedImage::rowData ========================
 
 // clang-format off
-NVCV_TEST_SUITE_P(TensorDataAccessPitch_RowData_ExecTests,
-      test::ValueList<test::Param<"tdata",MyTensorDataPitch>,
+NVCV_TEST_SUITE_P(TensorDataAccessStrided_RowData_ExecTests,
+      test::ValueList<test::Param<"tdata",MyTensorDataStrided>,
                       test::Param<"idx",int>,
                       test::Param<"gold",void *>>
       {
-        {MyTensorDataPitch({{4,6,34,2},"NHWC"},{160,32,4,2}, TEST_BASE_ADDR), 0, TEST_BASE_ADDR+0},
-        {MyTensorDataPitch({{4,6,34,2},"NHWC"},{160,32,4,2}, TEST_BASE_ADDR), 1, TEST_BASE_ADDR+32},
-        {MyTensorDataPitch({{4,6,34,2},"NHWC"},{160,32,4,2}, TEST_BASE_ADDR), 2, TEST_BASE_ADDR+64},
+        {MyTensorDataStrided({{4,6,34,2},"NHWC"},{160,32,4,2}, TEST_BASE_ADDR), 0, TEST_BASE_ADDR+0},
+        {MyTensorDataStrided({{4,6,34,2},"NHWC"},{160,32,4,2}, TEST_BASE_ADDR), 1, TEST_BASE_ADDR+32},
+        {MyTensorDataStrided({{4,6,34,2},"NHWC"},{160,32,4,2}, TEST_BASE_ADDR), 2, TEST_BASE_ADDR+64},
       });
 
 // clang-format on
 
-TEST_P(TensorDataAccessPitch_RowData_ExecTests, works)
+TEST_P(TensorDataAccessStrided_RowData_ExecTests, works)
 {
-    const MyTensorDataPitch &input = std::get<0>(GetParam());
-    const int               &idx   = std::get<1>(GetParam());
-    void                    *gold  = std::get<2>(GetParam());
+    const MyTensorDataStrided &input = std::get<0>(GetParam());
+    const int                 &idx   = std::get<1>(GetParam());
+    void                      *gold  = std::get<2>(GetParam());
 
-    auto info = nvcv::TensorDataAccessPitchImage::Create(input);
+    auto info = nvcv::TensorDataAccessStridedImage::Create(input);
     ASSERT_TRUE(info);
     EXPECT_EQ(gold, info->rowData(idx));
 }
 
-// TensorDataAccessPitchImagePlanar::planePitchBytes ========================
+// TensorDataAccessStridedImagePlanar::planeStride ========================
 
 // clang-format off
-NVCV_TEST_SUITE_P(TensorDataAccessPitchImagePlanar_planePitchBytes_ExecTests,
-      test::ValueList<test::Param<"tdata",MyTensorDataPitch>,
+NVCV_TEST_SUITE_P(TensorDataAccessStridedImagePlanar_planeStride_ExecTests,
+      test::ValueList<test::Param<"tdata",MyTensorDataStrided>,
                       test::Param<"gold",int64_t>>
       {
-        {MyTensorDataPitch({{4,6,34,2},"NHWC"},{160,32,4,2}),0},
-        {MyTensorDataPitch({{4,6,2},"NCW"},{160,32,2}),32},
+        {MyTensorDataStrided({{4,6,34,2},"NHWC"},{160,32,4,2}),0},
+        {MyTensorDataStrided({{4,6,2},"NCW"},{160,32,2}),32},
       });
 
 // clang-format on
 
-TEST_P(TensorDataAccessPitchImagePlanar_planePitchBytes_ExecTests, works)
+TEST_P(TensorDataAccessStridedImagePlanar_planeStride_ExecTests, works)
 {
-    const MyTensorDataPitch &input = std::get<0>(GetParam());
-    const int64_t           &gold  = std::get<1>(GetParam());
+    const MyTensorDataStrided &input = std::get<0>(GetParam());
+    const int64_t             &gold  = std::get<1>(GetParam());
 
-    auto info = nvcv::TensorDataAccessPitchImagePlanar::Create(input);
+    auto info = nvcv::TensorDataAccessStridedImagePlanar::Create(input);
     ASSERT_TRUE(info);
-    EXPECT_EQ(gold, info->planePitchBytes());
+    EXPECT_EQ(gold, info->planeStride());
 }
 
-// TensorDataAccessPitchImagePlanar::planeData ========================
+// TensorDataAccessStridedImagePlanar::planeData ========================
 
 // clang-format off
-NVCV_TEST_SUITE_P(TensorDataAccessPitchImagePlanar_planeData_ExecTests,
-      test::ValueList<test::Param<"tdata",MyTensorDataPitch>,
+NVCV_TEST_SUITE_P(TensorDataAccessStridedImagePlanar_planeData_ExecTests,
+      test::ValueList<test::Param<"tdata",MyTensorDataStrided>,
                       test::Param<"idx",int>,
                       test::Param<"gold",void *>>
       {
-        {MyTensorDataPitch({{4,6,2},"NCW"},{160,32,2}, TEST_BASE_ADDR),0, TEST_BASE_ADDR+0},
-        {MyTensorDataPitch({{4,6,2},"NCW"},{160,32,2}, TEST_BASE_ADDR),1, TEST_BASE_ADDR+32},
-        {MyTensorDataPitch({{4,6,2},"NCW"},{160,32,2}, TEST_BASE_ADDR),2, TEST_BASE_ADDR+64},
+        {MyTensorDataStrided({{4,6,2},"NCW"},{160,32,2}, TEST_BASE_ADDR),0, TEST_BASE_ADDR+0},
+        {MyTensorDataStrided({{4,6,2},"NCW"},{160,32,2}, TEST_BASE_ADDR),1, TEST_BASE_ADDR+32},
+        {MyTensorDataStrided({{4,6,2},"NCW"},{160,32,2}, TEST_BASE_ADDR),2, TEST_BASE_ADDR+64},
       });
 
 // clang-format on
 
-TEST_P(TensorDataAccessPitchImagePlanar_planeData_ExecTests, works)
+TEST_P(TensorDataAccessStridedImagePlanar_planeData_ExecTests, works)
 {
-    const MyTensorDataPitch &input = std::get<0>(GetParam());
-    const int               &idx   = std::get<1>(GetParam());
-    void                    *gold  = std::get<2>(GetParam());
+    const MyTensorDataStrided &input = std::get<0>(GetParam());
+    const int                 &idx   = std::get<1>(GetParam());
+    void                      *gold  = std::get<2>(GetParam());
 
-    auto info = nvcv::TensorDataAccessPitchImagePlanar::Create(input);
+    auto info = nvcv::TensorDataAccessStridedImagePlanar::Create(input);
     ASSERT_TRUE(info);
     EXPECT_EQ(gold, info->planeData(idx));
 }

@@ -119,7 +119,7 @@ NVCVTensorData FillNVCVTensorData(const py::buffer_info &info, std::optional<cv:
     {
         // according to https://docs.python.org/3/c-api/buffer.html,
         // when ndim is zero, buf points to a scalar, so its shape is [1]
-        // info.shape and info.pitchBytes are NULL.
+        // info.shape and info.strides are NULL.
         tensorData.shape[0] = 1;
     }
     else
@@ -132,33 +132,33 @@ NVCVTensorData FillNVCVTensorData(const py::buffer_info &info, std::optional<cv:
 
     // buffer type ------------
     tensorData.bufferType = bufType;
-    NVCV_ASSERT(bufType == NVCV_TENSOR_BUFFER_PITCH_DEVICE && "Only pitch-linear device buffer supported for now");
+    NVCV_ASSERT(bufType == NVCV_TENSOR_BUFFER_STRIDED_DEVICE && "Only pitch-linear device buffer supported for now");
 
-    NVCVTensorBufferPitch &dataPitch = tensorData.buffer.pitch;
+    NVCVTensorBufferStrided &dataStrided = tensorData.buffer.strided;
 
     // pitch ------------
     if (info.ndim == 0)
     {
-        // tensor only holds one scalar, to pitchBytes is itemsize
-        dataPitch.pitchBytes[0] = info.itemsize;
+        // tensor only holds one scalar, to strides is itemsize
+        dataStrided.strides[0] = info.itemsize;
     }
     else
     {
         for (int d = 0; d < info.ndim; ++d)
         {
-            dataPitch.pitchBytes[d] = info.strides[d];
+            dataStrided.strides[d] = info.strides[d];
         }
     }
 
-    // data ------------
-    dataPitch.data = info.ptr;
+    // Memory buffer ------------
+    dataStrided.basePtr = reinterpret_cast<NVCVByte *>(info.ptr);
 
     return tensorData;
 }
 
 NVCVTensorData FillNVCVTensorDataCUDA(const py::buffer_info &info, std::optional<cv::TensorLayout> layout)
 {
-    return FillNVCVTensorData(info, std::move(layout), NVCV_TENSOR_BUFFER_PITCH_DEVICE);
+    return FillNVCVTensorData(info, std::move(layout), NVCV_TENSOR_BUFFER_STRIDED_DEVICE);
 }
 
 } // namespace
@@ -167,7 +167,7 @@ std::shared_ptr<Tensor> Tensor::Wrap(CudaBuffer &buffer, std::optional<cv::Tenso
 {
     py::buffer_info info = buffer.request(true);
 
-    cv::TensorDataPitchDevice data{FillNVCVTensorDataCUDA(info, std::move(layout))};
+    cv::TensorDataStridedDevice data{FillNVCVTensorDataCUDA(info, std::move(layout))};
 
     // This is the key of a tensor wrapper.
     // All tensor wrappers have the same key.
@@ -316,11 +316,11 @@ auto Tensor::key() const -> const Key &
     return m_key;
 }
 
-static py::buffer_info ToPyBufferInfo(const cv::ITensorDataPitch &tensorData)
+static py::buffer_info ToPyBufferInfo(const cv::ITensorDataStrided &tensorData)
 {
     std::vector<ssize_t> shape(tensorData.shape().shape().begin(), tensorData.shape().shape().end());
-    std::vector<ssize_t> strides(tensorData.cdata().buffer.pitch.pitchBytes,
-                                 tensorData.cdata().buffer.pitch.pitchBytes + tensorData.ndim());
+    std::vector<ssize_t> strides(tensorData.cdata().buffer.strided.strides,
+                                 tensorData.cdata().buffer.strided.strides + tensorData.ndim());
 
     py::dtype dt = py::cast<py::dtype>(py::cast(tensorData.dtype()));
 
@@ -329,7 +329,7 @@ static py::buffer_info ToPyBufferInfo(const cv::ITensorDataPitch &tensorData)
     // to retrieve the corresponding py::buffer_info.
     // To avoid spurious data copies in py::array ctor, we create this dummy owner.
     py::tuple tmpOwner = py::make_tuple();
-    py::array tmp(dt, shape, strides, tensorData.data(), tmpOwner);
+    py::array tmp(dt, shape, strides, tensorData.basePtr(), tmpOwner);
 
     return tmp.request();
 }
@@ -338,14 +338,14 @@ static py::object ToPython(const cv::ITensorData &imgData, py::object owner)
 {
     py::object out;
 
-    auto *pitchData = dynamic_cast<const cv::ITensorDataPitch *>(&imgData);
-    if (!pitchData)
+    auto *stridedData = dynamic_cast<const cv::ITensorDataStrided *>(&imgData);
+    if (!stridedData)
     {
         throw std::runtime_error("Only tensors with pitch-linear data can be exported");
     }
 
-    py::buffer_info info = ToPyBufferInfo(*pitchData);
-    if (dynamic_cast<const cv::ITensorDataPitchDevice *>(pitchData))
+    py::buffer_info info = ToPyBufferInfo(*stridedData);
+    if (dynamic_cast<const cv::ITensorDataStridedDevice *>(stridedData))
     {
         if (owner)
         {

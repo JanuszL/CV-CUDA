@@ -37,13 +37,13 @@ AverageBlur::AverageBlur(cv::Size2D maxKernelSize, int maxBatchSize)
 void AverageBlur::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, cv::Size2D kernelSize,
                              int2 kernelAnchor, NVCVBorderType borderMode) const
 {
-    auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
+    auto *inData = dynamic_cast<const cv::ITensorDataStridedDevice *>(in.exportData());
     if (inData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be device-accessible, pitch-linear tensor");
     }
 
-    auto *outData = dynamic_cast<const cv::ITensorDataPitchDevice *>(out.exportData());
+    auto *outData = dynamic_cast<const cv::ITensorDataStridedDevice *>(out.exportData());
     if (outData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be device-accessible, pitch-linear tensor");
@@ -56,28 +56,28 @@ void AverageBlur::operator()(cudaStream_t stream, const cv::IImageBatchVarShape 
                              const cv::ITensor &kernelSize, const cv::ITensor &kernelAnchor,
                              NVCVBorderType borderMode) const
 {
-    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
+    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(in.exportData(stream));
     if (inData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
                                   "Input must be device-acessible, varshape pitch-linear image batch");
     }
 
-    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(out.exportData(stream));
+    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(out.exportData(stream));
     if (outData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
                                   "Output must be device-acessible, varshape pitch-linear image batch");
     }
 
-    auto *kernelSizeData = dynamic_cast<const cv::ITensorDataPitchDevice *>(kernelSize.exportData());
+    auto *kernelSizeData = dynamic_cast<const cv::ITensorDataStridedDevice *>(kernelSize.exportData());
     if (kernelSizeData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
                                   "Kernel size must be device-acessible, pitch-linear tensor");
     }
 
-    auto *kernelAnchorData = dynamic_cast<const cv::ITensorDataPitchDevice *>(kernelAnchor.exportData());
+    auto *kernelAnchorData = dynamic_cast<const cv::ITensorDataStridedDevice *>(kernelAnchor.exportData());
     if (kernelAnchorData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,

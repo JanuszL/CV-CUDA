@@ -109,12 +109,11 @@ NVCVImageRequirements Image::CalcRequirements(Size2D size, ImageFormat fmt, int3
     {
         Size2D planeSize = fmt.planeSize(size, p);
 
-        NVCV_ASSERT((size_t)p < sizeof(reqs.planeRowPitchBytes) / sizeof(reqs.planeRowPitchBytes[0]));
+        NVCV_ASSERT((size_t)p < sizeof(reqs.planeRowStride) / sizeof(reqs.planeRowStride[0]));
 
-        reqs.planeRowPitchBytes[p]
-            = util::RoundUpPowerOfTwo((int64_t)planeSize.w * fmt.planePixelStrideBytes(p), rowAlign);
+        reqs.planeRowStride[p] = util::RoundUpPowerOfTwo((int64_t)planeSize.w * fmt.planePixelStrideBytes(p), rowAlign);
 
-        AddBuffer(reqs.mem.deviceMem, reqs.planeRowPitchBytes[p] * planeSize.h, baseAlign);
+        AddBuffer(reqs.mem.deviceMem, reqs.planeRowStride[p] * planeSize.h, baseAlign);
     }
 
     return reqs;
@@ -130,13 +129,13 @@ Image::Image(NVCVImageRequirements reqs, IAllocator &alloc)
     }
 
     int64_t bufSize = CalcTotalSizeBytes(m_reqs.mem.deviceMem);
-    m_buffer        = m_alloc.allocDeviceMem(bufSize, m_reqs.alignBytes);
-    NVCV_ASSERT(m_buffer != nullptr);
+    m_memBuffer     = m_alloc.allocDeviceMem(bufSize, m_reqs.alignBytes);
+    NVCV_ASSERT(m_memBuffer != nullptr);
 }
 
 Image::~Image()
 {
-    m_alloc.freeDeviceMem(m_buffer, CalcTotalSizeBytes(m_reqs.mem.deviceMem), m_reqs.alignBytes);
+    m_alloc.freeDeviceMem(m_memBuffer, CalcTotalSizeBytes(m_reqs.mem.deviceMem), m_reqs.alignBytes);
 }
 
 NVCVTypeImage Image::type() const
@@ -166,24 +165,24 @@ void Image::exportData(NVCVImageData &data) const
     NVCV_ASSERT(fmt.memLayout() == NVCV_MEM_LAYOUT_PL);
 
     data.format     = m_reqs.format;
-    data.bufferType = NVCV_IMAGE_BUFFER_PITCH_DEVICE;
+    data.bufferType = NVCV_IMAGE_BUFFER_STRIDED_DEVICE;
 
-    NVCVImageBufferPitch &buf = data.buffer.pitch;
+    NVCVImageBufferStrided &buf = data.buffer.strided;
 
     buf.numPlanes            = fmt.numPlanes();
     int64_t planeOffsetBytes = 0;
     for (int p = 0; p < buf.numPlanes; ++p)
     {
-        NVCVImagePlanePitch &plane = buf.planes[p];
+        NVCVImagePlaneStrided &plane = buf.planes[p];
 
         Size2D planeSize = fmt.planeSize({m_reqs.width, m_reqs.height}, p);
 
-        plane.width      = planeSize.w;
-        plane.height     = planeSize.h;
-        plane.pitchBytes = m_reqs.planeRowPitchBytes[p];
-        plane.buffer     = reinterpret_cast<std::byte *>(m_buffer) + planeOffsetBytes;
+        plane.width     = planeSize.w;
+        plane.height    = planeSize.h;
+        plane.rowStride = m_reqs.planeRowStride[p];
+        plane.basePtr   = reinterpret_cast<NVCVByte *>(m_memBuffer) + planeOffsetBytes;
 
-        planeOffsetBytes += plane.height * plane.pitchBytes;
+        planeOffsetBytes += plane.height * plane.rowStride;
     }
 
     // Due to addr alignment, the allocated buffer could be larger than what we need,
@@ -214,37 +213,37 @@ void ImageWrapData::doValidateData(const NVCVImageData &data) const
     bool success = false;
     switch (data.bufferType)
     {
-    case NVCV_IMAGE_BUFFER_PITCH_DEVICE:
+    case NVCV_IMAGE_BUFFER_STRIDED_DEVICE:
         if (format.memLayout() != NVCV_MEM_LAYOUT_PL)
         {
             throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
                 << "Image buffer type PITCH_DEVICE not consistent with image format " << format;
         }
 
-        if (data.buffer.pitch.numPlanes < 1)
+        if (data.buffer.strided.numPlanes < 1)
         {
             throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
-                << "Number of planes must be >= 1, not " << data.buffer.pitch.numPlanes;
+                << "Number of planes must be >= 1, not " << data.buffer.strided.numPlanes;
         }
 
-        for (int p = 0; p < data.buffer.pitch.numPlanes; ++p)
+        for (int p = 0; p < data.buffer.strided.numPlanes; ++p)
         {
-            const NVCVImagePlanePitch &plane = data.buffer.pitch.planes[p];
+            const NVCVImagePlaneStrided &plane = data.buffer.strided.planes[p];
             if (plane.width < 1 || plane.height < 1)
             {
                 throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
                     << "Plane #" << p << " must have dimensions >= 1x1, not " << plane.width << "x" << plane.height;
             }
 
-            if (plane.buffer == nullptr)
+            if (plane.basePtr == nullptr)
             {
-                throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Plane #" << p << "'s buffer pointer must not be NULL";
+                throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Plane #" << p << "'s base pointer must not be NULL";
             }
         }
         success = true;
         break;
 
-    case NVCV_IMAGE_BUFFER_PITCH_HOST:
+    case NVCV_IMAGE_BUFFER_STRIDED_HOST:
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
             << "Wrapping of host memory into an image isn't currently supported";
 
@@ -268,9 +267,9 @@ IAllocator &ImageWrapData::alloc() const
 
 Size2D ImageWrapData::size() const
 {
-    if (m_data.bufferType == NVCV_IMAGE_BUFFER_PITCH_DEVICE)
+    if (m_data.bufferType == NVCV_IMAGE_BUFFER_STRIDED_DEVICE)
     {
-        return {m_data.buffer.pitch.planes[0].width, m_data.buffer.pitch.planes[0].height};
+        return {m_data.buffer.strided.planes[0].width, m_data.buffer.strided.planes[0].height};
     }
     else
     {

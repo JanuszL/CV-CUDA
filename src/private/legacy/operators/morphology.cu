@@ -86,7 +86,7 @@ __global__ void erode(SrcWrapper src, DstWrapper dst, Size2D dstSize, Size2D ker
 }
 
 template<typename D, NVCVBorderType B>
-void MorphFilter2DCaller(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+void MorphFilter2DCaller(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                          NVCVMorphologyType morph_type, Size2D kernelSize, int2 kernelAnchor, cudaStream_t stream)
 {
     using BT = cuda::BaseType<D>;
@@ -96,7 +96,7 @@ void MorphFilter2DCaller(const ITensorDataPitchDevice &inData, const ITensorData
     cuda::BorderWrapNHW<const D, B> src(inData, cuda::SetAll<D>(val));
     cuda::Tensor3DWrap<D>           dst(outData);
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
     Size2D dstSize{outAccess->numCols(), outAccess->numRows()};
     dim3   block(16, 16);
@@ -125,7 +125,7 @@ void MorphFilter2DCaller(const ITensorDataPitchDevice &inData, const ITensorData
 }
 
 template<typename D>
-void MorphFilter2D(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+void MorphFilter2D(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                    NVCVMorphologyType morph_type, Size2D kernelSize, int2 kernelAnchor, NVCVBorderType borderMode,
                    cudaStream_t stream)
 {
@@ -149,7 +149,7 @@ void MorphFilter2D(const ITensorDataPitchDevice &inData, const ITensorDataPitchD
     }
 }
 
-ErrorCode Morphology::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+ErrorCode Morphology::infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                             NVCVMorphologyType morph_type, Size2D mask_size, int2 anchor, int iteration,
                             const NVCVBorderType borderMode, cudaStream_t stream)
 {
@@ -157,10 +157,10 @@ ErrorCode Morphology::infer(const ITensorDataPitchDevice &inData, const ITensorD
     DataFormat output_format = GetLegacyDataFormat(outData.layout());
     DataType   data_type     = GetLegacyDataType(inData.dtype());
 
-    auto inAccess = nv::cv::TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
-    auto outAccess = nv::cv::TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     DataShape input_shape = GetLegacyDataShape(inAccess->infoShape());
@@ -212,14 +212,14 @@ ErrorCode Morphology::infer(const ITensorDataPitchDevice &inData, const ITensorD
         // just a unity copy here
         for (uint32_t i = 0; i < inAccess->numSamples(); ++i)
         {
-            void *inSampData  = inAccess->sampleData(i);
-            void *outSampData = outAccess->sampleData(i);
+            cv::Byte *inSampData  = inAccess->sampleData(i);
+            cv::Byte *outSampData = outAccess->sampleData(i);
 
             for (int32_t p = 0; p < inAccess->numPlanes(); ++p)
             {
-                checkCudaErrors(cudaMemcpy2DAsync(outAccess->planeData(p, outSampData), outAccess->rowPitchBytes(),
-                                                  inAccess->planeData(p, inSampData), inAccess->rowPitchBytes(),
-                                                  inAccess->numCols() * inAccess->colPitchBytes(), inAccess->numRows(),
+                checkCudaErrors(cudaMemcpy2DAsync(outAccess->planeData(p, outSampData), outAccess->rowStride(),
+                                                  inAccess->planeData(p, inSampData), inAccess->rowStride(),
+                                                  inAccess->numCols() * inAccess->colStride(), inAccess->numRows(),
                                                   cudaMemcpyDeviceToDevice, stream));
             }
         }
@@ -230,7 +230,7 @@ ErrorCode Morphology::infer(const ITensorDataPitchDevice &inData, const ITensorD
     mask_size_.h = mask_size_.h + (iteration - 1) * (mask_size_.h - 1);
     anchor_      = anchor_ * iteration;
 
-    typedef void (*filter2D_t)(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+    typedef void (*filter2D_t)(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                                NVCVMorphologyType morph_type, Size2D kernelSize, int2 kernelAnchor,
                                NVCVBorderType borderMode, cudaStream_t stream);
 

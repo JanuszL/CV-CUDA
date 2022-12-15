@@ -833,21 +833,21 @@ void StartTest(int srcWidth, int srcHeight, int dstWidth, int dstHeight, NVCVInt
     // Generate input
     nvcv::Tensor imgSrc(numberOfImages, {srcWidth, srcHeight}, fmt);
 
-    const auto *srcData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgSrc.exportData());
+    const auto *srcData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgSrc.exportData());
 
     ASSERT_NE(nullptr, srcData);
 
-    auto srcAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*srcData);
+    auto srcAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*srcData);
     ASSERT_TRUE(srcAccess);
 
     std::vector<std::vector<T>> srcVec(numberOfImages);
-    int                         srcVecRowPitch = srcWidth * fmt.planePixelStrideBytes(0);
+    int                         srcVecRowStride = srcWidth * fmt.planePixelStrideBytes(0);
 
     std::default_random_engine randEng;
 
     for (int i = 0; i < numberOfImages; ++i)
     {
-        srcVec[i].resize(srcHeight * srcVecRowPitch);
+        srcVec[i].resize(srcHeight * srcVecRowStride);
 
         std::default_random_engine             randEng{0};
         std::uniform_int_distribution<uint8_t> srcRand{0u, 255u};
@@ -858,8 +858,8 @@ void StartTest(int srcWidth, int srcHeight, int dstWidth, int dstHeight, NVCVInt
 
         // Copy input data to the GPU
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(srcAccess->sampleData(i), srcAccess->rowPitchBytes(), srcVec[i].data(), srcVecRowPitch,
-                               srcVecRowPitch, // vec has no padding
+                  cudaMemcpy2D(srcAccess->sampleData(i), srcAccess->rowStride(), srcVec[i].data(), srcVecRowStride,
+                               srcVecRowStride, // vec has no padding
                                srcHeight, cudaMemcpyHostToDevice));
     }
 
@@ -874,23 +874,23 @@ void StartTest(int srcWidth, int srcHeight, int dstWidth, int dstHeight, NVCVInt
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
     // Check result
-    const auto *dstData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgDst.exportData());
+    const auto *dstData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgDst.exportData());
     ASSERT_NE(nullptr, dstData);
 
-    auto dstAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*dstData);
+    auto dstAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*dstData);
     ASSERT_TRUE(dstAccess);
 
-    int dstVecRowPitch = dstWidth * fmt.planePixelStrideBytes(0);
+    int dstVecRowStride = dstWidth * fmt.planePixelStrideBytes(0);
     for (int i = 0; i < numberOfImages; ++i)
     {
         SCOPED_TRACE(i);
 
-        std::vector<T> testVec(dstHeight * dstVecRowPitch);
+        std::vector<T> testVec(dstHeight * dstVecRowStride);
 
         // Copy output data to Host
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(testVec.data(), dstVecRowPitch, dstAccess->sampleData(i), dstAccess->rowPitchBytes(),
-                               dstVecRowPitch, // vec has no padding
+                  cudaMemcpy2D(testVec.data(), dstVecRowStride, dstAccess->sampleData(i), dstAccess->rowStride(),
+                               dstVecRowStride, // vec has no padding
                                dstHeight, cudaMemcpyDeviceToHost));
 
         TestMat<T> test_in(srcHeight, srcWidth, fmt.planePixelStrideBytes(0), nvcv::DataKind::UNSIGNED, srcVec[i]);
@@ -956,25 +956,25 @@ void StartVarShapeTest(int srcWidthBase, int srcHeightBase, int dstWidthBase, in
     batchDst.pushBack(imgDst.begin(), imgDst.end());
 
     std::vector<std::vector<T>> srcVec(numberOfImages);
-    std::vector<int>            srcVecRowPitch(numberOfImages);
+    std::vector<int>            srcVecRowStride(numberOfImages);
 
     // Populate input
     for (int i = 0; i < numberOfImages; ++i)
     {
-        const auto *srcData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedDevice *>(imgSrc[i]->exportData());
         assert(srcData->numPlanes() == 1);
 
         int srcWidth  = srcData->plane(0).width;
         int srcHeight = srcData->plane(0).height;
 
-        int srcRowPitch = srcWidth * fmt.planePixelStrideBytes(0);
+        int srcRowStride = srcWidth * fmt.planePixelStrideBytes(0);
 
-        srcVecRowPitch[i] = srcRowPitch;
+        srcVecRowStride[i] = srcRowStride;
 
         std::default_random_engine             randEng{0};
         std::uniform_int_distribution<uint8_t> srcRand{0u, 255u};
 
-        srcVec[i].resize(srcHeight * srcRowPitch);
+        srcVec[i].resize(srcHeight * srcRowStride);
         if (std::is_same<T, float>::value)
             std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return srcRand(randEng) / 255.0f; });
         else
@@ -982,8 +982,8 @@ void StartVarShapeTest(int srcWidthBase, int srcHeightBase, int dstWidthBase, in
 
         // Copy input data to the GPU
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(srcData->plane(0).buffer, srcData->plane(0).pitchBytes, srcVec[i].data(), srcRowPitch,
-                               srcRowPitch, // vec has no padding
+                  cudaMemcpy2D(srcData->plane(0).basePtr, srcData->plane(0).rowStride, srcVec[i].data(), srcRowStride,
+                               srcRowStride, // vec has no padding
                                srcHeight, cudaMemcpyHostToDevice));
     }
 
@@ -1004,25 +1004,25 @@ void StartVarShapeTest(int srcWidthBase, int srcHeightBase, int dstWidthBase, in
     {
         SCOPED_TRACE(i);
 
-        const auto *srcData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedDevice *>(imgSrc[i]->exportData());
         assert(srcData->numPlanes() == 1);
         int srcWidth  = srcData->plane(0).width;
         int srcHeight = srcData->plane(0).height;
 
-        const auto *dstData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgDst[i]->exportData());
+        const auto *dstData = dynamic_cast<const nvcv::IImageDataStridedDevice *>(imgDst[i]->exportData());
         assert(dstData->numPlanes() == 1);
 
         int dstWidth  = dstData->plane(0).width;
         int dstHeight = dstData->plane(0).height;
 
-        int dstRowPitch = dstWidth * fmt.planePixelStrideBytes(0);
+        int dstRowStride = dstWidth * fmt.planePixelStrideBytes(0);
 
-        std::vector<T> testVec(dstHeight * dstRowPitch);
+        std::vector<T> testVec(dstHeight * dstRowStride);
 
         // Copy output data to Host
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(testVec.data(), dstRowPitch, dstData->plane(0).buffer, dstData->plane(0).pitchBytes,
-                               dstRowPitch, // vec has no padding
+                  cudaMemcpy2D(testVec.data(), dstRowStride, dstData->plane(0).basePtr, dstData->plane(0).rowStride,
+                               dstRowStride, // vec has no padding
                                dstHeight, cudaMemcpyDeviceToHost));
 
         TestMat<T> test_in(srcHeight, srcWidth, fmt.planePixelStrideBytes(0), nvcv::DataKind::UNSIGNED, srcVec[i]);

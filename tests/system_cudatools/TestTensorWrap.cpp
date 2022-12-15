@@ -136,14 +136,14 @@ TYPED_TEST(Tensor1DWrapTensorTest, correct_with_tensor)
 
     nv::cv::Tensor tensor({{123}, "N"}, nv::cv::DataType{dataType});
 
-    const auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(tensor.exportData());
+    const auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedDevice *>(tensor.exportData());
     ASSERT_NE(dev, nullptr);
 
     cuda::Tensor1DWrap<ValueType> wrap(*dev);
 
-    const ValueType *ptr0 = reinterpret_cast<const ValueType *>(dev->data());
+    const ValueType *ptr0 = reinterpret_cast<const ValueType *>(dev->basePtr());
     const ValueType *ptr1
-        = reinterpret_cast<const ValueType *>(reinterpret_cast<const uint8_t *>(dev->data()) + dev->pitchBytes(0));
+        = reinterpret_cast<const ValueType *>(reinterpret_cast<const uint8_t *>(dev->basePtr()) + dev->stride(0));
 
     EXPECT_EQ(wrap.ptr(0), ptr0);
     EXPECT_EQ(wrap.ptr(1), ptr1);
@@ -161,28 +161,28 @@ TYPED_TEST(Tensor1DWrapTensorTest, it_works_in_device)
 
     int1 size{static_cast<int>(tensor.shape()[0])};
 
-    const auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(tensor.exportData());
+    const auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedDevice *>(tensor.exportData());
     ASSERT_NE(dev, nullptr);
 
     cuda::Tensor1DWrap<ValueType> wrap(*dev);
 
     DeviceSetOnes(wrap, size, stream);
 
-    long        pitchBytes{dev->pitchBytes(0)};
-    std::size_t sizeBytes = size.x * pitchBytes;
+    long        stride{dev->stride(0)};
+    std::size_t sizeBytes = size.x * stride;
 
     std::vector<uint8_t> test(sizeBytes);
     std::vector<uint8_t> gold(sizeBytes);
 
     for (int i = 0; i < size.x; i++)
     {
-        *reinterpret_cast<ValueType *>(&gold[i * pitchBytes]) = cuda::SetAll<ValueType>(1);
+        *reinterpret_cast<ValueType *>(&gold[i * stride]) = cuda::SetAll<ValueType>(1);
     }
 
     // Get test data back
     ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
     ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpy(test.data(), dev->data(), sizeBytes, cudaMemcpyDeviceToHost));
+    ASSERT_EQ(cudaSuccess, cudaMemcpy(test.data(), dev->basePtr(), sizeBytes, cudaMemcpyDeviceToHost));
 
     EXPECT_EQ(test, gold);
 }
@@ -215,10 +215,10 @@ TYPED_TEST(Tensor2DWrapTest, correct_content_and_is_const)
     using InputType = decltype(input);
     using ValueType = typename InputType::value_type;
 
-    cuda::Tensor2DWrap<const ValueType> wrap(input.data(), input.pitchBytes);
+    cuda::Tensor2DWrap<const ValueType> wrap(input.data(), input.rowStride);
 
-    auto pitchBytes = wrap.pitchBytes();
-    EXPECT_EQ(pitchBytes[0], input.pitchBytes);
+    auto strides = wrap.strides();
+    EXPECT_EQ(strides[0], input.rowStride);
 
     EXPECT_TRUE(std::is_pointer_v<decltype(wrap.ptr())>);
     EXPECT_TRUE(std::is_const_v<std::remove_pointer_t<decltype(wrap.ptr())>>);
@@ -283,7 +283,7 @@ TYPED_TEST(Tensor2DWrapCopyTest, can_change_content)
     using InputType = decltype(test);
     using ValueType = typename InputType::value_type;
 
-    cuda::Tensor2DWrap<ValueType> wrap(test.data(), test.pitchBytes);
+    cuda::Tensor2DWrap<ValueType> wrap(test.data(), test.rowStride);
 
     for (int y = 0; y < gold.height; ++y)
     {
@@ -325,24 +325,24 @@ TYPED_TEST(Tensor2DWrapImageWrapTest, correct_with_image_wrap)
     using InputType = decltype(input);
     using ValueType = typename InputType::value_type;
 
-    nv::cv::ImageDataPitchDevice::Buffer buf;
-    buf.numPlanes            = 1;
-    buf.planes[0].width      = input.width;
-    buf.planes[0].height     = input.height;
-    buf.planes[0].pitchBytes = input.pitchBytes;
-    buf.planes[0].buffer     = reinterpret_cast<void *>(input.data());
+    nv::cv::ImageDataStridedDevice::Buffer buf;
+    buf.numPlanes           = 1;
+    buf.planes[0].width     = input.width;
+    buf.planes[0].height    = input.height;
+    buf.planes[0].rowStride = input.rowStride;
+    buf.planes[0].basePtr   = reinterpret_cast<NVCVByte *>(input.data());
 
     nv::cv::ImageWrapData img{
-        nv::cv::ImageDataPitchDevice{nv::cv::ImageFormat{imgFormat}, buf}
+        nv::cv::ImageDataStridedDevice{nv::cv::ImageFormat{imgFormat}, buf}
     };
 
-    auto *dev = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(img.exportData());
+    auto *dev = dynamic_cast<const nv::cv::IImageDataStridedDevice *>(img.exportData());
     ASSERT_NE(dev, nullptr);
 
     cuda::Tensor2DWrap<ValueType> wrap(*dev);
 
-    auto pitchBytes = wrap.pitchBytes();
-    EXPECT_EQ(pitchBytes[0], input.pitchBytes);
+    auto strides = wrap.strides();
+    EXPECT_EQ(strides[0], input.rowStride);
 
     for (int y = 0; y < input.height; ++y)
     {
@@ -350,9 +350,8 @@ TYPED_TEST(Tensor2DWrapImageWrapTest, correct_with_image_wrap)
         {
             int2 c2{x, y};
 
-            EXPECT_EQ(wrap[c2],
-                      *reinterpret_cast<ValueType *>((reinterpret_cast<uint8_t *>(dev->plane(0).buffer)
-                                                      + y * dev->plane(0).pitchBytes + x * sizeof(ValueType))));
+            EXPECT_EQ(wrap[c2], *reinterpret_cast<ValueType *>(
+                                    (dev->plane(0).basePtr + y * dev->plane(0).rowStride + x * sizeof(ValueType))));
         }
     }
 }
@@ -378,17 +377,16 @@ TYPED_TEST(Tensor2DWrapImageTest, correct_with_image)
 
     nv::cv::Image img({213, 211}, nv::cv::ImageFormat{imgFormat});
 
-    const auto *dev = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(img.exportData());
+    const auto *dev = dynamic_cast<const nv::cv::IImageDataStridedDevice *>(img.exportData());
     ASSERT_NE(dev, nullptr);
 
     cuda::Tensor2DWrap<ValueType> wrap(*dev);
 
-    auto pitchBytes = wrap.pitchBytes();
-    EXPECT_EQ(pitchBytes[0], dev->plane(0).pitchBytes);
+    auto strides = wrap.strides();
+    EXPECT_EQ(strides[0], dev->plane(0).rowStride);
 
-    const ValueType *ptr0 = reinterpret_cast<const ValueType *>(dev->plane(0).buffer);
-    const ValueType *ptr1 = reinterpret_cast<const ValueType *>(reinterpret_cast<const uint8_t *>(dev->plane(0).buffer)
-                                                                + dev->plane(0).pitchBytes);
+    const ValueType *ptr0 = reinterpret_cast<const ValueType *>(dev->plane(0).basePtr);
+    const ValueType *ptr1 = reinterpret_cast<const ValueType *>(dev->plane(0).basePtr + dev->plane(0).rowStride);
 
     EXPECT_EQ(wrap.ptr(0), ptr0);
     EXPECT_EQ(wrap.ptr(1), ptr1);
@@ -407,14 +405,14 @@ TYPED_TEST(Tensor2DWrapImageTest, it_works_in_device)
     int width  = img.size().w;
     int height = img.size().h;
 
-    const auto *dev = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(img.exportData());
+    const auto *dev = dynamic_cast<const nv::cv::IImageDataStridedDevice *>(img.exportData());
     ASSERT_NE(dev, nullptr);
 
     cuda::Tensor2DWrap<ValueType> wrap(*dev);
 
     DeviceSetOnes(wrap, {width, height}, stream);
 
-    long2       pitches{dev->plane(0).pitchBytes, sizeof(ValueType)};
+    long2       pitches{dev->plane(0).rowStride, sizeof(ValueType)};
     std::size_t sizeBytes = height * pitches.x;
 
     std::vector<uint8_t> test(sizeBytes);
@@ -431,7 +429,7 @@ TYPED_TEST(Tensor2DWrapImageTest, it_works_in_device)
     // Get test data back
     ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
     ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpy(test.data(), dev->plane(0).buffer, sizeBytes, cudaMemcpyDeviceToHost));
+    ASSERT_EQ(cudaSuccess, cudaMemcpy(test.data(), dev->plane(0).basePtr, sizeBytes, cudaMemcpyDeviceToHost));
 
     EXPECT_EQ(test, gold);
 }
@@ -465,11 +463,11 @@ TYPED_TEST(Tensor3DWrapTest, correct_content_and_is_const)
     using InputType = decltype(input);
     using ValueType = typename InputType::value_type;
 
-    cuda::Tensor3DWrap<const ValueType> wrap(input.data(), input.pitchBytes1, input.pitchBytes2);
+    cuda::Tensor3DWrap<const ValueType> wrap(input.data(), input.stride1, input.stride2);
 
-    auto pitchBytes = wrap.pitchBytes();
-    EXPECT_EQ(pitchBytes[0], input.pitchBytes1);
-    EXPECT_EQ(pitchBytes[1], input.pitchBytes2);
+    auto strides = wrap.strides();
+    EXPECT_EQ(strides[0], input.stride1);
+    EXPECT_EQ(strides[1], input.stride2);
 
     EXPECT_TRUE(std::is_pointer_v<decltype(wrap.ptr())>);
     EXPECT_TRUE(std::is_const_v<std::remove_pointer_t<decltype(wrap.ptr())>>);
@@ -543,7 +541,7 @@ TYPED_TEST(Tensor3DWrapCopyTest, can_change_content)
     using InputType = decltype(test);
     using ValueType = typename InputType::value_type;
 
-    cuda::Tensor3DWrap<ValueType> wrap(test.data(), test.pitchBytes1, test.pitchBytes2);
+    cuda::Tensor3DWrap<ValueType> wrap(test.data(), test.stride1, test.stride2);
 
     for (int b = 0; b < test.batches; ++b)
     {
@@ -571,18 +569,18 @@ TEST(Tensor3DWrapBigPitchDeathTest, it_dies)
     int64_t height = 2;
     int64_t width  = std::numeric_limits<int>::max();
 
-    nv::cv::DataType                      dt{NVCV_DATA_TYPE_U8};
-    nv::cv::TensorDataPitchDevice::Buffer buf;
-    buf.pitchBytes[2] = sizeof(DataType);
-    buf.pitchBytes[1] = width * buf.pitchBytes[2];
-    buf.pitchBytes[0] = height * buf.pitchBytes[1];
-    buf.data          = reinterpret_cast<void *>(123);
+    nv::cv::DataType                        dt{NVCV_DATA_TYPE_U8};
+    nv::cv::TensorDataStridedDevice::Buffer buf;
+    buf.strides[2] = sizeof(DataType);
+    buf.strides[1] = width * buf.strides[2];
+    buf.strides[0] = height * buf.strides[1];
+    buf.basePtr    = reinterpret_cast<NVCVByte *>(123);
 
     nv::cv::TensorWrapData tensor{
-        nv::cv::TensorDataPitchDevice{nv::cv::TensorShape{{1, height, width}, "NHW"}, dt, buf}
+        nv::cv::TensorDataStridedDevice{nv::cv::TensorShape{{1, height, width}, "NHW"}, dt, buf}
     };
 
-    const auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(tensor.exportData());
+    const auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedDevice *>(tensor.exportData());
     ASSERT_NE(dev, nullptr);
 
     EXPECT_DEATH({ cuda::Tensor3DWrap<DataType> wrap(*dev); }, "");
@@ -622,24 +620,24 @@ TYPED_TEST(Tensor3DWrapTensorWrapTest, correct_with_tensor_wrap)
     int h = input.height;
     int w = input.width;
 
-    nv::cv::TensorDataPitchDevice::Buffer buf;
-    buf.pitchBytes[0] = input.pitchBytes1;
-    buf.pitchBytes[1] = input.pitchBytes2;
-    buf.pitchBytes[2] = sizeof(ValueType);
-    buf.data          = reinterpret_cast<void *>(input.data());
+    nv::cv::TensorDataStridedDevice::Buffer buf;
+    buf.strides[0] = input.stride1;
+    buf.strides[1] = input.stride2;
+    buf.strides[2] = sizeof(ValueType);
+    buf.basePtr    = reinterpret_cast<NVCVByte *>(input.data());
 
     nv::cv::TensorWrapData tensor{
-        nv::cv::TensorDataPitchDevice{nv::cv::TensorShape{{n, h, w}, "NHW"}, nv::cv::DataType{dataType}, buf}
+        nv::cv::TensorDataStridedDevice{nv::cv::TensorShape{{n, h, w}, "NHW"}, nv::cv::DataType{dataType}, buf}
     };
 
-    const auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(tensor.exportData());
+    const auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedDevice *>(tensor.exportData());
     ASSERT_NE(dev, nullptr);
 
     cuda::Tensor3DWrap<ValueType> wrap(*dev);
 
-    auto pitchBytes = wrap.pitchBytes();
-    EXPECT_EQ(pitchBytes[0], input.pitchBytes1);
-    EXPECT_EQ(pitchBytes[1], input.pitchBytes2);
+    auto strides = wrap.strides();
+    EXPECT_EQ(strides[0], input.stride1);
+    EXPECT_EQ(strides[1], input.stride2);
 
     for (int b = 0; b < input.batches; ++b)
     {
@@ -649,9 +647,8 @@ TYPED_TEST(Tensor3DWrapTensorWrapTest, correct_with_tensor_wrap)
             {
                 int3 c3{x, y, b};
 
-                EXPECT_EQ(wrap[c3], *reinterpret_cast<ValueType *>((reinterpret_cast<uint8_t *>(dev->data())
-                                                                    + b * dev->pitchBytes(0) + y * dev->pitchBytes(1)
-                                                                    + x * dev->pitchBytes(2))));
+                EXPECT_EQ(wrap[c3], *reinterpret_cast<ValueType *>(dev->basePtr() + b * dev->stride(0)
+                                                                   + y * dev->stride(1) + x * dev->stride(2)));
             }
         }
     }
@@ -678,20 +675,18 @@ TYPED_TEST(Tensor3DWrapTensorTest, correct_with_tensor)
 
     nv::cv::Tensor tensor(3, {213, 211}, nv::cv::ImageFormat{imgFormat});
 
-    const auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(tensor.exportData());
+    const auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedDevice *>(tensor.exportData());
     ASSERT_NE(dev, nullptr);
 
     cuda::Tensor3DWrap<ValueType> wrap(*dev);
 
-    auto pitchBytes = wrap.pitchBytes();
-    EXPECT_EQ(pitchBytes[0], dev->pitchBytes(0));
-    EXPECT_EQ(pitchBytes[1], dev->pitchBytes(1));
+    auto strides = wrap.strides();
+    EXPECT_EQ(strides[0], dev->stride(0));
+    EXPECT_EQ(strides[1], dev->stride(1));
 
-    const ValueType *ptr0 = reinterpret_cast<const ValueType *>(dev->data());
-    const ValueType *ptr1
-        = reinterpret_cast<const ValueType *>(reinterpret_cast<const uint8_t *>(dev->data()) + dev->pitchBytes(0));
-    const ValueType *ptr12 = reinterpret_cast<const ValueType *>(reinterpret_cast<const uint8_t *>(dev->data())
-                                                                 + dev->pitchBytes(0) + 2 * dev->pitchBytes(1));
+    const ValueType *ptr0  = reinterpret_cast<const ValueType *>(dev->basePtr());
+    const ValueType *ptr1  = reinterpret_cast<const ValueType *>(dev->basePtr() + dev->stride(0));
+    const ValueType *ptr12 = reinterpret_cast<const ValueType *>(dev->basePtr() + dev->stride(0) + 2 * dev->stride(1));
 
     EXPECT_EQ(wrap.ptr(0), ptr0);
     EXPECT_EQ(wrap.ptr(1), ptr1);
@@ -712,14 +707,14 @@ TYPED_TEST(Tensor3DWrapTensorTest, it_works_in_device)
     int height  = tensor.shape()[1];
     int width   = tensor.shape()[2];
 
-    const auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(tensor.exportData());
+    const auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedDevice *>(tensor.exportData());
     ASSERT_NE(dev, nullptr);
 
     cuda::Tensor3DWrap<ValueType> wrap(*dev);
 
     DeviceSetOnes(wrap, {width, height, batches}, stream);
 
-    long3       pitches{dev->pitchBytes(0), dev->pitchBytes(1), dev->pitchBytes(2)};
+    long3       pitches{dev->stride(0), dev->stride(1), dev->stride(2)};
     std::size_t sizeBytes = batches * pitches.x;
 
     std::vector<uint8_t> test(sizeBytes);
@@ -740,7 +735,7 @@ TYPED_TEST(Tensor3DWrapTensorTest, it_works_in_device)
     // Get test data back
     ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
     ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpy(test.data(), dev->data(), sizeBytes, cudaMemcpyDeviceToHost));
+    ASSERT_EQ(cudaSuccess, cudaMemcpy(test.data(), dev->basePtr(), sizeBytes, cudaMemcpyDeviceToHost));
 
     EXPECT_EQ(test, gold);
 }
@@ -774,12 +769,12 @@ TYPED_TEST(Tensor4DWrapTest, correct_content_and_is_const)
     using InputType = decltype(input);
     using ValueType = typename InputType::value_type;
 
-    cuda::Tensor4DWrap<const ValueType> wrap(input.data(), input.pitchBytes1, input.pitchBytes2, input.pitchBytes3);
+    cuda::Tensor4DWrap<const ValueType> wrap(input.data(), input.stride1, input.stride2, input.stride3);
 
-    auto pitchBytes = wrap.pitchBytes();
-    EXPECT_EQ(pitchBytes[0], input.pitchBytes1);
-    EXPECT_EQ(pitchBytes[1], input.pitchBytes2);
-    EXPECT_EQ(pitchBytes[2], input.pitchBytes3);
+    auto strides = wrap.strides();
+    EXPECT_EQ(strides[0], input.stride1);
+    EXPECT_EQ(strides[1], input.stride2);
+    EXPECT_EQ(strides[2], input.stride3);
 
     EXPECT_TRUE(std::is_pointer_v<decltype(wrap.ptr())>);
     EXPECT_TRUE(std::is_const_v<std::remove_pointer_t<decltype(wrap.ptr())>>);
@@ -866,7 +861,7 @@ TYPED_TEST(Tensor4DWrapCopyTest, can_change_content)
     using InputType = decltype(test);
     using ValueType = typename InputType::value_type;
 
-    cuda::Tensor4DWrap<ValueType> wrap(test.data(), test.pitchBytes1, test.pitchBytes2, test.pitchBytes3);
+    cuda::Tensor4DWrap<ValueType> wrap(test.data(), test.stride1, test.stride2, test.stride3);
 
     for (int b = 0; b < test.batches; ++b)
     {
@@ -921,26 +916,26 @@ TYPED_TEST(Tensor4DWrapTensorWrapTest, correct_with_tensor_wrap)
     int w = input.width;
     int c = input.channels;
 
-    nv::cv::TensorDataPitchDevice::Buffer buf;
-    buf.pitchBytes[0] = input.pitchBytes1;
-    buf.pitchBytes[1] = input.pitchBytes2;
-    buf.pitchBytes[2] = input.pitchBytes3;
-    buf.pitchBytes[3] = sizeof(ValueType);
-    buf.data          = reinterpret_cast<void *>(input.data());
+    nv::cv::TensorDataStridedDevice::Buffer buf;
+    buf.strides[0] = input.stride1;
+    buf.strides[1] = input.stride2;
+    buf.strides[2] = input.stride3;
+    buf.strides[3] = sizeof(ValueType);
+    buf.basePtr    = reinterpret_cast<NVCVByte *>(input.data());
 
     nv::cv::TensorWrapData tensor{
-        nv::cv::TensorDataPitchDevice{nv::cv::TensorShape{{n, h, w, c}, "NHWC"}, nv::cv::DataType{dataType}, buf}
+        nv::cv::TensorDataStridedDevice{nv::cv::TensorShape{{n, h, w, c}, "NHWC"}, nv::cv::DataType{dataType}, buf}
     };
 
-    const auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(tensor.exportData());
+    const auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedDevice *>(tensor.exportData());
     ASSERT_NE(dev, nullptr);
 
     cuda::Tensor4DWrap<ValueType> wrap(*dev);
 
-    auto pitchBytes = wrap.pitchBytes();
-    EXPECT_EQ(pitchBytes[0], input.pitchBytes1);
-    EXPECT_EQ(pitchBytes[1], input.pitchBytes2);
-    EXPECT_EQ(pitchBytes[2], input.pitchBytes3);
+    auto strides = wrap.strides();
+    EXPECT_EQ(strides[0], input.stride1);
+    EXPECT_EQ(strides[1], input.stride2);
+    EXPECT_EQ(strides[2], input.stride3);
 
     for (int b = 0; b < input.batches; ++b)
     {
@@ -953,9 +948,8 @@ TYPED_TEST(Tensor4DWrapTensorWrapTest, correct_with_tensor_wrap)
                     int4 c4{k, x, y, b};
 
                     EXPECT_EQ(wrap[c4],
-                              *reinterpret_cast<ValueType *>((reinterpret_cast<uint8_t *>(dev->data())
-                                                              + b * dev->pitchBytes(0) + y * dev->pitchBytes(1)
-                                                              + x * dev->pitchBytes(2) + k * dev->pitchBytes(3))));
+                              *reinterpret_cast<ValueType *>(dev->basePtr() + b * dev->stride(0) + y * dev->stride(1)
+                                                             + x * dev->stride(2) + k * dev->stride(3)));
                 }
             }
         }
@@ -988,24 +982,21 @@ TYPED_TEST(Tensor4DWrapTensorTest, correct_with_tensor)
     },
         nv::cv::DataType{dataType});
 
-    const auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(tensor.exportData());
+    const auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedDevice *>(tensor.exportData());
     ASSERT_NE(dev, nullptr);
 
     cuda::Tensor4DWrap<ValueType> wrap(*dev);
 
-    auto pitchBytes = wrap.pitchBytes();
-    EXPECT_EQ(pitchBytes[0], dev->pitchBytes(0));
-    EXPECT_EQ(pitchBytes[1], dev->pitchBytes(1));
-    EXPECT_EQ(pitchBytes[2], dev->pitchBytes(2));
+    auto strides = wrap.strides();
+    EXPECT_EQ(strides[0], dev->stride(0));
+    EXPECT_EQ(strides[1], dev->stride(1));
+    EXPECT_EQ(strides[2], dev->stride(2));
 
-    const ValueType *ptr0 = reinterpret_cast<const ValueType *>(dev->data());
-    const ValueType *ptr1
-        = reinterpret_cast<const ValueType *>(reinterpret_cast<const uint8_t *>(dev->data()) + dev->pitchBytes(0));
-    const ValueType *ptr12 = reinterpret_cast<const ValueType *>(reinterpret_cast<const uint8_t *>(dev->data())
-                                                                 + dev->pitchBytes(0) + 2 * dev->pitchBytes(1));
-    const ValueType *ptr123
-        = reinterpret_cast<const ValueType *>(reinterpret_cast<const uint8_t *>(dev->data()) + dev->pitchBytes(0)
-                                              + 2 * dev->pitchBytes(1) + 3 * dev->pitchBytes(2));
+    const ValueType *ptr0   = reinterpret_cast<const ValueType *>(dev->basePtr());
+    const ValueType *ptr1   = reinterpret_cast<const ValueType *>(dev->basePtr() + dev->stride(0));
+    const ValueType *ptr12  = reinterpret_cast<const ValueType *>(dev->basePtr() + dev->stride(0) + 2 * dev->stride(1));
+    const ValueType *ptr123 = reinterpret_cast<const ValueType *>(dev->basePtr() + dev->stride(0) + 2 * dev->stride(1)
+                                                                  + 3 * dev->stride(2));
 
     EXPECT_EQ(wrap.ptr(0), ptr0);
     EXPECT_EQ(wrap.ptr(1), ptr1);
@@ -1033,14 +1024,14 @@ TYPED_TEST(Tensor4DWrapTensorTest, it_works_in_device)
     int width    = tensor.shape()[2];
     int channels = tensor.shape()[3];
 
-    const auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(tensor.exportData());
+    const auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedDevice *>(tensor.exportData());
     ASSERT_NE(dev, nullptr);
 
     cuda::Tensor4DWrap<ValueType> wrap(*dev);
 
     DeviceSetOnes(wrap, {width, height, batches, channels}, stream);
 
-    long4  pitches{dev->pitchBytes(0), dev->pitchBytes(1), dev->pitchBytes(2), dev->pitchBytes(3)};
+    long4  pitches{dev->stride(0), dev->stride(1), dev->stride(2), dev->stride(3)};
     size_t sizeBytes = batches * pitches.x;
 
     std::vector<uint8_t> test(sizeBytes);
@@ -1064,7 +1055,7 @@ TYPED_TEST(Tensor4DWrapTensorTest, it_works_in_device)
     // Get test data back
     ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
     ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpy(test.data(), dev->data(), sizeBytes, cudaMemcpyDeviceToHost));
+    ASSERT_EQ(cudaSuccess, cudaMemcpy(test.data(), dev->basePtr(), sizeBytes, cudaMemcpyDeviceToHost));
 
     EXPECT_EQ(test, gold);
 }

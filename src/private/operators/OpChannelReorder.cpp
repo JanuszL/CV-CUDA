@@ -35,22 +35,22 @@ ChannelReorder::ChannelReorder()
 void ChannelReorder::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
                                 const cv::ITensor &orders) const
 {
-    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
+    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(in.exportData(stream));
     if (inData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
                             "Input must be device-acessible, varshape pitch-linear image batch");
     }
 
-    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(out.exportData(stream));
+    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(out.exportData(stream));
     if (outData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
                             "Output must be device-acessible, varshape pitch-linear image batch");
     }
 
-    const cv::ITensorDataPitchDevice *ordersData
-        = dynamic_cast<const cv::ITensorDataPitchDevice *>(orders.exportData());
+    const cv::ITensorDataStridedDevice *ordersData
+        = dynamic_cast<const cv::ITensorDataStridedDevice *>(orders.exportData());
     if (ordersData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,

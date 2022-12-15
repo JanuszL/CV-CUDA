@@ -123,12 +123,12 @@ int main(int argc, char *argv[])
     // without padding since NvDecode utility currently doesnt support
     // Padded buffers.
 
-    nv::cv::TensorDataPitchDevice::Buffer inBuf;
-    inBuf.pitchBytes[3] = sizeof(uint8_t);
-    inBuf.pitchBytes[2] = maxChannels * inBuf.pitchBytes[3];
-    inBuf.pitchBytes[1] = maxImageWidth * inBuf.pitchBytes[2];
-    inBuf.pitchBytes[0] = maxImageHeight * inBuf.pitchBytes[1];
-    CHECK_CUDA_ERROR(cudaMallocAsync(&inBuf.data, batchSize * inBuf.pitchBytes[0], stream));
+    nv::cv::TensorDataStridedDevice::Buffer inBuf;
+    inBuf.strides[3] = sizeof(uint8_t);
+    inBuf.strides[2] = maxChannels * inBuf.strides[3];
+    inBuf.strides[1] = maxImageWidth * inBuf.strides[2];
+    inBuf.strides[0] = maxImageHeight * inBuf.strides[1];
+    CHECK_CUDA_ERROR(cudaMallocAsync(&inBuf.basePtr, batchSize * inBuf.strides[0], stream));
 
     // tag: Tensor Requirements
     // Calculate the requirements for the RGBI uint8_t Tensor which include
@@ -137,15 +137,15 @@ int main(int argc, char *argv[])
         = nv::cv::Tensor::CalcRequirements(batchSize, {maxImageWidth, maxImageHeight}, nv::cv::FMT_RGB8);
 
     // Create a tensor buffer to store the data pointer and pitch bytes for each plane
-    nv::cv::TensorDataPitchDevice inData(nv::cv::TensorShape{inReqs.shape, inReqs.ndim, inReqs.layout},
-                                         nv::cv::DataType{inReqs.dtype}, inBuf);
+    nv::cv::TensorDataStridedDevice inData(nv::cv::TensorShape{inReqs.shape, inReqs.ndim, inReqs.layout},
+                                           nv::cv::DataType{inReqs.dtype}, inBuf);
 
     // TensorWrapData allows for interoperation of external tensor representations with CVCUDA Tensor.
     nv::cv::TensorWrapData inTensor(inData);
 
     // tag: Image Loading
     // NvJpeg is used to load the images to create a batched input device buffer.
-    uint8_t             *gpuInput = static_cast<uint8_t *>(inBuf.data);
+    uint8_t             *gpuInput = reinterpret_cast<uint8_t *>(inBuf.basePtr);
     // The total images is set to the same value as batch size for testing
     uint32_t             totalImages = batchSize;
     // Format in which the decoded output will be saved

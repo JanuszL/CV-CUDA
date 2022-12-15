@@ -52,26 +52,26 @@ private:
     mutable detail::Optional<TensorShape> m_cacheShape;
 };
 
-class ITensorDataPitch : public ITensorData
+class ITensorDataStrided : public ITensorData
 {
 public:
-    virtual ~ITensorDataPitch() = 0;
+    virtual ~ITensorDataStrided() = 0;
 
-    void *data() const;
+    Byte *basePtr() const;
 
-    const int64_t &pitchBytes(int d) const;
+    const int64_t &stride(int d) const;
 
 protected:
     using ITensorData::ITensorData;
 };
 
-class ITensorDataPitchDevice : public ITensorDataPitch
+class ITensorDataStridedDevice : public ITensorDataStrided
 {
 public:
-    virtual ~ITensorDataPitchDevice() = 0;
+    virtual ~ITensorDataStridedDevice() = 0;
 
 protected:
-    using ITensorDataPitch::ITensorDataPitch;
+    using ITensorDataStrided::ITensorDataStrided;
 };
 
 }} // namespace nv::cv

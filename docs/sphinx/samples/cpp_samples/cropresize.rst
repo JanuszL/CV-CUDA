@@ -53,7 +53,7 @@ Since we need a contiguous buffer for a batch, we will preallocate the Tensor bu
    :end-before: Tensor Requirements
    :dedent:
 
-The Tensor Buffer is then wrapped to create a Tensor Object for which we will calculate the requirements of the buffer such as pitch bytes and alignment
+The Tensor Buffer is then wrapped to create a Tensor Object for which we will calculate the requirements of the buffer such as strides and alignment
 
 .. literalinclude:: ../../../../samples/cropandresize/Main.cpp
    :language: cpp

@@ -64,10 +64,10 @@ __global__ void composite_kernel(const Ptr2dNHWC<T> fg, const Ptr2dNHWC<T> bg, c
 }
 
 template<typename T, int scn, int dcn> // uchar
-void composite(const nvcv::TensorDataAccessPitchImagePlanar &foregroundData,
-               const nvcv::TensorDataAccessPitchImagePlanar &backgroundData,
-               const nvcv::TensorDataAccessPitchImagePlanar &fgMaskData,
-               const nvcv::TensorDataAccessPitchImagePlanar &outData, cudaStream_t stream)
+void composite(const nvcv::TensorDataAccessStridedImagePlanar &foregroundData,
+               const nvcv::TensorDataAccessStridedImagePlanar &backgroundData,
+               const nvcv::TensorDataAccessStridedImagePlanar &fgMaskData,
+               const nvcv::TensorDataAccessStridedImagePlanar &outData, cudaStream_t stream)
 {
     const int batch_size = foregroundData.numSamples();
     const int out_width  = outData.numCols();
@@ -95,8 +95,8 @@ void composite(const nvcv::TensorDataAccessPitchImagePlanar &foregroundData,
 
 namespace nv::cv::legacy::cuda_op {
 
-ErrorCode Composite::infer(const ITensorDataPitchDevice &foreground, const ITensorDataPitchDevice &background,
-                           const ITensorDataPitchDevice &fgMask, const ITensorDataPitchDevice &outData,
+ErrorCode Composite::infer(const ITensorDataStridedDevice &foreground, const ITensorDataStridedDevice &background,
+                           const ITensorDataStridedDevice &fgMask, const ITensorDataStridedDevice &outData,
                            cudaStream_t stream)
 {
     DataFormat background_format = GetLegacyDataFormat(background.layout());
@@ -121,16 +121,16 @@ ErrorCode Composite::infer(const ITensorDataPitchDevice &foreground, const ITens
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    auto foregroundAccess = TensorDataAccessPitchImagePlanar::Create(foreground);
+    auto foregroundAccess = TensorDataAccessStridedImagePlanar::Create(foreground);
     NVCV_ASSERT(foregroundAccess);
 
-    auto backgroundAccess = TensorDataAccessPitchImagePlanar::Create(background);
+    auto backgroundAccess = TensorDataAccessStridedImagePlanar::Create(background);
     NVCV_ASSERT(backgroundAccess);
 
-    auto fgMaskAccess = TensorDataAccessPitchImagePlanar::Create(fgMask);
+    auto fgMaskAccess = TensorDataAccessStridedImagePlanar::Create(fgMask);
     NVCV_ASSERT(fgMaskAccess);
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     DataType foreground_data_type = GetLegacyDataType(foreground.dtype());
@@ -163,10 +163,10 @@ ErrorCode Composite::infer(const ITensorDataPitchDevice &foreground, const ITens
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    typedef void (*func_t)(const nvcv::TensorDataAccessPitchImagePlanar &foregroundData,
-                           const nvcv::TensorDataAccessPitchImagePlanar &backgroundData,
-                           const nvcv::TensorDataAccessPitchImagePlanar &fgMaskData,
-                           const nvcv::TensorDataAccessPitchImagePlanar &outData, cudaStream_t stream);
+    typedef void (*func_t)(const nvcv::TensorDataAccessStridedImagePlanar &foregroundData,
+                           const nvcv::TensorDataAccessStridedImagePlanar &backgroundData,
+                           const nvcv::TensorDataAccessStridedImagePlanar &fgMaskData,
+                           const nvcv::TensorDataAccessStridedImagePlanar &outData, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {
         { 0 /*composite<uchar,1,1>*/,  0 /*composite<uchar,2,2>*/,             composite<uchar,3, 3>, composite<uchar, 3, 4>},

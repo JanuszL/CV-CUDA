@@ -52,7 +52,7 @@ public:
 private:
     virtual NVCVTensorHandle doGetHandle() const = 0;
 
-    mutable detail::Optional<TensorDataPitchDevice> m_cacheData;
+    mutable detail::Optional<TensorDataStridedDevice> m_cacheData;
 };
 
 }} // namespace nv::cv

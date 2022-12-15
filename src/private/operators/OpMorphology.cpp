@@ -38,13 +38,13 @@ void Morphology::operator()(cudaStream_t stream, const cv::ITensor &in, const cv
                             NVCVMorphologyType morph_type, cv::Size2D mask_size, int2 anchor, int32_t iteration,
                             const NVCVBorderType borderMode) const
 {
-    auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
+    auto *inData = dynamic_cast<const cv::ITensorDataStridedDevice *>(in.exportData());
     if (inData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be device-accessible, pitch-linear tensor");
     }
 
-    auto *outData = dynamic_cast<const cv::ITensorDataPitchDevice *>(out.exportData());
+    auto *outData = dynamic_cast<const cv::ITensorDataStridedDevice *>(out.exportData());
     if (outData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be device-accessible, pitch-linear tensor");
@@ -58,13 +58,13 @@ void Morphology::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &
                             NVCVMorphologyType morph_type, cv::ITensor &masks, cv::ITensor &anchors, int32_t iteration,
                             NVCVBorderType borderMode) const
 {
-    auto *masksData = dynamic_cast<const cv::ITensorDataPitchDevice *>(masks.exportData());
+    auto *masksData = dynamic_cast<const cv::ITensorDataStridedDevice *>(masks.exportData());
     if (masksData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "masksData must be a tensor");
     }
 
-    auto *anchorsData = dynamic_cast<const cv::ITensorDataPitchDevice *>(anchors.exportData());
+    auto *anchorsData = dynamic_cast<const cv::ITensorDataStridedDevice *>(anchors.exportData());
     if (anchorsData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "anchors must be a tensor");

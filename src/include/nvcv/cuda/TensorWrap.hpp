@@ -26,8 +26,8 @@
 
 #include "TypeTraits.hpp" // for HasTypeTraits, etc.
 
-#include <nvcv/IImageData.hpp>  // for IImageDataPitchDevice, etc.
-#include <nvcv/ITensorData.hpp> // for ITensorDataPitchDevice, etc.
+#include <nvcv/IImageData.hpp>  // for IImageDataStridedDevice, etc.
+#include <nvcv/ITensorData.hpp> // for ITensorDataStridedDevice, etc.
 
 #include <utility>
 
@@ -42,14 +42,14 @@ namespace nv::cv::cuda {
  * TensorWrap class is a non-owning wrap of a N-D tensor used for easy access of its elements in CUDA device.
  *
  * TensorWrap is a wrapper of a multi-dimensional tensor that can have one or more of its N dimension strides, or
- * pitches, defined either at compile-time or at run-time.  Each pitch in \p Pitches represents the offset in bytes
+ * pitches, defined either at compile-time or at run-time.  Each pitch in \p Strides represents the offset in bytes
  * as a compile-time template parameter that will be applied from the first (slowest changing) dimension to the
  * last (fastest changing) dimension of the tensor, in that order.  Each dimension with run-time pitch is specified
- * as -1 in the \p Pitches template parameter.
+ * as -1 in the \p Strides template parameter.
  *
  * Template arguments:
  * - T type of the values inside the tensor
- * - Pitches sequence of compile- or run-time pitches (-1 indicates run-time)
+ * - Strides sequence of compile- or run-time pitches (-1 indicates run-time)
  *   - Y compile-time pitches
  *   - X run-time pitches
  *   - N dimensions, where N = X + Y
@@ -64,9 +64,9 @@ namespace nv::cv::cuda {
  * using ChannelType = BaseType<DataType>;
  * using TensorWrap = TensorWrap<ChannelType, -1, -1, sizeof(DataType), sizeof(ChannelType)>;
  * void *imageData = ...;
- * int imgPitchBytes = ...;
- * int rowPitchBytes = ...;
- * TensorWrap tensorWrap(imageData, imgPitchBytes, rowPitchBytes);
+ * int imgStride = ...;
+ * int rowStride = ...;
+ * TensorWrap tensorWrap(imageData, imgStride, rowStride);
  * // Elements may be accessed via operator[] using an int4 argument.  They can also be accessed via pointer using
  * // the ptr method with up to 4 integer arguments.
  * @endcode
@@ -74,22 +74,22 @@ namespace nv::cv::cuda {
  * @sa NVCV_CPP_CUDATOOLS_TENSORWRAPS
  *
  * @tparam T Type (it can be const) of each element inside the tensor wrapper.
- * @tparam Pitches Each compile-time (use -1 for run-time) pitch in bytes from first to last dimension.
+ * @tparam Strides Each compile-time (use -1 for run-time) pitch in bytes from first to last dimension.
  */
-template<typename T, int... Pitches>
+template<typename T, int... Strides>
 class TensorWrap;
 
-template<typename T, int... Pitches>
-class TensorWrap<const T, Pitches...>
+template<typename T, int... Strides>
+class TensorWrap<const T, Strides...>
 {
     static_assert(HasTypeTraits<T>, "TensorWrap<T> can only be used if T has type traits");
 
 public:
     using ValueType = const T;
 
-    static constexpr int kNumDimensions   = sizeof...(Pitches);
-    static constexpr int kVariablePitches = ((Pitches == -1) + ...);
-    static constexpr int kConstantPitches = kNumDimensions - kVariablePitches;
+    static constexpr int kNumDimensions   = sizeof...(Strides);
+    static constexpr int kVariableStrides = ((Strides == -1) + ...);
+    static constexpr int kConstantStrides = kNumDimensions - kVariableStrides;
 
     TensorWrap() = default;
 
@@ -97,15 +97,15 @@ public:
      * Constructs a constant TensorWrap by wrapping a const \p data pointer argument.
      *
      * @param[in] data Pointer to the data that will be wrapped
-     * @param[in] pitchBytes0..D Each run-time pitch in bytes from first to last dimension
+     * @param[in] strides0..D Each run-time pitch in bytes from first to last dimension
      */
     template<typename... Args>
-    explicit __host__ __device__ TensorWrap(const void *data, Args... pitchBytes)
+    explicit __host__ __device__ TensorWrap(const void *data, Args... strides)
         : m_data(data)
-        , m_pitchBytes{std::forward<int>(pitchBytes)...}
+        , m_strides{std::forward<int>(strides)...}
     {
         static_assert(std::conjunction_v<std::is_same<int, Args>...>);
-        static_assert(sizeof...(Args) == kVariablePitches);
+        static_assert(sizeof...(Args) == kVariableStrides);
     }
 
     /**
@@ -113,13 +113,13 @@ public:
      *
      * @param[in] image Image reference to the image that will be wrapped
      */
-    __host__ TensorWrap(const IImageDataPitchDevice &image)
+    __host__ TensorWrap(const IImageDataStridedDevice &image)
     {
-        static_assert(kVariablePitches == 1 && kNumDimensions == 2);
+        static_assert(kVariableStrides == 1 && kNumDimensions == 2);
 
-        m_data = reinterpret_cast<const void *>(image.plane(0).buffer);
+        m_data = reinterpret_cast<const void *>(image.plane(0).basePtr);
 
-        m_pitchBytes[0] = image.plane(0).pitchBytes;
+        m_strides[0] = image.plane(0).rowStride;
     }
 
     /**
@@ -127,16 +127,16 @@ public:
      *
      * @param[in] tensor Tensor reference to the tensor that will be wrapped
      */
-    __host__ TensorWrap(const ITensorDataPitchDevice &tensor)
+    __host__ TensorWrap(const ITensorDataStridedDevice &tensor)
     {
-        m_data = reinterpret_cast<const void *>(tensor.data());
+        m_data = reinterpret_cast<const void *>(tensor.basePtr());
 
 #pragma unroll
-        for (int i = 0; i < kVariablePitches; ++i)
+        for (int i = 0; i < kVariableStrides; ++i)
         {
-            assert(tensor.pitchBytes(i) <= TypeTraits<int>::max);
+            assert(tensor.stride(i) <= TypeTraits<int>::max);
 
-            m_pitchBytes[i] = tensor.pitchBytes(i);
+            m_strides[i] = tensor.stride(i);
         }
     }
 
@@ -145,9 +145,9 @@ public:
      *
      * @return The const array (as a pointer) containing run-time pitches in bytes.
      */
-    __host__ __device__ const int *pitchBytes() const
+    __host__ __device__ const int *strides() const
     {
-        return m_pitchBytes;
+        return m_strides;
     }
 
     /**
@@ -218,10 +218,10 @@ protected:
         static_assert(std::conjunction_v<std::is_same<int, Args>...>);
         static_assert(sizeof...(Args) <= kNumDimensions);
 
-        constexpr int kArgSize      = sizeof...(Args);
-        constexpr int kVarSize      = kArgSize < kVariablePitches ? kArgSize : kVariablePitches;
-        constexpr int kDimSize      = kArgSize < kNumDimensions ? kArgSize : kNumDimensions;
-        constexpr int kPitchBytes[] = {std::forward<int>(Pitches)...};
+        constexpr int kArgSize  = sizeof...(Args);
+        constexpr int kVarSize  = kArgSize < kVariableStrides ? kArgSize : kVariableStrides;
+        constexpr int kDimSize  = kArgSize < kNumDimensions ? kArgSize : kNumDimensions;
+        constexpr int kStride[] = {std::forward<int>(Strides)...};
 
         int coords[] = {std::forward<int>(c)...};
 
@@ -230,39 +230,39 @@ protected:
 #pragma unroll
         for (int i = 0; i < kVarSize; ++i)
         {
-            offset += coords[i] * m_pitchBytes[i];
+            offset += coords[i] * m_strides[i];
         }
 #pragma unroll
-        for (int i = kVariablePitches; i < kDimSize; ++i)
+        for (int i = kVariableStrides; i < kDimSize; ++i)
         {
-            offset += coords[i] * kPitchBytes[i];
+            offset += coords[i] * kStride[i];
         }
 
         return reinterpret_cast<const T *>(reinterpret_cast<const uint8_t *>(m_data) + offset);
     }
 
 private:
-    const void *m_data                         = nullptr;
-    int         m_pitchBytes[kVariablePitches] = {};
+    const void *m_data                      = nullptr;
+    int         m_strides[kVariableStrides] = {};
 };
 
 /**
  * Tensor wrapper class specialized for non-constant value type.
  *
  * @tparam T Type (non-const) of each element inside the tensor wrapper.
- * @tparam Pitches Each compile-time (use -1 for run-time) pitch in bytes from first to last dimension.
+ * @tparam Strides Each compile-time (use -1 for run-time) pitch in bytes from first to last dimension.
  */
-template<typename T, int... Pitches>
-class TensorWrap : public TensorWrap<const T, Pitches...>
+template<typename T, int... Strides>
+class TensorWrap : public TensorWrap<const T, Strides...>
 {
-    using Base = TensorWrap<const T, Pitches...>;
+    using Base = TensorWrap<const T, Strides...>;
 
 public:
     using ValueType = T;
 
-    using Base::kConstantPitches;
+    using Base::kConstantStrides;
     using Base::kNumDimensions;
-    using Base::kVariablePitches;
+    using Base::kVariableStrides;
 
     TensorWrap() = default;
 
@@ -270,11 +270,11 @@ public:
      * Constructs a TensorWrap by wrapping a \p data pointer argument.
      *
      * @param[in] data Pointer to the data that will be wrapped
-     * @param[in] pitchBytes0..N Each run-time pitch in bytes from first to last dimension
+     * @param[in] strides0..N Each run-time pitch in bytes from first to last dimension
      */
     template<typename... Args>
-    explicit __host__ __device__ TensorWrap(void *data, Args... pitchBytes)
-        : Base(data, pitchBytes...)
+    explicit __host__ __device__ TensorWrap(void *data, Args... strides)
+        : Base(data, strides...)
     {
     }
 
@@ -283,7 +283,7 @@ public:
      *
      * @param[in] image Image reference to the image that will be wrapped
      */
-    __host__ TensorWrap(const IImageDataPitchDevice &image)
+    __host__ TensorWrap(const IImageDataStridedDevice &image)
         : Base(image)
     {
     }
@@ -293,7 +293,7 @@ public:
      *
      * @param[in] tensor Tensor reference to the tensor that will be wrapped
      */
-    __host__ TensorWrap(const ITensorDataPitchDevice &tensor)
+    __host__ TensorWrap(const ITensorDataStridedDevice &tensor)
         : Base(tensor)
     {
     }

@@ -171,8 +171,8 @@ void warp_caller(const Ptr2dVarShapeNHWC<T> src, Ptr2dVarShapeNHWC<T> dst, const
 }
 
 template<typename T>
-void warpAffine(const nv::cv::IImageBatchVarShapeDataPitchDevice &inData,
-                const nv::cv::IImageBatchVarShapeDataPitchDevice &outData, const cuda::Tensor2DWrap<float> transform,
+void warpAffine(const nv::cv::IImageBatchVarShapeDataStridedDevice &inData,
+                const nv::cv::IImageBatchVarShapeDataStridedDevice &outData, const cuda::Tensor2DWrap<float> transform,
                 const int interpolation, const int borderMode, const float4 borderValue, cudaStream_t stream)
 {
     cuda_op::Ptr2dVarShapeNHWC<T> src_ptr(inData);
@@ -185,8 +185,8 @@ void warpAffine(const nv::cv::IImageBatchVarShapeDataPitchDevice &inData,
 }
 
 template<typename T>
-void warpPerspective(const nv::cv::IImageBatchVarShapeDataPitchDevice &inData,
-                     const nv::cv::IImageBatchVarShapeDataPitchDevice &outData,
+void warpPerspective(const nv::cv::IImageBatchVarShapeDataStridedDevice &inData,
+                     const nv::cv::IImageBatchVarShapeDataStridedDevice &outData,
                      const cuda::Tensor2DWrap<float> transform, const int interpolation, const int borderMode,
                      const float4 borderValue, cudaStream_t stream)
 {
@@ -221,9 +221,9 @@ WarpAffineVarShape::~WarpAffineVarShape()
     m_transformationMatrix = nullptr;
 }
 
-ErrorCode WarpAffineVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData,
-                                    const IImageBatchVarShapeDataPitchDevice &outData,
-                                    const ITensorDataPitchDevice &transMatrix, const int32_t flags,
+ErrorCode WarpAffineVarShape::infer(const IImageBatchVarShapeDataStridedDevice &inData,
+                                    const IImageBatchVarShapeDataStridedDevice &outData,
+                                    const ITensorDataStridedDevice &transMatrix, const int32_t flags,
                                     const NVCVBorderType borderMode, const float4 borderValue, cudaStream_t stream)
 {
     if (m_maxBatchSize <= 0)
@@ -303,12 +303,12 @@ ErrorCode WarpAffineVarShape::infer(const IImageBatchVarShapeDataPitchDevice &in
     else
     {
         NVCV_CHECK_LOG(cudaMemcpy2DAsync(m_transformationMatrix, sizeof(float) * 9, transMatrixInput.ptr(0, 0),
-                                         transMatrixInput.pitchBytes()[0], sizeof(float) * 6, inData.numImages(),
+                                         transMatrixInput.strides()[0], sizeof(float) * 6, inData.numImages(),
                                          cudaMemcpyDeviceToDevice, stream));
     }
 
-    typedef void (*func_t)(const nv::cv::IImageBatchVarShapeDataPitchDevice &inData,
-                           const nv::cv::IImageBatchVarShapeDataPitchDevice &outData,
+    typedef void (*func_t)(const nv::cv::IImageBatchVarShapeDataStridedDevice &inData,
+                           const nv::cv::IImageBatchVarShapeDataStridedDevice &outData,
                            const cuda::Tensor2DWrap<float> transform, const int interpolation, const int borderMode,
                            const float4 borderValue, cudaStream_t stream);
 
@@ -348,9 +348,9 @@ WarpPerspectiveVarShape::~WarpPerspectiveVarShape()
     m_transformationMatrix = nullptr;
 }
 
-ErrorCode WarpPerspectiveVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData,
-                                         const IImageBatchVarShapeDataPitchDevice &outData,
-                                         const ITensorDataPitchDevice &transMatrix, const int32_t flags,
+ErrorCode WarpPerspectiveVarShape::infer(const IImageBatchVarShapeDataStridedDevice &inData,
+                                         const IImageBatchVarShapeDataStridedDevice &outData,
+                                         const ITensorDataStridedDevice &transMatrix, const int32_t flags,
                                          const NVCVBorderType borderMode, const float4 borderValue, cudaStream_t stream)
 {
     if (m_maxBatchSize <= 0)
@@ -430,12 +430,12 @@ ErrorCode WarpPerspectiveVarShape::infer(const IImageBatchVarShapeDataPitchDevic
     else
     {
         NVCV_CHECK_LOG(cudaMemcpy2DAsync(m_transformationMatrix, sizeof(float) * 9, transMatrixInput.ptr(0, 0),
-                                         transMatrixInput.pitchBytes()[0], sizeof(float) * 9, inData.numImages(),
+                                         transMatrixInput.strides()[0], sizeof(float) * 9, inData.numImages(),
                                          cudaMemcpyDeviceToDevice, stream));
     }
 
-    typedef void (*func_t)(const nv::cv::IImageBatchVarShapeDataPitchDevice &inData,
-                           const nv::cv::IImageBatchVarShapeDataPitchDevice &outData,
+    typedef void (*func_t)(const nv::cv::IImageBatchVarShapeDataStridedDevice &inData,
+                           const nv::cv::IImageBatchVarShapeDataStridedDevice &outData,
                            const cuda::Tensor2DWrap<float> transform, const int interpolation, const int borderMode,
                            const float4 borderValue, cudaStream_t stream);
 

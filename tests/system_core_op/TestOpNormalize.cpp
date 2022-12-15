@@ -33,11 +33,11 @@ namespace nvcv = nv::cv;
 namespace test = nv::cv::test;
 namespace t    = ::testing;
 
-static void Normalize(std::vector<uint8_t> &hDst, int dstRowPitch, const std::vector<uint8_t> &hSrc, int srcRowPitch,
-                      nvcv::Size2D size, nvcv::ImageFormat fmt, const std::vector<float> &hBase, int baseRowPitch,
+static void Normalize(std::vector<uint8_t> &hDst, int dstRowStride, const std::vector<uint8_t> &hSrc, int srcRowStride,
+                      nvcv::Size2D size, nvcv::ImageFormat fmt, const std::vector<float> &hBase, int baseRowStride,
                       nvcv::Size2D baseSize, nvcv::ImageFormat baseFormat, const std::vector<float> &hScale,
-                      int scaleRowPitch, nvcv::Size2D scaleSize, nvcv::ImageFormat scaleFormat, const float globalScale,
-                      const float globalShift, const float epsilon, const uint32_t flags)
+                      int scaleRowStride, nvcv::Size2D scaleSize, nvcv::ImageFormat scaleFormat,
+                      const float globalScale, const float globalShift, const float epsilon, const uint32_t flags)
 {
     using FT = float;
 
@@ -60,21 +60,21 @@ static void Normalize(std::vector<uint8_t> &hDst, int dstRowPitch, const std::ve
 
                 if (flags & NVCV_OP_NORMALIZE_SCALE_IS_STDDEV)
                 {
-                    FT s = hScale.at(si * scaleRowPitch + sj * scaleFormat.numChannels() + sk);
+                    FT s = hScale.at(si * scaleRowStride + sj * scaleFormat.numChannels() + sk);
                     FT x = s * s + epsilon;
                     mul  = FT{1} / std::sqrt(x);
                 }
                 else
                 {
-                    mul = hScale.at(si * scaleRowPitch + sj * scaleFormat.numChannels() + sk);
+                    mul = hScale.at(si * scaleRowStride + sj * scaleFormat.numChannels() + sk);
                 }
 
-                FT res = std::rint((hSrc.at(i * srcRowPitch + j * fmt.numChannels() + k)
-                                    - hBase.at(bi * baseRowPitch + bj * baseFormat.numChannels() + bk))
+                FT res = std::rint((hSrc.at(i * srcRowStride + j * fmt.numChannels() + k)
+                                    - hBase.at(bi * baseRowStride + bj * baseFormat.numChannels() + bk))
                                        * mul * globalScale
                                    + globalShift);
 
-                hDst.at(i * dstRowPitch + j * fmt.numChannels() + k) = res < 0 ? 0 : (res > 255 ? 255 : res);
+                hDst.at(i * dstRowStride + j * fmt.numChannels() + k) = res < 0 ? 0 : (res > 255 ? 255 : res);
             }
         }
     }
@@ -132,71 +132,71 @@ TEST_P(OpNormalize, tensor_correct_output)
 
     // Create input tensor
     nvcv::Tensor imgSrc(numImages, {width, height}, fmt);
-    const auto  *srcData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgSrc.exportData());
+    const auto  *srcData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgSrc.exportData());
     ASSERT_NE(nullptr, srcData);
-    auto srcAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*srcData);
+    auto srcAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*srcData);
     ASSERT_TRUE(srcAccess);
 
     std::vector<std::vector<uint8_t>> srcVec(numImages);
-    int                               srcVecRowPitch = width * fmt.numChannels();
+    int                               srcVecRowStride = width * fmt.numChannels();
     for (int i = 0; i < numImages; ++i)
     {
         std::uniform_int_distribution<uint8_t> udist(0, 255);
 
-        srcVec[i].resize(height * srcVecRowPitch);
+        srcVec[i].resize(height * srcVecRowStride);
         generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
 
         // Copy input data to the GPU
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(srcAccess->sampleData(i), srcAccess->rowPitchBytes(), srcVec[i].data(), srcVecRowPitch,
-                               srcVecRowPitch, // vec has no padding
+                  cudaMemcpy2D(srcAccess->sampleData(i), srcAccess->rowStride(), srcVec[i].data(), srcVecRowStride,
+                               srcVecRowStride, // vec has no padding
                                height, cudaMemcpyHostToDevice));
     }
 
     // Create base tensor
     nvcv::Tensor imgBase(baseNumImages, {baseWidth, baseHeight}, baseFormat);
-    const auto  *baseData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgBase.exportData());
+    const auto  *baseData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgBase.exportData());
     ASSERT_NE(nullptr, baseData);
-    auto baseAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*baseData);
+    auto baseAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*baseData);
     ASSERT_TRUE(baseAccess);
 
     std::vector<std::vector<float>> baseVec(baseNumImages);
-    int                             baseVecRowPitch = baseWidth * baseFormat.numChannels();
+    int                             baseVecRowStride = baseWidth * baseFormat.numChannels();
     for (int i = 0; i < baseNumImages; ++i)
     {
         std::uniform_real_distribution<float> udist(0, 255.f);
 
-        baseVec[i].resize(baseHeight * baseVecRowPitch);
+        baseVec[i].resize(baseHeight * baseVecRowStride);
         generate(baseVec[i].begin(), baseVec[i].end(), [&]() { return udist(rng); });
 
         // Copy input data to the GPU
-        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(baseAccess->sampleData(i), baseAccess->rowPitchBytes(), baseVec[i].data(),
-                                            baseVecRowPitch * sizeof(float),
-                                            baseVecRowPitch * sizeof(float), // vec has no padding
+        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(baseAccess->sampleData(i), baseAccess->rowStride(), baseVec[i].data(),
+                                            baseVecRowStride * sizeof(float),
+                                            baseVecRowStride * sizeof(float), // vec has no padding
                                             baseHeight, cudaMemcpyHostToDevice));
     }
 
     // Create scale tensor
     nvcv::Tensor imgScale(scaleNumImages, {scaleWidth, scaleHeight}, scaleFormat);
-    const auto  *scaleData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgScale.exportData());
+    const auto  *scaleData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgScale.exportData());
     ASSERT_NE(nullptr, scaleData);
-    auto scaleAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*scaleData);
+    auto scaleAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*scaleData);
     ASSERT_TRUE(scaleAccess);
 
     std::vector<std::vector<float>> scaleVec(scaleNumImages);
     assert(scaleFormat.numPlanes() == 1);
-    int scaleVecRowPitch = scaleWidth * scaleFormat.numChannels();
+    int scaleVecRowStride = scaleWidth * scaleFormat.numChannels();
     for (int i = 0; i < scaleNumImages; ++i)
     {
         std::uniform_real_distribution<float> udist(0, 1.f);
 
-        scaleVec[i].resize(scaleHeight * scaleVecRowPitch);
+        scaleVec[i].resize(scaleHeight * scaleVecRowStride);
         generate(scaleVec[i].begin(), scaleVec[i].end(), [&]() { return udist(rng); });
 
         // Copy input data to the GPU
-        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(scaleAccess->sampleData(i), scaleAccess->rowPitchBytes(),
-                                            scaleVec[i].data(), scaleVecRowPitch * sizeof(float),
-                                            scaleVecRowPitch * sizeof(float), // vec has no padding
+        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(scaleAccess->sampleData(i), scaleAccess->rowStride(), scaleVec[i].data(),
+                                            scaleVecRowStride * sizeof(float),
+                                            scaleVecRowStride * sizeof(float), // vec has no padding
                                             scaleHeight, cudaMemcpyHostToDevice));
     }
 
@@ -212,33 +212,33 @@ TEST_P(OpNormalize, tensor_correct_output)
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
     // Check result
-    const auto *dstData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgDst.exportData());
+    const auto *dstData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgDst.exportData());
     ASSERT_NE(nullptr, dstData);
 
-    auto dstAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*dstData);
+    auto dstAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*dstData);
     ASSERT_TRUE(dstAccess);
 
-    int dstVecRowPitch = width * fmt.numChannels();
+    int dstVecRowStride = width * fmt.numChannels();
     for (int i = 0; i < numImages; ++i)
     {
         SCOPED_TRACE(i);
 
-        std::vector<uint8_t> testVec(height * dstVecRowPitch);
+        std::vector<uint8_t> testVec(height * dstVecRowStride);
 
         // Copy output data to Host
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(testVec.data(), dstVecRowPitch, dstAccess->sampleData(i), dstAccess->rowPitchBytes(),
-                               dstVecRowPitch, // vec has no padding
+                  cudaMemcpy2D(testVec.data(), dstVecRowStride, dstAccess->sampleData(i), dstAccess->rowStride(),
+                               dstVecRowStride, // vec has no padding
                                height, cudaMemcpyDeviceToHost));
 
-        std::vector<uint8_t> goldVec(height * dstVecRowPitch);
+        std::vector<uint8_t> goldVec(height * dstVecRowStride);
 
         int bi = baseNumImages == 1 ? 0 : i;
         int si = scaleNumImages == 1 ? 0 : i;
 
         // Generate gold result
-        Normalize(goldVec, dstVecRowPitch, srcVec[i], srcVecRowPitch, {width, height}, fmt, baseVec[bi],
-                  baseVecRowPitch, {baseWidth, baseHeight}, baseFormat, scaleVec[si], scaleVecRowPitch,
+        Normalize(goldVec, dstVecRowStride, srcVec[i], srcVecRowStride, {width, height}, fmt, baseVec[bi],
+                  baseVecRowStride, {baseWidth, baseHeight}, baseFormat, scaleVec[si], scaleVecRowStride,
                   {scaleWidth, scaleHeight}, scaleFormat, globalScale, globalShift, epsilon, flags);
 
         EXPECT_EQ(goldVec, testVec);
@@ -275,27 +275,27 @@ TEST_P(OpNormalize, varshape_correct_output)
     std::vector<std::unique_ptr<nvcv::Image>> imgSrc;
 
     std::vector<std::vector<uint8_t>> srcVec(numImages);
-    std::vector<int>                  srcVecRowPitch(numImages);
+    std::vector<int>                  srcVecRowStride(numImages);
 
     for (int i = 0; i < numImages; ++i)
     {
         imgSrc.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{udistWidth(rng), udistHeight(rng)}, fmt));
 
-        int srcRowPitch   = imgSrc[i]->size().w * fmt.numChannels();
-        srcVecRowPitch[i] = srcRowPitch;
+        int srcRowStride   = imgSrc[i]->size().w * fmt.numChannels();
+        srcVecRowStride[i] = srcRowStride;
 
         std::uniform_int_distribution<uint8_t> udist(0, 255);
 
-        srcVec[i].resize(imgSrc[i]->size().h * srcRowPitch);
+        srcVec[i].resize(imgSrc[i]->size().h * srcRowStride);
         generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
 
-        auto *imgData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        auto *imgData = dynamic_cast<const nvcv::IImageDataStridedDevice *>(imgSrc[i]->exportData());
         assert(imgData != nullptr);
 
         // Copy input data to the GPU
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(imgData->plane(0).buffer, imgData->plane(0).pitchBytes, srcVec[i].data(), srcRowPitch,
-                               srcRowPitch, // vec has no padding
+                  cudaMemcpy2D(imgData->plane(0).basePtr, imgData->plane(0).rowStride, srcVec[i].data(), srcRowStride,
+                               srcRowStride, // vec has no padding
                                imgSrc[i]->size().h, cudaMemcpyHostToDevice));
     }
 
@@ -311,15 +311,15 @@ TEST_P(OpNormalize, varshape_correct_output)
         baseFormat.planeDataType(0));
     std::vector<float> baseVec(baseFormat.numChannels());
     {
-        const auto *baseData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgBase.exportData());
+        const auto *baseData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgBase.exportData());
         ASSERT_NE(nullptr, baseData);
-        auto baseAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*baseData);
+        auto baseAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*baseData);
         ASSERT_TRUE(baseAccess);
 
         std::uniform_real_distribution<float> udist(0, 255.f);
         generate(baseVec.begin(), baseVec.end(), [&]() { return udist(rng); });
 
-        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(baseAccess->sampleData(0), baseAccess->rowPitchBytes(), baseVec.data(),
+        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(baseAccess->sampleData(0), baseAccess->rowStride(), baseVec.data(),
                                             baseVec.size() * sizeof(float),
                                             baseVec.size() * sizeof(float), // vec has no padding
                                             1, cudaMemcpyHostToDevice));
@@ -334,15 +334,15 @@ TEST_P(OpNormalize, varshape_correct_output)
         scaleFormat.planeDataType(0));
     std::vector<float> scaleVec(scaleFormat.numChannels());
     {
-        const auto *scaleData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgScale.exportData());
+        const auto *scaleData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgScale.exportData());
         ASSERT_NE(nullptr, scaleData);
-        auto scaleAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*scaleData);
+        auto scaleAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*scaleData);
         ASSERT_TRUE(scaleAccess);
 
         std::uniform_real_distribution<float> udist(0, 1.f);
         generate(scaleVec.begin(), scaleVec.end(), [&]() { return udist(rng); });
 
-        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(scaleAccess->sampleData(0), scaleAccess->rowPitchBytes(), scaleVec.data(),
+        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(scaleAccess->sampleData(0), scaleAccess->rowStride(), scaleVec.data(),
                                             scaleVec.size() * sizeof(float),
                                             scaleVec.size() * sizeof(float), // vec has no padding
                                             1, cudaMemcpyHostToDevice));
@@ -371,28 +371,28 @@ TEST_P(OpNormalize, varshape_correct_output)
     {
         SCOPED_TRACE(i);
 
-        const auto *srcData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedDevice *>(imgSrc[i]->exportData());
         assert(srcData->numPlanes() == 1);
         int width  = srcData->plane(0).width;
         int height = srcData->plane(0).height;
 
-        const auto *dstData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgDst[i]->exportData());
+        const auto *dstData = dynamic_cast<const nvcv::IImageDataStridedDevice *>(imgDst[i]->exportData());
         assert(dstData->numPlanes() == 1);
 
-        int dstRowPitch = srcVecRowPitch[i];
+        int dstRowStride = srcVecRowStride[i];
 
-        std::vector<uint8_t> testVec(height * dstRowPitch);
+        std::vector<uint8_t> testVec(height * dstRowStride);
 
         // Copy output data to Host
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(testVec.data(), dstRowPitch, dstData->plane(0).buffer, dstData->plane(0).pitchBytes,
-                               dstRowPitch, // vec has no padding
+                  cudaMemcpy2D(testVec.data(), dstRowStride, dstData->plane(0).basePtr, dstData->plane(0).rowStride,
+                               dstRowStride, // vec has no padding
                                height, cudaMemcpyDeviceToHost));
 
-        std::vector<uint8_t> goldVec(height * dstRowPitch);
+        std::vector<uint8_t> goldVec(height * dstRowStride);
 
         // Generate gold result
-        Normalize(goldVec, dstRowPitch, srcVec[i], srcVecRowPitch[i], {width, height}, fmt, baseVec, 0, {1, 1},
+        Normalize(goldVec, dstRowStride, srcVec[i], srcVecRowStride[i], {width, height}, fmt, baseVec, 0, {1, 1},
                   baseFormat, scaleVec, 0, {1, 1}, scaleFormat, globalScale, globalShift, epsilon, flags);
 
         EXPECT_THAT(testVec, t::ElementsAreArray(goldVec));

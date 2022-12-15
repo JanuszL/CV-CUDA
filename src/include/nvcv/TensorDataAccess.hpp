@@ -30,10 +30,10 @@ namespace nv { namespace cv {
 
 namespace detail {
 
-class TensorDataAccessPitchImpl
+class TensorDataAccessStridedImpl
 {
 public:
-    TensorDataAccessPitchImpl(const ITensorDataPitch &tdata, const TensorShapeInfoImpl &infoShape)
+    TensorDataAccessStridedImpl(const ITensorDataStrided &tdata, const TensorShapeInfoImpl &infoShape)
         : m_tdata(tdata)
         , m_infoShape(infoShape)
     {
@@ -59,12 +59,12 @@ public:
         return m_tdata.shape();
     }
 
-    int64_t samplePitchBytes() const
+    int64_t sampleStride() const
     {
         int idx = this->infoLayout().idxSample();
         if (idx >= 0)
         {
-            return m_tdata.pitchBytes(idx);
+            return m_tdata.stride(idx);
         }
         else
         {
@@ -72,15 +72,15 @@ public:
         }
     }
 
-    void *sampleData(int n) const
+    Byte *sampleData(int n) const
     {
-        return sampleData(n, m_tdata.data());
+        return sampleData(n, m_tdata.basePtr());
     }
 
-    void *sampleData(int n, void *base) const
+    Byte *sampleData(int n, Byte *base) const
     {
         assert(0 <= n && n < this->numSamples());
-        return reinterpret_cast<std::byte *>(base) + this->samplePitchBytes() * n;
+        return base + this->sampleStride() * n;
     }
 
     bool isImage() const
@@ -99,11 +99,11 @@ public:
     }
 
 protected:
-    const ITensorDataPitch &m_tdata;
+    const ITensorDataStrided &m_tdata;
 
-    TensorDataAccessPitchImpl(const TensorDataAccessPitchImpl &that) = delete;
+    TensorDataAccessStridedImpl(const TensorDataAccessStridedImpl &that) = delete;
 
-    TensorDataAccessPitchImpl(const TensorDataAccessPitchImpl &that, const TensorShapeInfoImpl &infoShape)
+    TensorDataAccessStridedImpl(const TensorDataAccessStridedImpl &that, const TensorShapeInfoImpl &infoShape)
         : m_tdata(that.m_tdata)
         , m_infoShape(infoShape)
     {
@@ -113,17 +113,17 @@ private:
     const TensorShapeInfoImpl &m_infoShape;
 };
 
-class TensorDataAccessPitchImageImpl : public TensorDataAccessPitchImpl
+class TensorDataAccessStridedImageImpl : public TensorDataAccessStridedImpl
 {
 public:
-    TensorDataAccessPitchImageImpl(const ITensorDataPitch &tdata, const TensorShapeInfoImageImpl &infoShape)
-        : TensorDataAccessPitchImpl(tdata, infoShape)
+    TensorDataAccessStridedImageImpl(const ITensorDataStrided &tdata, const TensorShapeInfoImageImpl &infoShape)
+        : TensorDataAccessStridedImpl(tdata, infoShape)
     {
     }
 
     const TensorShapeInfoImageImpl &infoShape() const
     {
-        return static_cast<const TensorShapeInfoImageImpl &>(TensorDataAccessPitchImpl::infoShape());
+        return static_cast<const TensorShapeInfoImageImpl &>(TensorDataAccessStridedImpl::infoShape());
     }
 
     const TensorLayoutInfoImage &infoLayout() const
@@ -151,12 +151,12 @@ public:
         return this->infoShape().size();
     }
 
-    int64_t chPitchBytes() const
+    int64_t chStride() const
     {
         int idx = this->infoLayout().idxChannel();
         if (idx >= 0)
         {
-            return m_tdata.pitchBytes(idx);
+            return m_tdata.stride(idx);
         }
         else
         {
@@ -164,12 +164,12 @@ public:
         }
     }
 
-    int64_t colPitchBytes() const
+    int64_t colStride() const
     {
         int idx = this->infoLayout().idxWidth();
         if (idx >= 0)
         {
-            return m_tdata.pitchBytes(idx);
+            return m_tdata.stride(idx);
         }
         else
         {
@@ -177,12 +177,12 @@ public:
         }
     }
 
-    int64_t rowPitchBytes() const
+    int64_t rowStride() const
     {
         int idx = this->infoLayout().idxHeight();
         if (idx >= 0)
         {
-            return m_tdata.pitchBytes(idx);
+            return m_tdata.stride(idx);
         }
         else
         {
@@ -190,12 +190,12 @@ public:
         }
     }
 
-    int64_t depthPitchBytes() const
+    int64_t depthStride() const
     {
         int idx = this->infoLayout().idxDepth();
         if (idx >= 0)
         {
-            return m_tdata.pitchBytes(idx);
+            return m_tdata.stride(idx);
         }
         else
         {
@@ -203,49 +203,49 @@ public:
         }
     }
 
-    void *rowData(int y) const
+    Byte *rowData(int y) const
     {
-        return rowData(y, m_tdata.data());
+        return rowData(y, m_tdata.basePtr());
     }
 
-    void *rowData(int y, void *base) const
+    Byte *rowData(int y, Byte *base) const
     {
         assert(0 <= y && y < this->numRows());
-        return reinterpret_cast<std::byte *>(base) + this->rowPitchBytes() * y;
+        return base + this->rowStride() * y;
     }
 
-    void *chData(int c) const
+    Byte *chData(int c) const
     {
-        return chData(c, m_tdata.data());
+        return chData(c, m_tdata.basePtr());
     }
 
-    void *chData(int c, void *base) const
+    Byte *chData(int c, Byte *base) const
     {
         assert(0 <= c && c < this->numChannels());
-        return reinterpret_cast<std::byte *>(base) + this->chPitchBytes() * c;
+        return base + this->chStride() * c;
     }
 
 protected:
-    TensorDataAccessPitchImageImpl(const TensorDataAccessPitchImageImpl &that) = delete;
+    TensorDataAccessStridedImageImpl(const TensorDataAccessStridedImageImpl &that) = delete;
 
-    TensorDataAccessPitchImageImpl(const TensorDataAccessPitchImageImpl &that,
-                                   const TensorShapeInfoImageImpl       &infoShape)
-        : TensorDataAccessPitchImpl(that, infoShape)
+    TensorDataAccessStridedImageImpl(const TensorDataAccessStridedImageImpl &that,
+                                     const TensorShapeInfoImageImpl         &infoShape)
+        : TensorDataAccessStridedImpl(that, infoShape)
     {
     }
 };
 
-class TensorDataAccessPitchImagePlanarImpl : public TensorDataAccessPitchImageImpl
+class TensorDataAccessStridedImagePlanarImpl : public TensorDataAccessStridedImageImpl
 {
 public:
-    TensorDataAccessPitchImagePlanarImpl(const ITensorDataPitch &tdata, const TensorShapeInfoImagePlanar &infoShape)
-        : TensorDataAccessPitchImageImpl(tdata, infoShape)
+    TensorDataAccessStridedImagePlanarImpl(const ITensorDataStrided &tdata, const TensorShapeInfoImagePlanar &infoShape)
+        : TensorDataAccessStridedImageImpl(tdata, infoShape)
     {
     }
 
     const TensorShapeInfoImagePlanar &infoShape() const
     {
-        return static_cast<const TensorShapeInfoImagePlanar &>(TensorDataAccessPitchImageImpl::infoShape());
+        return static_cast<const TensorShapeInfoImagePlanar &>(TensorDataAccessStridedImageImpl::infoShape());
     }
 
     int32_t numPlanes() const
@@ -253,13 +253,13 @@ public:
         return this->infoShape().numPlanes();
     }
 
-    int64_t planePitchBytes() const
+    int64_t planeStride() const
     {
         if (this->infoLayout().isChannelFirst())
         {
             int ichannel = this->infoLayout().idxChannel();
             assert(ichannel >= 0);
-            return m_tdata.pitchBytes(ichannel);
+            return m_tdata.stride(ichannel);
         }
         else
         {
@@ -267,45 +267,45 @@ public:
         }
     }
 
-    void *planeData(int p) const
+    Byte *planeData(int p) const
     {
-        return planeData(p, m_tdata.data());
+        return planeData(p, m_tdata.basePtr());
     }
 
-    void *planeData(int p, void *base) const
+    Byte *planeData(int p, Byte *base) const
     {
         assert(0 <= p && p < this->numPlanes());
-        return reinterpret_cast<std::byte *>(base) + this->planePitchBytes() * p;
+        return base + this->planeStride() * p;
     }
 
 protected:
-    TensorDataAccessPitchImagePlanarImpl(const TensorDataAccessPitchImagePlanarImpl &that) = delete;
+    TensorDataAccessStridedImagePlanarImpl(const TensorDataAccessStridedImagePlanarImpl &that) = delete;
 
-    TensorDataAccessPitchImagePlanarImpl(const TensorDataAccessPitchImagePlanarImpl &that,
-                                         const TensorShapeInfoImagePlanar           &infoShape)
-        : TensorDataAccessPitchImageImpl(that, infoShape)
+    TensorDataAccessStridedImagePlanarImpl(const TensorDataAccessStridedImagePlanarImpl &that,
+                                           const TensorShapeInfoImagePlanar             &infoShape)
+        : TensorDataAccessStridedImageImpl(that, infoShape)
     {
     }
 };
 
 } // namespace detail
 
-class TensorDataAccessPitch
+class TensorDataAccessStrided
     // declaration order is important here
     : private detail::BaseFromMember<TensorShapeInfo>
-    , public detail::TensorDataAccessPitchImpl
+    , public detail::TensorDataAccessStridedImpl
 {
 public:
     static bool IsCompatible(const ITensorData &data)
     {
-        return dynamic_cast<const ITensorDataPitch *>(&data) != nullptr;
+        return dynamic_cast<const ITensorDataStrided *>(&data) != nullptr;
     }
 
-    static detail::Optional<TensorDataAccessPitch> Create(const ITensorData &data)
+    static detail::Optional<TensorDataAccessStrided> Create(const ITensorData &data)
     {
-        if (auto *dataPitch = dynamic_cast<const ITensorDataPitch *>(&data))
+        if (auto *dataStrided = dynamic_cast<const ITensorDataStrided *>(&data))
         {
-            return TensorDataAccessPitch(*dataPitch);
+            return TensorDataAccessStrided(*dataStrided);
         }
         else
         {
@@ -313,44 +313,44 @@ public:
         }
     }
 
-    TensorDataAccessPitch(const TensorDataAccessPitch &that)
+    TensorDataAccessStrided(const TensorDataAccessStrided &that)
         : MemberShapeInfo(that)
-        , detail::TensorDataAccessPitchImpl(that, MemberShapeInfo::member)
+        , detail::TensorDataAccessStridedImpl(that, MemberShapeInfo::member)
     {
     }
 
 private:
     using MemberShapeInfo = detail::BaseFromMember<TensorShapeInfo>;
 
-    TensorDataAccessPitch(const ITensorDataPitch &data)
+    TensorDataAccessStrided(const ITensorDataStrided &data)
         : MemberShapeInfo{*TensorShapeInfo::Create(data.shape())}
-        , detail::TensorDataAccessPitchImpl(data, MemberShapeInfo::member)
+        , detail::TensorDataAccessStridedImpl(data, MemberShapeInfo::member)
     {
     }
 };
 
-class TensorDataAccessPitchImage
+class TensorDataAccessStridedImage
     // declaration order is important here
     : private detail::BaseFromMember<TensorShapeInfoImage>
-    , public detail::TensorDataAccessPitchImageImpl
+    , public detail::TensorDataAccessStridedImageImpl
 {
 public:
-    TensorDataAccessPitchImage(const TensorDataAccessPitchImage &that)
+    TensorDataAccessStridedImage(const TensorDataAccessStridedImage &that)
         : MemberShapeInfo(that)
-        , detail::TensorDataAccessPitchImageImpl(that, MemberShapeInfo::member)
+        , detail::TensorDataAccessStridedImageImpl(that, MemberShapeInfo::member)
     {
     }
 
     static bool IsCompatible(const ITensorData &data)
     {
-        return TensorDataAccessPitch::IsCompatible(data) && TensorShapeInfoImage::IsCompatible(data.shape());
+        return TensorDataAccessStrided::IsCompatible(data) && TensorShapeInfoImage::IsCompatible(data.shape());
     }
 
-    static detail::Optional<TensorDataAccessPitchImage> Create(const ITensorData &data)
+    static detail::Optional<TensorDataAccessStridedImage> Create(const ITensorData &data)
     {
         if (IsCompatible(data))
         {
-            return TensorDataAccessPitchImage(dynamic_cast<const ITensorDataPitch &>(data));
+            return TensorDataAccessStridedImage(dynamic_cast<const ITensorDataStrided &>(data));
         }
         else
         {
@@ -362,35 +362,36 @@ private:
     using MemberShapeInfo = detail::BaseFromMember<TensorShapeInfoImage>;
 
 protected:
-    TensorDataAccessPitchImage(const ITensorDataPitch &data)
+    TensorDataAccessStridedImage(const ITensorDataStrided &data)
         : MemberShapeInfo{*TensorShapeInfoImage::Create(data.shape())}
-        , detail::TensorDataAccessPitchImageImpl(data, MemberShapeInfo::member)
+        , detail::TensorDataAccessStridedImageImpl(data, MemberShapeInfo::member)
     {
     }
 };
 
-class TensorDataAccessPitchImagePlanar
+class TensorDataAccessStridedImagePlanar
     // declaration order is important here
     : private detail::BaseFromMember<TensorShapeInfoImagePlanar>
-    , public detail::TensorDataAccessPitchImagePlanarImpl
+    , public detail::TensorDataAccessStridedImagePlanarImpl
 {
 public:
-    TensorDataAccessPitchImagePlanar(const TensorDataAccessPitchImagePlanar &that)
+    TensorDataAccessStridedImagePlanar(const TensorDataAccessStridedImagePlanar &that)
         : MemberShapeInfo(that)
-        , detail::TensorDataAccessPitchImagePlanarImpl(that, MemberShapeInfo::member)
+        , detail::TensorDataAccessStridedImagePlanarImpl(that, MemberShapeInfo::member)
     {
     }
 
     static bool IsCompatible(const ITensorData &data)
     {
-        return TensorDataAccessPitchImage::IsCompatible(data) && TensorShapeInfoImagePlanar::IsCompatible(data.shape());
+        return TensorDataAccessStridedImage::IsCompatible(data)
+            && TensorShapeInfoImagePlanar::IsCompatible(data.shape());
     }
 
-    static detail::Optional<TensorDataAccessPitchImagePlanar> Create(const ITensorData &data)
+    static detail::Optional<TensorDataAccessStridedImagePlanar> Create(const ITensorData &data)
     {
         if (IsCompatible(data))
         {
-            return TensorDataAccessPitchImagePlanar(dynamic_cast<const ITensorDataPitch &>(data));
+            return TensorDataAccessStridedImagePlanar(dynamic_cast<const ITensorDataStrided &>(data));
         }
         else
         {
@@ -402,9 +403,9 @@ private:
     using MemberShapeInfo = detail::BaseFromMember<TensorShapeInfoImagePlanar>;
 
 protected:
-    TensorDataAccessPitchImagePlanar(const ITensorDataPitch &data)
+    TensorDataAccessStridedImagePlanar(const ITensorDataStrided &data)
         : MemberShapeInfo{*TensorShapeInfoImagePlanar::Create(data.shape())}
-        , detail::TensorDataAccessPitchImagePlanarImpl(data, MemberShapeInfo::member)
+        , detail::TensorDataAccessStridedImagePlanarImpl(data, MemberShapeInfo::member)
     {
     }
 };

@@ -38,27 +38,27 @@ void Normalize::operator()(cudaStream_t stream, const cv::ITensor &in, const cv:
                            const cv::ITensor &scale, cv::ITensor &out, const float global_scale, const float shift,
                            const float epsilon, const uint32_t flags) const
 {
-    auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
+    auto *inData = dynamic_cast<const cv::ITensorDataStridedDevice *>(in.exportData());
     if (inData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be device-acessible, pitch-linear tensor");
     }
 
-    auto *baseData = dynamic_cast<const cv::ITensorDataPitchDevice *>(base.exportData());
+    auto *baseData = dynamic_cast<const cv::ITensorDataStridedDevice *>(base.exportData());
     if (baseData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
                                   "Input base must be device-acessible, pitch-linear tensor");
     }
 
-    auto *scaleData = dynamic_cast<const cv::ITensorDataPitchDevice *>(scale.exportData());
+    auto *scaleData = dynamic_cast<const cv::ITensorDataStridedDevice *>(scale.exportData());
     if (scaleData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
                                   "Input scale must be device-acessible, pitch-linear tensor");
     }
 
-    auto *outData = dynamic_cast<const cv::ITensorDataPitchDevice *>(out.exportData());
+    auto *outData = dynamic_cast<const cv::ITensorDataStridedDevice *>(out.exportData());
     if (outData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be device-acessible, pitch-linear tensor");
@@ -72,28 +72,28 @@ void Normalize::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &i
                            const cv::ITensor &scale, cv::IImageBatchVarShape &out, const float global_scale,
                            const float shift, const float epsilon, const uint32_t flags) const
 {
-    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
+    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(in.exportData(stream));
     if (inData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
                                   "Input must be device-acessible, varshape pitch-linear image batch");
     }
 
-    auto *baseData = dynamic_cast<const cv::ITensorDataPitchDevice *>(base.exportData());
+    auto *baseData = dynamic_cast<const cv::ITensorDataStridedDevice *>(base.exportData());
     if (baseData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
                                   "Input base must be device-acessible, pitch-linear tensor");
     }
 
-    auto *scaleData = dynamic_cast<const cv::ITensorDataPitchDevice *>(scale.exportData());
+    auto *scaleData = dynamic_cast<const cv::ITensorDataStridedDevice *>(scale.exportData());
     if (scaleData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
                                   "Input scale must be device-acessible, pitch-linear tensor");
     }
 
-    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(out.exportData(stream));
+    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(out.exportData(stream));
     if (outData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,

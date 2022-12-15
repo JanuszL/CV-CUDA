@@ -39,13 +39,13 @@ void WarpPerspective::operator()(cudaStream_t stream, const cv::ITensor &in, con
                                  const NVCVPerspectiveTransform transMatrix, const int32_t flags,
                                  const NVCVBorderType borderMode, const float4 borderValue) const
 {
-    auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
+    auto *inData = dynamic_cast<const cv::ITensorDataStridedDevice *>(in.exportData());
     if (inData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be device-accessible, pitch-linear tensor");
     }
 
-    auto *outData = dynamic_cast<const cv::ITensorDataPitchDevice *>(out.exportData());
+    auto *outData = dynamic_cast<const cv::ITensorDataStridedDevice *>(out.exportData());
     if (outData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
@@ -59,19 +59,19 @@ void WarpPerspective::operator()(cudaStream_t stream, const cv::IImageBatchVarSh
                                  const cv::IImageBatchVarShape &out, const cv::ITensor &transMatrix,
                                  const int32_t flags, const NVCVBorderType borderMode, const float4 borderValue) const
 {
-    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
+    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(in.exportData(stream));
     if (inData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be varshape image batch");
     }
 
-    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(out.exportData(stream));
+    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(out.exportData(stream));
     if (outData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be varshape image batch");
     }
 
-    auto *transMatrixData = dynamic_cast<const cv::ITensorDataPitchDevice *>(transMatrix.exportData());
+    auto *transMatrixData = dynamic_cast<const cv::ITensorDataStridedDevice *>(transMatrix.exportData());
     if (outData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,

@@ -578,14 +578,14 @@ __global__ void resize_area_ocv_align(const Ptr2dNHWC<T> src, const IntegerAreaF
 }
 
 template<typename T>
-void resize(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+void resize(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
             NVCVInterpolationType interpolation, cudaStream_t stream)
 
 {
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     const int batch_size = inAccess->numSamples();
@@ -688,7 +688,7 @@ size_t Resize::calBufferSize(DataShape max_input_shape, DataShape max_output_sha
     return 0;
 } //Resize::calBufferSize
 
-ErrorCode Resize::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+ErrorCode Resize::infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                         const NVCVInterpolationType interpolation, cudaStream_t stream)
 {
     DataFormat input_format  = GetLegacyDataFormat(inData.layout());
@@ -708,7 +708,7 @@ ErrorCode Resize::infer(const ITensorDataPitchDevice &inData, const ITensorDataP
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
     cuda_op::DataType  data_type   = GetLegacyDataType(inData.dtype());
@@ -728,7 +728,7 @@ ErrorCode Resize::infer(const ITensorDataPitchDevice &inData, const ITensorDataP
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    typedef void (*func_t)(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+    typedef void (*func_t)(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                            const NVCVInterpolationType interpolation, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {

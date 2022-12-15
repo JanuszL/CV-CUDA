@@ -35,7 +35,7 @@ namespace t    = ::testing;
 
 // #define DBG_MEDIAN_BLUR 1
 
-static void printVec(std::vector<uint8_t> &vec, int height, int rowPitch, int bytesPerPixel, std::string name)
+static void printVec(std::vector<uint8_t> &vec, int height, int rowStride, int bytesPerPixel, std::string name)
 {
 #if DBG_MEDIAN_BLUR
     for (int i = 0; i < bytesPerPixel; i++)
@@ -44,9 +44,9 @@ static void printVec(std::vector<uint8_t> &vec, int height, int rowPitch, int by
 
         for (int k = 0; k < height; k++)
         {
-            for (int j = 0; j < static_cast<int>(rowPitch / bytesPerPixel); j++)
+            for (int j = 0; j < static_cast<int>(rowStride / bytesPerPixel); j++)
             {
-                printf("%4d, ", static_cast<int>(vec[k * rowPitch + j * bytesPerPixel + i]));
+                printf("%4d, ", static_cast<int>(vec[k * rowStride + j * bytesPerPixel + i]));
             }
             std::cout << std::endl;
         }
@@ -55,7 +55,7 @@ static void printVec(std::vector<uint8_t> &vec, int height, int rowPitch, int by
 #endif
 }
 
-static uint8_t computeMedianInSubsetMatrix(const std::vector<uint8_t> &hSrc, int srcRowPitch, nvcv::Size2D srcSize,
+static uint8_t computeMedianInSubsetMatrix(const std::vector<uint8_t> &hSrc, int srcRowStride, nvcv::Size2D srcSize,
                                            nv::cv::Size2D ksize, nvcv::ImageFormat fmt, int x, int y, int z)
 {
     assert(fmt.numPlanes() == 1);
@@ -73,7 +73,7 @@ static uint8_t computeMedianInSubsetMatrix(const std::vector<uint8_t> &hSrc, int
         {
             int yP = y + j;
             int xP = x + i;
-            samples.push_back(srcPtr[yP * srcRowPitch + xP * elementsPerPixel + z]);
+            samples.push_back(srcPtr[yP * srcRowStride + xP * elementsPerPixel + z]);
         }
     }
 
@@ -95,8 +95,8 @@ static uint8_t computeMedianInSubsetMatrix(const std::vector<uint8_t> &hSrc, int
     return samples[samples.size() / 2];
 }
 
-static void GenerateMedianBlurGoldenOutput(std::vector<uint8_t> &hDst, int dstRowPitch, nvcv::Size2D dstSize,
-                                           const std::vector<uint8_t> &hSrc, int srcRowPitch, nvcv::Size2D srcSize,
+static void GenerateMedianBlurGoldenOutput(std::vector<uint8_t> &hDst, int dstRowStride, nvcv::Size2D dstSize,
+                                           const std::vector<uint8_t> &hSrc, int srcRowStride, nvcv::Size2D srcSize,
                                            nvcv::ImageFormat fmt, nv::cv::Size2D ksize)
 {
     assert(fmt.numPlanes() == 1);
@@ -117,15 +117,15 @@ static void GenerateMedianBlurGoldenOutput(std::vector<uint8_t> &hDst, int dstRo
         {
             for (int k = 0; k < elementsPerPixel; k++)
             {
-                dstPtr[dst_y * dstRowPitch + dst_x * elementsPerPixel + k] = computeMedianInSubsetMatrix(
-                    hSrc, srcRowPitch, srcSize, ksize, fmt, dst_x + offsetWidth, dst_y + offsetHeight, k);
+                dstPtr[dst_y * dstRowStride + dst_x * elementsPerPixel + k] = computeMedianInSubsetMatrix(
+                    hSrc, srcRowStride, srcSize, ksize, fmt, dst_x + offsetWidth, dst_y + offsetHeight, k);
             }
         }
     }
 }
 
-static void GenerateInputWithBorderReplicate(std::vector<uint8_t> &hDst, int dstRowPitch, nvcv::Size2D dstSize,
-                                             std::vector<uint8_t> &hSrc, int srcRowPitch, nvcv::Size2D srcSize,
+static void GenerateInputWithBorderReplicate(std::vector<uint8_t> &hDst, int dstRowStride, nvcv::Size2D dstSize,
+                                             std::vector<uint8_t> &hSrc, int srcRowStride, nvcv::Size2D srcSize,
                                              nvcv::ImageFormat fmt, nv::cv::Size2D ksize)
 {
     assert(fmt.numPlanes() == 1);
@@ -169,8 +169,8 @@ static void GenerateInputWithBorderReplicate(std::vector<uint8_t> &hDst, int dst
                 {
                     reducedOffsetY = srcHeight - 1;
                 }
-                dstPtr[dst_y * dstRowPitch + dst_x * elementsPerPixel + k]
-                    = srcPtr[reducedOffsetY * srcRowPitch + reducedOffsetX * elementsPerPixel + k];
+                dstPtr[dst_y * dstRowStride + dst_x * elementsPerPixel + k]
+                    = srcPtr[reducedOffsetY * srcRowStride + reducedOffsetX * elementsPerPixel + k];
             }
         }
     }
@@ -210,18 +210,18 @@ TEST_P(OpMedianBlur, tensor_correct_output)
     // Generate input
     nvcv::Tensor imgSrc(numberOfImages, {srcWidth, srcHeight}, fmt);
 
-    const auto *srcData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgSrc.exportData());
+    const auto *srcData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgSrc.exportData());
 
     ASSERT_NE(nullptr, srcData);
 
-    auto srcAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*srcData);
+    auto srcAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*srcData);
     ASSERT_TRUE(srcAccess);
 
     std::vector<std::vector<uint8_t>> srcVec(numberOfImages);
-    int                               srcVecRowPitch = srcWidth * fmt.planePixelStrideBytes(0);
+    int                               srcVecRowStride = srcWidth * fmt.planePixelStrideBytes(0);
 
     std::vector<std::vector<uint8_t>> srcBrdReplicateVec(numberOfImages);
-    int                               srcBrdReplicateVecRowPitch = srcBrdReplicateWidth * fmt.planePixelStrideBytes(0);
+    int                               srcBrdReplicateVecRowStride = srcBrdReplicateWidth * fmt.planePixelStrideBytes(0);
 
     std::default_random_engine randEng;
 
@@ -229,24 +229,24 @@ TEST_P(OpMedianBlur, tensor_correct_output)
     {
         std::uniform_int_distribution<uint8_t> rand(0, 255);
 
-        srcVec[i].resize(srcHeight * srcVecRowPitch);
+        srcVec[i].resize(srcHeight * srcVecRowStride);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return rand(randEng); });
 
         // Copy input data to the GPU
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(srcAccess->sampleData(i), srcAccess->rowPitchBytes(), srcVec[i].data(), srcVecRowPitch,
-                               srcVecRowPitch, // vec has no padding
+                  cudaMemcpy2D(srcAccess->sampleData(i), srcAccess->rowStride(), srcVec[i].data(), srcVecRowStride,
+                               srcVecRowStride, // vec has no padding
                                srcHeight, cudaMemcpyHostToDevice));
 
-        printVec(srcVec[i], srcHeight, srcVecRowPitch, bytesPerPixel, "input");
+        printVec(srcVec[i], srcHeight, srcVecRowStride, bytesPerPixel, "input");
 
-        srcBrdReplicateVec[i].resize(srcBrdReplicateHeight * srcBrdReplicateVecRowPitch);
+        srcBrdReplicateVec[i].resize(srcBrdReplicateHeight * srcBrdReplicateVecRowStride);
 
-        GenerateInputWithBorderReplicate(srcBrdReplicateVec[i], srcBrdReplicateVecRowPitch,
-                                         {srcBrdReplicateWidth, srcBrdReplicateHeight}, srcVec[i], srcVecRowPitch,
+        GenerateInputWithBorderReplicate(srcBrdReplicateVec[i], srcBrdReplicateVecRowStride,
+                                         {srcBrdReplicateWidth, srcBrdReplicateHeight}, srcVec[i], srcVecRowStride,
                                          {srcWidth, srcHeight}, fmt, ksize);
 
-        printVec(srcBrdReplicateVec[i], srcBrdReplicateHeight, srcBrdReplicateVecRowPitch, bytesPerPixel,
+        printVec(srcBrdReplicateVec[i], srcBrdReplicateHeight, srcBrdReplicateVecRowStride, bytesPerPixel,
                  "input with replicated border");
     }
 
@@ -260,36 +260,36 @@ TEST_P(OpMedianBlur, tensor_correct_output)
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
     // Check result
-    const auto *dstData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgDst.exportData());
+    const auto *dstData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgDst.exportData());
     ASSERT_NE(nullptr, dstData);
 
-    auto dstAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*dstData);
+    auto dstAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*dstData);
     ASSERT_TRUE(dstAccess);
 
-    int dstVecRowPitch = srcWidth * fmt.planePixelStrideBytes(0);
+    int dstVecRowStride = srcWidth * fmt.planePixelStrideBytes(0);
     for (int i = 0; i < numberOfImages; ++i)
     {
         SCOPED_TRACE(i);
 
-        std::vector<uint8_t> testVec(srcHeight * dstVecRowPitch);
+        std::vector<uint8_t> testVec(srcHeight * dstVecRowStride);
 
         // Copy output data to Host
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(testVec.data(), dstVecRowPitch, dstAccess->sampleData(i), dstAccess->rowPitchBytes(),
-                               dstVecRowPitch, // vec has no padding
+                  cudaMemcpy2D(testVec.data(), dstVecRowStride, dstAccess->sampleData(i), dstAccess->rowStride(),
+                               dstVecRowStride, // vec has no padding
                                srcHeight, cudaMemcpyDeviceToHost));
 
-        std::vector<uint8_t> goldVec(srcHeight * dstVecRowPitch);
+        std::vector<uint8_t> goldVec(srcHeight * dstVecRowStride);
 
         // Generate gold result and compare against operator output
         // Note - this function ignores the border pixels and only tests the inner pixels
-        GenerateMedianBlurGoldenOutput(goldVec, dstVecRowPitch, {srcWidth, srcHeight}, srcBrdReplicateVec[i],
-                                       srcBrdReplicateVecRowPitch, {srcBrdReplicateWidth, srcBrdReplicateHeight}, fmt,
+        GenerateMedianBlurGoldenOutput(goldVec, dstVecRowStride, {srcWidth, srcHeight}, srcBrdReplicateVec[i],
+                                       srcBrdReplicateVecRowStride, {srcBrdReplicateWidth, srcBrdReplicateHeight}, fmt,
                                        ksize);
 
-        printVec(goldVec, srcHeight, dstVecRowPitch, bytesPerPixel, "golden output");
+        printVec(goldVec, srcHeight, dstVecRowStride, bytesPerPixel, "golden output");
 
-        printVec(testVec, srcHeight, dstVecRowPitch, bytesPerPixel, "operator output");
+        printVec(testVec, srcHeight, dstVecRowStride, bytesPerPixel, "operator output");
 
         EXPECT_EQ(goldVec, testVec);
     }
@@ -311,10 +311,10 @@ TEST_P(OpMedianBlur, varshape_correct_output)
 
     // Create tensor to store kernel size
     nvcv::Tensor ksizeTensor(nvcv::TensorShape({numberOfImages, 2}, nvcv::TensorLayout::NW), nvcv::TYPE_S32);
-    const auto  *ksizeTensorData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(ksizeTensor.exportData());
+    const auto  *ksizeTensorData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(ksizeTensor.exportData());
     ASSERT_NE(nullptr, ksizeTensorData);
 
-    auto ksizeTensorDataAccess = nvcv::TensorDataAccessPitch::Create(*ksizeTensorData);
+    auto ksizeTensorDataAccess = nvcv::TensorDataAccessStrided::Create(*ksizeTensorData);
     ASSERT_TRUE(ksizeTensorDataAccess);
 
     // Create input and output
@@ -352,7 +352,7 @@ TEST_P(OpMedianBlur, varshape_correct_output)
 
     // Copy the kernel sizes to device tensor
     ASSERT_EQ(cudaSuccess, cudaMemcpy2DAsync(ksizeTensorDataAccess->sampleData(0),
-                                             ksizeTensorDataAccess->samplePitchBytes(), ksizeVecs.data(), sizeof(int2),
+                                             ksizeTensorDataAccess->sampleStride(), ksizeVecs.data(), sizeof(int2),
                                              sizeof(int2), numberOfImages, cudaMemcpyHostToDevice, stream));
 
     nvcv::ImageBatchVarShape batchSrc(numberOfImages);
@@ -362,15 +362,15 @@ TEST_P(OpMedianBlur, varshape_correct_output)
     batchDst.pushBack(imgDst.begin(), imgDst.end());
 
     std::vector<std::vector<uint8_t>> srcVec(numberOfImages);
-    std::vector<int>                  srcVecRowPitch(numberOfImages);
+    std::vector<int>                  srcVecRowStride(numberOfImages);
 
     std::vector<std::vector<uint8_t>> srcBrdReplicateVec(numberOfImages);
-    std::vector<int>                  srcBrdReplicateVecRowPitch(numberOfImages);
+    std::vector<int>                  srcBrdReplicateVecRowStride(numberOfImages);
 
     // Populate input
     for (int i = 0; i < numberOfImages; ++i)
     {
-        const auto *srcData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedDevice *>(imgSrc[i]->exportData());
         ASSERT_NE(nullptr, srcData);
 
         assert(srcData->numPlanes() == 1);
@@ -378,24 +378,24 @@ TEST_P(OpMedianBlur, varshape_correct_output)
         int srcWidth  = srcData->plane(0).width;
         int srcHeight = srcData->plane(0).height;
 
-        srcVecRowPitch[i] = srcWidth * fmt.planePixelStrideBytes(0);
+        srcVecRowStride[i] = srcWidth * fmt.planePixelStrideBytes(0);
 
         std::uniform_int_distribution<uint8_t> rand(0, 255);
 
-        srcVec[i].resize(srcHeight * srcVecRowPitch[i]);
+        srcVec[i].resize(srcHeight * srcVecRowStride[i]);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return rand(randEng); });
 
-        printVec(srcVec[i], srcHeight, srcVecRowPitch[i], bytesPerPixel, "input");
+        printVec(srcVec[i], srcHeight, srcVecRowStride[i], bytesPerPixel, "input");
 
         // Copy input data to the GPU
-        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(srcData->plane(0).buffer, srcData->plane(0).pitchBytes, srcVec[i].data(),
-                                            srcVecRowPitch[i],
-                                            srcVecRowPitch[i], // vec has no padding
+        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(srcData->plane(0).basePtr, srcData->plane(0).rowStride, srcVec[i].data(),
+                                            srcVecRowStride[i],
+                                            srcVecRowStride[i], // vec has no padding
                                             srcHeight, cudaMemcpyHostToDevice));
 
         // Fill the border with BORDER_REPLICATE
         const auto *srcBrdReplicateData
-            = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrcBrdReplicate[i]->exportData());
+            = dynamic_cast<const nvcv::IImageDataStridedDevice *>(imgSrcBrdReplicate[i]->exportData());
         ASSERT_NE(nullptr, srcBrdReplicateData);
 
         assert(srcBrdReplicateData->numPlanes() == 1);
@@ -403,15 +403,15 @@ TEST_P(OpMedianBlur, varshape_correct_output)
         int srcBrdReplicateWidth  = srcBrdReplicateData->plane(0).width;
         int srcBrdReplicateHeight = srcBrdReplicateData->plane(0).height;
 
-        srcBrdReplicateVecRowPitch[i] = srcBrdReplicateWidth * fmt.planePixelStrideBytes(0);
+        srcBrdReplicateVecRowStride[i] = srcBrdReplicateWidth * fmt.planePixelStrideBytes(0);
 
-        srcBrdReplicateVec[i].resize(srcBrdReplicateHeight * srcBrdReplicateVecRowPitch[i]);
+        srcBrdReplicateVec[i].resize(srcBrdReplicateHeight * srcBrdReplicateVecRowStride[i]);
 
-        GenerateInputWithBorderReplicate(srcBrdReplicateVec[i], srcBrdReplicateVecRowPitch[i],
-                                         {srcBrdReplicateWidth, srcBrdReplicateHeight}, srcVec[i], srcVecRowPitch[i],
+        GenerateInputWithBorderReplicate(srcBrdReplicateVec[i], srcBrdReplicateVecRowStride[i],
+                                         {srcBrdReplicateWidth, srcBrdReplicateHeight}, srcVec[i], srcVecRowStride[i],
                                          {srcWidth, srcHeight}, fmt, ksizeVecs[i]);
 
-        printVec(srcBrdReplicateVec[i], srcBrdReplicateHeight, srcBrdReplicateVecRowPitch[i], bytesPerPixel,
+        printVec(srcBrdReplicateVec[i], srcBrdReplicateHeight, srcBrdReplicateVecRowStride[i], bytesPerPixel,
                  "input with replicated border");
     }
 
@@ -429,39 +429,39 @@ TEST_P(OpMedianBlur, varshape_correct_output)
         SCOPED_TRACE(i);
 
         const auto *srcBrdReplicateData
-            = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrcBrdReplicate[i]->exportData());
+            = dynamic_cast<const nvcv::IImageDataStridedDevice *>(imgSrcBrdReplicate[i]->exportData());
         assert(srcBrdReplicateData->numPlanes() == 1);
         int srcBrdReplicateWidth  = srcBrdReplicateData->plane(0).width;
         int srcBrdReplicateHeight = srcBrdReplicateData->plane(0).height;
 
-        const auto *dstData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgDst[i]->exportData());
+        const auto *dstData = dynamic_cast<const nvcv::IImageDataStridedDevice *>(imgDst[i]->exportData());
         assert(dstData->numPlanes() == 1);
 
         int dstWidth  = dstData->plane(0).width;
         int dstHeight = dstData->plane(0).height;
 
-        int dstRowPitch                = dstWidth * fmt.planePixelStrideBytes(0);
-        int srcBrdReplicateVecRowPitch = srcBrdReplicateWidth * fmt.planePixelStrideBytes(0);
+        int dstRowStride                = dstWidth * fmt.planePixelStrideBytes(0);
+        int srcBrdReplicateVecRowStride = srcBrdReplicateWidth * fmt.planePixelStrideBytes(0);
 
-        std::vector<uint8_t> testVec(dstHeight * dstRowPitch);
+        std::vector<uint8_t> testVec(dstHeight * dstRowStride);
 
         // Copy output data to Host
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(testVec.data(), dstRowPitch, dstData->plane(0).buffer, dstData->plane(0).pitchBytes,
-                               dstRowPitch, // vec has no padding
+                  cudaMemcpy2D(testVec.data(), dstRowStride, dstData->plane(0).basePtr, dstData->plane(0).rowStride,
+                               dstRowStride, // vec has no padding
                                dstHeight, cudaMemcpyDeviceToHost));
 
-        std::vector<uint8_t> goldVec(dstHeight * dstRowPitch);
+        std::vector<uint8_t> goldVec(dstHeight * dstRowStride);
         std::generate(goldVec.begin(), goldVec.end(), [&]() { return 0; });
 
         // Generate gold result
-        GenerateMedianBlurGoldenOutput(goldVec, dstRowPitch, {dstWidth, dstHeight}, srcBrdReplicateVec[i],
-                                       srcBrdReplicateVecRowPitch, {srcBrdReplicateWidth, srcBrdReplicateHeight}, fmt,
+        GenerateMedianBlurGoldenOutput(goldVec, dstRowStride, {dstWidth, dstHeight}, srcBrdReplicateVec[i],
+                                       srcBrdReplicateVecRowStride, {srcBrdReplicateWidth, srcBrdReplicateHeight}, fmt,
                                        ksizeVecs[i]);
 
-        printVec(goldVec, dstHeight, dstRowPitch, bytesPerPixel, "golden output");
+        printVec(goldVec, dstHeight, dstRowStride, bytesPerPixel, "golden output");
 
-        printVec(testVec, dstHeight, dstRowPitch, bytesPerPixel, "operator output");
+        printVec(testVec, dstHeight, dstRowStride, bytesPerPixel, "operator output");
 
         EXPECT_EQ(goldVec, testVec);
     }

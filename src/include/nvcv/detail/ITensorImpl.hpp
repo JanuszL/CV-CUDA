@@ -72,12 +72,12 @@ inline const ITensorData *ITensor::exportData() const
     NVCVTensorData data;
     detail::CheckThrow(nvcvTensorExportData(this->handle(), &data));
 
-    if (data.bufferType != NVCV_TENSOR_BUFFER_PITCH_DEVICE)
+    if (data.bufferType != NVCV_TENSOR_BUFFER_STRIDED_DEVICE)
     {
         throw Exception(Status::ERROR_INVALID_OPERATION, "Tensor data cannot be exported, buffer type not supported");
     }
 
-    m_cacheData.emplace(TensorShape(data.shape, data.ndim, data.layout), DataType{data.dtype}, data.buffer.pitch);
+    m_cacheData.emplace(TensorShape(data.shape, data.ndim, data.layout), DataType{data.dtype}, data.buffer.strided);
 
     return &*m_cacheData;
 }

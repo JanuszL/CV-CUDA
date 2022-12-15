@@ -12,7 +12,7 @@
 
 @startuml
 
-struct ImagePlanePitchMem
+struct ImagePlaneStridedMem
 {
     + size: Size2D
     + pitchBytes: int32_t
@@ -44,54 +44,54 @@ interface IImageDataCudaArray extends IImageData
     + {abstract} plane(int p) const: cudaArray_t
 }
 
-interface IImageDataPitchMem extends IImageData
+interface IImageDataStridedMem extends IImageData
 {
     + {abstract} size() const: Size2D
     + {abstract} format() const: ImageFormat
 
-    + {abstract} plane(int p) const: ImagePlanePitchMem &
+    + {abstract} plane(int p) const: ImagePlaneStridedMem &
 }
 
-IImageDataPitchMem -[hidden]left- ImagePlanePitchMem
+IImageDataStridedMem -[hidden]left- ImagePlaneStridedMem
 
 interface IImageDataHostMem
 {
 }
-IImageDataPitchMem <|--# IImageDataHostMem: virtual
+IImageDataStridedMem <|--# IImageDataHostMem: virtual
 
 interface IImageDataHostPinnedMem
 {
 }
-IImageDataPitchMem <|--# IImageDataHostPinnedMem: virtual
+IImageDataStridedMem <|--# IImageDataHostPinnedMem: virtual
 
 interface IImageDataDeviceMem
 {
 }
-IImageDataPitchMem <|--# IImageDataDeviceMem: virtual
+IImageDataStridedMem <|--# IImageDataDeviceMem: virtual
 
 class ImageDataCudaArray implements IImageDataCudaArray
 {
 }
 
-class ImageDataPitchMem
+class ImageDataStridedMem
 {
 }
-IImageDataPitchMem <|..# ImageDataPitchMem: virtual
+IImageDataStridedMem <|..# ImageDataStridedMem: virtual
 
 class ImageDataHostMem implements IImageDataHostMem
 {
 }
-ImageDataPitchMem <|--* ImageDataHostMem: private
+ImageDataStridedMem <|--* ImageDataHostMem: private
 
 class ImageDataHostPinnedMem implements IImageDataHostPinnedMem
 {
 }
-ImageDataPitchMem <|--* ImageDataHostPinnedMem: private
+ImageDataStridedMem <|--* ImageDataHostPinnedMem: private
 
 class ImageDataDeviceMem implements IImageDataDeviceMem
 {
 }
-ImageDataPitchMem <|--* ImageDataDeviceMem: private
+ImageDataStridedMem <|--* ImageDataDeviceMem: private
 
 ImageDataCudaArray -[hidden]left- ImageDataDeviceMem
 

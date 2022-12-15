@@ -29,16 +29,16 @@ extern "C"
 typedef NVCVDataType NVCVElementType;
 
 /** Stores the tensor plane contents. */
-typedef struct NVCVTensorBufferPitchRec
+typedef struct NVCVTensorBufferStridedRec
 {
-    int64_t pitchBytes[NVCV_TENSOR_MAX_NDIM];
+    int64_t strides[NVCV_TENSOR_MAX_NDIM];
 
     /** Pointer to memory buffer with tensor contents.
-     * Pixel with type T is addressed by:
-     * pixAttr = (uint8_t *)mem + shape[0]*pitchBytes[0] + ... + shape[ndim-1]*pitchBytes[ndim-1];
+     * Element with type T is addressed by:
+     * pelem = basePtr + shape[0]*strides[0] + ... + shape[ndim-1]*strides[ndim-1];
      */
-    void *data;
-} NVCVTensorBufferPitch;
+    NVCVByte *basePtr;
+} NVCVTensorBufferStrided;
 
 /** Represents how the image buffer data is stored. */
 typedef enum
@@ -48,7 +48,7 @@ typedef enum
     NVCV_TENSOR_BUFFER_NONE = 0,
 
     /** GPU-accessible with equal-shape planes in pitch-linear layout. */
-    NVCV_TENSOR_BUFFER_PITCH_DEVICE,
+    NVCV_TENSOR_BUFFER_STRIDED_DEVICE,
 } NVCVTensorBufferType;
 
 /** Represents the available methods to access image batch contents.
@@ -57,9 +57,9 @@ typedef union NVCVTensorBufferRec
 {
     /** Tensor image batch stored in pitch-linear layout.
      * To be used when \ref NVCVTensorData::bufferType is:
-     * - \ref NVCV_TENSOR_BUFFER_PITCH_DEVICE
+     * - \ref NVCV_TENSOR_BUFFER_STRIDED_DEVICE
      */
-    NVCVTensorBufferPitch pitch;
+    NVCVTensorBufferStrided strided;
 } NVCVTensorBuffer;
 
 /** Stores information about image batch characteristics and content. */

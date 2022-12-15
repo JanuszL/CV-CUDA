@@ -35,13 +35,13 @@ Flip::Flip(int32_t maxBatchSize)
 
 void Flip::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, int32_t flipCode) const
 {
-    auto *input = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
+    auto *input = dynamic_cast<const cv::ITensorDataStridedDevice *>(in.exportData());
     if (input == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be device-accessible, pitch-linear tensor");
     }
 
-    auto *output = dynamic_cast<const cv::ITensorDataPitchDevice *>(out.exportData());
+    auto *output = dynamic_cast<const cv::ITensorDataStridedDevice *>(out.exportData());
     if (output == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
@@ -54,7 +54,7 @@ void Flip::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITen
 void Flip::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
                       const cv::ITensor &flipCode) const
 {
-    auto *input = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
+    auto *input = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(in.exportData(stream));
     if (input == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
@@ -62,7 +62,7 @@ void Flip::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, co
                             "image batch");
     }
 
-    auto *output = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(out.exportData(stream));
+    auto *output = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(out.exportData(stream));
     if (output == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
@@ -70,7 +70,7 @@ void Flip::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, co
                             " image batch");
     }
 
-    auto *flip_code = dynamic_cast<const cv::ITensorDataPitchDevice *>(flipCode.exportData());
+    auto *flip_code = dynamic_cast<const cv::ITensorDataStridedDevice *>(flipCode.exportData());
     if (flip_code == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,

@@ -61,7 +61,7 @@ typedef struct NVCVTensorRequirementsRec
     int64_t shape[NVCV_TENSOR_MAX_NDIM];
 
     /*< Distance in bytes between each element of a given dimension. */
-    int64_t pitchBytes[NVCV_TENSOR_MAX_NDIM];
+    int64_t strides[NVCV_TENSOR_MAX_NDIM];
 
     /*< Alignment/block size in bytes */
     int32_t alignBytes;
@@ -166,7 +166,7 @@ NVCV_PUBLIC NVCVStatus nvcvTensorConstruct(const NVCVTensorRequirements *reqs, N
  * @param [in] data Tensor contents.
  *                  + Must not be NULL.
  *                  + Allowed buffer types:
- *                    - \ref NVCV_TENSOR_BUFFER_PITCH_DEVICE
+ *                    - \ref NVCV_TENSOR_BUFFER_STRIDED_DEVICE
  *
  * @param [in] cleanup Cleanup function to be called when the tensor is destroyed
  *                     via @ref nvcvTensorDestroy.

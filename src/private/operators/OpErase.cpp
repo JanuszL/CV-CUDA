@@ -38,37 +38,37 @@ void Erase::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITe
                        cv::ITensor &erasing, cv::ITensor &values, cv::ITensor &imgIdx, bool random,
                        unsigned int seed) const
 {
-    auto *inData = dynamic_cast<const cv::ITensorDataPitchDevice *>(in.exportData());
+    auto *inData = dynamic_cast<const cv::ITensorDataStridedDevice *>(in.exportData());
     if (inData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input must be device-acessible, pitch-linear tensor");
     }
 
-    auto *outData = dynamic_cast<const cv::ITensorDataPitchDevice *>(out.exportData());
+    auto *outData = dynamic_cast<const cv::ITensorDataStridedDevice *>(out.exportData());
     if (outData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Output must be device-acessible, pitch-linear tensor");
     }
 
-    auto *anchorData = dynamic_cast<const cv::ITensorDataPitchDevice *>(anchor.exportData());
+    auto *anchorData = dynamic_cast<const cv::ITensorDataStridedDevice *>(anchor.exportData());
     if (anchorData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "anchor must be device-acessible, pitch-linear tensor");
     }
 
-    auto *erasingData = dynamic_cast<const cv::ITensorDataPitchDevice *>(erasing.exportData());
+    auto *erasingData = dynamic_cast<const cv::ITensorDataStridedDevice *>(erasing.exportData());
     if (erasingData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "erasing must be device-acessible, pitch-linear tensor");
     }
 
-    auto *valuesData = dynamic_cast<const cv::ITensorDataPitchDevice *>(values.exportData());
+    auto *valuesData = dynamic_cast<const cv::ITensorDataStridedDevice *>(values.exportData());
     if (valuesData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "values must be device-acessible, pitch-linear tensor");
     }
 
-    auto *imgIdxData = dynamic_cast<const cv::ITensorDataPitchDevice *>(imgIdx.exportData());
+    auto *imgIdxData = dynamic_cast<const cv::ITensorDataStridedDevice *>(imgIdx.exportData());
     if (imgIdxData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "imgIdx must be device-acessible, pitch-linear tensor");
@@ -83,25 +83,25 @@ void Erase::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, c
                        cv::ITensor &anchor, cv::ITensor &erasing, cv::ITensor &values, cv::ITensor &imgIdx, bool random,
                        unsigned int seed) const
 {
-    auto *anchorData = dynamic_cast<const cv::ITensorDataPitchDevice *>(anchor.exportData());
+    auto *anchorData = dynamic_cast<const cv::ITensorDataStridedDevice *>(anchor.exportData());
     if (anchorData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "anchor must be device-acessible, pitch-linear tensor");
     }
 
-    auto *erasingData = dynamic_cast<const cv::ITensorDataPitchDevice *>(erasing.exportData());
+    auto *erasingData = dynamic_cast<const cv::ITensorDataStridedDevice *>(erasing.exportData());
     if (erasingData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "erasing must be device-acessible, pitch-linear tensor");
     }
 
-    auto *valuesData = dynamic_cast<const cv::ITensorDataPitchDevice *>(values.exportData());
+    auto *valuesData = dynamic_cast<const cv::ITensorDataStridedDevice *>(values.exportData());
     if (valuesData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "values must be device-acessible, pitch-linear tensor");
     }
 
-    auto *imgIdxData = dynamic_cast<const cv::ITensorDataPitchDevice *>(imgIdx.exportData());
+    auto *imgIdxData = dynamic_cast<const cv::ITensorDataStridedDevice *>(imgIdx.exportData());
     if (imgIdxData == nullptr)
     {
         throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "imgIdx must be device-acessible, pitch-linear tensor");

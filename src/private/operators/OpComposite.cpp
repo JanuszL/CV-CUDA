@@ -37,28 +37,28 @@ Composite::Composite()
 void Composite::operator()(cudaStream_t stream, const cv::ITensor &foreground, const cv::ITensor &background,
                            const cv::ITensor &fgMask, const cv::ITensor &output) const
 {
-    auto *foregroundData = dynamic_cast<const cv::ITensorDataPitchDevice *>(foreground.exportData());
+    auto *foregroundData = dynamic_cast<const cv::ITensorDataStridedDevice *>(foreground.exportData());
     if (foregroundData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
                             "Input foreground must be device-acessible, pitch-linear tensor");
     }
 
-    auto *backgroundData = dynamic_cast<const cv::ITensorDataPitchDevice *>(background.exportData());
+    auto *backgroundData = dynamic_cast<const cv::ITensorDataStridedDevice *>(background.exportData());
     if (backgroundData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
                             "Input background must be device-acessible, pitch-linear tensor");
     }
 
-    auto *fgMaskData = dynamic_cast<const cv::ITensorDataPitchDevice *>(fgMask.exportData());
+    auto *fgMaskData = dynamic_cast<const cv::ITensorDataStridedDevice *>(fgMask.exportData());
     if (fgMaskData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
                             "Input fgMask must be device-acessible, pitch-linear tensor");
     }
 
-    auto *outData = dynamic_cast<const cv::ITensorDataPitchDevice *>(output.exportData());
+    auto *outData = dynamic_cast<const cv::ITensorDataStridedDevice *>(output.exportData());
     if (outData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be device-acessible, pitch-linear tensor");
@@ -71,28 +71,30 @@ void Composite::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &f
                            const cv::IImageBatchVarShape &background, const cv::IImageBatchVarShape &fgMask,
                            const cv::IImageBatchVarShape &output) const
 {
-    auto *foregroundData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(foreground.exportData(stream));
+    auto *foregroundData
+        = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(foreground.exportData(stream));
     if (foregroundData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
                             "Input foreground must be device-acessible, varshape image batch");
     }
 
-    auto *backgroundData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(background.exportData(stream));
+    auto *backgroundData
+        = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(background.exportData(stream));
     if (backgroundData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
                             "Input background must be device-acessible, varshape image batch");
     }
 
-    auto *fgMaskData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(fgMask.exportData(stream));
+    auto *fgMaskData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(fgMask.exportData(stream));
     if (fgMaskData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
                             "Input fgMask must be device-acessible, varshape image batch");
     }
 
-    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(output.exportData(stream));
+    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedDevice *>(output.exportData(stream));
     if (outData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,

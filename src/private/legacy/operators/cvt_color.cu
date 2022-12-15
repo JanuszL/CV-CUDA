@@ -631,7 +631,7 @@ __global__ void yuv422_to_gray_char_nhwc(cuda::Tensor4DWrap<T> src, cuda::Tensor
     *dst.ptr(batch_idx, dst_y, dst_x, 0) = Y;
 }
 
-inline ErrorCode BGR_to_RGB(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+inline ErrorCode BGR_to_RGB(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                             NVCVColorConversionCode code, cudaStream_t stream)
 {
     int sch  = (code == NVCV_COLOR_BGRA2BGR || code == NVCV_COLOR_RGBA2BGR || code == NVCV_COLOR_BGRA2RGBA) ? 4 : 3;
@@ -641,13 +641,13 @@ inline ErrorCode BGR_to_RGB(const ITensorDataPitchDevice &inData, const ITensorD
                  ? 2
                  : 0;
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
     cuda_op::DataType  inDataType = helpers::GetLegacyDataType(inData.dtype());
     cuda_op::DataShape inputShape = helpers::GetLegacyDataShape(inAccess->infoShape());
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     cuda_op::DataType  outDataType = helpers::GetLegacyDataType(outData.dtype());
@@ -724,18 +724,18 @@ inline ErrorCode BGR_to_RGB(const ITensorDataPitchDevice &inData, const ITensorD
     return ErrorCode::SUCCESS;
 }
 
-inline ErrorCode GRAY_to_BGR(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+inline ErrorCode GRAY_to_BGR(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                              NVCVColorConversionCode code, cudaStream_t stream)
 {
     int dch = (code == NVCV_COLOR_GRAY2BGRA) ? 4 : 3;
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
     cuda_op::DataType  inDataType = helpers::GetLegacyDataType(inData.dtype());
     cuda_op::DataShape inputShape = helpers::GetLegacyDataShape(inAccess->infoShape());
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     cuda_op::DataType  outDataType = helpers::GetLegacyDataType(outData.dtype());
@@ -812,19 +812,19 @@ inline ErrorCode GRAY_to_BGR(const ITensorDataPitchDevice &inData, const ITensor
     return ErrorCode::SUCCESS;
 }
 
-inline ErrorCode BGR_to_GRAY(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+inline ErrorCode BGR_to_GRAY(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                              NVCVColorConversionCode code, cudaStream_t stream)
 {
     int bidx = (code == NVCV_COLOR_RGBA2GRAY || code == NVCV_COLOR_RGB2GRAY) ? 2 : 0;
     int sch  = (code == NVCV_COLOR_RGBA2GRAY || code == NVCV_COLOR_BGRA2GRAY) ? 4 : 3;
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
     cuda_op::DataType  inDataType = helpers::GetLegacyDataType(inData.dtype());
     cuda_op::DataShape inputShape = helpers::GetLegacyDataShape(inAccess->infoShape());
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     cuda_op::DataType  outDataType = helpers::GetLegacyDataType(outData.dtype());
@@ -885,18 +885,18 @@ inline ErrorCode BGR_to_GRAY(const ITensorDataPitchDevice &inData, const ITensor
     return ErrorCode::SUCCESS;
 }
 
-inline ErrorCode BGR_to_YUV(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+inline ErrorCode BGR_to_YUV(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                             NVCVColorConversionCode code, cudaStream_t stream)
 {
     int bidx = code == NVCV_COLOR_BGR2YUV ? 0 : 2;
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
     cuda_op::DataType  inDataType = helpers::GetLegacyDataType(inData.dtype());
     cuda_op::DataShape inputShape = helpers::GetLegacyDataShape(inAccess->infoShape());
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     cuda_op::DataType  outDataType = helpers::GetLegacyDataType(outData.dtype());
@@ -956,18 +956,18 @@ inline ErrorCode BGR_to_YUV(const ITensorDataPitchDevice &inData, const ITensorD
     return ErrorCode::SUCCESS;
 }
 
-inline ErrorCode YUV_to_BGR(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+inline ErrorCode YUV_to_BGR(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                             NVCVColorConversionCode code, cudaStream_t stream)
 {
     int bidx = code == NVCV_COLOR_YUV2BGR ? 0 : 2;
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
     cuda_op::DataType  inDataType = helpers::GetLegacyDataType(inData.dtype());
     cuda_op::DataShape inputShape = helpers::GetLegacyDataShape(inAccess->infoShape());
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     cuda_op::DataType  outDataType = helpers::GetLegacyDataType(outData.dtype());
@@ -1027,19 +1027,19 @@ inline ErrorCode YUV_to_BGR(const ITensorDataPitchDevice &inData, const ITensorD
     return ErrorCode::SUCCESS;
 }
 
-inline ErrorCode BGR_to_HSV(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+inline ErrorCode BGR_to_HSV(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                             NVCVColorConversionCode code, cudaStream_t stream)
 {
     bool isFullRange = (code == NVCV_COLOR_BGR2HSV_FULL || code == NVCV_COLOR_RGB2HSV_FULL);
     int  bidx        = (code == NVCV_COLOR_BGR2HSV || code == NVCV_COLOR_BGR2HSV_FULL) ? 0 : 2;
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
     cuda_op::DataType  inDataType = helpers::GetLegacyDataType(inData.dtype());
     cuda_op::DataShape inputShape = helpers::GetLegacyDataShape(inAccess->infoShape());
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     cuda_op::DataType  outDataType = helpers::GetLegacyDataType(outData.dtype());
@@ -1092,19 +1092,19 @@ inline ErrorCode BGR_to_HSV(const ITensorDataPitchDevice &inData, const ITensorD
     return ErrorCode::SUCCESS;
 }
 
-inline ErrorCode HSV_to_BGR(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+inline ErrorCode HSV_to_BGR(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                             NVCVColorConversionCode code, cudaStream_t stream)
 {
     bool isFullRange = (code == NVCV_COLOR_HSV2BGR_FULL || code == NVCV_COLOR_HSV2RGB_FULL);
     int  bidx        = (code == NVCV_COLOR_HSV2BGR || code == NVCV_COLOR_HSV2BGR_FULL) ? 0 : 2;
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
     cuda_op::DataType  inDataType = helpers::GetLegacyDataType(inData.dtype());
     cuda_op::DataShape inputShape = helpers::GetLegacyDataShape(inAccess->infoShape());
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     cuda_op::DataType  outDataType = helpers::GetLegacyDataType(outData.dtype());
@@ -1163,7 +1163,7 @@ inline ErrorCode HSV_to_BGR(const ITensorDataPitchDevice &inData, const ITensorD
     return ErrorCode::SUCCESS;
 }
 
-inline ErrorCode YUV420xp_to_BGR(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+inline ErrorCode YUV420xp_to_BGR(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                                  NVCVColorConversionCode code, cudaStream_t stream)
 {
     int bidx
@@ -1180,13 +1180,13 @@ inline ErrorCode YUV420xp_to_BGR(const ITensorDataPitchDevice &inData, const ITe
             ? 0
             : 1;
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
     cuda_op::DataType  inDataType = helpers::GetLegacyDataType(inData.dtype());
     cuda_op::DataShape inputShape = helpers::GetLegacyDataShape(inAccess->infoShape());
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     cuda_op::DataType  outDataType = helpers::GetLegacyDataType(outData.dtype());
@@ -1240,12 +1240,12 @@ inline ErrorCode YUV420xp_to_BGR(const ITensorDataPitchDevice &inData, const ITe
         // checkKernelErrors();
 
         /* Method 2 (Better performance, but only works with fixed input shapes) */
-        int dpitch     = static_cast<int>(outAccess->samplePitchBytes());
-        int spitch     = static_cast<int>(inAccess->samplePitchBytes());
-        int cpy_width  = static_cast<int>(outAccess->samplePitchBytes());
+        int dpitch     = static_cast<int>(outAccess->sampleStride());
+        int spitch     = static_cast<int>(inAccess->sampleStride());
+        int cpy_width  = static_cast<int>(outAccess->sampleStride());
         int cpy_height = inputShape.N;
 
-        checkCudaErrors(cudaMemcpy2DAsync(outData.data(), dpitch, inData.data(), spitch, cpy_width, cpy_height,
+        checkCudaErrors(cudaMemcpy2DAsync(outData.basePtr(), dpitch, inData.basePtr(), spitch, cpy_width, cpy_height,
                                           cudaMemcpyDeviceToDevice, stream));
     }
     break;
@@ -1284,7 +1284,7 @@ inline ErrorCode YUV420xp_to_BGR(const ITensorDataPitchDevice &inData, const ITe
     return ErrorCode::SUCCESS;
 }
 
-inline ErrorCode YUV422_to_BGR(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+inline ErrorCode YUV422_to_BGR(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                                NVCVColorConversionCode code, cudaStream_t stream)
 {
     int bidx
@@ -1307,13 +1307,13 @@ inline ErrorCode YUV422_to_BGR(const ITensorDataPitchDevice &inData, const ITens
             ? 0
             : 2;
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
     cuda_op::DataType  inDataType = helpers::GetLegacyDataType(inData.dtype());
     cuda_op::DataShape inputShape = helpers::GetLegacyDataShape(inAccess->infoShape());
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     cuda_op::DataType  outDataType = helpers::GetLegacyDataType(outData.dtype());
@@ -1415,7 +1415,7 @@ inline static void bgr_to_yuv420sp_launcher(cuda::Tensor4DWrap<T> src_ptr, cuda:
     // NPP
 }
 
-inline ErrorCode BGR_to_YUV420xp(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+inline ErrorCode BGR_to_YUV420xp(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                                  NVCVColorConversionCode code, cudaStream_t stream)
 {
     int bidx
@@ -1432,13 +1432,13 @@ inline ErrorCode BGR_to_YUV420xp(const ITensorDataPitchDevice &inData, const ITe
             ? 0
             : 1;
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
     cuda_op::DataType  inDataType = helpers::GetLegacyDataType(inData.dtype());
     cuda_op::DataShape inputShape = helpers::GetLegacyDataShape(inAccess->infoShape());
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     cuda_op::DataType  outDataType = helpers::GetLegacyDataType(outData.dtype());
@@ -1514,7 +1514,7 @@ size_t CvtColor::calBufferSize(DataShape max_input_shape, DataShape max_output_s
     return 0;
 }
 
-ErrorCode CvtColor::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+ErrorCode CvtColor::infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                           NVCVColorConversionCode code, cudaStream_t stream)
 {
     DataFormat input_format  = helpers::GetLegacyDataFormat(inData.layout());
@@ -1534,7 +1534,7 @@ ErrorCode CvtColor::infer(const ITensorDataPitchDevice &inData, const ITensorDat
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    typedef ErrorCode (*func_t)(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+    typedef ErrorCode (*func_t)(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                                 NVCVColorConversionCode code, cudaStream_t stream);
 
     static const func_t funcs[] = {

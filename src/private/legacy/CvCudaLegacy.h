@@ -284,7 +284,7 @@ public:
      * @param stream for the asynchronous execution.
      *
      */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, const double alpha,
+    ErrorCode infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData, const double alpha,
                     const double beta, cudaStream_t stream);
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator
@@ -364,7 +364,7 @@ public:
      * @param [in]  roi region of interest, defined in pixels
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, NVCVRectI roi,
+    ErrorCode infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData, NVCVRectI roi,
                     cudaStream_t stream);
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator
@@ -436,8 +436,8 @@ public:
      *      both axes.
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const ITensorDataPitchDevice &input, const ITensorDataPitchDevice &output, const int32_t flipCode,
-                    cudaStream_t stream);
+    ErrorCode infer(const ITensorDataStridedDevice &input, const ITensorDataStridedDevice &output,
+                    const int32_t flipCode, cudaStream_t stream);
 
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator
@@ -509,8 +509,9 @@ public:
      *      both axes.
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &input, const IImageBatchVarShapeDataPitchDevice &output,
-                    const ITensorDataPitchDevice &flipCode, cudaStream_t stream);
+    ErrorCode infer(const IImageBatchVarShapeDataStridedDevice &input,
+                    const IImageBatchVarShapeDataStridedDevice &output, const ITensorDataStridedDevice &flipCode,
+                    cudaStream_t stream);
 
     /**
      * @brief calculate the gpu buffer size needed by this operator
@@ -587,7 +588,8 @@ public:
      * @param data_type data type of the input images, e.g. kCV_32F.
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, cudaStream_t stream);
+    ErrorCode infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
+                    cudaStream_t stream);
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator
      * @param max_input_shape maximum input DataShape that may be used
@@ -662,7 +664,7 @@ public:
      * @param [in] stream Stream for the asynchronous execution.
      *
      */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+    ErrorCode infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                     const NVCVInterpolationType interpolation, cudaStream_t stream);
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator
@@ -737,7 +739,7 @@ public:
      * @param borderMode the border mode to use when acessing data outside of source
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+    ErrorCode infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                     NVCVMorphologyType morph_type, Size2D mask_size, int2 anchor, int iteration,
                     const NVCVBorderType borderMode, cudaStream_t stream);
 };
@@ -804,8 +806,8 @@ public:
      * @param stream for the asynchronous execution.
      */
     ErrorCode infer(const cv::IImageBatchVarShape &inData, const cv::IImageBatchVarShape &outData,
-                    NVCVMorphologyType morph_type, const ITensorDataPitchDevice &masks,
-                    const ITensorDataPitchDevice &anchors, int iteration, NVCVBorderType borderMode,
+                    NVCVMorphologyType morph_type, const ITensorDataStridedDevice &masks,
+                    const ITensorDataStridedDevice &anchors, int iteration, NVCVBorderType borderMode,
                     cudaStream_t stream);
 
 protected:
@@ -904,8 +906,8 @@ public:
      * reciprocal is used when scaling.
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &baseData,
-                    const ITensorDataPitchDevice &scaleData, const ITensorDataPitchDevice &outData,
+    ErrorCode infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &baseData,
+                    const ITensorDataStridedDevice &scaleData, const ITensorDataStridedDevice &outData,
                     const float global_scale, const float shift, const float epsilon, const uint32_t flags,
                     cudaStream_t stream);
     /**
@@ -978,8 +980,8 @@ public:
      *     Data Type must be 32bit Signed.
      */
 
-    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
-                    const ITensorDataPitchDevice &top, const ITensorDataPitchDevice &left,
+    ErrorCode infer(const IImageBatchVarShapeDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
+                    const ITensorDataStridedDevice &top, const ITensorDataStridedDevice &left,
                     const NVCVBorderType borderMode, const float borderValue, cudaStream_t stream);
 
     size_t calBufferSize(int batch_size);
@@ -1009,8 +1011,9 @@ public:
      * @param data_type data type of the input images, e.g. kCV_32F.
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, const double angleDeg,
-                    const double2 shift, const NVCVInterpolationType interpolation, cudaStream_t stream);
+    ErrorCode infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
+                    const double angleDeg, const double2 shift, const NVCVInterpolationType interpolation,
+                    cudaStream_t stream);
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator
      * @param max_input_shape maximum input DataShape that may be used
@@ -1045,8 +1048,8 @@ public:
      * @param data_type data type of the input images, e.g. kCV_32F.
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, const cv::Size2D ksize,
-                    cudaStream_t stream);
+    ErrorCode infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
+                    const cv::Size2D ksize, cudaStream_t stream);
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator
      * @param max_input_shape maximum input DataShape that may be used
@@ -1115,9 +1118,9 @@ public:
      * @param out_data_type data type of the output images, e.g. kCV_32F.
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const nv::cv::IImageBatchVarShapeDataPitchDevice &inData,
-                    const nv::cv::ITensorDataPitchDevice &baseData, const nv::cv::ITensorDataPitchDevice &scaleData,
-                    const nv::cv::IImageBatchVarShapeDataPitchDevice &outData, const float global_scale,
+    ErrorCode infer(const nv::cv::IImageBatchVarShapeDataStridedDevice &inData,
+                    const nv::cv::ITensorDataStridedDevice &baseData, const nv::cv::ITensorDataStridedDevice &scaleData,
+                    const nv::cv::IImageBatchVarShapeDataStridedDevice &outData, const float global_scale,
                     const float shift, const float epsilon, const uint32_t flags, cudaStream_t stream);
 };
 
@@ -1159,8 +1162,9 @@ public:
      * @param stream for the asynchronous execution.
      *
      */
-    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
-                    const NVCVInterpolationType interpolation, cudaStream_t stream);
+    ErrorCode infer(const IImageBatchVarShapeDataStridedDevice &inData,
+                    const IImageBatchVarShapeDataStridedDevice &outData, const NVCVInterpolationType interpolation,
+                    cudaStream_t stream);
 };
 
 class CopyMakeBorder : public CudaBaseOp
@@ -1233,7 +1237,7 @@ public:
      * @param value border value if borderType==BORDER_CONSTANT.
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, const int top,
+    ErrorCode infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData, const int top,
                     const int left, const NVCVBorderType border_type, const float4 value, cudaStream_t stream);
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator
@@ -1270,18 +1274,19 @@ public:
      * @param value border value if borderType==BORDER_CONSTANT.
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
-                    const nv::cv::ITensorDataPitchDevice &top, const nv::cv::ITensorDataPitchDevice &left,
-                    const NVCVBorderType border_type, const float4 value, cudaStream_t stream);
+    ErrorCode infer(const IImageBatchVarShapeDataStridedDevice &inData,
+                    const IImageBatchVarShapeDataStridedDevice &outData, const nv::cv::ITensorDataStridedDevice &top,
+                    const nv::cv::ITensorDataStridedDevice &left, const NVCVBorderType border_type, const float4 value,
+                    cudaStream_t stream);
 
-    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
-                    const nv::cv::ITensorDataPitchDevice &top, const nv::cv::ITensorDataPitchDevice &left,
+    ErrorCode infer(const IImageBatchVarShapeDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
+                    const nv::cv::ITensorDataStridedDevice &top, const nv::cv::ITensorDataStridedDevice &left,
                     const NVCVBorderType border_type, const float4 value, cudaStream_t stream);
 
 private:
     template<class OutType>
-    ErrorCode inferWarp(const IImageBatchVarShapeDataPitchDevice &inData, const OutType &outData,
-                        const nv::cv::ITensorDataPitchDevice &top, const nv::cv::ITensorDataPitchDevice &left,
+    ErrorCode inferWarp(const IImageBatchVarShapeDataStridedDevice &inData, const OutType &outData,
+                        const nv::cv::ITensorDataStridedDevice &top, const nv::cv::ITensorDataStridedDevice &left,
                         const NVCVBorderType border_type, const float4 value, cudaStream_t stream);
 };
 
@@ -1306,7 +1311,7 @@ public:
      * @param input_shape shape of the input images.
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, int crop_rows,
+    ErrorCode infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData, int crop_rows,
                     int crop_columns, cudaStream_t stream);
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator
@@ -1345,9 +1350,10 @@ public:
      * @param data_type data type of the input images, e.g. kCV_32F.
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
-                    const ITensorDataPitchDevice &angleDeg, const ITensorDataPitchDevice &shift,
-                    const NVCVInterpolationType interpolation, cudaStream_t stream);
+    ErrorCode infer(const IImageBatchVarShapeDataStridedDevice &inData,
+                    const IImageBatchVarShapeDataStridedDevice &outData, const ITensorDataStridedDevice &angleDeg,
+                    const ITensorDataStridedDevice &shift, const NVCVInterpolationType interpolation,
+                    cudaStream_t stream);
 
 protected:
     double   *d_aCoeffs;
@@ -1416,8 +1422,8 @@ public:
      * @param borderMode pixel extrapolation method, e.g. \p NVCV_BORDER_CONSTANT
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, int ksize, float scale,
-                    NVCVBorderType borderMode, cudaStream_t stream);
+    ErrorCode infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData, int ksize,
+                    float scale, NVCVBorderType borderMode, cudaStream_t stream);
 
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator
@@ -1491,7 +1497,7 @@ public:
      * @param borderMode pixel extrapolation method, e.g. NVCV_BORDER_CONSTANT
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, Size2D kernelSize,
+    ErrorCode infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData, Size2D kernelSize,
                     double2 sigma, NVCVBorderType borderMode, cudaStream_t stream);
 
     /**
@@ -1537,9 +1543,9 @@ public:
      * @param stream for the asynchronous execution.
      *
      */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
-                    const ITensorDataPitchDevice &anchor, const ITensorDataPitchDevice &erasing,
-                    const ITensorDataPitchDevice &values, const ITensorDataPitchDevice &imgIdx, bool random,
+    ErrorCode infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
+                    const ITensorDataStridedDevice &anchor, const ITensorDataStridedDevice &erasing,
+                    const ITensorDataStridedDevice &values, const ITensorDataStridedDevice &imgIdx, bool random,
                     unsigned int seed, bool inplace, cudaStream_t stream);
 
 protected:
@@ -1609,7 +1615,7 @@ public:
      * @param borderMode pixel extrapolation method, e.g. NVCV_BORDER_CONSTANT
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, Size2D kernelSize,
+    ErrorCode infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData, Size2D kernelSize,
                     int2 kernelAnchor, NVCVBorderType borderMode, cudaStream_t stream);
 
     /**
@@ -1699,9 +1705,10 @@ public:
      * @param borderMode pixel extrapolation method, e.g. NVCV_BORDER_CONSTANT
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
-                    const IImageBatchVarShapeDataPitchDevice &kernelData,
-                    const ITensorDataPitchDevice &kernelAnchorData, NVCVBorderType borderMode, cudaStream_t stream);
+    ErrorCode infer(const IImageBatchVarShapeDataStridedDevice &inData,
+                    const IImageBatchVarShapeDataStridedDevice &outData,
+                    const IImageBatchVarShapeDataStridedDevice &kernelData,
+                    const ITensorDataStridedDevice &kernelAnchorData, NVCVBorderType borderMode, cudaStream_t stream);
 };
 
 class LaplacianVarShape : public CudaBaseOp
@@ -1768,9 +1775,9 @@ public:
      * @param borderMode pixel extrapolation method, e.g. cv::BORDER_CONSTANT
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
-                    const ITensorDataPitchDevice &ksize, const ITensorDataPitchDevice &scale, NVCVBorderType borderMode,
-                    cudaStream_t stream);
+    ErrorCode infer(const IImageBatchVarShapeDataStridedDevice &inData,
+                    const IImageBatchVarShapeDataStridedDevice &outData, const ITensorDataStridedDevice &ksize,
+                    const ITensorDataStridedDevice &scale, NVCVBorderType borderMode, cudaStream_t stream);
 };
 
 class GammaContrastVarShape : public CudaBaseOp
@@ -1801,8 +1808,9 @@ public:
      * @param stream for the asynchronous execution.
      */
 
-    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
-                    const ITensorDataPitchDevice &gammas, cudaStream_t stream);
+    ErrorCode infer(const IImageBatchVarShapeDataStridedDevice &inData,
+                    const IImageBatchVarShapeDataStridedDevice &outData, const ITensorDataStridedDevice &gammas,
+                    cudaStream_t stream);
 
 private:
     int    m_maxBatchSize    = 0;
@@ -1834,8 +1842,8 @@ public:
     * @param stream for the asynchronous execution.
     */
     ErrorCode infer(const IImageBatchVarShape &inbatch, const IImageBatchVarShape &outbatch,
-                    const ITensorDataPitchDevice &anchor, const ITensorDataPitchDevice &erasing,
-                    const ITensorDataPitchDevice &values, const ITensorDataPitchDevice &imgIdx, bool random,
+                    const ITensorDataStridedDevice &anchor, const ITensorDataStridedDevice &erasing,
+                    const ITensorDataStridedDevice &values, const ITensorDataStridedDevice &imgIdx, bool random,
                     unsigned int seed, bool inplace, cudaStream_t stream);
 
 protected:
@@ -1907,9 +1915,9 @@ public:
      * @param borderMode pixel extrapolation method, e.g. NVCV_BORDER_CONSTANT
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
-                    const ITensorDataPitchDevice &kernelSize, const ITensorDataPitchDevice &sigma,
-                    NVCVBorderType borderMode, cudaStream_t stream);
+    ErrorCode infer(const IImageBatchVarShapeDataStridedDevice &inData,
+                    const IImageBatchVarShapeDataStridedDevice &outData, const ITensorDataStridedDevice &kernelSize,
+                    const ITensorDataStridedDevice &sigma, NVCVBorderType borderMode, cudaStream_t stream);
 
     /**
      * @brief calculate the gpu buffer size needed by this operator
@@ -1988,9 +1996,9 @@ public:
      * @param borderMode pixel extrapolation method, e.g. cv::BORDER_CONSTANT
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
-                    const ITensorDataPitchDevice &kernelSize, const ITensorDataPitchDevice &kernelAnchor,
-                    NVCVBorderType borderMode, cudaStream_t stream);
+    ErrorCode infer(const IImageBatchVarShapeDataStridedDevice &inData,
+                    const IImageBatchVarShapeDataStridedDevice &outData, const ITensorDataStridedDevice &kernelSize,
+                    const ITensorDataStridedDevice &kernelAnchor, NVCVBorderType borderMode, cudaStream_t stream);
 
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator
@@ -2028,8 +2036,8 @@ public:
      * @param data_type data type of the input images, e.g. kCV_32F.
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &in, const IImageBatchVarShapeDataPitchDevice &out,
-                    const ITensorDataPitchDevice &ksize, cudaStream_t stream);
+    ErrorCode infer(const IImageBatchVarShapeDataStridedDevice &in, const IImageBatchVarShapeDataStridedDevice &out,
+                    const ITensorDataStridedDevice &ksize, cudaStream_t stream);
 
 protected:
     const int        m_maxBatchSize;
@@ -2056,7 +2064,7 @@ public:
      * @param borderMode pixel extrapolation method, e.g. cv::BORDER_CONSTANT
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, int diameter,
+    ErrorCode infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData, int diameter,
                     float sigmaColor, float sigmaSpace, NVCVBorderType borderMode, cudaStream_t stream);
 };
 
@@ -2080,9 +2088,10 @@ public:
      * @param borderMode pixel extrapolation method, e.g. cv::BORDER_CONSTANT
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
-                    const ITensorDataPitchDevice &diameterData, const ITensorDataPitchDevice &sigmaColorData,
-                    const ITensorDataPitchDevice &sigmaSpaceData, NVCVBorderType borderMode, cudaStream_t stream);
+    ErrorCode infer(const IImageBatchVarShapeDataStridedDevice &inData,
+                    const IImageBatchVarShapeDataStridedDevice &outData, const ITensorDataStridedDevice &diameterData,
+                    const ITensorDataStridedDevice &sigmaColorData, const ITensorDataStridedDevice &sigmaSpaceData,
+                    NVCVBorderType borderMode, cudaStream_t stream);
 };
 
 class CvtColor : public CudaBaseOp
@@ -2102,7 +2111,7 @@ public:
      * @param code Color space conversion code, \ref NVCVColorConversionCode.
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+    ErrorCode infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                     NVCVColorConversionCode code, cudaStream_t stream);
 
     /**
@@ -2135,7 +2144,7 @@ public:
      * @param borderValue used in case of a constant border.
      * @param stream for the asynchronous execution.
     */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, const float *xform,
+    ErrorCode infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData, const float *xform,
                     const int32_t flags, const NVCVBorderType borderMode, const float4 borderValue,
                     cudaStream_t stream);
 };
@@ -2169,7 +2178,7 @@ public:
      * @param data_type data type of the input images, e.g. kCV_32F.
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+    ErrorCode infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                     const float *transMatrix, const int32_t flags, const NVCVBorderType borderMode,
                     const float4 borderValue, cudaStream_t stream);
     /**
@@ -2213,9 +2222,10 @@ public:
      * @param stream for the asynchronous execution.
      *
      */
-    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
-                    const ITensorDataPitchDevice &transMatrix, const int32_t flags, const NVCVBorderType borderMode,
-                    const float4 borderValue, cudaStream_t stream);
+    ErrorCode infer(const IImageBatchVarShapeDataStridedDevice &inData,
+                    const IImageBatchVarShapeDataStridedDevice &outData, const ITensorDataStridedDevice &transMatrix,
+                    const int32_t flags, const NVCVBorderType borderMode, const float4 borderValue,
+                    cudaStream_t stream);
 
 protected:
     const int m_maxBatchSize;
@@ -2252,9 +2262,10 @@ public:
      * @param data_type data type of the input images, e.g. kCV_32F.
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
-                    const ITensorDataPitchDevice &transMatrix, const int32_t flags, const NVCVBorderType borderMode,
-                    const float4 borderValue, cudaStream_t stream);
+    ErrorCode infer(const IImageBatchVarShapeDataStridedDevice &inData,
+                    const IImageBatchVarShapeDataStridedDevice &outData, const ITensorDataStridedDevice &transMatrix,
+                    const int32_t flags, const NVCVBorderType borderMode, const float4 borderValue,
+                    cudaStream_t stream);
 
 protected:
     const int m_maxBatchSize;
@@ -2278,8 +2289,9 @@ public:
      * @param code color space conversion code
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
-                    NVCVColorConversionCode code, cudaStream_t stream);
+    ErrorCode infer(const IImageBatchVarShapeDataStridedDevice &inData,
+                    const IImageBatchVarShapeDataStridedDevice &outData, NVCVColorConversionCode code,
+                    cudaStream_t stream);
 
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator
@@ -2311,8 +2323,9 @@ public:
      *
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const ITensorDataPitchDevice &foreground, const ITensorDataPitchDevice &background,
-                    const ITensorDataPitchDevice &fgMask, const ITensorDataPitchDevice &outData, cudaStream_t stream);
+    ErrorCode infer(const ITensorDataStridedDevice &foreground, const ITensorDataStridedDevice &background,
+                    const ITensorDataStridedDevice &fgMask, const ITensorDataStridedDevice &outData,
+                    cudaStream_t stream);
 };
 
 class ChannelReorderVarShape : public CudaBaseOp
@@ -2344,8 +2357,9 @@ public:
      * @param stream for the asynchronous execution.
      */
 
-    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
-                    const ITensorDataPitchDevice &order, cudaStream_t stream);
+    ErrorCode infer(const IImageBatchVarShapeDataStridedDevice &inData,
+                    const IImageBatchVarShapeDataStridedDevice &outData, const ITensorDataStridedDevice &order,
+                    cudaStream_t stream);
 };
 
 class CompositeVarShape : public CudaBaseOp
@@ -2371,10 +2385,10 @@ public:
      *
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const IImageBatchVarShapeDataPitchDevice &forground,
-                    const IImageBatchVarShapeDataPitchDevice &background,
-                    const IImageBatchVarShapeDataPitchDevice &fgMask, const IImageBatchVarShapeDataPitchDevice &outData,
-                    cudaStream_t stream);
+    ErrorCode infer(const IImageBatchVarShapeDataStridedDevice &forground,
+                    const IImageBatchVarShapeDataStridedDevice &background,
+                    const IImageBatchVarShapeDataStridedDevice &fgMask,
+                    const IImageBatchVarShapeDataStridedDevice &outData, cudaStream_t stream);
 };
 
 class PillowResize : public CudaBaseOp
@@ -2400,7 +2414,7 @@ public:
      * @param stream for the asynchronous execution.
      *
      */
-    ErrorCode infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+    ErrorCode infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                     const NVCVInterpolationType interpolation, cudaStream_t stream);
 
     /**

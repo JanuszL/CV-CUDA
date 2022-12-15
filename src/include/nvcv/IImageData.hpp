@@ -56,38 +56,38 @@ protected:
     using IImageData::IImageData;
 };
 
-using ImagePlanePitch = NVCVImagePlanePitch;
+using ImagePlaneStrided = NVCVImagePlaneStrided;
 
-class IImageDataPitch : public IImageData
+class IImageDataStrided : public IImageData
 {
 public:
-    virtual ~IImageDataPitch() = 0;
+    virtual ~IImageDataStrided() = 0;
 
     Size2D size() const;
 
-    int                    numPlanes() const;
-    const ImagePlanePitch &plane(int p) const;
+    int                      numPlanes() const;
+    const ImagePlaneStrided &plane(int p) const;
 
 protected:
     using IImageData::IImageData;
 };
 
-class IImageDataPitchDevice : public IImageDataPitch
+class IImageDataStridedDevice : public IImageDataStrided
 {
 public:
-    virtual ~IImageDataPitchDevice() = 0;
+    virtual ~IImageDataStridedDevice() = 0;
 
 protected:
-    using IImageDataPitch::IImageDataPitch;
+    using IImageDataStrided::IImageDataStrided;
 };
 
-class IImageDataPitchHost : public IImageDataPitch
+class IImageDataStridedHost : public IImageDataStrided
 {
 public:
-    virtual ~IImageDataPitchHost() = 0;
+    virtual ~IImageDataStridedHost() = 0;
 
 protected:
-    using IImageDataPitch::IImageDataPitch;
+    using IImageDataStrided::IImageDataStrided;
 };
 
 }} // namespace nv::cv

@@ -43,11 +43,11 @@ inline void CheckCudaError(cudaError_t code, const char *file, const int line)
 
 void WriteRGBITensor(nv::cv::Tensor &inTensor, cudaStream_t &stream)
 {
-    const auto *srcData = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(inTensor.exportData());
+    const auto *srcData = dynamic_cast<const nv::cv::ITensorDataStridedDevice *>(inTensor.exportData());
     CHECK_CUDA_ERROR(cudaStreamSynchronize(stream));
 
-    int bufferSize = srcData->pitchBytes(0);
-    int pitchBytes = srcData->pitchBytes(1);
+    int bufferSize = srcData->stride(0);
+    int rowStride  = srcData->stride(1);
     int height     = inTensor.shape()[1];
     int width      = inTensor.shape()[2];
     int batchSize  = inTensor.shape()[0];
@@ -56,7 +56,7 @@ void WriteRGBITensor(nv::cv::Tensor &inTensor, cudaStream_t &stream)
     {
         std::ostringstream ossIn;
         ossIn << "./cvcudatest_" << b << ".bmp";
-        writeBMPi(ossIn.str().c_str(), (const unsigned char *)srcData->data() + bufferSize * b, pitchBytes, width,
+        writeBMPi(ossIn.str().c_str(), (const unsigned char *)srcData->basePtr() + bufferSize * b, rowStride, width,
                   height);
     }
 }

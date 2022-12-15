@@ -76,13 +76,13 @@ inline const IImageData *IImage::exportData() const
 
     switch (imgData.bufferType)
     {
-    case NVCV_IMAGE_BUFFER_PITCH_HOST:
+    case NVCV_IMAGE_BUFFER_STRIDED_HOST:
     case NVCV_IMAGE_BUFFER_NONE:
         break; // will return nullptr as per current semantics
 
-    case NVCV_IMAGE_BUFFER_PITCH_DEVICE:
+    case NVCV_IMAGE_BUFFER_STRIDED_DEVICE:
         m_cacheDataPtr
-            = ::new (&m_cacheDataArena) ImageDataPitchDevice(ImageFormat{imgData.format}, imgData.buffer.pitch);
+            = ::new (&m_cacheDataArena) ImageDataStridedDevice(ImageFormat{imgData.format}, imgData.buffer.strided);
         break;
 
     case NVCV_IMAGE_BUFFER_CUDA_ARRAY:

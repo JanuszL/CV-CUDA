@@ -35,12 +35,12 @@ namespace test = nv::cv::test;
 //#define DBG_CROP_RECT
 
 #ifdef DBG_CROP_RECT
-static void dbgImage(std::vector<uint8_t> &in, int rowPitch)
+static void dbgImage(std::vector<uint8_t> &in, int rowStride)
 {
-    std::cout << "\n IMG -- " << rowPitch << " in " << in.size() << "\n";
+    std::cout << "\n IMG -- " << rowStride << " in " << in.size() << "\n";
     for (size_t i = 0; i < in.size(); i++)
     {
-        if (i % rowPitch == 0)
+        if (i % rowStride == 0)
             std::cout << "\n";
         printf("%02x,", in[i]);
     }
@@ -48,7 +48,7 @@ static void dbgImage(std::vector<uint8_t> &in, int rowPitch)
 #endif
 
 // Width is in bytes or pixels..
-static void WriteData(const nvcv::TensorDataAccessPitchImagePlanar &data, uint8_t val, NVCVRectI region)
+static void WriteData(const nvcv::TensorDataAccessStridedImagePlanar &data, uint8_t val, NVCVRectI region)
 {
     EXPECT_EQ(NVCV_TENSOR_NHWC, data.layout());
     EXPECT_LE(region.x + region.width, data.numCols());
@@ -59,18 +59,18 @@ static void WriteData(const nvcv::TensorDataAccessPitchImagePlanar &data, uint8_
     uint8_t *impPtrTop     = (uint8_t *)data.sampleData(0);
     uint8_t *impPtr        = nullptr;
     int      numImages     = data.numSamples();
-    int      rowPitchBytes = data.rowPitchBytes();
+    int      rowStride     = data.rowStride();
 
     EXPECT_NE(nullptr, impPtrTop);
     for (int img = 0; img < numImages; img++)
     {
-        impPtr = impPtrTop + (data.samplePitchBytes() * img) + (region.x * bytesPerPixel) + (rowPitchBytes * region.y);
+        impPtr = impPtrTop + (data.sampleStride() * img) + (region.x * bytesPerPixel) + (rowStride * region.y);
         EXPECT_EQ(cudaSuccess,
-                  cudaMemset2D((void *)impPtr, rowPitchBytes, val, region.width * bytesPerPixel, region.height));
+                  cudaMemset2D((void *)impPtr, rowStride, val, region.width * bytesPerPixel, region.height));
     }
 }
 
-static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessPitchImagePlanar &data,
+static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStridedImagePlanar &data,
                           NVCVRectI region, uint8_t val)
 {
     int bytesPerChan  = data.dtype().bitsPerChannel()[0] / 8;
@@ -79,11 +79,11 @@ static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAcce
     uint8_t *ptrTop = vect.data();
     for (int img = 0; img < data.numSamples(); img++)
     {
-        uint8_t *ptr = ptrTop + data.samplePitchBytes() * img;
+        uint8_t *ptr = ptrTop + data.sampleStride() * img;
         for (int i = 0; i < region.height; i++)
         {
             memset(ptr, val, region.width * bytesPerPixel);
-            ptr += data.rowPitchBytes();
+            ptr += data.rowStride();
         }
     }
 }
@@ -136,26 +136,26 @@ TEST_P(OpCustomCrop, CustomCrop_packed)
     nvcv::Tensor imgOut(numberOfImages, {outWidth, outHeight}, nvcv::FMT_RGBA8);
     nvcv::Tensor imgIn(numberOfImages, {inWidth, inHeight}, nvcv::FMT_RGBA8);
 
-    const auto *inData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgIn.exportData());
-    const auto *outData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgOut.exportData());
+    const auto *inData  = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgIn.exportData());
+    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(imgOut.exportData());
 
     ASSERT_NE(nullptr, inData);
     ASSERT_NE(nullptr, outData);
 
-    auto inAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*inData);
+    auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*inData);
     ASSERT_TRUE(inAccess);
 
-    auto outAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*outData);
+    auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*outData);
     ASSERT_TRUE(outAccess);
 
-    int inBufSize = inAccess->samplePitchBytes()
-                  * inAccess->numSamples(); //img pitch bytes can be more than the image 64, 128, etc
-    int outBufSize = outAccess->samplePitchBytes() * outAccess->numSamples();
+    int inBufSize
+        = inAccess->sampleStride() * inAccess->numSamples(); //img pitch bytes can be more than the image 64, 128, etc
+    int outBufSize = outAccess->sampleStride() * outAccess->numSamples();
 
     NVCVRectI crpRect = {cropX, cropY, cropWidth, cropHeight};
 
-    EXPECT_EQ(cudaSuccess, cudaMemset(inData->data(), 0x00, inAccess->samplePitchBytes() * inAccess->numSamples()));
-    EXPECT_EQ(cudaSuccess, cudaMemset(outData->data(), 0x00, outAccess->samplePitchBytes() * outAccess->numSamples()));
+    EXPECT_EQ(cudaSuccess, cudaMemset(inData->basePtr(), 0x00, inAccess->sampleStride() * inAccess->numSamples()));
+    EXPECT_EQ(cudaSuccess, cudaMemset(outData->basePtr(), 0x00, outAccess->sampleStride() * outAccess->numSamples()));
     WriteData(*inAccess, cropVal, crpRect); // write data to be cropped
 
     std::vector<uint8_t> gold(outBufSize);
@@ -171,15 +171,15 @@ TEST_P(OpCustomCrop, CustomCrop_packed)
     std::vector<uint8_t> testIn(inBufSize);
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(testIn.data(), inData->data(), inBufSize, cudaMemcpyDeviceToHost));
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), outData->data(), outBufSize, cudaMemcpyDeviceToHost));
+    EXPECT_EQ(cudaSuccess, cudaMemcpy(testIn.data(), inData->basePtr(), inBufSize, cudaMemcpyDeviceToHost));
+    EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), outData->basePtr(), outBufSize, cudaMemcpyDeviceToHost));
 
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
 #ifdef DBG_CROP_RECT
-    dbgImage(testIn, inData->rowPitchBytes());
-    dbgImage(test, outData->rowPitchBytes());
-    dbgImage(gold, outData->rowPitchBytes());
+    dbgImage(testIn, inData->rowStride());
+    dbgImage(test, outData->rowStride());
+    dbgImage(gold, outData->rowStride());
 #endif
     EXPECT_EQ(gold, test);
 }

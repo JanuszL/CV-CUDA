@@ -61,10 +61,10 @@ __global__ void convertFormat(Ptr2DSrc src, Ptr2DDst dst, UnOp op, int2 size)
 }
 
 template<typename DT_SOURCE, typename DT_DEST, int NC>
-void convertToScaleCN(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData,
+void convertToScaleCN(const nvcv::ITensorDataStridedDevice &inData, const nvcv::ITensorDataStridedDevice &outData,
                       const double alpha, const double beta, cudaStream_t stream)
 {
-    auto inAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
     const int2 size       = {inAccess->numCols(), inAccess->numRows()};
@@ -87,7 +87,7 @@ void convertToScaleCN(const nvcv::ITensorDataPitchDevice &inData, const nvcv::IT
 }
 
 template<typename DT_SOURCE, typename DT_DEST> // <uchar, float> <float double>
-void convertToScale(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData,
+void convertToScale(const nvcv::ITensorDataStridedDevice &inData, const nvcv::ITensorDataStridedDevice &outData,
                     int numChannels, const double alpha, const double beta, cudaStream_t stream)
 {
     switch (numChannels)
@@ -126,7 +126,7 @@ size_t ConvertTo::calBufferSize(DataShape max_input_shape, DataShape max_output_
     return 0;
 }
 
-ErrorCode ConvertTo::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+ErrorCode ConvertTo::infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
                            const double alpha, const double beta, cudaStream_t stream)
 {
     cuda_op::DataFormat input_format    = GetLegacyDataFormat(inData.layout());
@@ -140,7 +140,7 @@ ErrorCode ConvertTo::infer(const ITensorDataPitchDevice &inData, const ITensorDa
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
     int batch    = inAccess->numSamples();
@@ -169,7 +169,7 @@ ErrorCode ConvertTo::infer(const ITensorDataPitchDevice &inData, const ITensorDa
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    typedef void (*func_t)(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData,
+    typedef void (*func_t)(const nvcv::ITensorDataStridedDevice &inData, const nvcv::ITensorDataStridedDevice &outData,
                            int numChannels, const double alpha, const double beta, cudaStream_t stream);
 
     // clang-format off

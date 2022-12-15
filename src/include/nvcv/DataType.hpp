@@ -32,6 +32,13 @@
 namespace nv { namespace cv {
 
 /**
+ * Byte type, similar to C++17's std::byte
+ */
+enum class Byte : uint8_t
+{
+};
+
+/**
  * @brief Defines types and functions to handle data types.
  *
  * @defgroup NVCV_CPP_CORE_DATATYPE Data types

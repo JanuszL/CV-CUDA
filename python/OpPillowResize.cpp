@@ -38,8 +38,8 @@ std::shared_ptr<Tensor> PillowResizeInto(Tensor &input, Tensor &output, cv::Imag
     {
         pstream = Stream::Current().shared_from_this();
     }
-    auto in_access  = cv::TensorDataAccessPitchImagePlanar::Create(*input.impl().exportData());
-    auto out_access = cv::TensorDataAccessPitchImagePlanar::Create(*output.impl().exportData());
+    auto in_access  = cv::TensorDataAccessStridedImagePlanar::Create(*input.impl().exportData());
+    auto out_access = cv::TensorDataAccessStridedImagePlanar::Create(*output.impl().exportData());
     if (!in_access || !out_access)
     {
         throw std::runtime_error("Incompatible input/output tensor layout");

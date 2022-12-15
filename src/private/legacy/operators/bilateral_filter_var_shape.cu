@@ -195,8 +195,8 @@ __global__ void BilateralFilterVarShapeKernel(const BrdRd src, Ptr2dVarShapeNHWC
 }
 
 template<typename T, template<typename> class Brd>
-void BilateralFilterVarShapeCaller(const IImageBatchVarShapeDataPitchDevice &inData,
-                                   const IImageBatchVarShapeDataPitchDevice &outData, int batch,
+void BilateralFilterVarShapeCaller(const IImageBatchVarShapeDataStridedDevice &inData,
+                                   const IImageBatchVarShapeDataStridedDevice &outData, int batch,
                                    const cuda::Tensor1DWrap<int>   &inDiameter,
                                    const cuda::Tensor1DWrap<float> &inSigmaColor,
                                    const cuda::Tensor1DWrap<float> &inSigmaSpace, cudaStream_t stream)
@@ -223,11 +223,11 @@ void BilateralFilterVarShapeCaller(const IImageBatchVarShapeDataPitchDevice &inD
 #endif
 }
 
-ErrorCode BilateralFilterVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData,
-                                         const IImageBatchVarShapeDataPitchDevice &outData,
-                                         const ITensorDataPitchDevice             &diameterData,
-                                         const ITensorDataPitchDevice             &sigmaColorData,
-                                         const ITensorDataPitchDevice &sigmaSpaceData, NVCVBorderType borderMode,
+ErrorCode BilateralFilterVarShape::infer(const IImageBatchVarShapeDataStridedDevice &inData,
+                                         const IImageBatchVarShapeDataStridedDevice &outData,
+                                         const ITensorDataStridedDevice             &diameterData,
+                                         const ITensorDataStridedDevice             &sigmaColorData,
+                                         const ITensorDataStridedDevice &sigmaSpaceData, NVCVBorderType borderMode,
                                          cudaStream_t stream)
 {
     cuda_op::DataFormat input_format  = GetLegacyDataFormat(inData);
@@ -317,8 +317,8 @@ ErrorCode BilateralFilterVarShape::infer(const IImageBatchVarShapeDataPitchDevic
     cuda::Tensor1DWrap<float> inSigmaSpace(sigmaSpaceData);
 
     typedef void (*bilateral_filter_var_shape_t)(
-        const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData, int batch,
-        const cuda::Tensor1DWrap<int> &inDiameter, const cuda::Tensor1DWrap<float> &inSigmaColor,
+        const IImageBatchVarShapeDataStridedDevice &inData, const IImageBatchVarShapeDataStridedDevice &outData,
+        int batch, const cuda::Tensor1DWrap<int> &inDiameter, const cuda::Tensor1DWrap<float> &inSigmaColor,
         const cuda::Tensor1DWrap<float> &inSigmaSpace, cudaStream_t stream);
 
     // All templated functions instantiated here to remove one level of indirection that just hides the same lookup

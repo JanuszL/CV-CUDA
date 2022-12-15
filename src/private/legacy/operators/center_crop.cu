@@ -49,8 +49,9 @@ __global__ void center_crop_kernel_nhwc(Ptr2D src_ptr, Ptr2D dst_ptr, const int 
 }
 
 template<typename T>
-void center_crop(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData, int crop_rows,
-                 int crop_columns, const int batch_size, const int rows, const int columns, cudaStream_t stream)
+void center_crop(const nvcv::ITensorDataStridedDevice &inData, const nvcv::ITensorDataStridedDevice &outData,
+                 int crop_rows, int crop_columns, const int batch_size, const int rows, const int columns,
+                 cudaStream_t stream)
 {
     int top_indices  = (rows - crop_rows) / 2;
     int left_indices = (columns - crop_columns) / 2;
@@ -77,8 +78,8 @@ size_t CenterCrop::calBufferSize(DataShape max_input_shape, DataShape max_output
     return 0;
 }
 
-ErrorCode CenterCrop::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, int crop_rows,
-                            int crop_columns, cudaStream_t stream)
+ErrorCode CenterCrop::infer(const ITensorDataStridedDevice &inData, const ITensorDataStridedDevice &outData,
+                            int crop_rows, int crop_columns, cudaStream_t stream)
 {
     cuda_op::DataFormat input_format  = GetLegacyDataFormat(inData.layout());
     cuda_op::DataFormat output_format = GetLegacyDataFormat(outData.layout());
@@ -96,7 +97,7 @@ ErrorCode CenterCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    auto inAccess = cv::TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = cv::TensorDataAccessStridedImagePlanar::Create(inData);
     if (!inAccess)
     {
         return ErrorCode::INVALID_DATA_FORMAT;
@@ -111,7 +112,7 @@ ErrorCode CenterCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    auto outAccess = cv::TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = cv::TensorDataAccessStridedImagePlanar::Create(outData);
     if (!outAccess)
     {
         return ErrorCode::INVALID_DATA_FORMAT;
@@ -122,7 +123,7 @@ ErrorCode CenterCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    typedef void (*func_t)(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData,
+    typedef void (*func_t)(const nvcv::ITensorDataStridedDevice &inData, const nvcv::ITensorDataStridedDevice &outData,
                            int crop_rows, int crop_columns, const int batch_size, const int rows, const int columns,
                            cudaStream_t stream);
     static const func_t funcs[5][4] = {

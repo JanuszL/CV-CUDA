@@ -55,13 +55,13 @@ __global__ void transformFormat(const Ptr2DSrc src, Ptr2DDst dst, int3 inout_siz
 }
 
 template<typename data_type> // uchar float
-void transform(const nv::cv::ITensorDataPitchDevice &inData, const nv::cv::ITensorDataPitchDevice &outData,
+void transform(const nv::cv::ITensorDataStridedDevice &inData, const nv::cv::ITensorDataStridedDevice &outData,
                cuda_op::DataFormat input_format, cuda_op::DataFormat output_format, cudaStream_t stream)
 {
-    auto inAccess = nv::cv::TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
-    auto outAccess = nv::cv::TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     const int3 inout_size = {inAccess->numCols(), inAccess->numRows(), outAccess->numChannels()};
@@ -103,8 +103,8 @@ size_t Reformat::calBufferSize(DataShape max_input_shape, DataShape max_output_s
     return 0;
 }
 
-ErrorCode Reformat::infer(const nv::cv::ITensorDataPitchDevice &inData, const nv::cv::ITensorDataPitchDevice &outData,
-                          cudaStream_t stream)
+ErrorCode Reformat::infer(const nv::cv::ITensorDataStridedDevice &inData,
+                          const nv::cv::ITensorDataStridedDevice &outData, cudaStream_t stream)
 {
     DataFormat input_format  = helpers::GetLegacyDataFormat(inData.layout());
     DataFormat output_format = helpers::GetLegacyDataFormat(outData.layout());
@@ -112,10 +112,10 @@ ErrorCode Reformat::infer(const nv::cv::ITensorDataPitchDevice &inData, const nv
     checkDataFormat(input_format);
     checkDataFormat(output_format);
 
-    auto inAccess = nv::cv::TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
-    auto outAccess = nv::cv::TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     if (inData.dtype() == outData.dtype() && inData.shape() == outData.shape())
@@ -126,14 +126,14 @@ ErrorCode Reformat::infer(const nv::cv::ITensorDataPitchDevice &inData, const nv
 
         for (uint32_t i = 0; i < inAccess->numSamples(); ++i)
         {
-            void *inSampData  = inAccess->sampleData(i);
-            void *outSampData = outAccess->sampleData(i);
+            cv::Byte *inSampData  = inAccess->sampleData(i);
+            cv::Byte *outSampData = outAccess->sampleData(i);
 
             for (int p = 0; p < inAccess->numPlanes(); ++p)
             {
-                checkCudaErrors(cudaMemcpy2DAsync(outAccess->planeData(p, outSampData), outAccess->rowPitchBytes(),
-                                                  inAccess->planeData(p, inSampData), inAccess->rowPitchBytes(),
-                                                  inAccess->numCols() * inAccess->colPitchBytes(), inAccess->numRows(),
+                checkCudaErrors(cudaMemcpy2DAsync(outAccess->planeData(p, outSampData), outAccess->rowStride(),
+                                                  inAccess->planeData(p, inSampData), inAccess->rowStride(),
+                                                  inAccess->numCols() * inAccess->colStride(), inAccess->numRows(),
                                                   cudaMemcpyDeviceToDevice, stream));
             }
         }
@@ -158,7 +158,7 @@ ErrorCode Reformat::infer(const nv::cv::ITensorDataPitchDevice &inData, const nv
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    typedef void (*transform_t)(const ITensorDataPitchDevice &input, const ITensorDataPitchDevice &output,
+    typedef void (*transform_t)(const ITensorDataStridedDevice &input, const ITensorDataStridedDevice &output,
                                 DataFormat in_format, DataFormat out_format, cudaStream_t stream);
 
     static const transform_t funcs[7] = {transform<uchar>, transform<schar>, transform<ushort>, transform<short>,

@@ -27,7 +27,7 @@
 #include <private/core/TensorData.hpp>
 #include <private/core/TensorLayout.hpp>
 #include <private/core/TensorManager.hpp>
-#include <private/core/TensorWrapDataPitch.hpp>
+#include <private/core/TensorWrapDataStrided.hpp>
 #include <private/fmt/DataType.hpp>
 #include <private/fmt/ImageFormat.hpp>
 
@@ -113,8 +113,8 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorWrapDataConstruct,
 
             switch (data->bufferType)
             {
-            case NVCV_TENSOR_BUFFER_PITCH_DEVICE:
-                *handle = priv::CreateCoreObject<priv::TensorWrapDataPitch>(*data, cleanup, ctxCleanup);
+            case NVCV_TENSOR_BUFFER_STRIDED_DEVICE:
+                *handle = priv::CreateCoreObject<priv::TensorWrapDataStrided>(*data, cleanup, ctxCleanup);
                 break;
 
             default:
@@ -143,7 +143,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorWrapImageConstruct, (NVCVImageHandle
             NVCVTensorData tensorData;
             FillTensorData(img, tensorData);
 
-            *handle = priv::CreateCoreObject<priv::TensorWrapDataPitch>(tensorData, nullptr, nullptr);
+            *handle = priv::CreateCoreObject<priv::TensorWrapDataStrided>(tensorData, nullptr, nullptr);
         });
 }
 

@@ -104,8 +104,8 @@ public:
 
 private:
     explicit Image(const Size2D &size, cv::ImageFormat fmt);
-    explicit Image(std::vector<std::shared_ptr<CudaBuffer>> buf, const cv::IImageDataPitchDevice &imgData);
-    explicit Image(std::vector<py::buffer> buf, const cv::IImageDataPitchHost &imgData);
+    explicit Image(std::vector<std::shared_ptr<CudaBuffer>> buf, const cv::IImageDataStridedDevice &imgData);
+    explicit Image(std::vector<py::buffer> buf, const cv::IImageDataStridedHost &imgData);
 
     std::unique_ptr<cv::IImage> m_impl; // must come before m_key
     Key                         m_key;

@@ -51,8 +51,8 @@ inline T &ValueAt(std::vector<uint8_t> &vec, long4 pitches, int b, int y, int x,
 }
 
 template<typename T>
-inline void Reformat(std::vector<uint8_t> &hDst, long4 dstPitches, nv::cv::TensorLayout dstLayout,
-                     std::vector<uint8_t> &hSrc, long4 srcPitches, nv::cv::TensorLayout srcLayout, int numBatches,
+inline void Reformat(std::vector<uint8_t> &hDst, long4 dstStrides, nv::cv::TensorLayout dstLayout,
+                     std::vector<uint8_t> &hSrc, long4 srcStrides, nv::cv::TensorLayout srcLayout, int numBatches,
                      int numRows, int numCols, int numChannels)
 {
     for (int b = 0; b < numBatches; ++b)
@@ -63,8 +63,8 @@ inline void Reformat(std::vector<uint8_t> &hDst, long4 dstPitches, nv::cv::Tenso
             {
                 for (int c = 0; c < numChannels; ++c)
                 {
-                    ValueAt<T>(hDst, dstPitches, b, y, x, c, dstLayout)
-                        = ValueAt<T>(hSrc, srcPitches, b, y, x, c, srcLayout);
+                    ValueAt<T>(hDst, dstStrides, b, y, x, c, dstLayout)
+                        = ValueAt<T>(hSrc, srcStrides, b, y, x, c, srcLayout);
                 }
             }
         }
@@ -103,16 +103,16 @@ TYPED_TEST(OpReformat, correct_output)
     nvcv::Tensor inTensor(batches, {width, height}, inFormat);
     nvcv::Tensor outTensor(batches, {width, height}, outFormat);
 
-    const auto *inData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(inTensor.exportData());
-    const auto *outData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(outTensor.exportData());
+    const auto *inData  = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(inTensor.exportData());
+    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedDevice *>(outTensor.exportData());
 
     ASSERT_NE(inData, nullptr);
     ASSERT_NE(outData, nullptr);
 
-    long4 inPitches{inData->pitchBytes(0), inData->pitchBytes(1), inData->pitchBytes(2), inData->pitchBytes(3)};
-    long4 outPitches{outData->pitchBytes(0), outData->pitchBytes(1), outData->pitchBytes(2), outData->pitchBytes(3)};
+    long4 inStrides{inData->stride(0), inData->stride(1), inData->stride(2), inData->stride(3)};
+    long4 outStrides{outData->stride(0), outData->stride(1), outData->stride(2), outData->stride(3)};
 
-    auto inAccess = nv::cv::TensorDataAccessPitchImagePlanar::Create(*inData);
+    auto inAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(*inData);
     ASSERT_TRUE(inAccess);
 
     int numBatches  = inAccess->numSamples();
@@ -120,8 +120,8 @@ TYPED_TEST(OpReformat, correct_output)
     int numCols     = inAccess->numCols();
     int numChannels = inAccess->numChannels();
 
-    long inBufSize  = inPitches.x * inData->shape(0);
-    long outBufSize = outPitches.x * outData->shape(0);
+    long inBufSize  = inStrides.x * inData->shape(0);
+    long outBufSize = outStrides.x * outData->shape(0);
 
     std::vector<uint8_t> inVec(inBufSize);
 
@@ -131,7 +131,7 @@ TYPED_TEST(OpReformat, correct_output)
     std::generate(inVec.begin(), inVec.end(), [&]() { return rand(randEng); });
 
     // copy random input to device
-    ASSERT_EQ(cudaSuccess, cudaMemcpy(inData->data(), inVec.data(), inBufSize, cudaMemcpyHostToDevice));
+    ASSERT_EQ(cudaSuccess, cudaMemcpy(inData->basePtr(), inVec.data(), inBufSize, cudaMemcpyHostToDevice));
 
     // run operator
     nv::cvop::Reformat reformatOp;
@@ -145,10 +145,10 @@ TYPED_TEST(OpReformat, correct_output)
     std::vector<uint8_t> testVec(outBufSize);
 
     // copy output back to host
-    ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), outData->data(), outBufSize, cudaMemcpyDeviceToHost));
+    ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), outData->basePtr(), outBufSize, cudaMemcpyDeviceToHost));
 
     // generate gold result
-    Reformat<ValueType>(goldVec, outPitches, outData->layout(), inVec, inPitches, inData->layout(), numBatches, numRows,
+    Reformat<ValueType>(goldVec, outStrides, outData->layout(), inVec, inStrides, inData->layout(), numBatches, numRows,
                         numCols, numChannels);
 
     EXPECT_EQ(testVec, goldVec);

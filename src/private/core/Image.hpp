@@ -40,7 +40,7 @@ public:
 private:
     IAllocator           &m_alloc;
     NVCVImageRequirements m_reqs;
-    void                 *m_buffer;
+    void                 *m_memBuffer;
 };
 
 class ImageWrapData final : public CoreObjectBase<IImage>

@@ -87,20 +87,20 @@ inline NVCVTensorData &ITensorData::cdata()
     return m_data;
 }
 
-// Implementation - ITensorDataPitch ----------------------------
+// Implementation - ITensorDataStrided ----------------------------
 
-inline ITensorDataPitch::~ITensorDataPitch()
+inline ITensorDataStrided::~ITensorDataStrided()
 {
     // required dtor implementation
 }
 
-inline void *ITensorDataPitch::data() const
+inline Byte *ITensorDataStrided::basePtr() const
 {
-    const NVCVTensorBufferPitch &buffer = this->cdata().buffer.pitch;
-    return buffer.data;
+    const NVCVTensorBufferStrided &buffer = this->cdata().buffer.strided;
+    return reinterpret_cast<Byte *>(buffer.basePtr);
 }
 
-inline const int64_t &ITensorDataPitch::pitchBytes(int d) const
+inline const int64_t &ITensorDataStrided::stride(int d) const
 {
     const NVCVTensorData &data = this->cdata();
     if (d < 0 || d >= data.ndim)
@@ -108,11 +108,11 @@ inline const int64_t &ITensorDataPitch::pitchBytes(int d) const
         throw Exception(Status::ERROR_INVALID_ARGUMENT, "Index of pitch %d is out of bounds [0;%d]", d, data.ndim - 1);
     }
 
-    return data.buffer.pitch.pitchBytes[d];
+    return data.buffer.strided.strides[d];
 }
 
-// Implementation - ITensorDataPitchDevice ----------------------------
-inline ITensorDataPitchDevice::~ITensorDataPitchDevice()
+// Implementation - ITensorDataStridedDevice ----------------------------
+inline ITensorDataStridedDevice::~ITensorDataStridedDevice()
 {
     // required dtor implementation
 }

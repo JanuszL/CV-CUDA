@@ -63,15 +63,15 @@ public:
     };
 
     // Returns the row pitch in bytes.
-    int64_t rowPitchBytes() const
+    int64_t rowStride() const
     {
-        return m_rowPitchBytes;
+        return m_rowStride;
     };
 
     // Returns plane pitch in bytes
-    int64_t planePitchBytes() const
+    int64_t planeStride() const
     {
-        return m_planePitchBytes;
+        return m_planeStride;
     };
 
     // Returns true if the image is planar, false if the image is HWC.
@@ -104,7 +104,7 @@ public:
      *
      * ex.
      * [H = 2 W = 2 C = 3]
-     * [planar = 0 bytesPerC = 1 rowPitchBytes = 32 planePitchBytes = 0 samplePitchBytes = 64]
+     * [planar = 0 bytesPerC = 1 rowStride = 32 planeStride = 0 sampleStride = 64]
      * [aa, bb, cc | aa, bb, cc] 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
      * [aa, bb, cc | aa, bb, cc] 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
      *
@@ -114,8 +114,8 @@ public:
      * C = Colors in a pixel, H*W define number of pixels
      * planar = if 1 data is CHW if 0 data is HWC
      * bytesPerC = Bytes per Color
-     * rowPitchBytes = Bytes per Row, HWC rows will include all Color components.
-     * planePitchBytes = Number of bytes in a CHW plane will be 0 in a HWC Tensor.
+     * rowStride = Bytes per Row, HWC rows will include all Color components.
+     * planeStride = Number of bytes in a CHW plane will be 0 in a HWC Tensor.
      *
      *
      * [aa, XX, XX | XX, XX, XX] 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
@@ -157,9 +157,9 @@ public:
         uint32_t byteIndex = 0;
 
         if (!m_planar)
-            byteIndex = (c * m_bytesPerC) + (x * m_bytesPerC * m_numC) + (y * m_rowPitchBytes);
+            byteIndex = (c * m_bytesPerC) + (x * m_bytesPerC * m_numC) + (y * m_rowStride);
         else
-            byteIndex = (c * m_planePitchBytes) + (x * m_bytesPerC) + (y * m_rowPitchBytes);
+            byteIndex = (c * m_planeStride) + (x * m_bytesPerC) + (y * m_rowStride);
 
         if (byteIndex >= m_data.size())
             throw std::runtime_error("Requested data out of bounds");
@@ -168,14 +168,14 @@ public:
     }
 
 private:
-    std::vector<uint8_t> m_data;            // pointer to local data
-    Size2D               m_size;            // h/w in logical pixels, byte offset == m_size.x * bytesPerPixel.
-    int64_t              m_rowPitchBytes;   // Row pitch in bytes
-    int64_t              m_planePitchBytes; // used for (n)CHW Tensors 0 if not CHW
-    int                  m_numC;            // Number of color channels usually 1,3,4 (Y, RGB, ARGB)
-    bool                 m_planar;          // If true the image is (n)CHW
-    int32_t              m_bytesPerC;       // bytes per logical pixels
-    NVCVTensorLayout     m_layout;          // layout of originating ITensor NVCV_TENSOR_CHW/NVCV_TENSOR_NHWC/HWC
+    std::vector<uint8_t> m_data;        // pointer to local data
+    Size2D               m_size;        // h/w in logical pixels, byte offset == m_size.x * bytesPerPixel.
+    int64_t              m_rowStride;   // Row stride in bytes
+    int64_t              m_planeStride; // used for (n)CHW Tensors 0 if not CHW
+    int                  m_numC;        // Number of color channels usually 1,3,4 (Y, RGB, ARGB)
+    bool                 m_planar;      // If true the image is (n)CHW
+    int32_t              m_bytesPerC;   // bytes per logical pixels
+    NVCVTensorLayout     m_layout;      // layout of originating ITensor NVCV_TENSOR_CHW/NVCV_TENSOR_NHWC/HWC
 };
 
 /**
@@ -214,7 +214,7 @@ static void SetTensorToRandomValue(const ITensorData *tensorData, DT minVal, DT 
 
 /**
  * Writes over the Tensor data with an array of type DT array must be
- * the size of samplePitchBytes(). All samples will be overriden.
+ * the size of sampleStride(). All samples will be overriden.
  * Function does not do data type checking
  *
  * @param[in,out] tensorData created tensor object.
@@ -259,15 +259,15 @@ template<typename DT>
 void SetTensorTo(const ITensorData *tensorData, DT data, int sample)
 {
     assert(tensorData);
-    if (!nvcv::TensorDataAccessPitch::IsCompatible(*tensorData))
+    if (!nvcv::TensorDataAccessStrided::IsCompatible(*tensorData))
         throw std::runtime_error("Tensor Data is not pitch access capable.");
 
-    auto tDataAc = nvcv::TensorDataAccessPitch::Create(*tensorData);
+    auto tDataAc = nvcv::TensorDataAccessStrided::Create(*tensorData);
 
     if (tDataAc->numSamples() <= sample)
         throw std::runtime_error("Number of samples smaller than requested sample.");
 
-    int             inElements = (tDataAc->samplePitchBytes() / sizeof(DT));
+    int             inElements = (tDataAc->sampleStride() / sizeof(DT));
     std::vector<DT> srcVec(inElements, data);
 
     int totalSamples;
@@ -284,7 +284,7 @@ void SetTensorTo(const ITensorData *tensorData, DT data, int sample)
     for (int i = sample; i < totalSamples; ++i)
     {
         if (cudaSuccess
-            != cudaMemcpy(tDataAc->sampleData(i), srcVec.data(), tDataAc->samplePitchBytes(), cudaMemcpyHostToDevice))
+            != cudaMemcpy(tDataAc->sampleData(i), srcVec.data(), tDataAc->sampleStride(), cudaMemcpyHostToDevice))
         {
             throw std::runtime_error("CudaMemcpy failed");
         }
@@ -297,15 +297,15 @@ template<typename DT>
 static void SetTensorToRandomValueFloat(const ITensorData *tensorData, DT minVal, DT maxVal, int sample)
 {
     assert(tensorData);
-    if (!nvcv::TensorDataAccessPitch::IsCompatible(*tensorData))
+    if (!nvcv::TensorDataAccessStrided::IsCompatible(*tensorData))
         throw std::runtime_error("Tensor Data is not pitch access capable.");
 
-    auto tDataAc = nvcv::TensorDataAccessPitch::Create(*tensorData);
+    auto tDataAc = nvcv::TensorDataAccessStrided::Create(*tensorData);
 
     if (tDataAc->numSamples() <= sample)
         throw std::runtime_error("Number of samples smaller than requested sample.");
 
-    int                        inElements = (tDataAc->samplePitchBytes() / sizeof(DT));
+    int                        inElements = (tDataAc->sampleStride() / sizeof(DT));
     std::vector<DT>            srcVec(inElements);
     std::default_random_engine randEng(0);
 
@@ -325,7 +325,7 @@ static void SetTensorToRandomValueFloat(const ITensorData *tensorData, DT minVal
     {
         std::generate(srcVec.begin(), srcVec.end(), [&]() { return srcRand(randEng); });
         if (cudaSuccess
-            != cudaMemcpy(tDataAc->sampleData(i), srcVec.data(), tDataAc->samplePitchBytes(), cudaMemcpyHostToDevice))
+            != cudaMemcpy(tDataAc->sampleData(i), srcVec.data(), tDataAc->sampleStride(), cudaMemcpyHostToDevice))
         {
             throw std::runtime_error("CudaMemcpy failed");
         }
@@ -349,15 +349,15 @@ template<typename DT>
 static void SetTensorToRandomValue(const ITensorData *tensorData, DT minVal, DT maxVal, int sample)
 {
     assert(tensorData);
-    if (!nvcv::TensorDataAccessPitch::IsCompatible(*tensorData))
+    if (!nvcv::TensorDataAccessStrided::IsCompatible(*tensorData))
         throw std::runtime_error("Tensor Data is not pitch access capable.");
 
-    auto tDataAc = nvcv::TensorDataAccessPitch::Create(*tensorData);
+    auto tDataAc = nvcv::TensorDataAccessStrided::Create(*tensorData);
 
     if (tDataAc->numSamples() <= sample)
         throw std::runtime_error("Number of samples smaller than requested sample.");
 
-    int                        inElements = (tDataAc->samplePitchBytes() / sizeof(DT));
+    int                        inElements = (tDataAc->sampleStride() / sizeof(DT));
     std::vector<DT>            srcVec(inElements);
     std::default_random_engine randEng(0);
 
@@ -376,7 +376,7 @@ static void SetTensorToRandomValue(const ITensorData *tensorData, DT minVal, DT 
     {
         std::generate(srcVec.begin(), srcVec.end(), [&]() { return srcRand(randEng); });
         if (cudaSuccess
-            != cudaMemcpy(tDataAc->sampleData(i), srcVec.data(), tDataAc->samplePitchBytes(), cudaMemcpyHostToDevice))
+            != cudaMemcpy(tDataAc->sampleData(i), srcVec.data(), tDataAc->sampleStride(), cudaMemcpyHostToDevice))
         {
             throw std::runtime_error("CudaMemcpy failed");
         }
@@ -389,12 +389,12 @@ template<typename DT>
 void SetTensorFromVector(const ITensorData *tensorData, std::vector<DT> &data, int sample)
 {
     assert(tensorData);
-    if (!nvcv::TensorDataAccessPitch::IsCompatible(*tensorData))
+    if (!nvcv::TensorDataAccessStrided::IsCompatible(*tensorData))
         throw std::runtime_error("Tensor Data is not pitch access capable.");
 
-    auto tDataAc = nvcv::TensorDataAccessPitch::Create(*tensorData);
+    auto tDataAc = nvcv::TensorDataAccessStrided::Create(*tensorData);
 
-    if ((int64_t)(data.size() * sizeof(DT)) != tDataAc->samplePitchBytes())
+    if ((int64_t)(data.size() * sizeof(DT)) != tDataAc->sampleStride())
         throw std::runtime_error("Data vector is incorrect size.");
 
     if (tDataAc->numSamples() <= sample)
@@ -405,7 +405,7 @@ void SetTensorFromVector(const ITensorData *tensorData, std::vector<DT> &data, i
         for (int i = 0; i < tDataAc->numSamples(); ++i)
         {
             if (cudaSuccess
-                != cudaMemcpy(tDataAc->sampleData(i), (char8_t *)data.data(), tDataAc->samplePitchBytes(),
+                != cudaMemcpy(tDataAc->sampleData(i), (char8_t *)data.data(), tDataAc->sampleStride(),
                               cudaMemcpyHostToDevice))
             {
                 throw std::runtime_error("CudaMemcpy failed");
@@ -415,7 +415,7 @@ void SetTensorFromVector(const ITensorData *tensorData, std::vector<DT> &data, i
     else
     {
         if (cudaSuccess
-            != cudaMemcpy(tDataAc->sampleData(sample), (char8_t *)data.data(), tDataAc->samplePitchBytes(),
+            != cudaMemcpy(tDataAc->sampleData(sample), (char8_t *)data.data(), tDataAc->sampleStride(),
                           cudaMemcpyHostToDevice))
         {
             throw std::runtime_error("CudaMemcpy failed");
@@ -429,20 +429,20 @@ template<typename DT>
 void GetVectorFromTensor(const ITensorData *tensorData, int sample, std::vector<DT> &outData)
 {
     assert(tensorData);
-    if (!nvcv::TensorDataAccessPitch::IsCompatible(*tensorData))
+    if (!nvcv::TensorDataAccessStrided::IsCompatible(*tensorData))
         throw std::runtime_error("Tensor Data is not pitch access capable.");
 
-    auto tDataAc = nvcv::TensorDataAccessPitch::Create(*tensorData);
+    auto tDataAc = nvcv::TensorDataAccessStrided::Create(*tensorData);
 
     if (tDataAc->numSamples() <= sample)
         throw std::runtime_error("Number of samples smaller than requested sample.");
 
-    int elements = (tDataAc->samplePitchBytes() / sizeof(DT));
+    int elements = (tDataAc->sampleStride() / sizeof(DT));
 
     outData.resize(elements);
 
     if (cudaSuccess
-        != cudaMemcpy(outData.data(), tDataAc->sampleData(sample), tDataAc->samplePitchBytes(), cudaMemcpyDeviceToHost))
+        != cudaMemcpy(outData.data(), tDataAc->sampleData(sample), tDataAc->sampleStride(), cudaMemcpyDeviceToHost))
     {
         throw std::runtime_error("CudaMemcpy failed");
     }

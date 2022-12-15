@@ -62,8 +62,8 @@ typedef struct NVCVImageRequirementsRec
     int32_t         width, height; /*< Image dimensions. */
     NVCVImageFormat format;        /*< Image format. */
 
-    /** Row pitch of each plane, in bytes */
-    int32_t planeRowPitchBytes[NVCV_MAX_PLANE_COUNT];
+    /** Row stride of each plane, in bytes */
+    int32_t planeRowStride[NVCV_MAX_PLANE_COUNT];
 
     int32_t          alignBytes; /*< Alignment/block size in bytes */
     NVCVRequirements mem;        /*< Image resource requirements. */

@@ -50,7 +50,7 @@ private:
     IAllocator            &m_alloc;
     NVCVTensorRequirements m_reqs;
 
-    void *m_buffer;
+    void *m_memBuffer;
 };
 
 } // namespace nv::cv::priv

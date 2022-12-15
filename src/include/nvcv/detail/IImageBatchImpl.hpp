@@ -52,13 +52,13 @@ inline const IImageBatchData *IImageBatch::exportData(CUstream stream) const
     NVCVImageBatchData batchData;
     detail::CheckThrow(nvcvImageBatchExportData(this->handle(), stream, &batchData));
 
-    if (batchData.bufferType != NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_PITCH_DEVICE)
+    if (batchData.bufferType != NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_STRIDED_DEVICE)
     {
         throw Exception(Status::ERROR_INVALID_OPERATION,
                         "Image batch data cannot be exported, buffer type not supported");
     }
 
-    m_cacheData.emplace(batchData.numImages, batchData.buffer.varShapePitch);
+    m_cacheData.emplace(batchData.numImages, batchData.buffer.varShapeStrided);
 
     return &*m_cacheData;
 }

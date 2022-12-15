@@ -32,24 +32,24 @@ public:
     explicit ImageDataCudaArray(const NVCVImageData &data);
 };
 
-// ImageDataPitchDevice definition -----------------------
-class ImageDataPitchDevice : public IImageDataPitchDevice
+// ImageDataStridedDevice definition -----------------------
+class ImageDataStridedDevice : public IImageDataStridedDevice
 {
 public:
-    using Buffer = NVCVImageBufferPitch;
+    using Buffer = NVCVImageBufferStrided;
 
-    explicit ImageDataPitchDevice(ImageFormat format, const Buffer &buffer);
-    explicit ImageDataPitchDevice(const NVCVImageData &data);
+    explicit ImageDataStridedDevice(ImageFormat format, const Buffer &buffer);
+    explicit ImageDataStridedDevice(const NVCVImageData &data);
 };
 
-// ImageDataPitchHost definition -----------------------
-class ImageDataPitchHost : public IImageDataPitchHost
+// ImageDataStridedHost definition -----------------------
+class ImageDataStridedHost : public IImageDataStridedHost
 {
 public:
-    using Buffer = NVCVImageBufferPitch;
+    using Buffer = NVCVImageBufferStrided;
 
-    explicit ImageDataPitchHost(ImageFormat format, const Buffer &buffer);
-    explicit ImageDataPitchHost(const NVCVImageData &data);
+    explicit ImageDataStridedHost(ImageFormat format, const Buffer &buffer);
+    explicit ImageDataStridedHost(const NVCVImageData &data);
 };
 
 }} // namespace nv::cv
