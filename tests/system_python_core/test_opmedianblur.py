@@ -19,6 +19,9 @@ import numpy as np
 import util
 
 
+RNG = np.random.default_rng(0)
+
+
 @t.mark.parametrize(
     "input, ksize",
     [
@@ -82,7 +85,7 @@ def test_op_median_blur(input, ksize):
 def test_op_median_blurvarshape(nimages, format, max_size, max_pixel, max_ksize):
 
     input = util.create_image_batch(
-        nimages, format, max_size=max_size, max_random=max_pixel
+        nimages, format, max_size=max_size, max_random=max_pixel, rng=RNG
     )
 
     ksize = util.create_tensor(
@@ -90,7 +93,8 @@ def test_op_median_blurvarshape(nimages, format, max_size, max_pixel, max_ksize)
         np.int32,
         "NC",
         max_random=max_ksize,
-        odd_only=True,
+        rng=RNG,
+        transform_dist=util.dist_odd,
     )
 
     out = input.median_blur(

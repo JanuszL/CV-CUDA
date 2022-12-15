@@ -19,39 +19,52 @@ import numpy as np
 import util
 
 
+RNG = np.random.default_rng(0)
+
+
 @t.mark.parametrize(
     "input, kernel, kernel_anchor, border",
     [
         (
             util.create_image_batch(
-                10, nvcv.Format.RGB8, size=(123, 321), max_random=256
+                10, nvcv.Format.RGB8, size=(123, 321), max_random=256, rng=RNG
             ),
-            util.create_image_batch(10, nvcv.Format.F32, size=(3, 3), max_random=1),
-            util.create_tensor((10, 2), np.int32, "NC", max_random=(3, 3)),
+            util.create_image_batch(
+                10, nvcv.Format.F32, size=(3, 3), max_random=1, rng=RNG
+            ),
+            util.create_tensor((10, 2), np.int32, "NC", max_random=(3, 3), rng=RNG),
             nvcv.Border.CONSTANT,
         ),
         (
-            util.create_image_batch(7, nvcv.Format.RGBf32, max_random=1),
-            util.create_image_batch(7, nvcv.Format.F32, size=(5, 5), max_random=3),
-            util.create_tensor((7, 2), np.int32, "NC", max_random=(5, 5)),
+            util.create_image_batch(7, nvcv.Format.RGBf32, max_random=1, rng=RNG),
+            util.create_image_batch(
+                7, nvcv.Format.F32, size=(5, 5), max_random=3, rng=RNG
+            ),
+            util.create_tensor((7, 2), np.int32, "NC", max_random=(5, 5), rng=RNG),
             nvcv.Border.REPLICATE,
         ),
         (
-            util.create_image_batch(1, nvcv.Format.U8, max_random=1234),
-            util.create_image_batch(1, nvcv.Format.F32, size=(7, 7), max_random=2),
-            util.create_tensor((1, 2), np.int32, "NC", max_random=(7, 7)),
+            util.create_image_batch(1, nvcv.Format.U8, max_random=123, rng=RNG),
+            util.create_image_batch(
+                1, nvcv.Format.F32, size=(7, 7), max_random=2, rng=RNG
+            ),
+            util.create_tensor((1, 2), np.int32, "NC", max_random=(7, 7), rng=RNG),
             nvcv.Border.REFLECT,
         ),
         (
-            util.create_image_batch(6, nvcv.Format.S16, max_random=1234),
-            util.create_image_batch(6, nvcv.Format.F32, max_size=(9, 9), max_random=4),
-            util.create_tensor((6, 2), np.int32, "NC", max_random=(1, 1)),
+            util.create_image_batch(6, nvcv.Format.S16, max_random=1234, rng=RNG),
+            util.create_image_batch(
+                6, nvcv.Format.F32, max_size=(9, 9), max_random=4, rng=RNG
+            ),
+            util.create_tensor((6, 2), np.int32, "NC", max_random=(1, 1), rng=RNG),
             nvcv.Border.WRAP,
         ),
         (
-            util.create_image_batch(9, nvcv.Format.S32, max_random=12345),
-            util.create_image_batch(9, nvcv.Format.F32, max_size=(4, 4), max_random=2),
-            util.create_tensor((9, 2), np.int32, "NC", max_random=(4, 4)),
+            util.create_image_batch(9, nvcv.Format.S32, max_random=12345, rng=RNG),
+            util.create_image_batch(
+                9, nvcv.Format.F32, max_size=(4, 4), max_random=2, rng=RNG
+            ),
+            util.create_tensor((9, 2), np.int32, "NC", max_random=(4, 4), rng=RNG),
             nvcv.Border.REFLECT101,
         ),
     ],

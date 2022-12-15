@@ -19,6 +19,9 @@ import numpy as np
 import util
 
 
+RNG = np.random.default_rng(0)
+
+
 @t.mark.parametrize(
     "input, ksize, scale, border",
     [
@@ -110,7 +113,7 @@ def test_op_laplacian(input, ksize, scale, border):
             1,
             nvcv.Format.U8,
             (23, 18),
-            1234,
+            123,
             1,
             1.23,
             nvcv.Border.WRAP,
@@ -130,10 +133,17 @@ def test_op_laplacianvarshape(
     num_images, img_format, img_size, max_pixel, max_ksize, max_scale, border
 ):
 
-    input = util.create_image_batch(num_images, img_format, img_size, max_pixel)
+    input = util.create_image_batch(
+        num_images, img_format, size=img_size, max_random=max_pixel, rng=RNG
+    )
 
     ksize = util.create_tensor(
-        (num_images, 1), np.int32, "NC", max_random=max_ksize, odd_only=True
+        (num_images, 1),
+        np.int32,
+        "NC",
+        max_random=max_ksize,
+        rng=RNG,
+        transform_dist=util.dist_odd,
     )
 
     scale = nvcv.Tensor(

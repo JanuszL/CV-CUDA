@@ -19,6 +19,9 @@ import numpy as np
 import util
 
 
+RNG = np.random.default_rng(0)
+
+
 @t.mark.parametrize(
     "input, kernel_size, kernel_anchor, border",
     [
@@ -99,7 +102,7 @@ def test_op_averageblur(input, kernel_size, kernel_anchor, border):
             1,
             nvcv.Format.U8,
             (33, 48),
-            1234,
+            123,
             (7, 7),
             nvcv.Border.REFLECT,
         ),
@@ -125,14 +128,21 @@ def test_op_averageblurvarshape(
     num_images, img_format, img_size, max_pixel, max_kernel_size, border
 ):
 
-    input = util.create_image_batch(num_images, img_format, img_size, max_pixel)
+    input = util.create_image_batch(
+        num_images, img_format, size=img_size, max_random=max_pixel, rng=RNG
+    )
 
     kernel_size = util.create_tensor(
-        (num_images, 2), np.int32, "NC", max_random=max_kernel_size, odd_only=True
+        (num_images, 2),
+        np.int32,
+        "NC",
+        max_random=max_kernel_size,
+        rng=RNG,
+        transform_dist=util.dist_odd,
     )
 
     kernel_anchor = util.create_tensor(
-        (num_images, 2), np.int32, "NC", max_random=max_kernel_size
+        (num_images, 2), np.int32, "NC", max_random=max_kernel_size, rng=RNG
     )
 
     out = input.averageblur(
