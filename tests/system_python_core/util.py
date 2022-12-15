@@ -17,6 +17,7 @@ import nvcv
 import numpy as np
 import numbers
 import torch
+import copy
 
 
 DTYPE = {
@@ -24,9 +25,35 @@ DTYPE = {
     nvcv.Format.RGBf32: np.float32,
     nvcv.Format.F32: np.float32,
     nvcv.Format.U8: np.uint8,
+    nvcv.Format.U16: np.uint16,
     nvcv.Format.S16: np.int16,
     nvcv.Format.S32: np.int32,
 }
+
+
+def to_cuda_buffer(host):
+    orig_dtype = copy.copy(host.dtype)
+
+    # torch doesn't accept uint16. Let's make it believe
+    # it is handling int16 instead.
+    if host.dtype == np.uint16:
+        host.dtype = np.int16
+
+    dev = torch.as_tensor(host, device="cuda").cuda()
+    host.dtype = orig_dtype  # restore it
+
+    class CudaBuffer:
+        __cuda_array_interface = None
+        obj = None
+
+    # The cuda buffer only needs the cuda array interface.
+    # We can then set its dtype to whatever we want.
+    buf = CudaBuffer()
+    buf.__cuda_array_interface__ = dev.__cuda_array_interface__
+    buf.__cuda_array_interface__["typestr"] = orig_dtype.str
+    buf.obj = dev  # make sure it holds a reference to the torch buffer
+
+    return buf
 
 
 def create_tensor(shape, dtype, layout, max_random, odd_only=False):
@@ -44,8 +71,7 @@ def create_tensor(shape, dtype, layout, max_random, odd_only=False):
     elif issubclass(dtype, numbers.Real):
         h_data = np.random.random_sample(shape) * np.array(max_random)
     h_data = h_data.astype(dtype)
-    d_data = torch.from_numpy(h_data).cuda()
-    tensor = nvcv.as_tensor(d_data, layout=layout)
+    tensor = nvcv.as_tensor(to_cuda_buffer(h_data), layout=layout)
     return tensor
 
 
@@ -55,8 +81,8 @@ def create_image(size, img_format, max_random):
     """
     h_data = np.random.rand(size[1], size[0], img_format.channels) * max_random
     h_data = h_data.astype(DTYPE[img_format])
-    d_data = torch.from_numpy(h_data).cuda()
-    image = nvcv.as_image(d_data)
+
+    image = nvcv.as_image(to_cuda_buffer(h_data))
     return image
 
 
