@@ -34,7 +34,7 @@ public:
 
     CudaBuffer(CudaBuffer &&that) = delete;
 
-    explicit CudaBuffer(const py::buffer_info &data, bool copy = false);
+    explicit CudaBuffer(const py::buffer_info &data, bool copy = false, py::object wrappedObj = {});
 
     ~CudaBuffer();
 
@@ -53,8 +53,9 @@ private:
     friend py::detail::type_caster<CudaBuffer>;
     CudaBuffer();
 
-    py::dict m_cudaArrayInterface;
-    bool     m_owns;
+    py::object m_wrappedObj;
+    py::dict   m_cudaArrayInterface;
+    bool       m_owns;
 };
 
 } // namespace nv::cvpy
