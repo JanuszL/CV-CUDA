@@ -26,6 +26,7 @@ DTYPE = {
     nvcv.Format.RGBA8: np.uint8,
     nvcv.Format.BGR8: np.uint8,
     nvcv.Format.RGB8: np.uint8,
+    nvcv.Format.RGBA8: np.uint8,
     nvcv.Format.RGBf32: np.float32,
     nvcv.Format.F32: np.float32,
     nvcv.Format.U8: np.uint8,
@@ -179,17 +180,20 @@ def create_image_batch(
     return image_batch
 
 
-def clone_image_batch(input_image_batch):
+def clone_image_batch(input_image_batch, img_format=None):
     """Clone an image batch
 
     Args:
         input_image_batch (nvcv.ImageBatchVarShape): Image batch to be cloned
+        img_format (nvcv.ImageFormat): Image format of the output
 
     Returns:
         nvcv.ImageBatchVarShape: The cloned image batch var shape
     """
     output_image_batch = nvcv.ImageBatchVarShape(input_image_batch.capacity)
     for input_image in input_image_batch:
-        image = nvcv.Image(input_image.size, input_image.format)
+        image = nvcv.Image(
+            input_image.size, input_image.format if img_format is None else img_format
+        )
         output_image_batch.pushback(image)
     return output_image_batch
