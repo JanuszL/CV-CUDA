@@ -75,7 +75,7 @@ std::shared_ptr<Tensor> CenterCrop(Tensor &input, const std::tuple<int, int> &cr
     out_shape[iwidth]  = std::get<0>(cropSize);
     out_shape[iheight] = std::get<1>(cropSize);
 
-    std::shared_ptr<Tensor> output = Tensor::Create(input.shape(), input.dtype(), input.layout());
+    std::shared_ptr<Tensor> output = Tensor::Create(out_shape, input.dtype(), input.layout());
 
     return CenterCropInto(input, *output, cropSize, pstream);
 }
