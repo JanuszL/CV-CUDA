@@ -24,6 +24,7 @@ overview of the interoperability of PyTorch and TensorRT with CVCUDA tensors and
 operators.
 """
 
+# docs_tag: begin_python_imports
 import os
 import sys
 import glob
@@ -46,7 +47,10 @@ common_dir = os.path.join(
 sys.path.insert(0, common_dir)
 from trt_utils import convert_onnx_to_tensorrt, setup_tensort_bindings  # noqa: E402
 
+# docs_tag: end_python_imports
 
+
+# docs_tag: class_def
 class SemanticSegmentationSample:
     def __init__(
         self,
@@ -59,6 +63,7 @@ class SemanticSegmentationSample:
         device_id,
         backend,
     ):
+        # docs_tag: begin_class_init
         self.input_path = input_path
         self.results_dir = results_dir
         self.visualization_class_name = visualization_class_name
@@ -75,7 +80,9 @@ class SemanticSegmentationSample:
                 "Currently supports: pytorch, tensorrt" % self.backend
             )
             exit(1)
+        # docs_tag: end_class_init
 
+        # docs_tag: begin_data_read
         # Start by parsing the input_path expression first.
         if os.path.isfile(self.input_path):
             # Read the input image file.
@@ -96,7 +103,9 @@ class SemanticSegmentationSample:
                 "It is neither a valid JPEG file nor a directory: %s" % self.input_path
             )
             exit(1)
+        # docs_tag: end_data_read
 
+        # docs_tag: begin_input_validation
         if not os.path.isdir(self.results_dir):
             print("Output directory not found: %s" % self.results_dir)
             exit(1)
@@ -112,9 +121,12 @@ class SemanticSegmentationSample:
         if self.target_img_width < 10:
             print("target_img_width must be a value >=10.")
             exit(1)
+        # docs_tag: end_input_validation
 
+    # docs_tag: setup_model_def
     def setup_model(self):
         # Setup the model and a few more things depending on the type of backend.
+        # docs_tag: begin_setup_pytorch
         if self.backend == "pytorch":
             # Fetch the segmentation index to class name information from the weights
             # meta properties.
@@ -144,7 +156,9 @@ class SemanticSegmentationSample:
             model.eval()
 
             return model
+            # docs_tag: end_setup_pytorch
 
+        # docs_tag: begin_setup_tensorrt
         elif self.backend == "tensorrt":
             # For TensorRT, the process is the following:
             # We check if there already exists a TensorRT engine generated
@@ -234,6 +248,7 @@ class SemanticSegmentationSample:
                     "Using a pre-built TensorRT engine from: %s" % trt_engine_file_path
                 )
 
+            # docs_tag: begin_load_tensorrt
             # Once the TensorRT engine generation is all done, we load it.
             trt_logger = trt.Logger(trt.Logger.INFO)
             with open(trt_engine_file_path, "rb") as f, trt.Runtime(
@@ -250,6 +265,7 @@ class SemanticSegmentationSample:
             )
 
             return context, output_tensors, output_idx
+            # docs_tag: end_setup_tensorrt
 
         else:
             print(
@@ -258,22 +274,29 @@ class SemanticSegmentationSample:
             )
             exit(1)
 
+    # docs_tag: begin_execute_inference
     def execute_inference(self, model_info, torch_preprocessed_tensor):
         # Executes inference depending on the type of the backend.
+        # docs_tag: begin_infer_pytorch
         if self.backend == "pytorch":
             with torch.no_grad():
                 infer_output = model_info(torch_preprocessed_tensor)["out"]
 
             return infer_output
+            # docs_tag: end_infer_pytorch
 
+        # docs_tag: begin_infer_tensorrt
         elif self.backend == "tensorrt":
             # Setup TensorRT IO binding pointers.
+            # docs_tag: begin_tensorrt_unpack
             context, output_tensors, output_idx = model_info  # Un-pack this.
+            # docs_tag: end_tensorrt_unpack
 
             # We need to check the allocated batch size and the required batch
             # size. Sometimes, during to batching, the last batch may be of
             # less size than the batch size. In those cases, we would simply
             # pad that with zero inputs and discard its output later on.
+            # docs_tag: begin_check_last_batch
             allocated_batch_size = output_tensors[output_idx].shape[0]
             required_batch_size = torch_preprocessed_tensor.shape[0]
 
@@ -295,7 +318,9 @@ class SemanticSegmentationSample:
                 torch_preprocessed_tensor = torch.cat(
                     (torch_preprocessed_tensor, extra_input)
                 )
+                # docs_tag: end_check_last_batch
 
+            # docs_tag: begin_tensorrt_run
             # Prepare the TensorRT I/O bindings.
             input_bindings = [torch_preprocessed_tensor.data_ptr()]
             output_bindings = []
@@ -306,7 +331,9 @@ class SemanticSegmentationSample:
             # Execute synchronously.
             context.execute_v2(bindings=io_bindings)
             infer_output = output_tensors[output_idx]
+            # docs_tag: end_tensorrt_run
 
+            # docs_tag: begin_discard_last_batch
             # Finally, check if we had padded the input. If so, we need to
             # discard the extra output.
             if allocated_batch_size != required_batch_size:
@@ -317,6 +344,8 @@ class SemanticSegmentationSample:
                 )[0]
 
             return infer_output
+            # docs_tag: end_discard_last_batch
+            # docs_tag: end_infer_tensorrt
 
         else:
             print(
@@ -325,7 +354,9 @@ class SemanticSegmentationSample:
             )
             exit(1)
 
+    # docs_tag: begin_run
     def run(self):
+        # docs_tag: begin_run_basics
         # Runs the complete sample end-to-end.
         max_image_size = 1024 * 1024 * 3  # Maximum possible image size.
 
@@ -343,7 +374,9 @@ class SemanticSegmentationSample:
             for i in range(0, len(self.data), self.batch_size)
         ]
         batch_idx = 0
+        # docs_tag: end_run_basics
 
+        # docs_tag: begin_batch_loop
         # We will use the torchnvjpeg based decoder on the GPU. This will be
         # allocated once during the first run or whenever a batch size change
         # happens.
@@ -353,6 +386,7 @@ class SemanticSegmentationSample:
             print("Processing batch %d of %d" % (batch_idx + 1, len(file_name_batches)))
             effective_batch_size = len(file_name_batch)
 
+            # docs_tag: begin_decode
             # Decode in batch using torchnvjpeg decoder on the GPU.
             if not decoder or effective_batch_size != self.batch_size:
                 decoder = torchnvjpeg.Decoder(
@@ -377,12 +411,16 @@ class SemanticSegmentationSample:
                 image_tensors.shape[1],
                 image_tensors.shape[2],
             )
+            # docs_tag: end_decode
 
+            # docs_tag: begin_torch_to_nvcv
             # A torch tensor can be wrapped into a CVCUDA Object using the "as_tensor"
             # function in the specified layout. The datatype and dimensions are derived
             # directly from the torch tensor.
             nvcv_input_tensor = nvcv.as_tensor(image_tensors, "NHWC")
+            # docs_tag: end_torch_to_nvcv
 
+            # docs_tag: begin_preproc
             # Start the pre-processing now. For segmentation, pre-processing includes
             # the following sequence of operations.
             # Resize -> DataType Convert(U8->F32) -> Normalize -> Interleaved to Planar
@@ -418,26 +456,33 @@ class SemanticSegmentationSample:
             # The final stage in the pre-process pipeline includes converting the NHWC
             # buffer into a NCHW buffer.
             nvcv_preprocessed_tensor = nvcv_normalized_tensor.reformat("NCHW")
+            # docs_tag: end_preproc
 
+            # docs_tag: begin_run_infer
             # Execute the inference after converting the tensor back to Torch.
             torch_preprocessed_tensor = torch.as_tensor(
                 nvcv_preprocessed_tensor.cuda(),
                 device=torch.device("cuda", self.device_id),
             )
             infer_output = self.execute_inference(model_info, torch_preprocessed_tensor)
+            # docs_tag: end_run_infer
 
             # Once the inference is over we would start the post-processing steps.
             # First, we normalize the probability scores from the network.
+            # docs_tag: begin_normalize
             normalized_masks = torch.nn.functional.softmax(infer_output, dim=1)
+            # docs_tag: end_normalize
 
             # Then filter based on the scores corresponding only to the class of
             # interest
+            # docs_tag: begin_argmax
             class_masks = (
                 normalized_masks.argmax(dim=1)
                 == self.class_to_idx_dict[self.visualization_class_name]
             )
             class_masks = torch.unsqueeze(class_masks, dim=-1)  # Makes it NHWC
             class_masks = class_masks.type(torch.uint8)  # Make it uint8 from bool
+            # docs_tag: end_argmax
 
             # Then convert the masks back to CV-CUDA tensor for rest of the
             # post-processing:
@@ -445,6 +490,7 @@ class SemanticSegmentationSample:
             # 2) Apply blur on the original images and overlay on the original image.
 
             # Convert back to CV-CUDA tensor
+            # docs_tag: begin_mask_upscale
             nvcv_class_masks = nvcv.as_tensor(class_masks.cuda(), "NHWC")
             # Upscale it.
             nvcv_class_masks_upscaled = nvcv_class_masks.resize(
@@ -461,27 +507,33 @@ class SemanticSegmentationSample:
             class_masks_upscaled_nchw = class_masks_upscaled.permute(
                 0, 3, 1, 2
             )  # from NHWC to NCHW
+            # docs_tag: end_mask_upscale
 
             # Blur the input images using the median blur op and convert to PyTorch.
+            # docs_tag: begin_input_blur
             nvcv_blurred_input_imgs = nvcv_input_tensor.median_blur(ksize=(27, 27))
             nvcv_blurred_input_imgs = nvcv_blurred_input_imgs.reformat("NCHW")
             blurred_input_imgs = torch.as_tensor(
                 nvcv_blurred_input_imgs.cuda(),
                 device=torch.device("cuda", self.device_id),
             )
+            # docs_tag: end_input_blur
 
             # Create an overlay image. We do this by selectively blurring out pixels
             # in the input image where the class mask prediction was absent (i.e. False)
             # We already have all the things required for this: The input images,
             # the blurred version of the input images and the upscale version
             # of the mask
+            # docs_tag: begin_overlay
             mask_absent = class_masks_upscaled_nchw == 0
             image_tensors_nchw[mask_absent] = blurred_input_imgs[
                 mask_absent
             ]  # In-place
+            # docs_tag: end_overlay
 
             # Loop over all the images in the current batch and save the
             # inference results.
+            # docs_tag: begin_visualization_loop
             for img_idx in range(effective_batch_size):
                 img_name = os.path.splitext(os.path.basename(file_name_batch[img_idx]))[
                     0
@@ -500,8 +552,10 @@ class SemanticSegmentationSample:
 
             # Increment the batch counter.
             batch_idx += 1
+            # docs_tag: end_visualization_loop
 
 
+# docs_tag: main_func
 def main():
     parser = argparse.ArgumentParser(
         "Semantic segmentation sample using CV-CUDA.",
