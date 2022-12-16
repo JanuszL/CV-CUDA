@@ -19,7 +19,7 @@
 Image Classification
 ====================
 
-In this example we will cover use of CVCUDA to accalerate the preprocessing pipeline in DL inference usecase.
+In this example we will cover use of CVCUDA to accelerate the preprocessing pipeline in DL inference usecase.
 The preprocessing pipeline converts the input image to the required format for the input layer of the model.
 We will use the Resnet50 model pretrained on Imagenet to implement an image classification pipeline.
 
@@ -30,32 +30,47 @@ Resize -> Convert Datatype(Float) -> Normalize (std deviation/mean) -> Interleav
 Writing the Sample App
 ----------------------
 
-The first stage in the sample pipeline is loading the Input image
-
-We will use NvJpeg library to decode the images into the desired color format and create a buffer on the device
+The first stage in the sample pipeline is importing the necessary python modules and cvcuda module
 
 .. literalinclude:: ../../../samples/classification/python/inference.py
    :language: python
-   :linenos:
-   :lines: 37-47
+   :start-after: Import python module
+   :end-before: Classification Sample
+   :dedent:
+
+We will then read and load the input images
+
+.. literalinclude:: ../../../samples/classification/python/inference.py
+   :language: python
+   :start-after: Image Loading
+   :end-before: Validate other inputs
+   :dedent:
+
+We will use torchnvjpeg which uses NvJpeg library to decode the images into the desired color format and
+create a buffer on the device
+
+.. literalinclude:: ../../../samples/classification/python/inference.py
+   :language: python
+   :start-after: NvJpeg Decoder
+   :end-before: Wrapping into Tensor
+   :dedent:
 
 Once the device buffer is created we will wrap the externally allocated buffer in a CVCUDA Tensor
+with the NHWC layout
 
 .. literalinclude:: ../../../samples/classification/python/inference.py
    :language: python
-   :lines: 49-52
-
-We will convert the input tensor to interleaved format for the rest of the preprocessing operations
-
-.. literalinclude:: ../../../samples/classification/python/inference.py
-   :language: python
-   :lines: 56-59
+   :start-after:  Wrapping into Tensor
+   :end-before:  Preprocess
+   :dedent:
 
 The input buffer is now ready for the preprocessing stage
 
 .. literalinclude:: ../../../samples/classification/python/inference.py
    :language: python
-   :lines: 61-110
+   :start-after:  Preprocess
+   :end-before: Inference
+   :dedent:
 
 The preprocessed tensor is used as an input to the resnet model for inference. The cvcuda tensor
 can be exported to torch using the .cuda() operator. If the device type of the torch tensor and
@@ -63,21 +78,38 @@ cvcuda tensor are same there will be no memory copy
 
 .. literalinclude:: ../../../samples/classification/python/inference.py
    :language: python
-   :lines: 112-121
+   :start-after: Inference
+   :end-before: Postprocess
+   :dedent:
 
 The final stage in the pipeline is the post processing to apply softmax to normalize the score and sort the scores to get the TopN scores
 
 .. literalinclude:: ../../../samples/classification/python/inference.py
    :language: python
-   :lines: 123-144
+   :start-after: Postprocess
+   :end-before: Display Top N Results
+   :dedent:
 
 Running the Sample
 ------------------
-Set the image path, labels path and batch size in the python script
+
+Run classification sample for single image with batch size 1
 
 .. code-block:: bash
 
-   python3 sample/classification/python/inference.py
+   python3 ./classification/python/inference.py -i ./assets/tabby_tiger_cat.jpg -l ./models/imagenet-classes.txt -b 1
+
+Run classification sample for single image with batch size 4, This would copy the same image across the batch
+
+.. code-block:: bash
+
+   python3 ./classification/python/inference.py -i ./assets/tabby_tiger_cat.jpg -l ./models/imagenet-classes.txt -b 4
+
+Run classification sample for image directory as input with batch size 2
+
+.. code-block:: bash
+
+   python3 ./classification/python/inference.py -i ./assets -l ./models/imagenet-classes.txt -b 2
 
 Sample Output
 -------------
