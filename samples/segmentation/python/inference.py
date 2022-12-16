@@ -168,9 +168,15 @@ class SemanticSegmentationSample:
             # The underlying pytorch model that we use in case of TensorRT
             # inference is the FCN model from torchvision. It is only used during
             # the conversion process and not during the inference.
-            onnx_file_path = os.path.join(self.results_dir, "model.onnx")
+            onnx_file_path = os.path.join(
+                self.results_dir,
+                "model.%d.%d.%d.onnx"
+                % (self.batch_size, self.target_img_height, self.target_img_height),
+            )
             trt_engine_file_path = os.path.join(
-                self.results_dir, "model.%d.trtmodel" % self.batch_size
+                self.results_dir,
+                "model.%d.%d.%d.trtmodel"
+                % (self.batch_size, self.target_img_height, self.target_img_height),
             )
 
             torch_model = segmentation_models.fcn_resnet101
@@ -196,34 +202,40 @@ class SemanticSegmentationSample:
             if not os.path.isfile(trt_engine_file_path):
                 if not os.path.isfile(onnx_file_path):
                     # First we use PyTorch to create a segmentation model.
-                    pyt_model = torch_model(weights=weights)
-                    pyt_model.to("cuda")
-                    pyt_model.eval()
+                    with torch.no_grad():
+                        pyt_model = torch_model(weights=weights)
+                        pyt_model.to("cuda")
+                        pyt_model.eval()
 
-                    # Allocate a dummy input to help generate an ONNX model.
-                    dummy_x_in = torch.randn(
-                        self.batch_size,
-                        3,
-                        self.target_img_height,
-                        self.target_img_width,
-                        requires_grad=False,
-                    ).cuda()
+                        # Allocate a dummy input to help generate an ONNX model.
+                        dummy_x_in = torch.randn(
+                            self.batch_size,
+                            3,
+                            self.target_img_height,
+                            self.target_img_width,
+                            requires_grad=False,
+                        ).cuda()
 
-                    # Generate an ONNX model using the PyTorch's onnx export.
-                    torch.onnx.export(
-                        pyt_model,
-                        args=dummy_x_in,
-                        f=onnx_file_path,
-                        export_params=True,
-                        opset_version=11,
-                        do_constant_folding=True,
-                        input_names=["input"],
-                        output_names=["output"],
-                        dynamic_axes={
-                            "input": {0: "batch_size"},
-                            "output": {0: "batch_size"},
-                        },
-                    )
+                        # Generate an ONNX model using the PyTorch's onnx export.
+                        torch.onnx.export(
+                            pyt_model,
+                            args=dummy_x_in,
+                            f=onnx_file_path,
+                            export_params=True,
+                            opset_version=11,
+                            do_constant_folding=True,
+                            input_names=["input"],
+                            output_names=["output"],
+                            dynamic_axes={
+                                "input": {0: "batch_size"},
+                                "output": {0: "batch_size"},
+                            },
+                        )
+
+                        # Remove the tensors and model after this.
+                        del pyt_model
+                        del dummy_x_in
+                        torch.cuda.empty_cache()
 
                     print("Generated an ONNX model and saved at: %s" % onnx_file_path)
                 else:
@@ -589,7 +601,7 @@ def main():
     parser.add_argument(
         "-th",
         "--target_img_height",
-        default=520,
+        default=224,
         type=int,
         help="The height to which you want to resize the input_image before "
         "running inference.",
@@ -598,7 +610,7 @@ def main():
     parser.add_argument(
         "-tw",
         "--target_img_width",
-        default=520,
+        default=224,
         type=int,
         help="The width to which you want to resize the input_image before "
         "running inference.",

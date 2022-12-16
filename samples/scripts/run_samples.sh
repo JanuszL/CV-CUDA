@@ -20,6 +20,7 @@
 # Crop and Resize Sample
 # Batch size 2
 LD_LIBRARY_PATH=./lib ./bin/nvcv_samples_cropandresize -i ./assets/ -b 2
+export CUDA_MODULE_LOADING="LAZY"
 
 mkdir -p models
 # Export onnx model from torch
