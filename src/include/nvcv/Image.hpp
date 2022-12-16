@@ -71,20 +71,8 @@ private:
     std::function<ImageDataCleanupFunc> m_cleanup;
 };
 
-// ImageWrapHandle definition -------------------------------------
-// Refers to an external NVCVImageHandle. It doesn't own it.
-class ImageWrapHandle : public IImage
-{
-public:
-    explicit ImageWrapHandle(NVCVImageHandle handle);
-
-    ImageWrapHandle(const ImageWrapHandle &that);
-
-private:
-    NVCVImageHandle doGetHandle() const final;
-
-    NVCVImageHandle m_handle;
-};
+// For API backward-compatibility
+using ImageWrapHandle = detail::WrapHandle<IImage>;
 
 }} // namespace nv::cv
 

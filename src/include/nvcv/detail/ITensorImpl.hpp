@@ -82,6 +82,11 @@ inline const ITensorData *ITensor::exportData() const
     return &*m_cacheData;
 }
 
+inline ITensor *ITensor::cast(HandleType h)
+{
+    return detail::CastImpl<ITensor>(&nvcvTensorGetUserPointer, &nvcvTensorSetUserPointer, h);
+}
+
 inline void ITensor::setUserPointer(void *ptr)
 {
     detail::CheckThrow(nvcvTensorSetUserPointer(this->handle(), ptr));

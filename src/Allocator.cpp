@@ -61,7 +61,15 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvAllocatorSetUserPointer, (NVCVAllocatorHan
         [&]
         {
             auto &img = priv::ToStaticRef<priv::IAllocator>(handle);
-            img.setUserPointer(userPtr);
+
+            if (priv::MustProvideHiddenFunctionality(handle))
+            {
+                img.setCXXObject(userPtr);
+            }
+            else
+            {
+                img.setUserPointer(userPtr);
+            }
         });
 }
 
@@ -75,8 +83,16 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvAllocatorGetUserPointer, (NVCVAllocatorHan
                 throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to output user pointer cannot be NULL");
             }
 
-            auto &img   = priv::ToStaticRef<const priv::IAllocator>(handle);
-            *outUserPtr = img.userPointer();
+            auto &img = priv::ToStaticRef<const priv::IAllocator>(handle);
+
+            if (priv::MustProvideHiddenFunctionality(handle))
+            {
+                img.getCXXObject(outUserPtr);
+            }
+            else
+            {
+                *outUserPtr = img.userPointer();
+            }
         });
 }
 

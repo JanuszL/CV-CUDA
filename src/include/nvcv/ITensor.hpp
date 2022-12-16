@@ -18,6 +18,7 @@
 #ifndef NVCV_ITENSOR_HPP
 #define NVCV_ITENSOR_HPP
 
+#include "Casts.hpp"
 #include "PixelType.hpp"
 #include "Tensor.h"
 #include "TensorData.hpp"
@@ -30,9 +31,13 @@ namespace nv { namespace cv {
 class ITensor
 {
 public:
+    using HandleType    = NVCVTensorHandle;
+    using BaseInterface = ITensor;
+
     virtual ~ITensor() = default;
 
-    NVCVTensorHandle handle() const;
+    HandleType      handle() const;
+    static ITensor *cast(HandleType h);
 
     int          ndim() const;
     TensorShape  shape() const;

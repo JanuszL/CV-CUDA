@@ -18,6 +18,7 @@
 #ifndef NVCV_IIMAGE_HPP
 #define NVCV_IIMAGE_HPP
 
+#include "Casts.hpp"
 #include "IImageData.hpp"
 #include "Image.h"
 #include "ImageData.hpp"
@@ -31,9 +32,13 @@ namespace nv { namespace cv {
 class IImage
 {
 public:
+    using HandleType    = NVCVImageHandle;
+    using BaseInterface = IImage;
+
     virtual ~IImage();
 
-    NVCVImageHandle handle() const;
+    HandleType     handle() const;
+    static IImage *cast(HandleType h);
 
     Size2D      size() const;
     ImageFormat format() const;

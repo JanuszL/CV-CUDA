@@ -371,3 +371,57 @@ TEST(ImageBatch, wip_user_pointer)
     batch.setUserPointer(nullptr);
     EXPECT_EQ(nullptr, batch.userPointer());
 }
+
+TEST(ImageBatch, wip_cast)
+{
+    nvcv::ImageBatchVarShape img(5);
+
+    EXPECT_EQ(&img, nvcv::StaticCast<nvcv::IImageBatch *>(img.handle()));
+    EXPECT_EQ(&img, nvcv::StaticCast<nvcv::IImageBatchVarShape *>(img.handle()));
+    EXPECT_EQ(&img, nvcv::StaticCast<nvcv::ImageBatchVarShape *>(img.handle()));
+
+    EXPECT_EQ(&img, &nvcv::StaticCast<nvcv::IImageBatch>(img.handle()));
+    EXPECT_EQ(&img, &nvcv::StaticCast<nvcv::IImageBatchVarShape>(img.handle()));
+    EXPECT_EQ(&img, &nvcv::StaticCast<nvcv::ImageBatchVarShape>(img.handle()));
+
+    EXPECT_EQ(nullptr, nvcv::DynamicCast<nvcv::ImageBatchWrapHandle *>(img.handle()));
+
+    EXPECT_EQ(nullptr, nvcv::DynamicCast<nvcv::IImageBatch *>(nullptr));
+    EXPECT_THROW(nvcv::DynamicCast<nvcv::IImageBatch>(nullptr), std::bad_cast);
+
+    // Now when we create the object via C API
+
+    NVCVImageBatchHandle               handle;
+    NVCVImageBatchVarShapeRequirements reqs;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvImageBatchVarShapeCalcRequirements(5, &reqs));
+    ASSERT_EQ(NVCV_SUCCESS, nvcvImageBatchVarShapeConstruct(&reqs, nullptr, &handle));
+
+    // Size of the internal buffer used to store the WrapHandle object
+    // we might have to create for containers allocated via C API.
+    // This value must never decrease, or else it'll break ABI compatibility.
+    uintptr_t max = 512;
+
+    EXPECT_GE(max, sizeof(nvcv::detail::WrapHandle<nvcv::IImageBatch>)) << "Must be big enough for the WrapHandle";
+
+    void *cxxPtr = &max;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvImageBatchGetUserPointer((NVCVImageBatchHandle)(((uintptr_t)handle) | 1), &cxxPtr));
+    ASSERT_NE(&max, cxxPtr) << "Pointer must have been changed";
+
+    // Buffer too big, bail.
+    max    = 513;
+    cxxPtr = &max;
+    ASSERT_EQ(NVCV_ERROR_INTERNAL,
+              nvcvImageBatchGetUserPointer((NVCVImageBatchHandle)(((uintptr_t)handle) | 1), &cxxPtr))
+        << "Required WrapHandle buffer storage should have been too big";
+
+    nvcv::IImageBatch *pimg = nvcv::StaticCast<nvcv::IImageBatch *>(handle);
+    ASSERT_NE(nullptr, pimg);
+    EXPECT_EQ(handle, pimg->handle());
+    EXPECT_EQ(5, pimg->capacity());
+
+    EXPECT_EQ(pimg, nvcv::DynamicCast<nvcv::IImageBatch *>(handle));
+    EXPECT_EQ(pimg, nvcv::DynamicCast<nvcv::IImageBatchVarShape *>(handle));
+    EXPECT_EQ(nullptr, nvcv::DynamicCast<nvcv::ImageBatchVarShape *>(handle));
+
+    nvcvImageBatchDestroy(handle);
+}

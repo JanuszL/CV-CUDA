@@ -20,6 +20,8 @@
 #include <core/HandleManager.hpp>
 #include <core/HandleManagerImpl.hpp>
 
+#include <unordered_set>
+
 namespace priv = nv::cv::priv;
 
 namespace {
@@ -53,22 +55,27 @@ TEST(HandleManager, wip_handle_generation_wraps_around)
 
     mgr.setFixedSize(1);
 
+    std::unordered_set<void *> usedHandles;
+
     void   *h;
     Object *obj;
     std::tie(h, obj) = mgr.create<Object>(0);
     ASSERT_EQ(0, obj->value());
     ASSERT_EQ(obj, mgr.validate(h));
+    usedHandles.insert(h);
 
     void *origh = h;
 
-    for (int i = 1; i < 16; ++i)
+    // Maximum of 8 generations
+    for (int i = 1; i < 8; ++i)
     {
         IObject *obj = mgr.validate(h);
         ASSERT_EQ(i - 1, obj->value());
 
         mgr.destroy(h);
         void *newh = mgr.create<Object>(i).first;
-        ASSERT_NE(h, newh) << "Handle generation must be different";
+        ASSERT_FALSE(usedHandles.contains(newh)) << "Handle generation must be different";
+        usedHandles.insert(newh);
 
         IObject *newobj = mgr.validate(newh);
         ASSERT_EQ(obj, newobj);
@@ -80,6 +87,7 @@ TEST(HandleManager, wip_handle_generation_wraps_around)
     mgr.destroy(h);
     std::tie(h, obj) = mgr.create<Object>(16);
     ASSERT_EQ(origh, h) << "Handle generation must wrapped around";
+    ASSERT_TRUE(usedHandles.contains(h)) << "Handle must have been reused";
     IObject *iobj = mgr.validate(h);
     ASSERT_EQ(obj, iobj);
     ASSERT_EQ(16, iobj->value());

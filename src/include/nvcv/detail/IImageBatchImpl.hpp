@@ -47,7 +47,7 @@ inline int32_t IImageBatch::numImages() const
 
 inline const IImageBatchData *IImageBatch::exportData(CUstream stream) const
 {
-    // ImageBatches are mutable, we can't cache previously exported daa.
+    // ImageBatches are mutable, we can't cache previously exported data.
 
     NVCVImageBatchData batchData;
     detail::CheckThrow(nvcvImageBatchExportData(this->handle(), stream, &batchData));
@@ -73,6 +73,28 @@ inline void *IImageBatch::userPointer() const
     void *ptr;
     detail::CheckThrow(nvcvImageBatchGetUserPointer(this->handle(), &ptr));
     return ptr;
+}
+
+inline IImageBatch *IImageBatch::cast(HandleType h)
+{
+    if (h != nullptr)
+    {
+        // Must get the concrete type to cast to the proper interface.
+        NVCVTypeImageBatch type;
+        detail::CheckThrow(nvcvImageBatchGetType(h, &type));
+        switch (type)
+        {
+        case NVCV_TYPE_IMAGEBATCH_VARSHAPE:
+            return detail::CastImpl<IImageBatchVarShape>(&nvcvImageBatchGetUserPointer, &nvcvImageBatchSetUserPointer,
+                                                         h);
+        default:
+            return nullptr;
+        }
+    }
+    else
+    {
+        return nullptr;
+    }
 }
 
 // IImageBatchVarShape implementation ----------------------------------

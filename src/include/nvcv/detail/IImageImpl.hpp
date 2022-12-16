@@ -44,6 +44,11 @@ inline NVCVImageHandle IImage::handle() const
     return h;
 }
 
+inline IImage *IImage::cast(HandleType h)
+{
+    return detail::CastImpl<IImage>(&nvcvImageGetUserPointer, &nvcvImageSetUserPointer, h);
+}
+
 inline Size2D IImage::size() const
 {
     Size2D out;

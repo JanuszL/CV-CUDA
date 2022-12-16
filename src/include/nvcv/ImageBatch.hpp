@@ -18,6 +18,7 @@
 #ifndef NVCV_IMAGEBATCH_HPP
 #define NVCV_IMAGEBATCH_HPP
 
+#include "Casts.hpp"
 #include "IImageBatch.hpp"
 #include "ImageBatchData.hpp"
 
@@ -42,35 +43,9 @@ private:
     NVCVImageBatchHandle m_handle;
 };
 
-// ImageBatchWrapHandle definition -------------------------------------
-// Refers to an external NVCVImageBatch handle. It doesn't own it.
-class ImageBatchWrapHandle : public IImageBatch
-{
-public:
-    explicit ImageBatchWrapHandle(NVCVImageBatchHandle handle);
-
-    ImageBatchWrapHandle(const ImageBatchWrapHandle &that);
-
-private:
-    NVCVImageBatchHandle doGetHandle() const final;
-
-    NVCVImageBatchHandle m_handle;
-};
-
-// ImageBatchVarShapeWrapHandle definition -------------------------------------
-// Refers to an external varshape NVCVImageBatch handle. It doesn't own it.
-class ImageBatchVarShapeWrapHandle : public IImageBatchVarShape
-{
-public:
-    explicit ImageBatchVarShapeWrapHandle(NVCVImageBatchHandle handle);
-
-    ImageBatchVarShapeWrapHandle(const ImageBatchVarShapeWrapHandle &that);
-
-private:
-    NVCVImageBatchHandle doGetHandle() const final;
-
-    NVCVImageBatchHandle m_handle;
-};
+// For API backward-compatibility
+using ImageBatchWrapHandle         = detail::WrapHandle<IImageBatch>;
+using ImageBatchVarShapeWrapHandle = detail::WrapHandle<IImageBatchVarShape>;
 
 }} // namespace nv::cv
 

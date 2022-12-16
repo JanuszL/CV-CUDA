@@ -30,9 +30,13 @@ namespace nv { namespace cv {
 class IImageBatch
 {
 public:
+    using HandleType    = NVCVImageBatchHandle;
+    using BaseInterface = IImageBatch;
+
     virtual ~IImageBatch() = default;
 
     NVCVImageBatchHandle handle() const;
+    static IImageBatch  *cast(HandleType h);
 
     int32_t capacity() const;
     int32_t numImages() const;

@@ -48,6 +48,7 @@ inline auto Tensor::CalcRequirements(int numImages, Size2D imgSize, ImageFormat 
 inline Tensor::Tensor(const Requirements &reqs, IAllocator *alloc)
 {
     detail::CheckThrow(nvcvTensorConstruct(&reqs, alloc ? alloc->handle() : nullptr, &m_handle));
+    detail::SetObjectAssociation(nvcvTensorSetUserPointer, this, m_handle);
 }
 
 inline Tensor::Tensor(int numImages, Size2D imgSize, ImageFormat fmt, const MemAlignment &bufAlign, IAllocator *alloc)
@@ -76,6 +77,7 @@ inline TensorWrapData::TensorWrapData(const ITensorData &data, std::function<Ten
     : m_cleanup(std::move(cleanup))
 {
     detail::CheckThrow(nvcvTensorWrapDataConstruct(&data.cdata(), m_cleanup ? &doCleanup : nullptr, this, &m_handle));
+    detail::SetObjectAssociation(nvcvTensorSetUserPointer, this, m_handle);
 }
 
 inline TensorWrapData::~TensorWrapData()
@@ -108,6 +110,7 @@ inline void TensorWrapData::doCleanup(void *ctx, const NVCVTensorData *data)
 inline TensorWrapImage::TensorWrapImage(const IImage &img)
 {
     detail::CheckThrow(nvcvTensorWrapImageConstruct(img.handle(), &m_handle));
+    detail::SetObjectAssociation(nvcvTensorSetUserPointer, this, m_handle);
 }
 
 inline TensorWrapImage::~TensorWrapImage()
@@ -116,23 +119,6 @@ inline TensorWrapImage::~TensorWrapImage()
 }
 
 inline NVCVTensorHandle TensorWrapImage::doGetHandle() const
-{
-    return m_handle;
-}
-
-// TensorWrapHandle implementation -------------------------------------
-
-inline TensorWrapHandle::TensorWrapHandle(const TensorWrapHandle &that)
-    : m_handle(that.m_handle)
-{
-}
-
-inline TensorWrapHandle::TensorWrapHandle(NVCVTensorHandle handle)
-    : m_handle(handle)
-{
-}
-
-inline NVCVTensorHandle TensorWrapHandle::doGetHandle() const
 {
     return m_handle;
 }
