@@ -49,8 +49,8 @@ extern "C"
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the operator.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_OP_PUBLIC NVCVStatus nvcvopPillowResizeCreate(NVCVOperatorHandle *handle, int maxWidth, int maxHeight,
-                                                   int maxBatchSize, NVCVImageFormat fmt);
+NVCV_OP_PUBLIC NVCVStatus nvcvopPillowResizeCreate(NVCVOperatorHandle *handle, int32_t maxWidth, int32_t maxHeight,
+                                                   int32_t maxBatchSize, NVCVImageFormat fmt);
 
 /** Executes the pillow resize operation on the given cuda stream. This operation does not
  *  wait for completion.
@@ -115,11 +115,6 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopPillowResizeCreate(NVCVOperatorHandle *handle, i
 /** @{ */
 NVCV_OP_PUBLIC NVCVStatus nvcvopPillowResizeSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
                                                    NVCVTensorHandle out, const NVCVInterpolationType interpolation);
-
-// NVCV_OP_PUBLIC NVCVStatus nvcvopPillowResizeVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
-//                                                      NVCVImageBatchHandle in, NVCVImageBatchHandle out,
-//                                                      const NVCVInterpolationType interpolation);
-/** @} */
 
 #ifdef __cplusplus
 }

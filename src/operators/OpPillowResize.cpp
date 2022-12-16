@@ -24,8 +24,9 @@ namespace nvcv    = nv::cv;
 namespace priv    = nv::cv::priv;
 namespace priv_op = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopPillowResizeCreate,
-                (NVCVOperatorHandle * handle, int maxWidth, int maxHeight, int maxBatchSize, NVCVImageFormat fmt))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopPillowResizeCreate,
+                (NVCVOperatorHandle * handle, int32_t maxWidth, int32_t maxHeight, int32_t maxBatchSize,
+                 NVCVImageFormat fmt))
 {
     return nvcv::ProtectCall(
         [&]

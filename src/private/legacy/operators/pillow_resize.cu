@@ -23,6 +23,8 @@
 
 #include "../CvCudaUtils.cuh"
 
+#include <nvcv/Rect.h>
+
 using namespace nv::cv;
 using namespace nv::cv::legacy::cuda_op;
 using namespace nv::cv::legacy::helpers;
@@ -155,7 +157,7 @@ __global__ void _precomputeCoeffs(int in_size, int in0, work_type scale, work_ty
 }
 
 template<class T, class Filter>
-__global__ void horizontal_pass(const cuda_op::Ptr2dNHWC<T> src, cuda_op::Ptr2dNHWC<T> dst, cuda_op::Rect<float> roi,
+__global__ void horizontal_pass(const cuda_op::Ptr2dNHWC<T> src, cuda_op::Ptr2dNHWC<T> dst, NVCVRectI roi,
                                 Filter &filterp, int h_ksize, int v_ksize, int *h_bounds, work_type *h_kk,
                                 int *v_bounds, work_type *v_kk, work_type init_buffer, bool round_up,
                                 bool use_share_mem)
@@ -207,7 +209,7 @@ __global__ void horizontal_pass(const cuda_op::Ptr2dNHWC<T> src, cuda_op::Ptr2dN
 }
 
 template<class T, class Filter>
-__global__ void vertical_pass(const cuda_op::Ptr2dNHWC<T> src, cuda_op::Ptr2dNHWC<T> dst, cuda_op::Rect<float> roi,
+__global__ void vertical_pass(const cuda_op::Ptr2dNHWC<T> src, cuda_op::Ptr2dNHWC<T> dst, NVCVRectI roi,
                               Filter &filterp, int h_ksize, int v_ksize, int *h_bounds, work_type *h_kk, int *v_bounds,
                               work_type *v_kk, work_type init_buffer, bool round_up, bool use_share_mem)
 {
@@ -265,7 +267,7 @@ void pillow_resize_v2(const TensorDataAccessPitchImagePlanar &inData, const Tens
     cuda_op::DataShape   input_shape = GetLegacyDataShape(inData.infoShape());
     Ptr2dNHWC<elem_type> src_ptr(inData);
     Ptr2dNHWC<elem_type> dst_ptr(outData);
-    cuda_op::Rect<float> roi(.0, .0, (float)src_ptr.cols, (float)src_ptr.rows);
+    NVCVRectI            roi = {0, 0, src_ptr.cols, src_ptr.rows};
     Filter               filterp;
     work_type            h_scale = 0, v_scale = 0;
     work_type            h_filterscale = 0, v_filterscale = 0;
@@ -423,7 +425,14 @@ size_t PillowResize::calBufferSize(DataShape max_input_shape, DataShape max_outp
 ErrorCode PillowResize::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
                               const NVCVInterpolationType interpolation, cudaStream_t stream)
 {
-    DataFormat format = GetLegacyDataFormat(inData.layout());
+    DataFormat format        = GetLegacyDataFormat(inData.layout());
+    DataFormat output_format = GetLegacyDataFormat(outData.layout());
+
+    if (format != output_format)
+    {
+        LOG_ERROR("Invalid DataFormat between input (" << format << ") and output (" << output_format << ")");
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
     if (!(format == kNHWC || format == kHWC))
     {
         LOG_ERROR("Invalid DataFormat " << format);

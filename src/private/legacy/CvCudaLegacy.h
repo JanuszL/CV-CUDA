@@ -2415,7 +2415,6 @@ private:
     void *gpu_workspace;
 };
 
-
 } // namespace nv::cv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H

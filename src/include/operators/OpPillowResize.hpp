@@ -37,7 +37,7 @@ namespace nv { namespace cvop {
 class PillowResize final : public IOperator
 {
 public:
-    explicit PillowResize(cv::Size2D maxSize, int maxBatchSize, cv::ImageFormat fmt);
+    explicit PillowResize(cv::Size2D maxSize, int32_t maxBatchSize, cv::ImageFormat fmt);
 
     ~PillowResize();
 
@@ -49,7 +49,7 @@ private:
     NVCVOperatorHandle m_handle;
 };
 
-inline PillowResize::PillowResize(cv::Size2D maxSize, int maxBatchSize, cv::ImageFormat fmt)
+inline PillowResize::PillowResize(cv::Size2D maxSize, int32_t maxBatchSize, cv::ImageFormat fmt)
 {
     NVCVImageFormat cfmt = fmt.cvalue();
     cv::detail::CheckThrow(nvcvopPillowResizeCreate(&m_handle, maxSize.w, maxSize.h, maxBatchSize, cfmt));
