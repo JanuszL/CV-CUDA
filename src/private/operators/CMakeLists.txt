@@ -37,6 +37,7 @@ add_library(nvcv_private_operators STATIC
     OpComposite.cpp
     OpChannelReorder.cpp
     OpFlip.cpp
+    OpGammaContrast.cpp
 )
 
 target_include_directories(nvcv_private_operators
