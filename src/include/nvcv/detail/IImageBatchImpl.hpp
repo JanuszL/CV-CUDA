@@ -200,11 +200,11 @@ inline void IImageBatchVarShape::popBack(int32_t imgCount)
     detail::CheckThrow(nvcvImageBatchVarShapePopImages(this->handle(), imgCount));
 }
 
-inline ImageWrapHandle IImageBatchVarShape::operator[](ptrdiff_t n) const
+inline IImage &IImageBatchVarShape::operator[](ptrdiff_t n) const
 {
     NVCVImageHandle himg;
     detail::CheckThrow(nvcvImageBatchVarShapeGetImages(this->handle(), n, &himg, 1));
-    return ImageWrapHandle(himg);
+    return StaticCast<IImage>(himg);
 }
 
 inline void IImageBatchVarShape::clear()
@@ -287,11 +287,7 @@ inline auto IImageBatchVarShape::Iterator::operator*() const -> reference
         throw Exception(Status::ERROR_INVALID_OPERATION, "Iterator points to an invalid image in the image batch");
     }
 
-    if (!m_opImage)
-    {
-        m_opImage.emplace((*m_batch)[m_curIndex]);
-    }
-    return *m_opImage;
+    return (*m_batch)[m_curIndex];
 }
 
 inline auto IImageBatchVarShape::Iterator::operator->() const -> pointer
@@ -309,7 +305,6 @@ inline auto IImageBatchVarShape::Iterator::operator++(int) -> Iterator
 inline auto IImageBatchVarShape::Iterator::operator++() -> Iterator &
 {
     ++m_curIndex;
-    m_opImage.reset();
     return *this;
 }
 
