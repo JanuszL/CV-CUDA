@@ -19,30 +19,18 @@ import numpy as np
 
 
 @t.mark.parametrize(
-    "input, crop_size",
+    "input, crop_size, gold_shape",
     [
-        (
-            nvcv.Tensor([5, 9, 9, 4], np.uint8, "NHWC"),
-            [5, 5],
-        ),
-        (
-            nvcv.Tensor([9, 9, 3], np.uint8, "HWC"),
-            [5, 5],
-        ),
-        (
-            nvcv.Tensor([5, 21, 21, 4], np.uint8, "NHWC"),
-            [15, 15],
-        ),
-        (
-            nvcv.Tensor([21, 21, 3], np.uint8, "HWC"),
-            [15, 15],
-        ),
+        (nvcv.Tensor([5, 9, 9, 4], np.uint8, "NHWC"), [5, 5], [5, 5, 5, 4]),
+        (nvcv.Tensor([9, 9, 3], np.uint8, "HWC"), [5, 5], [5, 5, 3]),
+        (nvcv.Tensor([5, 21, 21, 4], np.uint8, "NHWC"), [15, 15], [5, 15, 15, 4]),
+        (nvcv.Tensor([21, 21, 3], np.uint8, "HWC"), [15, 15], [15, 15, 3]),
     ],
 )
-def test_op_center_crop(input, crop_size):
+def test_op_center_crop(input, crop_size, gold_shape):
     out = input.center_crop(crop_size)
     assert out.layout == input.layout
-    assert out.shape == input.shape
+    assert out.shape == gold_shape
     assert out.dtype == input.dtype
 
     nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
