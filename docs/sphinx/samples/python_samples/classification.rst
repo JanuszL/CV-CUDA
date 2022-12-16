@@ -32,7 +32,7 @@ Writing the Sample App
 
 The first stage in the sample pipeline is importing the necessary python modules and cvcuda module
 
-.. literalinclude:: ../../../samples/classification/python/inference.py
+.. literalinclude:: ../../../../samples/classification/python/inference.py
    :language: python
    :start-after: Import python module
    :end-before: Classification Sample
@@ -58,7 +58,7 @@ create a buffer on the device
 Once the device buffer is created we will wrap the externally allocated buffer in a CVCUDA Tensor
 with the NHWC layout
 
-.. literalinclude:: ../../../samples/classification/python/inference.py
+.. literalinclude:: ../../../../samples/classification/python/inference.py
    :language: python
    :start-after:  Wrapping into Tensor
    :end-before:  Preprocess
@@ -66,7 +66,7 @@ with the NHWC layout
 
 The input buffer is now ready for the preprocessing stage
 
-.. literalinclude:: ../../../samples/classification/python/inference.py
+.. literalinclude:: ../../../../samples/classification/python/inference.py
    :language: python
    :start-after:  Preprocess
    :end-before: Inference
@@ -76,7 +76,7 @@ The preprocessed tensor is used as an input to the resnet model for inference. T
 can be exported to torch using the .cuda() operator. If the device type of the torch tensor and
 cvcuda tensor are same there will be no memory copy
 
-.. literalinclude:: ../../../samples/classification/python/inference.py
+.. literalinclude:: ../../../../samples/classification/python/inference.py
    :language: python
    :start-after: Inference
    :end-before: Postprocess
@@ -84,7 +84,7 @@ cvcuda tensor are same there will be no memory copy
 
 The final stage in the pipeline is the post processing to apply softmax to normalize the score and sort the scores to get the TopN scores
 
-.. literalinclude:: ../../../samples/classification/python/inference.py
+.. literalinclude:: ../../../../samples/classification/python/inference.py
    :language: python
    :start-after: Postprocess
    :end-before: Display Top N Results
