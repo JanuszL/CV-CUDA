@@ -49,8 +49,8 @@ public:
         , channels(channels_)
         , type(type_)
     {
-        data = new std::vector<T>();
-        data->resize(rows * cols * channels);
+        data = std::vector<T>();
+        data.resize(rows * cols * channels);
     }
 
     TestMat(int rows_, int cols_, int channels_, nvcv::DataType type_, std::vector<T> &data_)
@@ -59,8 +59,8 @@ public:
         , channels(channels_)
         , type(type_)
     {
-        data  = new std::vector<T>();
-        *data = data_;
+        data = std::vector<T>();
+        data = data_;
     }
 
     TestMat(const TestMat &test_mat, NVCVRectI roi)
@@ -71,21 +71,21 @@ public:
         type     = test_mat.type;
         if (roi.height == test_mat.rows && roi.width == test_mat.cols)
         {
-            data  = new std::vector<T>();
-            *data = *test_mat.data;
+            data = std::vector<T>();
+            data = test_mat.data;
         }
         else
         {
-            data = new std::vector<T>();
-            data->resize(roi.width * roi.height * test_mat.channels);
+            data = std::vector<T>();
+            data.resize(roi.width * roi.height * test_mat.channels);
             for (int i = 0; i < rows; i++)
             {
                 for (int j = 0; j < cols; j++)
                 {
                     for (int c = 0; c < channels; c++)
                     {
-                        (*data)[i * cols * channels + j * channels + c]
-                            = (*test_mat.data)[(i + roi.y) * test_mat.cols * channels + (j + roi.x) * channels + c];
+                        data[i * cols * channels + j * channels + c]
+                            = test_mat.data[(i + roi.y) * test_mat.cols * channels + (j + roi.x) * channels + c];
                     }
                 }
             }
@@ -98,18 +98,18 @@ public:
         rows     = 0;
         cols     = 0;
         channels = 0;
-        data     = nullptr;
+        data     = std::vector<T>();
     }
 
     bool empty()
     {
-        return (data == nullptr);
+        return data.empty();
     }
 
     void create(int rows_, int cols_, int ch_)
     {
-        data = new std::vector<T>();
-        data->resize(rows_ * cols_ * ch_);
+        data = std::vector<T>();
+        data.resize(rows_ * cols_ * ch_);
         rows     = rows_;
         cols     = cols_;
         channels = ch_;
@@ -124,8 +124,8 @@ public:
             {
                 for (int c = 0; c < channels; c++)
                 {
-                    (*new_test_mat.data)[j * rows * channels + i * channels + c]
-                        = (*data)[i * cols * channels + j * channels + c];
+                    new_test_mat.data[j * rows * channels + i * channels + c]
+                        = data[i * cols * channels + j * channels + c];
                 }
             }
         }
@@ -134,12 +134,12 @@ public:
 
     T get(int row, int col, int ch) const
     {
-        return (*data)[row * cols * channels + col * channels + ch];
+        return data[row * cols * channels + col * channels + ch];
     }
 
     void set(int row, int col, int ch, T val)
     {
-        (*data)[row * cols * channels + col * channels + ch] = val;
+        data[row * cols * channels + col * channels + ch] = val;
     }
 
     void print() const
@@ -158,11 +158,11 @@ public:
         }
     }
 
-    int             rows;
-    int             cols;
-    int             channels;
-    std::vector<T> *data;
-    nvcv::DataType  type;
+    int            rows;
+    int            cols;
+    int            channels;
+    std::vector<T> data;
+    nvcv::DataType type;
 };
 
 struct Rect2f
@@ -809,10 +809,10 @@ NVCV_TEST_SUITE_P(OpPillowResize, test::ValueList<int, int, int, int, NVCVInterp
     {        10,        10,        5,         5,  NVCV_INTERP_LINEAR,           1, nvcv::FMT_RGB8},
     {        42,        40,       21,        20,  NVCV_INTERP_LINEAR,           1, nvcv::FMT_RGB8},
     {        21,        21,       42,        42,  NVCV_INTERP_LINEAR,           1, nvcv::FMT_RGB8},
-    {       420,       420,      210,       210,  NVCV_INTERP_LINEAR,           4, nvcv::FMT_RGB8},
-    {       210,       210,      420,       420,  NVCV_INTERP_LINEAR,           5, nvcv::FMT_RGB8},
-    {       420,       420,      210,       210,  NVCV_INTERP_LINEAR,           6, nvcv::FMT_RGBf32},
-    {       211,       211,      421,       421,  NVCV_INTERP_LINEAR,           7, nvcv::FMT_RGBf32},
+    {        42,        42,       21,        21,  NVCV_INTERP_LINEAR,           4, nvcv::FMT_RGB8},
+    {        21,        21,       42,        42,  NVCV_INTERP_LINEAR,           5, nvcv::FMT_RGB8},
+    {        42,        42,       21,        21,  NVCV_INTERP_LINEAR,           6, nvcv::FMT_RGBf32},
+    {        21,        21,       42,        42,  NVCV_INTERP_LINEAR,           7, nvcv::FMT_RGBf32},
 });
 
 // clang-format on
@@ -895,7 +895,7 @@ void StartTest(int srcWidth, int srcHeight, int dstWidth, int dstHeight, NVCVInt
         std::vector<int> mae(testVec.size());
         for (size_t i = 0; i < mae.size(); ++i)
         {
-            mae[i] = abs(static_cast<int>((*test_out.data)[i]) - static_cast<int>(testVec[i]));
+            mae[i] = abs(static_cast<int>((test_out.data)[i]) - static_cast<int>(testVec[i]));
         }
 
         int maeThreshold = 2;
