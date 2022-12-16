@@ -47,6 +47,9 @@ public:
 
     void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const NVCVInterpolationType interpolation);
 
+    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
+                    const NVCVInterpolationType interpolation);
+
     virtual NVCVOperatorHandle handle() const noexcept override;
 
 private:
@@ -70,6 +73,13 @@ inline void PillowResize::operator()(cudaStream_t stream, cv::ITensor &in, cv::I
                                      const NVCVInterpolationType interpolation)
 {
     cv::detail::CheckThrow(nvcvopPillowResizeSubmit(m_handle, stream, in.handle(), out.handle(), interpolation));
+}
+
+inline void PillowResize::operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
+                                     const NVCVInterpolationType interpolation)
+{
+    cv::detail::CheckThrow(
+        nvcvopPillowResizeVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), interpolation));
 }
 
 inline NVCVOperatorHandle PillowResize::handle() const noexcept

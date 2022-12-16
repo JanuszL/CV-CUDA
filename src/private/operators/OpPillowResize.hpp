@@ -48,9 +48,12 @@ public:
 
     void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
                     const NVCVInterpolationType interpolation) const;
+    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
+                    const NVCVInterpolationType interpolation) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::PillowResize> m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::PillowResize>         m_legacyOp;
+    std::unique_ptr<cv::legacy::cuda_op::PillowResizeVarShape> m_legacyOpVarShape;
 };
 
 } // namespace nv::cvop::priv

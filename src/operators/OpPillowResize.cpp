@@ -55,3 +55,15 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopPillowResizeSubmit,
             priv::ToDynamicRef<priv_op::PillowResize>(handle)(stream, input, output, interpolation);
         });
 }
+
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopPillowResizeVarShapeSubmit,
+                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                 const NVCVInterpolationType interpolation))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            nv::cv::ImageBatchVarShapeWrapHandle input(in), output(out);
+            priv::ToDynamicRef<priv_op::PillowResize>(handle)(stream, input, output, interpolation);
+        });
+}

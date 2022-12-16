@@ -38,7 +38,8 @@ PillowResize::PillowResize(cv::Size2D maxSize, int maxBatchSize, NVCVImageFormat
     leg::cuda_op::DataType  data_type = leg::helpers::GetLegacyDataType(bpc[0], dtype);
     leg::cuda_op::DataShape maxIn(maxBatchSize, maxChannel, maxSize.h, maxSize.w),
         maxOut(maxBatchSize, maxChannel, maxSize.h, maxSize.w);
-    m_legacyOp = std::make_unique<leg::cuda_op::PillowResize>(maxIn, maxOut, data_type);
+    m_legacyOp         = std::make_unique<leg::cuda_op::PillowResize>(maxIn, maxOut, data_type);
+    m_legacyOpVarShape = std::make_unique<leg::cuda_op::PillowResizeVarShape>(maxIn, maxOut, data_type);
 }
 
 void PillowResize::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
@@ -57,6 +58,12 @@ void PillowResize::operator()(cudaStream_t stream, const cv::ITensor &in, const 
     }
 
     NVCV_CHECK_THROW(m_legacyOp->infer(*inData, *outData, interpolation, stream));
+}
+
+void PillowResize::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in,
+                              const cv::IImageBatchVarShape &out, const NVCVInterpolationType interpolation) const
+{
+    NVCV_CHECK_THROW(m_legacyOpVarShape->infer(in, out, interpolation, stream));
 }
 
 } // namespace nv::cvop::priv

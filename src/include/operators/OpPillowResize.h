@@ -120,6 +120,10 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopPillowResizeCreate(NVCVOperatorHandle *handle, i
 NVCV_OP_PUBLIC NVCVStatus nvcvopPillowResizeSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
                                                    NVCVTensorHandle out, const NVCVInterpolationType interpolation);
 
+NVCV_OP_PUBLIC NVCVStatus nvcvopPillowResizeVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
+                                                           NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                                                           const NVCVInterpolationType interpolation);
+/** @} */
 #ifdef __cplusplus
 }
 #endif
