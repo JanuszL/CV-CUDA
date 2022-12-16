@@ -276,6 +276,12 @@ ErrorCode Erase::infer(const ITensorDataPitchDevice &inData, const ITensorDataPi
 
     int max_ew = h_max_values.x, max_eh = h_max_values.y;
 
+    // All areas as empty? Weird, but valid nonetheless.
+    if (max_ew == 0 || max_eh == 0)
+    {
+        return SUCCESS;
+    }
+
     typedef void (*erase_t)(const ITensorDataPitchDevice &imgs, const ITensorDataPitchDevice &anchor,
                             const ITensorDataPitchDevice &erasing, const ITensorDataPitchDevice &imgIdx,
                             const ITensorDataPitchDevice &values, int max_eh, int max_ew, int num_erasing_area,
