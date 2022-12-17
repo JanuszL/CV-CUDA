@@ -44,7 +44,7 @@ public:
     Image(const Image &) = delete;
 
 private:
-    NVCVImageHandle doGetHandle() const final;
+    NVCVImageHandle doGetHandle() const final override;
 
     NVCVImageHandle m_handle;
 };
@@ -63,7 +63,7 @@ public:
     ImageWrapData(const Image &) = delete;
 
 private:
-    NVCVImageHandle doGetHandle() const final;
+    NVCVImageHandle doGetHandle() const final override;
 
     static void doCleanup(void *ctx, const NVCVImageData *data);
 

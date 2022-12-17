@@ -38,7 +38,7 @@ public:
     ImageBatchVarShape(const ImageBatchVarShape &) = delete;
 
 private:
-    NVCVImageBatchHandle doGetHandle() const final;
+    NVCVImageBatchHandle doGetHandle() const final override;
 
     NVCVImageBatchHandle m_handle;
 };

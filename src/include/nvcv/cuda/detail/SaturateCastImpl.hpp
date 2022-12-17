@@ -34,6 +34,10 @@ inline __host__ __device__ T BaseSaturateCastImpl(U u)
     constexpr bool SmallToBig = sizeof(U) <= sizeof(T);
     constexpr bool BigToSmall = sizeof(U) > sizeof(T);
 
+    // To silence spurious warnings with gcc-11.1 (-Wunused-but-set-variable)
+    (void)SmallToBig;
+    (void)BigToSmall;
+
     if constexpr (std::is_floating_point_v<U> && std::is_integral_v<T>)
     {
         // any-float -> any-integral
