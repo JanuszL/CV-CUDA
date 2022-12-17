@@ -55,7 +55,7 @@ public:
 private:
     HandleType m_handle;
 
-    HandleType doGetHandle() const final
+    HandleType doGetHandle() const final override
     {
         return m_handle;
     }

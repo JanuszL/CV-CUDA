@@ -46,7 +46,7 @@ public:
     Tensor(const Tensor &) = delete;
 
 private:
-    NVCVTensorHandle doGetHandle() const final;
+    NVCVTensorHandle doGetHandle() const final override;
 
     NVCVTensorHandle m_handle;
 };
@@ -63,7 +63,7 @@ public:
     TensorWrapData(const TensorWrapData &) = delete;
 
 private:
-    NVCVTensorHandle doGetHandle() const final;
+    NVCVTensorHandle doGetHandle() const final override;
 
     static void doCleanup(void *ctx, const NVCVTensorData *data);
 
@@ -82,7 +82,7 @@ public:
     TensorWrapImage(const TensorWrapImage &) = delete;
 
 private:
-    NVCVTensorHandle doGetHandle() const final;
+    NVCVTensorHandle doGetHandle() const final override;
 
     NVCVTensorHandle m_handle;
 };
