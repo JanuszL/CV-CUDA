@@ -43,14 +43,14 @@ static void ValidateTensorBufferStrided(const NVCVTensorData &tdata)
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Memory buffer must not be NULL";
     }
 
-    int ndim = tdata.ndim;
+    int rank = tdata.rank;
 
-    if (ndim <= 0)
+    if (rank <= 0)
     {
-        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Number of dimensions must be >= 1, not %d", ndim);
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Number of dimensions must be >= 1, not %d", rank);
     }
 
-    for (int i = 0; i < ndim; ++i)
+    for (int i = 0; i < rank; ++i)
     {
         if (tdata.shape[i] < 1)
         {
@@ -60,13 +60,13 @@ static void ValidateTensorBufferStrided(const NVCVTensorData &tdata)
 
     DataType dtype{tdata.dtype};
 
-    int firstPacked = IsChannelLast(tdata.layout) ? std::max(0, ndim - 2) : ndim - 1;
+    int firstPacked = IsChannelLast(tdata.layout) ? std::max(0, rank - 2) : rank - 1;
 
     // Test packed dimensions
     int dim;
-    for (dim = ndim - 1; dim >= firstPacked; --dim)
+    for (dim = rank - 1; dim >= firstPacked; --dim)
     {
-        int correctPitch = dim == ndim - 1 ? dtype.strideBytes() : buffer.strides[dim + 1] * tdata.shape[dim + 1];
+        int correctPitch = dim == rank - 1 ? dtype.strideBytes() : buffer.strides[dim + 1] * tdata.shape[dim + 1];
         if (buffer.strides[dim] != correctPitch)
         {
             throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
@@ -104,9 +104,9 @@ TensorWrapDataStrided::~TensorWrapDataStrided()
     }
 }
 
-int32_t TensorWrapDataStrided::ndim() const
+int32_t TensorWrapDataStrided::rank() const
 {
-    return m_tdata.ndim;
+    return m_tdata.rank;
 }
 
 const int64_t *TensorWrapDataStrided::shape() const

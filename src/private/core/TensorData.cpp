@@ -150,7 +150,7 @@ void FillTensorData(IImage &img, NVCVTensorData &tensorData)
         tensorData.layout = NVCV_TENSOR_NCHW;
     }
 
-    tensorData.ndim = 4;
+    tensorData.rank = 4;
     if (tensorData.layout == NVCV_TENSOR_NHWC)
     {
         tensorData.shape[0] = 1;

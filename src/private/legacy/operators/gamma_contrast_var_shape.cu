@@ -248,7 +248,7 @@ ErrorCode GammaContrastVarShape::infer(const IImageBatchVarShapeDataStridedCuda 
     NVCV_ASSERT(gammasAccess);
 
     int numElements = 1;
-    for (int i = 0; i < gammas.ndim(); i++)
+    for (int i = 0; i < gammas.rank(); i++)
     {
         numElements *= gammas.shape(i);
     }

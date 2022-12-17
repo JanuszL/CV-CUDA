@@ -36,9 +36,9 @@ inline ITensorData::~ITensorData()
     // required dtor implementation
 }
 
-inline int ITensorData::ndim() const
+inline int ITensorData::rank() const
 {
-    return this->cdata().ndim;
+    return this->cdata().rank;
 }
 
 inline const TensorShape &ITensorData::shape() const
@@ -46,7 +46,7 @@ inline const TensorShape &ITensorData::shape() const
     if (!m_cacheShape)
     {
         const NVCVTensorData &data = this->cdata();
-        m_cacheShape.emplace(data.shape, data.ndim, data.layout);
+        m_cacheShape.emplace(data.shape, data.rank, data.layout);
     }
 
     return *m_cacheShape;
@@ -56,10 +56,10 @@ inline auto ITensorData::shape(int d) const -> const TensorShape::DimType &
 {
     const NVCVTensorData &data = this->cdata();
 
-    if (d < 0 || d >= data.ndim)
+    if (d < 0 || d >= data.rank)
     {
         throw Exception(Status::ERROR_INVALID_ARGUMENT, "Index of shape dimension %d is out of bounds [0;%d]", d,
-                        data.ndim - 1);
+                        data.rank - 1);
     }
     return data.shape[d];
 }
@@ -103,9 +103,9 @@ inline Byte *ITensorDataStrided::basePtr() const
 inline const int64_t &ITensorDataStrided::stride(int d) const
 {
     const NVCVTensorData &data = this->cdata();
-    if (d < 0 || d >= data.ndim)
+    if (d < 0 || d >= data.rank)
     {
-        throw Exception(Status::ERROR_INVALID_ARGUMENT, "Index of pitch %d is out of bounds [0;%d]", d, data.ndim - 1);
+        throw Exception(Status::ERROR_INVALID_ARGUMENT, "Index of pitch %d is out of bounds [0;%d]", d, data.rank - 1);
     }
 
     return data.buffer.strided.strides[d];

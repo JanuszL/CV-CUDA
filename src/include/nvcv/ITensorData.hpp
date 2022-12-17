@@ -31,7 +31,7 @@ class ITensorData
 public:
     virtual ~ITensorData() = 0;
 
-    int                         ndim() const;
+    int                         rank() const;
     const TensorShape          &shape() const;
     const TensorShape::DimType &shape(int d) const;
 

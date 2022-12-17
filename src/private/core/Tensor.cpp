@@ -72,7 +72,7 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t numImages, Size2D imgSiz
 
     int64_t shapeNCHW[4] = {numImages, fmt.numChannels(), imgSize.h, imgSize.w};
 
-    int64_t shape[NVCV_TENSOR_MAX_NDIM];
+    int64_t shape[NVCV_TENSOR_MAX_RANK];
     PermuteShape(NVCV_TENSOR_NCHW, shapeNCHW, layout, shape);
 
     // Calculate the element type. It's the data type of the
@@ -88,10 +88,10 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t numImages, Size2D imgSiz
 
     DataType dtype{fmt.dataKind(), *chPacking};
 
-    return CalcRequirements(layout.ndim, shape, dtype, layout, userBaseAlign, userRowAlign);
+    return CalcRequirements(layout.rank, shape, dtype, layout, userBaseAlign, userRowAlign);
 }
 
-NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int64_t *shape, const DataType &dtype,
+NVCVTensorRequirements Tensor::CalcRequirements(int32_t rank, const int64_t *shape, const DataType &dtype,
                                                 NVCVTensorLayout layout, int32_t userBaseAlign, int32_t userRowAlign)
 {
     NVCVTensorRequirements reqs;
@@ -99,19 +99,19 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int64_t *sha
     reqs.layout = layout;
     reqs.dtype  = dtype.value();
 
-    if (layout.ndim > 0 && ndim != layout.ndim)
+    if (layout.rank > 0 && rank != layout.rank)
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
-            << "Number of shape dimensions " << ndim << " must be equal to layout dimensions " << layout.ndim;
+            << "Number of shape dimensions " << rank << " must be equal to layout dimensions " << layout.rank;
     }
 
-    if (ndim <= 0)
+    if (rank <= 0)
     {
-        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Number of dimensions must be >= 1, not %d", ndim);
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Number of dimensions must be >= 1, not %d", rank);
     }
 
-    std::copy_n(shape, ndim, reqs.shape);
-    reqs.ndim = ndim;
+    std::copy_n(shape, rank, reqs.shape);
+    reqs.rank = rank;
 
     reqs.mem = {};
 
@@ -168,10 +168,10 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int64_t *sha
         }
     }
 
-    int firstPacked = reqs.layout == NVCV_TENSOR_NHWC ? std::max(0, ndim - 2) : ndim - 1;
+    int firstPacked = reqs.layout == NVCV_TENSOR_NHWC ? std::max(0, rank - 2) : rank - 1;
 
-    reqs.strides[ndim - 1] = dtype.strideBytes();
-    for (int d = ndim - 2; d >= 0; --d)
+    reqs.strides[rank - 1] = dtype.strideBytes();
+    for (int d = rank - 2; d >= 0; --d)
     {
         if (d == firstPacked - 1)
         {
@@ -204,9 +204,9 @@ Tensor::~Tensor()
     m_alloc.freeCudaMem(m_memBuffer, CalcTotalSizeBytes(m_reqs.mem.cudaMem), m_reqs.alignBytes);
 }
 
-int32_t Tensor::ndim() const
+int32_t Tensor::rank() const
 {
-    return m_reqs.ndim;
+    return m_reqs.rank;
 }
 
 const int64_t *Tensor::shape() const
@@ -235,7 +235,7 @@ void Tensor::exportData(NVCVTensorData &data) const
 
     data.dtype  = m_reqs.dtype;
     data.layout = m_reqs.layout;
-    data.ndim   = m_reqs.ndim;
+    data.rank   = m_reqs.rank;
 
     memcpy(data.shape, m_reqs.shape, sizeof(data.shape));
 

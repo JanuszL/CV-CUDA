@@ -31,7 +31,7 @@ extern "C"
 #endif
 
 /** Maximum number of dimensions of a tensor */
-#define NVCV_TENSOR_MAX_NDIM (15)
+#define NVCV_TENSOR_MAX_RANK (15)
 
 /** Represents the tensor layout.
  * It assigns labels to each tensor dimension.
@@ -39,8 +39,8 @@ extern "C"
 typedef struct NVCVTensorLayoutRec
 {
     // Not to be used directly.
-    char    data[NVCV_TENSOR_MAX_NDIM + 1]; // +1 for '\0'
-    int32_t ndim;
+    char    data[NVCV_TENSOR_MAX_RANK + 1]; // +1 for '\0'
+    int32_t rank;
 } NVCVTensorLayout;
 
 typedef enum
@@ -91,7 +91,7 @@ NVCV_CONSTEXPR static const NVCVTensorLayout NVCV_TENSOR_IMPLICIT[7] =
  * The number of dimensions is taken from the string length.
  *
  * @param [in] descr Zero-terminated string,
- *                   + Must have at most @NVCV_TENSOR_MAX_NDIM characters.
+ *                   + Must have at most @NVCV_TENSOR_MAX_RANK characters.
  * @param [out] layout Where the output layout will be written to
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
@@ -105,7 +105,7 @@ NVCV_PUBLIC NVCVStatus nvcvTensorLayoutMake(const char *descr, NVCVTensorLayout 
  *
  * @param [in] beg, end Label range.
  *                   + Must not be NULL
- *                   + Must specify at most @NVCV_TENSOR_MAX_NDIM characters
+ *                   + Must specify at most @NVCV_TENSOR_MAX_RANK characters
  *
  * @param [out] layout Where the output layout will be written to
  *
@@ -120,7 +120,7 @@ NVCV_PUBLIC NVCVStatus nvcvTensorLayoutMakeRange(const char *beg, const char *en
  * @param [in] n Number of labels from start of the layout.
  *               - If 0, returns an empty layout.
  *               - If negative, returns the -n last labels instead.
- *               - If >= ndim or <= -ndim, returns a copy of the input layout.
+ *               - If >= rank or <= -rank, returns a copy of the input layout.
  *
  * @param [out] layout Where the output layout will be written to
  *              + Must not be NULL
@@ -134,7 +134,7 @@ NVCV_PUBLIC NVCVStatus nvcvTensorLayoutMakeFirst(NVCVTensorLayout in, int32_t n,
  *
  * @param [in] layout Layout to copy from
  * @param [in] n Number of labels from end of the layout.
- *               - If >= ndim or <= -ndim, returns a copy of the input layout.
+ *               - If >= rank or <= -rank, returns a copy of the input layout.
  *               - If 0, returns an empty layout.
  *               - If negative, returns the -n first labels instead.
  *
@@ -150,9 +150,9 @@ NVCV_PUBLIC NVCVStatus nvcvTensorLayoutMakeLast(NVCVTensorLayout in, int32_t n, 
  *
  * @param [in] layout Layout to copy from
  * @param [in] beg,end Range from input layout to be copied.
- *                   - If >= ndim, consider at ndim
- *                   - If <= -ndim, consider at 0
- *                   - If < 0, consider at ndim+beg (ndim+end).
+ *                   - If >= rank, consider at rank
+ *                   - If <= -rank, consider at 0
+ *                   - If < 0, consider at rank+beg (rank+end).
  *
  * @param [out] layout Where the output layout will be written to
  *              + Must not be NULL
@@ -175,10 +175,10 @@ inline static int32_t nvcvTensorLayoutFindDimIndex(NVCVTensorLayout layout, char
 {
     if (idxStart < 0)
     {
-        idxStart = layout.ndim + idxStart;
+        idxStart = layout.rank + idxStart;
     }
 
-    int n = layout.ndim - idxStart;
+    int n = layout.rank - idxStart;
     if (n > 0)
     {
         void *p = memchr(layout.data + idxStart, dimLabel, n);
@@ -202,10 +202,10 @@ NVCV_CONSTEXPR inline static char nvcvTensorLayoutGetLabel(NVCVTensorLayout layo
 {
     if (idx < 0)
     {
-        idx = layout.ndim + idx;
+        idx = layout.rank + idx;
     }
 
-    if (0 <= idx && idx < layout.ndim)
+    if (0 <= idx && idx < layout.rank)
     {
         return layout.data[idx];
     }
@@ -223,7 +223,7 @@ NVCV_CONSTEXPR inline static char nvcvTensorLayoutGetLabel(NVCVTensorLayout layo
  */
 NVCV_CONSTEXPR inline static int32_t nvcvTensorLayoutGetNumDim(NVCVTensorLayout layout)
 {
-    return layout.ndim;
+    return layout.rank;
 }
 
 /** Compares the two layouts.
@@ -234,13 +234,13 @@ NVCV_CONSTEXPR inline static int32_t nvcvTensorLayoutGetNumDim(NVCVTensorLayout 
  */
 inline static int32_t nvcvTensorLayoutCompare(NVCVTensorLayout a, NVCVTensorLayout b)
 {
-    if (a.ndim == b.ndim)
+    if (a.rank == b.rank)
     {
-        return memcmp(a.data, b.data, a.ndim);
+        return memcmp(a.data, b.data, a.rank);
     }
     else
     {
-        return a.ndim - b.ndim;
+        return a.rank - b.rank;
     }
 }
 
@@ -255,9 +255,9 @@ inline static int32_t nvcvTensorLayoutCompare(NVCVTensorLayout a, NVCVTensorLayo
  */
 inline static int32_t nvcvTensorLayoutStartsWith(NVCVTensorLayout layout, NVCVTensorLayout test)
 {
-    if (test.ndim <= layout.ndim)
+    if (test.rank <= layout.rank)
     {
-        return memcmp(test.data, layout.data, test.ndim) == 0;
+        return memcmp(test.data, layout.data, test.rank) == 0;
     }
     else
     {
@@ -276,9 +276,9 @@ inline static int32_t nvcvTensorLayoutStartsWith(NVCVTensorLayout layout, NVCVTe
  */
 inline static int32_t nvcvTensorLayoutEndsWith(NVCVTensorLayout layout, NVCVTensorLayout test)
 {
-    if (test.ndim <= layout.ndim)
+    if (test.rank <= layout.rank)
     {
-        return memcmp(test.data, layout.data + layout.ndim - test.ndim, test.ndim) == 0;
+        return memcmp(test.data, layout.data + layout.rank - test.rank, test.rank) == 0;
     }
     else
     {

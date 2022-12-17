@@ -86,9 +86,9 @@ void PreProcess(nv::cv::TensorWrapData &inTensor, uint32_t batchSize, int inputL
     nv::cv::Tensor::Requirements reqsScale       = nv::cv::Tensor::CalcRequirements(1, {1, 1}, nv::cv::FMT_RGBf32);
     int64_t                      scaleBufferSize = CalcTotalSizeBytes(nv::cv::Requirements{reqsScale.mem}.cudaMem());
     nv::cv::TensorDataStridedCuda::Buffer bufScale;
-    std::copy(reqsScale.strides, reqsScale.strides + NVCV_TENSOR_MAX_NDIM, bufScale.strides);
+    std::copy(reqsScale.strides, reqsScale.strides + NVCV_TENSOR_MAX_RANK, bufScale.strides);
     CHECK_CUDA_ERROR(cudaMalloc(&bufScale.basePtr, scaleBufferSize));
-    nv::cv::TensorDataStridedCuda scaleIn(nv::cv::TensorShape{reqsScale.shape, reqsScale.ndim, reqsScale.layout},
+    nv::cv::TensorDataStridedCuda scaleIn(nv::cv::TensorShape{reqsScale.shape, reqsScale.rank, reqsScale.layout},
                                           nv::cv::DataType{reqsScale.dtype}, bufScale);
     nv::cv::TensorWrapData        scaleTensor(scaleIn);
 
@@ -96,9 +96,9 @@ void PreProcess(nv::cv::TensorWrapData &inTensor, uint32_t batchSize, int inputL
     nv::cv::TensorDataStridedCuda::Buffer bufBase;
     nv::cv::Tensor::Requirements          reqsBase = nv::cv::Tensor::CalcRequirements(1, {1, 1}, nv::cv::FMT_RGBf32);
     int64_t baseBufferSize                         = CalcTotalSizeBytes(nv::cv::Requirements{reqsBase.mem}.cudaMem());
-    std::copy(reqsBase.strides, reqsBase.strides + NVCV_TENSOR_MAX_NDIM, bufBase.strides);
+    std::copy(reqsBase.strides, reqsBase.strides + NVCV_TENSOR_MAX_RANK, bufBase.strides);
     CHECK_CUDA_ERROR(cudaMalloc(&bufBase.basePtr, baseBufferSize));
-    nv::cv::TensorDataStridedCuda baseIn(nv::cv::TensorShape{reqsBase.shape, reqsBase.ndim, reqsBase.layout},
+    nv::cv::TensorDataStridedCuda baseIn(nv::cv::TensorShape{reqsBase.shape, reqsBase.rank, reqsBase.layout},
                                          nv::cv::DataType{reqsBase.dtype}, bufBase);
     nv::cv::TensorWrapData        baseTensor(baseIn);
 
@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
     nv::cv::Tensor::Requirements inReqs
         = nv::cv::Tensor::CalcRequirements(batchSize, {maxImageWidth, maxImageHeight}, nv::cv::FMT_RGB8);
 
-    nv::cv::TensorDataStridedCuda inData(nv::cv::TensorShape{inReqs.shape, inReqs.ndim, inReqs.layout},
+    nv::cv::TensorDataStridedCuda inData(nv::cv::TensorShape{inReqs.shape, inReqs.rank, inReqs.layout},
                                          nv::cv::DataType{inReqs.dtype}, inBuf);
     nv::cv::TensorWrapData        inTensor(inData);
 
@@ -277,12 +277,12 @@ int main(int argc, char *argv[])
     // Calculates the total buffer size needed based on the requirements
     int64_t inputLayerSize = CalcTotalSizeBytes(nv::cv::Requirements{reqsInputLayer.mem}.cudaMem());
     nv::cv::TensorDataStridedCuda::Buffer bufInputLayer;
-    std::copy(reqsInputLayer.strides, reqsInputLayer.strides + NVCV_TENSOR_MAX_NDIM, bufInputLayer.strides);
+    std::copy(reqsInputLayer.strides, reqsInputLayer.strides + NVCV_TENSOR_MAX_RANK, bufInputLayer.strides);
     // Allocate buffer size needed for the tensor
     CHECK_CUDA_ERROR(cudaMalloc(&bufInputLayer.basePtr, inputLayerSize));
     // Wrap the tensor as a CVCUDA tensor
     nv::cv::TensorDataStridedCuda inputLayerTensorData(
-        nv::cv::TensorShape{reqsInputLayer.shape, reqsInputLayer.ndim, reqsInputLayer.layout},
+        nv::cv::TensorShape{reqsInputLayer.shape, reqsInputLayer.rank, reqsInputLayer.layout},
         nv::cv::DataType{reqsInputLayer.dtype}, bufInputLayer);
     nv::cv::TensorWrapData inputLayerTensor(inputLayerTensorData);
 
@@ -291,10 +291,10 @@ int main(int argc, char *argv[])
         = nv::cv::Tensor::CalcRequirements(batchSize, {outputDims.width, 1}, nv::cv::FMT_RGBf32p);
     int64_t outputLayerSize = CalcTotalSizeBytes(nv::cv::Requirements{reqsOutputLayer.mem}.cudaMem());
     nv::cv::TensorDataStridedCuda::Buffer bufOutputLayer;
-    std::copy(reqsOutputLayer.strides, reqsOutputLayer.strides + NVCV_TENSOR_MAX_NDIM, bufOutputLayer.strides);
+    std::copy(reqsOutputLayer.strides, reqsOutputLayer.strides + NVCV_TENSOR_MAX_RANK, bufOutputLayer.strides);
     CHECK_CUDA_ERROR(cudaMalloc(&bufOutputLayer.basePtr, outputLayerSize));
     nv::cv::TensorDataStridedCuda outputLayerTensorData(
-        nv::cv::TensorShape{reqsOutputLayer.shape, reqsOutputLayer.ndim, reqsOutputLayer.layout},
+        nv::cv::TensorShape{reqsOutputLayer.shape, reqsOutputLayer.rank, reqsOutputLayer.layout},
         nv::cv::DataType{reqsOutputLayer.dtype}, bufOutputLayer);
     nv::cv::TensorWrapData outputLayerTensor(outputLayerTensorData);
 

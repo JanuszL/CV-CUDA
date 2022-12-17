@@ -60,13 +60,13 @@ TEST_P(TensorTests, wip_create)
     const nvcv::ImageFormat PARAM_FORMAT     = std::get<3>(GetParam());
     const nvcv::TensorShape GOLD_SHAPE       = std::get<4>(GetParam());
     const nvcv::DataType    GOLD_DTYPE       = std::get<5>(GetParam());
-    const int               GOLD_NDIM        = 4;
+    const int               GOLD_RANK        = 4;
 
     nvcv::Tensor tensor(PARAM_NUM_IMAGES, {PARAM_WIDTH, PARAM_HEIGHT}, PARAM_FORMAT);
 
     EXPECT_EQ(GOLD_DTYPE, tensor.dtype());
     EXPECT_EQ(GOLD_SHAPE, tensor.shape());
-    EXPECT_EQ(GOLD_NDIM, tensor.ndim());
+    EXPECT_EQ(GOLD_RANK, tensor.rank());
     EXPECT_EQ(GOLD_SHAPE.layout(), tensor.layout());
     ASSERT_NE(nullptr, tensor.handle());
 
@@ -79,7 +79,7 @@ TEST_P(TensorTests, wip_create)
         auto *devdata = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(data);
         ASSERT_NE(nullptr, devdata);
 
-        EXPECT_EQ(GOLD_NDIM, devdata->ndim());
+        EXPECT_EQ(GOLD_RANK, devdata->rank());
         ASSERT_EQ(GOLD_SHAPE, devdata->shape());
         ASSERT_EQ(GOLD_SHAPE.layout(), devdata->layout());
         ASSERT_EQ(GOLD_DTYPE, devdata->dtype());
@@ -220,7 +220,7 @@ TEST(Tensor, wip_cast)
     nvcv::ITensor *ptensor = nvcv::StaticCast<nvcv::ITensor *>(handle);
     ASSERT_NE(nullptr, ptensor);
     EXPECT_EQ(handle, ptensor->handle());
-    ASSERT_EQ(4, ptensor->ndim());
+    ASSERT_EQ(4, ptensor->rank());
     EXPECT_EQ(4, ptensor->shape()[3]);
     EXPECT_EQ(163, ptensor->shape()[2]);
     EXPECT_EQ(117, ptensor->shape()[1]);
@@ -279,7 +279,7 @@ TEST(TensorWrapData, wip_create)
     EXPECT_EQ(173, tdata->shape()[3]);
     EXPECT_EQ(79, tdata->shape()[2]);
     EXPECT_EQ(2, tdata->shape()[1]);
-    EXPECT_EQ(4, tdata->ndim());
+    EXPECT_EQ(4, tdata->rank());
 
     EXPECT_EQ(2, tdata->stride(3));
     EXPECT_EQ(173 * 2, tdata->stride(2));
@@ -290,7 +290,7 @@ TEST(TensorWrapData, wip_create)
 
     EXPECT_EQ(tdata->shape(), tensor.shape());
     EXPECT_EQ(tdata->layout(), tensor.layout());
-    EXPECT_EQ(tdata->ndim(), tensor.ndim());
+    EXPECT_EQ(tdata->rank(), tensor.rank());
     EXPECT_EQ(GOLD_DTYPE, tensor.dtype());
 
     const nvcv::ITensorData *data = tensor.exportData();
@@ -304,7 +304,7 @@ TEST(TensorWrapData, wip_create)
 
     EXPECT_EQ(tdata->dtype(), devdata->dtype());
     EXPECT_EQ(tdata->shape(), devdata->shape());
-    EXPECT_EQ(tdata->ndim(), devdata->ndim());
+    EXPECT_EQ(tdata->rank(), devdata->rank());
 
     EXPECT_EQ(tdata->basePtr(), devdata->basePtr());
 

@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
         = nv::cv::Tensor::CalcRequirements(batchSize, {maxImageWidth, maxImageHeight}, nv::cv::FMT_RGB8);
 
     // Create a tensor buffer to store the data pointer and pitch bytes for each plane
-    nv::cv::TensorDataStridedCuda inData(nv::cv::TensorShape{inReqs.shape, inReqs.ndim, inReqs.layout},
+    nv::cv::TensorDataStridedCuda inData(nv::cv::TensorShape{inReqs.shape, inReqs.rank, inReqs.layout},
                                          nv::cv::DataType{inReqs.dtype}, inBuf);
 
     // TensorWrapData allows for interoperation of external tensor representations with CVCUDA Tensor.

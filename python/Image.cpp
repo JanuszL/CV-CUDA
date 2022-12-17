@@ -92,7 +92,7 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer
     {
         const py::buffer_info &info = buffers[p];
 
-        // Extract 4d shape and layout regardless of ndim
+        // Extract 4d shape and layout regardless of rank
         ssize_t          shape[4];
         ssize_t          strides[4];
         cv::TensorLayout layout;
@@ -186,7 +186,7 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer
             throw std::invalid_argument("Buffer strides must be all >= 1");
         }
 
-        NVCV_ASSERT(layout.ndim() == 4);
+        NVCV_ASSERT(layout.rank() == 4);
 
         auto infoShape = cv::TensorShapeInfoImagePlanar::Create(cv::TensorShape(shape, 4, layout));
         NVCV_ASSERT(infoShape);
@@ -763,8 +763,8 @@ std::vector<std::pair<py::buffer_info, cv::TensorLayout>> ToPyBufferInfo(const c
             inferredDType  = py::cast(imgData.format().planeDataType(p).channelType(0));
         }
 
-        NVCV_ASSERT((ssize_t)inferredShape.size() == inferredLayout.ndim());
-        NVCV_ASSERT((ssize_t)inferredStrides.size() == inferredLayout.ndim());
+        NVCV_ASSERT((ssize_t)inferredShape.size() == inferredLayout.rank());
+        NVCV_ASSERT((ssize_t)inferredStrides.size() == inferredLayout.rank());
 
         std::vector<ssize_t> shape;
         std::vector<ssize_t> strides;
@@ -776,7 +776,7 @@ std::vector<std::pair<py::buffer_info, cv::TensorLayout>> ToPyBufferInfo(const c
             layout = *userLayout;
 
             // Check if user layout has all required dimensions
-            for (int i = 0; i < inferredLayout.ndim(); ++i)
+            for (int i = 0; i < inferredLayout.rank(); ++i)
             {
                 if (inferredShape[i] >= 2 && userLayout->find(inferredLayout[i]) < 0)
                 {
@@ -787,7 +787,7 @@ std::vector<std::pair<py::buffer_info, cv::TensorLayout>> ToPyBufferInfo(const c
             int idxLastInferDim = -1;
 
             // Fill up the final shape and strides according to the user layout
-            for (int i = 0; i < userLayout->ndim(); ++i)
+            for (int i = 0; i < userLayout->rank(); ++i)
             {
                 int idxInferDim = inferredLayout.find((*userLayout)[i]);
 

@@ -31,11 +31,11 @@ typedef NVCVDataType NVCVElementType;
 /** Stores the tensor plane contents. */
 typedef struct NVCVTensorBufferStridedRec
 {
-    int64_t strides[NVCV_TENSOR_MAX_NDIM];
+    int64_t strides[NVCV_TENSOR_MAX_RANK];
 
     /** Pointer to memory buffer with tensor contents.
      * Element with type T is addressed by:
-     * pelem = basePtr + shape[0]*strides[0] + ... + shape[ndim-1]*strides[ndim-1];
+     * pelem = basePtr + shape[0]*strides[0] + ... + shape[rank-1]*strides[rank-1];
      */
     NVCVByte *basePtr;
 } NVCVTensorBufferStrided;
@@ -68,8 +68,8 @@ typedef struct NVCVTensorDataRec
     NVCVElementType  dtype;
     NVCVTensorLayout layout;
 
-    int32_t ndim;
-    int64_t shape[NVCV_TENSOR_MAX_NDIM];
+    int32_t rank;
+    int64_t shape[NVCV_TENSOR_MAX_RANK];
 
     /** Type of image batch buffer.
      *  It defines which member of the \ref NVCVTensorBuffer tagged union that

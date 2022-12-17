@@ -198,7 +198,7 @@ ErrorCode EraseVarShape::infer(const cv::IImageBatchVarShape &inbatch, const cv:
         LOG_ERROR("Invalid anchor DataType " << anchor_data_type);
         return ErrorCode::INVALID_DATA_TYPE;
     }
-    int anchor_dim = anchor.layout().ndim();
+    int anchor_dim = anchor.layout().rank();
     if (anchor_dim != 1)
     {
         LOG_ERROR("Invalid anchor Dim " << anchor_dim);
@@ -223,7 +223,7 @@ ErrorCode EraseVarShape::infer(const cv::IImageBatchVarShape &inbatch, const cv:
         LOG_ERROR("Invalid erasing DataType " << erasing_data_type);
         return ErrorCode::INVALID_DATA_TYPE;
     }
-    int erasing_dim = erasing.layout().ndim();
+    int erasing_dim = erasing.layout().rank();
     if (erasing_dim != 1)
     {
         LOG_ERROR("Invalid erasing_w Dim " << erasing_dim);
@@ -236,7 +236,7 @@ ErrorCode EraseVarShape::infer(const cv::IImageBatchVarShape &inbatch, const cv:
         LOG_ERROR("Invalid imgIdx DataType " << imgidx_data_type);
         return ErrorCode::INVALID_DATA_TYPE;
     }
-    int imgidx_dim = imgIdx.layout().ndim();
+    int imgidx_dim = imgIdx.layout().rank();
     if (imgidx_dim != 1)
     {
         LOG_ERROR("Invalid imgIdx Dim " << imgidx_dim);
@@ -249,7 +249,7 @@ ErrorCode EraseVarShape::infer(const cv::IImageBatchVarShape &inbatch, const cv:
         LOG_ERROR("Invalid values DataType " << values_data_type);
         return ErrorCode::INVALID_DATA_TYPE;
     }
-    int values_dim = values.layout().ndim();
+    int values_dim = values.layout().rank();
     if (values_dim != 1)
     {
         LOG_ERROR("Invalid values Dim " << values_dim);

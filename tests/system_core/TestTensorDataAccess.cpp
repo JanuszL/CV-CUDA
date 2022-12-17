@@ -35,11 +35,11 @@ public:
         , m_basePtr(basePtr)
         , m_strides(std::move(strides))
     {
-        assert((int)strides.size() == tshape.ndim());
+        assert((int)strides.size() == tshape.rank());
 
         NVCVTensorData &data = this->cdata();
         data.bufferType      = NVCV_TENSOR_BUFFER_STRIDED_CUDA;
-        data.ndim            = tshape.size();
+        data.rank            = tshape.size();
         data.dtype           = NVCV_DATA_TYPE_U8;
         data.layout          = tshape.layout();
 

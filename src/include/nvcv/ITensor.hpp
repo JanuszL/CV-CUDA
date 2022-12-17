@@ -39,7 +39,7 @@ public:
     HandleType      handle() const;
     static ITensor *cast(HandleType h);
 
-    int          ndim() const;
+    int          rank() const;
     TensorShape  shape() const;
     DataType     dtype() const;
     TensorLayout layout() const;

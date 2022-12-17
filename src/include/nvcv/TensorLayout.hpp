@@ -83,7 +83,7 @@ public:
     }
 
     constexpr char operator[](int idx) const;
-    constexpr int  ndim() const;
+    constexpr int  rank() const;
 
     int find(char dimLabel, int start = 0) const;
 
@@ -147,20 +147,20 @@ NVCV_DETAIL_DEF_TLAYOUT(NONE)
 #include "TensorLayoutDef.inc"
 #undef NVCV_DETAIL_DEF_TLAYOUT
 
-constexpr const TensorLayout &GetImplicitTensorLayout(int ndim)
+constexpr const TensorLayout &GetImplicitTensorLayout(int rank)
 {
     // clang-format off
-    return ndim == 1
+    return rank == 1
             ? TensorLayout::W
-            : (ndim == 2
+            : (rank == 2
                 ? TensorLayout::HW
-                : (ndim == 3
+                : (rank == 3
                     ? TensorLayout::NHW
-                    : (ndim == 4
+                    : (rank == 4
                         ? TensorLayout::NCHW
-                        : (ndim == 5
+                        : (rank == 5
                             ? TensorLayout::NCDHW
-                            : (ndim == 6
+                            : (rank == 6
                                 ? TensorLayout::NCFDHW
                                 : TensorLayout::NONE
                               )
@@ -176,7 +176,7 @@ constexpr char TensorLayout::operator[](int idx) const
     return nvcvTensorLayoutGetLabel(m_layout, idx);
 }
 
-constexpr int TensorLayout::ndim() const
+constexpr int TensorLayout::rank() const
 {
     return nvcvTensorLayoutGetNumDim(m_layout);
 }
@@ -213,7 +213,7 @@ constexpr auto TensorLayout::begin() const -> const_iterator
 
 constexpr inline auto TensorLayout::end() const -> const_iterator
 {
-    return this->begin() + this->ndim();
+    return this->begin() + this->rank();
 }
 
 constexpr auto TensorLayout::cbegin() const -> const_iterator

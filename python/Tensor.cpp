@@ -103,22 +103,22 @@ NVCVTensorData FillNVCVTensorData(const py::buffer_info &info, std::optional<cv:
         tensorData.layout = *layout;
     }
 
-    // ndim ------------
+    // rank ------------
     {
-        int ndim = info.ndim == 0 ? 1 : info.ndim;
-        if (ndim < 1 || ndim > NVCV_TENSOR_MAX_NDIM)
+        int rank = info.ndim == 0 ? 1 : info.ndim;
+        if (rank < 1 || rank > NVCV_TENSOR_MAX_RANK)
         {
             throw std::invalid_argument(
-                FormatString("Number of dimensions must be between 1 and %d, not %d", NVCV_TENSOR_MAX_NDIM, ndim));
+                FormatString("Number of dimensions must be between 1 and %d, not %d", NVCV_TENSOR_MAX_RANK, rank));
         }
-        tensorData.ndim = ndim;
+        tensorData.rank = rank;
     }
 
     // shape ------------
     if (info.ndim == 0)
     {
         // according to https://docs.python.org/3/c-api/buffer.html,
-        // when ndim is zero, buf points to a scalar, so its shape is [1]
+        // when rank is zero, buf points to a scalar, so its shape is [1]
         // info.shape and info.strides are NULL.
         tensorData.shape[0] = 1;
     }
@@ -261,13 +261,13 @@ cv::DataType Tensor::dtype() const
     return m_impl->dtype();
 }
 
-int Tensor::ndim() const
+int Tensor::rank() const
 {
-    return m_impl->ndim();
+    return m_impl->rank();
 }
 
 Tensor::Key::Key(const cv::Tensor::Requirements &reqs)
-    : Key(cv::TensorShape(reqs.shape, reqs.ndim, reqs.layout), static_cast<cv::DataType>(reqs.dtype))
+    : Key(cv::TensorShape(reqs.shape, reqs.rank, reqs.layout), static_cast<cv::DataType>(reqs.dtype))
 {
 }
 
@@ -320,7 +320,7 @@ static py::buffer_info ToPyBufferInfo(const cv::ITensorDataStrided &tensorData)
 {
     std::vector<ssize_t> shape(tensorData.shape().shape().begin(), tensorData.shape().shape().end());
     std::vector<ssize_t> strides(tensorData.cdata().buffer.strided.strides,
-                                 tensorData.cdata().buffer.strided.strides + tensorData.ndim());
+                                 tensorData.cdata().buffer.strided.strides + tensorData.rank());
 
     py::dtype dt = py::cast<py::dtype>(py::cast(tensorData.dtype()));
 
@@ -424,7 +424,10 @@ void Tensor::Export(py::module &m)
         .def_property_readonly("layout", &Tensor::layout)
         .def_property_readonly("shape", &Tensor::shape)
         .def_property_readonly("dtype", &Tensor::dtype)
-        .def_property_readonly("ndim", &Tensor::ndim)
+        // numpy and others use ndim, let's be consistent with them in python.
+        // It's not a requirement to be consistent between NVCV Python and C/C++.
+        // Each language use whatever is appropriate (and expected) in their environment.
+        .def_property_readonly("ndim", &Tensor::rank)
         .def("cuda", &Tensor::cuda)
         .def("__repr__", &ToString<Tensor>);
 

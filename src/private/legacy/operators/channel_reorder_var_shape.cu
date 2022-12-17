@@ -107,9 +107,9 @@ ErrorCode ChannelReorderVarShape::infer(const IImageBatchVarShapeDataStridedCuda
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    if (orderData.ndim() != 2)
+    if (orderData.rank() != 2)
     {
-        LOG_ERROR("order tensor must have 2 dimensions, not " << orderData.ndim());
+        LOG_ERROR("order tensor must have 2 dimensions, not " << orderData.rank());
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 

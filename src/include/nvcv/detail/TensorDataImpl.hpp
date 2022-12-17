@@ -34,7 +34,7 @@ inline TensorDataStridedCuda::TensorDataStridedCuda(const TensorShape &tshape, c
     NVCVTensorData &data = this->cdata();
 
     std::copy(tshape.shape().begin(), tshape.shape().end(), data.shape);
-    data.ndim   = tshape.ndim();
+    data.rank   = tshape.rank();
     data.dtype  = dtype;
     data.layout = tshape.layout();
 

@@ -32,10 +32,10 @@ public:
 
     static NVCVTensorRequirements CalcRequirements(int32_t numImages, Size2D imgSize, ImageFormat fmt,
                                                    int32_t baseAlign, int32_t rowAlign);
-    static NVCVTensorRequirements CalcRequirements(int ndim, const int64_t *shape, const DataType &dtype,
+    static NVCVTensorRequirements CalcRequirements(int rank, const int64_t *shape, const DataType &dtype,
                                                    NVCVTensorLayout layout, int32_t baseAlign, int32_t rowAlign);
 
-    int32_t        ndim() const override;
+    int32_t        rank() const override;
     const int64_t *shape() const override;
 
     const NVCVTensorLayout &layout() const override;

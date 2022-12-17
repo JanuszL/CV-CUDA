@@ -35,15 +35,15 @@ NVCVTensorLayout CreateLayout(const char *beg, const char *end)
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Range must not have negative length";
     }
 
-    if (end - beg > NVCV_TENSOR_MAX_NDIM)
+    if (end - beg > NVCV_TENSOR_MAX_RANK)
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
-            << "Range length " << end - beg << " too large, must be <= " << NVCV_TENSOR_MAX_NDIM;
+            << "Range length " << end - beg << " too large, must be <= " << NVCV_TENSOR_MAX_RANK;
     }
 
     NVCVTensorLayout out;
-    out.ndim = end - beg;
-    memcpy(out.data, beg, out.ndim);
+    out.rank = end - beg;
+    memcpy(out.data, beg, out.rank);
 
     return out;
 }
@@ -59,7 +59,7 @@ NVCVTensorLayout CreateLayout(const char *descr)
     else
     {
         const char *cur = descr;
-        for (int i = 0; i < NVCV_TENSOR_MAX_NDIM && *cur; ++i, ++cur)
+        for (int i = 0; i < NVCV_TENSOR_MAX_RANK && *cur; ++i, ++cur)
         {
             out.data[i] = *cur;
         }
@@ -76,16 +76,16 @@ NVCVTensorLayout CreateLayout(const char *descr)
                 << (strlen(buf) <= 31 ? "" : "...");
         }
 
-        out.ndim = cur - descr;
-        NVCV_ASSERT(0 <= out.ndim && (size_t)out.ndim < sizeof(out.data) / sizeof(out.data[0]));
-        out.data[out.ndim] = '\0'; // add null terminator
+        out.rank = cur - descr;
+        NVCV_ASSERT(0 <= out.rank && (size_t)out.rank < sizeof(out.data) / sizeof(out.data[0]));
+        out.data[out.rank] = '\0'; // add null terminator
     }
     return out;
 }
 
 int FindDimIndex(const NVCVTensorLayout &layout, char dimLabel)
 {
-    if (const void *p = memchr(layout.data, dimLabel, layout.ndim))
+    if (const void *p = memchr(layout.data, dimLabel, layout.rank))
     {
         return std::distance(reinterpret_cast<const std::byte *>(layout.data), reinterpret_cast<const std::byte *>(p));
     }
@@ -97,7 +97,7 @@ int FindDimIndex(const NVCVTensorLayout &layout, char dimLabel)
 
 bool IsChannelLast(const NVCVTensorLayout &layout)
 {
-    return layout.ndim == 0 || layout.data[layout.ndim - 1] == 'C';
+    return layout.rank == 0 || layout.data[layout.rank - 1] == 'C';
 }
 
 NVCVTensorLayout CreateFirst(const NVCVTensorLayout &layout, int n)
@@ -105,8 +105,8 @@ NVCVTensorLayout CreateFirst(const NVCVTensorLayout &layout, int n)
     if (n >= 0)
     {
         NVCVTensorLayout out;
-        out.ndim = std::min(n, layout.ndim);
-        memcpy(out.data, layout.data, out.ndim);
+        out.rank = std::min(n, layout.rank);
+        memcpy(out.data, layout.data, out.rank);
         return out;
     }
     else
@@ -120,8 +120,8 @@ NVCVTensorLayout CreateLast(const NVCVTensorLayout &layout, int n)
     if (n >= 0)
     {
         NVCVTensorLayout out;
-        out.ndim = std::min(n, layout.ndim);
-        memcpy(out.data, layout.data + layout.ndim - out.ndim, out.ndim);
+        out.rank = std::min(n, layout.rank);
+        memcpy(out.data, layout.data + layout.rank - out.rank, out.rank);
         return out;
     }
     else
@@ -134,32 +134,32 @@ NVCVTensorLayout CreateSubRange(const NVCVTensorLayout &layout, int beg, int end
 {
     if (beg < 0)
     {
-        beg = std::max(0, layout.ndim + beg);
+        beg = std::max(0, layout.rank + beg);
     }
     else
     {
-        beg = std::min(beg, layout.ndim);
+        beg = std::min(beg, layout.rank);
     }
 
     if (end < 0)
     {
-        end = std::max(0, layout.ndim + end);
+        end = std::max(0, layout.rank + end);
     }
     else
     {
-        end = std::min(end, layout.ndim);
+        end = std::min(end, layout.rank);
     }
 
     NVCVTensorLayout out;
 
-    out.ndim = end - beg;
-    if (out.ndim > 0)
+    out.rank = end - beg;
+    if (out.rank > 0)
     {
-        memcpy(out.data, layout.data + beg, out.ndim);
+        memcpy(out.data, layout.data + beg, out.rank);
     }
     else
     {
-        out.ndim = 0;
+        out.rank = 0;
     }
 
     return out;
@@ -167,9 +167,9 @@ NVCVTensorLayout CreateSubRange(const NVCVTensorLayout &layout, int beg, int end
 
 bool operator==(const NVCVTensorLayout &a, const NVCVTensorLayout &b)
 {
-    if (a.ndim == b.ndim)
+    if (a.rank == b.rank)
     {
-        return memcmp(a.data, b.data, a.ndim * sizeof(a.data[0])) == 0;
+        return memcmp(a.data, b.data, a.rank * sizeof(a.data[0])) == 0;
     }
     else
     {

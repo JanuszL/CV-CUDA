@@ -42,7 +42,7 @@ public:
     using iterator        = typename Data::iterator;
     using const_iterator  = typename Data::const_iterator;
 
-    constexpr static int MAX_NDIM = N;
+    constexpr static int MAX_RANK = N;
 
     Shape();
     Shape(const Shape &that);
@@ -56,7 +56,7 @@ public:
     reference       operator[](int i);
     const_reference operator[](int i) const;
 
-    size_type ndim() const;
+    size_type rank() const;
     size_type size() const;
     bool      empty() const;
 
@@ -118,7 +118,7 @@ Shape<T, N>::Shape(const T *data, size_t n)
 
     if (n > m_data.size())
     {
-        throw Exception(Status::ERROR_INVALID_ARGUMENT, "Shape ndims is too big");
+        throw Exception(Status::ERROR_INVALID_ARGUMENT, "Shape ranks is too big");
     }
 
     std::copy_n(data, n, m_data.begin());
@@ -164,7 +164,7 @@ bool Shape<T, N>::operator<(const Shape &that) const
 }
 
 template<class T, int N>
-auto Shape<T, N>::ndim() const -> size_type
+auto Shape<T, N>::rank() const -> size_type
 {
     return m_size;
 }
