@@ -341,12 +341,9 @@ TEST_P(OpRotate, varshape_correct_output)
     std::uniform_int_distribution<int> rndSrcHeight(srcHeightBase * 0.8, srcHeightBase * 1.1);
     std::uniform_int_distribution<int> rndAngle(0, 360);
 
-    nvcv::Tensor angleDegTensor(nvcv::TensorShape({numberOfImages, 1}, nvcv::TensorLayout::NW), nvcv::TYPE_F64);
+    nvcv::Tensor angleDegTensor(nvcv::TensorShape({numberOfImages}, "N"), nvcv::TYPE_F64);
     const auto  *angleDegTensorData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(angleDegTensor.exportData());
     ASSERT_NE(nullptr, angleDegTensorData);
-
-    auto angleDegTensorDataAccess = nvcv::TensorDataAccessPitch::Create(*angleDegTensorData);
-    ASSERT_TRUE(angleDegTensorDataAccess);
 
     nvcv::Tensor shiftTensor(nvcv::TensorShape({numberOfImages, 2}, nvcv::TensorLayout::NW), nvcv::TYPE_F64);
     const auto  *shiftTensorData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(shiftTensor.exportData());
@@ -387,10 +384,8 @@ TEST_P(OpRotate, varshape_correct_output)
         shiftVecs.push_back(shift);
     }
 
-    ASSERT_EQ(cudaSuccess,
-              cudaMemcpy2DAsync(angleDegTensorDataAccess->sampleData(0), angleDegTensorDataAccess->samplePitchBytes(),
-                                angleDegVecs.data(), sizeof(double), sizeof(double), numberOfImages,
-                                cudaMemcpyHostToDevice, stream));
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(angleDegTensorData->data(), angleDegVecs.data(),
+                                           angleDegVecs.size() * sizeof(double), cudaMemcpyHostToDevice, stream));
 
     ASSERT_EQ(cudaSuccess,
               cudaMemcpy2DAsync(shiftTensorDataAccess->sampleData(0), shiftTensorDataAccess->samplePitchBytes(),
