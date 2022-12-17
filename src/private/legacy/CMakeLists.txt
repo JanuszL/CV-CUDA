@@ -47,6 +47,7 @@ add_library(cvcuda_legacy STATIC
     ./operators/flip_or_copy_var_shape.cu
     ./operators/composite_var_shape.cu
     ./operators/gamma_contrast_var_shape.cu
+    ./operators/pillow_resize.cu
     CvCudaLegacyHelpers.cpp
 )
 

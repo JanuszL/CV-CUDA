@@ -42,6 +42,7 @@ add_executable(nvcv_test_system_core_op
     TestOpChannelReorder.cpp
     TestOpFlip.cpp
     TestOpGammaContrast.cpp
+    TestOpPillowResize.cpp
 )
 
 target_link_libraries(nvcv_test_system_core_op
