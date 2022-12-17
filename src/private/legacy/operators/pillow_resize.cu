@@ -337,13 +337,22 @@ void pillow_resize_v2(const TensorDataAccessPitchImagePlanar &inData, const Tens
         normalize_coeff, h_use_share_mem);
 
     checkKernelErrors();
-    // checkCudaErrors(cudaStreamSynchronize(stream));
+#ifdef CUDA_DEBUG_LOG
+    checkCudaErrors(cudaStreamSynchronize(stream));
+    checkCudaErrors(cudaGetLastError());
+#endif
+
     // compute vertical coef
     _precomputeCoeffs<Filter><<<v_coef_grid, coef_block, v_sm_size, stream>>>(
         src_ptr.rows, roi.y, v_scale, v_filterscale, v_support, dst_ptr.rows, v_k_size, filterp, v_bounds, v_kk,
         normalize_coeff, v_use_share_mem);
+
     checkKernelErrors();
-    // checkCudaErrors(cudaStreamSynchronize(stream));
+#ifdef CUDA_DEBUG_LOG
+    checkCudaErrors(cudaStreamSynchronize(stream));
+    checkCudaErrors(cudaGetLastError());
+#endif
+
     horizontal_pass<elem_type, Filter>
         <<<gridSizeH, blockSize, hv_sm_size1, stream>>>(src_ptr, h_ptr, roi, filterp, h_k_size, v_k_size, h_bounds,
                                                         h_kk, v_bounds, v_kk, init_buffer, round_up, hv_use_share_mem);
@@ -351,8 +360,12 @@ void pillow_resize_v2(const TensorDataAccessPitchImagePlanar &inData, const Tens
     vertical_pass<elem_type, Filter>
         <<<gridSizeV, blockSize, hv_sm_size2, stream>>>(h_ptr, dst_ptr, roi, filterp, h_k_size, v_k_size, h_bounds,
                                                         h_kk, v_bounds, v_kk, init_buffer, round_up, hv_use_share_mem);
+
     checkKernelErrors();
-    // checkCudaErrors(cudaStreamSynchronize(stream));
+#ifdef CUDA_DEBUG_LOG
+    checkCudaErrors(cudaStreamSynchronize(stream));
+    checkCudaErrors(cudaGetLastError());
+#endif
 }
 
 template<typename Filter>
