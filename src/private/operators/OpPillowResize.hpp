@@ -16,13 +16,13 @@
  */
 
 /**
- * @file OpCopyMakeBorder.hpp
+ * @file OpPillowResize.hpp
  *
- * @brief Defines the private C++ class for the pad and stack operation.
+ * @brief Defines the private C++ class for the pillow resize operation.
  */
 
-#ifndef NVCV_OP_PRIV_PADANDSTACK_HPP
-#define NVCV_OP_PRIV_PADANDSTACK_HPP
+#ifndef NVCV_OP_PRIV_PILLOW_RESIZE_HPP
+#define NVCV_OP_PRIV_PILLOW_RESIZE_HPP
 
 #include "IOperator.hpp"
 

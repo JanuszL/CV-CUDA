@@ -18,7 +18,7 @@
 /**
  * @file OpChannelReorder.h
  *
- * @brief Defines types and functions to handle the reformat operation.
+ * @brief Defines types and functions to handle the channel reorder operation.
  * @defgroup NVCV_C_ALGORITHM_CHANNEL_REORDER ChannelReorder
  * @{
  */

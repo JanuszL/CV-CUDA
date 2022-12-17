@@ -18,7 +18,7 @@
 /**
  * @file OpRotate.hpp
  *
- * @brief Defines the private C++ Class for the reformat operation.
+ * @brief Defines the private C++ Class for the rotate operation.
  */
 
 #ifndef NVCV_OP_PRIV_ROTATE_HPP

@@ -18,7 +18,7 @@
 /**
  * @file OpWarpPerspective.hpp
  *
- * @brief Defines the private C++ Class for the reformat operation.
+ * @brief Defines the private C++ Class for the warp perspective operation.
  */
 
 #ifndef NVCV_OP_PRIV_WARP_PERSPECTIVE_HPP

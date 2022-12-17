@@ -18,11 +18,11 @@
 /**
  * @file OpMedianBlur.hpp
  *
- * @brief Defines the private C++ Class for the reformat operation.
+ * @brief Defines the private C++ Class for the median blur operation.
  */
 
-#ifndef NVCV_OP_PRIV_RESIZE_HPP
-#define NVCV_OP_PRIV_RESIZE_HPP
+#ifndef NVCV_OP_PRIV_MEDIAN_BLUR_HPP
+#define NVCV_OP_PRIV_MEDIAN_BLUR_HPP
 
 #include "IOperator.hpp"
 

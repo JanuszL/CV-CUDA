@@ -19,12 +19,12 @@
  * @file OpGammaContrast.hpp
  *
  * @brief Defines the public C++ Class for the Gamma Contrast operation.
- * @defgroup NVCV_CPP_ALGORITHM_GAMMA Contrast
+ * @defgroup NVCV_CPP_ALGORITHM_GAMMA_CONTRAST
  * @{
  */
 
-#ifndef NVCV_OP_GAMMA_HPP
-#define NVCV_OP_GAMMA_HPP
+#ifndef NVCV_OP_GAMMA_CONTRAST_HPP
+#define NVCV_OP_GAMMA_CONTRAST_HPP
 
 #include "IOperator.hpp"
 #include "OpGammaContrast.h"
@@ -76,4 +76,4 @@ inline NVCVOperatorHandle GammaContrast::handle() const noexcept
 }
 
 }}     // namespace nv::cvop
-#endif // NVCV_OP_GAMMA_HPP
+#endif // NVCV_OP_GAMMA_CONTRAST_HPP

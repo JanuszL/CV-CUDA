@@ -18,7 +18,7 @@
 /**
  * @file OpCustomCrop.hpp
  *
- * @brief Defines the private C++ Class for the Custom Crop operation.
+ * @brief Defines the private C++ Class for the Center Crop operation.
  */
 
 #ifndef NVCV_OP_PRIV_CENTER_CROP_HPP

@@ -18,7 +18,7 @@
 /**
  * @file OpWarpAffine.hpp
  *
- * @brief Defines the private C++ Class for the reformat operation.
+ * @brief Defines the private C++ Class for the warp affine operation.
  */
 
 #ifndef NVCV_OP_PRIV_WARP_AFFINE_HPP
