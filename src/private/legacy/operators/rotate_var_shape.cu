@@ -31,7 +31,7 @@ using namespace nv::cv::legacy::helpers;
 
 namespace nv::cv::legacy::cuda_op {
 
-__global__ void compute_warpAffine(const int numImages, const cuda::Tensor2DWrap<double> angleDeg,
+__global__ void compute_warpAffine(const int numImages, const cuda::Tensor1DWrap<double> angleDeg,
                                    const cuda::Tensor2DWrap<double> shift, double *d_aCoeffs)
 {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
@@ -42,7 +42,7 @@ __global__ void compute_warpAffine(const int numImages, const cuda::Tensor2DWrap
 
     double *aCoeffs = (double *)((char *)d_aCoeffs + (sizeof(double) * 6) * index);
 
-    double angle  = *angleDeg.ptr(index, 0);
+    double angle  = *angleDeg.ptr(index);
     double xShift = *shift.ptr(index, 0);
     double yShift = *shift.ptr(index, 1);
 
@@ -274,7 +274,7 @@ ErrorCode RotateVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData
         return ErrorCode::INVALID_PARAMETER;
     }
 
-    cuda::Tensor2DWrap<double> angleDecPtr(angleDeg);
+    cuda::Tensor1DWrap<double> angleDecPtr(angleDeg);
     cuda::Tensor2DWrap<double> shiftPtr(shift);
 
     compute_warpAffine<<<1, inData.numImages(), 0, stream>>>(inData.numImages(), angleDecPtr, shiftPtr, d_aCoeffs);

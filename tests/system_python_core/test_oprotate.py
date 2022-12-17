@@ -133,7 +133,7 @@ def test_op_rotatevarshape(
     )
 
     angle_deg = util.create_tensor(
-        (nimages, 1), np.float64, "NC", max_random=max_angle_deg, rng=RNG
+        (nimages), np.float64, "N", max_random=max_angle_deg, rng=RNG
     )
 
     shift = util.create_tensor(
