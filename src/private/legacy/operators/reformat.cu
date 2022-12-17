@@ -121,7 +121,7 @@ ErrorCode Reformat::infer(const nv::cv::ITensorDataPitchDevice &inData, const nv
     if (inData.dtype() == outData.dtype() && inData.shape() == outData.shape())
     {
 #ifdef CUDA_DEBUG_LOG
-        printf("input_format == output_format, copy outputs from inputs\n");
+        LOG_ERROR("input_format == output_format, copy outputs from inputs");
 #endif
 
         for (uint32_t i = 0; i < inAccess->numSamples(); ++i)

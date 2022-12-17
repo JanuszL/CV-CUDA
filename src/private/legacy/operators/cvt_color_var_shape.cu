@@ -726,7 +726,7 @@ inline ErrorCode BGR_to_RGB(const IImageBatchVarShapeDataPitchDevice &inData,
 
     if (!inData.uniqueFormat())
     {
-        printf("Images in the input batch must all have the same format");
+        LOG_ERROR("Images in the input batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -741,7 +741,7 @@ inline ErrorCode BGR_to_RGB(const IImageBatchVarShapeDataPitchDevice &inData,
 
     if (!outData.uniqueFormat())
     {
-        printf("Images in the output batch must all have the same format");
+        LOG_ERROR("Images in the output batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -817,7 +817,7 @@ inline ErrorCode GRAY_to_BGR(const IImageBatchVarShapeDataPitchDevice &inData,
 
     if (!inData.uniqueFormat())
     {
-        printf("Images in the input batch must all have the same format");
+        LOG_ERROR("Images in the input batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -832,7 +832,7 @@ inline ErrorCode GRAY_to_BGR(const IImageBatchVarShapeDataPitchDevice &inData,
 
     if (!outData.uniqueFormat())
     {
-        printf("Images in the output batch must all have the same format");
+        LOG_ERROR("Images in the output batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -909,7 +909,7 @@ inline ErrorCode BGR_to_GRAY(const IImageBatchVarShapeDataPitchDevice &inData,
 
     if (!inData.uniqueFormat())
     {
-        printf("Images in the input batch must all have the same format");
+        LOG_ERROR("Images in the input batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -924,7 +924,7 @@ inline ErrorCode BGR_to_GRAY(const IImageBatchVarShapeDataPitchDevice &inData,
 
     if (!outData.uniqueFormat())
     {
-        printf("Images in the output batch must all have the same format");
+        LOG_ERROR("Images in the output batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -984,7 +984,7 @@ inline ErrorCode BGR_to_YUV(const IImageBatchVarShapeDataPitchDevice &inData,
 
     if (!inData.uniqueFormat())
     {
-        printf("Images in the input batch must all have the same format");
+        LOG_ERROR("Images in the input batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -999,7 +999,7 @@ inline ErrorCode BGR_to_YUV(const IImageBatchVarShapeDataPitchDevice &inData,
 
     if (!outData.uniqueFormat())
     {
-        printf("Images in the output batch must all have the same format");
+        LOG_ERROR("Images in the output batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -1059,7 +1059,7 @@ inline ErrorCode YUV_to_BGR(const IImageBatchVarShapeDataPitchDevice &inData,
 
     if (!inData.uniqueFormat())
     {
-        printf("Images in the input batch must all have the same format");
+        LOG_ERROR("Images in the input batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -1074,7 +1074,7 @@ inline ErrorCode YUV_to_BGR(const IImageBatchVarShapeDataPitchDevice &inData,
 
     if (!outData.uniqueFormat())
     {
-        printf("Images in the output batch must all have the same format");
+        LOG_ERROR("Images in the output batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -1135,7 +1135,7 @@ inline ErrorCode BGR_to_HSV(const IImageBatchVarShapeDataPitchDevice &inData,
 
     if (!inData.uniqueFormat())
     {
-        printf("Images in the input batch must all have the same format");
+        LOG_ERROR("Images in the input batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -1150,7 +1150,7 @@ inline ErrorCode BGR_to_HSV(const IImageBatchVarShapeDataPitchDevice &inData,
 
     if (!outData.uniqueFormat())
     {
-        printf("Images in the output batch must all have the same format");
+        LOG_ERROR("Images in the output batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -1203,7 +1203,7 @@ inline ErrorCode HSV_to_BGR(const IImageBatchVarShapeDataPitchDevice &inData,
 
     if (!inData.uniqueFormat())
     {
-        printf("Images in the input batch must all have the same format");
+        LOG_ERROR("Images in the input batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -1218,7 +1218,7 @@ inline ErrorCode HSV_to_BGR(const IImageBatchVarShapeDataPitchDevice &inData,
 
     if (!outData.uniqueFormat())
     {
-        printf("Images in the output batch must all have the same format");
+        LOG_ERROR("Images in the output batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -1283,7 +1283,7 @@ inline ErrorCode YUV420xp_to_BGR(const IImageBatchVarShapeDataPitchDevice &inDat
 
     if (!inData.uniqueFormat())
     {
-        printf("Images in the input batch must all have the same format");
+        LOG_ERROR("Images in the input batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -1303,7 +1303,7 @@ inline ErrorCode YUV420xp_to_BGR(const IImageBatchVarShapeDataPitchDevice &inDat
 
     if (!outData.uniqueFormat())
     {
-        printf("Images in the output batch must all have the same format");
+        LOG_ERROR("Images in the output batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -1394,7 +1394,7 @@ inline ErrorCode YUV422_to_BGR(const IImageBatchVarShapeDataPitchDevice &inData,
 
     if (!inData.uniqueFormat())
     {
-        printf("Images in the input batch must all have the same format");
+        LOG_ERROR("Images in the input batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -1414,7 +1414,7 @@ inline ErrorCode YUV422_to_BGR(const IImageBatchVarShapeDataPitchDevice &inData,
 
     if (!outData.uniqueFormat())
     {
-        printf("Images in the output batch must all have the same format");
+        LOG_ERROR("Images in the output batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -1522,7 +1522,7 @@ inline ErrorCode BGR_to_YUV420xp(const IImageBatchVarShapeDataPitchDevice &inDat
 
     if (!inData.uniqueFormat())
     {
-        printf("Images in the input batch must all have the same format");
+        LOG_ERROR("Images in the input batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 

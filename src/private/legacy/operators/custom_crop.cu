@@ -78,7 +78,7 @@ ErrorCode CustomCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
 
     if (!(input_format == kNHWC || input_format == kHWC) || !(output_format == kNHWC || output_format == kHWC))
     {
-        printf("Invliad DataFormat both Input and Output must be kHWC or kHWC\n");
+        LOG_ERROR("Invliad DataFormat both Input and Output must be kHWC or kHWC");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -124,12 +124,13 @@ ErrorCode CustomCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
     int end_x     = start_x + roi.width - 1;
     int end_y     = start_y + roi.height - 1;
 #ifdef CUDA_DEBUG_LOG
-    printf("x %d, y %d, w %d, h %d\n", roi.x, roi.y, roi.width, roi.height);
+    LOG_ERROR("x " << roi.x << " y " << roi.y << " width " << roi.width << " height " << roi.height);
 #endif
 
     if (start_x < 0 || start_y < 0 || end_x >= cols || end_y >= rows)
     {
-        printf("Invliad Roi range x %d, y %d, width %d, height %d\n", roi.x, roi.y, roi.width, roi.height);
+        LOG_ERROR("Invliad Roi range x " << roi.x << " y " << roi.y << " width " << roi.width << " height "
+                                         << roi.height);
         return ErrorCode::INVALID_PARAMETER;
     }
 

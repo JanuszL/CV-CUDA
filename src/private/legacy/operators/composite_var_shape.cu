@@ -114,7 +114,7 @@ ErrorCode CompositeVarShape::infer(const IImageBatchVarShapeDataPitchDevice &for
 
     if (!(foreground.uniqueFormat() && background.uniqueFormat() && fgMask.uniqueFormat() && outData.uniqueFormat()))
     {
-        printf("Images in the input batch must all have the same format");
+        LOG_ERROR("Images in the input batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
