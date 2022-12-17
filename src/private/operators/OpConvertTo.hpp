@@ -18,7 +18,7 @@
 /**
  * @file OpConverTo.hpp
  *
- * @brief Defines the private C++ Class for the reformat operation.
+ * @brief Defines the private C++ Class for the ConvertTo operation.
  */
 
 #ifndef NVCV_OP_PRIV_CONVERT_TO_HPP

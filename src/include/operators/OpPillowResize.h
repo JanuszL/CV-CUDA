@@ -18,7 +18,7 @@
 /**
  * @file OpPillowResize.h
  *
- * @brief Defines types and functions to handle the resize operation.
+ * @brief Defines types and functions to handle the pillow resize operation.
  * @defgroup NVCV_C_ALGORITHM_PILLOW_RESIZE Pillow Resize
  * @{
  */

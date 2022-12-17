@@ -18,7 +18,7 @@
 /**
  * @file OpNormalize.hpp
  *
- * @brief Defines the private C++ Class for the reformat operation.
+ * @brief Defines the private C++ Class for the normalize operation.
  */
 
 #ifndef NVCV_OP_PRIV_NORMALIZE_HPP

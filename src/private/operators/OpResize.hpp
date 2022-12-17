@@ -18,7 +18,7 @@
 /**
  * @file OpResize.hpp
  *
- * @brief Defines the private C++ Class for the reformat operation.
+ * @brief Defines the private C++ Class for the resize operation.
  */
 
 #ifndef NVCV_OP_PRIV_RESIZE_HPP

@@ -18,7 +18,7 @@
 /**
  * @file OpCopyMakeBorder.hpp
  *
- * @brief Defines the private C++ class for the pad and stack operation.
+ * @brief Defines the private C++ class for the CopyMakeBorder operation.
  */
 
 #ifndef NVCV_OP_PRIV_COPYMAKEBORDER_HPP

@@ -18,11 +18,11 @@
 /**
  * @file OpGammaContrast.hpp
  *
- * @brief Defines the private C++ Class for the reformat operation.
+ * @brief Defines the private C++ Class for the gamma contrast operation.
  */
 
-#ifndef NVCV_OP_PRIV_GAMMA_HPP
-#define NVCV_OP_PRIV_GAMMA_HPP
+#ifndef NVCV_OP_PRIV_GAMMA_CONTRAST_HPP
+#define NVCV_OP_PRIV_GAMMA_CONTRAST_HPP
 
 #include "IOperator.hpp"
 
@@ -56,4 +56,4 @@ private:
 
 } // namespace nv::cvop::priv
 
-#endif // NVCV_OP_PRIV_GAMMA_HPP
+#endif // NVCV_OP_PRIV_GAMMA_CONTRAST_HPP

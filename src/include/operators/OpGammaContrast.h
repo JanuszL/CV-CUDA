@@ -19,12 +19,12 @@
  * @file OpGammaContrast.h
  *
  * @brief Defines types and functions to handle the GammaContrast operation.
- * @defgroup NVCV_C_ALGORITHM_GammaContrast
+ * @defgroup NVCV_C_ALGORITHM_GAMMA_CONTRAST
  * @{
  */
 
-#ifndef NVCV_OP_GAMMA_H
-#define NVCV_OP_GAMMA_H
+#ifndef NVCV_OP_GAMMA_CONTRAST_H
+#define NVCV_OP_GAMMA_CONTRAST_H
 
 #include "Operator.h"
 #include "Types.h"
@@ -125,4 +125,4 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopGammaContrastVarShapeSubmit(NVCVOperatorHandle h
 }
 #endif
 
-#endif /* NVCV_OP_GAMMA_H */
+#endif /* NVCV_OP_GAMMA_CONTRAST_H */
