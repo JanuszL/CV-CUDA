@@ -82,7 +82,7 @@ class ClassificationSample:
 
         # tag: Validate other inputs
         if not os.path.isfile(self.labels_file):
-            print("Labels file not found: %s" % self.results_dir)
+            print("Labels file not found: %s" % self.labels_file)
             exit(1)
 
         if self.batch_size <= 0:
