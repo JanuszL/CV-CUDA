@@ -112,7 +112,7 @@ ErrorCode FlipOrCopyVarShape::infer(const IImageBatchVarShapeDataPitchDevice &in
 
     if (!input.uniqueFormat())
     {
-        printf("Images in the input batch must all have the same format");
+        LOG_ERROR("Images in the input batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 

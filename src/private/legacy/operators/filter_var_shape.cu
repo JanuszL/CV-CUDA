@@ -148,7 +148,7 @@ ErrorCode Conv2DVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData
 
     if (!inData.uniqueFormat())
     {
-        printf("Images in the input batch must all have the same format");
+        LOG_ERROR("Images in the input batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -333,7 +333,7 @@ ErrorCode LaplacianVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inD
 
     if (!inData.uniqueFormat())
     {
-        printf("Images in the input batch must all have the same format");
+        LOG_ERROR("Images in the input batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -569,7 +569,7 @@ ErrorCode GaussianVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inDa
 
     if (!inData.uniqueFormat())
     {
-        printf("Images in the input batch must all have the same format");
+        LOG_ERROR("Images in the input batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -811,7 +811,7 @@ ErrorCode AverageBlurVarShape::infer(const IImageBatchVarShapeDataPitchDevice &i
 
     if (!inData.uniqueFormat())
     {
-        printf("Images in the input batch must all have the same format");
+        LOG_ERROR("Images in the input batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -828,7 +828,7 @@ ErrorCode AverageBlurVarShape::infer(const IImageBatchVarShapeDataPitchDevice &i
 
     if (channels > 4)
     {
-        printf("Invalid channel number %d\n", channels);
+        LOG_ERROR("Invalid channel number " << channels);
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 

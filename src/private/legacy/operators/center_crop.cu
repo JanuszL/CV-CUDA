@@ -92,7 +92,7 @@ ErrorCode CenterCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
 
     if (!(input_format == kNHWC || input_format == kHWC) || !(output_format == kNHWC || output_format == kHWC))
     {
-        printf("Invalid DataFormat both Input and Output must be kHWC or kNHWC\n");
+        LOG_ERROR("Invalid DataFormat both Input and Output must be kHWC or kNHWC");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 

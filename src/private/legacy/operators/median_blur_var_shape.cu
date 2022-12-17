@@ -445,7 +445,7 @@ ErrorCode MedianBlurVarShape::infer(const IImageBatchVarShapeDataPitchDevice &in
 
     if (channels > 4)
     {
-        printf("Invalid channel number %d\n", channels);
+        LOG_ERROR("Invalid channel number " << channels);
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 

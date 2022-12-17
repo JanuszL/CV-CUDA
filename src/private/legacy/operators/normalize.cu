@@ -273,35 +273,35 @@ ErrorCode Normalize::infer(const nv::cv::ITensorDataPitchDevice &inData, const n
 
     if (!(format == kNHWC || format == kHWC))
     {
-        printf("Invalid DataFormat %d\n", format);
+        LOG_ERROR("Invalid DataFormat " << format);
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
     auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
     if (!inAccess)
     {
-        printf("Invalid DataFormat(in) %d\n", format);
+        LOG_ERROR("Invalid DataFormat(in) " << format);
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
     auto baseAccess = TensorDataAccessPitchImagePlanar::Create(baseData);
     if (!baseAccess)
     {
-        printf("Invalid DataFormat(base) %d\n", format);
+        LOG_ERROR("Invalid DataFormat(base) " << format);
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
     auto scaleAccess = TensorDataAccessPitchImagePlanar::Create(scaleData);
     if (!scaleAccess)
     {
-        printf("Invalid DataFormat(scale) %d\n", format);
+        LOG_ERROR("Invalid DataFormat(scale) " << format);
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
     auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
     if (!outAccess)
     {
-        printf("Invalid DataFormat(out) %d\n", format);
+        LOG_ERROR("Invalid DataFormat(out) " << format);
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 

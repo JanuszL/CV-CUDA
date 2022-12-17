@@ -201,13 +201,13 @@ ErrorCode NormalizeVarShape::infer(const nv::cv::IImageBatchVarShapeDataPitchDev
 
     if (!(format == kNHWC || format == kHWC))
     {
-        printf("Invliad DataFormat %d\n", format);
+        LOG_ERROR("Invliad DataFormat " << format);
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
     if (!inData.uniqueFormat())
     {
-        printf("Images in the input batch must all have the same format");
+        LOG_ERROR("Images in the input batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -222,7 +222,7 @@ ErrorCode NormalizeVarShape::infer(const nv::cv::IImageBatchVarShapeDataPitchDev
 
     if (!outData.uniqueFormat())
     {
-        printf("Images in the output batch must all have the same format");
+        LOG_ERROR("Images in the output batch must all have the same format");
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
@@ -244,14 +244,14 @@ ErrorCode NormalizeVarShape::infer(const nv::cv::IImageBatchVarShapeDataPitchDev
     auto baseAccess = TensorDataAccessPitchImagePlanar::Create(baseData);
     if (!baseAccess)
     {
-        printf("Invalid DataFormat(base) %d\n", format);
+        LOG_ERROR("Invalid DataFormat(base) " << format);
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
     auto scaleAccess = TensorDataAccessPitchImagePlanar::Create(scaleData);
     if (!scaleAccess)
     {
-        printf("Invalid DataFormat(scale) %d\n", format);
+        LOG_ERROR("Invalid DataFormat(scale) " << format);
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
