@@ -38,8 +38,10 @@ else()
 endif()
 
 option(EXPOSE_CODE "Expose in resulting binaries parts of our code" ${DEFAULT_EXPOSE_CODE})
-
 option(WARNINGS_AS_ERRORS "Treat compilation warnings as errors" OFF)
+
+# Needed to get cuda version
+find_package(CUDAToolkit REQUIRED)
 
 # Are we inside a git repo and it has submodules enabled?
 if(EXISTS ${CMAKE_SOURCE_DIR}/.git AND EXISTS ${CMAKE_SOURCE_DIR}/.gitmodules)
@@ -54,7 +56,7 @@ else()
     message(FATAL_ERROR "Architecture not supported")
 endif()
 
-set(CVCUDA_BUILD_SUFFIX "cuda${CUDA_VERSION_MAJOR}-${CVCUDA_SYSTEM_NAME}")
+set(CVCUDA_BUILD_SUFFIX "cuda${CUDAToolkit_VERSION_MAJOR}-${CVCUDA_SYSTEM_NAME}")
 
 function(setup_dso target version)
     string(REGEX MATCHALL "[0-9]+" version_list "${version}")
