@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#include "Image.hpp"
+#include "ImageBatch.hpp"
 #include "ImageFormat.hpp"
 #include "Operators.hpp"
 #include "PyUtil.hpp"
@@ -46,14 +48,14 @@ std::shared_ptr<Tensor> PillowResizeInto(Tensor &input, Tensor &output, cv::Imag
     int        h              = std::max(in_access->numRows(), out_access->numRows());
     int        max_batch_size = in_access->numSamples();
     cv::Size2D size{w, h};
-    auto       PillowResize = CreateOperator<cvop::PillowResize>(size, max_batch_size, format);
+    auto       pillowResize = CreateOperator<cvop::PillowResize>(size, max_batch_size, format);
 
     ResourceGuard guard(*pstream);
     guard.add(LOCK_READ, {input});
     guard.add(LOCK_WRITE, {output});
-    guard.add(LOCK_NONE, {*PillowResize});
+    guard.add(LOCK_NONE, {*pillowResize});
 
-    PillowResize->submit(pstream->handle(), input.impl(), output.impl(), interp);
+    pillowResize->submit(pstream->handle(), input.impl(), output.impl(), interp);
 
     return output.shared_from_this();
 }
@@ -66,6 +68,57 @@ std::shared_ptr<Tensor> PillowResize(Tensor &input, const Shape &out_shape, cv::
     return PillowResizeInto(input, *output, format, interp, pstream);
 }
 
+std::shared_ptr<ImageBatchVarShape> VarShapePillowResizeInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
+                                                             NVCVInterpolationType   interpolation,
+                                                             std::shared_ptr<Stream> pstream)
+{
+    if (pstream == nullptr)
+    {
+        pstream = Stream::Current().shared_from_this();
+    }
+
+    nv::cvpy::Size2D maxSrcSize = input.maxSize();
+    nv::cvpy::Size2D maxDstSize = output.maxSize();
+
+    int        w              = std::max(std::get<0>(maxSrcSize), std::get<0>(maxDstSize));
+    int        h              = std::max(std::get<1>(maxSrcSize), std::get<1>(maxDstSize));
+    int        max_batch_size = input.capacity();
+    cv::Size2D size{w, h};
+    auto       pillowResize = CreateOperator<cvop::PillowResize>(size, max_batch_size, input.impl().uniqueFormat());
+
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input});
+    guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*pillowResize});
+
+    pillowResize->submit(pstream->handle(), input.impl(), output.impl(), interpolation);
+
+    return output.shared_from_this();
+}
+
+std::shared_ptr<ImageBatchVarShape> VarShapePillowResize(ImageBatchVarShape                  &input,
+                                                         const std::vector<nv::cvpy::Size2D> &outSizes,
+                                                         NVCVInterpolationType                interpolation,
+                                                         std::shared_ptr<Stream>              pstream)
+{
+    std::shared_ptr<ImageBatchVarShape> output = ImageBatchVarShape::Create(input.capacity());
+
+    if (static_cast<int32_t>(outSizes.size()) != input.numImages())
+    {
+        throw std::runtime_error("Invalid outSizes passed");
+    }
+
+    for (int i = 0; i < input.numImages(); ++i)
+    {
+        cv::ImageFormat  format = input.impl()[i].format();
+        nv::cvpy::Size2D size   = outSizes[i];
+        auto             image  = Image::Create(size, format);
+        output->pushBack(*image);
+    }
+
+    return VarShapePillowResizeInto(input, *output, interpolation, pstream);
+}
+
 } // namespace
 
 void ExportOpPillowResize(py::module &m)
@@ -74,8 +127,14 @@ void ExportOpPillowResize(py::module &m)
 
     DefClassMethod<Tensor>("pillowresize", &PillowResize, "shape"_a, "format"_a, "interp"_a = NVCV_INTERP_LINEAR,
                            py::kw_only(), "stream"_a = nullptr);
-    DefClassMethod<Tensor>("pillowresize_into", &PillowResizeInto, "out"_a, "format"_a, "interp"_a = NVCV_INTERP_LINEAR,
-                           py::kw_only(), "stream"_a = nullptr);
+    DefClassMethod<Tensor>("pillowresize_into", &PillowResizeInto, "output"_a, "format"_a,
+                           "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(), "stream"_a = nullptr);
+
+    DefClassMethod<ImageBatchVarShape>("pillowresize", &VarShapePillowResize, "sizes"_a,
+                                       "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(), "stream"_a = nullptr);
+
+    DefClassMethod<ImageBatchVarShape>("pillowresize_into", &VarShapePillowResizeInto, "output"_a,
+                                       "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy
