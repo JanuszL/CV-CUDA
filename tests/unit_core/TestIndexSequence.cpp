@@ -20,8 +20,7 @@
 #include <common/TypedTests.hpp>
 #include <nvcv/detail/IndexSequence.hpp>
 
-namespace test = nv::cv::test::type;
-namespace nvcv = nv::cv;
+namespace test = nvcv::test::type;
 
 // clang-format off
 NVCV_TYPED_TEST_SUITE(IndexSequence,

@@ -23,8 +23,8 @@
 #include <limits> // for std::numeric_limits, etc.
 
 namespace t     = ::testing;
-namespace cuda  = nv::cv::cuda;
-namespace ttype = nv::cv::test::type;
+namespace cuda  = nvcv::cuda;
+namespace ttype = nvcv::test::type;
 
 template<typename T>
 constexpr T min = std::numeric_limits<T>::min();

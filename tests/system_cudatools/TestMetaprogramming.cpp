@@ -19,8 +19,8 @@
 #include <nvcv/optools/detail/Metaprogramming.hpp> // the object of this test
 
 namespace t      = ::testing;
-namespace test   = nv::cv::test;
-namespace detail = nv::cv::cuda::detail;
+namespace test   = nvcv::test;
+namespace detail = nvcv::cuda::detail;
 
 // ------------------------- Testing CopyConstness_t ---------------------------
 

@@ -36,7 +36,7 @@
 #include <nvcv/Size.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 
-namespace nv { namespace cvop {
+namespace nvcvop {
 
 class CvtColor final : public IOperator
 {
@@ -45,9 +45,9 @@ public:
 
     ~CvtColor();
 
-    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, NVCVColorConversionCode code);
+    void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, NVCVColorConversionCode code);
 
-    void operator()(cudaStream_t stream, cv::IImageBatch &in, cv::IImageBatch &out, NVCVColorConversionCode code);
+    void operator()(cudaStream_t stream, nvcv::IImageBatch &in, nvcv::IImageBatch &out, NVCVColorConversionCode code);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -57,7 +57,7 @@ private:
 
 inline CvtColor::CvtColor()
 {
-    cv::detail::CheckThrow(nvcvopCvtColorCreate(&m_handle));
+    nvcv::detail::CheckThrow(nvcvopCvtColorCreate(&m_handle));
     assert(m_handle);
 }
 
@@ -67,15 +67,16 @@ inline CvtColor::~CvtColor()
     m_handle = nullptr;
 }
 
-inline void CvtColor::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, NVCVColorConversionCode code)
-{
-    cv::detail::CheckThrow(nvcvopCvtColorSubmit(m_handle, stream, in.handle(), out.handle(), code));
-}
-
-inline void CvtColor::operator()(cudaStream_t stream, cv::IImageBatch &in, cv::IImageBatch &out,
+inline void CvtColor::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out,
                                  NVCVColorConversionCode code)
 {
-    cv::detail::CheckThrow(nvcvopCvtColorVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), code));
+    nvcv::detail::CheckThrow(nvcvopCvtColorSubmit(m_handle, stream, in.handle(), out.handle(), code));
+}
+
+inline void CvtColor::operator()(cudaStream_t stream, nvcv::IImageBatch &in, nvcv::IImageBatch &out,
+                                 NVCVColorConversionCode code)
+{
+    nvcv::detail::CheckThrow(nvcvopCvtColorVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), code));
 }
 
 inline NVCVOperatorHandle CvtColor::handle() const noexcept
@@ -83,6 +84,6 @@ inline NVCVOperatorHandle CvtColor::handle() const noexcept
     return m_handle;
 }
 
-}} // namespace nv::cvop
+} // namespace nvcvop
 
 #endif // NVCV_OP_CVTCOLOR_HPP

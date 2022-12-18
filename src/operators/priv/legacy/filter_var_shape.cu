@@ -26,10 +26,10 @@
 
 #include "CvCudaUtils.cuh"
 
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 template<typename D, typename BrdRd>
 __global__ void filter2D(const BrdRd src, Ptr2dVarShapeNHWC<D> dst, Ptr2dVarShapeNHWC<float> kernel,
@@ -874,4 +874,4 @@ ErrorCode AverageBlurVarShape::infer(const IImageBatchVarShapeDataStridedCuda &i
     return ErrorCode::SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

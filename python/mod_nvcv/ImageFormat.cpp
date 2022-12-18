@@ -21,26 +21,26 @@
 
 #include <sstream>
 
-// So that pybind can export nv::cv::ImageFormat as python enum
+// So that pybind can export nvcv::ImageFormat as python enum
 namespace std {
 template<>
-struct underlying_type<nv::cv::ImageFormat>
+struct underlying_type<nvcv::ImageFormat>
 {
     using type = uint64_t;
 };
 } // namespace std
 
-namespace nv::cv {
-size_t ComputeHash(const cv::ImageFormat &fmt)
+namespace nvcv {
+size_t ComputeHash(const nvcv::ImageFormat &fmt)
 {
     return std::hash<uint64_t>()(static_cast<uint64_t>(fmt));
 }
 
-} // namespace nv::cv
+} // namespace nvcv
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 
-static std::string ImageFormatToString(cv::ImageFormat fmt)
+static std::string ImageFormatToString(nvcv::ImageFormat fmt)
 {
     const char *str = nvcvImageFormatGetName(fmt);
 
@@ -72,12 +72,12 @@ static std::string ImageFormatToString(cv::ImageFormat fmt)
 
 void ExportImageFormat(py::module &m)
 {
-    py::enum_<cv::ImageFormat> fmt(m, "Format");
+    py::enum_<nvcv::ImageFormat> fmt(m, "Format");
 
-#define DEF(F)     fmt.value(#F, cv::FMT_##F);
+#define DEF(F)     fmt.value(#F, nvcv::FMT_##F);
 // for formats that begin with a number, we must prepend it with underscore to make
 // it a valid python identifier
-#define DEF_NUM(F) fmt.value("_" #F, cv::FMT_##F);
+#define DEF_NUM(F) fmt.value("_" #F, nvcv::FMT_##F);
 
 #include "NVCVPythonImageFormatDefs.inc"
 
@@ -85,12 +85,12 @@ void ExportImageFormat(py::module &m)
 #undef DEF_NUM
 
     fmt.export_values()
-        .def_property_readonly("planes", &cv::ImageFormat::numPlanes)
-        .def_property_readonly("channels", &cv::ImageFormat::numChannels);
+        .def_property_readonly("planes", &nvcv::ImageFormat::numPlanes)
+        .def_property_readonly("channels", &nvcv::ImageFormat::numChannels);
 
     // Need to do this way because pybind11 doesn't allow enums to have methods.
     fmt.attr("__repr__") = py::cpp_function(&ImageFormatToString, py::name("__repr__"), py::is_method(fmt),
                                             "String representation of the image format.");
 }
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv

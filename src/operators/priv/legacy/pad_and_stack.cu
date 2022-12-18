@@ -23,11 +23,9 @@
 
 #include "CvCudaUtils.cuh"
 
-using namespace nv::cv::legacy::helpers;
+using namespace nvcv::legacy::helpers;
 
-using namespace nv::cv::legacy::cuda_op;
-
-namespace nvcv = nv::cv;
+using namespace nvcv::legacy::cuda_op;
 
 template<typename Ptr2D, typename D, typename BrdRd, class Ptr2DVec>
 __global__ void padAndStack(const BrdRd src, Ptr2D dst, const Ptr2DVec topVec, const Ptr2DVec leftVec, int out_rows,
@@ -66,7 +64,7 @@ void padAndStackCaller(const nvcv::IImageBatchVarShapeDataStridedCuda &inData,
     dim3 block(16, 16);
     dim3 grid(divUp(outData.size().w, block.x), divUp(outData.size().h, block.y), outData.numSamples());
 
-    Brd<D> brd(0, 0, nv::cv::cuda::SetAll<D>(borderValue));
+    Brd<D> brd(0, 0, nvcv::cuda::SetAll<D>(borderValue));
 
     BorderReader<Ptr2dVarShapeNHWC<D>, Brd<D>> brdSrc(src, brd);
 
@@ -103,7 +101,7 @@ void padAndStack(const nvcv::IImageBatchVarShapeDataStridedCuda &inData,
     funcs[borderMode](inData, outData, top, left, borderValue, stream);
 }
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 size_t PadAndStack::calBufferSize(int batch_size)
 {
@@ -208,4 +206,4 @@ ErrorCode PadAndStack::infer(const IImageBatchVarShapeDataStridedCuda &inData, c
     return SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

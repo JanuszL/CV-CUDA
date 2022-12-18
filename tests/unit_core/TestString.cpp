@@ -21,8 +21,8 @@
 #include <util/Assert.h>
 #include <util/String.hpp>
 
-namespace util = nv::cv::util;
-namespace test = nv::cv::test;
+namespace util = nvcv::util;
+namespace test = nvcv::test;
 namespace t    = ::testing;
 
 NVCV_TEST_SUITE_P(ReplaceAllInlineTests,

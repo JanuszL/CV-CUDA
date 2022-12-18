@@ -20,12 +20,12 @@
 
 #include <pybind11/pybind11.h>
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 
 namespace py = ::pybind11;
 
 void ExportRect(py::module &m);
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv
 
 #endif // NVCV_PYTHON_PRIV_RECT_HPP

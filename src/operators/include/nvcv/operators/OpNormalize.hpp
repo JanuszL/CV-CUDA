@@ -35,7 +35,7 @@
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 
-namespace nv { namespace cvop {
+namespace nvcvop {
 
 class Normalize final : public IOperator
 {
@@ -44,11 +44,11 @@ public:
 
     ~Normalize();
 
-    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &base, cv::ITensor &scale, cv::ITensor &out,
-                    float global_scale, float shift, float epsilon, uint32_t flags = 0);
+    void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &base, nvcv::ITensor &scale,
+                    nvcv::ITensor &out, float global_scale, float shift, float epsilon, uint32_t flags = 0);
 
-    void operator()(cudaStream_t stream, cv::IImageBatch &in, cv::ITensor &base, cv::ITensor &scale,
-                    cv::IImageBatch &out, float global_scale, float shift, float epsilon, uint32_t flags = 0);
+    void operator()(cudaStream_t stream, nvcv::IImageBatch &in, nvcv::ITensor &base, nvcv::ITensor &scale,
+                    nvcv::IImageBatch &out, float global_scale, float shift, float epsilon, uint32_t flags = 0);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -58,7 +58,7 @@ private:
 
 inline Normalize::Normalize()
 {
-    cv::detail::CheckThrow(nvcvopNormalizeCreate(&m_handle));
+    nvcv::detail::CheckThrow(nvcvopNormalizeCreate(&m_handle));
     assert(m_handle);
 }
 
@@ -68,18 +68,19 @@ inline Normalize::~Normalize()
     m_handle = nullptr;
 }
 
-inline void Normalize::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &base, cv::ITensor &scale,
-                                  cv::ITensor &out, float global_scale, float shift, float epsilon, uint32_t flags)
+inline void Normalize::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &base, nvcv::ITensor &scale,
+                                  nvcv::ITensor &out, float global_scale, float shift, float epsilon, uint32_t flags)
 {
-    cv::detail::CheckThrow(nvcvopNormalizeSubmit(m_handle, stream, in.handle(), base.handle(), scale.handle(),
-                                                 out.handle(), global_scale, shift, epsilon, flags));
+    nvcv::detail::CheckThrow(nvcvopNormalizeSubmit(m_handle, stream, in.handle(), base.handle(), scale.handle(),
+                                                   out.handle(), global_scale, shift, epsilon, flags));
 }
 
-inline void Normalize::operator()(cudaStream_t stream, cv::IImageBatch &in, cv::ITensor &base, cv::ITensor &scale,
-                                  cv::IImageBatch &out, float global_scale, float shift, float epsilon, uint32_t flags)
+inline void Normalize::operator()(cudaStream_t stream, nvcv::IImageBatch &in, nvcv::ITensor &base, nvcv::ITensor &scale,
+                                  nvcv::IImageBatch &out, float global_scale, float shift, float epsilon,
+                                  uint32_t flags)
 {
-    cv::detail::CheckThrow(nvcvopNormalizeVarShapeSubmit(m_handle, stream, in.handle(), base.handle(), scale.handle(),
-                                                         out.handle(), global_scale, shift, epsilon, flags));
+    nvcv::detail::CheckThrow(nvcvopNormalizeVarShapeSubmit(m_handle, stream, in.handle(), base.handle(), scale.handle(),
+                                                           out.handle(), global_scale, shift, epsilon, flags));
 }
 
 inline NVCVOperatorHandle Normalize::handle() const noexcept
@@ -87,6 +88,6 @@ inline NVCVOperatorHandle Normalize::handle() const noexcept
     return m_handle;
 }
 
-}} // namespace nv::cvop
+} // namespace nvcvop
 
 #endif // NVCV_OP_NORMALIZE_HPP

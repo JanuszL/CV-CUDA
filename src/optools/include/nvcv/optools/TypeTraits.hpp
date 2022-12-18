@@ -29,7 +29,7 @@
 #include <cassert> // for assert, etc.
 #include <ostream> // for std::ostream, etc.
 
-namespace nv::cv::cuda {
+namespace nvcv::cuda {
 
 /**
  * @brief Metastruct to define type traits for regular C types and CUDA built-in vector (or compound) types
@@ -45,12 +45,12 @@ namespace nv::cv::cuda {
  * @{
  *
  * @code
- * using BaseType = typename nv::cv::cuda::TypeTraits<T>::base_type;
- * int nc = nv::cv::cuda::TypeTraits<T>::components;
- * int ne = nv::cv::cuda::TypeTraits<T>::elements;
- * const char *name = nv::cv::cuda::TypeTraits<T>::name;
- * T min = nv::cv::cuda::TypeTraits<T>::min;
- * T max = nv::cv::cuda::TypeTraits<T>::max;
+ * using BaseType = typename nvcv::cuda::TypeTraits<T>::base_type;
+ * int nc = nvcv::cuda::TypeTraits<T>::components;
+ * int ne = nvcv::cuda::TypeTraits<T>::elements;
+ * const char *name = nvcv::cuda::TypeTraits<T>::name;
+ * T min = nvcv::cuda::TypeTraits<T>::min;
+ * T max = nvcv::cuda::TypeTraits<T>::max;
  * @endcode
  *
  * @tparam T Type to get traits from
@@ -78,7 +78,7 @@ constexpr bool HasEnoughComponents = N <= TypeTraits<T>::components;
  *
  * @code
  * using DataType = ...;
- * using ChannelType = nv::cv::cuda::BaseType<DataType>;
+ * using ChannelType = nvcv::cuda::BaseType<DataType>;
  * @endcode
  *
  * @note This is identity for regular C types.
@@ -93,7 +93,7 @@ using BaseType = typename TypeTraits<T>::base_type;
  *
  * @code
  * using DataType = ...;
- * int nc = nv::cv::cuda::NumComponents<DataType>;
+ * int nc = nvcv::cuda::NumComponents<DataType>;
  * @endcode
  *
  * @note This is zero for regular C types.
@@ -108,7 +108,7 @@ constexpr int NumComponents = TypeTraits<T>::components;
  *
  * @code
  * using DataType = ...;
- * for (int e = 0; e < nv::cv::cuda::NumElements<DataType>; ++e)
+ * for (int e = 0; e < nvcv::cuda::NumElements<DataType>; ++e)
  *     // ...
  * @endcode
  *
@@ -254,7 +254,7 @@ __host__ const char *GetTypeName()
 
 /**@}*/
 
-} // namespace nv::cv::cuda
+} // namespace nvcv::cuda
 
 /**
  * @brief Metaoperator to insert a pixel into an output stream
@@ -275,14 +275,14 @@ __host__ const char *GetTypeName()
  *
  * @return Output stream with the data type and values
  */
-template<class T, class = nv::cv::cuda::Require<nv::cv::cuda::IsCompound<T>>>
+template<class T, class = nvcv::cuda::Require<nvcv::cuda::IsCompound<T>>>
 __host__ std::ostream &operator<<(std::ostream &out, const T &v)
 {
-    using BT         = nv::cv::cuda::BaseType<T>;
+    using BT         = nvcv::cuda::BaseType<T>;
     using OutType    = std::conditional_t<sizeof(BT) == 1, int, BT>;
-    constexpr int NC = nv::cv::cuda::NumComponents<T>;
+    constexpr int NC = nvcv::cuda::NumComponents<T>;
 
-    out << nv::cv::cuda::GetTypeName<T>() << "(";
+    out << nvcv::cuda::GetTypeName<T>() << "(";
 
     for (int c = 0; c < NC; ++c)
     {
@@ -290,7 +290,7 @@ __host__ std::ostream &operator<<(std::ostream &out, const T &v)
         {
             out << ", ";
         }
-        out << static_cast<OutType>(nv::cv::cuda::GetElement(v, c));
+        out << static_cast<OutType>(nvcv::cuda::GetElement(v, c));
     }
 
     out << ")";

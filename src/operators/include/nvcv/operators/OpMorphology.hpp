@@ -36,7 +36,7 @@
 #include <nvcv/Size.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 
-namespace nv { namespace cvop {
+namespace nvcvop {
 
 class Morphology final : public IOperator
 {
@@ -45,11 +45,12 @@ public:
 
     ~Morphology();
 
-    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, NVCVMorphologyType morphType,
-                    const cv::Size2D &maskSize, const int2 &anchor, int32_t iteration, const NVCVBorderType borderMode);
+    void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, NVCVMorphologyType morphType,
+                    const nvcv::Size2D &maskSize, const int2 &anchor, int32_t iteration,
+                    const NVCVBorderType borderMode);
 
-    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
-                    NVCVMorphologyType morphType, cv::ITensor &masks, const cv::ITensor &anchors, int32_t iteration,
+    void operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
+                    NVCVMorphologyType morphType, nvcv::ITensor &masks, const nvcv::ITensor &anchors, int32_t iteration,
                     const NVCVBorderType borderMode);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
@@ -60,7 +61,7 @@ private:
 
 inline Morphology::Morphology(int32_t maxVarShapeBatchSize)
 {
-    cv::detail::CheckThrow(nvcvopMorphologyCreate(&m_handle, maxVarShapeBatchSize));
+    nvcv::detail::CheckThrow(nvcvopMorphologyCreate(&m_handle, maxVarShapeBatchSize));
     assert(m_handle);
 }
 
@@ -70,20 +71,20 @@ inline Morphology::~Morphology()
     m_handle = nullptr;
 }
 
-inline void Morphology::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, NVCVMorphologyType morphType,
-                                   const cv::Size2D &maskSize, const int2 &anchor, int32_t iteration,
-                                   const NVCVBorderType borderMode)
-{
-    cv::detail::CheckThrow(nvcvopMorphologySubmit(m_handle, stream, in.handle(), out.handle(), morphType, maskSize.w,
-                                                  maskSize.h, anchor.x, anchor.y, iteration, borderMode));
-}
-
-inline void Morphology::operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
-                                   NVCVMorphologyType morphType, cv::ITensor &masks, const cv::ITensor &anchors,
+inline void Morphology::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out,
+                                   NVCVMorphologyType morphType, const nvcv::Size2D &maskSize, const int2 &anchor,
                                    int32_t iteration, const NVCVBorderType borderMode)
 {
-    cv::detail::CheckThrow(nvcvopMorphologyVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), morphType,
-                                                          masks.handle(), anchors.handle(), iteration, borderMode));
+    nvcv::detail::CheckThrow(nvcvopMorphologySubmit(m_handle, stream, in.handle(), out.handle(), morphType, maskSize.w,
+                                                    maskSize.h, anchor.x, anchor.y, iteration, borderMode));
+}
+
+inline void Morphology::operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
+                                   NVCVMorphologyType morphType, nvcv::ITensor &masks, const nvcv::ITensor &anchors,
+                                   int32_t iteration, const NVCVBorderType borderMode)
+{
+    nvcv::detail::CheckThrow(nvcvopMorphologyVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), morphType,
+                                                            masks.handle(), anchors.handle(), iteration, borderMode));
 }
 
 inline NVCVOperatorHandle Morphology::handle() const noexcept
@@ -91,6 +92,6 @@ inline NVCVOperatorHandle Morphology::handle() const noexcept
     return m_handle;
 }
 
-}} // namespace nv::cvop
+} // namespace nvcvop
 
 #endif // NVCV_OP_MORPHOLOGY_HPP

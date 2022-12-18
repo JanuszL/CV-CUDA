@@ -21,8 +21,7 @@
 #include <nvcv/Size.hpp>
 
 namespace gt   = ::testing;
-namespace test = nv::cv::test;
-namespace nvcv = nv::cv;
+namespace test = nvcv::test;
 
 // Size2D Equality --------------------------------------------
 class Size2DEqualityTests : public gt::TestWithParam<std::tuple<nvcv::Size2D, nvcv::Size2D, bool>>

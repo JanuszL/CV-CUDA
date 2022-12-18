@@ -27,7 +27,7 @@
 #include <climits>     // for CHAR_MIN, etc.
 #include <type_traits> // for std::remove_const, etc.
 
-namespace nv::cv::cuda::detail {
+namespace nvcv::cuda::detail {
 
 template<class FROM, class TO>
 struct CopyConstness
@@ -218,6 +218,6 @@ struct HasTypeTraits_t<T, std::void_t<typename TypeTraits<T>::base_type>> : std:
 {
 };
 
-} // namespace nv::cv::cuda::detail
+} // namespace nvcv::cuda::detail
 
 #endif // NVCV_CUDA_DETAIL_METAPROGRAMMING_HPP

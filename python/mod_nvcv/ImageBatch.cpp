@@ -21,7 +21,7 @@
 
 #include <common/Assert.hpp>
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 
 size_t ImageBatchVarShape::Key::doGetHash() const
 {
@@ -62,19 +62,19 @@ ImageBatchVarShape::ImageBatchVarShape(int capacity)
     m_list.reserve(capacity);
 }
 
-const cv::ImageBatchVarShape &ImageBatchVarShape::impl() const
+const nvcv::ImageBatchVarShape &ImageBatchVarShape::impl() const
 {
     return m_impl;
 }
 
-cv::ImageBatchVarShape &ImageBatchVarShape::impl()
+nvcv::ImageBatchVarShape &ImageBatchVarShape::impl()
 {
     return m_impl;
 }
 
 py::object ImageBatchVarShape::uniqueFormat() const
 {
-    cv::ImageFormat fmt = m_impl.uniqueFormat();
+    nvcv::ImageFormat fmt = m_impl.uniqueFormat();
     if (fmt)
     {
         return py::cast(fmt);
@@ -87,7 +87,7 @@ py::object ImageBatchVarShape::uniqueFormat() const
 
 Size2D ImageBatchVarShape::maxSize() const
 {
-    cv::Size2D s = m_impl.maxSize();
+    nvcv::Size2D s = m_impl.maxSize();
     return {s.w, s.h};
 }
 
@@ -172,4 +172,4 @@ void ImageBatchVarShape::Export(py::module &m)
         .def("clear", &ImageBatchVarShape::clear);
 }
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv

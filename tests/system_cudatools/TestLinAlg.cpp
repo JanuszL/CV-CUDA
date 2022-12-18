@@ -24,9 +24,9 @@
 #include <sstream>     // for std::stringstream, etc.
 #include <type_traits> // for std::remove_reference_t, etc.
 
-namespace test  = nv::cv::test;
-namespace math  = nv::cv::cuda::math;
-namespace ttype = nv::cv::test::type;
+namespace test  = nvcv::test;
+namespace math  = nvcv::cuda::math;
+namespace ttype = nvcv::test::type;
 
 template<int N>
 using TStr = typename test::StringLiteral<N>;

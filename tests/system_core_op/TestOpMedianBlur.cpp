@@ -29,8 +29,7 @@
 #include <cmath>
 #include <random>
 
-namespace nvcv = nv::cv;
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 namespace t    = ::testing;
 
 // #define DBG_MEDIAN_BLUR 1
@@ -56,7 +55,7 @@ static void printVec(std::vector<uint8_t> &vec, int height, int rowStride, int b
 }
 
 static uint8_t computeMedianInSubsetMatrix(const std::vector<uint8_t> &hSrc, int srcRowStride, nvcv::Size2D srcSize,
-                                           nv::cv::Size2D ksize, nvcv::ImageFormat fmt, int x, int y, int z)
+                                           nvcv::Size2D ksize, nvcv::ImageFormat fmt, int x, int y, int z)
 {
     assert(fmt.numPlanes() == 1);
 
@@ -97,7 +96,7 @@ static uint8_t computeMedianInSubsetMatrix(const std::vector<uint8_t> &hSrc, int
 
 static void GenerateMedianBlurGoldenOutput(std::vector<uint8_t> &hDst, int dstRowStride, nvcv::Size2D dstSize,
                                            const std::vector<uint8_t> &hSrc, int srcRowStride, nvcv::Size2D srcSize,
-                                           nvcv::ImageFormat fmt, nv::cv::Size2D ksize)
+                                           nvcv::ImageFormat fmt, nvcv::Size2D ksize)
 {
     assert(fmt.numPlanes() == 1);
 
@@ -126,7 +125,7 @@ static void GenerateMedianBlurGoldenOutput(std::vector<uint8_t> &hDst, int dstRo
 
 static void GenerateInputWithBorderReplicate(std::vector<uint8_t> &hDst, int dstRowStride, nvcv::Size2D dstSize,
                                              std::vector<uint8_t> &hSrc, int srcRowStride, nvcv::Size2D srcSize,
-                                             nvcv::ImageFormat fmt, nv::cv::Size2D ksize)
+                                             nvcv::ImageFormat fmt, nvcv::Size2D ksize)
 {
     assert(fmt.numPlanes() == 1);
 
@@ -178,7 +177,7 @@ static void GenerateInputWithBorderReplicate(std::vector<uint8_t> &hDst, int dst
 
 // clang-format off
 
-NVCV_TEST_SUITE_P(OpMedianBlur, test::ValueList<int, int, nv::cv::Size2D, int>
+NVCV_TEST_SUITE_P(OpMedianBlur, test::ValueList<int, int, nvcv::Size2D, int>
 {
     // width,       height,  kernel size, numberImages
     {         9,         9,        {5,5},           1},
@@ -198,8 +197,8 @@ TEST_P(OpMedianBlur, tensor_correct_output)
     int srcWidth  = GetParamValue<0>();
     int srcHeight = GetParamValue<1>();
 
-    nv::cv::Size2D ksize          = GetParamValue<2>();
-    int            numberOfImages = GetParamValue<3>();
+    nvcv::Size2D ksize          = GetParamValue<2>();
+    int          numberOfImages = GetParamValue<3>();
 
     int srcBrdReplicateWidth  = srcWidth + (ksize.w / 2) * 2;
     int srcBrdReplicateHeight = srcHeight + (ksize.h / 2) * 2;
@@ -253,7 +252,7 @@ TEST_P(OpMedianBlur, tensor_correct_output)
     // Generate test result
     nvcv::Tensor imgDst(numberOfImages, {srcWidth, srcHeight}, fmt);
 
-    nv::cvop::MedianBlur medianBlurOp(0);
+    nvcvop::MedianBlur medianBlurOp(0);
     EXPECT_NO_THROW(medianBlurOp(stream, imgSrc, imgDst, ksize));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
@@ -303,8 +302,8 @@ TEST_P(OpMedianBlur, varshape_correct_output)
     int srcWidthBase  = GetParamValue<0>();
     int srcHeightBase = GetParamValue<1>();
 
-    nv::cv::Size2D ksize          = GetParamValue<2>();
-    int            numberOfImages = GetParamValue<3>();
+    nvcv::Size2D ksize          = GetParamValue<2>();
+    int          numberOfImages = GetParamValue<3>();
 
     const nvcv::ImageFormat fmt           = nvcv::FMT_RGB8;
     const int               bytesPerPixel = 3;
@@ -325,7 +324,7 @@ TEST_P(OpMedianBlur, varshape_correct_output)
     std::uniform_int_distribution<int> rndSrcKSizeHeight(ksize.h * 0.8, ksize.h * 1.1);
 
     std::vector<std::unique_ptr<nvcv::Image>> imgSrc, imgSrcBrdReplicate, imgDst;
-    std::vector<nv::cv::Size2D>               ksizeVecs;
+    std::vector<nvcv::Size2D>                 ksizeVecs;
 
     for (int i = 0; i < numberOfImages; ++i)
     {
@@ -416,7 +415,7 @@ TEST_P(OpMedianBlur, varshape_correct_output)
     }
 
     // Generate test result
-    nv::cvop::MedianBlur medianBlurOp(numberOfImages);
+    nvcvop::MedianBlur medianBlurOp(numberOfImages);
     EXPECT_NO_THROW(medianBlurOp(stream, batchSrc, batchDst, ksizeTensor));
 
     // Get test data back

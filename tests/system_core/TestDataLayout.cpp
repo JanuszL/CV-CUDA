@@ -23,7 +23,7 @@
 #include <unordered_set>
 
 namespace t    = ::testing;
-namespace util = nv::cv::util;
+namespace util = nvcv::util;
 
 // Swizzle -----------------------------
 

@@ -23,9 +23,9 @@
 #include <nvcv/Exception.hpp>
 #include <util/CheckError.hpp>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
-namespace legacy = cv::legacy::cuda_op;
+namespace legacy = nvcv::legacy::cuda_op;
 
 PadAndStack::PadAndStack()
 {
@@ -34,34 +34,37 @@ PadAndStack::PadAndStack()
     m_legacyOp = std::make_unique<legacy::PadAndStack>(maxIn, maxOut);
 }
 
-void PadAndStack::operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::ITensor &out, cv::ITensor &top,
-                             cv::ITensor &left, const NVCVBorderType borderMode, const float borderValue) const
+void PadAndStack::operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in, nvcv::ITensor &out, nvcv::ITensor &top,
+                             nvcv::ITensor &left, const NVCVBorderType borderMode, const float borderValue) const
 {
-    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(in.exportData(stream));
+    auto *inData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(in.exportData(stream));
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be cuda-accessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Input must be cuda-accessible, pitch-linear tensor");
     }
 
-    auto *outData = dynamic_cast<const cv::ITensorDataStridedCuda *>(out.exportData());
+    auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(out.exportData());
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be cuda-accessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Output must be cuda-accessible, pitch-linear tensor");
     }
 
-    auto *topData = dynamic_cast<const cv::ITensorDataStridedCuda *>(top.exportData());
+    auto *topData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(top.exportData());
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Top must be cuda-accessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT, "Top must be cuda-accessible, pitch-linear tensor");
     }
 
-    auto *leftData = dynamic_cast<const cv::ITensorDataStridedCuda *>(left.exportData());
+    auto *leftData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(left.exportData());
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Left must be cuda-accessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Left must be cuda-accessible, pitch-linear tensor");
     }
 
     NVCV_CHECK_THROW(m_legacyOp->infer(*inData, *outData, *topData, *leftData, borderMode, borderValue, stream));
 }
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv

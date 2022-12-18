@@ -26,10 +26,10 @@
 #include <nvcv/optools/MathWrappers.hpp>
 #include <nvcv/optools/SaturateCast.hpp>
 
-using namespace nv::cv::legacy::helpers;
-using namespace nv::cv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
+using namespace nvcv::legacy::cuda_op;
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 template<typename T, class SrcWrapper, class DstWrapper>
 __global__ void dilate(SrcWrapper src, DstWrapper dst, Size2D dstSize, Size2D kernelSize, int2 kernelAnchor, T maxmin)
@@ -157,10 +157,10 @@ ErrorCode Morphology::infer(const ITensorDataStridedCuda &inData, const ITensorD
     DataFormat output_format = GetLegacyDataFormat(outData.layout());
     DataType   data_type     = GetLegacyDataType(inData.dtype());
 
-    auto inAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(inData);
+    auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
-    auto outAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(outData);
+    auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     DataShape input_shape = GetLegacyDataShape(inAccess->infoShape());
@@ -212,8 +212,8 @@ ErrorCode Morphology::infer(const ITensorDataStridedCuda &inData, const ITensorD
         // just a unity copy here
         for (uint32_t i = 0; i < inAccess->numSamples(); ++i)
         {
-            cv::Byte *inSampData  = inAccess->sampleData(i);
-            cv::Byte *outSampData = outAccess->sampleData(i);
+            nvcv::Byte *inSampData  = inAccess->sampleData(i);
+            nvcv::Byte *outSampData = outAccess->sampleData(i);
 
             for (int32_t p = 0; p < inAccess->numPlanes(); ++p)
             {
@@ -248,4 +248,4 @@ ErrorCode Morphology::infer(const ITensorDataStridedCuda &inData, const ITensorD
     return SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

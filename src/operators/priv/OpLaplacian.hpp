@@ -32,24 +32,24 @@
 
 #include <memory>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class Laplacian final : public IOperator
 {
 public:
     explicit Laplacian();
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, const int ksize,
+    void operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out, const int ksize,
                     const float scale, const NVCVBorderType borderMode) const;
 
-    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
-                    const cv::ITensor &ksize, const cv::ITensor &scale, NVCVBorderType borderMode) const;
+    void operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
+                    const nvcv::ITensor &ksize, const nvcv::ITensor &scale, NVCVBorderType borderMode) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::Laplacian>         m_legacyOp;
-    std::unique_ptr<cv::legacy::cuda_op::LaplacianVarShape> m_legacyOpVarShape;
+    std::unique_ptr<nvcv::legacy::cuda_op::Laplacian>         m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::LaplacianVarShape> m_legacyOpVarShape;
 };
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_LAPLACIAN_HPP

@@ -25,7 +25,7 @@
 #include "Metaprogramming.hpp"  // for TypeTraits, etc.
 #include "SaturateCastImpl.hpp" // for BaseSaturateImpl, etc.
 
-namespace nv::cv::cuda::detail {
+namespace nvcv::cuda::detail {
 
 template<typename T, typename U>
 inline __host__ __device__ T RangeCastImpl(U u)
@@ -73,6 +73,6 @@ inline __host__ __device__ T RangeCastImpl(U u)
     }
 }
 
-} // namespace nv::cv::cuda::detail
+} // namespace nvcv::cuda::detail
 
 #endif // NVCV_CUDA_DETAIL_RANGE_CAST_IMPL_HPP

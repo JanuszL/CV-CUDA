@@ -24,9 +24,9 @@
 
 #include "CvCudaUtils.cuh"
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
-using namespace nv::cv::legacy::helpers;
+using namespace nvcv::legacy::helpers;
 
 template<typename SrcWrapper, typename DstWrapper>
 __global__ void flipHorizontal(SrcWrapper src, DstWrapper dst, Size2D dstSize)
@@ -182,4 +182,4 @@ ErrorCode Flip::infer(const ITensorDataStridedCuda &input, const ITensorDataStri
     return ErrorCode::SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

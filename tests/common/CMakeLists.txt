@@ -36,7 +36,7 @@ target_link_libraries(nvcv_test_common
     INTERFACE
         nvcv_util
     PUBLIC
-        nvcv_headers
+        nvcv_types_headers
         nvcv_util
         nvcv_util_compat
 )
@@ -56,7 +56,7 @@ target_include_directories(nvcv_test_common_system
 
 target_link_libraries(nvcv_test_common_system
     PUBLIC
-        nvcv
+        nvcv_types
         nvcv_test_common
         nvcv_operators_headers
 )

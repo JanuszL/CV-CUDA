@@ -26,7 +26,7 @@
 
 #include "TypeTraits.hpp" // for Require, etc.
 
-namespace nv::cv::cuda {
+namespace nvcv::cuda {
 
 /**
  * @brief Metafunction to drop components of a compound value
@@ -74,6 +74,6 @@ __host__ __device__ auto DropCast(T v)
 
 /**@}*/
 
-} // namespace nv::cv::cuda
+} // namespace nvcv::cuda
 
 #endif // NVCV_CUDA_DROP_CAST_HPP

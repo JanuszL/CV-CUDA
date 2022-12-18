@@ -17,12 +17,12 @@
 
 #include "Definitions.hpp"
 
-#include <core/priv/HandleManager.hpp>
-#include <core/priv/HandleManagerImpl.hpp>
+#include <nvcv_types/priv/HandleManager.hpp>
+#include <nvcv_types/priv/HandleManagerImpl.hpp>
 
 #include <unordered_set>
 
-namespace priv = nv::cv::priv;
+namespace priv = nvcv::priv;
 
 namespace {
 class alignas(priv::kResourceAlignment) IObject

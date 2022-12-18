@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 
 #if NVCV_EXPORTING
-#    include <core/priv/Exception.hpp>
+#    include <nvcv_types/priv/Exception.hpp>
 #else
 #    include <nvcv/Exception.hpp>
 #endif
@@ -50,13 +50,13 @@ inline ::testing::AssertionResult CmpHelperEQFailure(const char *lhs_expression,
 }
 #endif
 
-namespace nv::cv::test {
+namespace nvcv::test {
 #if NVCV_EXPORTING
-using nv::cv::priv::Exception;
+using nvcv::priv::Exception;
 #else
-using nv::cv::Exception;
+using nvcv::Exception;
 #endif
-} // namespace nv::cv::test
+} // namespace nvcv::test
 
 #define NVCV_DETAIL_CHECK_STATUS(FAIL_KIND, STATUS, ...)                                                     \
     try                                                                                                      \
@@ -88,7 +88,7 @@ using nv::cv::Exception;
             }                                                                                                \
         }                                                                                                    \
     }                                                                                                        \
-    catch (::nv::cv::test::Exception & e)                                                                    \
+    catch (::nvcv::test::Exception & e)                                                                      \
     {                                                                                                        \
         if ((STATUS) == static_cast<NVCVStatus>(e.code()))                                                   \
         {                                                                                                    \

@@ -30,9 +30,8 @@
 
 #include <nvcv/Fwd.hpp>
 
-namespace nvcv = nv::cv;
 namespace t    = ::testing;
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 
 class TensorTests
     : public t::TestWithParam<std::tuple<test::Param<"numImages", int>, test::Param<"width", int>,
@@ -131,7 +130,7 @@ TEST_P(TensorTests, wip_create)
 
 TEST(TensorTests, wip_create_allocator)
 {
-    namespace nvcv = nv::cv;
+    ;
 
     int64_t setBufLen   = 0;
     int32_t setBufAlign = 0;

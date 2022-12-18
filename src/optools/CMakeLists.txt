@@ -23,5 +23,5 @@ target_include_directories(nvcv_optools
 target_link_libraries(nvcv_optools
     INTERFACE
         CUDA::cudart_static
-        nvcv_headers
+        nvcv_types_headers
 )

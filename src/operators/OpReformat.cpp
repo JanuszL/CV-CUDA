@@ -23,8 +23,7 @@
 #include <nvcv/Tensor.hpp>
 #include <util/Assert.h>
 
-namespace nvcv = nv::cv;
-namespace priv = nv::cvop::priv;
+namespace priv = nvcvop::priv;
 
 NVCV_OP_DEFINE_API(0, 0, NVCVStatus, nvcvopReformatCreate, (NVCVOperatorHandle * handle))
 {

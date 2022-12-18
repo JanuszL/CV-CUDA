@@ -30,9 +30,8 @@
 #include <random>
 #include <vector>
 
-namespace nvcv = nv::cv;
 namespace gt   = ::testing;
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 
 static uint32_t saturate_cast(float n)
 {
@@ -211,7 +210,7 @@ TEST_P(OpBilateralFilter, BilateralFilter_packed)
                              inAccess->rowStride(), inAccess->sampleStride(), d, sigmaColor, sigmaSpace);
 
     // run operator
-    nv::cvop::BilateralFilter bilateralFilterOp;
+    nvcvop::BilateralFilter bilateralFilterOp;
 
     EXPECT_NO_THROW(bilateralFilterOp(stream, imgIn, imgOut, d, sigmaColor, sigmaSpace, NVCV_BORDER_CONSTANT));
 
@@ -242,7 +241,7 @@ TEST_P(OpBilateralFilter, BilateralFilter_VarShape)
     std::uniform_int_distribution<int> udistWidth(width * 0.8, width * 1.1);
     std::uniform_int_distribution<int> udistHeight(height * 0.8, height * 1.1);
 
-    std::vector<std::unique_ptr<nv::cv::Image>> imgSrc;
+    std::vector<std::unique_ptr<nvcv::Image>> imgSrc;
 
     std::vector<std::vector<uint8_t>> srcVec(numberOfImages);
     std::vector<int>                  srcVecRowStride(numberOfImages);
@@ -252,7 +251,7 @@ TEST_P(OpBilateralFilter, BilateralFilter_VarShape)
     std::vector<std::vector<uint8_t>> dstVec(numberOfImages);
     for (int i = 0; i < numberOfImages; ++i)
     {
-        imgSrc.emplace_back(std::make_unique<nv::cv::Image>(nv::cv::Size2D{udistWidth(rng), udistHeight(rng)}, format));
+        imgSrc.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{udistWidth(rng), udistHeight(rng)}, format));
         int srcRowStride   = imgSrc[i]->size().w * format.planePixelStrideBytes(0);
         srcVecRowStride[i] = srcRowStride;
         srcVecRows[i]      = imgSrc[i]->size().h;
@@ -265,7 +264,7 @@ TEST_P(OpBilateralFilter, BilateralFilter_VarShape)
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
         std::generate(goldVec[i].begin(), goldVec[i].end(), [&]() { return 0; });
         std::generate(dstVec[i].begin(), dstVec[i].end(), [&]() { return 0; });
-        auto *imgData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
+        auto *imgData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_NE(imgData, nullptr);
 
         // Copy input data to the GPU
@@ -274,23 +273,23 @@ TEST_P(OpBilateralFilter, BilateralFilter_VarShape)
                                     srcRowStride, srcRowStride, imgSrc[i]->size().h, cudaMemcpyHostToDevice, stream));
     }
 
-    nv::cv::ImageBatchVarShape batchSrc(numberOfImages);
+    nvcv::ImageBatchVarShape batchSrc(numberOfImages);
     batchSrc.pushBack(imgSrc.begin(), imgSrc.end());
 
     // Create output varshape
-    std::vector<std::unique_ptr<nv::cv::Image>> imgDst;
+    std::vector<std::unique_ptr<nvcv::Image>> imgDst;
     for (int i = 0; i < numberOfImages; ++i)
     {
-        imgDst.emplace_back(std::make_unique<nv::cv::Image>(imgSrc[i]->size(), imgSrc[i]->format()));
+        imgDst.emplace_back(std::make_unique<nvcv::Image>(imgSrc[i]->size(), imgSrc[i]->format()));
     }
-    nv::cv::ImageBatchVarShape batchDst(numberOfImages);
+    nvcv::ImageBatchVarShape batchDst(numberOfImages);
     batchDst.pushBack(imgDst.begin(), imgDst.end());
 
     // Create diameter tensor
     std::vector<int> vDiameter(numberOfImages, diameter);
-    nv::cv::Tensor   diameterTensor({{numberOfImages}, "N"}, nv::cv::TYPE_S32);
+    nvcv::Tensor     diameterTensor({{numberOfImages}, "N"}, nvcv::TYPE_S32);
     {
-        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(diameterTensor.exportData());
+        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(diameterTensor.exportData());
         ASSERT_NE(dev, nullptr);
 
         ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(dev->basePtr(), vDiameter.data(), vDiameter.size() * sizeof(int),
@@ -299,9 +298,9 @@ TEST_P(OpBilateralFilter, BilateralFilter_VarShape)
 
     // Create sigmaColor tensor
     std::vector<float> vSigmaColor(numberOfImages, sigmaColor);
-    nv::cv::Tensor     sigmaColorTensor({{numberOfImages}, "N"}, nv::cv::TYPE_F32);
+    nvcv::Tensor       sigmaColorTensor({{numberOfImages}, "N"}, nvcv::TYPE_F32);
     {
-        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(sigmaColorTensor.exportData());
+        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(sigmaColorTensor.exportData());
         ASSERT_NE(dev, nullptr);
 
         ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(dev->basePtr(), vSigmaColor.data(), vSigmaColor.size() * sizeof(float),
@@ -310,9 +309,9 @@ TEST_P(OpBilateralFilter, BilateralFilter_VarShape)
 
     // Create sigmaSpace tensor
     std::vector<float> vSigmaSpace(numberOfImages, sigmaSpace);
-    nv::cv::Tensor     sigmaSpaceTensor({{numberOfImages}, "N"}, nv::cv::TYPE_F32);
+    nvcv::Tensor       sigmaSpaceTensor({{numberOfImages}, "N"}, nvcv::TYPE_F32);
     {
-        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(sigmaSpaceTensor.exportData());
+        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(sigmaSpaceTensor.exportData());
         ASSERT_NE(dev, nullptr);
 
         ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(dev->basePtr(), vSigmaSpace.data(), vSigmaSpace.size() * sizeof(float),
@@ -324,14 +323,14 @@ TEST_P(OpBilateralFilter, BilateralFilter_VarShape)
                                vSigmaSpace);
 
     // Run operator
-    nv::cvop::BilateralFilter bilateralFilterOp;
+    nvcvop::BilateralFilter bilateralFilterOp;
     EXPECT_NO_THROW(bilateralFilterOp(stream, batchSrc, batchDst, diameterTensor, sigmaColorTensor, sigmaSpaceTensor,
                                       NVCV_BORDER_CONSTANT));
 
     // Retrieve data from GPU
     for (int i = 0; i < numberOfImages; i++)
     {
-        auto *imgData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgDst[i]->exportData());
+        auto *imgData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgDst[i]->exportData());
         ASSERT_NE(imgData, nullptr);
 
         // Copy input data to the GPU

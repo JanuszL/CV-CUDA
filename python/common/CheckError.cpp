@@ -20,7 +20,7 @@
 #include <iostream>
 #include <sstream>
 
-namespace nv::cvpy::util {
+namespace nvcvpy::util {
 
 static std::string ToString(cudaError_t err)
 {
@@ -47,4 +47,4 @@ void CheckLog(cudaError_t err)
     }
 }
 
-} // namespace nv::cvpy::util
+} // namespace nvcvpy::util

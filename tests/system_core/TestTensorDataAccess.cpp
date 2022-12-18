@@ -21,9 +21,8 @@
 #include <common/ValueTests.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 namespace t    = ::testing;
-namespace nvcv = nv::cv;
 
 namespace {
 
@@ -62,7 +61,7 @@ public:
         return std::tie(m_tshape, m_basePtr, m_strides) < std::tie(that.m_tshape, that.m_basePtr, that.m_strides);
     }
 
-    friend void Update(nv::cv::util::HashMD5 &hash, const MyTensorDataStrided &d)
+    friend void Update(nvcv::util::HashMD5 &hash, const MyTensorDataStrided &d)
     {
         Update(hash, d.m_tshape, d.m_basePtr, d.m_strides);
     }

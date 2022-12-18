@@ -81,15 +81,15 @@ template<typename ValueType, int N, int H, int W, int C>
 void DeviceUseTensor4DWrap(PackedTensor4D<ValueType, N, H, W, C> &);
 
 template<typename ValueType>
-void DeviceSetOnes(nv::cv::cuda::Tensor1DWrap<ValueType> &, int1, cudaStream_t &);
+void DeviceSetOnes(nvcv::cuda::Tensor1DWrap<ValueType> &, int1, cudaStream_t &);
 
 template<typename ValueType>
-void DeviceSetOnes(nv::cv::cuda::Tensor2DWrap<ValueType> &, int2, cudaStream_t &);
+void DeviceSetOnes(nvcv::cuda::Tensor2DWrap<ValueType> &, int2, cudaStream_t &);
 
 template<typename ValueType>
-void DeviceSetOnes(nv::cv::cuda::Tensor3DWrap<ValueType> &, int3, cudaStream_t &);
+void DeviceSetOnes(nvcv::cuda::Tensor3DWrap<ValueType> &, int3, cudaStream_t &);
 
 template<typename ValueType>
-void DeviceSetOnes(nv::cv::cuda::Tensor4DWrap<ValueType> &, int4, cudaStream_t &);
+void DeviceSetOnes(nvcv::cuda::Tensor4DWrap<ValueType> &, int4, cudaStream_t &);
 
 #endif // NVCV_TESTS_DEVICE_TENSOR_WRAP_HPP

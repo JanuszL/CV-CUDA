@@ -28,8 +28,8 @@
 
 #include <cassert>
 
-namespace cuda    = nv::cv::cuda;
-namespace cuda_op = nv::cv::legacy::cuda_op;
+namespace cuda    = nvcv::cuda;
+namespace cuda_op = nvcv::legacy::cuda_op;
 
 template<bool srcIsNCHW, typename Ptr2DSrc, typename Ptr2DDst>
 __global__ void transformFormat(const Ptr2DSrc src, Ptr2DDst dst, int3 inout_size)
@@ -55,13 +55,13 @@ __global__ void transformFormat(const Ptr2DSrc src, Ptr2DDst dst, int3 inout_siz
 }
 
 template<typename data_type> // uchar float
-void transform(const nv::cv::ITensorDataStridedCuda &inData, const nv::cv::ITensorDataStridedCuda &outData,
+void transform(const nvcv::ITensorDataStridedCuda &inData, const nvcv::ITensorDataStridedCuda &outData,
                cuda_op::DataFormat input_format, cuda_op::DataFormat output_format, cudaStream_t stream)
 {
-    auto inAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(inData);
+    auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
-    auto outAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(outData);
+    auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     const int3 inout_size = {inAccess->numCols(), inAccess->numRows(), outAccess->numChannels()};
@@ -91,7 +91,7 @@ void transform(const nv::cv::ITensorDataStridedCuda &inData, const nv::cv::ITens
 #endif
 }
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 void Reformat::checkDataFormat(DataFormat format)
 {
@@ -103,7 +103,7 @@ size_t Reformat::calBufferSize(DataShape max_input_shape, DataShape max_output_s
     return 0;
 }
 
-ErrorCode Reformat::infer(const nv::cv::ITensorDataStridedCuda &inData, const nv::cv::ITensorDataStridedCuda &outData,
+ErrorCode Reformat::infer(const nvcv::ITensorDataStridedCuda &inData, const nvcv::ITensorDataStridedCuda &outData,
                           cudaStream_t stream)
 {
     DataFormat input_format  = helpers::GetLegacyDataFormat(inData.layout());
@@ -112,10 +112,10 @@ ErrorCode Reformat::infer(const nv::cv::ITensorDataStridedCuda &inData, const nv
     checkDataFormat(input_format);
     checkDataFormat(output_format);
 
-    auto inAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(inData);
+    auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
-    auto outAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(outData);
+    auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     if (inData.dtype() == outData.dtype() && inData.shape() == outData.shape())
@@ -126,8 +126,8 @@ ErrorCode Reformat::infer(const nv::cv::ITensorDataStridedCuda &inData, const nv
 
         for (uint32_t i = 0; i < inAccess->numSamples(); ++i)
         {
-            cv::Byte *inSampData  = inAccess->sampleData(i);
-            cv::Byte *outSampData = outAccess->sampleData(i);
+            nvcv::Byte *inSampData  = inAccess->sampleData(i);
+            nvcv::Byte *outSampData = outAccess->sampleData(i);
 
             for (int p = 0; p < inAccess->numPlanes(); ++p)
             {
@@ -170,4 +170,4 @@ ErrorCode Reformat::infer(const nv::cv::ITensorDataStridedCuda &inData, const nv
     return SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

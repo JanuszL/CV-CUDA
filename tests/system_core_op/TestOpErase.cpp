@@ -27,8 +27,6 @@
 
 #include <iostream>
 
-namespace nvcv = nv::cv;
-
 TEST(OpErase, OpErase_Tensor)
 {
     cudaStream_t stream;
@@ -61,8 +59,8 @@ TEST(OpErase, OpErase_Tensor)
     int          num_erasing_area = 2;
     nvcv::Tensor anchor({{num_erasing_area}, "N"}, nvcv::TYPE_2S32);
     nvcv::Tensor erasing({{num_erasing_area}, "N"}, nvcv::TYPE_3S32);
-    nvcv::Tensor values({{num_erasing_area}, "N"}, nv::cv::TYPE_F32);
-    nvcv::Tensor imgIdx({{num_erasing_area}, "N"}, nv::cv::TYPE_S32);
+    nvcv::Tensor values({{num_erasing_area}, "N"}, nvcv::TYPE_F32);
+    nvcv::Tensor imgIdx({{num_erasing_area}, "N"}, nvcv::TYPE_S32);
 
     const auto *anchorData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(anchor.exportData());
     const auto *erasingData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(erasing.exportData());
@@ -106,10 +104,10 @@ TEST(OpErase, OpErase_Tensor)
                                            cudaMemcpyHostToDevice, stream));
 
     // Call operator
-    unsigned int    seed                 = 0;
-    bool            random               = false;
-    int             max_num_erasing_area = 2;
-    nv::cvop::Erase eraseOp(max_num_erasing_area);
+    unsigned int  seed                 = 0;
+    bool          random               = false;
+    int           max_num_erasing_area = 2;
+    nvcvop::Erase eraseOp(max_num_erasing_area);
     EXPECT_NO_THROW(eraseOp(stream, imgIn, imgOut, anchor, erasing, values, imgIdx, random, seed));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
@@ -159,8 +157,8 @@ TEST(OpErase, OpErase_Varshape)
     int          num_erasing_area = 2;
     nvcv::Tensor anchor({{num_erasing_area}, "N"}, nvcv::TYPE_2S32);
     nvcv::Tensor erasing({{num_erasing_area}, "N"}, nvcv::TYPE_3S32);
-    nvcv::Tensor values({{num_erasing_area}, "N"}, nv::cv::TYPE_F32);
-    nvcv::Tensor imgIdx({{num_erasing_area}, "N"}, nv::cv::TYPE_S32);
+    nvcv::Tensor values({{num_erasing_area}, "N"}, nvcv::TYPE_F32);
+    nvcv::Tensor imgIdx({{num_erasing_area}, "N"}, nvcv::TYPE_S32);
 
     const auto *anchorData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(anchor.exportData());
     const auto *erasingData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(erasing.exportData());
@@ -204,10 +202,10 @@ TEST(OpErase, OpErase_Varshape)
                                            cudaMemcpyHostToDevice, stream));
 
     // Call operator
-    unsigned int    seed                 = 0;
-    bool            random               = false;
-    int             max_num_erasing_area = 2;
-    nv::cvop::Erase eraseOp(max_num_erasing_area);
+    unsigned int  seed                 = 0;
+    bool          random               = false;
+    int           max_num_erasing_area = 2;
+    nvcvop::Erase eraseOp(max_num_erasing_area);
     EXPECT_NO_THROW(eraseOp(stream, batchSrc, batchSrc, anchor, erasing, values, imgIdx, random, seed));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));

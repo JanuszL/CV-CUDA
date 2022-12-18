@@ -29,9 +29,8 @@
 #include <iostream>
 #include <random>
 
-namespace nvcv = nv::cv;
 namespace gt   = ::testing;
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 
 template<typename DT_DEST>
 static void setGoldBuffer(std::vector<DT_DEST> &vect, DT_DEST val, int width, int height, int rowStride, int imgStride,
@@ -92,7 +91,7 @@ const void testConvertTo(nvcv::ImageFormat fmtIn, nvcv::ImageFormat fmtOut, int 
     EXPECT_EQ(cudaSuccess, cudaMemsetAsync(outData->basePtr(), 0x0, outBufSizeBytes, stream));
 
     // run operator
-    nv::cvop::ConvertTo convertToOp;
+    nvcvop::ConvertTo convertToOp;
 
     EXPECT_NO_THROW(convertToOp(stream, imgIn, imgOut, alpha, beta));
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));

@@ -37,9 +37,9 @@
 #include <nvcv/alloc/Requirements.hpp>
 #include <nvcv/optools/math/LinAlg.hpp>
 
-namespace cvmath = nv::cv::cuda::math;
+namespace cvmath = nvcv::cuda::math;
 
-namespace nv { namespace cvop {
+namespace nvcvop {
 
 class WarpPerspective final : public IOperator
 {
@@ -48,11 +48,12 @@ public:
 
     ~WarpPerspective();
 
-    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const NVCVPerspectiveTransform transMatrix,
-                    const int32_t flags, const NVCVBorderType borderMode, const float4 borderValue);
+    void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out,
+                    const NVCVPerspectiveTransform transMatrix, const int32_t flags, const NVCVBorderType borderMode,
+                    const float4 borderValue);
 
-    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
-                    cv::ITensor &transMatrix, const int32_t flags, const NVCVBorderType borderMode,
+    void operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
+                    nvcv::ITensor &transMatrix, const int32_t flags, const NVCVBorderType borderMode,
                     const float4 borderValue);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
@@ -63,7 +64,7 @@ private:
 
 inline WarpPerspective::WarpPerspective(const int32_t maxVarShapeBatchSize)
 {
-    cv::detail::CheckThrow(nvcvopWarpPerspectiveCreate(&m_handle, maxVarShapeBatchSize));
+    nvcv::detail::CheckThrow(nvcvopWarpPerspectiveCreate(&m_handle, maxVarShapeBatchSize));
     assert(m_handle);
 }
 
@@ -73,20 +74,20 @@ inline WarpPerspective::~WarpPerspective()
     m_handle = nullptr;
 }
 
-inline void WarpPerspective::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out,
+inline void WarpPerspective::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out,
                                         const NVCVPerspectiveTransform transMatrix, const int32_t flags,
                                         const NVCVBorderType borderMode, const float4 borderValue)
 {
-    cv::detail::CheckThrow(nvcvopWarpPerspectiveSubmit(m_handle, stream, in.handle(), out.handle(), transMatrix, flags,
-                                                       borderMode, borderValue));
+    nvcv::detail::CheckThrow(nvcvopWarpPerspectiveSubmit(m_handle, stream, in.handle(), out.handle(), transMatrix,
+                                                         flags, borderMode, borderValue));
 }
 
-inline void WarpPerspective::operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
-                                        cv::ITensor &transMatrix, const int32_t flags, const NVCVBorderType borderMode,
-                                        const float4 borderValue)
+inline void WarpPerspective::operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in,
+                                        nvcv::IImageBatchVarShape &out, nvcv::ITensor &transMatrix, const int32_t flags,
+                                        const NVCVBorderType borderMode, const float4 borderValue)
 {
-    cv::detail::CheckThrow(nvcvopWarpPerspectiveVarShapeSubmit(m_handle, stream, in.handle(), out.handle(),
-                                                               transMatrix.handle(), flags, borderMode, borderValue));
+    nvcv::detail::CheckThrow(nvcvopWarpPerspectiveVarShapeSubmit(m_handle, stream, in.handle(), out.handle(),
+                                                                 transMatrix.handle(), flags, borderMode, borderValue));
 }
 
 inline NVCVOperatorHandle WarpPerspective::handle() const noexcept
@@ -94,6 +95,6 @@ inline NVCVOperatorHandle WarpPerspective::handle() const noexcept
     return m_handle;
 }
 
-}} // namespace nv::cvop
+} // namespace nvcvop
 
 #endif // NVCV_OP_WARP_PERSPECTIVE_HPP

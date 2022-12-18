@@ -33,7 +33,7 @@
 #include <ostream>   // for std::ostream, etc.
 #include <vector>    // for std::vector, etc.
 
-namespace nv::cv::cuda::math {
+namespace nvcv::cuda::math {
 
 /**
  * @defgroup NVCV_CPP_CUDATOOLS_LINALG Linear algebra
@@ -1226,6 +1226,6 @@ constexpr __host__ __device__ void inv_inplace(Matrix<T, 3, 3> &m)
 
 /**@}*/
 
-} // namespace nv::cv::cuda::math
+} // namespace nvcv::cuda::math
 
 #endif // NVCV_CUDA_MATH_LINALG_HPP

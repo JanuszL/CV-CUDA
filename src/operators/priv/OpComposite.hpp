@@ -33,25 +33,25 @@
 
 #include <memory>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class Composite final : public IOperator
 {
 public:
     explicit Composite();
 
-    void operator()(cudaStream_t stream, const cv::ITensor &foreground, const cv::ITensor &background,
-                    const cv::ITensor &fgMask, const cv::ITensor &output) const;
+    void operator()(cudaStream_t stream, const nvcv::ITensor &foreground, const nvcv::ITensor &background,
+                    const nvcv::ITensor &fgMask, const nvcv::ITensor &output) const;
 
-    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &foreground,
-                    const cv::IImageBatchVarShape &background, const cv::IImageBatchVarShape &fgMask,
-                    const cv::IImageBatchVarShape &output) const;
+    void operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &foreground,
+                    const nvcv::IImageBatchVarShape &background, const nvcv::IImageBatchVarShape &fgMask,
+                    const nvcv::IImageBatchVarShape &output) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::Composite>         m_legacyOp;
-    std::unique_ptr<cv::legacy::cuda_op::CompositeVarShape> m_legacyOpVarShape;
+    std::unique_ptr<nvcv::legacy::cuda_op::Composite>         m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::CompositeVarShape> m_legacyOpVarShape;
 };
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_COMPOSITE_HPP

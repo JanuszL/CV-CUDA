@@ -32,23 +32,24 @@
 
 #include <memory>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class MedianBlur final : public IOperator
 {
 public:
     explicit MedianBlur(const int maxVarShapeBatchSize);
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, const cv::Size2D ksize) const;
+    void operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out,
+                    const nvcv::Size2D ksize) const;
 
-    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
-                    cv::ITensor &ksize) const;
+    void operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, const nvcv::IImageBatchVarShape &out,
+                    nvcv::ITensor &ksize) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::MedianBlur>         m_legacyOp;
-    std::unique_ptr<cv::legacy::cuda_op::MedianBlurVarShape> m_legacyOpVarShape;
+    std::unique_ptr<nvcv::legacy::cuda_op::MedianBlur>         m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::MedianBlurVarShape> m_legacyOpVarShape;
 };
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_MEDIAN_BLUR_HPP

@@ -22,10 +22,10 @@
 
 #define BLOCK 32
 
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 static __device__ __forceinline__ float simple_clamp(float f, float a, float b)
 {
@@ -96,7 +96,7 @@ __global__ void gamma_contrast_kernel(const Ptr2dVarShapeNHWC<D> src, Ptr2dVarSh
     gamma_type gamma = *gamma_.ptr(batch_idx);
     gamma_type tmp   = (*src.ptr(batch_idx, dst_y, dst_x) + 0.0f) / 255.0f;
 
-    D out                             = nv::cv::cuda::SaturateCast<cuda::BaseType<D>>(simple_powf(tmp, gamma) * 255.0f);
+    D out                             = nvcv::cuda::SaturateCast<cuda::BaseType<D>>(simple_powf(tmp, gamma) * 255.0f);
     *dst.ptr(batch_idx, dst_y, dst_x) = out;
 }
 
@@ -113,7 +113,7 @@ __global__ void gamma_contrast_float_kernel(const Ptr2dVarShapeNHWC<D> src, Ptr2
 
     gamma_type gamma = *gamma_.ptr(batch_idx);
 
-    D out = nv::cv::cuda::SaturateCast<cuda::BaseType<D>>(simple_powf(*src.ptr(batch_idx, dst_y, dst_x), gamma));
+    D out = nvcv::cuda::SaturateCast<cuda::BaseType<D>>(simple_powf(*src.ptr(batch_idx, dst_y, dst_x), gamma));
     *dst.ptr(batch_idx, dst_y, dst_x) = simple_clamp(out, 0.0, 1.0);
 }
 
@@ -244,7 +244,7 @@ ErrorCode GammaContrastVarShape::infer(const IImageBatchVarShapeDataStridedCuda 
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    auto gammasAccess = nv::cv::TensorDataAccessStrided::Create(gammas);
+    auto gammasAccess = nvcv::TensorDataAccessStrided::Create(gammas);
     NVCV_ASSERT(gammasAccess);
 
     int numElements = 1;
@@ -268,8 +268,8 @@ ErrorCode GammaContrastVarShape::infer(const IImageBatchVarShapeDataStridedCuda 
         checkKernelErrors();
     }
 
-    typedef void (*func_t)(const nv::cv::IImageBatchVarShapeDataStridedCuda &in,
-                           const nv::cv::IImageBatchVarShapeDataStridedCuda &out, float *gammas, cudaStream_t stream);
+    typedef void (*func_t)(const nvcv::IImageBatchVarShapeDataStridedCuda &in,
+                           const nvcv::IImageBatchVarShapeDataStridedCuda &out, float *gammas, cudaStream_t stream);
 
     static const func_t funcs[5][4] = {
         {      gamma_contrast<uchar>,      gamma_contrast<uchar2>,      gamma_contrast<uchar3>,gamma_contrast<uchar4>                                                                                               },
@@ -297,4 +297,4 @@ ErrorCode GammaContrastVarShape::infer(const IImageBatchVarShapeDataStridedCuda 
     return ErrorCode::SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

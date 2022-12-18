@@ -23,7 +23,7 @@
 #include <nvcv/optools/StaticCast.hpp> // for StaticCast, etc.
 #include <nvcv/optools/TensorWrap.hpp> // the object of this test
 
-namespace cuda = nv::cv::cuda;
+namespace cuda = nvcv::cuda;
 
 // ---------------- To allow testing device-side Tensor1DWrap ------------------
 
@@ -74,7 +74,7 @@ NVCV_TEST_INST_USE(uchar4, 3);
 #undef NVCV_TEST_INST_USE
 
 template<typename ValueType>
-__global__ void SetOnes(nv::cv::cuda::Tensor1DWrap<ValueType> dst, int1 size)
+__global__ void SetOnes(nvcv::cuda::Tensor1DWrap<ValueType> dst, int1 size)
 {
     int1 coord = cuda::StaticCast<int>(cuda::DropCast<1>(blockIdx * blockDim + threadIdx));
 
@@ -87,7 +87,7 @@ __global__ void SetOnes(nv::cv::cuda::Tensor1DWrap<ValueType> dst, int1 size)
 }
 
 template<typename ValueType>
-void DeviceSetOnes(nv::cv::cuda::Tensor1DWrap<ValueType> &wrap, int1 size, cudaStream_t &stream)
+void DeviceSetOnes(nvcv::cuda::Tensor1DWrap<ValueType> &wrap, int1 size, cudaStream_t &stream)
 {
     dim3 block{32};
     dim3 grid{(size.x + block.x - 1) / block.x};
@@ -96,7 +96,7 @@ void DeviceSetOnes(nv::cv::cuda::Tensor1DWrap<ValueType> &wrap, int1 size, cudaS
 }
 
 #define NVCV_TEST_INST_SET(VALUE_TYPE) \
-    template void DeviceSetOnes(nv::cv::cuda::Tensor1DWrap<VALUE_TYPE> &, int1, cudaStream_t &)
+    template void DeviceSetOnes(nvcv::cuda::Tensor1DWrap<VALUE_TYPE> &, int1, cudaStream_t &)
 
 NVCV_TEST_INST_SET(int);
 NVCV_TEST_INST_SET(uchar1);
@@ -157,7 +157,7 @@ NVCV_TEST_INST_USE(uchar4, 3, 3);
 #undef NVCV_TEST_INST_USE
 
 template<typename ValueType>
-__global__ void SetOnes(nv::cv::cuda::Tensor2DWrap<ValueType> dst, int2 size)
+__global__ void SetOnes(nvcv::cuda::Tensor2DWrap<ValueType> dst, int2 size)
 {
     int2 coord = cuda::StaticCast<int>(cuda::DropCast<2>(blockIdx * blockDim + threadIdx));
 
@@ -170,7 +170,7 @@ __global__ void SetOnes(nv::cv::cuda::Tensor2DWrap<ValueType> dst, int2 size)
 }
 
 template<typename ValueType>
-void DeviceSetOnes(nv::cv::cuda::Tensor2DWrap<ValueType> &wrap, int2 size, cudaStream_t &stream)
+void DeviceSetOnes(nvcv::cuda::Tensor2DWrap<ValueType> &wrap, int2 size, cudaStream_t &stream)
 {
     dim3 block{32, 4};
     dim3 grid{(size.x + block.x - 1) / block.x, (size.y + block.y - 1) / block.y};
@@ -179,7 +179,7 @@ void DeviceSetOnes(nv::cv::cuda::Tensor2DWrap<ValueType> &wrap, int2 size, cudaS
 }
 
 #define NVCV_TEST_INST_SET(VALUE_TYPE) \
-    template void DeviceSetOnes(nv::cv::cuda::Tensor2DWrap<VALUE_TYPE> &, int2, cudaStream_t &)
+    template void DeviceSetOnes(nvcv::cuda::Tensor2DWrap<VALUE_TYPE> &, int2, cudaStream_t &)
 
 NVCV_TEST_INST_SET(int);
 NVCV_TEST_INST_SET(uchar1);
@@ -241,7 +241,7 @@ NVCV_TEST_INST_USE(uchar4, 3, 3, 1);
 #undef NVCV_TEST_INST_USE
 
 template<typename ValueType>
-__global__ void SetOnes(nv::cv::cuda::Tensor3DWrap<ValueType> dst, int3 size)
+__global__ void SetOnes(nvcv::cuda::Tensor3DWrap<ValueType> dst, int3 size)
 {
     int3 coord = cuda::StaticCast<int>(blockIdx * blockDim + threadIdx);
 
@@ -254,7 +254,7 @@ __global__ void SetOnes(nv::cv::cuda::Tensor3DWrap<ValueType> dst, int3 size)
 }
 
 template<typename ValueType>
-void DeviceSetOnes(nv::cv::cuda::Tensor3DWrap<ValueType> &wrap, int3 size, cudaStream_t &stream)
+void DeviceSetOnes(nvcv::cuda::Tensor3DWrap<ValueType> &wrap, int3 size, cudaStream_t &stream)
 {
     dim3 block{32, 2, 2};
     dim3 grid{(size.x + block.x - 1) / block.x, (size.y + block.y - 1) / block.y, (size.z + block.z - 1) / block.z};
@@ -263,7 +263,7 @@ void DeviceSetOnes(nv::cv::cuda::Tensor3DWrap<ValueType> &wrap, int3 size, cudaS
 }
 
 #define NVCV_TEST_INST_SET(VALUE_TYPE) \
-    template void DeviceSetOnes(nv::cv::cuda::Tensor3DWrap<VALUE_TYPE> &, int3, cudaStream_t &)
+    template void DeviceSetOnes(nvcv::cuda::Tensor3DWrap<VALUE_TYPE> &, int3, cudaStream_t &)
 
 NVCV_TEST_INST_SET(int);
 NVCV_TEST_INST_SET(uchar1);
@@ -329,7 +329,7 @@ NVCV_TEST_INST_USE(uchar4, 3, 3, 1, 1);
 #undef NVCV_TEST_INST_USE
 
 template<typename ValueType>
-__global__ void SetOnes(nv::cv::cuda::Tensor4DWrap<ValueType> dst, int4 size)
+__global__ void SetOnes(nvcv::cuda::Tensor4DWrap<ValueType> dst, int4 size)
 {
     int3 c3 = cuda::StaticCast<int>(blockIdx * blockDim + threadIdx);
 
@@ -346,7 +346,7 @@ __global__ void SetOnes(nv::cv::cuda::Tensor4DWrap<ValueType> dst, int4 size)
 }
 
 template<typename ValueType>
-void DeviceSetOnes(nv::cv::cuda::Tensor4DWrap<ValueType> &wrap, int4 size, cudaStream_t &stream)
+void DeviceSetOnes(nvcv::cuda::Tensor4DWrap<ValueType> &wrap, int4 size, cudaStream_t &stream)
 {
     dim3 block{32, 2, 2};
     dim3 grid{(size.x + block.x - 1) / block.x, (size.y + block.y - 1) / block.y, (size.z + block.z - 1) / block.z};
@@ -355,7 +355,7 @@ void DeviceSetOnes(nv::cv::cuda::Tensor4DWrap<ValueType> &wrap, int4 size, cudaS
 }
 
 #define NVCV_TEST_INST_SET(VALUE_TYPE) \
-    template void DeviceSetOnes(nv::cv::cuda::Tensor4DWrap<VALUE_TYPE> &, int4, cudaStream_t &)
+    template void DeviceSetOnes(nvcv::cuda::Tensor4DWrap<VALUE_TYPE> &, int4, cudaStream_t &)
 
 NVCV_TEST_INST_SET(int);
 NVCV_TEST_INST_SET(uchar1);

@@ -18,7 +18,7 @@
 #ifndef NVCV_UTIL_ALGORITHM_HPP
 #define NVCV_UTIL_ALGORITHM_HPP
 
-namespace nv::cv::util {
+namespace nvcv::util {
 
 template<class HEAD, class... TAIL>
 constexpr auto Max(const HEAD &head, const TAIL &...tail)
@@ -34,6 +34,6 @@ constexpr auto Max(const HEAD &head, const TAIL &...tail)
     }
 }
 
-} // namespace nv::cv::util
+} // namespace nvcv::util
 
 #endif // NVCV_UTIL_ALGORITHM_HPP

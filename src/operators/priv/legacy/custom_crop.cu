@@ -29,10 +29,8 @@
 
 #include <cstdio>
 
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
-
-namespace nvcv = nv::cv;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
 
 template<typename Ptr2D>
 __global__ void custom_crop_kernel(const Ptr2D src, Ptr2D dst, int start_x, int start_y, int width, int height)
@@ -63,7 +61,7 @@ void customCrop(const nvcv::ITensorDataStridedCuda &inData, const nvcv::ITensorD
     checkKernelErrors();
 }
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 size_t CustomCrop::calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type)
 {
@@ -89,7 +87,7 @@ ErrorCode CustomCrop::infer(const ITensorDataStridedCuda &inData, const ITensorD
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    auto inAccess = cv::TensorDataAccessStridedImagePlanar::Create(inData);
+    auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(inData);
     if (!inAccess)
     {
         return ErrorCode::INVALID_DATA_FORMAT;
@@ -106,7 +104,7 @@ ErrorCode CustomCrop::infer(const ITensorDataStridedCuda &inData, const ITensorD
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    auto outAccess = cv::TensorDataAccessStridedImagePlanar::Create(outData);
+    auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(outData);
     if (!outAccess)
     {
         return ErrorCode::INVALID_DATA_FORMAT;
@@ -134,7 +132,7 @@ ErrorCode CustomCrop::infer(const ITensorDataStridedCuda &inData, const ITensorD
         return ErrorCode::INVALID_PARAMETER;
     }
 
-    typedef void (*func_t)(const cv::ITensorDataStridedCuda &inData, const cv::ITensorDataStridedCuda &outData,
+    typedef void (*func_t)(const nvcv::ITensorDataStridedCuda &inData, const nvcv::ITensorDataStridedCuda &outData,
                            NVCVRectI roi, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {
@@ -150,4 +148,4 @@ ErrorCode CustomCrop::infer(const ITensorDataStridedCuda &inData, const ITensorD
     return ErrorCode::SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

@@ -22,7 +22,7 @@
 
 #include <util/HashMD5.hpp>
 
-namespace nv::cv::test {
+namespace nvcv::test {
 
 template<size_t N>
 struct StringLiteral
@@ -158,26 +158,26 @@ struct TestSuffixPrinter
     }
 };
 
-} // namespace nv::cv::test
+} // namespace nvcv::test
 
-#define NVCV_INSTANTIATE_TEST_SUITE_P(GROUP, TEST, ...)                                                           \
-    INSTANTIATE_TEST_SUITE_P(                                                                                     \
-        GROUP, TEST,                                                                                              \
-        ::testing::ValuesIn(UniqueSort(typename ::nv::cv::test::detail::NormalizeValueList<                       \
-                                       ::nv::cv::test::ValueList<typename TEST::ParamType>>::type(__VA_ARGS__))), \
-        ::nv::cv::test::TestSuffixPrinter())
+#define NVCV_INSTANTIATE_TEST_SUITE_P(GROUP, TEST, ...)                                                         \
+    INSTANTIATE_TEST_SUITE_P(                                                                                   \
+        GROUP, TEST,                                                                                            \
+        ::testing::ValuesIn(UniqueSort(typename ::nvcv::test::detail::NormalizeValueList<                       \
+                                       ::nvcv::test::ValueList<typename TEST::ParamType>>::type(__VA_ARGS__))), \
+        ::nvcv::test::TestSuffixPrinter())
 
-#define NVCV_TEST_SUITE_P(TEST, ...)                                                              \
-    static ::nv::cv::test::ValueList g_##TEST##_Params = ::nv::cv::test::UniqueSort(__VA_ARGS__); \
-    class TEST : public ::testing::TestWithParam<decltype(g_##TEST##_Params)::value_type>         \
-    {                                                                                             \
-    protected:                                                                                    \
-        template<int I>                                                                           \
-        auto GetParamValue() const                                                                \
-        {                                                                                         \
-            return std::get<I>(GetParam());                                                       \
-        }                                                                                         \
-    };                                                                                            \
+#define NVCV_TEST_SUITE_P(TEST, ...)                                                          \
+    static ::nvcv::test::ValueList g_##TEST##_Params = ::nvcv::test::UniqueSort(__VA_ARGS__); \
+    class TEST : public ::testing::TestWithParam<decltype(g_##TEST##_Params)::value_type>     \
+    {                                                                                         \
+    protected:                                                                                \
+        template<int I>                                                                       \
+        auto GetParamValue() const                                                            \
+        {                                                                                     \
+            return std::get<I>(GetParam());                                                   \
+        }                                                                                     \
+    };                                                                                        \
     NVCV_INSTANTIATE_TEST_SUITE_P(_, TEST, g_##TEST##_Params)
 
 #endif // NVCV_TEST_COMMON_VALUETESTS_HPP

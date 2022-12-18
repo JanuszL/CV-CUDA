@@ -29,7 +29,7 @@
 
 #include <utility> // for std::declval, etc.
 
-namespace nv::cv::cuda::detail {
+namespace nvcv::cuda::detail {
 
 // clang-format off
 
@@ -60,7 +60,7 @@ constexpr bool IsIntegralCompound = IsIntegral<T> && IsCompound<T>;
 
 // clang-format on
 
-} // namespace nv::cv::cuda::detail
+} // namespace nvcv::cuda::detail
 
 /**
  * @brief Operators on CUDA compound types resembling the same operator on corresponding regular C type
@@ -91,106 +91,106 @@ constexpr bool IsIntegralCompound = IsIntegral<T> && IsCompound<T>;
  * @return Return value of applying the operator on \p a and \p b
  */
 
-#define NVCV_CUDA_UNARY_OPERATOR(OPERATOR, REQUIREMENT)                                                              \
-    template<typename T, class = nv::cv::cuda::Require<REQUIREMENT<T>>>                                              \
-    inline __host__ __device__ auto operator OPERATOR(T a)                                                           \
-    {                                                                                                                \
-        using RT = nv::cv::cuda::ConvertBaseTypeTo<decltype(OPERATOR std::declval<nv::cv::cuda::BaseType<T>>()), T>; \
-        if constexpr (nv::cv::cuda::NumElements<RT> == 1)                                                            \
-            return RT{OPERATOR a.x};                                                                                 \
-        else if constexpr (nv::cv::cuda::NumElements<RT> == 2)                                                       \
-            return RT{OPERATOR a.x, OPERATOR a.y};                                                                   \
-        else if constexpr (nv::cv::cuda::NumElements<RT> == 3)                                                       \
-            return RT{OPERATOR a.x, OPERATOR a.y, OPERATOR a.z};                                                     \
-        else if constexpr (nv::cv::cuda::NumElements<RT> == 4)                                                       \
-            return RT{OPERATOR a.x, OPERATOR a.y, OPERATOR a.z, OPERATOR a.w};                                       \
+#define NVCV_CUDA_UNARY_OPERATOR(OPERATOR, REQUIREMENT)                                                          \
+    template<typename T, class = nvcv::cuda::Require<REQUIREMENT<T>>>                                            \
+    inline __host__ __device__ auto operator OPERATOR(T a)                                                       \
+    {                                                                                                            \
+        using RT = nvcv::cuda::ConvertBaseTypeTo<decltype(OPERATOR std::declval<nvcv::cuda::BaseType<T>>()), T>; \
+        if constexpr (nvcv::cuda::NumElements<RT> == 1)                                                          \
+            return RT{OPERATOR a.x};                                                                             \
+        else if constexpr (nvcv::cuda::NumElements<RT> == 2)                                                     \
+            return RT{OPERATOR a.x, OPERATOR a.y};                                                               \
+        else if constexpr (nvcv::cuda::NumElements<RT> == 3)                                                     \
+            return RT{OPERATOR a.x, OPERATOR a.y, OPERATOR a.z};                                                 \
+        else if constexpr (nvcv::cuda::NumElements<RT> == 4)                                                     \
+            return RT{OPERATOR a.x, OPERATOR a.y, OPERATOR a.z, OPERATOR a.w};                                   \
     }
 
-NVCV_CUDA_UNARY_OPERATOR(-, nv::cv::cuda::IsCompound)
-NVCV_CUDA_UNARY_OPERATOR(+, nv::cv::cuda::IsCompound)
-NVCV_CUDA_UNARY_OPERATOR(~, nv::cv::cuda::detail::IsIntegralCompound)
+NVCV_CUDA_UNARY_OPERATOR(-, nvcv::cuda::IsCompound)
+NVCV_CUDA_UNARY_OPERATOR(+, nvcv::cuda::IsCompound)
+NVCV_CUDA_UNARY_OPERATOR(~, nvcv::cuda::detail::IsIntegralCompound)
 
 #undef NVCV_CUDA_UNARY_OPERATOR
 
-#define NVCV_CUDA_BINARY_OPERATOR(OPERATOR, REQUIREMENT)                                                            \
-    template<typename T, typename U, class = nv::cv::cuda::Require<REQUIREMENT<T, U>>>                              \
-    inline __host__ __device__ auto operator OPERATOR(T a, U b)                                                     \
-    {                                                                                                               \
-        using RT = nv::cv::cuda::MakeType<                                                                          \
-            decltype(std::declval<nv::cv::cuda::BaseType<T>>() OPERATOR std::declval<nv::cv::cuda::BaseType<U>>()), \
-            nv::cv::cuda::NumComponents<T> == 0 ? nv::cv::cuda::NumComponents<U> : nv::cv::cuda::NumComponents<T>>; \
-        if constexpr (nv::cv::cuda::NumComponents<T> == 0)                                                          \
-        {                                                                                                           \
-            if constexpr (nv::cv::cuda::NumElements<RT> == 1)                                                       \
-                return RT{a OPERATOR b.x};                                                                          \
-            else if constexpr (nv::cv::cuda::NumElements<RT> == 2)                                                  \
-                return RT{a OPERATOR b.x, a OPERATOR b.y};                                                          \
-            else if constexpr (nv::cv::cuda::NumElements<RT> == 3)                                                  \
-                return RT{a OPERATOR b.x, a OPERATOR b.y, a OPERATOR b.z};                                          \
-            else if constexpr (nv::cv::cuda::NumElements<RT> == 4)                                                  \
-                return RT{a OPERATOR b.x, a OPERATOR b.y, a OPERATOR b.z, a OPERATOR b.w};                          \
-        }                                                                                                           \
-        else if constexpr (nv::cv::cuda::NumComponents<U> == 0)                                                     \
-        {                                                                                                           \
-            if constexpr (nv::cv::cuda::NumElements<RT> == 1)                                                       \
-                return RT{a.x OPERATOR b};                                                                          \
-            else if constexpr (nv::cv::cuda::NumElements<RT> == 2)                                                  \
-                return RT{a.x OPERATOR b, a.y OPERATOR b};                                                          \
-            else if constexpr (nv::cv::cuda::NumElements<RT> == 3)                                                  \
-                return RT{a.x OPERATOR b, a.y OPERATOR b, a.z OPERATOR b};                                          \
-            else if constexpr (nv::cv::cuda::NumElements<RT> == 4)                                                  \
-                return RT{a.x OPERATOR b, a.y OPERATOR b, a.z OPERATOR b, a.w OPERATOR b};                          \
-        }                                                                                                           \
-        else                                                                                                        \
-        {                                                                                                           \
-            if constexpr (nv::cv::cuda::NumElements<RT> == 1)                                                       \
-                return RT{a.x OPERATOR b.x};                                                                        \
-            else if constexpr (nv::cv::cuda::NumElements<RT> == 2)                                                  \
-                return RT{a.x OPERATOR b.x, a.y OPERATOR b.y};                                                      \
-            else if constexpr (nv::cv::cuda::NumElements<RT> == 3)                                                  \
-                return RT{a.x OPERATOR b.x, a.y OPERATOR b.y, a.z OPERATOR b.z};                                    \
-            else if constexpr (nv::cv::cuda::NumElements<RT> == 4)                                                  \
-                return RT{a.x OPERATOR b.x, a.y OPERATOR b.y, a.z OPERATOR b.z, a.w OPERATOR b.w};                  \
-        }                                                                                                           \
-    }                                                                                                               \
-    template<typename T, typename U, class = nv::cv::cuda::Require<nv::cv::cuda::IsCompound<T>>>                    \
-    inline __host__ __device__ T &operator OPERATOR##=(T &a, U b)                                                   \
-    {                                                                                                               \
-        return a = nv::cv::cuda::StaticCast<nv::cv::cuda::BaseType<T>>(a OPERATOR b);                               \
+#define NVCV_CUDA_BINARY_OPERATOR(OPERATOR, REQUIREMENT)                                                        \
+    template<typename T, typename U, class = nvcv::cuda::Require<REQUIREMENT<T, U>>>                            \
+    inline __host__ __device__ auto operator OPERATOR(T a, U b)                                                 \
+    {                                                                                                           \
+        using RT = nvcv::cuda::MakeType<                                                                        \
+            decltype(std::declval<nvcv::cuda::BaseType<T>>() OPERATOR std::declval<nvcv::cuda::BaseType<U>>()), \
+            nvcv::cuda::NumComponents<T> == 0 ? nvcv::cuda::NumComponents<U> : nvcv::cuda::NumComponents<T>>;   \
+        if constexpr (nvcv::cuda::NumComponents<T> == 0)                                                        \
+        {                                                                                                       \
+            if constexpr (nvcv::cuda::NumElements<RT> == 1)                                                     \
+                return RT{a OPERATOR b.x};                                                                      \
+            else if constexpr (nvcv::cuda::NumElements<RT> == 2)                                                \
+                return RT{a OPERATOR b.x, a OPERATOR b.y};                                                      \
+            else if constexpr (nvcv::cuda::NumElements<RT> == 3)                                                \
+                return RT{a OPERATOR b.x, a OPERATOR b.y, a OPERATOR b.z};                                      \
+            else if constexpr (nvcv::cuda::NumElements<RT> == 4)                                                \
+                return RT{a OPERATOR b.x, a OPERATOR b.y, a OPERATOR b.z, a OPERATOR b.w};                      \
+        }                                                                                                       \
+        else if constexpr (nvcv::cuda::NumComponents<U> == 0)                                                   \
+        {                                                                                                       \
+            if constexpr (nvcv::cuda::NumElements<RT> == 1)                                                     \
+                return RT{a.x OPERATOR b};                                                                      \
+            else if constexpr (nvcv::cuda::NumElements<RT> == 2)                                                \
+                return RT{a.x OPERATOR b, a.y OPERATOR b};                                                      \
+            else if constexpr (nvcv::cuda::NumElements<RT> == 3)                                                \
+                return RT{a.x OPERATOR b, a.y OPERATOR b, a.z OPERATOR b};                                      \
+            else if constexpr (nvcv::cuda::NumElements<RT> == 4)                                                \
+                return RT{a.x OPERATOR b, a.y OPERATOR b, a.z OPERATOR b, a.w OPERATOR b};                      \
+        }                                                                                                       \
+        else                                                                                                    \
+        {                                                                                                       \
+            if constexpr (nvcv::cuda::NumElements<RT> == 1)                                                     \
+                return RT{a.x OPERATOR b.x};                                                                    \
+            else if constexpr (nvcv::cuda::NumElements<RT> == 2)                                                \
+                return RT{a.x OPERATOR b.x, a.y OPERATOR b.y};                                                  \
+            else if constexpr (nvcv::cuda::NumElements<RT> == 3)                                                \
+                return RT{a.x OPERATOR b.x, a.y OPERATOR b.y, a.z OPERATOR b.z};                                \
+            else if constexpr (nvcv::cuda::NumElements<RT> == 4)                                                \
+                return RT{a.x OPERATOR b.x, a.y OPERATOR b.y, a.z OPERATOR b.z, a.w OPERATOR b.w};              \
+        }                                                                                                       \
+    }                                                                                                           \
+    template<typename T, typename U, class = nvcv::cuda::Require<nvcv::cuda::IsCompound<T>>>                    \
+    inline __host__ __device__ T &operator OPERATOR##=(T &a, U b)                                               \
+    {                                                                                                           \
+        return a = nvcv::cuda::StaticCast<nvcv::cuda::BaseType<T>>(a OPERATOR b);                               \
     }
 
-NVCV_CUDA_BINARY_OPERATOR(-, nv::cv::cuda::detail::OneIsCompound)
-NVCV_CUDA_BINARY_OPERATOR(+, nv::cv::cuda::detail::OneIsCompound)
-NVCV_CUDA_BINARY_OPERATOR(*, nv::cv::cuda::detail::OneIsCompound)
-NVCV_CUDA_BINARY_OPERATOR(/, nv::cv::cuda::detail::OneIsCompound)
-NVCV_CUDA_BINARY_OPERATOR(%, nv::cv::cuda::detail::OneIsCompoundAndBothAreIntegral)
-NVCV_CUDA_BINARY_OPERATOR(&, nv::cv::cuda::detail::OneIsCompoundAndBothAreIntegral)
-NVCV_CUDA_BINARY_OPERATOR(|, nv::cv::cuda::detail::OneIsCompoundAndBothAreIntegral)
-NVCV_CUDA_BINARY_OPERATOR(^, nv::cv::cuda::detail::OneIsCompoundAndBothAreIntegral)
-NVCV_CUDA_BINARY_OPERATOR(<<, nv::cv::cuda::detail::OneIsCompoundAndBothAreIntegral)
-NVCV_CUDA_BINARY_OPERATOR(>>, nv::cv::cuda::detail::OneIsCompoundAndBothAreIntegral)
+NVCV_CUDA_BINARY_OPERATOR(-, nvcv::cuda::detail::OneIsCompound)
+NVCV_CUDA_BINARY_OPERATOR(+, nvcv::cuda::detail::OneIsCompound)
+NVCV_CUDA_BINARY_OPERATOR(*, nvcv::cuda::detail::OneIsCompound)
+NVCV_CUDA_BINARY_OPERATOR(/, nvcv::cuda::detail::OneIsCompound)
+NVCV_CUDA_BINARY_OPERATOR(%, nvcv::cuda::detail::OneIsCompoundAndBothAreIntegral)
+NVCV_CUDA_BINARY_OPERATOR(&, nvcv::cuda::detail::OneIsCompoundAndBothAreIntegral)
+NVCV_CUDA_BINARY_OPERATOR(|, nvcv::cuda::detail::OneIsCompoundAndBothAreIntegral)
+NVCV_CUDA_BINARY_OPERATOR(^, nvcv::cuda::detail::OneIsCompoundAndBothAreIntegral)
+NVCV_CUDA_BINARY_OPERATOR(<<, nvcv::cuda::detail::OneIsCompoundAndBothAreIntegral)
+NVCV_CUDA_BINARY_OPERATOR(>>, nvcv::cuda::detail::OneIsCompoundAndBothAreIntegral)
 
 #undef NVCV_CUDA_BINARY_OPERATOR
 
-template<typename T, typename U, class = nv::cv::cuda::Require<nv::cv::cuda::detail::IsSameCompound<T, U>>>
+template<typename T, typename U, class = nvcv::cuda::Require<nvcv::cuda::detail::IsSameCompound<T, U>>>
 inline __host__ __device__ bool operator==(T a, U b)
 {
-    if constexpr (nv::cv::cuda::NumElements<T> >= 1)
+    if constexpr (nvcv::cuda::NumElements<T> >= 1)
         if (a.x != b.x)
             return false;
-    if constexpr (nv::cv::cuda::NumElements<T> >= 2)
+    if constexpr (nvcv::cuda::NumElements<T> >= 2)
         if (a.y != b.y)
             return false;
-    if constexpr (nv::cv::cuda::NumElements<T> >= 3)
+    if constexpr (nvcv::cuda::NumElements<T> >= 3)
         if (a.z != b.z)
             return false;
-    if constexpr (nv::cv::cuda::NumElements<T> == 4)
+    if constexpr (nvcv::cuda::NumElements<T> == 4)
         if (a.w != b.w)
             return false;
     return true;
 }
 
-template<typename T, typename U, class = nv::cv::cuda::Require<nv::cv::cuda::detail::IsSameCompound<T, U>>>
+template<typename T, typename U, class = nvcv::cuda::Require<nvcv::cuda::detail::IsSameCompound<T, U>>>
 inline __host__ __device__ bool operator!=(T a, U b)
 {
     return !(a == b);

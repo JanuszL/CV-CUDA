@@ -24,8 +24,6 @@
 
 #include <nvcv/Fwd.hpp>
 
-namespace nvcv = nv::cv;
-
 TEST(Image, wip_create)
 {
     nvcv::Image img({163, 117}, nvcv::FMT_RGBA8);
@@ -140,7 +138,7 @@ TEST(Image, wip_user_pointer)
 
 TEST(Image, wip_create_managed)
 {
-    namespace nvcv = nv::cv;
+    ;
 
     int64_t setBufLen   = 0;
     int32_t setBufAlign = 0;
@@ -255,7 +253,7 @@ TEST(ImageWrapData, wip_user_pointer)
 
 TEST(Image, wip_operator)
 {
-    namespace nvcv = nv::cv;
+    ;
 
     nvcv::Image in{
         {512, 256},
@@ -352,7 +350,7 @@ TEST(ImageWrapData, wip_mem_reqs)
 #if 0
 TEST(Image, wip_image_managed_memory)
 {
-    namespace nvcv = nv::cv;
+    ;
 
     nvcv::CustomAllocator managedAlloc
     {
@@ -380,7 +378,7 @@ TEST(Image, wip_image_managed_memory)
         nvcv::LockImageData lkData = img.lock(nvcv::READ);
         if(auto *data = dynamic_cast<const nvcv::IImageDataCudaMem *>(lkData->data()))
         {
-            cv::GpuMat ocvGPU{data->size.h, data->size.w,
+            nvcv::GpuMat ocvGPU{data->size.h, data->size.w,
                               data->plane(0).buffer,
                               data->plane(0).rowStride};
             // ...
@@ -395,7 +393,7 @@ TEST(Image, wip_image_managed_memory)
 
     if(nvcv::LockImageData lkData = img.lock<nvcv::IImageDataCudaMem>(nvcv::READ))
     {
-        cv::GpuMat ocvGPU{lkData->size.h, lkData->size.w,
+        nvcv::GpuMat ocvGPU{lkData->size.h, lkData->size.w,
                           lkData->plane(0).buffer,
                           lkData->plane(0).rowStride};
         // ...
@@ -405,7 +403,7 @@ TEST(Image, wip_image_managed_memory)
     if(nvcv::LockImageData lkData = img.lockCudaMem(nvcv::READ))
     {
         // If we know image holds managed memory, we can do this:
-        cv::Mat ocvCPU{lkData->size.h, lkData->size.w,
+        nvcv::Mat ocvCPU{lkData->size.h, lkData->size.w,
                        lkData->plane(0).buffer,
                        lkData->plane(0).rowStride};
         // ...
@@ -421,7 +419,7 @@ TEST(Image, wip_image_managed_memory)
         bool visit(IImageDataCudaMem &data) override
         {
             // pitch-linear processing
-            cv::GpuMat ocvGPU{data->size.h, data->size.w,
+            nvcv::GpuMat ocvGPU{data->size.h, data->size.w,
                               data->plane(0).buffer,
                               data->plane(0).rowStride};
             // process image in m_stream
@@ -444,10 +442,10 @@ TEST(Image, wip_image_managed_memory)
 
 TEST(Image, wip_wrap_opencv_read)
 {
-    namespace nvcv = nv::cv;
+    ;
 
     // create opencv mat and wrap it
-    cv::Mat mat(256,512,CV_8UC3);
+    nvcv::Mat mat(256,512,CV_8UC3);
     nvcv::ImageWrapData img(mat, nvcv::FMT_BGR8);
 
     // ... op write to img ...
@@ -455,16 +453,16 @@ TEST(Image, wip_wrap_opencv_read)
     // write result to disk
     {
         nvcv::LockedImage lk = img.lock(nvcv::LOCK_READ);
-        cv::imwrite("output.png",mat);
+        nvcv::imwrite("output.png",mat);
     }
 }
 
 TEST(Image, wip_wrap_opencv_write)
 {
-    namespace nvcv = nv::cv;
+    ;
 
     // create opencv mat and wrap it
-    cv::Mat mat(256,512,CV_8UC3);
+    nvcv::Mat mat(256,512,CV_8UC3);
     nvcv::ImageWrapData img(mat, nvcv::FMT_BGR8);
 
     {
@@ -477,7 +475,7 @@ TEST(Image, wip_wrap_opencv_write)
 
 TEST(Image, wip_img_opencv_read)
 {
-    namespace nvcv = nv::cv;
+    ;
 
     nvcv::Image img({512, 256}, nvcv::FMT_BGR8, nvcv::HOST);
 
@@ -486,13 +484,13 @@ TEST(Image, wip_img_opencv_read)
     // write result to disk
     {
         nvcv::LockedImage lk = img.lockOpenCV(nvcv::LOCK_READ); // - dev->host copy
-        cv::imwrite("output.png",*lk);
+        nvcv::imwrite("output.png",*lk);
     }
 }
 
 TEST(Image, wip_memcpy_opencv_read)
 {
-    namespace nvcv = nv::cv;
+    ;
 
     nvcv::ImageWrapData img({512,256}, nvcv::FMT_BGR8);
 
@@ -502,17 +500,17 @@ TEST(Image, wip_memcpy_opencv_read)
     {
         nvcv::LockedImage lk = img.lockDevice(nvcv::LOCK_READ);
 
-        cv::Mat mat(256,512,CV_8UC3);
+        nvcv::Mat mat(256,512,CV_8UC3);
         memcpy(mat, *lk);
 
-        cv::imwrite("output.png",mat);
+        nvcv::imwrite("output.png",mat);
     }
 }
 
 
 TEST(Image, wip_memcpy_opencv_write)
 {
-    namespace nvcv = nv::cv;
+    ;
 
     nvcv::ImageWrapData img({512,256}, nvcv::FMT_BGR8);
 
@@ -520,7 +518,7 @@ TEST(Image, wip_memcpy_opencv_write)
     {
         nvcv::LockedImage lk = img.lockDevice(nvcv::LOCK_READ);
 
-        cv::Mat mat = cv::imread("input.png");
+        nvcv::Mat mat = nvcv::imread("input.png");
 
         memcpy(*lk, mat);
     }

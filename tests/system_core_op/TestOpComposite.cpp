@@ -29,9 +29,8 @@
 #include <iostream>
 #include <random>
 
-namespace nvcv = nv::cv;
 namespace gt   = ::testing;
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 
 //#define DBG_COMPOSITE 1
 
@@ -187,7 +186,7 @@ TEST_P(OpComposite, tensor_correct_output)
     }
 
     // run operator
-    nv::cvop::Composite compositeOp;
+    nvcvop::Composite compositeOp;
 
     EXPECT_NO_THROW(compositeOp(stream, foregroundImg, backgroundImg, fgMaskImg, outImg));
 
@@ -341,7 +340,7 @@ TEST_P(OpComposite, varshape_correct_output)
     batchOutput.pushBack(imgOut.begin(), imgOut.end());
 
     // Generate test result
-    nv::cvop::Composite compositeOp;
+    nvcvop::Composite compositeOp;
     EXPECT_NO_THROW(compositeOp(stream, batchForeground, batchBackground, batchFgMask, batchOutput));
 
     // Get test data back

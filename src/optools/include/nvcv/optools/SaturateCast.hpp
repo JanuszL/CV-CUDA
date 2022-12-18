@@ -27,7 +27,7 @@
 #include "TypeTraits.hpp"              // for Require, etc.
 #include "detail/SaturateCastImpl.hpp" // for SaturateCastImpl, etc.
 
-namespace nv::cv::cuda {
+namespace nvcv::cuda {
 
 /**
  * @brief Metafunction to saturate cast all elements to a target type
@@ -78,6 +78,6 @@ __host__ __device__ auto SaturateCast(U u)
 
 /**@}*/
 
-} // namespace nv::cv::cuda
+} // namespace nvcv::cuda
 
 #endif // NVCV_CUDA_SATURATE_CAST_HPP

@@ -44,7 +44,7 @@ PYBIND11_MODULE(nvcv, m)
 
     m.attr("__version__") = NVCV_VERSION_STRING;
 
-    using namespace nv::cvpy::priv;
+    using namespace nvcvpy::priv;
 
     // Core entities
     Cache::Export(m);

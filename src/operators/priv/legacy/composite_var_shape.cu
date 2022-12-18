@@ -23,11 +23,9 @@
 
 #include "CvCudaUtils.cuh"
 
-using namespace nv::cv;
-using namespace nv::cv::legacy::helpers;
-using namespace nv::cv::legacy::cuda_op;
-
-namespace nvcv = nv::cv;
+using namespace nvcv;
+using namespace nvcv::legacy::helpers;
+using namespace nvcv::legacy::cuda_op;
 
 #define Inv_255              0.00392156862f // 1.f/255.f
 #define AlphaLerp(c0, c1, a) int(((int)c1 - (int)c0) * (int)a * Inv_255 + c0 + 0.5f)
@@ -91,7 +89,7 @@ void composite(const nvcv::IImageBatchVarShapeDataStridedCuda &foregroundData,
 #endif
 }
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 ErrorCode CompositeVarShape::infer(const IImageBatchVarShapeDataStridedCuda &foreground,
                                    const IImageBatchVarShapeDataStridedCuda &background,
@@ -177,4 +175,4 @@ ErrorCode CompositeVarShape::infer(const IImageBatchVarShapeDataStridedCuda &for
     return SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

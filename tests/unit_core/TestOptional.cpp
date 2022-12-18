@@ -19,7 +19,7 @@
 
 #include <nvcv/detail/Optional.hpp>
 
-namespace d = nv::cv::detail;
+namespace d = nvcv::detail;
 
 TEST(Optional, default_no_value)
 {

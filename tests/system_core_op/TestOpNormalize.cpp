@@ -29,8 +29,7 @@
 #include <cmath>
 #include <random>
 
-namespace nvcv = nv::cv;
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 namespace t    = ::testing;
 
 static void Normalize(std::vector<uint8_t> &hDst, int dstRowStride, const std::vector<uint8_t> &hSrc, int srcRowStride,
@@ -204,7 +203,7 @@ TEST_P(OpNormalize, tensor_correct_output)
     nvcv::Tensor imgDst(numImages, {width, height}, nvcv::FMT_RGBA8);
 
     // Generate test result
-    nv::cvop::Normalize normalizeOp;
+    nvcvop::Normalize normalizeOp;
     EXPECT_NO_THROW(normalizeOp(stream, imgSrc, imgBase, imgScale, imgDst, globalScale, globalShift, epsilon, flags));
 
     // Get test data back
@@ -358,7 +357,7 @@ TEST_P(OpNormalize, varshape_correct_output)
     batchDst.pushBack(imgDst.begin(), imgDst.end());
 
     // Generate test result
-    nv::cvop::Normalize normalizeOp;
+    nvcvop::Normalize normalizeOp;
     EXPECT_NO_THROW(
         normalizeOp(stream, batchSrc, imgBase, imgScale, batchDst, globalScale, globalShift, epsilon, flags));
 

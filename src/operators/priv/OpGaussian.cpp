@@ -23,67 +23,69 @@
 #include <nvcv/Exception.hpp>
 #include <util/CheckError.hpp>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
-namespace legacy = cv::legacy::cuda_op;
+namespace legacy = nvcv::legacy::cuda_op;
 
-Gaussian::Gaussian(cv::Size2D maxKernelSize, int maxBatchSize)
+Gaussian::Gaussian(nvcv::Size2D maxKernelSize, int maxBatchSize)
 {
     legacy::DataShape maxIn, maxOut; //maxIn/maxOut not used by op.
     m_legacyOp         = std::make_unique<legacy::Gaussian>(maxIn, maxOut, maxKernelSize);
     m_legacyOpVarShape = std::make_unique<legacy::GaussianVarShape>(maxIn, maxOut, maxKernelSize, maxBatchSize);
 }
 
-void Gaussian::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, cv::Size2D kernelSize,
-                          double2 sigma, NVCVBorderType borderMode) const
+void Gaussian::operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out,
+                          nvcv::Size2D kernelSize, double2 sigma, NVCVBorderType borderMode) const
 {
-    auto *inData = dynamic_cast<const cv::ITensorDataStridedCuda *>(in.exportData());
+    auto *inData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(in.exportData());
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be cuda-accessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Input must be cuda-accessible, pitch-linear tensor");
     }
 
-    auto *outData = dynamic_cast<const cv::ITensorDataStridedCuda *>(out.exportData());
+    auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(out.exportData());
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be cuda-accessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Output must be cuda-accessible, pitch-linear tensor");
     }
 
     NVCV_CHECK_THROW(m_legacyOp->infer(*inData, *outData, kernelSize, sigma, borderMode, stream));
 }
 
-void Gaussian::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
-                          const cv::ITensor &kernelSize, const cv::ITensor &sigma, NVCVBorderType borderMode) const
+void Gaussian::operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
+                          const nvcv::ITensor &kernelSize, const nvcv::ITensor &sigma, NVCVBorderType borderMode) const
 {
-    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(in.exportData(stream));
+    auto *inData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(in.exportData(stream));
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Input must be cuda-accessible, varshape pitch-linear image batch");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Input must be cuda-accessible, varshape pitch-linear image batch");
     }
 
-    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(out.exportData(stream));
+    auto *outData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(out.exportData(stream));
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Output must be cuda-accessible, varshape pitch-linear image batch");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Output must be cuda-accessible, varshape pitch-linear image batch");
     }
 
-    auto *kernelSizeData = dynamic_cast<const cv::ITensorDataStridedCuda *>(kernelSize.exportData());
+    auto *kernelSizeData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(kernelSize.exportData());
     if (kernelSizeData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Kernel size must be cuda-accessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Kernel size must be cuda-accessible, pitch-linear tensor");
     }
 
-    auto *sigmaData = dynamic_cast<const cv::ITensorDataStridedCuda *>(sigma.exportData());
+    auto *sigmaData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(sigma.exportData());
     if (sigmaData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Kernel sigma must be cuda-accessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Kernel sigma must be cuda-accessible, pitch-linear tensor");
     }
 
     NVCV_CHECK_THROW(m_legacyOpVarShape->infer(*inData, *outData, *kernelSizeData, *sigmaData, borderMode, stream));
 }
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv

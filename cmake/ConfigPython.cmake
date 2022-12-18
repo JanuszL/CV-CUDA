@@ -18,14 +18,19 @@ if(ENABLE_SANITIZERS)
 endif()
 
 # Because we python as subproject, we need to create a fake Findnvcv.cmake so
-# that find_package will find our local nvcv library and headers
-set(FINDNVCV_CONTENTS
+# that find_package will find our local nvcv_types library and headers
+set(FINDNVCV_TYPES_CONTENTS
 [=[
-add_library(nvcv SHARED IMPORTED)
-target_include_directories(nvcv
+add_library(nvcv_types SHARED IMPORTED)
+target_include_directories(nvcv_types
     INTERFACE
-    "$<TARGET_PROPERTY:nvcv,INTERFACE_INCLUDE_DIRECTORIES>"
+    "$<TARGET_PROPERTY:nvcv_types,INTERFACE_INCLUDE_DIRECTORIES>"
     "$<TARGET_PROPERTY:nvcv_optools,INTERFACE_INCLUDE_DIRECTORIES>"
+)
+add_library(nvcv_types_headers INTERFACE IMPORTED)
+target_include_directories(nvcv_types_headers
+    INTERFACE
+    "$<TARGET_PROPERTY:nvcv_types,INTERFACE_INCLUDE_DIRECTORIES>"
 )
 ]=])
 
@@ -47,15 +52,15 @@ endif()
 
 foreach(cfg ${NVCV_CONFIG_TYPES})
     string(TOLOWER ${cfg} cfg_lower)
-    set(FINDNVCV_CONTENTS
-"${FINDNVCV_CONTENTS}include(nvcv_${cfg_lower})
+    set(FINDNVCV_TYPES_CONTENTS
+"${FINDNVCV_TYPES_CONTENTS}include(nvcv_types_${cfg_lower})
 ")
     set(FINDNVCV_OP_CONTENTS
 "${FINDNVCV_OP_CONTENTS}include(nvcv_operators_${cfg_lower})
 ")
 endforeach()
 
-file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cmake/Findnvcv.cmake CONTENT "${FINDNVCV_CONTENTS}")
+file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cmake/Findnvcv_types.cmake CONTENT "${FINDNVCV_TYPES_CONTENTS}")
 file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cmake/Findnvcv_operators.cmake CONTENT "${FINDNVCV_OP_CONTENTS}")
 
 list(LENGTH "${NVCV_CONFIG_TYPES}" num_configs)
@@ -65,9 +70,9 @@ else()
     set(NVCV_BUILD_SUFFIX "_$<UPPER_CASE:$<CONFIG>>")
 endif()
 
-file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cmake/nvcv_$<LOWER_CASE:$<CONFIG>>.cmake CONTENT
-"set_target_properties(nvcv PROPERTIES IMPORTED_LOCATION${NVCV_BUILD_SUFFIX} \"$<TARGET_FILE:nvcv>\"
-                                       IMPORTED_IMPLIB${NVCV_BUILD_SUFFIX} \"$<TARGET_LINKER_FILE:nvcv>\")
+file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cmake/nvcv_types_$<LOWER_CASE:$<CONFIG>>.cmake CONTENT
+"set_target_properties(nvcv_types PROPERTIES IMPORTED_LOCATION${NVCV_BUILD_SUFFIX} \"$<TARGET_FILE:nvcv_types>\"
+                                       IMPORTED_IMPLIB${NVCV_BUILD_SUFFIX} \"$<TARGET_LINKER_FILE:nvcv_types>\")
 ")
 
 file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cmake/nvcv_operators_$<LOWER_CASE:$<CONFIG>>.cmake CONTENT

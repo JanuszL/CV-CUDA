@@ -32,24 +32,24 @@
 
 #include <memory>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class Gaussian final : public IOperator
 {
 public:
-    explicit Gaussian(cv::Size2D maxKernelSize, int maxBatchSize);
+    explicit Gaussian(nvcv::Size2D maxKernelSize, int maxBatchSize);
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, cv::Size2D kernelSize,
+    void operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out, nvcv::Size2D kernelSize,
                     double2 sigma, NVCVBorderType borderMode) const;
 
-    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
-                    const cv::ITensor &kernelSize, const cv::ITensor &sigma, NVCVBorderType borderMode) const;
+    void operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
+                    const nvcv::ITensor &kernelSize, const nvcv::ITensor &sigma, NVCVBorderType borderMode) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::Gaussian>         m_legacyOp;
-    std::unique_ptr<cv::legacy::cuda_op::GaussianVarShape> m_legacyOpVarShape;
+    std::unique_ptr<nvcv::legacy::cuda_op::Gaussian>         m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::GaussianVarShape> m_legacyOpVarShape;
 };
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_GAUSSIAN_HPP

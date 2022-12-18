@@ -20,7 +20,7 @@
 #include <common/TypedTests.hpp>
 
 namespace t    = ::testing;
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 
 struct Foo
 {

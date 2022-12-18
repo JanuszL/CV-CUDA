@@ -21,8 +21,7 @@
 #include <nvcv/Exception.hpp>
 #include <nvcv/operators/Operator.h>
 
-namespace nvcv = nv::cv;
-namespace priv = nv::cvop::priv;
+namespace priv = nvcvop::priv;
 
 NVCV_OP_DEFINE_API(0, 0, NVCVStatus, nvcvOperatorDestroy, (NVCVOperatorHandle handle))
 {

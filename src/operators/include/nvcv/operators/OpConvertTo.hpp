@@ -34,7 +34,7 @@
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 
-namespace nv { namespace cvop {
+namespace nvcvop {
 
 class ConvertTo final : public IOperator
 {
@@ -43,7 +43,7 @@ public:
 
     ~ConvertTo();
 
-    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const double alpha, const double beta);
+    void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, const double alpha, const double beta);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -53,7 +53,7 @@ private:
 
 inline ConvertTo::ConvertTo()
 {
-    cv::detail::CheckThrow(nvcvopConvertToCreate(&m_handle));
+    nvcv::detail::CheckThrow(nvcvopConvertToCreate(&m_handle));
     assert(m_handle);
 }
 
@@ -63,10 +63,10 @@ inline ConvertTo::~ConvertTo()
     m_handle = nullptr;
 }
 
-inline void ConvertTo::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const double alpha,
+inline void ConvertTo::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, const double alpha,
                                   const double beta)
 {
-    cv::detail::CheckThrow(nvcvopConvertToSubmit(m_handle, stream, in.handle(), out.handle(), alpha, beta));
+    nvcv::detail::CheckThrow(nvcvopConvertToSubmit(m_handle, stream, in.handle(), out.handle(), alpha, beta));
 }
 
 inline NVCVOperatorHandle ConvertTo::handle() const noexcept
@@ -74,6 +74,6 @@ inline NVCVOperatorHandle ConvertTo::handle() const noexcept
     return m_handle;
 }
 
-}} // namespace nv::cvop
+} // namespace nvcvop
 
 #endif // NVCV_OP_CONVERT_TO_HPP

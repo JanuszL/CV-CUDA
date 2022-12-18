@@ -20,7 +20,7 @@
 #include <gtest/gtest.h>                 // for EXPECT_EQ, etc.
 #include <nvcv/optools/MathWrappers.hpp> // the object of this test
 
-namespace cuda = nv::cv::cuda;
+namespace cuda = nvcv::cuda;
 
 // Need to instantiate each test on TestMathWrappers, making sure not to use const types
 

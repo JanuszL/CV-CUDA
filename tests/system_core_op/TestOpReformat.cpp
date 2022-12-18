@@ -29,21 +29,20 @@
 #include <iostream>
 #include <random>
 
-namespace nvcv  = nv::cv;
-namespace test  = nv::cv::test;
-namespace cuda  = nv::cv::cuda;
-namespace ttype = nv::cv::test::type;
+namespace test  = nvcv::test;
+namespace cuda  = nvcv::cuda;
+namespace ttype = nvcv::test::type;
 
 using uchar = unsigned char;
 
 template<typename T>
-inline T &ValueAt(std::vector<uint8_t> &vec, long4 pitches, int b, int y, int x, int c, nv::cv::TensorLayout layout)
+inline T &ValueAt(std::vector<uint8_t> &vec, long4 pitches, int b, int y, int x, int c, nvcv::TensorLayout layout)
 {
-    if (layout == nv::cv::TensorLayout::NHWC || layout == nv::cv::TensorLayout::HWC)
+    if (layout == nvcv::TensorLayout::NHWC || layout == nvcv::TensorLayout::HWC)
     {
         return *reinterpret_cast<T *>(&vec[b * pitches.x + y * pitches.y + x * pitches.z + c * pitches.w]);
     }
-    else if (layout == nv::cv::TensorLayout::NCHW || layout == nv::cv::TensorLayout::CHW)
+    else if (layout == nvcv::TensorLayout::NCHW || layout == nvcv::TensorLayout::CHW)
     {
         return *reinterpret_cast<T *>(&vec[b * pitches.x + c * pitches.y + y * pitches.z + x * pitches.w]);
     }
@@ -51,8 +50,8 @@ inline T &ValueAt(std::vector<uint8_t> &vec, long4 pitches, int b, int y, int x,
 }
 
 template<typename T>
-inline void Reformat(std::vector<uint8_t> &hDst, long4 dstStrides, nv::cv::TensorLayout dstLayout,
-                     std::vector<uint8_t> &hSrc, long4 srcStrides, nv::cv::TensorLayout srcLayout, int numBatches,
+inline void Reformat(std::vector<uint8_t> &hDst, long4 dstStrides, nvcv::TensorLayout dstLayout,
+                     std::vector<uint8_t> &hSrc, long4 srcStrides, nvcv::TensorLayout srcLayout, int numBatches,
                      int numRows, int numCols, int numChannels)
 {
     for (int b = 0; b < numBatches; ++b)
@@ -112,7 +111,7 @@ TYPED_TEST(OpReformat, correct_output)
     long4 inStrides{inData->stride(0), inData->stride(1), inData->stride(2), inData->stride(3)};
     long4 outStrides{outData->stride(0), outData->stride(1), outData->stride(2), outData->stride(3)};
 
-    auto inAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(*inData);
+    auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*inData);
     ASSERT_TRUE(inAccess);
 
     int numBatches  = inAccess->numSamples();
@@ -134,7 +133,7 @@ TYPED_TEST(OpReformat, correct_output)
     ASSERT_EQ(cudaSuccess, cudaMemcpy(inData->basePtr(), inVec.data(), inBufSize, cudaMemcpyHostToDevice));
 
     // run operator
-    nv::cvop::Reformat reformatOp;
+    nvcvop::Reformat reformatOp;
 
     EXPECT_NO_THROW(reformatOp(stream, inTensor, outTensor));
 

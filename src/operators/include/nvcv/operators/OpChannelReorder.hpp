@@ -34,7 +34,7 @@
 #include <nvcv/ITensor.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 
-namespace nv { namespace cvop {
+namespace nvcvop {
 
 class ChannelReorder final : public IOperator
 {
@@ -43,8 +43,8 @@ public:
 
     ~ChannelReorder();
 
-    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
-                    cv::ITensor &orders);
+    void operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
+                    nvcv::ITensor &orders);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -54,7 +54,7 @@ private:
 
 inline ChannelReorder::ChannelReorder()
 {
-    cv::detail::CheckThrow(nvcvopChannelReorderCreate(&m_handle));
+    nvcv::detail::CheckThrow(nvcvopChannelReorderCreate(&m_handle));
     assert(m_handle);
 }
 
@@ -64,10 +64,10 @@ inline ChannelReorder::~ChannelReorder()
     m_handle = nullptr;
 }
 
-inline void ChannelReorder::operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
-                                       cv::ITensor &orders)
+inline void ChannelReorder::operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in,
+                                       nvcv::IImageBatchVarShape &out, nvcv::ITensor &orders)
 {
-    cv::detail::CheckThrow(
+    nvcv::detail::CheckThrow(
         nvcvopChannelReorderVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), orders.handle()));
 }
 
@@ -76,6 +76,6 @@ inline NVCVOperatorHandle ChannelReorder::handle() const noexcept
     return m_handle;
 }
 
-}} // namespace nv::cvop
+} // namespace nvcvop
 
 #endif // NVCV_OP_CHANNEL_REORDER_HPP

@@ -19,7 +19,7 @@
 
 #include <nvcv/alloc/Allocator.h>
 
-namespace nv::cv::test {
+namespace nvcv::test {
 
 ObjectBag::~ObjectBag()
 {
@@ -36,4 +36,4 @@ void ObjectBag::insert(NVCVAllocatorHandle handle)
     m_objs.push([handle]() { nvcvAllocatorDestroy(handle); });
 }
 
-} // namespace nv::cv::test
+} // namespace nvcv::test

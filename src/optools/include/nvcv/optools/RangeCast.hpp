@@ -27,7 +27,7 @@
 #include "TypeTraits.hpp"           // for Require, etc.
 #include "detail/RangeCastImpl.hpp" // for RangeCastImpl, etc.
 
-namespace nv::cv::cuda {
+namespace nvcv::cuda {
 
 /**
  * @brief Metafunction to range cast (scale) all elements to a target range
@@ -87,6 +87,6 @@ __host__ __device__ auto RangeCast(U u)
 
 /**@}*/
 
-} // namespace nv::cv::cuda
+} // namespace nvcv::cuda
 
 #endif // NVCV_CUDA_RANGE_CAST_HPP

@@ -29,7 +29,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 
 class Resource;
 
@@ -93,6 +93,6 @@ private:
     py::object   m_wrappedObj;
 };
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv
 
 #endif // NVCV_PYTHON_PRIV_STREAM_HPP

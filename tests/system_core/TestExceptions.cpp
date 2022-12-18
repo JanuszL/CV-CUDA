@@ -17,14 +17,13 @@
 // TODO: once we have functions that generate errors, we should
 // extend these tests to cover more scenarios
 
-namespace t    = ::testing;
-namespace nvcv = nv::cv;
+namespace t = ::testing;
 
 TEST(ExceptionTest, exception_updates_internal_status)
 {
     try
     {
-        throw nv::cv::Exception(nv::cv::Status::ERROR_DEVICE, "test error");
+        throw nvcv::Exception(nvcv::Status::ERROR_DEVICE, "test error");
     }
     catch (...)
     {

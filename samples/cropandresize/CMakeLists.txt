@@ -20,7 +20,7 @@ set(CMAKE_CXX_FLAGS "-Wno-deprecated-enum-enum-conversion")
 # tag: Build crop and resize sample
 
 add_executable(nvcv_samples_cropandresize Main.cpp)
-target_link_libraries(nvcv_samples_cropandresize nvcv nvcv_operators CUDA::cudart nvcv_samples_common)
+target_link_libraries(nvcv_samples_cropandresize nvcv_types nvcv_operators CUDA::cudart nvcv_samples_common)
 
 target_include_directories(nvcv_samples_cropandresize
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)

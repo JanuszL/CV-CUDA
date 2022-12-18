@@ -23,9 +23,9 @@
 #include <iostream>
 
 #if NVCV_EXPORTING
-#    include <core/priv/ColorSpec.hpp>
-#    include <core/priv/DataLayout.hpp>
-#    include <core/priv/Status.hpp>
+#    include <nvcv_types/priv/ColorSpec.hpp>
+#    include <nvcv_types/priv/DataLayout.hpp>
+#    include <nvcv_types/priv/Status.hpp>
 #else
 #    include <nvcv/ColorSpec.hpp>
 #    include <nvcv/DataLayout.hpp>
@@ -35,7 +35,7 @@
 #if NVCV_EXPORTING
 inline std::ostream &operator<<(std::ostream &out, NVCVStatus status)
 {
-    return out << nv::cv::priv::GetName(status);
+    return out << nvcv::priv::GetName(status);
 }
 #endif
 

@@ -24,7 +24,7 @@
 #include <nvcv/Exception.hpp>
 #include <nvcv/operators/Operator.h>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class IOperator
 {
@@ -58,7 +58,7 @@ inline T &ToDynamicRef(NVCVOperatorHandle h)
 {
     if (h == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Handle cannot be NULL");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT, "Handle cannot be NULL");
     }
 
     if (T *child = ToDynamicPtr<T>(h))
@@ -67,11 +67,11 @@ inline T &ToDynamicRef(NVCVOperatorHandle h)
     }
     else
     {
-        throw cv::Exception(cv::Status::ERROR_NOT_COMPATIBLE,
-                            "Handle doesn't correspond to the requested object or was already destroyed.");
+        throw nvcv::Exception(nvcv::Status::ERROR_NOT_COMPATIBLE,
+                              "Handle doesn't correspond to the requested object or was already destroyed.");
     }
 }
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_IOPERATOR_HPP

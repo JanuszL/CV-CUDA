@@ -17,9 +17,9 @@
 
 #include "Definitions.hpp"
 
-#include <core/priv/LockFreeStack.hpp>
+#include <nvcv_types/priv/LockFreeStack.hpp>
 
-namespace priv = nv::cv::priv;
+namespace priv = nvcv::priv;
 
 struct Node
 {

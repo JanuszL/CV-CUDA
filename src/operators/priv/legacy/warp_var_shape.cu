@@ -28,11 +28,11 @@
 
 #define BLOCK 32
 
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
-using namespace nv::cv::cuda;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
+using namespace nvcv::cuda;
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 __global__ void inverseMatWarpPerspective(const int numImages, const cuda::Tensor2DWrap<float> in,
                                           cuda::Tensor2DWrap<float> out)
@@ -112,9 +112,8 @@ __global__ void warp(const Filter src, Ptr2dVarShapeNHWC<T> dst, const cuda::Ten
 
     if (x < dst.at_cols(batch_idx) && y < dst.at_rows(batch_idx))
     {
-        const float2 coord = Transform::calcCoord(coeff, x, y);
-        *dst.ptr(batch_idx, y, x)
-            = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<T>>(src(batch_idx, coord.y, coord.x));
+        const float2 coord        = Transform::calcCoord(coeff, x, y);
+        *dst.ptr(batch_idx, y, x) = nvcv::cuda::SaturateCast<nvcv::cuda::BaseType<T>>(src(batch_idx, coord.y, coord.x));
     }
 }
 
@@ -124,12 +123,12 @@ struct WarpDispatcher
     static void call(const Ptr2dVarShapeNHWC<T> src, Ptr2dVarShapeNHWC<T> dst, const cuda::Tensor2DWrap<float> d_coeffs,
                      const int max_height, const int max_width, const float4 borderValue, cudaStream_t stream)
     {
-        using work_type = nv::cv::cuda::ConvertBaseTypeTo<float, T>;
+        using work_type = nvcv::cuda::ConvertBaseTypeTo<float, T>;
 
         dim3 block(BLOCK, BLOCK / 4);
         dim3 grid(divUp(max_width, block.x), divUp(max_height, block.y), dst.batches);
 
-        work_type    borderVal = nv::cv::cuda::DropCast<NumComponents<T>>(borderValue);
+        work_type    borderVal = nvcv::cuda::DropCast<NumComponents<T>>(borderValue);
         B<work_type> brd(0, 0, borderVal);
         // B<work_type> brd(max_height, max_width, borderVal);
         BorderReader<Ptr2dVarShapeNHWC<T>, B<work_type>>         brdSrc(src, brd);
@@ -171,8 +170,8 @@ void warp_caller(const Ptr2dVarShapeNHWC<T> src, Ptr2dVarShapeNHWC<T> dst, const
 }
 
 template<typename T>
-void warpAffine(const nv::cv::IImageBatchVarShapeDataStridedCuda &inData,
-                const nv::cv::IImageBatchVarShapeDataStridedCuda &outData, const cuda::Tensor2DWrap<float> transform,
+void warpAffine(const nvcv::IImageBatchVarShapeDataStridedCuda &inData,
+                const nvcv::IImageBatchVarShapeDataStridedCuda &outData, const cuda::Tensor2DWrap<float> transform,
                 const int interpolation, const int borderMode, const float4 borderValue, cudaStream_t stream)
 {
     cuda_op::Ptr2dVarShapeNHWC<T> src_ptr(inData);
@@ -185,10 +184,9 @@ void warpAffine(const nv::cv::IImageBatchVarShapeDataStridedCuda &inData,
 }
 
 template<typename T>
-void warpPerspective(const nv::cv::IImageBatchVarShapeDataStridedCuda &inData,
-                     const nv::cv::IImageBatchVarShapeDataStridedCuda &outData,
-                     const cuda::Tensor2DWrap<float> transform, const int interpolation, const int borderMode,
-                     const float4 borderValue, cudaStream_t stream)
+void warpPerspective(const nvcv::IImageBatchVarShapeDataStridedCuda &inData,
+                     const nvcv::IImageBatchVarShapeDataStridedCuda &outData, const cuda::Tensor2DWrap<float> transform,
+                     const int interpolation, const int borderMode, const float4 borderValue, cudaStream_t stream)
 {
     Ptr2dVarShapeNHWC<T> src_ptr(inData);
     Ptr2dVarShapeNHWC<T> dst_ptr(outData);
@@ -307,8 +305,8 @@ ErrorCode WarpAffineVarShape::infer(const IImageBatchVarShapeDataStridedCuda &in
                                          cudaMemcpyDeviceToDevice, stream));
     }
 
-    typedef void (*func_t)(const nv::cv::IImageBatchVarShapeDataStridedCuda &inData,
-                           const nv::cv::IImageBatchVarShapeDataStridedCuda &outData,
+    typedef void (*func_t)(const nvcv::IImageBatchVarShapeDataStridedCuda &inData,
+                           const nvcv::IImageBatchVarShapeDataStridedCuda &outData,
                            const cuda::Tensor2DWrap<float> transform, const int interpolation, const int borderMode,
                            const float4 borderValue, cudaStream_t stream);
 
@@ -434,8 +432,8 @@ ErrorCode WarpPerspectiveVarShape::infer(const IImageBatchVarShapeDataStridedCud
                                          cudaMemcpyDeviceToDevice, stream));
     }
 
-    typedef void (*func_t)(const nv::cv::IImageBatchVarShapeDataStridedCuda &inData,
-                           const nv::cv::IImageBatchVarShapeDataStridedCuda &outData,
+    typedef void (*func_t)(const nvcv::IImageBatchVarShapeDataStridedCuda &inData,
+                           const nvcv::IImageBatchVarShapeDataStridedCuda &outData,
                            const cuda::Tensor2DWrap<float> transform, const int interpolation, const int borderMode,
                            const float4 borderValue, cudaStream_t stream);
 
@@ -457,4 +455,4 @@ ErrorCode WarpPerspectiveVarShape::infer(const IImageBatchVarShapeDataStridedCud
     return SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

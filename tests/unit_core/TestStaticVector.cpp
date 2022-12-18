@@ -19,7 +19,7 @@
 
 #include <util/StaticVector.hpp>
 
-namespace util = nv::cv::util;
+namespace util = nvcv::util;
 
 TEST(StaticVector, default_constructed_is_empty)
 {

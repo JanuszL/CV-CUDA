@@ -23,7 +23,7 @@
 
 #include <cstring>
 
-namespace nv::cv::util {
+namespace nvcv::util {
 
 struct HashMD5::Impl
 {
@@ -81,4 +81,4 @@ void Update(HashMD5 &hash, const char *value)
     }
 }
 
-} // namespace nv::cv::util
+} // namespace nvcv::util

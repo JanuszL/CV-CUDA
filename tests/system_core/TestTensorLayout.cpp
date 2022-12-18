@@ -21,9 +21,8 @@
 #include <nvcv/TensorLayout.h>
 #include <nvcv/TensorLayout.hpp>
 
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 namespace t    = ::testing;
-namespace nvcv = nv::cv;
 
 // nvcvTensorLayoutMake / nvcvTensorLayoutMakeRange ========================
 

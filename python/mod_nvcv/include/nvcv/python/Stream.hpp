@@ -22,7 +22,7 @@
 
 #include <cuda_runtime.h>
 
-namespace nv::cvpy {
+namespace nvcvpy {
 
 namespace py = pybind11;
 
@@ -52,11 +52,11 @@ private:
     }
 };
 
-} // namespace nv::cvpy
+} // namespace nvcvpy
 
 namespace pybind11::detail {
 
-namespace cvpy = nv::cvpy;
+namespace cvpy = nvcvpy;
 
 template<>
 struct type_caster<cvpy::Stream> : type_caster_base<cvpy::Stream>

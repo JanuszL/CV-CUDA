@@ -21,11 +21,9 @@
 #include "CvCudaUtils.cuh"
 
 #define BLOCK 32
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
-using namespace nv::cv::cuda;
-
-namespace nvcv = nv::cv;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
+using namespace nvcv::cuda;
 
 template<class Transform, class Filter, typename T>
 __global__ void warp(const Filter src, Ptr2dNHWC<T> dst, Transform transform)
@@ -53,12 +51,12 @@ struct WarpDispatcher
     static void call(const Ptr2dNHWC<T> src, Ptr2dNHWC<T> dst, Transform transform, const float4 borderValue,
                      cudaStream_t stream)
     {
-        using work_type = nv::cv::cuda::ConvertBaseTypeTo<float, T>;
+        using work_type = nvcv::cuda::ConvertBaseTypeTo<float, T>;
 
         dim3 block(BLOCK, BLOCK / 4);
         dim3 grid(divUp(dst.cols, block.x), divUp(dst.rows, block.y), dst.batches);
 
-        work_type                                borderVal = nv::cv::cuda::DropCast<NumComponents<T>>(borderValue);
+        work_type                                borderVal = nvcv::cuda::DropCast<NumComponents<T>>(borderValue);
         B<work_type>                             brd(src.rows, src.cols, borderVal);
         BorderReader<Ptr2dNHWC<T>, B<work_type>> brdSrc(src, brd);
         Filter<BorderReader<Ptr2dNHWC<T>, B<work_type>>> filter_src(brdSrc);
@@ -129,7 +127,7 @@ static void invertMat(const float *M, float *h_aCoeffs)
     h_aCoeffs[5] = (float)(M[3] * M[2] - M[0] * M[5]) * den;
 }
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 ErrorCode WarpAffine::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                             const float *xform, const int32_t flags, const NVCVBorderType borderMode,
@@ -326,4 +324,4 @@ ErrorCode WarpPerspective::infer(const ITensorDataStridedCuda &inData, const ITe
     return ErrorCode::SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

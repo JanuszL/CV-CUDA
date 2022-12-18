@@ -24,8 +24,7 @@
 #include <nvcv/Tensor.hpp>
 #include <util/Assert.h>
 
-namespace priv = nv::cvop::priv;
-namespace nvcv = nv::cv;
+namespace priv = nvcvop::priv;
 
 NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopGammaContrastCreate,
                    (NVCVOperatorHandle * handle, const int32_t maxVarShapeBatchSize,

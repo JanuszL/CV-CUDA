@@ -37,9 +37,9 @@
 #include <nvcv/alloc/Requirements.hpp>
 #include <nvcv/optools/math/LinAlg.hpp>
 
-namespace cvmath = nv::cv::cuda::math;
+namespace cvmath = nvcv::cuda::math;
 
-namespace nv { namespace cvop {
+namespace nvcvop {
 
 class WarpAffine final : public IOperator
 {
@@ -48,11 +48,11 @@ public:
 
     ~WarpAffine();
 
-    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const NVCVAffineTransform xform,
+    void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, const NVCVAffineTransform xform,
                     const int32_t flags, const NVCVBorderType borderMode, const float4 borderValue);
 
-    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
-                    cv::ITensor &transMatrix, const int32_t flags, const NVCVBorderType borderMode,
+    void operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
+                    nvcv::ITensor &transMatrix, const int32_t flags, const NVCVBorderType borderMode,
                     const float4 borderValue);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
@@ -63,7 +63,7 @@ private:
 
 inline WarpAffine::WarpAffine(const int32_t maxVarShapeBatchSize)
 {
-    cv::detail::CheckThrow(nvcvopWarpAffineCreate(&m_handle, maxVarShapeBatchSize));
+    nvcv::detail::CheckThrow(nvcvopWarpAffineCreate(&m_handle, maxVarShapeBatchSize));
     assert(m_handle);
 }
 
@@ -73,20 +73,20 @@ inline WarpAffine::~WarpAffine()
     m_handle = nullptr;
 }
 
-inline void WarpAffine::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out,
+inline void WarpAffine::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out,
                                    const NVCVAffineTransform xform, const int32_t flags,
                                    const NVCVBorderType borderMode, const float4 borderValue)
 {
-    cv::detail::CheckThrow(
+    nvcv::detail::CheckThrow(
         nvcvopWarpAffineSubmit(m_handle, stream, in.handle(), out.handle(), xform, flags, borderMode, borderValue));
 }
 
-inline void WarpAffine::operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
-                                   cv::ITensor &transMatrix, const int32_t flags, const NVCVBorderType borderMode,
+inline void WarpAffine::operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
+                                   nvcv::ITensor &transMatrix, const int32_t flags, const NVCVBorderType borderMode,
                                    const float4 borderValue)
 {
-    cv::detail::CheckThrow(nvcvopWarpAffineVarShapeSubmit(m_handle, stream, in.handle(), out.handle(),
-                                                          transMatrix.handle(), flags, borderMode, borderValue));
+    nvcv::detail::CheckThrow(nvcvopWarpAffineVarShapeSubmit(m_handle, stream, in.handle(), out.handle(),
+                                                            transMatrix.handle(), flags, borderMode, borderValue));
 }
 
 inline NVCVOperatorHandle WarpAffine::handle() const noexcept
@@ -94,6 +94,6 @@ inline NVCVOperatorHandle WarpAffine::handle() const noexcept
     return m_handle;
 }
 
-}} // namespace nv::cvop
+} // namespace nvcvop
 
 #endif // NVCV_OP_WARP_AFFINE_HPP

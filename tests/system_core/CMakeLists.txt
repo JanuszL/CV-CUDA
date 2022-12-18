@@ -41,7 +41,7 @@ add_executable(nvcv_test_system_core
 target_link_libraries(nvcv_test_system_core
     PUBLIC
         nvcv_test_common_system
-        nvcv
+        nvcv_types
 )
 
 nvcv_add_test(nvcv_test_system_core)
@@ -58,7 +58,7 @@ add_executable(nvcv_test_system_core_version_commit
 target_link_libraries(nvcv_test_system_core_version_commit
     PRIVATE
         nvcv_test_common
-        nvcv
+        nvcv_types
 )
 
 nvcv_add_test(nvcv_test_system_core_version_commit)

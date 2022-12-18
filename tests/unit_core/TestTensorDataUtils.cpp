@@ -27,9 +27,8 @@
 #include <iostream>
 #include <random>
 
-namespace nvcv = nv::cv;
 namespace gt   = ::testing;
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 
 // clang-format off
 NVCV_TEST_SUITE_P(TensorDataUtils, test::ValueList<int, int, int, uint8_t, nvcv::ImageFormat>

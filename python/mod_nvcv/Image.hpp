@@ -33,7 +33,7 @@
 #include <optional>
 #include <variant>
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 namespace py = pybind11;
 
 class Image final : public Container
@@ -41,30 +41,31 @@ class Image final : public Container
 public:
     static void Export(py::module &m);
 
-    static std::shared_ptr<Image> Zeros(const Size2D &size, cv::ImageFormat fmt);
-    static std::shared_ptr<Image> Create(const Size2D &size, cv::ImageFormat fmt);
-    static std::shared_ptr<Image> CreateHost(py::buffer buffer, cv::ImageFormat fmt);
-    static std::shared_ptr<Image> CreateHostVector(std::vector<py::buffer> buffer, cv::ImageFormat fmt);
+    static std::shared_ptr<Image> Zeros(const Size2D &size, nvcv::ImageFormat fmt);
+    static std::shared_ptr<Image> Create(const Size2D &size, nvcv::ImageFormat fmt);
+    static std::shared_ptr<Image> CreateHost(py::buffer buffer, nvcv::ImageFormat fmt);
+    static std::shared_ptr<Image> CreateHostVector(std::vector<py::buffer> buffer, nvcv::ImageFormat fmt);
 
-    static std::shared_ptr<Image> WrapCuda(CudaBuffer &buffer, cv::ImageFormat fmt);
-    static std::shared_ptr<Image> WrapCudaVector(std::vector<std::shared_ptr<CudaBuffer>> buffer, cv::ImageFormat fmt);
+    static std::shared_ptr<Image> WrapCuda(CudaBuffer &buffer, nvcv::ImageFormat fmt);
+    static std::shared_ptr<Image> WrapCudaVector(std::vector<std::shared_ptr<CudaBuffer>> buffer,
+                                                 nvcv::ImageFormat                        fmt);
 
     std::shared_ptr<Image>       shared_from_this();
     std::shared_ptr<const Image> shared_from_this() const;
 
-    Size2D          size() const;
-    int32_t         width() const;
-    int32_t         height() const;
-    cv::ImageFormat format() const;
+    Size2D            size() const;
+    int32_t           width() const;
+    int32_t           height() const;
+    nvcv::ImageFormat format() const;
 
     friend std::ostream &operator<<(std::ostream &out, const Image &img);
 
-    cv::IImage &impl()
+    nvcv::IImage &impl()
     {
         return *m_impl;
     }
 
-    const cv::IImage &impl() const
+    const nvcv::IImage &impl() const
     {
         return *m_impl;
     }
@@ -77,7 +78,7 @@ public:
         {
         }
 
-        explicit Key(Size2D size, cv::ImageFormat fmt)
+        explicit Key(Size2D size, nvcv::ImageFormat fmt)
             : m_size(size)
             , m_format(fmt)
             , m_wrapper(false)
@@ -85,9 +86,9 @@ public:
         }
 
     private:
-        Size2D          m_size;
-        cv::ImageFormat m_format;
-        bool            m_wrapper;
+        Size2D            m_size;
+        nvcv::ImageFormat m_format;
+        bool              m_wrapper;
 
         virtual size_t doGetHash() const override;
         virtual bool   doIsEqual(const IKey &that) const override;
@@ -98,25 +99,25 @@ public:
         return m_key;
     }
 
-    py::object cpu(std::optional<cv::TensorLayout> layout) const;
-    py::object cuda(std::optional<cv::TensorLayout> layout) const;
+    py::object cpu(std::optional<nvcv::TensorLayout> layout) const;
+    py::object cuda(std::optional<nvcv::TensorLayout> layout) const;
 
 private:
-    explicit Image(const Size2D &size, cv::ImageFormat fmt);
-    explicit Image(std::vector<std::shared_ptr<CudaBuffer>> buf, const cv::IImageDataStridedCuda &imgData);
-    explicit Image(std::vector<py::buffer> buf, const cv::IImageDataStridedHost &imgData);
+    explicit Image(const Size2D &size, nvcv::ImageFormat fmt);
+    explicit Image(std::vector<std::shared_ptr<CudaBuffer>> buf, const nvcv::IImageDataStridedCuda &imgData);
+    explicit Image(std::vector<py::buffer> buf, const nvcv::IImageDataStridedHost &imgData);
 
-    std::unique_ptr<cv::IImage> m_impl; // must come before m_key
-    Key                         m_key;
+    std::unique_ptr<nvcv::IImage> m_impl; // must come before m_key
+    Key                           m_key;
 
-    mutable py::object                      m_cacheCudaObject;
-    mutable std::optional<cv::TensorLayout> m_cacheCudaObjectLayout;
+    mutable py::object                        m_cacheCudaObject;
+    mutable std::optional<nvcv::TensorLayout> m_cacheCudaObjectLayout;
 
     py::object m_wrapped;
 };
 
 std::ostream &operator<<(std::ostream &out, const Image &img);
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv
 
 #endif // NVCV_PYTHON_PRIV_IMAGE_HPP

@@ -32,25 +32,25 @@
 
 #include <memory>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class BilateralFilter final : public IOperator
 {
 public:
     explicit BilateralFilter();
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, int diameter, float sigmaColor,
-                    float sigmaSpace, NVCVBorderType borderMode) const;
+    void operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out, int diameter,
+                    float sigmaColor, float sigmaSpace, NVCVBorderType borderMode) const;
 
-    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
-                    const cv::ITensor &diameter, const cv::ITensor &sigmaColor, const cv::ITensor &sigmaSpace,
+    void operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, const nvcv::IImageBatchVarShape &out,
+                    const nvcv::ITensor &diameter, const nvcv::ITensor &sigmaColor, const nvcv::ITensor &sigmaSpace,
                     NVCVBorderType borderMode) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::BilateralFilter>         m_legacyOp;
-    std::unique_ptr<cv::legacy::cuda_op::BilateralFilterVarShape> m_legacyOpVarShape;
+    std::unique_ptr<nvcv::legacy::cuda_op::BilateralFilter>         m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::BilateralFilterVarShape> m_legacyOpVarShape;
 };
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_BILATERAL_FILTER_HPP

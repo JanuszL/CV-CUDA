@@ -32,24 +32,25 @@
 
 #include <memory>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class AverageBlur final : public IOperator
 {
 public:
-    explicit AverageBlur(cv::Size2D maxKernelSize, int maxBatchSize);
+    explicit AverageBlur(nvcv::Size2D maxKernelSize, int maxBatchSize);
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, cv::Size2D kernelSize,
+    void operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out, nvcv::Size2D kernelSize,
                     int2 kernelAnchor, NVCVBorderType borderMode) const;
 
-    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
-                    const cv::ITensor &kernelSize, const cv::ITensor &kernelAnchor, NVCVBorderType borderMode) const;
+    void operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
+                    const nvcv::ITensor &kernelSize, const nvcv::ITensor &kernelAnchor,
+                    NVCVBorderType borderMode) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::AverageBlur>         m_legacyOp;
-    std::unique_ptr<cv::legacy::cuda_op::AverageBlurVarShape> m_legacyOpVarShape;
+    std::unique_ptr<nvcv::legacy::cuda_op::AverageBlur>         m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::AverageBlurVarShape> m_legacyOpVarShape;
 };
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_AVERAGEBLUR_HPP

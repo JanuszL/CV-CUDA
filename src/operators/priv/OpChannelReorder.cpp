@@ -23,9 +23,9 @@
 #include <nvcv/Exception.hpp>
 #include <util/CheckError.hpp>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
-namespace legacy = cv::legacy::cuda_op;
+namespace legacy = nvcv::legacy::cuda_op;
 
 ChannelReorder::ChannelReorder()
 {
@@ -33,32 +33,32 @@ ChannelReorder::ChannelReorder()
     m_legacyOpVarShape = std::make_unique<legacy::ChannelReorderVarShape>(maxIn, maxOut);
 }
 
-void ChannelReorder::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
-                                const cv::ITensor &orders) const
+void ChannelReorder::operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in,
+                                nvcv::IImageBatchVarShape &out, const nvcv::ITensor &orders) const
 {
-    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(in.exportData(stream));
+    auto *inData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(in.exportData(stream));
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Input must be cuda-accessible, varshape pitch-linear image batch");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Input must be cuda-accessible, varshape pitch-linear image batch");
     }
 
-    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(out.exportData(stream));
+    auto *outData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(out.exportData(stream));
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Output must be cuda-accessible, varshape pitch-linear image batch");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Output must be cuda-accessible, varshape pitch-linear image batch");
     }
 
-    const cv::ITensorDataStridedCuda *ordersData
-        = dynamic_cast<const cv::ITensorDataStridedCuda *>(orders.exportData());
+    const nvcv::ITensorDataStridedCuda *ordersData
+        = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(orders.exportData());
     if (ordersData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Input channel order tensor must be cuda-accessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Input channel order tensor must be cuda-accessible, pitch-linear tensor");
     }
 
     NVCV_CHECK_THROW(m_legacyOpVarShape->infer(*inData, *outData, *ordersData, stream));
 }
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv

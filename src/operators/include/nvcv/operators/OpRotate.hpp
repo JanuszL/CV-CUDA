@@ -35,7 +35,7 @@
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 
-namespace nv { namespace cvop {
+namespace nvcvop {
 
 class Rotate final : public IOperator
 {
@@ -44,11 +44,11 @@ public:
 
     ~Rotate();
 
-    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const double angleDeg, const double2 shift,
-                    const NVCVInterpolationType interpolation);
+    void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, const double angleDeg,
+                    const double2 shift, const NVCVInterpolationType interpolation);
 
-    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
-                    cv::ITensor &angleDeg, cv::ITensor &shift, const NVCVInterpolationType interpolation);
+    void operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
+                    nvcv::ITensor &angleDeg, nvcv::ITensor &shift, const NVCVInterpolationType interpolation);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -58,7 +58,7 @@ private:
 
 inline Rotate::Rotate(const int maxVarShapeBatchSize)
 {
-    cv::detail::CheckThrow(nvcvopRotateCreate(&m_handle, maxVarShapeBatchSize));
+    nvcv::detail::CheckThrow(nvcvopRotateCreate(&m_handle, maxVarShapeBatchSize));
     assert(m_handle);
 }
 
@@ -68,18 +68,18 @@ inline Rotate::~Rotate()
     m_handle = nullptr;
 }
 
-inline void Rotate::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const double angleDeg,
+inline void Rotate::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, const double angleDeg,
                                const double2 shift, const NVCVInterpolationType interpolation)
 {
-    cv::detail::CheckThrow(
+    nvcv::detail::CheckThrow(
         nvcvopRotateSubmit(m_handle, stream, in.handle(), out.handle(), angleDeg, shift, interpolation));
 }
 
-inline void Rotate::operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
-                               cv::ITensor &angleDeg, cv::ITensor &shift, const NVCVInterpolationType interpolation)
+inline void Rotate::operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
+                               nvcv::ITensor &angleDeg, nvcv::ITensor &shift, const NVCVInterpolationType interpolation)
 {
-    cv::detail::CheckThrow(nvcvopRotateVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), angleDeg.handle(),
-                                                      shift.handle(), interpolation));
+    nvcv::detail::CheckThrow(nvcvopRotateVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), angleDeg.handle(),
+                                                        shift.handle(), interpolation));
 }
 
 inline NVCVOperatorHandle Rotate::handle() const noexcept
@@ -87,6 +87,6 @@ inline NVCVOperatorHandle Rotate::handle() const noexcept
     return m_handle;
 }
 
-}} // namespace nv::cvop
+} // namespace nvcvop
 
 #endif // NVCV_OP_ROTATE_HPP

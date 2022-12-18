@@ -25,15 +25,14 @@
 
 #include <nvcv/ImageBatch.hpp>
 
-using namespace nv::cv;
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
 
 #define BLOCK           32
 #define SHARE_MEM_LIMIT 4096
 #define work_type       float
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 static constexpr float        bilinear_filter_support_var_shape = 1.;
 static constexpr unsigned int precision_bits_var_shape          = 32 - 8 - 2;
@@ -171,8 +170,8 @@ __global__ void _precomputeCoeffsVarShape(int *in_size_batch, int *in0_batch, wo
 }
 
 template<class T1, class T2, class Filter>
-__global__ void horizontal_pass_var_shape(const cuda_op::Ptr2dVarShapeNHWC<T1> src, cuda_op::Ptr2dNHWC<T2> dst,
-                                          Filter &filterp, int *h_ksize_batch, int *v_ksize_batch, int *h_bounds_batch,
+__global__ void horizontal_pass_var_shape(const Ptr2dVarShapeNHWC<T1> src, Ptr2dNHWC<T2> dst, Filter &filterp,
+                                          int *h_ksize_batch, int *v_ksize_batch, int *h_bounds_batch,
                                           int *h_bounds_offset, work_type *h_kk_batch, int *h_kk_offset,
                                           int *v_bounds_batch, int *v_bounds_offset, work_type *v_kk_batch,
                                           int *v_kk_offset, work_type init_buffer, bool round_up, bool use_share_mem)
@@ -233,8 +232,8 @@ __global__ void horizontal_pass_var_shape(const cuda_op::Ptr2dVarShapeNHWC<T1> s
 }
 
 template<class T1, class T2, class Filter>
-__global__ void vertical_pass_var_shape(const cuda_op::Ptr2dNHWC<T1> src, cuda_op::Ptr2dVarShapeNHWC<T2> dst,
-                                        Filter &filterp, int *h_ksize_batch, int *v_ksize_batch, int *h_bounds_batch,
+__global__ void vertical_pass_var_shape(const Ptr2dNHWC<T1> src, Ptr2dVarShapeNHWC<T2> dst, Filter &filterp,
+                                        int *h_ksize_batch, int *v_ksize_batch, int *h_bounds_batch,
                                         int *h_bounds_offset, work_type *h_kk_batch, int *h_kk_offset,
                                         int *v_bounds_batch, int *v_bounds_offset, work_type *v_kk_batch,
                                         int *v_kk_offset, work_type init_buffer, bool round_up, bool use_share_mem)
@@ -440,9 +439,9 @@ void pillow_resize_var_shape(const IImageBatchVarShape &inDataBase, const IImage
     checkCudaErrors(cudaMemcpyAsync((void *)gpu_workspace, (void *)cpu_workspace, current_buffer_size,
                                     cudaMemcpyHostToDevice, stream));
 
-    cuda_op::Ptr2dVarShapeNHWC<elem_type> src_ptr(inData);
-    cuda_op::Ptr2dVarShapeNHWC<elem_type> dst_ptr(outData);
-    Ptr2dNHWC<work_type> ptr_h_out(batch, max_input_height, max_width, channels, (work_type *)hori_gpu_data);
+    Ptr2dVarShapeNHWC<elem_type> src_ptr(inData);
+    Ptr2dVarShapeNHWC<elem_type> dst_ptr(outData);
+    Ptr2dNHWC<work_type>         ptr_h_out(batch, max_input_height, max_width, channels, (work_type *)hori_gpu_data);
 
     dim3 blockSize(BLOCK, BLOCK / 4, 1);
     dim3 gridSizeH(divUp(max_width, blockSize.x), divUp(max_input_height, blockSize.y), batch);
@@ -588,8 +587,8 @@ size_t PillowResizeVarShape::calBufferSize(DataShape max_input_shape, DataShape 
     return buffer_size;
 }
 
-ErrorCode PillowResizeVarShape::infer(const nv::cv::IImageBatchVarShape &inDataBase,
-                                      const nv::cv::IImageBatchVarShape &outDataBase,
+ErrorCode PillowResizeVarShape::infer(const nvcv::IImageBatchVarShape &inDataBase,
+                                      const nvcv::IImageBatchVarShape &outDataBase,
                                       const NVCVInterpolationType interpolation, cudaStream_t stream)
 {
     if (!inDataBase.uniqueFormat() || !outDataBase.uniqueFormat())
@@ -646,4 +645,4 @@ ErrorCode PillowResizeVarShape::infer(const nv::cv::IImageBatchVarShape &inDataB
     return ErrorCode::SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

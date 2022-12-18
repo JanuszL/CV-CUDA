@@ -35,7 +35,7 @@
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 
-namespace nv { namespace cvop {
+namespace nvcvop {
 
 class Composite final : public IOperator
 {
@@ -44,11 +44,11 @@ public:
 
     ~Composite();
 
-    void operator()(cudaStream_t stream, cv::ITensor &foreground, cv::ITensor &background, cv::ITensor &fgMask,
-                    cv::ITensor &output);
+    void operator()(cudaStream_t stream, nvcv::ITensor &foreground, nvcv::ITensor &background, nvcv::ITensor &fgMask,
+                    nvcv::ITensor &output);
 
-    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &foreground, cv::IImageBatchVarShape &background,
-                    cv::IImageBatchVarShape &fgMask, cv::IImageBatchVarShape &output);
+    void operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &foreground, nvcv::IImageBatchVarShape &background,
+                    nvcv::IImageBatchVarShape &fgMask, nvcv::IImageBatchVarShape &output);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -58,7 +58,7 @@ private:
 
 inline Composite::Composite()
 {
-    cv::detail::CheckThrow(nvcvopCompositeCreate(&m_handle));
+    nvcv::detail::CheckThrow(nvcvopCompositeCreate(&m_handle));
     assert(m_handle);
 }
 
@@ -68,19 +68,19 @@ inline Composite::~Composite()
     m_handle = nullptr;
 }
 
-inline void Composite::operator()(cudaStream_t stream, cv::ITensor &foreground, cv::ITensor &background,
-                                  cv::ITensor &fgMask, cv::ITensor &output)
+inline void Composite::operator()(cudaStream_t stream, nvcv::ITensor &foreground, nvcv::ITensor &background,
+                                  nvcv::ITensor &fgMask, nvcv::ITensor &output)
 {
-    cv::detail::CheckThrow(nvcvopCompositeSubmit(m_handle, stream, foreground.handle(), background.handle(),
-                                                 fgMask.handle(), output.handle()));
+    nvcv::detail::CheckThrow(nvcvopCompositeSubmit(m_handle, stream, foreground.handle(), background.handle(),
+                                                   fgMask.handle(), output.handle()));
 }
 
-inline void Composite::operator()(cudaStream_t stream, cv::IImageBatchVarShape &foreground,
-                                  cv::IImageBatchVarShape &background, cv::IImageBatchVarShape &fgMask,
-                                  cv::IImageBatchVarShape &output)
+inline void Composite::operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &foreground,
+                                  nvcv::IImageBatchVarShape &background, nvcv::IImageBatchVarShape &fgMask,
+                                  nvcv::IImageBatchVarShape &output)
 {
-    cv::detail::CheckThrow(nvcvopCompositeVarShapeSubmit(m_handle, stream, foreground.handle(), background.handle(),
-                                                         fgMask.handle(), output.handle()));
+    nvcv::detail::CheckThrow(nvcvopCompositeVarShapeSubmit(m_handle, stream, foreground.handle(), background.handle(),
+                                                           fgMask.handle(), output.handle()));
 }
 
 inline NVCVOperatorHandle Composite::handle() const noexcept
@@ -88,6 +88,6 @@ inline NVCVOperatorHandle Composite::handle() const noexcept
     return m_handle;
 }
 
-}} // namespace nv::cvop
+} // namespace nvcvop
 
 #endif // NVCV_OP_COMPOSITE_HPP

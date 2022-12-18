@@ -25,7 +25,7 @@ target_link_libraries(nvcv_test_main
         GTest::gmock
         nvcv_util_compat
     PRIVATE
-        nvcv
+        nvcv_types
         CUDA::cudart_static
 )
 

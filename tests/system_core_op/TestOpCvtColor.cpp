@@ -28,9 +28,8 @@
 
 #include <random>
 
-namespace nvcv = nv::cv;
-namespace test = nv::cv::test;
-namespace cuda = nv::cv::cuda;
+namespace test = nvcv::test;
+namespace cuda = nvcv::cuda;
 
 #define VEC_EXPECT_NEAR(vec1, vec2, delta)                              \
     ASSERT_EQ(vec1.size(), vec2.size());                                \
@@ -143,7 +142,7 @@ TEST_P(OpCvtColor, correct_output)
     ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
 
     // run operator
-    nv::cvop::CvtColor cvtColorOp;
+    nvcvop::CvtColor cvtColorOp;
 
     EXPECT_NO_THROW(cvtColorOp(stream, srcTensor, dstTensor, src2dstCode));
 
@@ -182,15 +181,14 @@ TEST_P(OpCvtColor, varshape_correct_output)
     std::uniform_int_distribution<int> udistWidth(width * 0.8, width * 1.1);
     std::uniform_int_distribution<int> udistHeight(height * 0.8, height * 1.1);
 
-    std::vector<std::unique_ptr<nv::cv::Image>> imgSrc;
+    std::vector<std::unique_ptr<nvcv::Image>> imgSrc;
 
     std::vector<std::vector<uint8_t>> srcVec(batches);
     std::vector<int>                  srcVecRowStride(batches);
 
     for (int i = 0; i < batches; ++i)
     {
-        imgSrc.emplace_back(
-            std::make_unique<nv::cv::Image>(nv::cv::Size2D{udistWidth(rng), udistHeight(rng)}, srcFormat));
+        imgSrc.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{udistWidth(rng), udistHeight(rng)}, srcFormat));
 
         int srcRowStride   = imgSrc[i]->size().w * srcFormat.planePixelStrideBytes(0);
         srcVecRowStride[i] = srcRowStride;
@@ -200,7 +198,7 @@ TEST_P(OpCvtColor, varshape_correct_output)
         srcVec[i].resize(imgSrc[i]->size().h * srcRowStride);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
 
-        auto *imgData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
+        auto *imgData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_NE(imgData, nullptr);
 
         // Copy input data to the GPU
@@ -209,22 +207,22 @@ TEST_P(OpCvtColor, varshape_correct_output)
                                     srcRowStride, srcRowStride, imgSrc[i]->size().h, cudaMemcpyHostToDevice, stream));
     }
 
-    nv::cv::ImageBatchVarShape batchSrc(batches);
+    nvcv::ImageBatchVarShape batchSrc(batches);
     batchSrc.pushBack(imgSrc.begin(), imgSrc.end());
 
     // Create output varshape
-    std::vector<std::unique_ptr<nv::cv::Image>> imgDst;
+    std::vector<std::unique_ptr<nvcv::Image>> imgDst;
 
     for (int i = 0; i < batches; ++i)
     {
-        imgDst.emplace_back(std::make_unique<nv::cv::Image>(imgSrc[i]->size(), dstFormat));
+        imgDst.emplace_back(std::make_unique<nvcv::Image>(imgSrc[i]->size(), dstFormat));
     }
 
-    nv::cv::ImageBatchVarShape batchDst(batches);
+    nvcv::ImageBatchVarShape batchDst(batches);
     batchDst.pushBack(imgDst.begin(), imgDst.end());
 
     // run operator
-    nv::cvop::CvtColor cvtColorOp;
+    nvcvop::CvtColor cvtColorOp;
 
     EXPECT_NO_THROW(cvtColorOp(stream, batchSrc, batchDst, src2dstCode));
 
@@ -238,7 +236,7 @@ TEST_P(OpCvtColor, varshape_correct_output)
     {
         SCOPED_TRACE(i);
 
-        const auto *imgData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
+        const auto *imgData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_NE(imgData, nullptr);
         ASSERT_EQ(imgData->numPlanes(), 1);
 

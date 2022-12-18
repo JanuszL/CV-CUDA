@@ -32,20 +32,20 @@
 
 #include <memory>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class PadAndStack final : public IOperator
 {
 public:
     explicit PadAndStack();
 
-    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::ITensor &out, cv::ITensor &top,
-                    cv::ITensor &left, const NVCVBorderType borderMode, const float borderValue) const;
+    void operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in, nvcv::ITensor &out, nvcv::ITensor &top,
+                    nvcv::ITensor &left, const NVCVBorderType borderMode, const float borderValue) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::PadAndStack> m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::PadAndStack> m_legacyOp;
 };
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_PADANDSTACK_HPP

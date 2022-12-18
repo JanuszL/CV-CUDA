@@ -32,21 +32,21 @@
 
 #include <memory>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class Conv2D final : public IOperator
 {
 public:
     explicit Conv2D();
 
-    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
-                    const cv::IImageBatchVarShape &kernel, const cv::ITensor &kernelAnchor,
+    void operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
+                    const nvcv::IImageBatchVarShape &kernel, const nvcv::ITensor &kernelAnchor,
                     NVCVBorderType borderMode) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::Conv2DVarShape> m_legacyOpVarShape;
+    std::unique_ptr<nvcv::legacy::cuda_op::Conv2DVarShape> m_legacyOpVarShape;
 };
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_CONV2D_HPP

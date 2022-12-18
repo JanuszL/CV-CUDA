@@ -32,23 +32,23 @@
 
 #include <memory>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class PillowResize final : public IOperator
 {
 public:
-    explicit PillowResize(cv::Size2D maxSize, int maxBatchSize, NVCVImageFormat fmt);
+    explicit PillowResize(nvcv::Size2D maxSize, int maxBatchSize, NVCVImageFormat fmt);
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
+    void operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out,
                     const NVCVInterpolationType interpolation) const;
-    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
+    void operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, const nvcv::IImageBatchVarShape &out,
                     const NVCVInterpolationType interpolation) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::PillowResize>         m_legacyOp;
-    std::unique_ptr<cv::legacy::cuda_op::PillowResizeVarShape> m_legacyOpVarShape;
+    std::unique_ptr<nvcv::legacy::cuda_op::PillowResize>         m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::PillowResizeVarShape> m_legacyOpVarShape;
 };
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_PILLOWRESIZE_HPP

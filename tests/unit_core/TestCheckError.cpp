@@ -21,8 +21,8 @@
 #include <util/CheckError.hpp>
 
 namespace gt   = ::testing;
-namespace test = nv::cv::test;
-namespace priv = nv::cv::priv;
+namespace test = nvcv::test;
+namespace priv = nvcv::priv;
 
 // clang-format off
 NVCV_TEST_SUITE_P(CheckErrorCudaConversionTests, test::ValueList<cudaError_t, NVCVStatus>

@@ -32,25 +32,27 @@
 
 #include <memory>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class CopyMakeBorder final : public IOperator
 {
 public:
     explicit CopyMakeBorder();
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, const int top, const int left,
-                    const NVCVBorderType borderMode, const float4 borderValue) const;
-    void operator()(cudaStream_t stream, const cv::IImageBatch &in, const cv::IImageBatch &out, const cv::ITensor &top,
-                    const cv::ITensor &left, const NVCVBorderType borderMode, const float4 borderValue) const;
-    void operator()(cudaStream_t stream, const cv::IImageBatch &in, const cv::ITensor &out, const cv::ITensor &top,
-                    const cv::ITensor &left, const NVCVBorderType borderMode, const float4 borderValue) const;
+    void operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out, const int top,
+                    const int left, const NVCVBorderType borderMode, const float4 borderValue) const;
+    void operator()(cudaStream_t stream, const nvcv::IImageBatch &in, const nvcv::IImageBatch &out,
+                    const nvcv::ITensor &top, const nvcv::ITensor &left, const NVCVBorderType borderMode,
+                    const float4 borderValue) const;
+    void operator()(cudaStream_t stream, const nvcv::IImageBatch &in, const nvcv::ITensor &out,
+                    const nvcv::ITensor &top, const nvcv::ITensor &left, const NVCVBorderType borderMode,
+                    const float4 borderValue) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::CopyMakeBorder>         m_legacyOp;
-    std::unique_ptr<cv::legacy::cuda_op::CopyMakeBorderVarShape> m_legacyOpVarShape;
+    std::unique_ptr<nvcv::legacy::cuda_op::CopyMakeBorder>         m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::CopyMakeBorderVarShape> m_legacyOpVarShape;
 };
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_PADANDSTACK_HPP

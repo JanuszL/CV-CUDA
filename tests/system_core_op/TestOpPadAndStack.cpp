@@ -29,8 +29,7 @@
 
 #include <random>
 
-namespace nvcv = nv::cv;
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 
 static void PadAndStack(std::vector<uint8_t> &hDst, const std::vector<std::vector<uint8_t>> &hBatchSrc,
                         const nvcv::TensorDataAccessStridedImagePlanar &dDstData, const int srcWidth,
@@ -225,7 +224,7 @@ TEST_P(OpPadAndStack, correct_output)
                 borderType, borderValue);
 
     // Generate test result
-    nv::cvop::PadAndStack padAndStackOp;
+    nvcvop::PadAndStack padAndStackOp;
 
     EXPECT_NO_THROW(padAndStackOp(stream, imgBatchSrc, imgDst, inTop, inLeft, borderType, borderValue));
 

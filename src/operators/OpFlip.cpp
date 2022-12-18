@@ -24,8 +24,7 @@
 #include <nvcv/Tensor.hpp>
 #include <util/Assert.h>
 
-namespace nvcv = nv::cv;
-namespace priv = nv::cvop::priv;
+namespace priv = nvcvop::priv;
 
 NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopFlipCreate, (NVCVOperatorHandle * handle, int32_t maxVarShapeBatchSize))
 {
@@ -49,7 +48,7 @@ NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopFlipSubmit,
     return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle output(out), input(in);
+            nvcv::TensorWrapHandle output(out), input(in);
             priv::ToDynamicRef<priv::Flip>(handle)(stream, input, output, flipCode);
         });
 }
@@ -61,8 +60,8 @@ NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopFlipVarShapeSubmit,
     return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::ImageBatchVarShapeWrapHandle output(out), input(in);
-            nv::cv::TensorWrapHandle             flip_code(flipCode);
+            nvcv::ImageBatchVarShapeWrapHandle output(out), input(in);
+            nvcv::TensorWrapHandle             flip_code(flipCode);
             priv::ToDynamicRef<priv::Flip>(handle)(stream, input, output, flip_code);
         });
 }

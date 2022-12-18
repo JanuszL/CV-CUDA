@@ -26,7 +26,7 @@
 
 #include "Operator.h"
 
-namespace nv { namespace cvop {
+namespace nvcvop {
 
 class IOperator
 {
@@ -38,6 +38,6 @@ public:
 private:
 };
 
-}} // namespace nv::cvop
+} // namespace nvcvop
 
 #endif // NVCV_OP_IOPERATOR_HPP

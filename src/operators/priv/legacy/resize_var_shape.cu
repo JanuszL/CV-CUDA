@@ -32,7 +32,7 @@
 
 #define USE_OCV_CPU_ALIGN_VERSION
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 namespace {
 
@@ -588,4 +588,4 @@ ErrorCode ResizeVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData
     return ErrorCode::SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

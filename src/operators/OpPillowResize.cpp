@@ -24,8 +24,7 @@
 #include <nvcv/Tensor.hpp>
 #include <util/Assert.h>
 
-namespace priv = nv::cvop::priv;
-namespace nvcv = nv::cv;
+namespace priv = nvcvop::priv;
 
 NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopPillowResizeCreate,
                    (NVCVOperatorHandle * handle, int32_t maxWidth, int32_t maxHeight, int32_t maxBatchSize,

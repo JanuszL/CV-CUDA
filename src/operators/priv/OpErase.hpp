@@ -32,26 +32,26 @@
 
 #include <memory>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class Erase final : public IOperator
 {
 public:
     explicit Erase(int num_erasing_area);
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, cv::ITensor &anchor,
-                    cv::ITensor &erasing, cv::ITensor &values, cv::ITensor &imgIdx, bool random,
+    void operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out, nvcv::ITensor &anchor,
+                    nvcv::ITensor &erasing, nvcv::ITensor &values, nvcv::ITensor &imgIdx, bool random,
                     unsigned int seed) const;
 
-    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
-                    cv::ITensor &anchor, cv::ITensor &erasing, cv::ITensor &values, cv::ITensor &imgIdx, bool random,
-                    unsigned int seed) const;
+    void operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, const nvcv::IImageBatchVarShape &out,
+                    nvcv::ITensor &anchor, nvcv::ITensor &erasing, nvcv::ITensor &values, nvcv::ITensor &imgIdx,
+                    bool random, unsigned int seed) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::Erase>         m_legacyOp;
-    std::unique_ptr<cv::legacy::cuda_op::EraseVarShape> m_legacyOpVarShape;
+    std::unique_ptr<nvcv::legacy::cuda_op::Erase>         m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::EraseVarShape> m_legacyOpVarShape;
 };
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_ERASE_HPP

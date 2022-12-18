@@ -77,7 +77,7 @@ static constexpr int ITUR_BT_601_CBV = -74448;
 
 #define BLOCK 32
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 template<class T>
 __global__ void rgb_to_bgr_nhwc(cuda::Tensor4DWrap<T> src, cuda::Tensor4DWrap<T> dst, int2 dstSize, int sch, int dch,
@@ -1754,4 +1754,4 @@ ErrorCode CvtColor::infer(const ITensorDataStridedCuda &inData, const ITensorDat
     return func(inData, outData, code, stream);
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

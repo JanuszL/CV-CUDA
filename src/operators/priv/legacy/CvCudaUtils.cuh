@@ -43,7 +43,7 @@
 #include <iostream>
 #include <sstream>
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 typedef unsigned char uchar;
 typedef signed char   schar;
@@ -148,7 +148,7 @@ struct Ptr2dNCHW
     {
         if (inData.format().numPlanes() != inData.format().numChannels())
         {
-            throw cv::Exception(Status::ERROR_INVALID_ARGUMENT, "Image must be planar");
+            throw nvcv::Exception(Status::ERROR_INVALID_ARGUMENT, "Image must be planar");
         }
 
         rowStride = inData.plane(0).rowStride;
@@ -163,23 +163,24 @@ struct Ptr2dNCHW
             {
                 if (plane.rowStride != rowStride)
                 {
-                    throw cv::Exception(Status::ERROR_INVALID_ARGUMENT, "All image planes' row pitch must be the same");
+                    throw nvcv::Exception(Status::ERROR_INVALID_ARGUMENT,
+                                          "All image planes' row pitch must be the same");
                 }
 
                 if (plane.basePtr != reinterpret_cast<const NVCVByte *>(data) + rowStride * plane.height * i)
                 {
-                    throw cv::Exception(Status::ERROR_INVALID_ARGUMENT, "All image buffer must be packed");
+                    throw nvcv::Exception(Status::ERROR_INVALID_ARGUMENT, "All image buffer must be packed");
                 }
 
                 if (inData.format().planeDataType(i) != inData.format().planeDataType(0))
                 {
-                    throw cv::Exception(Status::ERROR_INVALID_ARGUMENT,
-                                        "All image planes must have the same data type");
+                    throw nvcv::Exception(Status::ERROR_INVALID_ARGUMENT,
+                                          "All image planes must have the same data type");
                 }
 
                 if (plane.width != inData.plane(0).width || plane.height != inData.plane(0).height)
                 {
-                    throw cv::Exception(Status::ERROR_INVALID_ARGUMENT, "All image planes must have the same size");
+                    throw nvcv::Exception(Status::ERROR_INVALID_ARGUMENT, "All image planes must have the same size");
                 }
             }
         }
@@ -281,7 +282,7 @@ struct Ptr2dNHWC
     {
         if (inData.format().numPlanes() != 1)
         {
-            throw cv::Exception(Status::ERROR_INVALID_ARGUMENT, "Image must have only one plane");
+            throw nvcv::Exception(Status::ERROR_INVALID_ARGUMENT, "Image must have only one plane");
         }
 
         const ImagePlaneStrided &plane = inData.plane(0);
@@ -384,7 +385,7 @@ struct Ptr2dVarShapeNHWC
     {
     }
 
-    __host__ __forceinline__ Ptr2dVarShapeNHWC(const cv::IImageBatchVarShapeDataStridedCuda &data, int nch_ = -1)
+    __host__ __forceinline__ Ptr2dVarShapeNHWC(const nvcv::IImageBatchVarShapeDataStridedCuda &data, int nch_ = -1)
         : batches(data.numImages())
         , imgList(data.imageList())
         , nch(
@@ -479,7 +480,7 @@ struct BrdConstant
 {
     typedef D result_type;
 
-    __host__ __device__ __forceinline__ BrdConstant(int height_, int width_, const D &val_ = nv::cv::cuda::SetAll<D>(0))
+    __host__ __device__ __forceinline__ BrdConstant(int height_, int width_, const D &val_ = nvcv::cuda::SetAll<D>(0))
         : height(height_)
         , width(width_)
         , val(val_)
@@ -490,7 +491,7 @@ struct BrdConstant
     __device__ __forceinline__ D at(int b, int y, int x, const Ptr2D &src) const
     {
         return ((float)x >= 0 && x < src.at_cols(b) && (float)y >= 0 && y < src.at_rows(b))
-                 ? nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<D>>(*src.ptr(b, y, x))
+                 ? nvcv::cuda::SaturateCast<nvcv::cuda::BaseType<D>>(*src.ptr(b, y, x))
                  : val;
     }
 
@@ -550,7 +551,7 @@ struct BrdReplicate
     template<typename Ptr2D>
     __device__ __forceinline__ D at(int b, int y, int x, const Ptr2D &src) const
     {
-        return nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<D>>(
+        return nvcv::cuda::SaturateCast<nvcv::cuda::BaseType<D>>(
             *src.ptr(b, idx_row(y, src.at_rows(b) - 1), idx_col(x, src.at_cols(b) - 1)));
     }
 
@@ -609,7 +610,7 @@ struct BrdReflect101
     template<typename Ptr2D>
     __device__ __forceinline__ D at(int b, int y, int x, const Ptr2D &src) const
     {
-        return nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<D>>(
+        return nvcv::cuda::SaturateCast<nvcv::cuda::BaseType<D>>(
             *src.ptr(b, idx_row(y, src.at_rows(b) - 1), idx_col(x, src.at_cols(b) - 1)));
     }
 
@@ -668,7 +669,7 @@ struct BrdReflect
     template<typename Ptr2D>
     __device__ __forceinline__ D at(int b, int y, int x, const Ptr2D &src) const
     {
-        return nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<D>>(
+        return nvcv::cuda::SaturateCast<nvcv::cuda::BaseType<D>>(
             *src.ptr(b, idx_row(y, src.at_rows(b) - 1), idx_col(x, src.at_cols(b) - 1)));
     }
 
@@ -727,7 +728,7 @@ struct BrdWrap
     template<typename Ptr2D>
     __device__ __forceinline__ D at(int b, int y, int x, const Ptr2D &src) const
     {
-        return nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<D>>(
+        return nvcv::cuda::SaturateCast<nvcv::cuda::BaseType<D>>(
             *src.ptr(b, idx_row(y, src.at_rows(b)), idx_col(x, src.at_cols(b))));
     }
 
@@ -791,7 +792,7 @@ struct BorderReader<Ptr2D, BrdConstant<D>>
     __device__ __forceinline__ D operator()(int bidx, int y, int x) const
     {
         return ((float)x >= 0 && x < ptr.at_cols(bidx) && (float)y >= 0 && y < ptr.at_rows(bidx))
-                 ? nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<D>>(*ptr.ptr(bidx, y, x))
+                 ? nvcv::cuda::SaturateCast<nvcv::cuda::BaseType<D>>(*ptr.ptr(bidx, y, x))
                  : val;
     }
 
@@ -851,8 +852,8 @@ struct LinearFilter
 
     __device__ __forceinline__ elem_type operator()(int bidx, float y, float x) const
     {
-        using work_type = nv::cv::cuda::ConvertBaseTypeTo<float, elem_type>;
-        work_type out   = nv::cv::cuda::SetAll<work_type>(0);
+        using work_type = nvcv::cuda::ConvertBaseTypeTo<float, elem_type>;
+        work_type out   = nvcv::cuda::SetAll<work_type>(0);
 
         // to prevent -2147483648 > 0 in border
         // float x_float = x >= std::numeric_limits<int>::max() ? ((float) std::numeric_limits<int>::max() - 1):
@@ -877,7 +878,7 @@ struct LinearFilter
         src_reg = src(bidx, y2, x2);
         out     = out + src_reg * ((x - x1) * (y - y1));
 
-        return nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<elem_type>>(out);
+        return nvcv::cuda::SaturateCast<nvcv::cuda::BaseType<elem_type>>(out);
     }
 
     BrdReader src;
@@ -887,7 +888,7 @@ template<typename BrdReader>
 struct CubicFilter
 {
     typedef typename BrdReader::elem_type elem_type;
-    using work_type = nv::cv::cuda::ConvertBaseTypeTo<float, elem_type>;
+    using work_type = nvcv::cuda::ConvertBaseTypeTo<float, elem_type>;
 
     explicit __host__ __device__ __forceinline__ CubicFilter(const BrdReader &src_, float fx = 0.f, float fy = 0.f)
         : src(src_)
@@ -919,7 +920,7 @@ struct CubicFilter
         const float ymin = ceilf(y - 2.0f);
         const float ymax = floorf(y + 2.0f);
 
-        work_type sum  = nv::cv::cuda::SetAll<work_type>(0);
+        work_type sum  = nvcv::cuda::SetAll<work_type>(0);
         float     wsum = 0.0f;
 
         for (float cy = ymin; cy <= ymax; cy += 1.0f)
@@ -932,9 +933,9 @@ struct CubicFilter
             }
         }
 
-        work_type res = (!wsum) ? nv::cv::cuda::SetAll<work_type>(0) : sum / wsum;
+        work_type res = (!wsum) ? nvcv::cuda::SetAll<work_type>(0) : sum / wsum;
 
-        return nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<elem_type>>(res);
+        return nvcv::cuda::SaturateCast<nvcv::cuda::BaseType<elem_type>>(res);
     }
 
     BrdReader src;
@@ -969,8 +970,8 @@ struct IntegerAreaFilter
         int sy1 = __float2int_ru(fsy1);
         int sy2 = __float2int_rd(fsy2);
 
-        using work_type = nv::cv::cuda::ConvertBaseTypeTo<float, elem_type>;
-        work_type out   = nv::cv::cuda::SetAll<work_type>(0.f);
+        using work_type = nvcv::cuda::ConvertBaseTypeTo<float, elem_type>;
+        work_type out   = nvcv::cuda::SetAll<work_type>(0.f);
 
         for (int dy = sy1; dy < sy2; ++dy)
             for (int dx = sx1; dx < sx2; ++dx)
@@ -978,7 +979,7 @@ struct IntegerAreaFilter
                 out = out + src(bidx, dy, dx) * scale;
             }
 
-        return nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<elem_type>>(out);
+        return nvcv::cuda::SaturateCast<nvcv::cuda::BaseType<elem_type>>(out);
     }
 
     BrdReader src;
@@ -1013,8 +1014,8 @@ struct AreaFilter
 
         float scale = 1.f / (fminf(scale_x, src.at_cols(bidx) - fsx1) * fminf(scale_y, src.at_rows(bidx) - fsy1));
 
-        using work_type = nv::cv::cuda::ConvertBaseTypeTo<float, elem_type>;
-        work_type out   = nv::cv::cuda::SetAll<work_type>(0.f);
+        using work_type = nvcv::cuda::ConvertBaseTypeTo<float, elem_type>;
+        work_type out   = nvcv::cuda::SetAll<work_type>(0.f);
 
         for (int dy = sy1; dy < sy2; ++dy)
         {
@@ -1045,7 +1046,7 @@ struct AreaFilter
         if ((sy2 < fsy2) && (sx1 > fsx1))
             out = out + src(bidx, sy2, (sx1 - 1)) * ((fsy2 - sy2) * (sx1 - fsx1) * scale);
 
-        return nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<elem_type>>(out);
+        return nvcv::cuda::SaturateCast<nvcv::cuda::BaseType<elem_type>>(out);
     }
 
     BrdReader src;
@@ -1191,6 +1192,6 @@ inline void log(LogLevel log_level, LogLevel reportable_severity, std::string ms
 #define LOG_WARNING(...) GET_MACRO(LOG_WARNING_GLOBAL, __VA_ARGS__)(__VA_ARGS__)
 #define LOG_ERROR(...)   GET_MACRO(LOG_ERROR_GLOBAL, __VA_ARGS__)(__VA_ARGS__)
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op
 
 #endif // CV_CUDA_UTILS_CUH

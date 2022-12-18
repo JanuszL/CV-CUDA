@@ -24,7 +24,7 @@
 #include "MathWrappersImpl.hpp" // for RoundImpl, etc.
 #include "Metaprogramming.hpp"  // for TypeTraits, etc.
 
-namespace nv::cv::cuda::detail {
+namespace nvcv::cuda::detail {
 
 // The base saturate cast implementation can be used by host- or device-side calls
 
@@ -163,6 +163,6 @@ NVCV_CUDA_SAT_DEF(unsigned int, double, unsigned int, out = __double2uint_rn(u))
 #undef NVCV_CUDA_SAT_DEF
 #undef NVCV_CUDA_SAT_BODY
 
-} // namespace nv::cv::cuda::detail
+} // namespace nvcv::cuda::detail
 
 #endif // NVCV_CUDA_DETAIL_SATURATE_CAST_IMPL_HPP

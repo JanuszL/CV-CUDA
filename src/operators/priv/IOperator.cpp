@@ -14,7 +14,7 @@
 
 #include <sstream>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 IOperator *ToOperatorPtr(void *handle)
 {
@@ -30,7 +30,7 @@ IOperator *ToOperatorPtr(void *handle)
         {
             std::ostringstream ss;
             ss << "Object version " << op->version() << " not compatible with NVCV OP version " << CURRENT_VERSION;
-            throw cv::Exception(cv::Status::ERROR_NOT_COMPATIBLE, "%s", ss.str().c_str());
+            throw nvcv::Exception(nvcv::Status::ERROR_NOT_COMPATIBLE, "%s", ss.str().c_str());
         }
     }
     else
@@ -39,4 +39,4 @@ IOperator *ToOperatorPtr(void *handle)
     }
 }
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv

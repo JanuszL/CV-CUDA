@@ -32,25 +32,25 @@
 
 #include <memory>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class Normalize final : public IOperator
 {
 public:
     explicit Normalize();
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &base, const cv::ITensor &scale,
-                    cv::ITensor &out, float global_scale, float shift, float epsilon, uint32_t flags) const;
+    void operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &base, const nvcv::ITensor &scale,
+                    nvcv::ITensor &out, float global_scale, float shift, float epsilon, uint32_t flags) const;
 
-    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::ITensor &base,
-                    const cv::ITensor &scale, cv::IImageBatchVarShape &out, float global_scale, float shift,
+    void operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, const nvcv::ITensor &base,
+                    const nvcv::ITensor &scale, nvcv::IImageBatchVarShape &out, float global_scale, float shift,
                     float epsilon, uint32_t flags) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::Normalize>         m_legacyOp;
-    std::unique_ptr<cv::legacy::cuda_op::NormalizeVarShape> m_legacyOpVarShape;
+    std::unique_ptr<nvcv::legacy::cuda_op::Normalize>         m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::NormalizeVarShape> m_legacyOpVarShape;
 };
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_NORMALIZE_HPP

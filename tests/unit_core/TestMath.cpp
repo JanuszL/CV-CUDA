@@ -21,8 +21,8 @@
 #include <util/Math.hpp>
 
 namespace t    = ::testing;
-namespace util = nv::cv::util;
-namespace test = nv::cv::test;
+namespace util = nvcv::util;
+namespace test = nvcv::test;
 
 class MathRoundUpTests
     : public t::TestWithParam<

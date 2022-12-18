@@ -25,11 +25,11 @@
 
 #define BLOCK 32
 
-using namespace nv::cv;
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
+using namespace nvcv;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 namespace {
 
 template<typename BrdRd, typename T>
@@ -257,4 +257,4 @@ ErrorCode CopyMakeBorderVarShape::infer(const IImageBatchVarShapeDataStridedCuda
     return inferWarp(data_in, data_out, top, left, borderType, value, stream);
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

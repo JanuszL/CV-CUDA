@@ -23,8 +23,8 @@
 #include <nvcv/ImageFormat.hpp>
 
 namespace t    = ::testing;
-namespace util = nv::cv::util;
-namespace test = nv::cv::test;
+namespace util = nvcv::util;
+namespace test = nvcv::test;
 
 namespace {
 
@@ -135,7 +135,7 @@ TEST_P(DataTypeTests, make_pixel_type)
     EXPECT_EQ(p.dtype, pix);
 }
 
-class ImageDataTypeTests : public t::TestWithParam<std::tuple<nv::cv::ImageFormat, nv::cv::DataType>>
+class ImageDataTypeTests : public t::TestWithParam<std::tuple<nvcv::ImageFormat, nvcv::DataType>>
 {
 };
 

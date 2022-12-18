@@ -29,8 +29,7 @@
 #include <cmath>
 #include <random>
 
-namespace nvcv = nv::cv;
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 namespace t    = ::testing;
 
 #define PI 3.1415926535897932384626433832795
@@ -257,8 +256,8 @@ TEST_P(OpRotate, tensor_correct_output)
     int center_x = (srcWidth - 1) / 2, center_y = (srcHeight - 1) / 2;
     compute_center_shift(center_x, center_y, angleDeg, shiftX, shiftY);
 
-    nv::cvop::Rotate RotateOp(0);
-    double2          shift = {shiftX, shiftY};
+    nvcvop::Rotate RotateOp(0);
+    double2        shift = {shiftX, shiftY};
     EXPECT_NO_THROW(RotateOp(stream, imgSrc, imgDst, angleDeg, shift, interpolation));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
@@ -429,7 +428,7 @@ TEST_P(OpRotate, varshape_correct_output)
     }
 
     // Generate test result
-    nv::cvop::Rotate rotateOp(numberOfImages);
+    nvcvop::Rotate rotateOp(numberOfImages);
     EXPECT_NO_THROW(rotateOp(stream, batchSrc, batchDst, angleDegTensor, shiftTensor, interpolation));
 
     // Get test data back

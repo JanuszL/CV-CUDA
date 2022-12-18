@@ -23,9 +23,9 @@
 #include <nvcv/Exception.hpp>
 #include <util/CheckError.hpp>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
-namespace legacy = cv::legacy::cuda_op;
+namespace legacy = nvcv::legacy::cuda_op;
 
 CustomCrop::CustomCrop()
 {
@@ -34,22 +34,24 @@ CustomCrop::CustomCrop()
     m_legacyOp = std::make_unique<legacy::CustomCrop>(maxIn, maxOut);
 }
 
-void CustomCrop::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
+void CustomCrop::operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out,
                             const NVCVRectI &cropRect) const
 {
-    auto *inData = dynamic_cast<const cv::ITensorDataStridedCuda *>(in.exportData());
+    auto *inData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(in.exportData());
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be cuda-accessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Input must be cuda-accessible, pitch-linear tensor");
     }
 
-    auto *outData = dynamic_cast<const cv::ITensorDataStridedCuda *>(out.exportData());
+    auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(out.exportData());
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be cuda-accessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Output must be cuda-accessible, pitch-linear tensor");
     }
 
     NVCV_CHECK_THROW(m_legacyOp->infer(*inData, *outData, cropRect, stream));
 }
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv

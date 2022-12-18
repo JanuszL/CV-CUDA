@@ -26,15 +26,13 @@
 #define GENERAL_KERNEL_BLOCK 32
 #define SMALL_KERNEL_BLOCK   16
 
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
-
-namespace nvcv = nv::cv;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
 
 /**
  * This function fetches the pixel from the shared if possible.
  * Otherwise, the pixel is read from global memory.
- * If the given index is out of bound, then based on the rule of cv::BORDER_REPLICATE,
+ * If the given index is out of bound, then based on the rule of nvcv::BORDER_REPLICATE,
  * this function fetches the nearest valid pixel.
  * @tparam T The type of the pixels stored.
  * @param shared a pointer of type T to shared memory,
@@ -53,7 +51,7 @@ template<typename T>
 __device__ T fetch(T *shared, const Ptr2dNHWC<T> src, int batchIdx, int h, int w, int c, int sxOffset, int syOffset,
                    int gx, int gy, int block_size)
 {
-    // check for cv::BORDER_REPLICATE.
+    // check for nvcv::BORDER_REPLICATE.
     if (gx < 0)
     {
         gx = 0;
@@ -363,7 +361,7 @@ void median(const nvcv::TensorDataAccessStridedImagePlanar &inData,
 #endif
 }
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 size_t MedianBlur::calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type)
 {
@@ -371,7 +369,7 @@ size_t MedianBlur::calBufferSize(DataShape max_input_shape, DataShape max_output
 }
 
 ErrorCode MedianBlur::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
-                            const cv::Size2D ksize, cudaStream_t stream)
+                            const nvcv::Size2D ksize, cudaStream_t stream)
 {
     DataFormat input_format  = GetLegacyDataFormat(inData.layout());
     DataFormat output_format = GetLegacyDataFormat(outData.layout());
@@ -431,7 +429,7 @@ ErrorCode MedianBlur::infer(const ITensorDataStridedCuda &inData, const ITensorD
     return SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op
 
 #undef GENERAL_KERNEL_BLOCK
 #undef SMALL_KERNEL_BLOCK

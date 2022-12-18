@@ -22,8 +22,8 @@
 #include <limits> // for std::numeric_limits, etc.
 
 namespace t    = ::testing;
-namespace test = nv::cv::test;
-namespace cuda = nv::cv::cuda;
+namespace test = nvcv::test;
+namespace cuda = nvcv::cuda;
 
 template<int N>
 using TStr = typename test::StringLiteral<N>;
@@ -338,7 +338,7 @@ TYPED_TEST(TypeTraitsGetElementTest, correct_elements)
 {
     for (int e = 0; e < this->NumElements; ++e)
     {
-        EXPECT_EQ(nv::cv::cuda::GetElement(this->pix, e), e + 1);
+        EXPECT_EQ(nvcv::cuda::GetElement(this->pix, e), e + 1);
     }
 }
 
@@ -419,7 +419,7 @@ NVCV_TYPED_TEST_SUITE_F(
 
 TYPED_TEST(TypeTraitsVectorTypePrintTest, correct_output_stream)
 {
-    EXPECT_STREQ(nv::cv::cuda::GetTypeName<typename TestFixture::Type>(), this->GoldTypeName.value);
+    EXPECT_STREQ(nvcv::cuda::GetTypeName<typename TestFixture::Type>(), this->GoldTypeName.value);
 
     std::ostringstream oss;
 

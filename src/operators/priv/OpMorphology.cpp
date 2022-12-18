@@ -23,9 +23,9 @@
 #include <nvcv/Exception.hpp>
 #include <util/CheckError.hpp>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
-namespace legacy = cv::legacy::cuda_op;
+namespace legacy = nvcv::legacy::cuda_op;
 
 Morphology::Morphology(const int32_t maxVarShapeBatchSize)
 {
@@ -35,44 +35,46 @@ Morphology::Morphology(const int32_t maxVarShapeBatchSize)
     m_legacyOpVarShape = std::make_unique<legacy::MorphologyVarShape>(maxVarShapeBatchSize);
 }
 
-void Morphology::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
-                            NVCVMorphologyType morph_type, cv::Size2D mask_size, int2 anchor, int32_t iteration,
+void Morphology::operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out,
+                            NVCVMorphologyType morph_type, nvcv::Size2D mask_size, int2 anchor, int32_t iteration,
                             const NVCVBorderType borderMode) const
 {
-    auto *inData = dynamic_cast<const cv::ITensorDataStridedCuda *>(in.exportData());
+    auto *inData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(in.exportData());
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be cuda-accessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Input must be cuda-accessible, pitch-linear tensor");
     }
 
-    auto *outData = dynamic_cast<const cv::ITensorDataStridedCuda *>(out.exportData());
+    auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(out.exportData());
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be cuda-accessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Output must be cuda-accessible, pitch-linear tensor");
     }
 
     NVCV_CHECK_THROW(
         m_legacyOp->infer(*inData, *outData, morph_type, mask_size, anchor, iteration, borderMode, stream));
 }
 
-void Morphology::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
-                            NVCVMorphologyType morph_type, cv::ITensor &masks, cv::ITensor &anchors, int32_t iteration,
-                            NVCVBorderType borderMode) const
+void Morphology::operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in,
+                            const nvcv::IImageBatchVarShape &out, NVCVMorphologyType morph_type, nvcv::ITensor &masks,
+                            nvcv::ITensor &anchors, int32_t iteration, NVCVBorderType borderMode) const
 {
-    auto *masksData = dynamic_cast<const cv::ITensorDataStridedCuda *>(masks.exportData());
+    auto *masksData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(masks.exportData());
     if (masksData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "masksData must be a tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT, "masksData must be a tensor");
     }
 
-    auto *anchorsData = dynamic_cast<const cv::ITensorDataStridedCuda *>(anchors.exportData());
+    auto *anchorsData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(anchors.exportData());
     if (anchorsData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "anchors must be a tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT, "anchors must be a tensor");
     }
 
     NVCV_CHECK_THROW(
         m_legacyOpVarShape->infer(in, out, morph_type, *masksData, *anchorsData, iteration, borderMode, stream));
 }
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv

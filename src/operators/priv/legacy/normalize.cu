@@ -25,9 +25,8 @@
 
 #include <nvcv/operators/OpNormalize.h> // for NVCV_OP_NORMALIZE_SCALE_IS_STDDEV, etc.
 
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
-namespace nvcv = nv::cv;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
 
 // (float3 - float3) * float3 / (float3 - float) * float3 / (float3 - float3) * float / (float3 - float) * float
 template<typename input_type, typename base_type, typename scale_type>
@@ -52,7 +51,7 @@ __global__ void normalizeKernel(const input_type src, const base_type base, cons
 
     using input_value_type = typename input_type::ValueType;
 
-    *dst.ptr(batch_idx, src_y, src_x) = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<input_value_type>>(
+    *dst.ptr(batch_idx, src_y, src_x) = nvcv::cuda::SaturateCast<nvcv::cuda::BaseType<input_value_type>>(
         (*src.ptr(batch_idx, src_y, src_x) - *base.ptr(base_batch_idx, base_y, base_x))
             * (*scale.ptr(scale_batch_idx, scale_y, scale_x)) * global_scale
         + global_shift);
@@ -84,9 +83,9 @@ __global__ void normalizeInvStdDevKernel(const input_type src, const base_type b
 
     scale_value_type s   = *scale.ptr(scale_batch_idx, scale_y, scale_x);
     scale_value_type x   = s * s + epsilon;
-    scale_value_type mul = 1.0f / nv::cv::cuda::sqrt(x);
+    scale_value_type mul = 1.0f / nvcv::cuda::sqrt(x);
 
-    *dst.ptr(batch_idx, src_y, src_x) = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<input_value_type>>(
+    *dst.ptr(batch_idx, src_y, src_x) = nvcv::cuda::SaturateCast<nvcv::cuda::BaseType<input_value_type>>(
         (*src.ptr(batch_idx, src_y, src_x) - *base.ptr(base_batch_idx, base_y, base_x)) * mul * global_scale
         + global_shift);
 }
@@ -166,7 +165,7 @@ void normalize(const nvcv::ITensorDataStridedCuda &inData, const nvcv::ITensorDa
 
     DataShape input_shape = GetLegacyDataShape(inAccess->infoShape());
 
-    using work_type = nv::cv::cuda::ConvertBaseTypeTo<float, input_type>;
+    using work_type = nvcv::cuda::ConvertBaseTypeTo<float, input_type>;
 
     if (baseAccess->numChannels() != 1 && scaleAccess->numChannels() != 1)
     {
@@ -217,7 +216,7 @@ void normalizeInvStdDev(const nvcv::ITensorDataStridedCuda &inData, const nvcv::
 
     DataShape input_shape = GetLegacyDataShape(inAccess->infoShape());
 
-    using work_type = nv::cv::cuda::ConvertBaseTypeTo<float, input_type>;
+    using work_type = nvcv::cuda::ConvertBaseTypeTo<float, input_type>;
 
     if (baseAccess->numChannels() != 1 && scaleAccess->numChannels() != 1)
     {
@@ -249,7 +248,7 @@ void normalizeInvStdDev(const nvcv::ITensorDataStridedCuda &inData, const nvcv::
     }
 }
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 void Normalize::checkParamShape(DataShape input_shape, DataShape param_shape)
 {
@@ -264,10 +263,10 @@ size_t Normalize::calBufferSize(DataShape max_input_shape, DataShape max_output_
     return 0;
 }
 
-ErrorCode Normalize::infer(const nv::cv::ITensorDataStridedCuda &inData, const nv::cv::ITensorDataStridedCuda &baseData,
-                           const nv::cv::ITensorDataStridedCuda &scaleData,
-                           const nv::cv::ITensorDataStridedCuda &outData, const float global_scale, const float shift,
-                           const float epsilon, const uint32_t flags, cudaStream_t stream)
+ErrorCode Normalize::infer(const nvcv::ITensorDataStridedCuda &inData, const nvcv::ITensorDataStridedCuda &baseData,
+                           const nvcv::ITensorDataStridedCuda &scaleData, const nvcv::ITensorDataStridedCuda &outData,
+                           const float global_scale, const float shift, const float epsilon, const uint32_t flags,
+                           cudaStream_t stream)
 {
     DataFormat format = GetLegacyDataFormat(inData.layout());
 
@@ -372,4 +371,4 @@ ErrorCode Normalize::infer(const nv::cv::ITensorDataStridedCuda &inData, const n
     return SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

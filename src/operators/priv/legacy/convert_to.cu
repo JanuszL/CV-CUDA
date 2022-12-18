@@ -30,10 +30,8 @@
 #include <cassert>
 #include <cstdio>
 
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
-
-namespace nvcv = nv::cv;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
 
 template<typename SRC_TYPE, typename DST_TYPE, typename S>
 struct Convertor
@@ -119,7 +117,7 @@ void convertToScale(const nvcv::ITensorDataStridedCuda &inData, const nvcv::ITen
 #endif
 }
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 size_t ConvertTo::calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type)
 {
@@ -190,4 +188,4 @@ ErrorCode ConvertTo::infer(const ITensorDataStridedCuda &inData, const ITensorDa
     return ErrorCode::SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

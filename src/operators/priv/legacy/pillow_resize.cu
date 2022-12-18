@@ -25,15 +25,15 @@
 
 #include <nvcv/Rect.h>
 
-using namespace nv::cv;
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
+using namespace nvcv;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
 
 #define BLOCK           32
 #define SHARE_MEM_LIMIT 4096
 #define work_type       float
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 static constexpr float        bilinear_filter_support = 1.;
 static constexpr unsigned int precision_bits          = 32 - 8 - 2;
@@ -493,4 +493,4 @@ ErrorCode PillowResize::infer(const ITensorDataStridedCuda &inData, const ITenso
     return ErrorCode::SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

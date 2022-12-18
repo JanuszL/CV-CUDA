@@ -28,7 +28,7 @@
 
 #define BLOCK 32
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 template<typename T>
 __global__ void channel_reorder_kernel(const cuda_op::Ptr2dVarShapeNHWC<T> src, cuda_op::Ptr2dVarShapeNHWC<T> dst,
@@ -95,7 +95,7 @@ ErrorCode ChannelReorderVarShape::infer(const IImageBatchVarShapeDataStridedCuda
     DataType data_type;
     int      channels;
     {
-        cv::ImageFormat fmt(inData.hostFormatList()[0]);
+        nvcv::ImageFormat fmt(inData.hostFormatList()[0]);
         data_type = helpers::GetLegacyDataType(fmt);
         channels  = fmt.numChannels();
     }
@@ -113,9 +113,9 @@ ErrorCode ChannelReorderVarShape::infer(const IImageBatchVarShapeDataStridedCuda
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    if (orderData.layout()[0] != cv::LABEL_BATCH)
+    if (orderData.layout()[0] != nvcv::LABEL_BATCH)
     {
-        LOG_ERROR("Label of the first dimension of order tensor must be " << cv::LABEL_BATCH);
+        LOG_ERROR("Label of the first dimension of order tensor must be " << nvcv::LABEL_BATCH);
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
@@ -133,8 +133,8 @@ ErrorCode ChannelReorderVarShape::infer(const IImageBatchVarShapeDataStridedCuda
 
     for (int i = 0; i < inData.numImages(); ++i)
     {
-        cv::ImageFormat inFmt(inData.hostFormatList()[i]);
-        cv::ImageFormat outFmt(outData.hostFormatList()[i]);
+        nvcv::ImageFormat inFmt(inData.hostFormatList()[i]);
+        nvcv::ImageFormat outFmt(outData.hostFormatList()[i]);
 
         if (inFmt.numPlanes() != 1)
         {
@@ -204,4 +204,4 @@ ErrorCode ChannelReorderVarShape::infer(const IImageBatchVarShapeDataStridedCuda
     return ErrorCode::SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

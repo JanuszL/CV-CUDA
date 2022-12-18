@@ -23,12 +23,12 @@
 #include <nvcv/ImageFormat.h>
 #include <util/CheckError.hpp>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
-namespace leg    = cv::legacy;
-namespace legacy = cv::legacy::cuda_op;
+namespace leg    = nvcv::legacy;
+namespace legacy = nvcv::legacy::cuda_op;
 
-PillowResize::PillowResize(cv::Size2D maxSize, int maxBatchSize, NVCVImageFormat fmt)
+PillowResize::PillowResize(nvcv::Size2D maxSize, int maxBatchSize, NVCVImageFormat fmt)
 {
     int32_t bpc[4];
     nvcvImageFormatGetBitsPerChannel(fmt, bpc);
@@ -36,7 +36,7 @@ PillowResize::PillowResize(cv::Size2D maxSize, int maxBatchSize, NVCVImageFormat
     nvcvImageFormatGetNumChannels(fmt, &maxChannel);
     NVCVDataKind dataKind;
     nvcvImageFormatGetDataKind(fmt, &dataKind);
-    nv::cv::DataKind        dkind     = static_cast<nv::cv::DataKind>(dataKind);
+    nvcv::DataKind          dkind     = static_cast<nvcv::DataKind>(dataKind);
     leg::cuda_op::DataType  data_type = leg::helpers::GetLegacyDataType(bpc[0], dkind);
     leg::cuda_op::DataShape maxIn(maxBatchSize, maxChannel, maxSize.h, maxSize.w),
         maxOut(maxBatchSize, maxChannel, maxSize.h, maxSize.w);
@@ -44,28 +44,30 @@ PillowResize::PillowResize(cv::Size2D maxSize, int maxBatchSize, NVCVImageFormat
     m_legacyOpVarShape = std::make_unique<leg::cuda_op::PillowResizeVarShape>(maxIn, maxOut, data_type);
 }
 
-void PillowResize::operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
+void PillowResize::operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out,
                               const NVCVInterpolationType interpolation) const
 {
-    auto *inData = dynamic_cast<const cv::ITensorDataStridedCuda *>(in.exportData());
+    auto *inData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(in.exportData());
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Input must be device-acessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Input must be device-acessible, pitch-linear tensor");
     }
 
-    auto *outData = dynamic_cast<const cv::ITensorDataStridedCuda *>(out.exportData());
+    auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(out.exportData());
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be device-acessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Output must be device-acessible, pitch-linear tensor");
     }
 
     NVCV_CHECK_THROW(m_legacyOp->infer(*inData, *outData, interpolation, stream));
 }
 
-void PillowResize::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in,
-                              const cv::IImageBatchVarShape &out, const NVCVInterpolationType interpolation) const
+void PillowResize::operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in,
+                              const nvcv::IImageBatchVarShape &out, const NVCVInterpolationType interpolation) const
 {
     NVCV_CHECK_THROW(m_legacyOpVarShape->infer(in, out, interpolation, stream));
 }
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv

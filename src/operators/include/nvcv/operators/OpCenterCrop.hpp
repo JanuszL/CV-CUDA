@@ -35,7 +35,7 @@
 #include <nvcv/Size.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 
-namespace nv { namespace cvop {
+namespace nvcvop {
 
 class CenterCrop final : public IOperator
 {
@@ -44,7 +44,7 @@ public:
 
     ~CenterCrop();
 
-    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const cv::Size2D &cropSize);
+    void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, const nvcv::Size2D &cropSize);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -54,7 +54,7 @@ private:
 
 inline CenterCrop::CenterCrop()
 {
-    cv::detail::CheckThrow(nvcvopCenterCropCreate(&m_handle));
+    nvcv::detail::CheckThrow(nvcvopCenterCropCreate(&m_handle));
     assert(m_handle);
 }
 
@@ -64,9 +64,11 @@ inline CenterCrop::~CenterCrop()
     m_handle = nullptr;
 }
 
-inline void CenterCrop::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const cv::Size2D &cropSize)
+inline void CenterCrop::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out,
+                                   const nvcv::Size2D &cropSize)
 {
-    cv::detail::CheckThrow(nvcvopCenterCropSubmit(m_handle, stream, in.handle(), out.handle(), cropSize.w, cropSize.h));
+    nvcv::detail::CheckThrow(
+        nvcvopCenterCropSubmit(m_handle, stream, in.handle(), out.handle(), cropSize.w, cropSize.h));
 }
 
 inline NVCVOperatorHandle CenterCrop::handle() const noexcept
@@ -74,6 +76,6 @@ inline NVCVOperatorHandle CenterCrop::handle() const noexcept
     return m_handle;
 }
 
-}} // namespace nv::cvop
+} // namespace nvcvop
 
 #endif // NVCV_OP_CENTER_CROP_HPP

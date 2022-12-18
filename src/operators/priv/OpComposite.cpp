@@ -23,9 +23,9 @@
 #include <nvcv/Exception.hpp>
 #include <util/CheckError.hpp>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
-namespace legacy = cv::legacy::cuda_op;
+namespace legacy = nvcv::legacy::cuda_op;
 
 Composite::Composite()
 {
@@ -35,71 +35,75 @@ Composite::Composite()
     m_legacyOpVarShape = std::make_unique<legacy::CompositeVarShape>(maxIn, maxOut);
 }
 
-void Composite::operator()(cudaStream_t stream, const cv::ITensor &foreground, const cv::ITensor &background,
-                           const cv::ITensor &fgMask, const cv::ITensor &output) const
+void Composite::operator()(cudaStream_t stream, const nvcv::ITensor &foreground, const nvcv::ITensor &background,
+                           const nvcv::ITensor &fgMask, const nvcv::ITensor &output) const
 {
-    auto *foregroundData = dynamic_cast<const cv::ITensorDataStridedCuda *>(foreground.exportData());
+    auto *foregroundData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(foreground.exportData());
     if (foregroundData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Input foreground must be cuda-accessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Input foreground must be cuda-accessible, pitch-linear tensor");
     }
 
-    auto *backgroundData = dynamic_cast<const cv::ITensorDataStridedCuda *>(background.exportData());
+    auto *backgroundData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(background.exportData());
     if (backgroundData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Input background must be cuda-accessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Input background must be cuda-accessible, pitch-linear tensor");
     }
 
-    auto *fgMaskData = dynamic_cast<const cv::ITensorDataStridedCuda *>(fgMask.exportData());
+    auto *fgMaskData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(fgMask.exportData());
     if (fgMaskData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Input fgMask must be cuda-accessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Input fgMask must be cuda-accessible, pitch-linear tensor");
     }
 
-    auto *outData = dynamic_cast<const cv::ITensorDataStridedCuda *>(output.exportData());
+    auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(output.exportData());
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be cuda-accessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Output must be cuda-accessible, pitch-linear tensor");
     }
 
     NVCV_CHECK_THROW(m_legacyOp->infer(*foregroundData, *backgroundData, *fgMaskData, *outData, stream));
 }
 
-void Composite::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &foreground,
-                           const cv::IImageBatchVarShape &background, const cv::IImageBatchVarShape &fgMask,
-                           const cv::IImageBatchVarShape &output) const
+void Composite::operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &foreground,
+                           const nvcv::IImageBatchVarShape &background, const nvcv::IImageBatchVarShape &fgMask,
+                           const nvcv::IImageBatchVarShape &output) const
 {
-    auto *foregroundData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(foreground.exportData(stream));
+    auto *foregroundData
+        = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(foreground.exportData(stream));
     if (foregroundData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Input foreground must be cuda-accessible, varshape image batch");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Input foreground must be cuda-accessible, varshape image batch");
     }
 
-    auto *backgroundData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(background.exportData(stream));
+    auto *backgroundData
+        = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(background.exportData(stream));
     if (backgroundData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Input background must be cuda-accessible, varshape image batch");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Input background must be cuda-accessible, varshape image batch");
     }
 
-    auto *fgMaskData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(fgMask.exportData(stream));
+    auto *fgMaskData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(fgMask.exportData(stream));
     if (fgMaskData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Input fgMask must be cuda-accessible, varshape image batch");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Input fgMask must be cuda-accessible, varshape image batch");
     }
 
-    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(output.exportData(stream));
+    auto *outData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(output.exportData(stream));
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Output must be cuda-accessible, varshape image batch");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Output must be cuda-accessible, varshape image batch");
     }
 
     NVCV_CHECK_THROW(m_legacyOpVarShape->infer(*foregroundData, *backgroundData, *fgMaskData, *outData, stream));
 }
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv

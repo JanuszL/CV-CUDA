@@ -30,7 +30,7 @@
 #include <nvcv/ITensorData.hpp>   // for ITensorDataStridedCuda, etc.
 #include <nvcv/operators/Types.h> // for NVCVBorderType, etc.
 
-namespace nv::cv::cuda {
+namespace nvcv::cuda {
 
 /**
  * @defgroup NVCV_CPP_CUDATOOLS_BORDER Border functions
@@ -506,6 +506,6 @@ using BorderWrapNHWC = BorderWrap<Tensor4DWrap<T>, B, false, true, true, false>;
 
 /**@}*/
 
-} // namespace nv::cv::cuda
+} // namespace nvcv::cuda
 
 #endif // NVCV_CUDA_BORDER_WRAP_HPP

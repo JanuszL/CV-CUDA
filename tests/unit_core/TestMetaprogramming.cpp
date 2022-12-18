@@ -20,8 +20,8 @@
 #include <common/TypedTests.hpp>
 #include <util/Metaprogramming.hpp>
 
-namespace ttest = nv::cv::test::type;
-namespace util  = nv::cv::util;
+namespace ttest = nvcv::test::type;
+namespace util  = nvcv::util;
 
 // clang-format off
 NVCV_TYPED_TEST_SUITE(MetaprogrammingTypeIdentityTest,

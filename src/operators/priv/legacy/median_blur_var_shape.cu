@@ -26,15 +26,15 @@
 #define GENERAL_KERNEL_BLOCK 32
 #define SMALL_KERNEL_BLOCK   16
 
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 /**
  * This function fetches the pixel from the shared if possible.
  * Otherwise, the pixel is read from global memory.
- * If the given index is out of bound, then based on the rule of cv::BORDER_REPLICATE,
+ * If the given index is out of bound, then based on the rule of nvcv::BORDER_REPLICATE,
  * this function fetches the nearest valid pixel.
  * @tparam T The type of the pixels stored.
  * @param shared a pointer of type T to shared memory,
@@ -53,7 +53,7 @@ template<typename T>
 __device__ T fetch(T *shared, const Ptr2dVarShapeNHWC<T> src, int batchIdx, int h, int w, int c, int sxOffset,
                    int syOffset, int gx, int gy, int block_size)
 {
-    // check for cv::BORDER_REPLICATE.
+    // check for nvcv::BORDER_REPLICATE.
     if (gx < 0)
     {
         gx = 0;
@@ -449,7 +449,7 @@ ErrorCode MedianBlurVarShape::infer(const IImageBatchVarShapeDataStridedCuda &in
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    auto ksizeDataAccess = nv::cv::TensorDataAccessStrided::Create(ksize);
+    auto ksizeDataAccess = nvcv::TensorDataAccessStrided::Create(ksize);
     NVCV_ASSERT(ksizeDataAccess);
 
     // Copy the data to host
@@ -494,7 +494,7 @@ ErrorCode MedianBlurVarShape::infer(const IImageBatchVarShapeDataStridedCuda &in
     return SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op
 
 #undef GENERAL_KERNEL_BLOCK
 #undef SMALL_KERNEL_BLOCK

@@ -77,7 +77,7 @@ struct ProxyTypeList<>
 
 } // namespace testing::internal
 
-namespace nv::cv::test::type {
+namespace nvcv::test::type {
 
 // Types -----------------------------------------
 
@@ -696,12 +696,12 @@ auto ToValueList()
     return ToValueList(T());
 }
 
-} // namespace nv::cv::test::type
+} // namespace nvcv::test::type
 
-namespace nv::cv::test {
+namespace nvcv::test {
 using type::ToValueList;
 using type::Types;
 using type::Values;
-} // namespace nv::cv::test
+} // namespace nvcv::test
 
 #endif // NVCV_TEST_COMMON_TYPELIST_HPP

@@ -31,7 +31,7 @@ public:
         // Swallow any existing error so that test isn't affected by it.
         // Actual error must have been already trapped in the previous test.
 #if NVCV_UNIT_TESTS
-        nv::cv::priv::SetThreadStatus(std::exception_ptr{});
+        nvcv::priv::SetThreadStatus(std::exception_ptr{});
 #else
         nvcvGetLastError();
 #endif

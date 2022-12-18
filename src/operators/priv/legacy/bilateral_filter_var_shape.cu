@@ -25,10 +25,10 @@
 
 #include "CvCudaUtils.cuh"
 
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 static __device__ __forceinline__ float norm1(const float &a)
 {
@@ -174,23 +174,19 @@ __global__ void BilateralFilterVarShapeKernel(const BrdRd src, Ptr2dVarShapeNHWC
     }
     if (colIdx < columns && rowIdx < rows)
     {
-        *dst.ptr(coord0.z, coord0.y, coord0.x)
-            = nv::cv::cuda::SaturateCast<cuda::BaseType<T>>(numerator0 / denominator0);
+        *dst.ptr(coord0.z, coord0.y, coord0.x) = nvcv::cuda::SaturateCast<cuda::BaseType<T>>(numerator0 / denominator0);
     }
     if (colIdx + 1 < columns && rowIdx < rows)
     {
-        *dst.ptr(coord1.z, coord1.y, coord1.x)
-            = nv::cv::cuda::SaturateCast<cuda::BaseType<T>>(numerator1 / denominator1);
+        *dst.ptr(coord1.z, coord1.y, coord1.x) = nvcv::cuda::SaturateCast<cuda::BaseType<T>>(numerator1 / denominator1);
     }
     if (colIdx < columns && rowIdx + 1 < rows)
     {
-        *dst.ptr(coord2.z, coord2.y, coord2.x)
-            = nv::cv::cuda::SaturateCast<cuda::BaseType<T>>(numerator2 / denominator2);
+        *dst.ptr(coord2.z, coord2.y, coord2.x) = nvcv::cuda::SaturateCast<cuda::BaseType<T>>(numerator2 / denominator2);
     }
     if (colIdx + 1 < columns && rowIdx + 1 < rows)
     {
-        *dst.ptr(coord3.z, coord3.y, coord3.x)
-            = nv::cv::cuda::SaturateCast<cuda::BaseType<T>>(numerator3 / denominator3);
+        *dst.ptr(coord3.z, coord3.y, coord3.x) = nvcv::cuda::SaturateCast<cuda::BaseType<T>>(numerator3 / denominator3);
     }
 }
 
@@ -406,4 +402,4 @@ ErrorCode BilateralFilterVarShape::infer(const IImageBatchVarShapeDataStridedCud
     return ErrorCode::SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

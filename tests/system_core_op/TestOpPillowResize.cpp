@@ -30,8 +30,8 @@
 #include <cmath>
 #include <iostream>
 #include <random>
-namespace nvcv = nv::cv;
-namespace test = nv::cv::test;
+
+namespace test = nvcv::test;
 namespace t    = ::testing;
 
 using Vecf  = std::vector<float>;
@@ -358,7 +358,7 @@ protected:
     /**
      * \brief _resampleHorizontal Apply resample along the horizontal axis.
      * It calls the _resampleHorizontal with the correct pixel type using
-     * the value returned by cv::Mat::type().
+     * the value returned by nvcv::Mat::type().
      *
      * \param[in, out] im_out Output resized matrix.
      *                        The matrix has to be previously initialized with right size.
@@ -376,7 +376,7 @@ protected:
     /**
      * \brief _resampleVertical Apply resample along the vertical axis.
      * It calls the _resampleVertical with the correct pixel type using
-     * the value returned by cv::Mat::type().
+     * the value returned by nvcv::Mat::type().
      *
      * \param[in, out] im_out Output resized matrix.
      *                        The matrix has to be previously initialized with right size.
@@ -866,8 +866,8 @@ void StartTest(int srcWidth, int srcHeight, int dstWidth, int dstHeight, NVCVInt
     // Generate test result
     nvcv::Tensor imgDst(numberOfImages, {dstWidth, dstHeight}, fmt);
 
-    nv::cvop::PillowResize pillowResizeOp(nvcv::Size2D{std::max(srcWidth, dstWidth), std::max(srcHeight, dstHeight)},
-                                          numberOfImages, fmt);
+    nvcvop::PillowResize pillowResizeOp(nvcv::Size2D{std::max(srcWidth, dstWidth), std::max(srcHeight, dstHeight)},
+                                        numberOfImages, fmt);
     EXPECT_NO_THROW(pillowResizeOp(stream, imgSrc, imgDst, interpolation));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
@@ -987,11 +987,11 @@ void StartVarShapeTest(int srcWidthBase, int srcHeightBase, int dstWidthBase, in
                                srcHeight, cudaMemcpyHostToDevice));
     }
 
-    nv::cv::Size2D maxSrcSize = batchSrc.maxSize();
-    nv::cv::Size2D maxDstSize = batchDst.maxSize();
+    nvcv::Size2D maxSrcSize = batchSrc.maxSize();
+    nvcv::Size2D maxDstSize = batchDst.maxSize();
 
     // Generate test result
-    nv::cvop::PillowResize pillowResizeOp(
+    nvcvop::PillowResize pillowResizeOp(
         nvcv::Size2D{std::max(maxSrcSize.w, maxDstSize.w), std::max(maxSrcSize.h, maxDstSize.h)}, numberOfImages, fmt);
     EXPECT_NO_THROW(pillowResizeOp(stream, batchSrc, batchDst, interpolation));
 

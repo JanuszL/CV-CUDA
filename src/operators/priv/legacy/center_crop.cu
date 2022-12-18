@@ -29,10 +29,8 @@
 
 #define BLOCK 32
 
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
-
-namespace nvcv = nv::cv;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
 
 template<typename Ptr2D>
 __global__ void center_crop_kernel_nhwc(Ptr2D src_ptr, Ptr2D dst_ptr, const int left_indices, const int top_indices,
@@ -70,7 +68,7 @@ void center_crop(const nvcv::ITensorDataStridedCuda &inData, const nvcv::ITensor
 #endif
 }
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 size_t CenterCrop::calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type)
 {
@@ -96,7 +94,7 @@ ErrorCode CenterCrop::infer(const ITensorDataStridedCuda &inData, const ITensorD
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    auto inAccess = cv::TensorDataAccessStridedImagePlanar::Create(inData);
+    auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(inData);
     if (!inAccess)
     {
         return ErrorCode::INVALID_DATA_FORMAT;
@@ -111,7 +109,7 @@ ErrorCode CenterCrop::infer(const ITensorDataStridedCuda &inData, const ITensorD
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    auto outAccess = cv::TensorDataAccessStridedImagePlanar::Create(outData);
+    auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(outData);
     if (!outAccess)
     {
         return ErrorCode::INVALID_DATA_FORMAT;
@@ -138,4 +136,4 @@ ErrorCode CenterCrop::infer(const ITensorDataStridedCuda &inData, const ITensorD
     return ErrorCode::SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

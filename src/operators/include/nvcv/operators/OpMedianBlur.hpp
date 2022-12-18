@@ -35,7 +35,7 @@
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 
-namespace nv { namespace cvop {
+namespace nvcvop {
 
 class MedianBlur final : public IOperator
 {
@@ -44,9 +44,10 @@ public:
 
     ~MedianBlur();
 
-    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const cv::Size2D ksize);
+    void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, const nvcv::Size2D ksize);
 
-    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out, cv::ITensor &ksize);
+    void operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
+                    nvcv::ITensor &ksize);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -56,7 +57,7 @@ private:
 
 inline MedianBlur::MedianBlur(const int maxVarShapeBatchSize)
 {
-    cv::detail::CheckThrow(nvcvopMedianBlurCreate(&m_handle, maxVarShapeBatchSize));
+    nvcv::detail::CheckThrow(nvcvopMedianBlurCreate(&m_handle, maxVarShapeBatchSize));
     assert(m_handle);
 }
 
@@ -66,15 +67,16 @@ inline MedianBlur::~MedianBlur()
     m_handle = nullptr;
 }
 
-inline void MedianBlur::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const cv::Size2D ksize)
+inline void MedianBlur::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, const nvcv::Size2D ksize)
 {
-    cv::detail::CheckThrow(nvcvopMedianBlurSubmit(m_handle, stream, in.handle(), out.handle(), ksize.w, ksize.h));
+    nvcv::detail::CheckThrow(nvcvopMedianBlurSubmit(m_handle, stream, in.handle(), out.handle(), ksize.w, ksize.h));
 }
 
-inline void MedianBlur::operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
-                                   cv::ITensor &ksize)
+inline void MedianBlur::operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
+                                   nvcv::ITensor &ksize)
 {
-    cv::detail::CheckThrow(nvcvopMedianBlurVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), ksize.handle()));
+    nvcv::detail::CheckThrow(
+        nvcvopMedianBlurVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), ksize.handle()));
 }
 
 inline NVCVOperatorHandle MedianBlur::handle() const noexcept
@@ -82,6 +84,6 @@ inline NVCVOperatorHandle MedianBlur::handle() const noexcept
     return m_handle;
 }
 
-}} // namespace nv::cvop
+} // namespace nvcvop
 
 #endif // NVCV_OP_MEDIAN_BLUR_HPP

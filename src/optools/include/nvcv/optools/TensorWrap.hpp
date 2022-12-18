@@ -31,7 +31,7 @@
 
 #include <utility>
 
-namespace nv::cv::cuda {
+namespace nvcv::cuda {
 
 /**
  * @defgroup NVCV_CPP_CUDATOOLS_TENSORWRAP TensorWrap classes
@@ -399,6 +399,6 @@ using Tensor4DWrap = TensorWrap<T, -1, -1, -1, sizeof(T)>;
 
 /**@}*/
 
-} // namespace nv::cv::cuda
+} // namespace nvcv::cuda
 
 #endif // NVCV_CUDA_TENSOR_WRAP_HPP

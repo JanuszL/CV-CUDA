@@ -18,7 +18,7 @@ find_package(Doxygen)
 
 find_program(SPHINX_EXECUTABLE NAMES sphinx-build DOC "Path to sphinx-build executable")
 
-get_target_property(CORE_SRCPATH nvcv SOURCE_DIR)
+get_target_property(CORE_SRCPATH nvcv_types SOURCE_DIR)
 get_target_property(OPS_SRCPATH nvcv_operators SOURCE_DIR)
 get_target_property(OPTOOLS_SRCPATH nvcv_optools SOURCE_DIR)
 

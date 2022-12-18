@@ -33,10 +33,9 @@
 #include <map>
 #include <random>
 
-namespace nvcv     = nv::cv;
-namespace nvcvcuda = nv::cv::cuda;
-namespace test     = nv::cv::test;
-using namespace nv::cv::cuda;
+namespace nvcvcuda = nvcv::cuda;
+namespace test     = nvcv::test;
+using namespace nvcv::cuda;
 
 // #define DBG_WARP_PERSPECTIVE 1
 
@@ -135,7 +134,7 @@ static void WarpPerspectiveGold(std::vector<uint8_t> &hDst, const int dstRowStri
 
     if (flags & NVCV_WARP_INVERSE_MAP)
     {
-        nv::cv::cuda::math::Matrix<float, 3, 3> tempMatrixForInverse;
+        nvcv::cuda::math::Matrix<float, 3, 3> tempMatrixForInverse;
 
         tempMatrixForInverse[0][0] = (float)(transMatrix[0]);
         tempMatrixForInverse[0][1] = (float)(transMatrix[1]);
@@ -531,7 +530,7 @@ TEST_P(OpWarpPerspective, tensor_correct_output)
     // Generate test result
     nvcv::Tensor imgDst(numberOfImages, {dstWidth, dstHeight}, nvcv::FMT_RGBA8);
 
-    nv::cvop::WarpPerspective warpPerspectiveOp(0);
+    nvcvop::WarpPerspective warpPerspectiveOp(0);
     EXPECT_NO_THROW(warpPerspectiveOp(stream, imgSrc, imgDst, transMatrix, flags, borderMode, borderValue));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
@@ -706,7 +705,7 @@ TEST_P(OpWarpPerspective, varshape_correct_output)
     }
 
     // Generate test result
-    nv::cvop::WarpPerspective warpPerspectiveOp(numberOfImages);
+    nvcvop::WarpPerspective warpPerspectiveOp(numberOfImages);
     EXPECT_NO_THROW(warpPerspectiveOp(stream, batchSrc, batchDst, transMatrixTensor, flags, borderMode, borderValue));
 
     // Get test data back

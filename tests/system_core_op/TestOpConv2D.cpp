@@ -30,8 +30,8 @@
 
 #include <random>
 
-namespace cuda = nv::cv::cuda;
-namespace test = nv::cv::test;
+namespace cuda = nvcv::cuda;
+namespace test = nvcv::test;
 
 // clang-format off
 
@@ -64,11 +64,11 @@ TEST_P(OpConv2D, varshape_correct_output)
 
     NVCVBorderType borderMode = GetParamValue<7>();
 
-    nv::cv::ImageFormat imageFormat  = nv::cv::FMT_RGBA8;
-    nv::cv::ImageFormat kernelFormat = nv::cv::FMT_F32;
+    nvcv::ImageFormat imageFormat  = nvcv::FMT_RGBA8;
+    nvcv::ImageFormat kernelFormat = nvcv::FMT_F32;
 
-    nv::cv::Size2D kernelSize{kernelWidth, kernelHeight};
-    int2           kernelAnchor{kernelAnchorX, kernelAnchorY};
+    nvcv::Size2D kernelSize{kernelWidth, kernelHeight};
+    int2         kernelAnchor{kernelAnchorX, kernelAnchorY};
 
     float4 borderValue = cuda::SetAll<float4>(0);
 
@@ -79,7 +79,7 @@ TEST_P(OpConv2D, varshape_correct_output)
     std::uniform_int_distribution<int> udistWidth(width * 0.8, width * 1.1);
     std::uniform_int_distribution<int> udistHeight(height * 0.8, height * 1.1);
 
-    std::vector<std::unique_ptr<nv::cv::Image>> imgSrc;
+    std::vector<std::unique_ptr<nvcv::Image>> imgSrc;
 
     std::vector<std::vector<uint8_t>> srcVec(numImages);
     std::vector<int>                  srcVecRowStride(numImages);
@@ -87,7 +87,7 @@ TEST_P(OpConv2D, varshape_correct_output)
     for (int i = 0; i < numImages; ++i)
     {
         imgSrc.emplace_back(
-            std::make_unique<nv::cv::Image>(nv::cv::Size2D{udistWidth(rng), udistHeight(rng)}, imageFormat));
+            std::make_unique<nvcv::Image>(nvcv::Size2D{udistWidth(rng), udistHeight(rng)}, imageFormat));
 
         int srcRowStride   = imgSrc[i]->size().w * imageFormat.numChannels();
         srcVecRowStride[i] = srcRowStride;
@@ -97,7 +97,7 @@ TEST_P(OpConv2D, varshape_correct_output)
         srcVec[i].resize(imgSrc[i]->size().h * srcRowStride);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
 
-        auto *imgData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
+        auto *imgData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         assert(imgData != nullptr);
 
         // Copy input data to the GPU
@@ -106,27 +106,27 @@ TEST_P(OpConv2D, varshape_correct_output)
                                     srcRowStride, srcRowStride, imgSrc[i]->size().h, cudaMemcpyHostToDevice, stream));
     }
 
-    nv::cv::ImageBatchVarShape batchSrc(numImages);
+    nvcv::ImageBatchVarShape batchSrc(numImages);
     batchSrc.pushBack(imgSrc.begin(), imgSrc.end());
 
     // Create output varshape
 
-    std::vector<std::unique_ptr<nv::cv::Image>> imgDst;
+    std::vector<std::unique_ptr<nvcv::Image>> imgDst;
     for (int i = 0; i < numImages; ++i)
     {
-        imgDst.emplace_back(std::make_unique<nv::cv::Image>(imgSrc[i]->size(), imgSrc[i]->format()));
+        imgDst.emplace_back(std::make_unique<nvcv::Image>(imgSrc[i]->size(), imgSrc[i]->format()));
     }
-    nv::cv::ImageBatchVarShape batchDst(numImages);
+    nvcv::ImageBatchVarShape batchDst(numImages);
     batchDst.pushBack(imgDst.begin(), imgDst.end());
 
     // Create kernel varshape
 
-    std::vector<std::unique_ptr<nv::cv::Image>> kernel;
-    std::vector<std::vector<float>>             kernelVec(numImages);
+    std::vector<std::unique_ptr<nvcv::Image>> kernel;
+    std::vector<std::vector<float>>           kernelVec(numImages);
 
     for (int i = 0; i < numImages; ++i)
     {
-        kernel.emplace_back(std::make_unique<nv::cv::Image>(kernelSize, kernelFormat));
+        kernel.emplace_back(std::make_unique<nvcv::Image>(kernelSize, kernelFormat));
 
         int rowStride = kernel[i]->size().w * sizeof(float);
 
@@ -136,7 +136,7 @@ TEST_P(OpConv2D, varshape_correct_output)
 
         std::generate(kernelVec[i].begin(), kernelVec[i].end(), [&]() { return udist(rng); });
 
-        auto *data = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(kernel[i]->exportData());
+        auto *data = dynamic_cast<const nvcv::IImageDataStridedCuda *>(kernel[i]->exportData());
         assert(data != nullptr);
 
         // Copy kernel data to the GPU
@@ -145,15 +145,15 @@ TEST_P(OpConv2D, varshape_correct_output)
                                     rowStride, kernel[i]->size().h, cudaMemcpyHostToDevice, stream));
     }
 
-    nv::cv::ImageBatchVarShape batchKernel(numImages);
+    nvcv::ImageBatchVarShape batchKernel(numImages);
     batchKernel.pushBack(kernel.begin(), kernel.end());
 
     // Create kernel anchor tensor
 
-    nv::cv::Tensor kernelAnchorTensor({{numImages}, "N"}, nv::cv::TYPE_2S32);
+    nvcv::Tensor kernelAnchorTensor({{numImages}, "N"}, nvcv::TYPE_2S32);
 
     {
-        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(kernelAnchorTensor.exportData());
+        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(kernelAnchorTensor.exportData());
         ASSERT_NE(dev, nullptr);
 
         std::vector<int2> vec(numImages, kernelAnchor);
@@ -164,7 +164,7 @@ TEST_P(OpConv2D, varshape_correct_output)
 
     // Generate test result
 
-    nv::cvop::Conv2D conv2dOp;
+    nvcvop::Conv2D conv2dOp;
     EXPECT_NO_THROW(conv2dOp(stream, batchSrc, batchDst, batchKernel, kernelAnchorTensor, borderMode));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
@@ -175,10 +175,10 @@ TEST_P(OpConv2D, varshape_correct_output)
     {
         SCOPED_TRACE(i);
 
-        const auto *srcData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_EQ(srcData->numPlanes(), 1);
 
-        const auto *dstData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgDst[i]->exportData());
+        const auto *dstData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgDst[i]->exportData());
         ASSERT_EQ(dstData->numPlanes(), 1);
 
         int dstRowStride = srcVecRowStride[i];

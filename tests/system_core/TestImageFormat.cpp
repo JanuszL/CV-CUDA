@@ -27,8 +27,8 @@
 #include <unordered_set>
 
 namespace t    = ::testing;
-namespace util = nv::cv::util;
-namespace test = nv::cv::test;
+namespace util = nvcv::util;
+namespace test = nvcv::test;
 
 namespace {
 
@@ -1883,35 +1883,35 @@ private:
     char m_code[4];
 };
 
-static const test::ValueList<FCC, nv::cv::ImageFormat> g_FromFourCCParams = {
-    {FCC{'R', 'G', 'B', '3'},  nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_RGB8}},
-    {FCC{'B', 'G', 'R', '3'},  nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_BGR8}},
-    {FCC{'R', 'G', 'B', '4'}, nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_RGBA8}},
-    {FCC{'B', 'G', 'R', '4'}, nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_BGRA8}},
-    {FCC{'G', 'R', 'A', 'Y'},    nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_Y8}},
-    {FCC{'Y', '8', ' ', ' '},    nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_Y8}},
-    {FCC{'Y', '1', '6', ' '},   nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_Y16}},
+static const test::ValueList<FCC, nvcv::ImageFormat> g_FromFourCCParams = {
+    {FCC{'R', 'G', 'B', '3'},  nvcv::ImageFormat{NVCV_IMAGE_FORMAT_RGB8}},
+    {FCC{'B', 'G', 'R', '3'},  nvcv::ImageFormat{NVCV_IMAGE_FORMAT_BGR8}},
+    {FCC{'R', 'G', 'B', '4'}, nvcv::ImageFormat{NVCV_IMAGE_FORMAT_RGBA8}},
+    {FCC{'B', 'G', 'R', '4'}, nvcv::ImageFormat{NVCV_IMAGE_FORMAT_BGRA8}},
+    {FCC{'G', 'R', 'A', 'Y'},    nvcv::ImageFormat{NVCV_IMAGE_FORMAT_Y8}},
+    {FCC{'Y', '8', ' ', ' '},    nvcv::ImageFormat{NVCV_IMAGE_FORMAT_Y8}},
+    {FCC{'Y', '1', '6', ' '},   nvcv::ImageFormat{NVCV_IMAGE_FORMAT_Y16}},
 
-    {FCC{'U', 'Y', 'V', 'Y'},  nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_UYVY}},
-    {FCC{'Y', 'U', 'Y', '2'},  nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_YUYV}},
-    {FCC{'Y', 'U', 'Y', 'V'},  nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_YUYV}},
-    {FCC{'Y', 'U', 'N', 'V'},  nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_YUYV}},
-    {FCC{'N', 'V', '1', '2'},  nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_NV12}},
+    {FCC{'U', 'Y', 'V', 'Y'},  nvcv::ImageFormat{NVCV_IMAGE_FORMAT_UYVY}},
+    {FCC{'Y', 'U', 'Y', '2'},  nvcv::ImageFormat{NVCV_IMAGE_FORMAT_YUYV}},
+    {FCC{'Y', 'U', 'Y', 'V'},  nvcv::ImageFormat{NVCV_IMAGE_FORMAT_YUYV}},
+    {FCC{'Y', 'U', 'N', 'V'},  nvcv::ImageFormat{NVCV_IMAGE_FORMAT_YUYV}},
+    {FCC{'N', 'V', '1', '2'},  nvcv::ImageFormat{NVCV_IMAGE_FORMAT_NV12}},
 };
 
-static const test::ValueList<nv::cv::ImageFormat, FCC> g_ToFourCCParams = {
-    { nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_RGB8}, FCC{'R', 'G', 'B', '3'}},
-    { nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_BGR8}, FCC{'B', 'G', 'R', '3'}},
-    {nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_RGBA8}, FCC{'R', 'G', 'B', '4'}},
-    {nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_BGRA8}, FCC{'B', 'G', 'R', '4'}},
-    {   nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_Y8}, FCC{'G', 'R', 'A', 'Y'}},
+static const test::ValueList<nvcv::ImageFormat, FCC> g_ToFourCCParams = {
+    { nvcv::ImageFormat{NVCV_IMAGE_FORMAT_RGB8}, FCC{'R', 'G', 'B', '3'}},
+    { nvcv::ImageFormat{NVCV_IMAGE_FORMAT_BGR8}, FCC{'B', 'G', 'R', '3'}},
+    {nvcv::ImageFormat{NVCV_IMAGE_FORMAT_RGBA8}, FCC{'R', 'G', 'B', '4'}},
+    {nvcv::ImageFormat{NVCV_IMAGE_FORMAT_BGRA8}, FCC{'B', 'G', 'R', '4'}},
+    {   nvcv::ImageFormat{NVCV_IMAGE_FORMAT_Y8}, FCC{'G', 'R', 'A', 'Y'}},
 
-    { nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_UYVY}, FCC{'U', 'Y', 'V', 'Y'}},
-    { nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_YUYV}, FCC{'Y', 'U', 'Y', '2'}},
-    { nv::cv::ImageFormat{NVCV_IMAGE_FORMAT_NV12}, FCC{'N', 'V', '1', '2'}},
+    { nvcv::ImageFormat{NVCV_IMAGE_FORMAT_UYVY}, FCC{'U', 'Y', 'V', 'Y'}},
+    { nvcv::ImageFormat{NVCV_IMAGE_FORMAT_YUYV}, FCC{'Y', 'U', 'Y', '2'}},
+    { nvcv::ImageFormat{NVCV_IMAGE_FORMAT_NV12}, FCC{'N', 'V', '1', '2'}},
 };
 
-class ImageFormatFromFourCCTests : public t::TestWithParam<std::tuple<FCC, nv::cv::ImageFormat>>
+class ImageFormatFromFourCCTests : public t::TestWithParam<std::tuple<FCC, nvcv::ImageFormat>>
 {
 public:
     ImageFormatFromFourCCTests()
@@ -1971,7 +1971,7 @@ TEST_P(ImageFormatFromFourCCTests, conversion_works_while_forcing_colorspec_work
     EXPECT_EQ(gold, test);
 }
 
-class ImageFormatToFourCCTests : public t::TestWithParam<std::tuple<nv::cv::ImageFormat, FCC>>
+class ImageFormatToFourCCTests : public t::TestWithParam<std::tuple<nvcv::ImageFormat, FCC>>
 {
 public:
     ImageFormatToFourCCTests()

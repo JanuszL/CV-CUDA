@@ -21,7 +21,7 @@
 
 #include <cstring>
 
-namespace nv::cv::util {
+namespace nvcv::util {
 
 void ReplaceAllInline(char *strBuffer, int bufferSize, std::string_view what, std::string_view replace) noexcept
 {
@@ -67,4 +67,4 @@ BufferOStream::~BufferOStream()
     *this << '\0' << std::flush;
 }
 
-} // namespace nv::cv::util
+} // namespace nvcv::util

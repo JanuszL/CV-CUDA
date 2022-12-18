@@ -23,9 +23,9 @@
 #include <nvcv/Exception.hpp>
 #include <util/CheckError.hpp>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
-namespace legacy = cv::legacy::cuda_op;
+namespace legacy = nvcv::legacy::cuda_op;
 
 Conv2D::Conv2D()
 {
@@ -33,39 +33,39 @@ Conv2D::Conv2D()
     m_legacyOpVarShape = std::make_unique<legacy::Conv2DVarShape>(maxIn, maxOut);
 }
 
-void Conv2D::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
-                        const cv::IImageBatchVarShape &kernel, const cv::ITensor &kernelAnchor,
+void Conv2D::operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
+                        const nvcv::IImageBatchVarShape &kernel, const nvcv::ITensor &kernelAnchor,
                         NVCVBorderType borderMode) const
 {
-    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(in.exportData(stream));
+    auto *inData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(in.exportData(stream));
     if (inData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Input must be cuda-accessible, varshape pitch-linear image batch");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Input must be cuda-accessible, varshape pitch-linear image batch");
     }
 
-    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(out.exportData(stream));
+    auto *outData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(out.exportData(stream));
     if (outData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Output must be cuda-accessible, varshape pitch-linear image batch");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Output must be cuda-accessible, varshape pitch-linear image batch");
     }
 
-    auto *kernelData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(kernel.exportData(stream));
+    auto *kernelData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(kernel.exportData(stream));
     if (kernelData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Kernel must be cuda-accessible, varshape pitch-linear image batch");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Kernel must be cuda-accessible, varshape pitch-linear image batch");
     }
 
-    auto *kernelAnchorData = dynamic_cast<const cv::ITensorDataStridedCuda *>(kernelAnchor.exportData());
+    auto *kernelAnchorData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(kernelAnchor.exportData());
     if (kernelAnchorData == nullptr)
     {
-        throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
-                            "Kernel anchor must be cuda-accessible, pitch-linear tensor");
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Kernel anchor must be cuda-accessible, pitch-linear tensor");
     }
 
     NVCV_CHECK_THROW(m_legacyOpVarShape->infer(*inData, *outData, *kernelData, *kernelAnchorData, borderMode, stream));
 }
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv

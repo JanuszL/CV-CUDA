@@ -25,8 +25,7 @@
 #include <nvcv/operators/OpChannelReorder.hpp>
 #include <nvcv/optools/MathOps.hpp>
 
-namespace nvcv = nv::cv;
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 
 TEST(TestOpChannelReorder, smoke_test_works)
 {
@@ -90,7 +89,7 @@ TEST(TestOpChannelReorder, smoke_test_works)
     cudaStream_t stream;
     ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
 
-    nv::cvop::ChannelReorder chReorder;
+    nvcvop::ChannelReorder chReorder;
 
     chReorder(stream, in, out, inOrders);
 

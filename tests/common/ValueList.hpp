@@ -29,7 +29,7 @@
 #include <tuple>
 #include <type_traits>
 
-namespace nv::cv::test {
+namespace nvcv::test {
 
 namespace detail {
 
@@ -1276,6 +1276,6 @@ auto Dup(const ValueList<T> &v)
     return DupImpl(v, std::make_index_sequence<N>());
 }
 
-} // namespace nv::cv::test
+} // namespace nvcv::test
 
 #endif // NVCV_TEST_COMMON_VALUELIST_HPP

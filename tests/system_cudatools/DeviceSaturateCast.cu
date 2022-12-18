@@ -20,7 +20,7 @@
 #include <gtest/gtest.h>                 // for EXPECT_EQ, etc.
 #include <nvcv/optools/SaturateCast.hpp> // the object of this test
 
-namespace cuda = nv::cv::cuda;
+namespace cuda = nvcv::cuda;
 
 // ----------------- To allow testing device-side SaturateCast -----------------
 

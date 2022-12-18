@@ -29,9 +29,8 @@
 
 #include <random>
 
-namespace nvcv = nv::cv;
-namespace test = nv::cv::test;
-namespace cuda = nv::cv::cuda;
+namespace test = nvcv::test;
+namespace cuda = nvcv::cuda;
 
 using uchar = unsigned char;
 
@@ -92,7 +91,7 @@ void checkTestVectors(cudaStream_t &stream, nvcv::Tensor &inTensor, nvcv::Tensor
         SetTensorToTestVector<uchar, rows, cols>(input, width, height, inTensor, i);
     }
 
-    nv::cvop::Morphology morphOp(0);
+    nvcvop::Morphology morphOp(0);
     morphOp(stream, inTensor, outTensor, type, maskSize, anchor, iteration, borderMode);
 
     if (cudaSuccess != cudaStreamSynchronize(stream))
@@ -381,8 +380,8 @@ TEST_P(OpMorphology, morph_noop)
     EXPECT_NO_THROW(test::SetTensorToRandomValue<uint8_t>(inTensor.exportData(), 0, 0xFF));
     EXPECT_NO_THROW(test::SetTensorTo<uint8_t>(outTensor.exportData(), 0));
 
-    nv::cvop::Morphology morphOp(0);
-    int2                 anchor(0, 0);
+    nvcvop::Morphology morphOp(0);
+    int2               anchor(0, 0);
 
     nvcv::Size2D maskSize(1, 1);
     int          iteration = 0;
@@ -446,8 +445,8 @@ TEST_P(OpMorphology, morph_random)
     ASSERT_EQ(cudaSuccess, cudaMemcpy(inData->basePtr(), inVec.data(), inBufSize, cudaMemcpyHostToDevice));
 
     // run operator
-    nv::cvop::Morphology morphOp(0);
-    int2                 anchor(-1, -1);
+    nvcvop::Morphology morphOp(0);
+    int2               anchor(-1, -1);
 
     EXPECT_NO_THROW(morphOp(stream, inTensor, outTensor, morphType, maskSize, anchor, iteration, borderMode));
 
@@ -509,7 +508,7 @@ TEST_P(OpMorphologyVarShape, varshape_correct_output)
     std::uniform_int_distribution<int> udistWidth(width * 0.8, width * 1.1);
     std::uniform_int_distribution<int> udistHeight(height * 0.8, height * 1.1);
 
-    std::vector<std::unique_ptr<nv::cv::Image>> imgSrc;
+    std::vector<std::unique_ptr<nvcv::Image>> imgSrc;
 
     std::vector<std::vector<uint8_t>> srcVec(batches);
     std::vector<int>                  srcVecRowStride(batches);
@@ -517,7 +516,7 @@ TEST_P(OpMorphologyVarShape, varshape_correct_output)
     //setup the input images
     for (int i = 0; i < batches; ++i)
     {
-        imgSrc.emplace_back(std::make_unique<nv::cv::Image>(nv::cv::Size2D{udistWidth(rng), udistHeight(rng)}, format));
+        imgSrc.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{udistWidth(rng), udistHeight(rng)}, format));
 
         int srcRowStride   = imgSrc[i]->size().w * format.planePixelStrideBytes(0);
         srcVecRowStride[i] = srcRowStride;
@@ -527,7 +526,7 @@ TEST_P(OpMorphologyVarShape, varshape_correct_output)
         srcVec[i].resize(imgSrc[i]->size().h * srcRowStride);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
 
-        auto *imgData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
+        auto *imgData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_NE(imgData, nullptr);
 
         // Copy input data to the GPU
@@ -536,22 +535,22 @@ TEST_P(OpMorphologyVarShape, varshape_correct_output)
                                     srcRowStride, srcRowStride, imgSrc[i]->size().h, cudaMemcpyHostToDevice, stream));
     }
 
-    nv::cv::ImageBatchVarShape batchSrc(batches);
+    nvcv::ImageBatchVarShape batchSrc(batches);
     batchSrc.pushBack(imgSrc.begin(), imgSrc.end());
 
     // Create output varshape
-    std::vector<std::unique_ptr<nv::cv::Image>> imgDst;
+    std::vector<std::unique_ptr<nvcv::Image>> imgDst;
     for (int i = 0; i < batches; ++i)
     {
-        imgDst.emplace_back(std::make_unique<nv::cv::Image>(imgSrc[i]->size(), imgSrc[i]->format()));
+        imgDst.emplace_back(std::make_unique<nvcv::Image>(imgSrc[i]->size(), imgSrc[i]->format()));
     }
-    nv::cv::ImageBatchVarShape batchDst(batches);
+    nvcv::ImageBatchVarShape batchDst(batches);
     batchDst.pushBack(imgDst.begin(), imgDst.end());
 
     // Create kernel mask size tensor
-    nv::cv::Tensor maskTensor({{batches}, "N"}, nv::cv::TYPE_2S32);
+    nvcv::Tensor maskTensor({{batches}, "N"}, nvcv::TYPE_2S32);
     {
-        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(maskTensor.exportData());
+        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(maskTensor.exportData());
         ASSERT_NE(dev, nullptr);
 
         std::vector<int2> vec(batches, int2{maskSizeX, maskSizeY});
@@ -561,9 +560,9 @@ TEST_P(OpMorphologyVarShape, varshape_correct_output)
     }
 
     // Create Anchor tensor
-    nv::cv::Tensor anchorTensor({{batches}, "N"}, nv::cv::TYPE_2S32);
+    nvcv::Tensor anchorTensor({{batches}, "N"}, nvcv::TYPE_2S32);
     {
-        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(anchorTensor.exportData());
+        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(anchorTensor.exportData());
         ASSERT_NE(dev, nullptr);
 
         std::vector<int2> vec(batches, int2{anchorX, anchorY});
@@ -573,7 +572,7 @@ TEST_P(OpMorphologyVarShape, varshape_correct_output)
     }
 
     // Run operator set the max batches
-    nv::cvop::Morphology morphOp(batches);
+    nvcvop::Morphology morphOp(batches);
 
     EXPECT_NO_THROW(morphOp(stream, batchSrc, batchDst, morphType, maskTensor, anchorTensor, iteration, borderMode));
 
@@ -585,10 +584,10 @@ TEST_P(OpMorphologyVarShape, varshape_correct_output)
     {
         SCOPED_TRACE(i);
 
-        const auto *srcData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_EQ(srcData->numPlanes(), 1);
 
-        const auto *dstData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgDst[i]->exportData());
+        const auto *dstData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgDst[i]->exportData());
         ASSERT_EQ(dstData->numPlanes(), 1);
 
         int dstRowStride = srcVecRowStride[i];
@@ -610,7 +609,7 @@ TEST_P(OpMorphologyVarShape, varshape_correct_output)
             maskSizeX = 3;
             maskSizeY = 3;
         }
-        nv::cv::Size2D       maskSize{maskSizeX, maskSizeY};
+        nvcv::Size2D         maskSize{maskSizeX, maskSizeY};
         int2                 kernelAnchor{maskSize.w / 2, maskSize.h / 2};
         std::vector<uint8_t> goldVec(shape.y * pitches.y);
 
@@ -646,7 +645,7 @@ TEST_P(OpMorphologyVarShape, varshape_noop)
     std::uniform_int_distribution<int> udistWidth(width * 0.8, width * 1.1);
     std::uniform_int_distribution<int> udistHeight(height * 0.8, height * 1.1);
 
-    std::vector<std::unique_ptr<nv::cv::Image>> imgSrc;
+    std::vector<std::unique_ptr<nvcv::Image>> imgSrc;
 
     std::vector<std::vector<uint8_t>> srcVec(batches);
     std::vector<int>                  srcVecRowStride(batches);
@@ -654,7 +653,7 @@ TEST_P(OpMorphologyVarShape, varshape_noop)
     //setup the input images
     for (int i = 0; i < batches; ++i)
     {
-        imgSrc.emplace_back(std::make_unique<nv::cv::Image>(nv::cv::Size2D{udistWidth(rng), udistHeight(rng)}, format));
+        imgSrc.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{udistWidth(rng), udistHeight(rng)}, format));
 
         int srcRowStride   = imgSrc[i]->size().w * format.planePixelStrideBytes(0);
         srcVecRowStride[i] = srcRowStride;
@@ -664,7 +663,7 @@ TEST_P(OpMorphologyVarShape, varshape_noop)
         srcVec[i].resize(imgSrc[i]->size().h * srcRowStride);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
 
-        auto *imgData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
+        auto *imgData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_NE(imgData, nullptr);
 
         // Copy input data to the GPU
@@ -673,22 +672,22 @@ TEST_P(OpMorphologyVarShape, varshape_noop)
                                     srcRowStride, srcRowStride, imgSrc[i]->size().h, cudaMemcpyHostToDevice, stream));
     }
 
-    nv::cv::ImageBatchVarShape batchSrc(batches);
+    nvcv::ImageBatchVarShape batchSrc(batches);
     batchSrc.pushBack(imgSrc.begin(), imgSrc.end());
 
     // Create output varshape
-    std::vector<std::unique_ptr<nv::cv::Image>> imgDst;
+    std::vector<std::unique_ptr<nvcv::Image>> imgDst;
     for (int i = 0; i < batches; ++i)
     {
-        imgDst.emplace_back(std::make_unique<nv::cv::Image>(imgSrc[i]->size(), imgSrc[i]->format()));
+        imgDst.emplace_back(std::make_unique<nvcv::Image>(imgSrc[i]->size(), imgSrc[i]->format()));
     }
-    nv::cv::ImageBatchVarShape batchDst(batches);
+    nvcv::ImageBatchVarShape batchDst(batches);
     batchDst.pushBack(imgDst.begin(), imgDst.end());
 
     // Create kernel mask size tensor
-    nv::cv::Tensor maskTensor({{batches}, "N"}, nv::cv::TYPE_2S32);
+    nvcv::Tensor maskTensor({{batches}, "N"}, nvcv::TYPE_2S32);
     {
-        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(maskTensor.exportData());
+        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(maskTensor.exportData());
         ASSERT_NE(dev, nullptr);
 
         std::vector<int2> vec(batches, int2{maskSizeX, maskSizeY});
@@ -698,9 +697,9 @@ TEST_P(OpMorphologyVarShape, varshape_noop)
     }
 
     // Create Anchor tensor
-    nv::cv::Tensor anchorTensor({{batches}, "N"}, nv::cv::TYPE_2S32);
+    nvcv::Tensor anchorTensor({{batches}, "N"}, nvcv::TYPE_2S32);
     {
-        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(anchorTensor.exportData());
+        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(anchorTensor.exportData());
         ASSERT_NE(dev, nullptr);
 
         std::vector<int2> vec(batches, int2{anchorX, anchorY});
@@ -710,7 +709,7 @@ TEST_P(OpMorphologyVarShape, varshape_noop)
     }
 
     // Run operator set the max batches
-    nv::cvop::Morphology morphOp(batches);
+    nvcvop::Morphology morphOp(batches);
 
     EXPECT_NO_THROW(morphOp(stream, batchSrc, batchDst, morphType, maskTensor, anchorTensor, iteration, borderMode));
 
@@ -722,10 +721,10 @@ TEST_P(OpMorphologyVarShape, varshape_noop)
     {
         SCOPED_TRACE(i);
 
-        const auto *srcData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_EQ(srcData->numPlanes(), 1);
 
-        const auto *dstData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgDst[i]->exportData());
+        const auto *dstData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgDst[i]->exportData());
         ASSERT_EQ(dstData->numPlanes(), 1);
 
         int dstRowStride = srcVecRowStride[i];

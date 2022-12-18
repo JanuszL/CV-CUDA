@@ -26,10 +26,8 @@
 #define BLOCK 32
 #define PI    3.1415926535897932384626433832795
 
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
-
-namespace nvcv = nv::cv;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
 
 __global__ void compute_warpAffine(const double angle, const double xShift, const double yShift, double *aCoeffs)
 {
@@ -58,8 +56,8 @@ __global__ void rotate_linear(const Ptr2dNHWC<T> src, Ptr2dNHWC<T> dst, const do
 
     if (src_x > -0.5 && src_x < width && src_y > -0.5 && src_y < height)
     {
-        using work_type = nv::cv::cuda::ConvertBaseTypeTo<float, T>;
-        work_type out   = nv::cv::cuda::SetAll<work_type>(0);
+        using work_type = nvcv::cuda::ConvertBaseTypeTo<float, T>;
+        work_type out   = nvcv::cuda::SetAll<work_type>(0);
 
         const int x1      = __float2int_rz(src_x);
         const int y1      = __float2int_rz(src_y);
@@ -80,7 +78,7 @@ __global__ void rotate_linear(const Ptr2dNHWC<T> src, Ptr2dNHWC<T> dst, const do
         src_reg = *src.ptr(batch_idx, y2_read, x2_read);
         out     = out + src_reg * ((src_x - x1) * (src_y - y1));
 
-        *dst.ptr(batch_idx, dst_y, dst_x) = nv::cv::cuda::SaturateCast<nv::cv::cuda::BaseType<T>>(out);
+        *dst.ptr(batch_idx, dst_y, dst_x) = nvcv::cuda::SaturateCast<nvcv::cuda::BaseType<T>>(out);
     }
 }
 
@@ -177,7 +175,7 @@ void rotate(const nvcv::TensorDataAccessStridedImagePlanar &inData,
 #endif
 }
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 Rotate::Rotate(DataShape max_input_shape, DataShape max_output_shape)
     : CudaBaseOp(max_input_shape, max_output_shape)
@@ -283,4 +281,4 @@ ErrorCode Rotate::infer(const ITensorDataStridedCuda &inData, const ITensorDataS
     return SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

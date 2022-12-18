@@ -21,8 +21,8 @@
 #include <util/Version.hpp>
 
 namespace t    = ::testing;
-namespace util = nv::cv::util;
-namespace test = nv::cv::test;
+namespace util = nvcv::util;
+namespace test = nvcv::test;
 
 #define MAKE_VERSION(major, minor, patch, tweak) ((major)*1000000 + (minor)*10000 + (patch)*100 + (tweak))
 

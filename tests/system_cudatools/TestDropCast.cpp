@@ -19,8 +19,8 @@
 #include <nvcv/optools/DropCast.hpp> // the object of this test
 
 namespace t     = ::testing;
-namespace cuda  = nv::cv::cuda;
-namespace ttype = nv::cv::test::type;
+namespace cuda  = nvcv::cuda;
+namespace ttype = nvcv::test::type;
 
 // --------------------------- Testing DropCast ------------------------------
 

@@ -21,26 +21,26 @@
 #include <nvcv/DataType.hpp>
 #include <pybind11/pybind11.h>
 
-namespace nv::cv {
-size_t ComputeHash(const cv::DataType &dtype);
+namespace nvcv {
+size_t ComputeHash(const nvcv::DataType &dtype);
 }
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 namespace py = pybind11;
 
 void ExportDataType(py::module &m);
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv
 
 namespace pybind11::detail {
 
 template<>
-struct PYBIND11_EXPORT type_caster<nv::cv::DataType>
+struct PYBIND11_EXPORT type_caster<nvcv::DataType>
 {
-    PYBIND11_TYPE_CASTER(nv::cv::DataType, const_name("nvcv.Type"));
+    PYBIND11_TYPE_CASTER(nvcv::DataType, const_name("nvcv.Type"));
 
     bool          load(handle src, bool);
-    static handle cast(nv::cv::DataType type, return_value_policy /* policy */, handle /*parent */);
+    static handle cast(nvcv::DataType type, return_value_policy /* policy */, handle /*parent */);
 };
 
 } // namespace pybind11::detail

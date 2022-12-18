@@ -26,7 +26,7 @@
 
 #include <vector>
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 namespace py = pybind11;
 
 using Shape = std::vector<int64_t>;
@@ -34,31 +34,31 @@ using Shape = std::vector<int64_t>;
 class CudaBuffer;
 class Image;
 
-Shape CreateShape(const cv::TensorShape &tshape);
+Shape CreateShape(const nvcv::TensorShape &tshape);
 
 class Tensor : public Container
 {
 public:
     static void Export(py::module &m);
 
-    static std::shared_ptr<Tensor> CreateForImageBatch(int numImages, const Size2D &size, cv::ImageFormat fmt);
-    static std::shared_ptr<Tensor> Create(Shape shape, cv::DataType dtype, std::optional<cv::TensorLayout> layout);
+    static std::shared_ptr<Tensor> CreateForImageBatch(int numImages, const Size2D &size, nvcv::ImageFormat fmt);
+    static std::shared_ptr<Tensor> Create(Shape shape, nvcv::DataType dtype, std::optional<nvcv::TensorLayout> layout);
 
-    static std::shared_ptr<Tensor> CreateFromReqs(const cv::Tensor::Requirements &reqs);
+    static std::shared_ptr<Tensor> CreateFromReqs(const nvcv::Tensor::Requirements &reqs);
 
-    static std::shared_ptr<Tensor> Wrap(CudaBuffer &buffer, std::optional<cv::TensorLayout> layout);
+    static std::shared_ptr<Tensor> Wrap(CudaBuffer &buffer, std::optional<nvcv::TensorLayout> layout);
     static std::shared_ptr<Tensor> WrapImage(Image &img);
 
     std::shared_ptr<Tensor>       shared_from_this();
     std::shared_ptr<const Tensor> shared_from_this() const;
 
-    std::optional<cv::TensorLayout> layout() const;
-    Shape                           shape() const;
-    cv::DataType                    dtype() const;
-    int                             rank() const;
+    std::optional<nvcv::TensorLayout> layout() const;
+    Shape                             shape() const;
+    nvcv::DataType                    dtype() const;
+    int                               rank() const;
 
-    cv::ITensor       &impl();
-    const cv::ITensor &impl() const;
+    nvcv::ITensor       &impl();
+    const nvcv::ITensor &impl() const;
 
     class Key final : public IKey
     {
@@ -68,13 +68,13 @@ public:
         {
         }
 
-        explicit Key(const cv::Tensor::Requirements &reqs);
-        explicit Key(const cv::TensorShape &shape, cv::DataType dtype);
+        explicit Key(const nvcv::Tensor::Requirements &reqs);
+        explicit Key(const nvcv::TensorShape &shape, nvcv::DataType dtype);
 
     private:
-        cv::TensorShape m_shape;
-        cv::DataType    m_dtype;
-        bool            m_wrapper;
+        nvcv::TensorShape m_shape;
+        nvcv::DataType    m_dtype;
+        bool              m_wrapper;
 
         virtual size_t doGetHash() const override;
         virtual bool   doIsEqual(const IKey &that) const override;
@@ -85,22 +85,22 @@ public:
     py::object cuda() const;
 
 private:
-    Tensor(const cv::Tensor::Requirements &reqs);
-    Tensor(const cv::ITensorData &data, py::object wrappedObject);
+    Tensor(const nvcv::Tensor::Requirements &reqs);
+    Tensor(const nvcv::ITensorData &data, py::object wrappedObject);
     Tensor(Image &img);
 
     // m_impl must come before m_key
-    std::unique_ptr<cv::ITensor> m_impl;
-    Key                          m_key;
+    std::unique_ptr<nvcv::ITensor> m_impl;
+    Key                            m_key;
 
-    mutable py::object                      m_cacheCudaObject;
-    mutable std::optional<cv::TensorLayout> m_cacheCudaObjectLayout;
+    mutable py::object                        m_cacheCudaObject;
+    mutable std::optional<nvcv::TensorLayout> m_cacheCudaObjectLayout;
 
     py::object m_wrappedObject; // null if not wrapping
 };
 
 std::ostream &operator<<(std::ostream &out, const Tensor &tensor);
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv
 
 #endif // NVCV_PYTHON_PRIV_TENSOR_HPP

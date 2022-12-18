@@ -20,7 +20,7 @@
 #include <common/MixTypedTests.hpp>
 
 namespace t    = ::testing;
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 
 // clang-format off
 NVCV_MIXTYPED_TEST_SUITE(TypedMixedTest,

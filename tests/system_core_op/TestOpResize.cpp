@@ -29,8 +29,7 @@
 #include <cmath>
 #include <random>
 
-namespace nvcv = nv::cv;
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 namespace t    = ::testing;
 
 static void Resize(std::vector<uint8_t> &hDst, int dstRowStride, nvcv::Size2D dstSize, const std::vector<uint8_t> &hSrc,
@@ -222,7 +221,7 @@ TEST_P(OpResize, tensor_correct_output)
     // Generate test result
     nvcv::Tensor imgDst(numberOfImages, {dstWidth, dstHeight}, nvcv::FMT_RGBA8);
 
-    nv::cvop::Resize resizeOp;
+    nvcvop::Resize resizeOp;
     EXPECT_NO_THROW(resizeOp(stream, imgSrc, imgDst, interpolation));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
@@ -326,7 +325,7 @@ TEST_P(OpResize, varshape_correct_output)
     }
 
     // Generate test result
-    nv::cvop::Resize resizeOp;
+    nvcvop::Resize resizeOp;
     EXPECT_NO_THROW(resizeOp(stream, batchSrc, batchDst, interpolation));
 
     // Get test data back

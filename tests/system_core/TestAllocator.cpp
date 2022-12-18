@@ -28,8 +28,7 @@
 #include <nvcv/alloc/Fwd.hpp>
 
 namespace t    = ::testing;
-namespace test = nv::cv::test;
-namespace nvcv = nv::cv;
+namespace test = nvcv::test;
 
 // WIP: just to check if it compiles.
 TEST(Allocator, wip_test_default)

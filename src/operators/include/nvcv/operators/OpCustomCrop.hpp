@@ -34,7 +34,7 @@
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 
-namespace nv { namespace cvop {
+namespace nvcvop {
 
 class CustomCrop final : public IOperator
 {
@@ -43,7 +43,7 @@ public:
 
     ~CustomCrop();
 
-    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const NVCVRectI cropRect);
+    void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, const NVCVRectI cropRect);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -53,7 +53,7 @@ private:
 
 inline CustomCrop::CustomCrop()
 {
-    cv::detail::CheckThrow(nvcvopCustomCropCreate(&m_handle));
+    nvcv::detail::CheckThrow(nvcvopCustomCropCreate(&m_handle));
     assert(m_handle);
 }
 
@@ -63,9 +63,9 @@ inline CustomCrop::~CustomCrop()
     m_handle = nullptr;
 }
 
-inline void CustomCrop::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const NVCVRectI cropRect)
+inline void CustomCrop::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, const NVCVRectI cropRect)
 {
-    cv::detail::CheckThrow(nvcvopCustomCropSubmit(m_handle, stream, in.handle(), out.handle(), cropRect));
+    nvcv::detail::CheckThrow(nvcvopCustomCropSubmit(m_handle, stream, in.handle(), out.handle(), cropRect));
 }
 
 inline NVCVOperatorHandle CustomCrop::handle() const noexcept
@@ -73,6 +73,6 @@ inline NVCVOperatorHandle CustomCrop::handle() const noexcept
     return m_handle;
 }
 
-}} // namespace nv::cvop
+} // namespace nvcvop
 
 #endif // NVCV_OP_CUSTOM_CROP_HPP

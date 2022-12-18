@@ -20,11 +20,11 @@
 #include <common/TypeList.hpp>
 
 namespace test {
-using namespace nv::cv::test::type;
-using nv::cv::test::ValueList;
+using namespace nvcv::test::type;
+using nvcv::test::ValueList;
 } // namespace test
 
-namespace util = nv::cv::util;
+namespace util = nvcv::util;
 
 TEST(TypeListTests, get_type)
 {

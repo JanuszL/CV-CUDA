@@ -28,7 +28,7 @@
 #include <cassert>
 #include <vector>
 
-namespace nv::cvpy {
+namespace nvcvpy {
 
 namespace py = pybind11;
 
@@ -40,12 +40,12 @@ class Image
 
 class Image
     : public Resource
-    , public cv::IImage
+    , public nvcv::IImage
 {
 public:
     using PrivateImpl = priv::Image;
 
-    static Image Create(cv::Size2D size, cv::ImageFormat fmt)
+    static Image Create(nvcv::Size2D size, nvcv::ImageFormat fmt)
     {
         PyObject *oimg = capi().Image_Create(size.w, size.h, static_cast<NVCVImageFormat>(fmt));
 
@@ -72,11 +72,11 @@ private:
     }
 };
 
-} // namespace nv::cvpy
+} // namespace nvcvpy
 
 namespace pybind11::detail {
 
-namespace cvpy = nv::cvpy;
+namespace cvpy = nvcvpy;
 
 template<>
 struct type_caster<cvpy::Image> : type_caster_base<cvpy::Image>

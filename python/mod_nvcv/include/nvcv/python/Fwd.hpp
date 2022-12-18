@@ -18,7 +18,7 @@
 #ifndef NVCV_PYTHON_FWD_HPP
 #define NVCV_PYTHON_FWD_HPP
 
-namespace nv::cvpy {
+namespace nvcvpy {
 class ICacheItem;
 class IKey;
 class Container;
@@ -30,6 +30,6 @@ class Stream;
 class ResourceGuard;
 enum LockMode : uint8_t;
 using Shape = std::vector<int64_t>;
-} // namespace nv::cvpy
+} // namespace nvcvpy
 
 #endif // NVCV_PYTHON_FWD_HPP

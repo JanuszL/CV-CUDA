@@ -25,10 +25,10 @@
 
 #include "CvCudaUtils.cuh"
 
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 template<class SrcWrapper, class DstWrapper, class KernelWrapper>
 __global__ void filter2D(SrcWrapper src, DstWrapper dst, Size2D dstSize, KernelWrapper kernel, Size2D kernelSize,
@@ -330,9 +330,9 @@ ErrorCode Gaussian::infer(const ITensorDataStridedCuda &inData, const ITensorDat
 
     // automatic detection of kernel size from sigma
     if (kernelSize.w <= 0 && sigma.x > 0)
-        kernelSize.w = nv::cv::cuda::round<int>(sigma.x * (data_type == kCV_8U ? 3 : 4) * 2 + 1) | 1;
+        kernelSize.w = nvcv::cuda::round<int>(sigma.x * (data_type == kCV_8U ? 3 : 4) * 2 + 1) | 1;
     if (kernelSize.h <= 0 && sigma.y > 0)
-        kernelSize.h = nv::cv::cuda::round<int>(sigma.y * (data_type == kCV_8U ? 3 : 4) * 2 + 1) | 1;
+        kernelSize.h = nvcv::cuda::round<int>(sigma.y * (data_type == kCV_8U ? 3 : 4) * 2 + 1) | 1;
 
     if (!(kernelSize.w > 0 && kernelSize.w % 2 == 1 && kernelSize.w <= m_maxKernelSize.w && kernelSize.h > 0
           && kernelSize.h % 2 == 1 && kernelSize.h <= m_maxKernelSize.h))
@@ -512,4 +512,4 @@ ErrorCode AverageBlur::infer(const ITensorDataStridedCuda &inData, const ITensor
     return ErrorCode::SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

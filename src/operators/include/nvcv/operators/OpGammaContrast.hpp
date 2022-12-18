@@ -34,7 +34,7 @@
 #include <nvcv/ITensor.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 
-namespace nv { namespace cvop {
+namespace nvcvop {
 
 class GammaContrast final : public IOperator
 {
@@ -43,7 +43,7 @@ public:
 
     ~GammaContrast();
 
-    void operator()(cudaStream_t stream, cv::IImageBatch &in, cv::IImageBatch &out, cv::ITensor &gamma);
+    void operator()(cudaStream_t stream, nvcv::IImageBatch &in, nvcv::IImageBatch &out, nvcv::ITensor &gamma);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -53,7 +53,7 @@ private:
 
 inline GammaContrast::GammaContrast(const int32_t maxVarShapeBatchSize, const int32_t maxVarShapeChannelCount)
 {
-    cv::detail::CheckThrow(nvcvopGammaContrastCreate(&m_handle, maxVarShapeBatchSize, maxVarShapeChannelCount));
+    nvcv::detail::CheckThrow(nvcvopGammaContrastCreate(&m_handle, maxVarShapeBatchSize, maxVarShapeChannelCount));
     assert(m_handle);
 }
 
@@ -63,10 +63,10 @@ inline GammaContrast::~GammaContrast()
     m_handle = nullptr;
 }
 
-inline void GammaContrast::operator()(cudaStream_t stream, cv::IImageBatch &in, cv::IImageBatch &out,
-                                      cv::ITensor &gamma)
+inline void GammaContrast::operator()(cudaStream_t stream, nvcv::IImageBatch &in, nvcv::IImageBatch &out,
+                                      nvcv::ITensor &gamma)
 {
-    cv::detail::CheckThrow(
+    nvcv::detail::CheckThrow(
         nvcvopGammaContrastVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), gamma.handle()));
 }
 
@@ -75,5 +75,5 @@ inline NVCVOperatorHandle GammaContrast::handle() const noexcept
     return m_handle;
 }
 
-}}     // namespace nv::cvop
+} // namespace nvcvop
 #endif // NVCV_OP_GAMMA_CONTRAST_HPP

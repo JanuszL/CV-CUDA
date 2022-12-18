@@ -23,8 +23,8 @@
 #include <util/Size.hpp>
 
 namespace t    = ::testing;
-namespace util = nv::cv::util;
-namespace test = nv::cv::test;
+namespace util = nvcv::util;
+namespace test = nvcv::test;
 
 // Chroma Subsampling ===================================================
 

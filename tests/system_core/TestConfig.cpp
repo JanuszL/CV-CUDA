@@ -25,8 +25,7 @@
 #include <nvcv/alloc/CustomAllocator.hpp>
 
 namespace t     = ::testing;
-namespace ttest = nv::cv::test::type;
-namespace nvcv  = nv::cv;
+namespace ttest = nvcv::test::type;
 
 template<class T>
 std::unique_ptr<T> CreateObj()

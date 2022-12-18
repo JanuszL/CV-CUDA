@@ -25,9 +25,8 @@
 
 #include <nvcv/Fwd.hpp>
 
-namespace nvcv = nv::cv;
 namespace t    = ::testing;
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 
 static bool operator==(const NVCVImagePlaneStrided &a, const NVCVImagePlaneStrided &b)
 {

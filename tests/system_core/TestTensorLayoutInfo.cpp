@@ -20,9 +20,8 @@
 #include <common/ValueTests.hpp>
 #include <nvcv/TensorLayoutInfo.hpp>
 
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 namespace t    = ::testing;
-namespace nvcv = nv::cv;
 
 // TensorLayoutInfo::isBatch ========================
 

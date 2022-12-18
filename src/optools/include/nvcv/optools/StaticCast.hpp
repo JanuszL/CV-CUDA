@@ -26,7 +26,7 @@
 
 #include "TypeTraits.hpp" // for Require, etc.
 
-namespace nv::cv::cuda {
+namespace nvcv::cuda {
 
 /**
  * @brief Metafunction to static cast all values of a compound to a target type
@@ -75,6 +75,6 @@ __host__ __device__ auto StaticCast(U u)
 
 /**@}*/
 
-} // namespace nv::cv::cuda
+} // namespace nvcv::cuda
 
 #endif // NVCV_CUDA_STATIC_CAST_HPP

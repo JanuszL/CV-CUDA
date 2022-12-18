@@ -35,7 +35,7 @@
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 
-namespace nv { namespace cvop {
+namespace nvcvop {
 
 class PadAndStack final : public IOperator
 {
@@ -44,8 +44,8 @@ public:
 
     ~PadAndStack();
 
-    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::ITensor &out, cv::ITensor &top,
-                    cv::ITensor &left, NVCVBorderType borderMode, float borderValue);
+    void operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in, nvcv::ITensor &out, nvcv::ITensor &top,
+                    nvcv::ITensor &left, NVCVBorderType borderMode, float borderValue);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -55,7 +55,7 @@ private:
 
 inline PadAndStack::PadAndStack()
 {
-    cv::detail::CheckThrow(nvcvopPadAndStackCreate(&m_handle));
+    nvcv::detail::CheckThrow(nvcvopPadAndStackCreate(&m_handle));
     assert(m_handle);
 }
 
@@ -65,11 +65,12 @@ inline PadAndStack::~PadAndStack()
     m_handle = nullptr;
 }
 
-inline void PadAndStack::operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::ITensor &out,
-                                    cv::ITensor &top, cv::ITensor &left, NVCVBorderType borderMode, float borderValue)
+inline void PadAndStack::operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in, nvcv::ITensor &out,
+                                    nvcv::ITensor &top, nvcv::ITensor &left, NVCVBorderType borderMode,
+                                    float borderValue)
 {
-    cv::detail::CheckThrow(nvcvopPadAndStackSubmit(m_handle, stream, in.handle(), out.handle(), top.handle(),
-                                                   left.handle(), borderMode, borderValue));
+    nvcv::detail::CheckThrow(nvcvopPadAndStackSubmit(m_handle, stream, in.handle(), out.handle(), top.handle(),
+                                                     left.handle(), borderMode, borderValue));
 }
 
 inline NVCVOperatorHandle PadAndStack::handle() const noexcept
@@ -77,6 +78,6 @@ inline NVCVOperatorHandle PadAndStack::handle() const noexcept
     return m_handle;
 }
 
-}} // namespace nv::cvop
+} // namespace nvcvop
 
 #endif // NVCV_OP_PADANDSTACK_HPP

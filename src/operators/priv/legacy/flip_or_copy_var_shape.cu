@@ -24,10 +24,10 @@
 
 #include "CvCudaUtils.cuh"
 
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 template<typename T>
 __global__ void flip_kernel(const Ptr2dVarShapeNHWC<T> src, Ptr2dVarShapeNHWC<T> dst,
@@ -153,4 +153,4 @@ ErrorCode FlipOrCopyVarShape::infer(const IImageBatchVarShapeDataStridedCuda &in
     return ErrorCode::SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

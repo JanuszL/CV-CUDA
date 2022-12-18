@@ -46,7 +46,7 @@ add_library(nvcv_operators_priv STATIC
 
 target_link_libraries(nvcv_operators_priv
     PUBLIC
-        nvcv
+        nvcv_types
         nvcv_util
         nvcv_operators_headers
         nvcv_util_sanitizer

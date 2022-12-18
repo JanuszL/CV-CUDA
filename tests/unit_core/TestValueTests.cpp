@@ -20,7 +20,7 @@
 #include <common/ValueTests.hpp>
 
 namespace t    = ::testing;
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 
 NVCV_TEST_SUITE_P(ValueTestsTests, test::ValueList{1, 2} * test::ValueList{'c', 'd'});
 

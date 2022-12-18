@@ -45,7 +45,7 @@ target_link_libraries(nvcv_test_unit_core
     PRIVATE
         nvcv_util
         nvcv_test_common
-        nvcv_core_priv
+        nvcv_types_priv
 )
 
 nvcv_add_test(nvcv_test_unit_core)

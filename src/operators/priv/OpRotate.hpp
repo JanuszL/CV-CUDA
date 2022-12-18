@@ -32,24 +32,24 @@
 
 #include <memory>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class Rotate final : public IOperator
 {
 public:
     explicit Rotate(const int maxVarShapeBatchSize);
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, const double angleDeg,
+    void operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out, const double angleDeg,
                     const double2 shift, const NVCVInterpolationType interpolation) const;
 
-    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
-                    cv::ITensor &angleDeg, cv::ITensor &shift, const NVCVInterpolationType interpolation) const;
+    void operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, const nvcv::IImageBatchVarShape &out,
+                    nvcv::ITensor &angleDeg, nvcv::ITensor &shift, const NVCVInterpolationType interpolation) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::Rotate>         m_legacyOp;
-    std::unique_ptr<cv::legacy::cuda_op::RotateVarShape> m_legacyOpVarShape;
+    std::unique_ptr<nvcv::legacy::cuda_op::Rotate>         m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::RotateVarShape> m_legacyOpVarShape;
 };
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_ROTATE_HPP

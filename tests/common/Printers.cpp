@@ -23,5 +23,5 @@
 
 std::ostream &operator<<(std::ostream &out, cudaError_t err)
 {
-    return out << nv::cv::util::ToString(err);
+    return out << nvcv::util::ToString(err);
 }

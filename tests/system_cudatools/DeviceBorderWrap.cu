@@ -23,7 +23,7 @@
 #include <nvcv/optools/StaticCast.hpp> // for StaticCast, etc.
 #include <nvcv/optools/TensorWrap.hpp> // for Tensor3DWrap, etc.
 
-namespace cuda = nv::cv::cuda;
+namespace cuda = nvcv::cuda;
 
 // ------------------ To allow testing device-side BorderWrap ------------------
 

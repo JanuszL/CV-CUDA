@@ -21,7 +21,7 @@ if(LTO_ENABLED)
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION on)
 endif()
 
-add_subdirectory(core)
 add_subdirectory(util)
+add_subdirectory(nvcv_types)
 add_subdirectory(optools)
 add_subdirectory(operators)

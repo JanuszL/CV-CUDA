@@ -32,24 +32,24 @@
 
 #include <memory>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class Resize final : public IOperator
 {
 public:
     explicit Resize();
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
+    void operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out,
                     const NVCVInterpolationType interpolation) const;
 
-    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
+    void operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, const nvcv::IImageBatchVarShape &out,
                     const NVCVInterpolationType interpolation) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::Resize>         m_legacyOp;
-    std::unique_ptr<cv::legacy::cuda_op::ResizeVarShape> m_legacyOpVarShape;
+    std::unique_ptr<nvcv::legacy::cuda_op::Resize>         m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::ResizeVarShape> m_legacyOpVarShape;
 };
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_RESIZE_HPP

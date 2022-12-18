@@ -33,25 +33,26 @@
 
 #include <memory>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class WarpAffine final : public IOperator
 {
 public:
     explicit WarpAffine(const int32_t maxVarShapeBatchSize);
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, const NVCVAffineTransform xform,
-                    const int32_t flags, const NVCVBorderType borderMode, const float4 borderValueconst) const;
+    void operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out,
+                    const NVCVAffineTransform xform, const int32_t flags, const NVCVBorderType borderMode,
+                    const float4 borderValueconst) const;
 
-    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
-                    const cv::ITensor &transMatrix, const int32_t flags, const NVCVBorderType borderMode,
+    void operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, const nvcv::IImageBatchVarShape &out,
+                    const nvcv::ITensor &transMatrix, const int32_t flags, const NVCVBorderType borderMode,
                     const float4 borderValue) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::WarpAffine>         m_legacyOp;
-    std::unique_ptr<cv::legacy::cuda_op::WarpAffineVarShape> m_legacyOpVarShape;
+    std::unique_ptr<nvcv::legacy::cuda_op::WarpAffine>         m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::WarpAffineVarShape> m_legacyOpVarShape;
 };
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_WARP_AFFINE_HPP

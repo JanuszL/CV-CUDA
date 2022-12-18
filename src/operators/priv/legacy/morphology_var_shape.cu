@@ -26,10 +26,10 @@
 #include <nvcv/optools/MathWrappers.hpp>
 #include <nvcv/optools/SaturateCast.hpp>
 
-using namespace nv::cv::legacy::helpers;
-using namespace nv::cv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
+using namespace nvcv::legacy::cuda_op;
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 __global__ void UpdateMasksAnchors(cuda::Tensor1DWrap<int2> masks, cuda::Tensor1DWrap<int2> anchors, int numImages,
                                    int iteration)
@@ -124,7 +124,7 @@ void MorphFilter2DCaller(const IImageBatchVarShapeDataStridedCuda &inData,
     dim3 block(16, 16);
     dim3 grid(divUp(maxWidth, block.x), divUp(maxHeight, block.y), outData.numImages());
 
-    using BT   = nv::cv::cuda::BaseType<D>;
+    using BT   = nvcv::cuda::BaseType<D>;
     BT     val = (morph_type == NVCVMorphologyType::NVCV_DILATE) ? std::numeric_limits<BT>::min()
                                                                  : std::numeric_limits<BT>::max();
     Brd<D> brd(0, 0, cuda::SetAll<D>(val));
@@ -197,17 +197,17 @@ MorphologyVarShape::MorphologyVarShape(const int maxBatchSize)
 
 MorphologyVarShape::~MorphologyVarShape() {}
 
-ErrorCode MorphologyVarShape::infer(const cv::IImageBatchVarShape &inBatch, const cv::IImageBatchVarShape &outBatch,
+ErrorCode MorphologyVarShape::infer(const nvcv::IImageBatchVarShape &inBatch, const nvcv::IImageBatchVarShape &outBatch,
                                     NVCVMorphologyType morph_type, const ITensorDataStridedCuda &masks,
                                     const ITensorDataStridedCuda &anchors, int iteration, NVCVBorderType borderMode,
                                     cudaStream_t stream)
 {
-    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(inBatch.exportData(stream));
+    auto *inData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(inBatch.exportData(stream));
     if (inData == nullptr)
     {
         LOG_ERROR("Input must be varshape image batch");
     }
-    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(outBatch.exportData(stream));
+    auto *outData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(outBatch.exportData(stream));
     if (outData == nullptr)
     {
         LOG_ERROR("Output must be varshape image batch");
@@ -302,4 +302,4 @@ ErrorCode MorphologyVarShape::infer(const cv::IImageBatchVarShape &inBatch, cons
 
     return ErrorCode::SUCCESS;
 }
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

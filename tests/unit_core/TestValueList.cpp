@@ -22,7 +22,7 @@
 #include <type_traits>
 
 namespace t    = ::testing;
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 
 TEST(JoinTupleTests, only_values)
 {

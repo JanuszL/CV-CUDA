@@ -23,7 +23,7 @@
 
 #include <cmath> // for std::round, etc.
 
-namespace nv::cv::cuda::detail {
+namespace nvcv::cuda::detail {
 
 #ifdef __CUDA_ARCH__
 
@@ -300,6 +300,6 @@ inline __host__ __device__ U AbsImpl(U u)
     }
 }
 
-} // namespace nv::cv::cuda::detail
+} // namespace nvcv::cuda::detail
 
 #endif // NVCV_CUDA_DETAIL_MATH_WRAPPERS_IMPL_HPP

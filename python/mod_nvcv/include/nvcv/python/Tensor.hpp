@@ -29,7 +29,7 @@
 #include <cassert>
 #include <vector>
 
-namespace nv::cvpy {
+namespace nvcvpy {
 
 namespace py = pybind11;
 
@@ -37,10 +37,10 @@ using Shape = std::vector<int64_t>;
 
 class Tensor
     : public Resource
-    , public cv::ITensor
+    , public nvcv::ITensor
 {
 public:
-    static Tensor Create(const cv::TensorShape &tshape, cv::DataType dtype)
+    static Tensor Create(const nvcv::TensorShape &tshape, nvcv::DataType dtype)
     {
         PyObject *otensor = capi().Tensor_Create(tshape.size(), &tshape[0], static_cast<NVCVDataType>(dtype),
                                                  static_cast<NVCVTensorLayout>(tshape.layout()));
@@ -50,7 +50,7 @@ public:
         return Tensor(pytensor);
     }
 
-    static Tensor CreateForImageBatch(int numImages, cv::Size2D size, cv::ImageFormat fmt)
+    static Tensor CreateForImageBatch(int numImages, nvcv::Size2D size, nvcv::ImageFormat fmt)
     {
         PyObject *otensor
             = capi().Tensor_CreateForImageBatch(numImages, size.w, size.h, static_cast<NVCVImageFormat>(fmt));
@@ -78,11 +78,11 @@ private:
     }
 };
 
-} // namespace nv::cvpy
+} // namespace nvcvpy
 
 namespace pybind11::detail {
 
-namespace cvpy = nv::cvpy;
+namespace cvpy = nvcvpy;
 
 template<>
 struct type_caster<cvpy::Tensor> : type_caster_base<cvpy::Tensor>

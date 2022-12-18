@@ -21,12 +21,12 @@
 #include <nvcv/operators/Version.h>
 #include <util/Version.hpp>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
-using cv::util::Version;
+using nvcv::util::Version;
 
 constexpr Version CURRENT_VERSION{NVCV_OP_VERSION};
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_VERSION_HPP

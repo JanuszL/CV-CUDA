@@ -31,9 +31,9 @@
 #include <numeric>
 #include <random>
 
-namespace cuda  = nv::cv::cuda;
-namespace test  = nv::cv::test;
-namespace ttype = nv::cv::test::type;
+namespace cuda  = nvcv::cuda;
+namespace test  = nvcv::test;
+namespace ttype = nvcv::test::type;
 
 // ---------------------------- Testing IsOutside ------------------------------
 
@@ -126,7 +126,7 @@ TYPED_TEST(BorderWrapNHWTest, correct_fill)
     int batches    = ttype::GetValue<TypeParam, 2>;
     int borderSize = ttype::GetValue<TypeParam, 3>;
 
-    nv::cv::ImageFormat format{ttype::GetValue<TypeParam, 4>};
+    nvcv::ImageFormat format{ttype::GetValue<TypeParam, 4>};
 
     using ValueType            = ttype::GetType<TypeParam, 5>;
     constexpr auto kBorderType = ttype::GetValue<TypeParam, 6>;
@@ -134,17 +134,17 @@ TYPED_TEST(BorderWrapNHWTest, correct_fill)
 
     ValueType borderValue = cuda::SetAll<ValueType>(123);
 
-    nv::cv::Tensor srcTensor(batches, {width, height}, format);
-    nv::cv::Tensor dstTensor(batches, {width + borderSize * 2, height + borderSize * 2}, format);
+    nvcv::Tensor srcTensor(batches, {width, height}, format);
+    nvcv::Tensor dstTensor(batches, {width + borderSize * 2, height + borderSize * 2}, format);
 
-    const auto *srcDev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(srcTensor.exportData());
-    const auto *dstDev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(dstTensor.exportData());
+    const auto *srcDev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(srcTensor.exportData());
+    const auto *dstDev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(dstTensor.exportData());
 
     ASSERT_NE(srcDev, nullptr);
     ASSERT_NE(dstDev, nullptr);
 
-    auto srcAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(*srcDev);
-    auto dstAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(*dstDev);
+    auto srcAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*srcDev);
+    auto dstAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*dstDev);
 
     ASSERT_TRUE(srcAccess);
     ASSERT_TRUE(dstAccess);
@@ -232,7 +232,7 @@ TYPED_TEST(BorderWrapNHWCTest, correct_fill)
     int batches    = ttype::GetValue<TypeParam, 2>;
     int borderSize = ttype::GetValue<TypeParam, 3>;
 
-    nv::cv::ImageFormat format{ttype::GetValue<TypeParam, 4>};
+    nvcv::ImageFormat format{ttype::GetValue<TypeParam, 4>};
 
     using ValueType            = ttype::GetType<TypeParam, 5>;
     constexpr auto kBorderType = ttype::GetValue<TypeParam, 6>;
@@ -240,17 +240,17 @@ TYPED_TEST(BorderWrapNHWCTest, correct_fill)
 
     ValueType borderValue = cuda::SetAll<ValueType>(123);
 
-    nv::cv::Tensor srcTensor(batches, {width, height}, format);
-    nv::cv::Tensor dstTensor(batches, {width + borderSize * 2, height + borderSize * 2}, format);
+    nvcv::Tensor srcTensor(batches, {width, height}, format);
+    nvcv::Tensor dstTensor(batches, {width + borderSize * 2, height + borderSize * 2}, format);
 
-    const auto *srcDev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(srcTensor.exportData());
-    const auto *dstDev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(dstTensor.exportData());
+    const auto *srcDev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(srcTensor.exportData());
+    const auto *dstDev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(dstTensor.exportData());
 
     ASSERT_NE(srcDev, nullptr);
     ASSERT_NE(dstDev, nullptr);
 
-    auto srcAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(*srcDev);
-    auto dstAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(*dstDev);
+    auto srcAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*srcDev);
+    auto dstAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*dstDev);
 
     ASSERT_TRUE(srcAccess);
     ASSERT_TRUE(dstAccess);

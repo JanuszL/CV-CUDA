@@ -19,7 +19,7 @@
 
 #include <cmath>
 
-namespace nv::cv::test {
+namespace nvcv::test {
 
 inline void ReplicateBorderIndex(int &coord, int size)
 {
@@ -129,4 +129,4 @@ bool IsInside(int2 &inCoord, int2 inSize, NVCVBorderType borderMode)
     }
 }
 
-} // namespace nv::cv::test
+} // namespace nvcv::test

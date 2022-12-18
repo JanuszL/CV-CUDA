@@ -25,11 +25,11 @@
 #include <cstdint> // for uint8_t, etc.
 #include <vector>  // for std::vector, etc.
 
-namespace nv::cv::test {
+namespace nvcv::test {
 
 void FlipCPU(std::vector<uint8_t> &hDst, const long3 &dstStrides, const std::vector<uint8_t> &hSrc,
              const long3 &srcStrides, const int3 &shape, const ImageFormat &format, int flipCode);
 
-} // namespace nv::cv::test
+} // namespace nvcv::test
 
 #endif // NVCV_TEST_COMMON_FLIP_UTILS_HPP

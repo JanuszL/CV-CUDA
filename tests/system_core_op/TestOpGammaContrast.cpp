@@ -28,9 +28,8 @@
 
 #include <random>
 
-namespace nvcv = nv::cv;
-namespace test = nv::cv::test;
-namespace cuda = nv::cv::cuda;
+namespace test = nvcv::test;
+namespace cuda = nvcv::cuda;
 
 // clang-format off
 
@@ -123,14 +122,14 @@ TEST_P(OpGammaContrast, varshape_correct_output)
     std::uniform_int_distribution<int>    udistHeight(height * 0.8, height * 1.1);
     std::uniform_real_distribution<float> udistGamma(gamma * 0.8, 1.0);
 
-    std::vector<std::unique_ptr<nv::cv::Image>> imgSrc;
+    std::vector<std::unique_ptr<nvcv::Image>> imgSrc;
 
     std::vector<std::vector<uint8_t>> srcVec(batches);
     std::vector<int>                  srcVecRowStride(batches);
 
     for (int i = 0; i < batches; ++i)
     {
-        imgSrc.emplace_back(std::make_unique<nv::cv::Image>(nv::cv::Size2D{udistWidth(rng), udistHeight(rng)}, format));
+        imgSrc.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{udistWidth(rng), udistHeight(rng)}, format));
 
         int srcRowStride   = imgSrc[i]->size().w * format.planePixelStrideBytes(0);
         srcVecRowStride[i] = srcRowStride;
@@ -140,7 +139,7 @@ TEST_P(OpGammaContrast, varshape_correct_output)
         srcVec[i].resize(imgSrc[i]->size().h * srcRowStride);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
 
-        auto *imgData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
+        auto *imgData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_NE(imgData, nullptr);
 
         printVec(srcVec[i], imgSrc[i]->size().h, srcVecRowStride[i], format.numChannels(), "input");
@@ -151,16 +150,16 @@ TEST_P(OpGammaContrast, varshape_correct_output)
                                     srcRowStride, srcRowStride, imgSrc[i]->size().h, cudaMemcpyHostToDevice, stream));
     }
 
-    nv::cv::ImageBatchVarShape batchSrc(batches);
+    nvcv::ImageBatchVarShape batchSrc(batches);
     batchSrc.pushBack(imgSrc.begin(), imgSrc.end());
 
     // Create output varshape
-    std::vector<std::unique_ptr<nv::cv::Image>> imgDst;
+    std::vector<std::unique_ptr<nvcv::Image>> imgDst;
     for (int i = 0; i < batches; ++i)
     {
-        imgDst.emplace_back(std::make_unique<nv::cv::Image>(imgSrc[i]->size(), imgSrc[i]->format()));
+        imgDst.emplace_back(std::make_unique<nvcv::Image>(imgSrc[i]->size(), imgSrc[i]->format()));
     }
-    nv::cv::ImageBatchVarShape batchDst(batches);
+    nvcv::ImageBatchVarShape batchDst(batches);
     batchDst.pushBack(imgDst.begin(), imgDst.end());
 
     // Create gamma tensor
@@ -175,10 +174,10 @@ TEST_P(OpGammaContrast, varshape_correct_output)
     }
     std::generate(gammaVec.begin(), gammaVec.end(), [&]() { return udistGamma(rng); });
 
-    int            nElements = gammaVec.size();
-    nv::cv::Tensor gammaTensor({{nElements}, "N"}, nv::cv::TYPE_F32);
+    int          nElements = gammaVec.size();
+    nvcv::Tensor gammaTensor({{nElements}, "N"}, nvcv::TYPE_F32);
     {
-        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(gammaTensor.exportData());
+        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(gammaTensor.exportData());
         ASSERT_NE(dev, nullptr);
 
         ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(dev->basePtr(), gammaVec.data(), gammaVec.size() * sizeof(float),
@@ -186,7 +185,7 @@ TEST_P(OpGammaContrast, varshape_correct_output)
     }
 
     // Run operator
-    nv::cvop::GammaContrast gammacontrastOp(batches, format.numChannels());
+    nvcvop::GammaContrast gammacontrastOp(batches, format.numChannels());
 
     EXPECT_NO_THROW(gammacontrastOp(stream, batchSrc, batchDst, gammaTensor));
 
@@ -198,12 +197,12 @@ TEST_P(OpGammaContrast, varshape_correct_output)
     {
         SCOPED_TRACE(i);
 
-        const auto *srcData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_EQ(srcData->numPlanes(), 1);
         int srcWidth  = srcData->plane(0).width;
         int srcHeight = srcData->plane(0).height;
 
-        const auto *dstData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgDst[i]->exportData());
+        const auto *dstData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgDst[i]->exportData());
         ASSERT_EQ(dstData->numPlanes(), 1);
 
         int dstWidth  = dstData->plane(0).width;

@@ -31,20 +31,20 @@
 
 #include <memory>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class ConvertTo final : public IOperator
 {
 public:
     explicit ConvertTo();
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, const double alpha,
+    void operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out, const double alpha,
                     const double beta) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::ConvertTo> m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::ConvertTo> m_legacyOp;
 };
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_CONVERT_TO_HPP

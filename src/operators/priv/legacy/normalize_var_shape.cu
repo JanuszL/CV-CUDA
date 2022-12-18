@@ -26,7 +26,7 @@
 #include <nvcv/operators/OpNormalize.h> // for NVCV_OP_NORMALIZE_SCALE_IS_STDDEV, etc.
 #include <nvcv/optools/MathWrappers.hpp>
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 namespace {
 
@@ -183,10 +183,10 @@ void normInvStdDev(const IImageBatchVarShapeDataStridedCuda &in, const TensorDat
 
 } // namespace
 
-ErrorCode NormalizeVarShape::infer(const nv::cv::IImageBatchVarShapeDataStridedCuda &inData,
-                                   const nv::cv::ITensorDataStridedCuda             &baseData,
-                                   const nv::cv::ITensorDataStridedCuda             &scaleData,
-                                   const nv::cv::IImageBatchVarShapeDataStridedCuda &outData, const float global_scale,
+ErrorCode NormalizeVarShape::infer(const nvcv::IImageBatchVarShapeDataStridedCuda &inData,
+                                   const nvcv::ITensorDataStridedCuda             &baseData,
+                                   const nvcv::ITensorDataStridedCuda             &scaleData,
+                                   const nvcv::IImageBatchVarShapeDataStridedCuda &outData, const float global_scale,
                                    const float shift, const float epsilon, const uint32_t flags, cudaStream_t stream)
 {
     DataFormat input_format  = helpers::GetLegacyDataFormat(inData);
@@ -323,4 +323,4 @@ normInvStdDev<ushort4, uchar4>},
     return ErrorCode::SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

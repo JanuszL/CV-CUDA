@@ -30,11 +30,11 @@
 #include <nvcv/ITensorData.hpp>
 #include <nvcv/TensorShapeInfo.hpp>
 
-namespace nv::cv::legacy::helpers {
+namespace nvcv::legacy::helpers {
 
 cuda_op::DataFormat GetLegacyDataFormat(int32_t numberChannels, int32_t numberPlanes, int32_t numberInBatch);
 
-cuda_op::DataType GetLegacyDataType(int32_t bpc, cv::DataKind kind);
+cuda_op::DataType GetLegacyDataType(int32_t bpc, nvcv::DataKind kind);
 cuda_op::DataType GetLegacyDataType(DataType dtype);
 cuda_op::DataType GetLegacyDataType(ImageFormat fmt);
 
@@ -48,9 +48,9 @@ cuda_op::DataShape GetLegacyDataShape(const TensorShapeInfoImage &shapeInfo);
 Size2D GetMaxImageSize(const ITensorDataStridedCuda &tensor);
 Size2D GetMaxImageSize(const IImageBatchVarShapeDataStridedCuda &imageBatch);
 
-} // namespace nv::cv::legacy::helpers
+} // namespace nvcv::legacy::helpers
 
-namespace nv::cv::util {
+namespace nvcv::util {
 
 inline bool CheckSucceeded(legacy::cuda_op::ErrorCode err)
 {
@@ -60,6 +60,6 @@ inline bool CheckSucceeded(legacy::cuda_op::ErrorCode err)
 NVCVStatus  TranslateError(legacy::cuda_op::ErrorCode err);
 const char *ToString(legacy::cuda_op::ErrorCode err, const char **perrdescr = nullptr);
 
-} // namespace nv::cv::util
+} // namespace nvcv::util
 
 #endif // CV_CUDA_LEGACY_HELPERS_HPP

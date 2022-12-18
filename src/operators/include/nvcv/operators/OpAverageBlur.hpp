@@ -36,20 +36,20 @@
 #include <nvcv/Size.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 
-namespace nv { namespace cvop {
+namespace nvcvop {
 
 class AverageBlur final : public IOperator
 {
 public:
-    explicit AverageBlur(cv::Size2D maxKernelSize, int32_t maxVarShapeBatchSize);
+    explicit AverageBlur(nvcv::Size2D maxKernelSize, int32_t maxVarShapeBatchSize);
 
     ~AverageBlur();
 
-    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, cv::Size2D kernelSize, int2 kernelAnchor,
-                    NVCVBorderType borderMode);
+    void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, nvcv::Size2D kernelSize,
+                    int2 kernelAnchor, NVCVBorderType borderMode);
 
-    void operator()(cudaStream_t stream, cv::IImageBatch &in, cv::IImageBatch &out, cv::ITensor &kernelSize,
-                    cv::ITensor &kernelAnchor, NVCVBorderType borderMode);
+    void operator()(cudaStream_t stream, nvcv::IImageBatch &in, nvcv::IImageBatch &out, nvcv::ITensor &kernelSize,
+                    nvcv::ITensor &kernelAnchor, NVCVBorderType borderMode);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -57,9 +57,10 @@ private:
     NVCVOperatorHandle m_handle;
 };
 
-inline AverageBlur::AverageBlur(cv::Size2D maxKernelSize, int32_t maxVarShapeBatchSize)
+inline AverageBlur::AverageBlur(nvcv::Size2D maxKernelSize, int32_t maxVarShapeBatchSize)
 {
-    cv::detail::CheckThrow(nvcvopAverageBlurCreate(&m_handle, maxKernelSize.w, maxKernelSize.h, maxVarShapeBatchSize));
+    nvcv::detail::CheckThrow(
+        nvcvopAverageBlurCreate(&m_handle, maxKernelSize.w, maxKernelSize.h, maxVarShapeBatchSize));
     assert(m_handle);
 }
 
@@ -69,18 +70,18 @@ inline AverageBlur::~AverageBlur()
     m_handle = nullptr;
 }
 
-inline void AverageBlur::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, cv::Size2D kernelSize,
+inline void AverageBlur::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, nvcv::Size2D kernelSize,
                                     int2 kernelAnchor, NVCVBorderType borderMode)
 {
-    cv::detail::CheckThrow(nvcvopAverageBlurSubmit(m_handle, stream, in.handle(), out.handle(), kernelSize.w,
-                                                   kernelSize.h, kernelAnchor.x, kernelAnchor.y, borderMode));
+    nvcv::detail::CheckThrow(nvcvopAverageBlurSubmit(m_handle, stream, in.handle(), out.handle(), kernelSize.w,
+                                                     kernelSize.h, kernelAnchor.x, kernelAnchor.y, borderMode));
 }
 
-inline void AverageBlur::operator()(cudaStream_t stream, cv::IImageBatch &in, cv::IImageBatch &out,
-                                    cv::ITensor &kernelSize, cv::ITensor &kernelAnchor, NVCVBorderType borderMode)
+inline void AverageBlur::operator()(cudaStream_t stream, nvcv::IImageBatch &in, nvcv::IImageBatch &out,
+                                    nvcv::ITensor &kernelSize, nvcv::ITensor &kernelAnchor, NVCVBorderType borderMode)
 {
-    cv::detail::CheckThrow(nvcvopAverageBlurVarShapeSubmit(m_handle, stream, in.handle(), out.handle(),
-                                                           kernelSize.handle(), kernelAnchor.handle(), borderMode));
+    nvcv::detail::CheckThrow(nvcvopAverageBlurVarShapeSubmit(m_handle, stream, in.handle(), out.handle(),
+                                                             kernelSize.handle(), kernelAnchor.handle(), borderMode));
 }
 
 inline NVCVOperatorHandle AverageBlur::handle() const noexcept
@@ -88,6 +89,6 @@ inline NVCVOperatorHandle AverageBlur::handle() const noexcept
     return m_handle;
 }
 
-}} // namespace nv::cvop
+} // namespace nvcvop
 
 #endif // NVCV_OP_AVERAGEBLUR_HPP

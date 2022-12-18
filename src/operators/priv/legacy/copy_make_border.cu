@@ -23,9 +23,9 @@
 
 #include "CvCudaUtils.cuh"
 
-using namespace nv::cv;
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
+using namespace nvcv;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
 
 #define BLOCK 32
 
@@ -92,7 +92,7 @@ void copyMakeBorder(const TensorDataAccessStridedImagePlanar &d_in, const Tensor
     funcs[border_type](src_ptr, dst_ptr, brdVal, left, top, stream);
 }
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 ErrorCode CopyMakeBorder::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                                 const int top, const int left, const NVCVBorderType border_type, const float4 value,
@@ -185,4 +185,4 @@ ErrorCode CopyMakeBorder::infer(const ITensorDataStridedCuda &inData, const ITen
     return SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

@@ -32,24 +32,24 @@
 
 #include <memory>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class CvtColor final : public IOperator
 {
 public:
     explicit CvtColor();
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out,
+    void operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out,
                     NVCVColorConversionCode code) const;
 
-    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
+    void operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, const nvcv::IImageBatchVarShape &out,
                     NVCVColorConversionCode code) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::CvtColor>         m_legacyOp;
-    std::unique_ptr<cv::legacy::cuda_op::CvtColorVarShape> m_legacyOpVarShape;
+    std::unique_ptr<nvcv::legacy::cuda_op::CvtColor>         m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::CvtColorVarShape> m_legacyOpVarShape;
 };
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_CVTCOLOR_HPP

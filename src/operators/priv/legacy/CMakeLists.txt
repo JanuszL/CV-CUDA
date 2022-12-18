@@ -63,7 +63,7 @@ add_library(cvcuda_legacy STATIC
 target_link_libraries(cvcuda_legacy
     PUBLIC
         CUDA::cudart_static
-        nvcv
+        nvcv_types
         nvcv_util
         nvcv_optools
         nvcv_operators_headers

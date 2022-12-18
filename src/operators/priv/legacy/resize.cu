@@ -24,10 +24,10 @@
 
 #include <nvcv/optools/MathWrappers.hpp>
 
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 //private internal API
 
@@ -758,4 +758,4 @@ ErrorCode Resize::infer(const ITensorDataStridedCuda &inData, const ITensorDataS
     return SUCCESS;
 } //Resize::infer
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

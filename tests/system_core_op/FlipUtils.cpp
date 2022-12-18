@@ -23,7 +23,7 @@
 #include <nvcv/optools/TypeTraits.hpp>   // for BaseType, etc.
 #include <util/Assert.h>                 // for NVCV_ASSERT, etc.
 
-namespace nv::cv::test {
+namespace nvcv::test {
 
 namespace detail {
 
@@ -115,4 +115,4 @@ void FlipCPU(std::vector<uint8_t> &hDst, const long3 &dstStrides, const std::vec
     }
 }
 
-} // namespace nv::cv::test
+} // namespace nvcv::test

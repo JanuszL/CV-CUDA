@@ -27,7 +27,7 @@
 #include "TypeTraits.hpp"              // for Require, etc.
 #include "detail/MathWrappersImpl.hpp" // for MathWrappersImpl, etc.
 
-namespace nv::cv::cuda {
+namespace nvcv::cuda {
 
 namespace detail {
 
@@ -37,7 +37,7 @@ inline __host__ __device__ RT RoundImpl(U u)
     RT out{};
 
 #pragma unroll
-    for (int e = 0; e < nv::cv::cuda::NumElements<RT>; ++e)
+    for (int e = 0; e < nvcv::cuda::NumElements<RT>; ++e)
     {
         GetElement(out, e) = RoundImpl<T, BaseType<U>>(GetElement(u, e));
     }
@@ -131,7 +131,7 @@ inline __host__ __device__ U min(U a, U b)
     {
         U out{};
 #pragma unroll
-        for (int e = 0; e < nv::cv::cuda::NumElements<U>; ++e)
+        for (int e = 0; e < nvcv::cuda::NumElements<U>; ++e)
         {
             GetElement(out, e) = detail::MinImpl(GetElement(a, e), GetElement(b, e));
         }
@@ -174,7 +174,7 @@ inline __host__ __device__ U max(U a, U b)
     {
         U out{};
 #pragma unroll
-        for (int e = 0; e < nv::cv::cuda::NumElements<U>; ++e)
+        for (int e = 0; e < nvcv::cuda::NumElements<U>; ++e)
         {
             GetElement(out, e) = detail::MaxImpl(GetElement(a, e), GetElement(b, e));
         }
@@ -203,7 +203,7 @@ inline __host__ __device__ U exp(U u)
     U out{};
 
 #pragma unroll
-    for (int e = 0; e < nv::cv::cuda::NumElements<U>; ++e)
+    for (int e = 0; e < nvcv::cuda::NumElements<U>; ++e)
     {
         GetElement(out, e) = detail::ExpImpl(GetElement(u, e));
     }
@@ -229,7 +229,7 @@ inline __host__ __device__ U sqrt(U u)
     U out{};
 
 #pragma unroll
-    for (int e = 0; e < nv::cv::cuda::NumElements<U>; ++e)
+    for (int e = 0; e < nvcv::cuda::NumElements<U>; ++e)
     {
         GetElement(out, e) = detail::SqrtImpl(GetElement(u, e));
     }
@@ -276,7 +276,7 @@ inline __host__ __device__ U abs(U u)
     {
         U out{};
 #pragma unroll
-        for (int e = 0; e < nv::cv::cuda::NumElements<U>; ++e)
+        for (int e = 0; e < nvcv::cuda::NumElements<U>; ++e)
         {
             GetElement(out, e) = detail::AbsImpl(GetElement(u, e));
         }
@@ -289,6 +289,6 @@ inline __host__ __device__ U abs(U u)
 
 /**@}*/
 
-} // namespace nv::cv::cuda
+} // namespace nvcv::cuda
 
 #endif // NVCV_CUDA_MATH_WRAPPERS_HPP

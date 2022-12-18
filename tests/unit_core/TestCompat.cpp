@@ -24,7 +24,7 @@
 #endif
 #include <util/Compat.h>
 
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 namespace t    = ::testing;
 
 #if HAS_SYS_RANDOM_H

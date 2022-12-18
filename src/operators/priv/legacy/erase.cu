@@ -24,11 +24,9 @@
 #include "CvCudaUtils.cuh"
 #include "cub/cub.cuh"
 
-using namespace nv::cv::legacy::helpers;
+using namespace nvcv::legacy::helpers;
 
-using namespace nv::cv::legacy::cuda_op;
-
-namespace nvcv = nv::cv;
+using namespace nvcv::legacy::cuda_op;
 
 static __device__ int erase_hash(unsigned int x)
 {
@@ -65,11 +63,11 @@ __global__ void erase(nvcv::cuda::Tensor4DWrap<D> img, int imgH, int imgW, nvcv:
                                        + 0x26AD0C9 * blockDim.x * blockDim.y * blockDim.z * (blockIdx.x + 1)
                                              * (blockIdx.y + 1) * (blockIdx.z + 1);
                 *img.ptr(batchId, anchor_y + y, anchor_x + x, c)
-                    = nv::cv::cuda::SaturateCast<D>(erase_hash(hashValue) % 256);
+                    = nvcv::cuda::SaturateCast<D>(erase_hash(hashValue) % 256);
             }
             else
             {
-                *img.ptr(batchId, anchor_y + y, anchor_x + x, c) = nv::cv::cuda::SaturateCast<D>(value);
+                *img.ptr(batchId, anchor_y + y, anchor_x + x, c) = nvcv::cuda::SaturateCast<D>(value);
             }
         }
     }
@@ -104,7 +102,7 @@ struct MaxWH
     }
 };
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 Erase::Erase(DataShape max_input_shape, DataShape max_output_shape, int num_erasing_area)
     : CudaBaseOp(max_input_shape, max_output_shape)
@@ -299,4 +297,4 @@ ErrorCode Erase::infer(const ITensorDataStridedCuda &inData, const ITensorDataSt
     return SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

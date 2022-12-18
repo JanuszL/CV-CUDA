@@ -19,7 +19,7 @@
 
 #include <util/HashMD5.hpp>
 
-namespace util = nv::cv::util;
+namespace util = nvcv::util;
 namespace t    = ::testing;
 
 namespace {

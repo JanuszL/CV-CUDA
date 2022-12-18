@@ -28,9 +28,8 @@
 #include <iostream>
 #include <random>
 
-namespace nvcv = nv::cv;
 namespace gt   = ::testing;
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 
 //#define DBG_CROP_RECT
 
@@ -162,7 +161,7 @@ TEST_P(OpCustomCrop, CustomCrop_packed)
     setGoldBuffer(gold, *outAccess, crpRect, cropVal);
 
     // run operator
-    nv::cvop::CustomCrop cropOp;
+    nvcvop::CustomCrop cropOp;
 
     EXPECT_NO_THROW(cropOp(stream, imgIn, imgOut, crpRect));
 

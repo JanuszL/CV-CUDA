@@ -21,9 +21,8 @@
 #include <common/ValueTests.hpp>
 #include <nvcv/TensorShapeInfo.hpp>
 
-namespace test = nv::cv::test;
+namespace test = nvcv::test;
 namespace t    = ::testing;
-namespace nvcv = nv::cv;
 
 // TensorShapeInfo::numSamples ========================
 

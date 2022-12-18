@@ -24,21 +24,21 @@
 
 namespace pybind11::detail {
 
-namespace cvpy = nv::cvpy;
+namespace cvpy = nvcvpy;
 
 template<>
-struct type_caster<nv::cv::ImageFormat>
+struct type_caster<nvcv::ImageFormat>
 {
-    PYBIND11_TYPE_CASTER(nv::cv::ImageFormat, const_name("nvcv.Format"));
+    PYBIND11_TYPE_CASTER(nvcv::ImageFormat, const_name("nvcv.Format"));
 
     bool load(handle src, bool)
     {
         NVCVImageFormat p = cvpy::capi().ImageFormat_FromPython(src.ptr());
-        value             = nv::cv::ImageFormat(p);
+        value             = nvcv::ImageFormat(p);
         return true;
     }
 
-    static handle cast(nv::cv::ImageFormat type, return_value_policy /* policy */, handle /*parent */)
+    static handle cast(nvcv::ImageFormat type, return_value_policy /* policy */, handle /*parent */)
     {
         return cvpy::capi().ImageFormat_ToPython(static_cast<NVCVImageFormat>(type));
     }

@@ -27,7 +27,7 @@
 
 #include <vector>
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 enum ErrorCode
 {
@@ -802,7 +802,7 @@ public:
      * @param borderMode the border mode to use when acessing data outside of source
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const cv::IImageBatchVarShape &inData, const cv::IImageBatchVarShape &outData,
+    ErrorCode infer(const nvcv::IImageBatchVarShape &inData, const nvcv::IImageBatchVarShape &outData,
                     NVCVMorphologyType morph_type, const ITensorDataStridedCuda &masks,
                     const ITensorDataStridedCuda &anchors, int iteration, NVCVBorderType borderMode,
                     cudaStream_t stream);
@@ -1044,8 +1044,8 @@ public:
      * @param data_type data type of the input images, e.g. kCV_32F.
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData, const cv::Size2D ksize,
-                    cudaStream_t stream);
+    ErrorCode infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
+                    const nvcv::Size2D ksize, cudaStream_t stream);
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator
      * @param max_input_shape maximum input DataShape that may be used
@@ -1114,9 +1114,9 @@ public:
      * @param out_data_type data type of the output images, e.g. kCV_32F.
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const nv::cv::IImageBatchVarShapeDataStridedCuda &inData,
-                    const nv::cv::ITensorDataStridedCuda &baseData, const nv::cv::ITensorDataStridedCuda &scaleData,
-                    const nv::cv::IImageBatchVarShapeDataStridedCuda &outData, const float global_scale,
+    ErrorCode infer(const nvcv::IImageBatchVarShapeDataStridedCuda &inData,
+                    const nvcv::ITensorDataStridedCuda &baseData, const nvcv::ITensorDataStridedCuda &scaleData,
+                    const nvcv::IImageBatchVarShapeDataStridedCuda &outData, const float global_scale,
                     const float shift, const float epsilon, const uint32_t flags, cudaStream_t stream);
 };
 
@@ -1151,7 +1151,7 @@ public:
      * ```
      * (double)dsize.height/src.rows
      * ```
-     * @param interpolation interpolation method. See cv::InterpolationFlags for more detials.
+     * @param interpolation interpolation method. See nvcv::InterpolationFlags for more detials.
      * @param input_shape shape of the input images.
      * @param format format of the input images, e.g. kNHWC.
      * @param data_type data type of the input images, e.g. kCV_32F.
@@ -1270,17 +1270,17 @@ public:
      * @param stream for the asynchronous execution.
      */
     ErrorCode infer(const IImageBatchVarShapeDataStridedCuda &inData, const IImageBatchVarShapeDataStridedCuda &outData,
-                    const nv::cv::ITensorDataStridedCuda &top, const nv::cv::ITensorDataStridedCuda &left,
+                    const nvcv::ITensorDataStridedCuda &top, const nvcv::ITensorDataStridedCuda &left,
                     const NVCVBorderType border_type, const float4 value, cudaStream_t stream);
 
     ErrorCode infer(const IImageBatchVarShapeDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
-                    const nv::cv::ITensorDataStridedCuda &top, const nv::cv::ITensorDataStridedCuda &left,
+                    const nvcv::ITensorDataStridedCuda &top, const nvcv::ITensorDataStridedCuda &left,
                     const NVCVBorderType border_type, const float4 value, cudaStream_t stream);
 
 private:
     template<class OutType>
     ErrorCode inferWarp(const IImageBatchVarShapeDataStridedCuda &inData, const OutType &outData,
-                        const nv::cv::ITensorDataStridedCuda &top, const nv::cv::ITensorDataStridedCuda &left,
+                        const nvcv::ITensorDataStridedCuda &top, const nvcv::ITensorDataStridedCuda &left,
                         const NVCVBorderType border_type, const float4 value, cudaStream_t stream);
 };
 
@@ -1764,7 +1764,7 @@ public:
      * @param buffer_size size of the gpu_workspace/cpu_workspace.
      * @param ksize aperture size used to compute the second-derivative filters
      * @param scale optional scale factor for the computed Laplacian values. By default, no scaling is applied.
-     * @param borderMode pixel extrapolation method, e.g. cv::BORDER_CONSTANT
+     * @param borderMode pixel extrapolation method, e.g. nvcv::BORDER_CONSTANT
      * @param stream for the asynchronous execution.
      */
     ErrorCode infer(const IImageBatchVarShapeDataStridedCuda &inData, const IImageBatchVarShapeDataStridedCuda &outData,
@@ -1984,7 +1984,7 @@ public:
      * @param kernelAnchor Anchor of the kernel that indicates the relative position of a filtered point within the kernel.
      * (-1,-1) means that the anchor is at the kernel center.
      *                     + Must be 1D tensor of int2, NVCV_DATA_TYPE_2S32
-     * @param borderMode pixel extrapolation method, e.g. cv::BORDER_CONSTANT
+     * @param borderMode pixel extrapolation method, e.g. nvcv::BORDER_CONSTANT
      * @param stream for the asynchronous execution.
      */
     ErrorCode infer(const IImageBatchVarShapeDataStridedCuda &inData, const IImageBatchVarShapeDataStridedCuda &outData,
@@ -2052,7 +2052,7 @@ public:
      * @param diameter pixel neighborhood diameter that is used during filtering
      * @param sigmaColor filter sigma in the color space
      * @param sigmaSpace filter sigma in the coordinate space
-     * @param borderMode pixel extrapolation method, e.g. cv::BORDER_CONSTANT
+     * @param borderMode pixel extrapolation method, e.g. nvcv::BORDER_CONSTANT
      * @param stream for the asynchronous execution.
      */
     ErrorCode infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData, int diameter,
@@ -2076,7 +2076,7 @@ public:
      * @param diameterData tensor of each pixel neighborhood that is used during filtering
      * @param sigmaColorData tensor filter sigmas in the color space
      * @param sigmaSpaceData tensor filter sigmas in the coordinate space
-     * @param borderMode pixel extrapolation method, e.g. cv::BORDER_CONSTANT
+     * @param borderMode pixel extrapolation method, e.g. nvcv::BORDER_CONSTANT
      * @param stream for the asynchronous execution.
      */
     ErrorCode infer(const IImageBatchVarShapeDataStridedCuda &inData, const IImageBatchVarShapeDataStridedCuda &outData,
@@ -2124,7 +2124,7 @@ public:
     }
 
     /*
-     * @brief Applies an affine transformation to an image. Same function as cv::warpAffine.
+     * @brief Applies an affine transformation to an image. Same function as nvcv::warpAffine.
      * @param inData input tensor.
      * @param outData output tensor.
      * @param xform cpu pointer, 2x3 transformation matrix.
@@ -2150,7 +2150,7 @@ public:
     }
 
     /*
-     * @brief Applies a perspective transformation to an image. Same function as cv::warpPerspective.
+     * @brief Applies a perspective transformation to an image. Same function as nvcv::warpPerspective.
      * @param inputs gpu pointer, inputs[0] are batched input images, whose shape is input_shape and type is data_type.
      * @param outputs gpu pointer, outputs[0] are batched output images that have the size dsize and the same type as
      * data_type.
@@ -2190,7 +2190,7 @@ public:
     ~WarpPerspectiveVarShape();
 
     /**
-     * @brief Applies a perspective transformation to an image. Same function as cv::warpPerspective.
+     * @brief Applies a perspective transformation to an image. Same function as nvcv::warpPerspective.
      * @param inputs gpu pointer, inputs[i] is input image where i ranges from 0 to batch-1, whose shape is
      * input_shape[i] and type is data_type.
      * @param outputs gpu pointer, outputs[i] is output image where i ranges from 0 to batch-1, whose size is dsize[i]
@@ -2230,7 +2230,7 @@ public:
 
     ~WarpAffineVarShape();
     /**
-     * @brief Applies an affine transformation to an image. Same function as cv::warpAffine.
+     * @brief Applies an affine transformation to an image. Same function as nvcv::warpAffine.
      * @param inputs gpu pointer, inputs[i] is input image where i ranges from 0 to batch-1, whose shape is
      * input_shape[i] and type is data_type.
      * @param outputs gpu pointer, outputs[i] is output image where i ranges from 0 to batch-1, whose size is dsize[i]
@@ -2456,6 +2456,6 @@ private:
     void *cpu_workspace = nullptr;
 };
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H

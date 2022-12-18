@@ -31,43 +31,43 @@
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
-namespace nv::cv {
+namespace nvcv {
 
-static size_t ComputeHash(const cv::TensorShape &shape)
+static size_t ComputeHash(const nvcv::TensorShape &shape)
 {
-    using cvpy::util::ComputeHash;
+    using nvcvpy::util::ComputeHash;
     return ComputeHash(shape.shape(), shape.layout());
 }
 
-} // namespace nv::cv
+} // namespace nvcv
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 
-Shape CreateShape(const cv::TensorShape &tshape)
+Shape CreateShape(const nvcv::TensorShape &tshape)
 {
     return Shape{tshape.shape().begin(), tshape.shape().end()};
 }
 
-std::shared_ptr<Tensor> Tensor::CreateForImageBatch(int numImages, const Size2D &size, cv::ImageFormat fmt)
+std::shared_ptr<Tensor> Tensor::CreateForImageBatch(int numImages, const Size2D &size, nvcv::ImageFormat fmt)
 {
-    cv::Tensor::Requirements reqs
-        = cv::Tensor::CalcRequirements(numImages, cv::Size2D{std::get<0>(size), std::get<1>(size)}, fmt);
+    nvcv::Tensor::Requirements reqs
+        = nvcv::Tensor::CalcRequirements(numImages, nvcv::Size2D{std::get<0>(size), std::get<1>(size)}, fmt);
     return CreateFromReqs(reqs);
 }
 
-std::shared_ptr<Tensor> Tensor::Create(Shape shape, cv::DataType dtype, std::optional<cv::TensorLayout> layout)
+std::shared_ptr<Tensor> Tensor::Create(Shape shape, nvcv::DataType dtype, std::optional<nvcv::TensorLayout> layout)
 {
     if (!layout)
     {
-        layout = cv::TensorLayout::NONE;
+        layout = nvcv::TensorLayout::NONE;
     }
 
-    cv::Tensor::Requirements reqs
-        = cv::Tensor::CalcRequirements(cv::TensorShape(shape.data(), shape.size(), *layout), dtype);
+    nvcv::Tensor::Requirements reqs
+        = nvcv::Tensor::CalcRequirements(nvcv::TensorShape(shape.data(), shape.size(), *layout), dtype);
     return CreateFromReqs(reqs);
 }
 
-std::shared_ptr<Tensor> Tensor::CreateFromReqs(const cv::Tensor::Requirements &reqs)
+std::shared_ptr<Tensor> Tensor::CreateFromReqs(const nvcv::Tensor::Requirements &reqs)
 {
     std::vector<std::shared_ptr<CacheItem>> vcont = Cache::Instance().fetch(Key{reqs});
 
@@ -89,13 +89,13 @@ std::shared_ptr<Tensor> Tensor::CreateFromReqs(const cv::Tensor::Requirements &r
 
 namespace {
 
-NVCVTensorData FillNVCVTensorData(const py::buffer_info &info, std::optional<cv::TensorLayout> layout,
+NVCVTensorData FillNVCVTensorData(const py::buffer_info &info, std::optional<nvcv::TensorLayout> layout,
                                   NVCVTensorBufferType bufType)
 {
     NVCVTensorData tensorData = {};
 
     // dtype ------------
-    tensorData.dtype = py::cast<cv::DataType>(util::ToDType(info));
+    tensorData.dtype = py::cast<nvcv::DataType>(util::ToDType(info));
 
     // layout ------------
     if (layout)
@@ -156,18 +156,18 @@ NVCVTensorData FillNVCVTensorData(const py::buffer_info &info, std::optional<cv:
     return tensorData;
 }
 
-NVCVTensorData FillNVCVTensorDataCUDA(const py::buffer_info &info, std::optional<cv::TensorLayout> layout)
+NVCVTensorData FillNVCVTensorDataCUDA(const py::buffer_info &info, std::optional<nvcv::TensorLayout> layout)
 {
     return FillNVCVTensorData(info, std::move(layout), NVCV_TENSOR_BUFFER_STRIDED_CUDA);
 }
 
 } // namespace
 
-std::shared_ptr<Tensor> Tensor::Wrap(CudaBuffer &buffer, std::optional<cv::TensorLayout> layout)
+std::shared_ptr<Tensor> Tensor::Wrap(CudaBuffer &buffer, std::optional<nvcv::TensorLayout> layout)
 {
     py::buffer_info info = buffer.request(true);
 
-    cv::TensorDataStridedCuda data{FillNVCVTensorDataCUDA(info, std::move(layout))};
+    nvcv::TensorDataStridedCuda data{FillNVCVTensorDataCUDA(info, std::move(layout))};
 
     // This is the key of a tensor wrapper.
     // All tensor wrappers have the same key.
@@ -196,21 +196,21 @@ std::shared_ptr<Tensor> Tensor::WrapImage(Image &img)
     return tensor;
 }
 
-Tensor::Tensor(const cv::Tensor::Requirements &reqs)
-    : m_impl{std::make_unique<cv::Tensor>(reqs)}
+Tensor::Tensor(const nvcv::Tensor::Requirements &reqs)
+    : m_impl{std::make_unique<nvcv::Tensor>(reqs)}
     , m_key{reqs}
 {
 }
 
-Tensor::Tensor(const cv::ITensorData &data, py::object wrappedObject)
-    : m_impl{std::make_unique<cv::TensorWrapData>(data)}
+Tensor::Tensor(const nvcv::ITensorData &data, py::object wrappedObject)
+    : m_impl{std::make_unique<nvcv::TensorWrapData>(data)}
     , m_key{}
     , m_wrappedObject(wrappedObject)
 {
 }
 
 Tensor::Tensor(Image &img)
-    : m_impl{std::make_unique<cv::TensorWrapImage>(img.impl())}
+    : m_impl{std::make_unique<nvcv::TensorWrapImage>(img.impl())}
     , m_key{}
     , m_wrappedObject(py::cast(img))
 {
@@ -226,27 +226,27 @@ std::shared_ptr<const Tensor> Tensor::shared_from_this() const
     return std::static_pointer_cast<const Tensor>(Container::shared_from_this());
 }
 
-cv::ITensor &Tensor::impl()
+nvcv::ITensor &Tensor::impl()
 {
     return *m_impl;
 }
 
-const cv::ITensor &Tensor::impl() const
+const nvcv::ITensor &Tensor::impl() const
 {
     return *m_impl;
 }
 
 Shape Tensor::shape() const
 {
-    cv::Shape ishape = m_impl->shape().shape();
+    nvcv::Shape ishape = m_impl->shape().shape();
 
     return Shape(ishape.begin(), ishape.end());
 }
 
-std::optional<cv::TensorLayout> Tensor::layout() const
+std::optional<nvcv::TensorLayout> Tensor::layout() const
 {
-    const cv::TensorLayout &layout = m_impl->layout();
-    if (layout != cv::TensorLayout::NONE)
+    const nvcv::TensorLayout &layout = m_impl->layout();
+    if (layout != nvcv::TensorLayout::NONE)
     {
         return layout;
     }
@@ -256,7 +256,7 @@ std::optional<cv::TensorLayout> Tensor::layout() const
     }
 }
 
-cv::DataType Tensor::dtype() const
+nvcv::DataType Tensor::dtype() const
 {
     return m_impl->dtype();
 }
@@ -266,12 +266,12 @@ int Tensor::rank() const
     return m_impl->rank();
 }
 
-Tensor::Key::Key(const cv::Tensor::Requirements &reqs)
-    : Key(cv::TensorShape(reqs.shape, reqs.rank, reqs.layout), static_cast<cv::DataType>(reqs.dtype))
+Tensor::Key::Key(const nvcv::Tensor::Requirements &reqs)
+    : Key(nvcv::TensorShape(reqs.shape, reqs.rank, reqs.layout), static_cast<nvcv::DataType>(reqs.dtype))
 {
 }
 
-Tensor::Key::Key(const cv::TensorShape &shape, cv::DataType dtype)
+Tensor::Key::Key(const nvcv::TensorShape &shape, nvcv::DataType dtype)
     : m_shape(std::move(shape))
     , m_dtype(dtype)
     , m_wrapper(false)
@@ -317,7 +317,7 @@ auto Tensor::key() const -> const Key &
     return m_key;
 }
 
-static py::buffer_info ToPyBufferInfo(const cv::ITensorDataStrided &tensorData)
+static py::buffer_info ToPyBufferInfo(const nvcv::ITensorDataStrided &tensorData)
 {
     std::vector<ssize_t> shape(tensorData.shape().shape().begin(), tensorData.shape().shape().end());
     std::vector<ssize_t> strides(tensorData.cdata().buffer.strided.strides,
@@ -335,18 +335,18 @@ static py::buffer_info ToPyBufferInfo(const cv::ITensorDataStrided &tensorData)
     return tmp.request();
 }
 
-static py::object ToPython(const cv::ITensorData &imgData, py::object owner)
+static py::object ToPython(const nvcv::ITensorData &imgData, py::object owner)
 {
     py::object out;
 
-    auto *stridedData = dynamic_cast<const cv::ITensorDataStrided *>(&imgData);
+    auto *stridedData = dynamic_cast<const nvcv::ITensorDataStrided *>(&imgData);
     if (!stridedData)
     {
         throw std::runtime_error("Only tensors with pitch-linear data can be exported");
     }
 
     py::buffer_info info = ToPyBufferInfo(*stridedData);
-    if (dynamic_cast<const cv::ITensorDataStridedCuda *>(stridedData))
+    if (dynamic_cast<const nvcv::ITensorDataStridedCuda *>(stridedData))
     {
         if (owner)
         {
@@ -369,7 +369,7 @@ py::object Tensor::cuda() const
     // Do we need to redefine the cuda object?
     if (!m_cacheCudaObject)
     {
-        const cv::ITensorData *tensorData = m_impl->exportData();
+        const nvcv::ITensorData *tensorData = m_impl->exportData();
         if (!tensorData)
         {
             throw std::runtime_error("Tensor data can't be exported");
@@ -387,7 +387,7 @@ std::ostream &operator<<(std::ostream &out, const Tensor &tensor)
                << " dtype=" << py::str(py::cast(tensor.dtype())).cast<std::string>() << '>';
 }
 
-static std::string TensorLayoutToString(const cv::TensorLayout &layout)
+static std::string TensorLayoutToString(const nvcv::TensorLayout &layout)
 {
     std::ostringstream ss;
     ss << layout;
@@ -408,16 +408,16 @@ void Tensor::Export(py::module &m)
 {
     using namespace py::literals;
 
-    py::class_<cv::TensorLayout>(m, "TensorLayout")
+    py::class_<nvcv::TensorLayout>(m, "TensorLayout")
         .def(py::init<const char *>())
-#define NVCV_DETAIL_DEF_TLAYOUT(LAYOUT) .def_readonly_static(#LAYOUT, &cv::TensorLayout::LAYOUT)
+#define NVCV_DETAIL_DEF_TLAYOUT(LAYOUT) .def_readonly_static(#LAYOUT, &nvcv::TensorLayout::LAYOUT)
 #include <nvcv/TensorLayoutDef.inc>
 #undef NVCV_DETAIL_DEF_TLAYOUT
         .def(py::self == py::self)
         .def(py::self != py::self)
         .def("__repr__", &TensorLayoutToString);
 
-    py::implicitly_convertible<py::str, cv::TensorLayout>();
+    py::implicitly_convertible<py::str, nvcv::TensorLayout>();
 
     py::class_<Tensor, std::shared_ptr<Tensor>, Container>(m, "Tensor")
         .def(py::init(&Tensor::CreateForImageBatch), "nimages"_a, "imgsize"_a, "format"_a)
@@ -436,4 +436,4 @@ void Tensor::Export(py::module &m)
     m.def("as_tensor", &Tensor::WrapImage, "image"_a);
 }
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv

@@ -24,11 +24,9 @@
 #include "CvCudaUtils.cuh"
 #include "cub/cub.cuh"
 
-using namespace nv::cv::legacy::helpers;
+using namespace nvcv::legacy::helpers;
 
-using namespace nv::cv::legacy::cuda_op;
-
-namespace nvcv = nv::cv;
+using namespace nvcv::legacy::cuda_op;
 
 static __device__ int erase_var_shape_hash(unsigned int x)
 {
@@ -65,11 +63,11 @@ __global__ void erase(Ptr2dVarShapeNHWC<D> img, nvcv::cuda::Tensor1DWrap<int2> a
                                        + 0x26AD0C9 * blockDim.x * blockDim.y * blockDim.z * (blockIdx.x + 1)
                                              * (blockIdx.y + 1) * (blockIdx.z + 1);
                 *img.ptr(batchId, anchor_y + y, anchor_x + x, c)
-                    = nv::cv::cuda::SaturateCast<D>(erase_var_shape_hash(hashValue) % 256);
+                    = nvcv::cuda::SaturateCast<D>(erase_var_shape_hash(hashValue) % 256);
             }
             else
             {
-                *img.ptr(batchId, anchor_y + y, anchor_x + x, c) = nv::cv::cuda::SaturateCast<D>(value);
+                *img.ptr(batchId, anchor_y + y, anchor_x + x, c) = nvcv::cuda::SaturateCast<D>(value);
             }
         }
     }
@@ -104,7 +102,7 @@ struct MaxWH
     }
 };
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 EraseVarShape::EraseVarShape(DataShape max_input_shape, DataShape max_output_shape, int num_erasing_area)
     : CudaBaseOp(max_input_shape, max_output_shape)
@@ -153,17 +151,17 @@ EraseVarShape::~EraseVarShape()
     temp_storage = nullptr;
 }
 
-ErrorCode EraseVarShape::infer(const cv::IImageBatchVarShape &inbatch, const cv::IImageBatchVarShape &outbatch,
+ErrorCode EraseVarShape::infer(const nvcv::IImageBatchVarShape &inbatch, const nvcv::IImageBatchVarShape &outbatch,
                                const ITensorDataStridedCuda &anchor, const ITensorDataStridedCuda &erasing,
                                const ITensorDataStridedCuda &values, const ITensorDataStridedCuda &imgIdx, bool random,
                                unsigned int seed, bool inplace, cudaStream_t stream)
 {
-    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(inbatch.exportData(stream));
+    auto *inData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(inbatch.exportData(stream));
     if (inData == nullptr)
     {
         LOG_ERROR("Input must be varshape image batch");
     }
-    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(outbatch.exportData(stream));
+    auto *outData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(outbatch.exportData(stream));
     if (outData == nullptr)
     {
         LOG_ERROR("Output must be varshape image batch");
@@ -312,4 +310,4 @@ ErrorCode EraseVarShape::infer(const cv::IImageBatchVarShape &inbatch, const cv:
     return SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

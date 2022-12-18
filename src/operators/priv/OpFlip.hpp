@@ -32,23 +32,23 @@
 
 #include <memory>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class Flip final : public IOperator
 {
 public:
     explicit Flip(int32_t maxBatchSize);
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, int32_t flipCode) const;
+    void operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out, int32_t flipCode) const;
 
-    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
-                    const cv::ITensor &flipCode) const;
+    void operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, const nvcv::IImageBatchVarShape &out,
+                    const nvcv::ITensor &flipCode) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::Flip>               m_legacyOp;
-    std::unique_ptr<cv::legacy::cuda_op::FlipOrCopyVarShape> m_legacyOpVarShape;
+    std::unique_ptr<nvcv::legacy::cuda_op::Flip>               m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::FlipOrCopyVarShape> m_legacyOpVarShape;
 };
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_FLIP_HPP

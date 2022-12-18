@@ -36,18 +36,19 @@
 #include <nvcv/Size.hpp>
 #include <nvcv/alloc/Requirements.hpp>
 
-namespace nv { namespace cvop {
+namespace nvcvop {
 
 class PillowResize final : public IOperator
 {
 public:
-    explicit PillowResize(cv::Size2D maxSize, int32_t maxBatchSize, cv::ImageFormat fmt);
+    explicit PillowResize(nvcv::Size2D maxSize, int32_t maxBatchSize, nvcv::ImageFormat fmt);
 
     ~PillowResize();
 
-    void operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out, const NVCVInterpolationType interpolation);
+    void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out,
+                    const NVCVInterpolationType interpolation);
 
-    void operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
+    void operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
                     const NVCVInterpolationType interpolation);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
@@ -56,10 +57,10 @@ private:
     NVCVOperatorHandle m_handle;
 };
 
-inline PillowResize::PillowResize(cv::Size2D maxSize, int32_t maxBatchSize, cv::ImageFormat fmt)
+inline PillowResize::PillowResize(nvcv::Size2D maxSize, int32_t maxBatchSize, nvcv::ImageFormat fmt)
 {
     NVCVImageFormat cfmt = fmt.cvalue();
-    cv::detail::CheckThrow(nvcvopPillowResizeCreate(&m_handle, maxSize.w, maxSize.h, maxBatchSize, cfmt));
+    nvcv::detail::CheckThrow(nvcvopPillowResizeCreate(&m_handle, maxSize.w, maxSize.h, maxBatchSize, cfmt));
     assert(m_handle);
 }
 
@@ -69,16 +70,16 @@ inline PillowResize::~PillowResize()
     m_handle = nullptr;
 }
 
-inline void PillowResize::operator()(cudaStream_t stream, cv::ITensor &in, cv::ITensor &out,
+inline void PillowResize::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out,
                                      const NVCVInterpolationType interpolation)
 {
-    cv::detail::CheckThrow(nvcvopPillowResizeSubmit(m_handle, stream, in.handle(), out.handle(), interpolation));
+    nvcv::detail::CheckThrow(nvcvopPillowResizeSubmit(m_handle, stream, in.handle(), out.handle(), interpolation));
 }
 
-inline void PillowResize::operator()(cudaStream_t stream, cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
+inline void PillowResize::operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
                                      const NVCVInterpolationType interpolation)
 {
-    cv::detail::CheckThrow(
+    nvcv::detail::CheckThrow(
         nvcvopPillowResizeVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), interpolation));
 }
 
@@ -87,6 +88,6 @@ inline NVCVOperatorHandle PillowResize::handle() const noexcept
     return m_handle;
 }
 
-}} // namespace nv::cvop
+} // namespace nvcvop
 
 #endif // NVCV_OP_PILLOW_RESIZE_HPP

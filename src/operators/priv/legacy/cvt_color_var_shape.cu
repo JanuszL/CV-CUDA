@@ -77,7 +77,7 @@ static constexpr int ITUR_BT_601_CBV = -74448;
 
 #define BLOCK 32
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 __device__ inline bool checkShapeFromYUV420(int rows, int cols, NVCVColorConversionCode code)
 {
@@ -1824,4 +1824,4 @@ ErrorCode CvtColorVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inDa
     return func(inData, outData, code, stream);
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

@@ -32,25 +32,26 @@
 
 #include <memory>
 
-namespace nv::cvop::priv {
+namespace nvcvop::priv {
 
 class Morphology final : public IOperator
 {
 public:
     explicit Morphology(const int32_t maxVarShapeBatchSize);
 
-    void operator()(cudaStream_t stream, const cv::ITensor &in, const cv::ITensor &out, NVCVMorphologyType morph_type,
-                    cv::Size2D mask_size, int2 anchor, int32_t iteration, const NVCVBorderType borderMode) const;
+    void operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out,
+                    NVCVMorphologyType morph_type, nvcv::Size2D mask_size, int2 anchor, int32_t iteration,
+                    const NVCVBorderType borderMode) const;
 
-    void operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, const cv::IImageBatchVarShape &out,
-                    NVCVMorphologyType morph_type, cv::ITensor &masks, cv::ITensor &anchors, int32_t iteration,
+    void operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, const nvcv::IImageBatchVarShape &out,
+                    NVCVMorphologyType morph_type, nvcv::ITensor &masks, nvcv::ITensor &anchors, int32_t iteration,
                     NVCVBorderType borderMode) const;
 
 private:
-    std::unique_ptr<cv::legacy::cuda_op::Morphology>         m_legacyOp;
-    std::unique_ptr<cv::legacy::cuda_op::MorphologyVarShape> m_legacyOpVarShape;
+    std::unique_ptr<nvcv::legacy::cuda_op::Morphology>         m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::MorphologyVarShape> m_legacyOpVarShape;
 };
 
-} // namespace nv::cvop::priv
+} // namespace nvcvop::priv
 
 #endif // NVCV_OP_PRIV_MORPHOLOGY_HPP

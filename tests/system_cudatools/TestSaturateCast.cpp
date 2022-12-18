@@ -21,8 +21,8 @@
 #include <nvcv/optools/MathOps.hpp>      // for operator == to allow EXPECT_EQ
 #include <nvcv/optools/SaturateCast.hpp> // the object of this test
 
-namespace cuda  = nv::cv::cuda;
-namespace ttype = nv::cv::test::type;
+namespace cuda  = nvcv::cuda;
+namespace ttype = nvcv::test::type;
 
 template<typename T>
 constexpr T min = std::numeric_limits<T>::min();

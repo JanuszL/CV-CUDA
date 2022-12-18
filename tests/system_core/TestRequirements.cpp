@@ -22,8 +22,7 @@
 
 #include <algorithm>
 
-namespace nvcv = nv::cv;
-namespace util = nv::cv::util;
+namespace util = nvcv::util;
 
 static void AssertEq(const NVCVRequirements &reqGold, const nvcv::Requirements &req)
 {

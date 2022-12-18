@@ -25,10 +25,10 @@
 
 #include "CvCudaUtils.cuh"
 
-using namespace nv::cv::legacy::cuda_op;
-using namespace nv::cv::legacy::helpers;
+using namespace nvcv::legacy::cuda_op;
+using namespace nvcv::legacy::helpers;
 
-namespace nv::cv::legacy::cuda_op {
+namespace nvcv::legacy::cuda_op {
 
 static __device__ __forceinline__ float norm1(const float &a)
 {
@@ -145,19 +145,19 @@ __global__ void BilateralFilterKernel(SrcWrapper src, DstWrapper dst, const int 
     }
     if (colIdx < columns && rowIdx < rows)
     {
-        dst[coord0] = nv::cv::cuda::SaturateCast<BT>(numerator0 / denominator0);
+        dst[coord0] = nvcv::cuda::SaturateCast<BT>(numerator0 / denominator0);
     }
     if (colIdx + 1 < columns && rowIdx < rows)
     {
-        dst[coord1] = nv::cv::cuda::SaturateCast<BT>(numerator1 / denominator1);
+        dst[coord1] = nvcv::cuda::SaturateCast<BT>(numerator1 / denominator1);
     }
     if (colIdx < columns && rowIdx + 1 < rows)
     {
-        dst[coord2] = nv::cv::cuda::SaturateCast<BT>(numerator2 / denominator2);
+        dst[coord2] = nvcv::cuda::SaturateCast<BT>(numerator2 / denominator2);
     }
     if (colIdx + 1 < columns && rowIdx + 1 < rows)
     {
-        dst[coord3] = nv::cv::cuda::SaturateCast<BT>(numerator3 / denominator3);
+        dst[coord3] = nvcv::cuda::SaturateCast<BT>(numerator3 / denominator3);
     }
 }
 
@@ -250,7 +250,7 @@ ErrorCode BilateralFilter::infer(const ITensorDataStridedCuda &inData, const ITe
     }
     assert(radius < 10000);
 
-    auto inAccess = cv::TensorDataAccessStridedImagePlanar::Create(inData);
+    auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(inData);
     if (!inAccess)
     {
         return ErrorCode::INVALID_DATA_FORMAT;
@@ -365,4 +365,4 @@ ErrorCode BilateralFilter::infer(const ITensorDataStridedCuda &inData, const ITe
     return ErrorCode::SUCCESS;
 }
 
-} // namespace nv::cv::legacy::cuda_op
+} // namespace nvcv::legacy::cuda_op

@@ -47,7 +47,7 @@ add_library(nvcv_operators SHARED
 
 target_link_libraries(nvcv_operators
     PRIVATE
-        nvcv
+        nvcv_types
         nvcv_util
         nvcv_operators_priv
 )
@@ -61,7 +61,7 @@ target_include_directories(nvcv_operators
 # target used when only public headers are needed
 add_library(nvcv_operators_headers INTERFACE)
 target_include_directories(nvcv_operators_headers INTERFACE include ${CMAKE_CURRENT_BINARY_DIR}/include)
-target_link_libraries(nvcv_operators_headers INTERFACE nvcv_headers)
+target_link_libraries(nvcv_operators_headers INTERFACE nvcv_types_headers)
 
 configure_version(nvcv_operators NVCV_OP nvcv/operators ${PROJECT_VERSION})
 configure_symbol_versioning(nvcv_operators NVCV_OP nvcv_operators)

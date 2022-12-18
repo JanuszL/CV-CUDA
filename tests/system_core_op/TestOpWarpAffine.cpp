@@ -31,10 +31,9 @@
 #include <cmath>
 #include <random>
 
-namespace nvcv     = nv::cv;
-namespace nvcvcuda = nv::cv::cuda;
-namespace test     = nv::cv::test;
-using namespace nv::cv::cuda;
+namespace nvcvcuda = nvcv::cuda;
+namespace test     = nvcv::test;
+using namespace nvcv::cuda;
 using namespace test;
 
 //#define DBG 1
@@ -382,7 +381,7 @@ TEST_P(OpWarpAffine, tensor_correct_output)
     // Generate test result
     nvcv::Tensor imgDst(numberOfImages, {dstWidth, dstHeight}, nvcv::FMT_RGBA8);
 
-    nv::cvop::WarpAffine warpAffineOp(0);
+    nvcvop::WarpAffine warpAffineOp(0);
     EXPECT_NO_THROW(warpAffineOp(stream, imgSrc, imgDst, xform, flags, borderMode, borderValue));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
@@ -583,7 +582,7 @@ TEST_P(OpWarpAffine, varshape_correct_output)
     }
 
     // Generate test result
-    nv::cvop::WarpAffine warpAffineOp(numberOfImages);
+    nvcvop::WarpAffine warpAffineOp(numberOfImages);
     EXPECT_NO_THROW(warpAffineOp(stream, batchSrc, batchDst, transMatrixTensor, flags, borderMode, borderValue));
 
     // Get test data back

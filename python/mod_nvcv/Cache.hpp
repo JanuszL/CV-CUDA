@@ -26,7 +26,7 @@
 
 #include <vector>
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 
 namespace py = pybind11;
 
@@ -52,12 +52,12 @@ private:
 class ExternalCacheItem : public CacheItem
 {
 public:
-    ExternalCacheItem(std::shared_ptr<cvpy::ICacheItem> obj_)
+    ExternalCacheItem(std::shared_ptr<nvcvpy::ICacheItem> obj_)
         : obj(obj_)
     {
     }
 
-    std::shared_ptr<cvpy::ICacheItem> obj;
+    std::shared_ptr<nvcvpy::ICacheItem> obj;
 
     const IKey &key() const override
     {
@@ -104,6 +104,6 @@ private:
     void doIterateThroughItems(const std::function<void(CacheItem &item)> &fn) const;
 };
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv
 
 #endif // NVCV_PYTHON_PRIV_CACHE_HPP

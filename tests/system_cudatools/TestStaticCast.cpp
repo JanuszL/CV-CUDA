@@ -18,8 +18,8 @@
 #include <common/TypedTests.hpp>       // for NVCV_TYPED_TEST_SUITE, etc.
 #include <nvcv/optools/StaticCast.hpp> // the object of this test
 
-namespace cuda  = nv::cv::cuda;
-namespace ttype = nv::cv::test::type;
+namespace cuda  = nvcv::cuda;
+namespace ttype = nvcv::test::type;
 
 // --------------------------- Testing StaticCast ------------------------------
 
