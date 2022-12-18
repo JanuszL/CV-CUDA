@@ -30,7 +30,7 @@ set(PYTHON_TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 string(REPLACE ";" " " PYTHON_TEST_VERSIONS "${PYTHON_VERSIONS}")
 
 set(PYTHON_MODULE_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/python)
-configure_file(nvcv_test_python.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/nvcv_test_python @ONLY)
+configure_file(nvcv_test_types_python.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/nvcv_test_types_python @ONLY)
 
 set(PYTHON_TEST_INSTDIR "${CMAKE_INSTALL_DATADIR}/python")
 
@@ -41,6 +41,6 @@ install(FILES ${SOURCES}
 # create the test script that will get installed
 set(PYTHON_TEST_DIR ${CMAKE_INSTALL_PREFIX}/${PYTHON_TEST_INSTDIR})
 set(PYTHON_MODULE_DIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
-configure_file(nvcv_test_python.in nvcv_test_python @ONLY)
+configure_file(nvcv_test_types_python.in nvcv_test_types_python @ONLY)
 
-nvcv_add_test(${CMAKE_CURRENT_BINARY_DIR}/nvcv_test_python)
+nvcv_add_test(${CMAKE_CURRENT_BINARY_DIR}/nvcv_test_types_python)

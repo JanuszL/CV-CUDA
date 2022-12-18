@@ -13,9 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_executable(nvcv_test_unit_core
-    ../Main.cpp
-
+add_executable(nvcv_test_types_unit
     TestHashMD5.cpp
     TestValueList.cpp
     TestValueTests.cpp
@@ -36,16 +34,17 @@ add_executable(nvcv_test_unit_core
     #TestCompat.cpp
 )
 
-target_compile_definitions(nvcv_test_unit_core
+target_compile_definitions(nvcv_test_types_unit
     PRIVATE
         -DNVCV_UNIT_TEST=1
 )
 
-target_link_libraries(nvcv_test_unit_core
+target_link_libraries(nvcv_test_types_unit
     PRIVATE
+        nvcv_test_main
         nvcv_util
         nvcv_test_common
         nvcv_types_priv
 )
 
-nvcv_add_test(nvcv_test_unit_core)
+nvcv_add_test(nvcv_test_types_unit)

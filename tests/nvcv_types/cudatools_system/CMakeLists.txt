@@ -13,23 +13,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project(nvcv_test_unit_cudatools)
+project(nvcv_test_cudatools_system)
 set(CMAKE_FOLDER tests)
 
-add_executable(nvcv_test_unit_cudatools
-    TestLegacyHelpers.cpp
+add_executable(nvcv_test_cudatools_system
+    TestBorderWrap.cpp
+    DeviceBorderWrap.cu
+    TestLinAlg.cpp
+    TestTensorWrap.cpp
+    DeviceTensorWrap.cu
+    TestSaturateCast.cpp
+    DeviceSaturateCast.cu
+    TestRangeCast.cpp
+    TestMathWrappers.cpp
+    DeviceMathWrappers.cu
+    TestMathOps.cpp
+    TestStaticCast.cpp
+    TestDropCast.cpp
+    TestTypeTraits.cpp
+    TestMetaprogramming.cpp
 )
 
-target_link_libraries(nvcv_test_unit_cudatools
+target_link_libraries(nvcv_test_cudatools_system
     PUBLIC
+        nvcv_types
         nvcv_util
-        nvcv_test_common
-        cvcuda_legacy
+        nvcv_test_common_system
 )
 
-target_include_directories(nvcv_test_unit_cudatools
+target_include_directories(nvcv_test_cudatools_system
     PRIVATE
         ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
 )
 
-nvcv_add_test(nvcv_test_unit_cudatools)
+nvcv_add_test(nvcv_test_cudatools_system)

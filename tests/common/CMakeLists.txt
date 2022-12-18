@@ -24,7 +24,7 @@ add_library(nvcv_test_common STATIC
 
 target_include_directories(nvcv_test_common
     INTERFACE
-        ..
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
 
 target_compile_definitions(nvcv_test_common
@@ -51,7 +51,7 @@ add_library(nvcv_test_common_system STATIC
 
 target_include_directories(nvcv_test_common_system
     INTERFACE
-        ..
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
 
 target_link_libraries(nvcv_test_common_system

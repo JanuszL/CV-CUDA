@@ -13,11 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project(nvcv_test_system_core_op)
-set(CMAKE_FOLDER tests)
-
 # system core -------------------------------------------------
-add_executable(nvcv_test_system_core_op
+add_executable(cvcuda_test_system
     FlipUtils.cpp
     ConvUtils.cpp
     TestOpReformat.cpp
@@ -47,10 +44,10 @@ add_executable(nvcv_test_system_core_op
     TestOpPillowResize.cpp
 )
 
-target_link_libraries(nvcv_test_system_core_op
+target_link_libraries(cvcuda_test_system
     PUBLIC
         cvcuda
         nvcv_test_common_system
 )
 
-nvcv_add_test(nvcv_test_system_core_op)
+nvcv_add_test(cvcuda_test_system)
