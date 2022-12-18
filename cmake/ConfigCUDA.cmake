@@ -53,4 +53,8 @@ if(NOT USE_CMAKE_CUDA_ARCHITECTURES)
     # Required compute capability:
     # * compute_70: fast fp16 support + PTX for forward compatibility
     list(APPEND CMAKE_CUDA_ARCHITECTURES 70-virtual)
+
+    # We must set the cache to the correct values, or else cmake will write its default there,
+    # which is the old architecture supported by nvcc. We don't want that.
+    set(CMAKE_CUDA_ARCHITECTURES "${CMAKE_CUDA_ARCHITECTURES}" CACHE STRING "CUDA architectures to build for" FORCE)
 endif()
