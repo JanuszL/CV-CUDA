@@ -18,6 +18,12 @@ message(STATUS "")
 message(STATUS "Build options")
 message(STATUS "    CMAKE_INSTALL_PREFIX     : ${CMAKE_INSTALL_PREFIX}")
 
+if(WARNINGS_AS_ERRORS)
+    message(STATUS "    WARNINGS_AS_ERRORS       : ON")
+else()
+    message(STATUS "    WARNINGS_AS_ERRORS       : off")
+endif()
+
 if(BUILD_TESTS)
     message(STATUS "    BUILD_TESTS              : ON")
 else()

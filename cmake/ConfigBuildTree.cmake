@@ -39,6 +39,8 @@ endif()
 
 option(EXPOSE_CODE "Expose in resulting binaries parts of our code" ${DEFAULT_EXPOSE_CODE})
 
+option(WARNINGS_AS_ERRORS "Treat compilation warnings as errors" OFF)
+
 # Are we inside a git repo and it has submodules enabled?
 if(EXISTS ${CMAKE_SOURCE_DIR}/.git AND EXISTS ${CMAKE_SOURCE_DIR}/.gitmodules)
     if(NOT EXISTS ${CMAKE_SOURCE_DIR}/.git/modules)
