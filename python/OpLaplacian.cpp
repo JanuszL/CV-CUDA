@@ -69,13 +69,14 @@ std::shared_ptr<ImageBatchVarShape> LaplacianVarShapeInto(ImageBatchVarShape &in
         pstream = Stream::Current().shared_from_this();
     }
 
-    cvop::Laplacian laplacian;
+    auto laplacian = CreateOperator<cvop::Laplacian>();
 
     ResourceGuard guard(*pstream);
     guard.add(LOCK_READ, {input, ksize, scale});
     guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*laplacian});
 
-    laplacian(pstream->handle(), input.impl(), output.impl(), ksize.impl(), scale.impl(), border);
+    laplacian->submit(pstream->handle(), input.impl(), output.impl(), ksize.impl(), scale.impl(), border);
 
     return output.shared_from_this();
 }

@@ -40,13 +40,15 @@ std::shared_ptr<ImageBatchVarShape> VarShapeGammaContrastInto(ImageBatchVarShape
         pstream = Stream::Current().shared_from_this();
     }
 
-    cvop::GammaContrast gamma_contrast(input.capacity(), input.impl().uniqueFormat().numChannels());
+    auto gamma_contrast
+        = CreateOperator<cvop::GammaContrast>(input.capacity(), input.impl().uniqueFormat().numChannels());
 
     ResourceGuard guard(*pstream);
     guard.add(LOCK_READ, {input, gamma});
     guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*gamma_contrast});
 
-    gamma_contrast(pstream->handle(), input.impl(), output.impl(), gamma.impl());
+    gamma_contrast->submit(pstream->handle(), input.impl(), output.impl(), gamma.impl());
 
     return output.shared_from_this();
 }
