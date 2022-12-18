@@ -849,7 +849,7 @@ const char *GetName(NVCVDataKind dataKind)
         ENUM_CASE(NVCV_DATA_KIND_FLOAT);
 #undef ENUM_CASE
     }
-    priv::FormatTLS &tls = priv::GetFormatTLS();
+    priv::CoreTLS &tls = priv::GetCoreTLS();
     util::BufferOStream(tls.bufDataKindName, sizeof(tls.bufDataKindName)) << "NVCVDataKind(" << (int)dataKind << ")";
     return tls.bufDataKindName;
 }
@@ -871,7 +871,7 @@ const char *GetName(NVCVMemLayout memLayout)
 #undef ENUM_CASE
     }
 
-    priv::FormatTLS &tls = priv::GetFormatTLS();
+    priv::CoreTLS &tls = priv::GetCoreTLS();
     util::BufferOStream(tls.bufMemLayoutName, sizeof(tls.bufMemLayoutName))
         << "NVCVMemLayout(" << (int)memLayout << ")";
     return tls.bufMemLayoutName;
@@ -897,7 +897,7 @@ const char *GetName(NVCVChannel swizzleChannel)
         break;
     }
 
-    priv::FormatTLS &tls = priv::GetFormatTLS();
+    priv::CoreTLS &tls = priv::GetCoreTLS();
     util::BufferOStream(tls.bufChannelName, sizeof(tls.bufChannelName)) << "NVCVChannel(" << (int)swizzleChannel << ")";
     return tls.bufChannelName;
 }
@@ -906,7 +906,7 @@ const char *GetName(NVCVSwizzle swizzle)
 {
     std::array<NVCVChannel, 4> channels = priv::GetChannels(swizzle);
 
-    priv::FormatTLS &tls = priv::GetFormatTLS();
+    priv::CoreTLS &tls = priv::GetCoreTLS();
     util::BufferOStream(tls.bufSwizzleName, sizeof(tls.bufSwizzleName))
         << channels[0] << channels[1] << channels[2] << channels[3];
     return tls.bufSwizzleName;
@@ -922,7 +922,7 @@ const char *GetName(NVCVByteOrder byteOrder)
         return "MSB";
     }
 
-    priv::FormatTLS &tls = priv::GetFormatTLS();
+    priv::CoreTLS &tls = priv::GetCoreTLS();
     util::BufferOStream(tls.bufByteOrderName, sizeof(tls.bufByteOrderName))
         << "NVCVByteOrder(" << (int)byteOrder << ")";
     return tls.bufByteOrderName;
@@ -937,7 +937,7 @@ const char *GetName(NVCVPacking packing)
     }
     else
     {
-        priv::FormatTLS &tls = priv::GetFormatTLS();
+        priv::CoreTLS &tls = priv::GetCoreTLS();
         util::BufferOStream(tls.bufPackingName, sizeof(tls.bufPackingName)) << "NVCVPacking(" << (int)packing << ")";
         return tls.bufPackingName;
     }

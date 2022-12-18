@@ -19,8 +19,8 @@
 #define NVCV_CORE_PRIV_IIMAGE_HPP
 
 #include "ICoreObject.hpp"
+#include "ImageFormat.hpp"
 
-#include <format/priv/ImageFormat.hpp>
 #include <nvcv/Image.h>
 
 namespace nv::cv::priv {

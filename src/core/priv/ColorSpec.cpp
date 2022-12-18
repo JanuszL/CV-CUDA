@@ -225,7 +225,7 @@ bool NeedsColorspec(NVCVColorModel cmodel)
 
 const char *GetName(NVCVColorSpec cspec)
 {
-    priv::FormatTLS &tls = priv::GetFormatTLS();
+    priv::CoreTLS &tls = priv::GetCoreTLS();
 
     char         *buffer  = tls.bufColorSpecName;
     constexpr int bufSize = sizeof(tls.bufColorSpecName);
@@ -272,7 +272,7 @@ const char *GetName(NVCVColorModel colorModel)
 #undef ENUM_CASE
     }
 
-    priv::FormatTLS &tls = priv::GetFormatTLS();
+    priv::CoreTLS &tls = priv::GetCoreTLS();
 
     util::BufferOStream(tls.bufColorModelName, sizeof(tls.bufColorModelName))
         << "NVCVColorModel(" << (int)colorModel << ")";
@@ -294,7 +294,7 @@ const char *GetName(NVCVChromaLocation loc)
 #undef ENUM_CASE
     }
 
-    priv::FormatTLS &tls = priv::GetFormatTLS();
+    priv::CoreTLS &tls = priv::GetCoreTLS();
 
     util::BufferOStream(tls.bufChromaLocationName, sizeof(tls.bufChromaLocationName))
         << "NVCVChromaLocation(" << (int)loc << ")";
@@ -327,7 +327,7 @@ const char *GetName(NVCVRawPattern raw)
         break;
     }
 
-    priv::FormatTLS &tls = priv::GetFormatTLS();
+    priv::CoreTLS &tls = priv::GetCoreTLS();
     util::BufferOStream(tls.bufRawPatternName, sizeof(tls.bufRawPatternName)) << "NVCVRawPattern(" << (int)raw << ")";
 
     return tls.bufRawPatternName;
@@ -347,7 +347,7 @@ const char *GetName(NVCVColorSpace color_space)
 #undef ENUM_CASE
     }
 
-    priv::FormatTLS &tls = priv::GetFormatTLS();
+    priv::CoreTLS &tls = priv::GetCoreTLS();
     util::BufferOStream(tls.bufColorSpaceName, sizeof(tls.bufColorSpaceName))
         << "NVCVColorSpace(" << (int)color_space << ")";
     return tls.bufColorSpaceName;
@@ -366,7 +366,7 @@ const char *GetName(NVCVWhitePoint whitePoint)
         break;
     }
 
-    priv::FormatTLS &tls = priv::GetFormatTLS();
+    priv::CoreTLS &tls = priv::GetCoreTLS();
     util::BufferOStream(tls.bufWhitePointName, sizeof(tls.bufWhitePointName))
         << "NVCVWhitePoint(" << (int)whitePoint << ")";
     return tls.bufWhitePointName;
@@ -389,7 +389,7 @@ const char *GetName(NVCVColorTransferFunction xferFunc)
 #undef ENUM_CASE
     }
 
-    priv::FormatTLS &tls = priv::GetFormatTLS();
+    priv::CoreTLS &tls = priv::GetCoreTLS();
     util::BufferOStream(tls.bufColorTransferFunctionName, sizeof(tls.bufColorTransferFunctionName))
         << "NVCVColorTransferFunction(" << (int)xferFunc << ")";
     return tls.bufColorTransferFunctionName;
@@ -407,7 +407,7 @@ const char *GetName(NVCVColorRange range)
 #undef ENUM_CASE
     }
 
-    priv::FormatTLS &tls = priv::GetFormatTLS();
+    priv::CoreTLS &tls = priv::GetCoreTLS();
     util::BufferOStream(tls.bufColorRangeName, sizeof(tls.bufColorRangeName)) << "NVCVColorRange(" << (int)range << ")";
     return tls.bufColorRangeName;
 }
@@ -428,7 +428,7 @@ const char *GetName(NVCVYCbCrEncoding encoding)
 #undef ENUM_CASE
     }
 
-    priv::FormatTLS &tls = priv::GetFormatTLS();
+    priv::CoreTLS &tls = priv::GetCoreTLS();
     util::BufferOStream(tls.bufYCbCrEncodingName, sizeof(tls.bufYCbCrEncodingName))
         << "NVCVYCbCrEncoding(" << (int)encoding << ")";
     return tls.bufYCbCrEncodingName;
@@ -436,7 +436,7 @@ const char *GetName(NVCVYCbCrEncoding encoding)
 
 const char *GetName(NVCVChromaSubsampling chromaSub)
 {
-    priv::FormatTLS &tls = priv::GetFormatTLS();
+    priv::CoreTLS &tls = priv::GetCoreTLS();
 
     {
         util::BufferOStream ss(tls.bufChromaSubsamplingName, sizeof(tls.bufChromaSubsamplingName));

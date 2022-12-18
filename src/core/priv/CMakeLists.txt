@@ -29,6 +29,11 @@ add_library(nvcv_core_priv STATIC
     TensorLayout.cpp
     TensorData.cpp
     TensorShape.cpp
+    ColorSpec.cpp
+    DataLayout.cpp
+    ColorFormat.cpp
+    DataType.cpp
+    ImageFormat.cpp
 )
 
 target_include_directories(nvcv_core_priv
@@ -42,6 +47,5 @@ target_link_libraries(nvcv_core_priv
     PUBLIC
         nvcv_headers
         nvcv_util_sanitizer
-        nvcv_format
         CUDA::cudart_static
 )

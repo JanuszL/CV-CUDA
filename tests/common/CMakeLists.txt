@@ -37,7 +37,6 @@ target_link_libraries(nvcv_test_common
         nvcv_util
     PUBLIC
         nvcv_headers
-        nvcv_format_headers
         nvcv_util
         nvcv_util_compat
 )

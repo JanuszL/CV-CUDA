@@ -17,13 +17,13 @@
 
 #include "ImageBatchVarShape.hpp"
 
+#include "DataType.hpp"
 #include "IAllocator.hpp"
 #include "IImage.hpp"
 #include "ImageManager.hpp"
 #include "Requirements.hpp"
 
 #include <cuda_runtime.h>
-#include <format/priv/DataType.hpp>
 #include <util/CheckError.hpp>
 #include <util/Math.hpp>
 

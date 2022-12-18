@@ -23,9 +23,9 @@
 #include <iostream>
 
 #if NVCV_EXPORTING
+#    include <core/priv/ColorSpec.hpp>
+#    include <core/priv/DataLayout.hpp>
 #    include <core/priv/Status.hpp>
-#    include <format/priv/ColorSpec.hpp>
-#    include <format/priv/DataLayout.hpp>
 #else
 #    include <nvcv/ColorSpec.hpp>
 #    include <nvcv/DataLayout.hpp>

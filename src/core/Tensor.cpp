@@ -18,9 +18,11 @@
 #include "priv/Tensor.hpp"
 
 #include "priv/AllocatorManager.hpp"
+#include "priv/DataType.hpp"
 #include "priv/Exception.hpp"
 #include "priv/IAllocator.hpp"
 #include "priv/IImage.hpp"
+#include "priv/ImageFormat.hpp"
 #include "priv/Status.hpp"
 #include "priv/SymbolVersioning.hpp"
 #include "priv/TensorData.hpp"
@@ -28,8 +30,6 @@
 #include "priv/TensorManager.hpp"
 #include "priv/TensorWrapDataStrided.hpp"
 
-#include <format/priv/DataType.hpp>
-#include <format/priv/ImageFormat.hpp>
 #include <nvcv/Tensor.h>
 
 #include <algorithm>

@@ -25,7 +25,6 @@ add_library(nvcv SHARED IMPORTED)
 target_include_directories(nvcv
     INTERFACE
     "$<TARGET_PROPERTY:nvcv,INTERFACE_INCLUDE_DIRECTORIES>"
-    "$<TARGET_PROPERTY:nvcv_format,INTERFACE_INCLUDE_DIRECTORIES>"
     "$<TARGET_PROPERTY:nvcv_optools,INTERFACE_INCLUDE_DIRECTORIES>"
 )
 ]=])

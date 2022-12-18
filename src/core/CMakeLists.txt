@@ -27,11 +27,14 @@ add_library(nvcv SHARED
     Tensor.cpp
     TensorShape.cpp
     TensorLayout.cpp
+    ColorSpec.cpp
+    DataLayout.cpp
+    DataType.cpp
+    ImageFormat.cpp
 )
 
 target_link_libraries(nvcv
     PRIVATE
-        nvcv_format
         nvcv_core_priv
         nvcv_util
 )
@@ -40,11 +43,10 @@ target_include_directories(nvcv
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:$<TARGET_PROPERTY:nvcv_format,INTERFACE_INCLUDE_DIRECTORIES>>
 )
 
 configure_version(nvcv NVCV nvcv ${PROJECT_VERSION})
-configure_symbol_versioning(nvcv NVCV "nvcv;nvcv_format")
+configure_symbol_versioning(nvcv NVCV "nvcv")
 setup_dso(nvcv ${PROJECT_VERSION})
 
 target_compile_definitions(nvcv PRIVATE -DNVCV_EXPORTING=1)

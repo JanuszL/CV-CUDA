@@ -21,7 +21,6 @@ if(LTO_ENABLED)
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION on)
 endif()
 
-add_subdirectory(format)
 add_subdirectory(core)
 add_subdirectory(util)
 add_subdirectory(optools)

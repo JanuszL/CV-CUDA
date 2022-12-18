@@ -569,7 +569,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageFormatGetPlaneSize,
 
 NVCV_DEFINE_API(0, 0, const char *, nvcvImageFormatGetName, (NVCVImageFormat fmt))
 {
-    priv::FormatTLS &tls = priv::GetFormatTLS(); // noexcept
+    priv::CoreTLS &tls = priv::GetCoreTLS(); // noexcept
 
     char         *buffer  = tls.bufImageFormatName;
     constexpr int bufSize = sizeof(tls.bufImageFormatName);

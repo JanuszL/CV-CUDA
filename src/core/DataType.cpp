@@ -142,7 +142,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvDataTypeGetChannelType,
 
 NVCV_DEFINE_API(0, 0, const char *, nvcvDataTypeGetName, (NVCVDataType type))
 {
-    priv::FormatTLS &tls = priv::GetFormatTLS(); // noexcept
+    priv::CoreTLS &tls = priv::GetCoreTLS(); // noexcept
 
     char         *buffer  = tls.bufDataTypeName;
     constexpr int bufSize = sizeof(tls.bufDataTypeName);

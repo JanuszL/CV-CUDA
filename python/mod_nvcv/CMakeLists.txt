@@ -17,7 +17,7 @@ find_package(nvcv REQUIRED)
 
 set(imgformat_defs ${CMAKE_CURRENT_BINARY_DIR}/NVCVPythonImageFormatDefs.inc)
 set(imgformat_script ${CMAKE_CURRENT_SOURCE_DIR}/gen_imgformat_list.sh)
-set(imgformat_header ${NVCV_FORMAT_SOURCE_DIR}/include/nvcv/ImageFormat.h)
+set(imgformat_header ${NVCV_SOURCE_DIR}/include/nvcv/ImageFormat.h)
 add_custom_command(OUTPUT ${imgformat_defs}
     COMMAND ${imgformat_script} "${imgformat_header}" > ${imgformat_defs}
     DEPENDS ${imgformat_script} ${imgformat_header}
@@ -25,7 +25,7 @@ add_custom_command(OUTPUT ${imgformat_defs}
 
 set(dtype_defs ${CMAKE_CURRENT_BINARY_DIR}/NVCVPythonDataTypeDefs.inc)
 set(dtype_script ${CMAKE_CURRENT_SOURCE_DIR}/gen_dtype_list.sh)
-set(dtype_header ${NVCV_FORMAT_SOURCE_DIR}/include/nvcv/DataType.h)
+set(dtype_header ${NVCV_SOURCE_DIR}/include/nvcv/DataType.h)
 add_custom_command(OUTPUT ${dtype_defs}
     COMMAND ${dtype_script} "${dtype_header}" > ${dtype_defs}
     DEPENDS ${dtype_script} ${dtype_header}

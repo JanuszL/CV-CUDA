@@ -19,8 +19,8 @@
 #define NVCV_CORE_PRIV_ITENSOR_HPP
 
 #include "ICoreObject.hpp"
+#include "ImageFormat.hpp"
 
-#include <format/priv/ImageFormat.hpp>
 #include <nvcv/Tensor.h>
 
 namespace nv::cv::priv {

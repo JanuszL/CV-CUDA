@@ -17,6 +17,8 @@
 
 #include "Tensor.hpp"
 
+#include "DataLayout.hpp"
+#include "DataType.hpp"
 #include "IAllocator.hpp"
 #include "Requirements.hpp"
 #include "TensorData.hpp"
@@ -24,8 +26,6 @@
 #include "TensorShape.hpp"
 
 #include <cuda_runtime.h>
-#include <format/priv/DataLayout.hpp>
-#include <format/priv/DataType.hpp>
 #include <util/Assert.h>
 #include <util/CheckError.hpp>
 #include <util/Math.hpp>

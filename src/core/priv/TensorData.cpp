@@ -17,10 +17,10 @@
 
 #include "TensorData.hpp"
 
+#include "DataType.hpp"
 #include "Exception.hpp"
 #include "TensorLayout.hpp"
 
-#include <format/priv/DataType.hpp>
 #include <nvcv/TensorLayout.h>
 
 namespace nv::cv::priv {

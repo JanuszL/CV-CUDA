@@ -20,10 +20,10 @@
 #include "priv/IAllocator.hpp"
 #include "priv/ImageBatchManager.hpp"
 #include "priv/ImageBatchVarShape.hpp"
+#include "priv/ImageFormat.hpp"
 #include "priv/Status.hpp"
 #include "priv/SymbolVersioning.hpp"
 
-#include <format/priv/ImageFormat.hpp>
 #include <nvcv/ImageBatch.h>
 
 namespace priv = nv::cv::priv;

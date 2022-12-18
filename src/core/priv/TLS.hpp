@@ -28,6 +28,27 @@ struct CoreTLS
 {
     NVCVStatus lastErrorStatus;
     char       lastErrorMessage[NVCV_MAX_STATUS_MESSAGE_LENGTH];
+
+    char bufColorSpecName[1024];
+    char bufColorModelName[128];
+    char bufChromaLocationName[128];
+    char bufRawPatternName[128];
+    char bufColorSpaceName[128];
+    char bufColorTransferFunctionName[128];
+    char bufColorRangeName[128];
+    char bufWhitePointName[128];
+    char bufYCbCrEncodingName[128];
+    char bufChromaSubsamplingName[128];
+
+    char bufDataKindName[128];
+    char bufMemLayoutName[128];
+    char bufChannelName[128];
+    char bufSwizzleName[128];
+    char bufByteOrderName[128];
+    char bufPackingName[128];
+
+    char bufDataTypeName[1024];
+    char bufImageFormatName[1024];
 };
 
 CoreTLS &GetCoreTLS() noexcept;

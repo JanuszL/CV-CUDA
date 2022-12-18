@@ -267,7 +267,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvColorSpecSetChromaLoc,
 
 NVCV_DEFINE_API(0, 0, const char *, nvcvColorSpecGetName, (NVCVColorSpec cspec))
 {
-    priv::FormatTLS &tls = priv::GetFormatTLS();
+    priv::CoreTLS &tls = priv::GetCoreTLS();
 
     char         *buffer  = tls.bufColorSpecName;
     constexpr int bufSize = sizeof(tls.bufColorSpecName);

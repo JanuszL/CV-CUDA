@@ -19,9 +19,9 @@
 #define NVCV_CORE_PRIV_TENSORDATA_HPP
 
 #include "IImage.hpp"
+#include "ImageFormat.hpp"
 #include "Size.hpp"
 
-#include <format/priv/ImageFormat.hpp>
 #include <nvcv/TensorData.h>
 
 namespace nv::cv::priv {

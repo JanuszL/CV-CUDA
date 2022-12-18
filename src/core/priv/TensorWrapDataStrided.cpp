@@ -17,13 +17,13 @@
 
 #include "TensorWrapDataStrided.hpp"
 
+#include "DataType.hpp"
 #include "IAllocator.hpp"
 #include "Requirements.hpp"
 #include "TensorData.hpp"
 #include "TensorLayout.hpp"
 
 #include <cuda_runtime.h>
-#include <format/priv/DataType.hpp>
 #include <util/CheckError.hpp>
 #include <util/Math.hpp>
 
