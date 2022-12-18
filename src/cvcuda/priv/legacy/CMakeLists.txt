@@ -65,6 +65,5 @@ target_link_libraries(cvcuda_legacy
         CUDA::cudart_static
         nvcv_types
         nvcv_util
-        nvcv_optools
         cvcuda_headers
 )

@@ -20,9 +20,8 @@ find_program(SPHINX_EXECUTABLE NAMES sphinx-build DOC "Path to sphinx-build exec
 
 get_target_property(CORE_SRCPATH nvcv_types SOURCE_DIR)
 get_target_property(OPS_SRCPATH cvcuda SOURCE_DIR)
-get_target_property(OPTOOLS_SRCPATH nvcv_optools SOURCE_DIR)
 
-set(DOXYGEN_INPUT_DIR "${CORE_SRCPATH}/include ${OPS_SRCPATH}/include ${OPTOOLS_SRCPATH}/include")
+set(DOXYGEN_INPUT_DIR "${CORE_SRCPATH}/include ${OPS_SRCPATH}/include")
 set(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/doxygen)
 set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/xml/index.xml)
 set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)

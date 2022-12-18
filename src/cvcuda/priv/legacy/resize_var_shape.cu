@@ -25,8 +25,8 @@
 
 #include "CvCudaUtils.cuh"
 
-#include <nvcv/optools/MathWrappers.hpp>
-#include <nvcv/optools/SaturateCast.hpp>
+#include <nvcv/cuda/MathWrappers.hpp>
+#include <nvcv/cuda/SaturateCast.hpp>
 
 #define BLOCK 32
 

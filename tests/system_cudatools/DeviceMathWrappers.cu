@@ -17,8 +17,8 @@
 
 #include "DeviceMathWrappers.hpp" // to test in the device
 
-#include <gtest/gtest.h>                 // for EXPECT_EQ, etc.
-#include <nvcv/optools/MathWrappers.hpp> // the object of this test
+#include <gtest/gtest.h>              // for EXPECT_EQ, etc.
+#include <nvcv/cuda/MathWrappers.hpp> // the object of this test
 
 namespace cuda = nvcv::cuda;
 

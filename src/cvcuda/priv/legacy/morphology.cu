@@ -23,8 +23,8 @@
 
 #include "CvCudaUtils.cuh"
 
-#include <nvcv/optools/MathWrappers.hpp>
-#include <nvcv/optools/SaturateCast.hpp>
+#include <nvcv/cuda/MathWrappers.hpp>
+#include <nvcv/cuda/SaturateCast.hpp>
 
 using namespace nvcv::legacy::helpers;
 using namespace nvcv::legacy::cuda_op;

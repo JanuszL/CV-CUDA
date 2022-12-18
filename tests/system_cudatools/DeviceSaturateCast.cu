@@ -17,8 +17,8 @@
 
 #include "DeviceSaturateCast.hpp" // to test in the device
 
-#include <gtest/gtest.h>                 // for EXPECT_EQ, etc.
-#include <nvcv/optools/SaturateCast.hpp> // the object of this test
+#include <gtest/gtest.h>              // for EXPECT_EQ, etc.
+#include <nvcv/cuda/SaturateCast.hpp> // the object of this test
 
 namespace cuda = nvcv::cuda;
 

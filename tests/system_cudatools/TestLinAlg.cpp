@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include <common/TypedTests.hpp>        // for NVCV_TYPED_TEST_SUITE, etc.
-#include <common/ValueTests.hpp>        // for StringLiteral
-#include <nvcv/optools/math/LinAlg.hpp> // the object of this test
+#include <common/TypedTests.hpp>     // for NVCV_TYPED_TEST_SUITE, etc.
+#include <common/ValueTests.hpp>     // for StringLiteral
+#include <nvcv/cuda/math/LinAlg.hpp> // the object of this test
 
 #include <cmath>       // for std::pow, etc.
 #include <numeric>     // for std::iota, etc.

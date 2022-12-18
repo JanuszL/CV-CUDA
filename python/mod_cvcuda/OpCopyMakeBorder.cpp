@@ -22,7 +22,7 @@
 #include <cvcuda/OpCopyMakeBorder.hpp>
 #include <cvcuda/Types.h>
 #include <nvcv/DataType.hpp>
-#include <nvcv/optools/TypeTraits.hpp>
+#include <nvcv/cuda/TypeTraits.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
 #include <nvcv/python/Stream.hpp>

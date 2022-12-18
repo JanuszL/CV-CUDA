@@ -19,8 +19,8 @@
 
 #include <common/TypedTests.hpp> // for NVCV_TYPED_TEST_SUITE, etc.
 #include <nvcv/Image.hpp>
-#include <nvcv/Tensor.hpp>          // for Tensor, etc.
-#include <nvcv/optools/MathOps.hpp> // for operator == to allow EXPECT_EQ
+#include <nvcv/Tensor.hpp>       // for Tensor, etc.
+#include <nvcv/cuda/MathOps.hpp> // for operator == to allow EXPECT_EQ
 
 #include <limits>
 

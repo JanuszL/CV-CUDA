@@ -25,7 +25,6 @@ add_library(nvcv_types SHARED IMPORTED)
 target_include_directories(nvcv_types
     INTERFACE
     "$<TARGET_PROPERTY:nvcv_types,INTERFACE_INCLUDE_DIRECTORIES>"
-    "$<TARGET_PROPERTY:nvcv_optools,INTERFACE_INCLUDE_DIRECTORIES>"
 )
 add_library(nvcv_types_headers INTERFACE IMPORTED)
 target_include_directories(nvcv_types_headers
@@ -40,7 +39,6 @@ add_library(cvcuda SHARED IMPORTED)
 target_include_directories(cvcuda
     INTERFACE
     "$<TARGET_PROPERTY:cvcuda,INTERFACE_INCLUDE_DIRECTORIES>"
-    "$<TARGET_PROPERTY:nvcv_optools,INTERFACE_INCLUDE_DIRECTORIES>"
 )
 ]=])
 

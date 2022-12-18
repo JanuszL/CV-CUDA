@@ -17,11 +17,11 @@
 
 #include "FlipUtils.hpp"
 
-#include <nvcv/optools/DropCast.hpp>     // for SaturateCast, etc.
-#include <nvcv/optools/MathOps.hpp>      // for operator *, etc.
-#include <nvcv/optools/SaturateCast.hpp> // for SaturateCast, etc.
-#include <nvcv/optools/TypeTraits.hpp>   // for BaseType, etc.
-#include <util/Assert.h>                 // for NVCV_ASSERT, etc.
+#include <nvcv/cuda/DropCast.hpp>     // for SaturateCast, etc.
+#include <nvcv/cuda/MathOps.hpp>      // for operator *, etc.
+#include <nvcv/cuda/SaturateCast.hpp> // for SaturateCast, etc.
+#include <nvcv/cuda/TypeTraits.hpp>   // for BaseType, etc.
+#include <util/Assert.h>              // for NVCV_ASSERT, etc.
 
 namespace nvcv::test {
 

@@ -22,7 +22,7 @@
 #include <cvcuda/OpPillowResize.hpp>
 #include <cvcuda/Types.h>
 #include <nvcv/TensorDataAccess.hpp>
-#include <nvcv/optools/TypeTraits.hpp>
+#include <nvcv/cuda/TypeTraits.hpp>
 #include <nvcv/python/Image.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ImageFormat.hpp>

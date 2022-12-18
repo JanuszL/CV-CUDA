@@ -26,8 +26,8 @@
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/optools/TypeTraits.hpp>
-#include <nvcv/optools/math/LinAlg.hpp> // the object of this test
+#include <nvcv/cuda/TypeTraits.hpp>
+#include <nvcv/cuda/math/LinAlg.hpp> // the object of this test
 
 #include <cmath>
 #include <map>

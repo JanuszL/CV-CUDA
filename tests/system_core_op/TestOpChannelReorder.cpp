@@ -23,7 +23,7 @@
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
-#include <nvcv/optools/MathOps.hpp>
+#include <nvcv/cuda/MathOps.hpp>
 
 namespace test = nvcv::test;
 

@@ -17,11 +17,11 @@
 
 #include "DeviceTensorWrap.hpp" // to test in the device
 
-#include <gtest/gtest.h>               // for EXPECT_EQ, etc.
-#include <nvcv/optools/DropCast.hpp>   // for DropCast, etc.
-#include <nvcv/optools/MathOps.hpp>    // for operator == to allow EXPECT_EQ
-#include <nvcv/optools/StaticCast.hpp> // for StaticCast, etc.
-#include <nvcv/optools/TensorWrap.hpp> // the object of this test
+#include <gtest/gtest.h>            // for EXPECT_EQ, etc.
+#include <nvcv/cuda/DropCast.hpp>   // for DropCast, etc.
+#include <nvcv/cuda/MathOps.hpp>    // for operator == to allow EXPECT_EQ
+#include <nvcv/cuda/StaticCast.hpp> // for StaticCast, etc.
+#include <nvcv/cuda/TensorWrap.hpp> // the object of this test
 
 namespace cuda = nvcv::cuda;
 

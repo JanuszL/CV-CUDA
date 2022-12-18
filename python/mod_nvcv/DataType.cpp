@@ -20,7 +20,7 @@
 #include <common/Assert.hpp>
 #include <common/String.hpp>
 #include <nvcv/DataType.hpp>
-#include <nvcv/optools/TypeTraits.hpp>
+#include <nvcv/cuda/TypeTraits.hpp>
 #include <pybind11/numpy.h>
 #include <pybind11/operators.h>
 

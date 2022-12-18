@@ -24,7 +24,7 @@
 #include "CvCudaUtils.cuh"
 
 #include <cvcuda/OpNormalize.h> // for CVCUDA_NORMALIZE_SCALE_IS_STDDEV, etc.
-#include <nvcv/optools/MathWrappers.hpp>
+#include <nvcv/cuda/MathWrappers.hpp>
 
 namespace nvcv::legacy::cuda_op {
 

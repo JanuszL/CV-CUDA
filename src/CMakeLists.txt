@@ -23,5 +23,4 @@ endif()
 
 add_subdirectory(util)
 add_subdirectory(nvcv_types)
-add_subdirectory(optools)
 add_subdirectory(cvcuda)

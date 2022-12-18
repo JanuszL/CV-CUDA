@@ -17,14 +17,14 @@
 
 #include "DeviceBorderWrap.hpp" // to test in the device
 
-#include <common/BorderUtils.hpp>      // for test::ReplicateBorderIndex, etc.
-#include <common/Printers.hpp>         // for stream operator, etc.
-#include <common/TypedTests.hpp>       // for NVCV_TYPED_TEST_SUITE, etc.
-#include <nvcv/Tensor.hpp>             // for Tensor, etc.
-#include <nvcv/TensorDataAccess.hpp>   // for TensorDataAccessStridedImagePlanar, etc.
-#include <nvcv/optools/BorderWrap.hpp> // the object of this test
-#include <nvcv/optools/MathOps.hpp>    // for operator == to allow EXPECT_EQ
-#include <nvcv/optools/TensorWrap.hpp> // for Tensor3DWrap, etc.
+#include <common/BorderUtils.hpp>    // for test::ReplicateBorderIndex, etc.
+#include <common/Printers.hpp>       // for stream operator, etc.
+#include <common/TypedTests.hpp>     // for NVCV_TYPED_TEST_SUITE, etc.
+#include <nvcv/Tensor.hpp>           // for Tensor, etc.
+#include <nvcv/TensorDataAccess.hpp> // for TensorDataAccessStridedImagePlanar, etc.
+#include <nvcv/cuda/BorderWrap.hpp>  // the object of this test
+#include <nvcv/cuda/MathOps.hpp>     // for operator == to allow EXPECT_EQ
+#include <nvcv/cuda/TensorWrap.hpp>  // for Tensor3DWrap, etc.
 
 #include <algorithm>
 #include <array>

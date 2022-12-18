@@ -17,9 +17,9 @@
 
 #include "DeviceSaturateCast.hpp" // to test in the device
 
-#include <common/TypedTests.hpp>         // for NVCV_TYPED_TEST_SUITE, etc.
-#include <nvcv/optools/MathOps.hpp>      // for operator == to allow EXPECT_EQ
-#include <nvcv/optools/SaturateCast.hpp> // the object of this test
+#include <common/TypedTests.hpp>      // for NVCV_TYPED_TEST_SUITE, etc.
+#include <nvcv/cuda/MathOps.hpp>      // for operator == to allow EXPECT_EQ
+#include <nvcv/cuda/SaturateCast.hpp> // the object of this test
 
 namespace cuda  = nvcv::cuda;
 namespace ttype = nvcv::test::type;

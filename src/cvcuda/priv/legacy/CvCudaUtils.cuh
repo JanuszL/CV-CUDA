@@ -23,17 +23,17 @@
 #include <nvcv/IImageData.hpp>  // for IImageDataStridedCuda, etc.
 #include <nvcv/ITensorData.hpp> // for ITensorDataStridedCuda, etc.
 #include <nvcv/TensorDataAccess.hpp>
-#include <nvcv/optools/BorderWrap.hpp>   // for BorderWrap, etc.
-#include <nvcv/optools/DropCast.hpp>     // for DropCast, etc.
-#include <nvcv/optools/MathOps.hpp>      // for math operators
-#include <nvcv/optools/MathWrappers.hpp> // for sqrt, etc.
-#include <nvcv/optools/SaturateCast.hpp> // for SaturateCast, etc.
-#include <nvcv/optools/StaticCast.hpp>   // for StaticCast, etc.
-#include <nvcv/optools/TensorWrap.hpp>   // for TensorWrap, etc.
-#include <nvcv/optools/TypeTraits.hpp>   // for BaseType, etc.
-#include <nvcv/optools/math/LinAlg.hpp>  // for Vector, etc.
-#include <util/Assert.h>                 // for NVCV_ASSERT, etc.
-#include <util/CheckError.hpp>           // for NVCV_CHECK_LOG, etc.
+#include <nvcv/cuda/BorderWrap.hpp>   // for BorderWrap, etc.
+#include <nvcv/cuda/DropCast.hpp>     // for DropCast, etc.
+#include <nvcv/cuda/MathOps.hpp>      // for math operators
+#include <nvcv/cuda/MathWrappers.hpp> // for sqrt, etc.
+#include <nvcv/cuda/SaturateCast.hpp> // for SaturateCast, etc.
+#include <nvcv/cuda/StaticCast.hpp>   // for StaticCast, etc.
+#include <nvcv/cuda/TensorWrap.hpp>   // for TensorWrap, etc.
+#include <nvcv/cuda/TypeTraits.hpp>   // for BaseType, etc.
+#include <nvcv/cuda/math/LinAlg.hpp>  // for Vector, etc.
+#include <util/Assert.h>              // for NVCV_ASSERT, etc.
+#include <util/CheckError.hpp>        // for NVCV_CHECK_LOG, etc.
 
 #include <cassert>
 #include <cerrno>

@@ -25,7 +25,7 @@
 
 #include <nvcv/IImage.hpp>
 #include <nvcv/IImageData.hpp>
-#include <nvcv/optools/TypeTraits.hpp>
+#include <nvcv/cuda/TypeTraits.hpp>
 
 #include <cassert>
 #include <cstdio>

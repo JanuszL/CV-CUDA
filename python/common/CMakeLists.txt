@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+find_package(CUDAToolkit REQUIRED)
+
 add_library(nvcv_python_common STATIC
     Assert.cpp
     CheckError.cpp
@@ -22,4 +24,4 @@ add_library(nvcv_python_common STATIC
 
 target_include_directories(nvcv_python_common PUBLIC ..)
 
-target_link_libraries(nvcv_python_common PUBLIC nvcv_types pybind11::pybind11)
+target_link_libraries(nvcv_python_common PUBLIC nvcv_types CUDA::cudart_static pybind11::pybind11)

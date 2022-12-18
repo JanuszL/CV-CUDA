@@ -17,11 +17,11 @@
 
 #include "DeviceBorderWrap.hpp" // to test in the device
 
-#include <gtest/gtest.h>               // for EXPECT_EQ, etc.
-#include <nvcv/optools/BorderWrap.hpp> // the object of this test
-#include <nvcv/optools/MathOps.hpp>    // for operator *, etc.
-#include <nvcv/optools/StaticCast.hpp> // for StaticCast, etc.
-#include <nvcv/optools/TensorWrap.hpp> // for Tensor3DWrap, etc.
+#include <gtest/gtest.h>            // for EXPECT_EQ, etc.
+#include <nvcv/cuda/BorderWrap.hpp> // the object of this test
+#include <nvcv/cuda/MathOps.hpp>    // for operator *, etc.
+#include <nvcv/cuda/StaticCast.hpp> // for StaticCast, etc.
+#include <nvcv/cuda/TensorWrap.hpp> // for Tensor3DWrap, etc.
 
 namespace cuda = nvcv::cuda;
 

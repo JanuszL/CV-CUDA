@@ -24,7 +24,7 @@
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/optools/SaturateCast.hpp>
+#include <nvcv/cuda/SaturateCast.hpp>
 
 #include <iostream>
 #include <random>

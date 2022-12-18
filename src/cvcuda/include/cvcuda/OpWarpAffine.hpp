@@ -35,7 +35,7 @@
 #include <nvcv/ITensor.hpp>
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/alloc/Requirements.hpp>
-#include <nvcv/optools/math/LinAlg.hpp>
+#include <nvcv/cuda/math/LinAlg.hpp>
 
 namespace cvmath = nvcv::cuda::math;
 

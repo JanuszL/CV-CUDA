@@ -21,7 +21,7 @@
 #include <common/String.hpp>
 #include <cvcuda/OpRotate.hpp>
 #include <cvcuda/Types.h>
-#include <nvcv/optools/TypeTraits.hpp>
+#include <nvcv/cuda/TypeTraits.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
 #include <nvcv/python/Stream.hpp>

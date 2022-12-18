@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#include <common/TypedTests.hpp>    // for NVCV_TYPED_TEST_SUITE_F, etc.
-#include <nvcv/optools/MathOps.hpp> // the object of this test
+#include <common/TypedTests.hpp> // for NVCV_TYPED_TEST_SUITE_F, etc.
+#include <nvcv/cuda/MathOps.hpp> // the object of this test
 
 namespace t     = ::testing;
 namespace cuda  = nvcv::cuda;

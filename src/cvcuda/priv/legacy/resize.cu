@@ -22,7 +22,7 @@
 
 #include "CvCudaUtils.cuh"
 
-#include <nvcv/optools/MathWrappers.hpp>
+#include <nvcv/cuda/MathWrappers.hpp>
 
 using namespace nvcv::legacy::cuda_op;
 using namespace nvcv::legacy::helpers;

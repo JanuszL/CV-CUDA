@@ -18,9 +18,9 @@
 #ifndef NVCV_TESTS_DEVICE_TENSOR_WRAP_HPP
 #define NVCV_TESTS_DEVICE_TENSOR_WRAP_HPP
 
-#include <cuda_runtime.h>              // for int2, etc.
-#include <nvcv/optools/TensorWrap.hpp> // the object of this test
-#include <nvcv/optools/TypeTraits.hpp> // for NumElements, etc.
+#include <cuda_runtime.h>           // for int2, etc.
+#include <nvcv/cuda/TensorWrap.hpp> // the object of this test
+#include <nvcv/cuda/TypeTraits.hpp> // for NumElements, etc.
 
 #include <array> // for std::array, etc.
 
