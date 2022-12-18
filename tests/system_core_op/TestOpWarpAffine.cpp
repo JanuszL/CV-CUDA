@@ -19,13 +19,13 @@
 
 #include <common/BorderUtils.hpp>
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpWarpAffine.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/operators/OpWarpAffine.hpp>
 #include <nvcv/optools/TypeTraits.hpp>
 
 #include <cmath>
@@ -381,7 +381,7 @@ TEST_P(OpWarpAffine, tensor_correct_output)
     // Generate test result
     nvcv::Tensor imgDst(numberOfImages, {dstWidth, dstHeight}, nvcv::FMT_RGBA8);
 
-    nvcvop::WarpAffine warpAffineOp(0);
+    cvcuda::WarpAffine warpAffineOp(0);
     EXPECT_NO_THROW(warpAffineOp(stream, imgSrc, imgDst, xform, flags, borderMode, borderValue));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
@@ -582,7 +582,7 @@ TEST_P(OpWarpAffine, varshape_correct_output)
     }
 
     // Generate test result
-    nvcvop::WarpAffine warpAffineOp(numberOfImages);
+    cvcuda::WarpAffine warpAffineOp(numberOfImages);
     EXPECT_NO_THROW(warpAffineOp(stream, batchSrc, batchDst, transMatrixTensor, flags, borderMode, borderValue));
 
     // Get test data back

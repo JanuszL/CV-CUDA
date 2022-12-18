@@ -20,11 +20,11 @@
 
 #include <common/TensorDataUtils.hpp>
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpMorphology.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
-#include <nvcv/operators/OpMorphology.hpp>
 #include <nvcv/optools/TypeTraits.hpp>
 
 #include <random>
@@ -91,7 +91,7 @@ void checkTestVectors(cudaStream_t &stream, nvcv::Tensor &inTensor, nvcv::Tensor
         SetTensorToTestVector<uchar, rows, cols>(input, width, height, inTensor, i);
     }
 
-    nvcvop::Morphology morphOp(0);
+    cvcuda::Morphology morphOp(0);
     morphOp(stream, inTensor, outTensor, type, maskSize, anchor, iteration, borderMode);
 
     if (cudaSuccess != cudaStreamSynchronize(stream))
@@ -380,7 +380,7 @@ TEST_P(OpMorphology, morph_noop)
     EXPECT_NO_THROW(test::SetTensorToRandomValue<uint8_t>(inTensor.exportData(), 0, 0xFF));
     EXPECT_NO_THROW(test::SetTensorTo<uint8_t>(outTensor.exportData(), 0));
 
-    nvcvop::Morphology morphOp(0);
+    cvcuda::Morphology morphOp(0);
     int2               anchor(0, 0);
 
     nvcv::Size2D maskSize(1, 1);
@@ -445,7 +445,7 @@ TEST_P(OpMorphology, morph_random)
     ASSERT_EQ(cudaSuccess, cudaMemcpy(inData->basePtr(), inVec.data(), inBufSize, cudaMemcpyHostToDevice));
 
     // run operator
-    nvcvop::Morphology morphOp(0);
+    cvcuda::Morphology morphOp(0);
     int2               anchor(-1, -1);
 
     EXPECT_NO_THROW(morphOp(stream, inTensor, outTensor, morphType, maskSize, anchor, iteration, borderMode));
@@ -572,7 +572,7 @@ TEST_P(OpMorphologyVarShape, varshape_correct_output)
     }
 
     // Run operator set the max batches
-    nvcvop::Morphology morphOp(batches);
+    cvcuda::Morphology morphOp(batches);
 
     EXPECT_NO_THROW(morphOp(stream, batchSrc, batchDst, morphType, maskTensor, anchorTensor, iteration, borderMode));
 
@@ -709,7 +709,7 @@ TEST_P(OpMorphologyVarShape, varshape_noop)
     }
 
     // Run operator set the max batches
-    nvcvop::Morphology morphOp(batches);
+    cvcuda::Morphology morphOp(batches);
 
     EXPECT_NO_THROW(morphOp(stream, batchSrc, batchDst, morphType, maskTensor, anchorTensor, iteration, borderMode));
 

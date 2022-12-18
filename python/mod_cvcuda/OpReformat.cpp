@@ -18,7 +18,7 @@
 #include "Operators.hpp"
 
 #include <common/PyUtil.hpp>
-#include <nvcv/operators/OpReformat.hpp>
+#include <cvcuda/OpReformat.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
 #include <nvcv/python/Stream.hpp>
 #include <nvcv/python/Tensor.hpp>
@@ -33,7 +33,7 @@ Tensor ReformatInto(Tensor &output, Tensor &input, std::optional<Stream> pstream
         pstream = Stream::Current();
     }
 
-    auto reformat = CreateOperator<nvcvop::Reformat>();
+    auto reformat = CreateOperator<cvcuda::Reformat>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});

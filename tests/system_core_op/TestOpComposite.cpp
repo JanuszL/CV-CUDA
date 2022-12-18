@@ -18,13 +18,13 @@
 #include "Definitions.hpp"
 
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpComposite.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/operators/OpComposite.hpp>
 
 #include <iostream>
 #include <random>
@@ -186,7 +186,7 @@ TEST_P(OpComposite, tensor_correct_output)
     }
 
     // run operator
-    nvcvop::Composite compositeOp;
+    cvcuda::Composite compositeOp;
 
     EXPECT_NO_THROW(compositeOp(stream, foregroundImg, backgroundImg, fgMaskImg, outImg));
 
@@ -340,7 +340,7 @@ TEST_P(OpComposite, varshape_correct_output)
     batchOutput.pushBack(imgOut.begin(), imgOut.end());
 
     // Generate test result
-    nvcvop::Composite compositeOp;
+    cvcuda::Composite compositeOp;
     EXPECT_NO_THROW(compositeOp(stream, batchForeground, batchBackground, batchFgMask, batchOutput));
 
     // Get test data back

@@ -19,11 +19,11 @@
 #include "FlipUtils.hpp"
 
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpFlip.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
-#include <nvcv/operators/OpFlip.hpp>
 #include <nvcv/optools/TypeTraits.hpp>
 
 #include <random>
@@ -89,7 +89,7 @@ TEST_P(OpFlip, correct_output)
     ASSERT_EQ(cudaSuccess, cudaMemcpy(input->basePtr(), inVec.data(), inBufSize, cudaMemcpyHostToDevice));
 
     // run operator
-    nvcvop::Flip flipOp;
+    cvcuda::Flip flipOp;
     EXPECT_NO_THROW(flipOp(stream, inTensor, outTensor, flipCode));
 
     ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
@@ -171,7 +171,7 @@ TEST_P(OpFlip, varshape_correct_output)
     }
 
     // Run operator
-    nvcvop::Flip flipOp(batches);
+    cvcuda::Flip flipOp(batches);
 
     EXPECT_NO_THROW(flipOp(stream, batchSrc, batchDst, flip_code));
 

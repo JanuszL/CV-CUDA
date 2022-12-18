@@ -18,12 +18,12 @@
 #include "Definitions.hpp"
 
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpCustomCrop.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/operators/OpCustomCrop.hpp>
 
 #include <iostream>
 #include <random>
@@ -161,7 +161,7 @@ TEST_P(OpCustomCrop, CustomCrop_packed)
     setGoldBuffer(gold, *outAccess, crpRect, cropVal);
 
     // run operator
-    nvcvop::CustomCrop cropOp;
+    cvcuda::CustomCrop cropOp;
 
     EXPECT_NO_THROW(cropOp(stream, imgIn, imgOut, crpRect));
 

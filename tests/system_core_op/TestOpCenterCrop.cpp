@@ -18,12 +18,12 @@
 #include "Definitions.hpp"
 
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpCenterCrop.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/operators/OpCenterCrop.hpp>
 
 #include <iostream>
 #include <random>
@@ -172,7 +172,7 @@ TEST_P(OpCenterCrop, CenterCrop_packed)
     setGoldBuffer(gold, *outAccess, crop_rows, crop_columns, cropVal);
 
     // run operator
-    nvcvop::CenterCrop cropOp;
+    cvcuda::CenterCrop cropOp;
 
     EXPECT_NO_THROW(cropOp(stream, imgIn, imgOut, {crop_columns, crop_rows}));
 

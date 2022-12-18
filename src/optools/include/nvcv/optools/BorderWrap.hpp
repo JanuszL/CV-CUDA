@@ -27,8 +27,8 @@
 #include "TensorWrap.hpp" // for TensorWrap, etc.
 #include "TypeTraits.hpp" // for NumElements, etc.
 
-#include <nvcv/ITensorData.hpp>   // for ITensorDataStridedCuda, etc.
-#include <nvcv/operators/Types.h> // for NVCVBorderType, etc.
+#include <cvcuda/Types.h>       // for NVCVBorderType, etc.
+#include <nvcv/ITensorData.hpp> // for ITensorDataStridedCuda, etc.
 
 namespace nvcv::cuda {
 

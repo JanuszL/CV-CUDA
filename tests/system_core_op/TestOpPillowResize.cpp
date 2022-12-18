@@ -18,6 +18,7 @@
 #include "Definitions.hpp"
 
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpPillowResize.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Rect.h>
@@ -25,7 +26,6 @@
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/operators/OpPillowResize.hpp>
 
 #include <cmath>
 #include <iostream>
@@ -866,7 +866,7 @@ void StartTest(int srcWidth, int srcHeight, int dstWidth, int dstHeight, NVCVInt
     // Generate test result
     nvcv::Tensor imgDst(numberOfImages, {dstWidth, dstHeight}, fmt);
 
-    nvcvop::PillowResize pillowResizeOp(nvcv::Size2D{std::max(srcWidth, dstWidth), std::max(srcHeight, dstHeight)},
+    cvcuda::PillowResize pillowResizeOp(nvcv::Size2D{std::max(srcWidth, dstWidth), std::max(srcHeight, dstHeight)},
                                         numberOfImages, fmt);
     EXPECT_NO_THROW(pillowResizeOp(stream, imgSrc, imgDst, interpolation));
 
@@ -991,7 +991,7 @@ void StartVarShapeTest(int srcWidthBase, int srcHeightBase, int dstWidthBase, in
     nvcv::Size2D maxDstSize = batchDst.maxSize();
 
     // Generate test result
-    nvcvop::PillowResize pillowResizeOp(
+    cvcuda::PillowResize pillowResizeOp(
         nvcv::Size2D{std::max(maxSrcSize.w, maxDstSize.w), std::max(maxSrcSize.h, maxDstSize.h)}, numberOfImages, fmt);
     EXPECT_NO_THROW(pillowResizeOp(stream, batchSrc, batchDst, interpolation));
 

@@ -19,7 +19,7 @@ find_package(Doxygen)
 find_program(SPHINX_EXECUTABLE NAMES sphinx-build DOC "Path to sphinx-build executable")
 
 get_target_property(CORE_SRCPATH nvcv_types SOURCE_DIR)
-get_target_property(OPS_SRCPATH nvcv_operators SOURCE_DIR)
+get_target_property(OPS_SRCPATH cvcuda SOURCE_DIR)
 get_target_property(OPTOOLS_SRCPATH nvcv_optools SOURCE_DIR)
 
 set(DOXYGEN_INPUT_DIR "${CORE_SRCPATH}/include ${OPS_SRCPATH}/include ${OPTOOLS_SRCPATH}/include")

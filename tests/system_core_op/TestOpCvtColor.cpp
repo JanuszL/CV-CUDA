@@ -19,11 +19,11 @@
 #include "Definitions.hpp"
 
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpCvtColor.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
-#include <nvcv/operators/OpCvtColor.hpp>
 #include <nvcv/optools/TypeTraits.hpp>
 
 #include <random>
@@ -142,7 +142,7 @@ TEST_P(OpCvtColor, correct_output)
     ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
 
     // run operator
-    nvcvop::CvtColor cvtColorOp;
+    cvcuda::CvtColor cvtColorOp;
 
     EXPECT_NO_THROW(cvtColorOp(stream, srcTensor, dstTensor, src2dstCode));
 
@@ -222,7 +222,7 @@ TEST_P(OpCvtColor, varshape_correct_output)
     batchDst.pushBack(imgDst.begin(), imgDst.end());
 
     // run operator
-    nvcvop::CvtColor cvtColorOp;
+    cvcuda::CvtColor cvtColorOp;
 
     EXPECT_NO_THROW(cvtColorOp(stream, batchSrc, batchDst, src2dstCode));
 

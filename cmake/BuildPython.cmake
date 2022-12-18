@@ -51,7 +51,7 @@ foreach(VER ${PYTHON_VERSIONS})
         TMP_DIR ${BASEDIR}/tmp
         STAMP_DIR ${BASEDIR}/stamp
         BUILD_ALWAYS true
-        DEPENDS nvcv_types nvcv_operators
+        DEPENDS nvcv_types cvcuda
         INSTALL_COMMAND ""
     )
 endforeach()

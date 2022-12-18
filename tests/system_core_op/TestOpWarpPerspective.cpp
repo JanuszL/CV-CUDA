@@ -19,13 +19,13 @@
 
 #include <common/BorderUtils.hpp>
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpWarpPerspective.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/operators/OpWarpPerspective.hpp>
 #include <nvcv/optools/TypeTraits.hpp>
 #include <nvcv/optools/math/LinAlg.hpp> // the object of this test
 
@@ -530,7 +530,7 @@ TEST_P(OpWarpPerspective, tensor_correct_output)
     // Generate test result
     nvcv::Tensor imgDst(numberOfImages, {dstWidth, dstHeight}, nvcv::FMT_RGBA8);
 
-    nvcvop::WarpPerspective warpPerspectiveOp(0);
+    cvcuda::WarpPerspective warpPerspectiveOp(0);
     EXPECT_NO_THROW(warpPerspectiveOp(stream, imgSrc, imgDst, transMatrix, flags, borderMode, borderValue));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
@@ -705,7 +705,7 @@ TEST_P(OpWarpPerspective, varshape_correct_output)
     }
 
     // Generate test result
-    nvcvop::WarpPerspective warpPerspectiveOp(numberOfImages);
+    cvcuda::WarpPerspective warpPerspectiveOp(numberOfImages);
     EXPECT_NO_THROW(warpPerspectiveOp(stream, batchSrc, batchDst, transMatrixTensor, flags, borderMode, borderValue));
 
     // Get test data back

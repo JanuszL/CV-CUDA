@@ -19,11 +19,11 @@
 #include "Definitions.hpp"
 
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpLaplacian.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
-#include <nvcv/operators/OpLaplacian.hpp>
 #include <nvcv/optools/TypeTraits.hpp>
 
 #include <random>
@@ -96,7 +96,7 @@ TEST_P(OpLaplacian, correct_output)
     ASSERT_EQ(cudaSuccess, cudaMemcpy(inData->basePtr(), inVec.data(), inBufSize, cudaMemcpyHostToDevice));
 
     // run operator
-    nvcvop::Laplacian laplacianOp;
+    cvcuda::Laplacian laplacianOp;
 
     EXPECT_NO_THROW(laplacianOp(stream, inTensor, outTensor, ksize, scale, borderMode));
 
@@ -219,7 +219,7 @@ TEST_P(OpLaplacian, varshape_correct_output)
     }
 
     // Run operator
-    nvcvop::Laplacian laplacianOp;
+    cvcuda::Laplacian laplacianOp;
 
     EXPECT_NO_THROW(laplacianOp(stream, batchSrc, batchDst, ksizeTensor, scaleTensor, borderMode));
 

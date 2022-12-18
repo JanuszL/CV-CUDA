@@ -19,10 +19,10 @@
 
 #include <common/TensorDataUtils.hpp>
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpChannelReorder.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
-#include <nvcv/operators/OpChannelReorder.hpp>
 #include <nvcv/optools/MathOps.hpp>
 
 namespace test = nvcv::test;
@@ -89,7 +89,7 @@ TEST(TestOpChannelReorder, smoke_test_works)
     cudaStream_t stream;
     ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
 
-    nvcvop::ChannelReorder chReorder;
+    cvcuda::ChannelReorder chReorder;
 
     chReorder(stream, in, out, inOrders);
 

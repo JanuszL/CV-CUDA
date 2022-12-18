@@ -18,13 +18,13 @@
 #include "Definitions.hpp"
 
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpResize.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/operators/OpResize.hpp>
 
 #include <cmath>
 #include <random>
@@ -221,7 +221,7 @@ TEST_P(OpResize, tensor_correct_output)
     // Generate test result
     nvcv::Tensor imgDst(numberOfImages, {dstWidth, dstHeight}, nvcv::FMT_RGBA8);
 
-    nvcvop::Resize resizeOp;
+    cvcuda::Resize resizeOp;
     EXPECT_NO_THROW(resizeOp(stream, imgSrc, imgDst, interpolation));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
@@ -325,7 +325,7 @@ TEST_P(OpResize, varshape_correct_output)
     }
 
     // Generate test result
-    nvcvop::Resize resizeOp;
+    cvcuda::Resize resizeOp;
     EXPECT_NO_THROW(resizeOp(stream, batchSrc, batchDst, interpolation));
 
     // Get test data back

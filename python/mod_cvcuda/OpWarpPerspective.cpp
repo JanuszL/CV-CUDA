@@ -19,8 +19,8 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <nvcv/operators/OpWarpPerspective.hpp>
-#include <nvcv/operators/Types.h>
+#include <cvcuda/OpWarpPerspective.hpp>
+#include <cvcuda/Types.h>
 #include <nvcv/optools/TypeTraits.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
@@ -74,7 +74,7 @@ Tensor WarpPerspectiveInto(Tensor &output, Tensor &input, const pyarray &xform, 
         }
     }
 
-    auto warpPerspective = CreateOperator<nvcvop::WarpPerspective>(0);
+    auto warpPerspective = CreateOperator<cvcuda::WarpPerspective>(0);
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});
@@ -117,7 +117,7 @@ ImageBatchVarShape WarpPerspectiveVarShapeInto(ImageBatchVarShape &output, Image
         nvcv::cuda::GetElement(bValue, i) = bValueSize > i ? *borderValue.data(i) : 0.f;
     }
 
-    auto warpPerspective = CreateOperator<nvcvop::WarpPerspective>(input.capacity());
+    auto warpPerspective = CreateOperator<cvcuda::WarpPerspective>(input.capacity());
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, xform});

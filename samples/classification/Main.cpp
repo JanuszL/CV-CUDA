@@ -20,14 +20,14 @@
 #include <common/NvDecoder.h>
 #include <common/TRTUtils.h>
 #include <cuda_runtime_api.h>
+#include <cvcuda/OpConvertTo.hpp>
+#include <cvcuda/OpNormalize.hpp>
+#include <cvcuda/OpReformat.hpp>
+#include <cvcuda/OpResize.hpp>
 #include <math.h>
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
-#include <nvcv/operators/OpConvertTo.hpp>
-#include <nvcv/operators/OpNormalize.hpp>
-#include <nvcv/operators/OpReformat.hpp>
-#include <nvcv/operators/OpResize.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -71,12 +71,12 @@ void PreProcess(nvcv::TensorWrapData &inTensor, uint32_t batchSize, int inputLay
 
     // Resize to the dimensions of input layer of network
     nvcv::Tensor   resizedTensor(batchSize, {inputLayerWidth, inputLayerHeight}, nvcv::FMT_RGB8);
-    nvcvop::Resize resizeOp;
+    cvcuda::Resize resizeOp;
     resizeOp(stream, inTensor, resizedTensor, NVCV_INTERP_LINEAR);
 
     // Convert to data format expected by network (F32). Apply scale 1/255f.
     nvcv::Tensor      floatTensor(batchSize, {inputLayerWidth, inputLayerHeight}, nvcv::FMT_RGBf32);
-    nvcvop::ConvertTo convertOp;
+    cvcuda::ConvertTo convertOp;
     convertOp(stream, resizedTensor, floatTensor, 1.0f / 255.f, 0.0f);
 
     // The input to the network needs to be normalized based on the mean and std deviation values
@@ -110,18 +110,18 @@ void PreProcess(nvcv::TensorWrapData &inTensor, uint32_t batchSize, int inputLay
     float       base[3]   = {0.485f, 0.456f, 0.406f};
 
     // Flag to set the scale value as standard deviation i.e use 1/scale
-    uint32_t flags = NVCV_OP_NORMALIZE_SCALE_IS_STDDEV;
+    uint32_t flags = CVCUDA_NORMALIZE_SCALE_IS_STDDEV;
     CHECK_CUDA_ERROR(cudaMemcpyAsync(scaleData->basePtr(), scale, 3 * sizeof(float), cudaMemcpyHostToDevice, stream));
     CHECK_CUDA_ERROR(cudaMemcpyAsync(baseData->basePtr(), base, 3 * sizeof(float), cudaMemcpyHostToDevice, stream));
 
     nvcv::Tensor normTensor(batchSize, {inputLayerWidth, inputLayerHeight}, nvcv::FMT_RGBf32);
 
     // Normalize
-    nvcvop::Normalize normOp;
+    cvcuda::Normalize normOp;
     normOp(stream, floatTensor, baseTensor, scaleTensor, normTensor, 1.0f, 0.0f, 0.0f, flags);
 
     // Convert the data layout from interleaved to planar
-    nvcvop::Reformat reformatOp;
+    cvcuda::Reformat reformatOp;
     reformatOp(stream, normTensor, outTensor);
 
 #ifdef PROFILE_SAMPLE

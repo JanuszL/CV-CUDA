@@ -20,9 +20,9 @@
 #include <common/Assert.hpp>
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
+#include <cvcuda/OpCenterCrop.hpp>
+#include <cvcuda/Types.h>
 #include <nvcv/TensorLayoutInfo.hpp>
-#include <nvcv/operators/OpCenterCrop.hpp>
-#include <nvcv/operators/Types.h>
 #include <nvcv/optools/TypeTraits.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
@@ -41,7 +41,7 @@ Tensor CenterCropInto(Tensor &output, Tensor &input, const std::tuple<int, int> 
         pstream = Stream::Current();
     }
 
-    auto center_crop = CreateOperator<nvcvop::CenterCrop>();
+    auto center_crop = CreateOperator<cvcuda::CenterCrop>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});

@@ -43,7 +43,8 @@ if(UNIX)
     foreach(var CMAKE_INSTALL_PREFIX
                 CMAKE_INSTALL_INCLUDEDIR
                 CMAKE_INSTALL_LIBDIR
-                NVCV_PACKAGE_NAME
+                NVCV_TYPES_PACKAGE_NAME
+                CVCUDA_PACKAGE_NAME
                 CMAKE_LIBRARY_ARCHITECTURE
                 NVCV_VERSION_API_CODE
                 CVCUDA_USR_LIB_DIR)

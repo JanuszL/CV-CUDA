@@ -18,13 +18,13 @@
 #include "Definitions.hpp"
 
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpNormalize.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/operators/OpNormalize.hpp>
 
 #include <cmath>
 #include <random>
@@ -57,7 +57,7 @@ static void Normalize(std::vector<uint8_t> &hDst, int dstRowStride, const std::v
 
                 FT mul;
 
-                if (flags & NVCV_OP_NORMALIZE_SCALE_IS_STDDEV)
+                if (flags & CVCUDA_NORMALIZE_SCALE_IS_STDDEV)
                 {
                     FT s = hScale.at(si * scaleRowStride + sj * scaleFormat.numChannels() + sk);
                     FT x = s * s + epsilon;
@@ -80,7 +80,7 @@ static void Normalize(std::vector<uint8_t> &hDst, int dstRowStride, const std::v
 }
 
 static uint32_t normalScale   = 0;
-static uint32_t scaleIsStdDev = NVCV_OP_NORMALIZE_SCALE_IS_STDDEV;
+static uint32_t scaleIsStdDev = CVCUDA_NORMALIZE_SCALE_IS_STDDEV;
 
 // clang-format off
 
@@ -203,7 +203,7 @@ TEST_P(OpNormalize, tensor_correct_output)
     nvcv::Tensor imgDst(numImages, {width, height}, nvcv::FMT_RGBA8);
 
     // Generate test result
-    nvcvop::Normalize normalizeOp;
+    cvcuda::Normalize normalizeOp;
     EXPECT_NO_THROW(normalizeOp(stream, imgSrc, imgBase, imgScale, imgDst, globalScale, globalShift, epsilon, flags));
 
     // Get test data back
@@ -357,7 +357,7 @@ TEST_P(OpNormalize, varshape_correct_output)
     batchDst.pushBack(imgDst.begin(), imgDst.end());
 
     // Generate test result
-    nvcvop::Normalize normalizeOp;
+    cvcuda::Normalize normalizeOp;
     EXPECT_NO_THROW(
         normalizeOp(stream, batchSrc, imgBase, imgScale, batchDst, globalScale, globalShift, epsilon, flags));
 

@@ -18,8 +18,20 @@
 case "$1" in
     remove|deconfigure)
         cmakepath=/usr/lib/@CMAKE_LIBRARY_ARCHITECTURE@/cmake/
+        nvcv_types_pkg="@NVCV_TYPES_PACKAGE_NAME@"
+        cvcuda_pkg="@CVCUDA_PACKAGE_NAME@"
 
-        rm -f $cmakepath/@NVCV_PACKAGE_NAME@
+        if [ -z "$nvcv_types_pkg" ]; then
+            echo "nvcv_types_pkg variable must not be empty"
+            exit 1
+        fi
+        if [ -z "$cvcuda_pkg" ]; then
+            echo "cvcuda_pkg variable must not be empty"
+            exit 1
+        fi
+
+        rm -f "$cmakepath/$nvcv_types_pkg"
+        rm -f "$cmakepath/$cvcuda_pkg"
         if [ -f $cmakepath/.cvcuda_created ]; then
             rm $cmakepath/.cvcuda_created
             rmdir -p --ignore-fail-on-non-empty $cmakepath

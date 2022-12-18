@@ -13,7 +13,7 @@
 #include "Definitions.hpp"
 
 #include <common/ValueTests.hpp>
-#include <operators/priv/legacy/CvCudaLegacyHelpers.hpp>
+#include <cvcuda/priv/legacy/CvCudaLegacyHelpers.hpp>
 
 namespace gt      = ::testing;
 namespace test    = nvcv::test;

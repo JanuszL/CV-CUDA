@@ -18,7 +18,7 @@
 #include "Operators.hpp"
 
 #include <common/PyUtil.hpp>
-#include <nvcv/operators/OpPadAndStack.hpp>
+#include <cvcuda/OpPadAndStack.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
 #include <nvcv/python/Stream.hpp>
@@ -35,7 +35,7 @@ Tensor PadAndStackInto(Tensor &output, ImageBatchVarShape &input, Tensor &top, T
         pstream = Stream::Current();
     }
 
-    auto padstack = CreateOperator<nvcvop::PadAndStack>();
+    auto padstack = CreateOperator<cvcuda::PadAndStack>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, top, left});

@@ -19,11 +19,11 @@
 #include "Definitions.hpp"
 
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpGammaContrast.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
-#include <nvcv/operators/OpGammaContrast.hpp>
 #include <nvcv/optools/TypeTraits.hpp>
 
 #include <random>
@@ -185,7 +185,7 @@ TEST_P(OpGammaContrast, varshape_correct_output)
     }
 
     // Run operator
-    nvcvop::GammaContrast gammacontrastOp(batches, format.numChannels());
+    cvcuda::GammaContrast gammacontrastOp(batches, format.numChannels());
 
     EXPECT_NO_THROW(gammacontrastOp(stream, batchSrc, batchDst, gammaTensor));
 

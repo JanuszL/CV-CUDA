@@ -19,11 +19,11 @@
 #include "Definitions.hpp"
 
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpGaussian.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
-#include <nvcv/operators/OpGaussian.hpp>
 #include <nvcv/optools/TypeTraits.hpp>
 
 #include <random>
@@ -99,7 +99,7 @@ TEST_P(OpGaussian, correct_output)
     ASSERT_EQ(cudaSuccess, cudaMemcpy(inData->basePtr(), inVec.data(), inBufSize, cudaMemcpyHostToDevice));
 
     // run operator
-    nvcvop::Gaussian gaussianOp(kernelSize, 1);
+    cvcuda::Gaussian gaussianOp(kernelSize, 1);
 
     EXPECT_NO_THROW(gaussianOp(stream, inTensor, outTensor, kernelSize, sigma, borderMode));
 
@@ -236,7 +236,7 @@ TEST_P(OpGaussian, varshape_correct_output)
     }
 
     // Run operator
-    nvcvop::Gaussian gaussianOp(kernelSize, batches);
+    cvcuda::Gaussian gaussianOp(kernelSize, batches);
 
     EXPECT_NO_THROW(gaussianOp(stream, batchSrc, batchDst, kernelSizeTensor, sigmaTensor, borderMode));
 

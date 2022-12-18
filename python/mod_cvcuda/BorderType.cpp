@@ -17,7 +17,7 @@
 
 #include "BorderType.hpp"
 
-#include <nvcv/operators/Types.h>
+#include <cvcuda/Types.h>
 
 namespace cvcudapy {
 

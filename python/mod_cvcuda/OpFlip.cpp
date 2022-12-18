@@ -19,8 +19,8 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <nvcv/operators/OpFlip.hpp>
-#include <nvcv/operators/Types.h>
+#include <cvcuda/OpFlip.hpp>
+#include <cvcuda/Types.h>
 #include <nvcv/optools/TypeTraits.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
@@ -38,7 +38,7 @@ Tensor FlipInto(Tensor &output, Tensor &input, int32_t flipCode, std::optional<S
         pstream = Stream::Current();
     }
 
-    auto Flip = CreateOperator<nvcvop::Flip>(0);
+    auto Flip = CreateOperator<cvcuda::Flip>(0);
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});
@@ -65,7 +65,7 @@ ImageBatchVarShape FlipVarShapeInto(ImageBatchVarShape &output, ImageBatchVarSha
         pstream = Stream::Current();
     }
 
-    auto flip = CreateOperator<nvcvop::Flip>(0);
+    auto flip = CreateOperator<cvcuda::Flip>(0);
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, flipCode});

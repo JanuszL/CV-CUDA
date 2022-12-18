@@ -19,8 +19,8 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <nvcv/operators/OpLaplacian.hpp>
-#include <nvcv/operators/Types.h>
+#include <cvcuda/OpLaplacian.hpp>
+#include <cvcuda/Types.h>
 #include <nvcv/optools/TypeTraits.hpp>
 #include <nvcv/python/Image.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
@@ -40,7 +40,7 @@ Tensor LaplacianInto(Tensor &output, Tensor &input, const int &ksize, const floa
         pstream = Stream::Current();
     }
 
-    auto laplacian = CreateOperator<nvcvop::Laplacian>();
+    auto laplacian = CreateOperator<cvcuda::Laplacian>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});
@@ -68,7 +68,7 @@ ImageBatchVarShape LaplacianVarShapeInto(ImageBatchVarShape &output, ImageBatchV
         pstream = Stream::Current();
     }
 
-    auto laplacian = CreateOperator<nvcvop::Laplacian>();
+    auto laplacian = CreateOperator<cvcuda::Laplacian>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, ksize, scale});

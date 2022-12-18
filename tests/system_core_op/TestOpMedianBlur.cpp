@@ -18,13 +18,13 @@
 #include "Definitions.hpp"
 
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpMedianBlur.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/operators/OpMedianBlur.hpp>
 
 #include <cmath>
 #include <random>
@@ -252,7 +252,7 @@ TEST_P(OpMedianBlur, tensor_correct_output)
     // Generate test result
     nvcv::Tensor imgDst(numberOfImages, {srcWidth, srcHeight}, fmt);
 
-    nvcvop::MedianBlur medianBlurOp(0);
+    cvcuda::MedianBlur medianBlurOp(0);
     EXPECT_NO_THROW(medianBlurOp(stream, imgSrc, imgDst, ksize));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
@@ -415,7 +415,7 @@ TEST_P(OpMedianBlur, varshape_correct_output)
     }
 
     // Generate test result
-    nvcvop::MedianBlur medianBlurOp(numberOfImages);
+    cvcuda::MedianBlur medianBlurOp(numberOfImages);
     EXPECT_NO_THROW(medianBlurOp(stream, batchSrc, batchDst, ksizeTensor));
 
     // Get test data back

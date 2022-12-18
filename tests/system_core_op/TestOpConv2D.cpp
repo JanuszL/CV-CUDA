@@ -19,13 +19,13 @@
 #include "Definitions.hpp"
 
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpConv2D.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/operators/OpConv2D.hpp>
 #include <nvcv/optools/TypeTraits.hpp>
 
 #include <random>
@@ -164,7 +164,7 @@ TEST_P(OpConv2D, varshape_correct_output)
 
     // Generate test result
 
-    nvcvop::Conv2D conv2dOp;
+    cvcuda::Conv2D conv2dOp;
     EXPECT_NO_THROW(conv2dOp(stream, batchSrc, batchDst, batchKernel, kernelAnchorTensor, borderMode));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));

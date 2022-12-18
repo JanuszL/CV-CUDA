@@ -18,13 +18,13 @@
 #include "Definitions.hpp"
 
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpRotate.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/operators/OpRotate.hpp>
 
 #include <cmath>
 #include <random>
@@ -256,7 +256,7 @@ TEST_P(OpRotate, tensor_correct_output)
     int center_x = (srcWidth - 1) / 2, center_y = (srcHeight - 1) / 2;
     compute_center_shift(center_x, center_y, angleDeg, shiftX, shiftY);
 
-    nvcvop::Rotate RotateOp(0);
+    cvcuda::Rotate RotateOp(0);
     double2        shift = {shiftX, shiftY};
     EXPECT_NO_THROW(RotateOp(stream, imgSrc, imgDst, angleDeg, shift, interpolation));
 
@@ -428,7 +428,7 @@ TEST_P(OpRotate, varshape_correct_output)
     }
 
     // Generate test result
-    nvcvop::Rotate rotateOp(numberOfImages);
+    cvcuda::Rotate rotateOp(numberOfImages);
     EXPECT_NO_THROW(rotateOp(stream, batchSrc, batchDst, angleDegTensor, shiftTensor, interpolation));
 
     // Get test data back

@@ -19,8 +19,8 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <nvcv/operators/OpMorphology.hpp>
-#include <nvcv/operators/Types.h>
+#include <cvcuda/OpMorphology.hpp>
+#include <cvcuda/Types.h>
 #include <nvcv/optools/TypeTraits.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
@@ -40,7 +40,7 @@ Tensor MorphologyInto(Tensor &output, Tensor &input, NVCVMorphologyType morph_ty
         pstream = Stream::Current();
     }
 
-    auto morphology = CreateOperator<nvcvop::Morphology>(0);
+    auto morphology = CreateOperator<cvcuda::Morphology>(0);
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});
@@ -76,7 +76,7 @@ ImageBatchVarShape MorphologyVarShapeInto(ImageBatchVarShape &output, ImageBatch
         pstream = Stream::Current();
     }
 
-    auto morphology = CreateOperator<nvcvop::Morphology>(input.capacity());
+    auto morphology = CreateOperator<cvcuda::Morphology>(input.capacity());
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, masks, anchors});

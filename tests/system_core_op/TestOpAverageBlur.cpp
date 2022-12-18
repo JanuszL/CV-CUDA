@@ -19,11 +19,11 @@
 #include "Definitions.hpp"
 
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpAverageBlur.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
-#include <nvcv/operators/OpAverageBlur.hpp>
 #include <nvcv/optools/TypeTraits.hpp>
 
 #include <random>
@@ -98,7 +98,7 @@ TEST_P(OpAverageBlur, correct_output)
     ASSERT_EQ(cudaSuccess, cudaMemcpy(inData->basePtr(), inVec.data(), inBufSize, cudaMemcpyHostToDevice));
 
     // run operator
-    nvcvop::AverageBlur averageBlurOp(kernelSize, 1);
+    cvcuda::AverageBlur averageBlurOp(kernelSize, 1);
 
     EXPECT_NO_THROW(averageBlurOp(stream, inTensor, outTensor, kernelSize, kernelAnchor, borderMode));
 
@@ -215,7 +215,7 @@ TEST_P(OpAverageBlur, varshape_correct_output)
     }
 
     // Run operator
-    nvcvop::AverageBlur averageBlurOp(kernelSize, batches);
+    cvcuda::AverageBlur averageBlurOp(kernelSize, batches);
 
     EXPECT_NO_THROW(averageBlurOp(stream, batchSrc, batchDst, kernelSizeTensor, kernelAnchorTensor, borderMode));
 

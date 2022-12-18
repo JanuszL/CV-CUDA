@@ -19,6 +19,7 @@
 
 #include <common/BorderUtils.hpp>
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpCopyMakeBorder.hpp>
 #include <nvcv/DataLayout.hpp>
 #include <nvcv/DataType.hpp>
 #include <nvcv/IImageData.hpp>
@@ -30,7 +31,6 @@
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/operators/OpCopyMakeBorder.hpp>
 
 #include <random>
 
@@ -297,7 +297,7 @@ void StartTest(int srcWidth, int srcHeight, int numBatches, int topPad, int bott
                    leftPad, borderType, borderValue);
 
     // Generate test result
-    nvcvop::CopyMakeBorder cpyMakeBorderOp;
+    cvcuda::CopyMakeBorder cpyMakeBorderOp;
 
     EXPECT_NO_THROW(cpyMakeBorderOp(stream, imgSrc, imgDst, topPad, leftPad, borderType, borderValue));
 
@@ -446,7 +446,7 @@ void StartTestVarShape(int srcWidthBase, int srcHeightBase, int numBatches, int 
     CopyMakeBorder(batchGoldVec, hImgSrcVec, imgDstVec, imgSrcVec, topVec, leftVec, borderType, borderValue);
 
     // Generate test result
-    nvcvop::CopyMakeBorder cpyMakeBorderOp;
+    cvcuda::CopyMakeBorder cpyMakeBorderOp;
 
     EXPECT_NO_THROW(cpyMakeBorderOp(stream, imgBatchSrc, imgBatchDst, inTop, inLeft, borderType, borderValue));
 
@@ -600,7 +600,7 @@ void StartTestStack(int srcWidthBase, int srcHeightBase, int numBatches, int top
     CopyMakeBorder(goldVec, hImgSrcVec, *dstAccess, imgSrcVec, topVec, leftVec, borderType, borderValue);
 
     // Generate test result
-    nvcvop::CopyMakeBorder cpyMakeBorderOp;
+    cvcuda::CopyMakeBorder cpyMakeBorderOp;
 
     EXPECT_NO_THROW(cpyMakeBorderOp(stream, imgBatchSrc, imgDst, inTop, inLeft, borderType, borderValue));
 

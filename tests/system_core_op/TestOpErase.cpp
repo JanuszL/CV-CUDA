@@ -17,13 +17,13 @@
 
 #include "Definitions.hpp"
 
+#include <cvcuda/OpErase.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/operators/OpErase.hpp>
 
 #include <iostream>
 
@@ -107,7 +107,7 @@ TEST(OpErase, OpErase_Tensor)
     unsigned int  seed                 = 0;
     bool          random               = false;
     int           max_num_erasing_area = 2;
-    nvcvop::Erase eraseOp(max_num_erasing_area);
+    cvcuda::Erase eraseOp(max_num_erasing_area);
     EXPECT_NO_THROW(eraseOp(stream, imgIn, imgOut, anchor, erasing, values, imgIdx, random, seed));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
@@ -205,7 +205,7 @@ TEST(OpErase, OpErase_Varshape)
     unsigned int  seed                 = 0;
     bool          random               = false;
     int           max_num_erasing_area = 2;
-    nvcvop::Erase eraseOp(max_num_erasing_area);
+    cvcuda::Erase eraseOp(max_num_erasing_area);
     EXPECT_NO_THROW(eraseOp(stream, batchSrc, batchSrc, anchor, erasing, values, imgIdx, random, seed));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));

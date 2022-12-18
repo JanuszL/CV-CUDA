@@ -19,7 +19,7 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <nvcv/operators/OpErase.hpp>
+#include <cvcuda/OpErase.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
 #include <nvcv/python/Stream.hpp>
@@ -44,7 +44,7 @@ Tensor EraseInto(Tensor &output, Tensor &input, Tensor &anchor, Tensor &erasing,
 
     nvcv::TensorShape shape = anchor.shape();
 
-    auto erase = CreateOperator<nvcvop::Erase>((int)shape[0]);
+    auto erase = CreateOperator<cvcuda::Erase>((int)shape[0]);
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, anchor, erasing, values, imgIdx});
@@ -80,7 +80,7 @@ ImageBatchVarShape EraseVarShapeInto(ImageBatchVarShape &output, ImageBatchVarSh
 
     nvcv::TensorShape shape = anchor.shape();
 
-    auto erase = CreateOperator<nvcvop::Erase>((int)shape[0]);
+    auto erase = CreateOperator<cvcuda::Erase>((int)shape[0]);
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, anchor, erasing, values, imgIdx});

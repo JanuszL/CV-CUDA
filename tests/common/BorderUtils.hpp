@@ -19,7 +19,7 @@
 #define NVCV_TEST_COMMON_BORDER_UTILS_HPP
 
 #include <cuda_runtime.h> // for int2, etc.
-#include <nvcv/operators/Types.h>
+#include <cvcuda/Types.h>
 
 namespace nvcv::test {
 

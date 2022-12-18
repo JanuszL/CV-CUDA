@@ -38,7 +38,7 @@ target_link_libraries(nvcv_test_system_cudatools
     PUBLIC
         nvcv_types
         nvcv_optools
-        nvcv_operators
+        cvcuda
         nvcv_util
         nvcv_test_common_system
 )

@@ -18,12 +18,12 @@
 #include "Definitions.hpp"
 
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpConvertTo.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/operators/OpConvertTo.hpp>
 #include <nvcv/optools/SaturateCast.hpp>
 
 #include <iostream>
@@ -91,7 +91,7 @@ const void testConvertTo(nvcv::ImageFormat fmtIn, nvcv::ImageFormat fmtOut, int 
     EXPECT_EQ(cudaSuccess, cudaMemsetAsync(outData->basePtr(), 0x0, outBufSizeBytes, stream));
 
     // run operator
-    nvcvop::ConvertTo convertToOp;
+    cvcuda::ConvertTo convertToOp;
 
     EXPECT_NO_THROW(convertToOp(stream, imgIn, imgOut, alpha, beta));
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));

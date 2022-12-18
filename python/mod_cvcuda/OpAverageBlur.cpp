@@ -19,8 +19,8 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <nvcv/operators/OpAverageBlur.hpp>
-#include <nvcv/operators/Types.h>
+#include <cvcuda/OpAverageBlur.hpp>
+#include <cvcuda/Types.h>
 #include <nvcv/optools/TypeTraits.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
@@ -42,7 +42,7 @@ Tensor AverageBlurInto(Tensor &output, Tensor &input, const std::tuple<int, int>
     nvcv::Size2D kernelSizeArg{std::get<0>(kernel_size), std::get<1>(kernel_size)};
     int2         kernelAnchorArg{std::get<0>(kernel_anchor), std::get<1>(kernel_anchor)};
 
-    auto averageBlur = CreateOperator<nvcvop::AverageBlur>(kernelSizeArg, 0);
+    auto averageBlur = CreateOperator<cvcuda::AverageBlur>(kernelSizeArg, 0);
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});
@@ -73,7 +73,7 @@ ImageBatchVarShape AverageBlurVarShapeInto(ImageBatchVarShape &output, ImageBatc
 
     nvcv::Size2D maxKernelSizeArg{std::get<0>(max_kernel_size), std::get<1>(max_kernel_size)};
 
-    auto averageBlur = CreateOperator<nvcvop::AverageBlur>(maxKernelSizeArg, input.capacity());
+    auto averageBlur = CreateOperator<cvcuda::AverageBlur>(maxKernelSizeArg, input.capacity());
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, kernel_size, kernel_anchor});

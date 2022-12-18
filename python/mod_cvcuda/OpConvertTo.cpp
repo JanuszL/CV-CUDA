@@ -18,7 +18,7 @@
 #include "Operators.hpp"
 
 #include <common/PyUtil.hpp>
-#include <nvcv/operators/OpConvertTo.hpp>
+#include <cvcuda/OpConvertTo.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
 #include <nvcv/python/Stream.hpp>
 #include <nvcv/python/Tensor.hpp>
@@ -33,7 +33,7 @@ Tensor ConvertToInto(Tensor &output, Tensor &input, float scale, float offset, s
         pstream = Stream::Current();
     }
 
-    auto cvt = CreateOperator<nvcvop::ConvertTo>();
+    auto cvt = CreateOperator<cvcuda::ConvertTo>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});

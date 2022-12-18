@@ -18,13 +18,13 @@
 #include "Definitions.hpp"
 
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpBilateralFilter.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/operators/OpBilateralFilter.hpp>
 
 #include <iostream>
 #include <random>
@@ -210,7 +210,7 @@ TEST_P(OpBilateralFilter, BilateralFilter_packed)
                              inAccess->rowStride(), inAccess->sampleStride(), d, sigmaColor, sigmaSpace);
 
     // run operator
-    nvcvop::BilateralFilter bilateralFilterOp;
+    cvcuda::BilateralFilter bilateralFilterOp;
 
     EXPECT_NO_THROW(bilateralFilterOp(stream, imgIn, imgOut, d, sigmaColor, sigmaSpace, NVCV_BORDER_CONSTANT));
 
@@ -323,7 +323,7 @@ TEST_P(OpBilateralFilter, BilateralFilter_VarShape)
                                vSigmaSpace);
 
     // Run operator
-    nvcvop::BilateralFilter bilateralFilterOp;
+    cvcuda::BilateralFilter bilateralFilterOp;
     EXPECT_NO_THROW(bilateralFilterOp(stream, batchSrc, batchDst, diameterTensor, sigmaColorTensor, sigmaSpaceTensor,
                                       NVCV_BORDER_CONSTANT));
 

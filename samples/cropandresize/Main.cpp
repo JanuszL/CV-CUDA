@@ -18,12 +18,12 @@
 #include <common/NvDecoder.h>
 #include <common/TestUtils.h>
 #include <cuda_runtime_api.h>
+#include <cvcuda/OpCustomCrop.hpp>
+#include <cvcuda/OpResize.hpp>
 #include <getopt.h>
 #include <math.h>
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
-#include <nvcv/operators/OpCustomCrop.hpp>
-#include <nvcv/operators/OpResize.hpp>
 
 /**
  * @brief Crop and Resize sample app.
@@ -182,8 +182,8 @@ int main(int argc, char *argv[])
     cudaEventRecord(start);
 #endif
     // tag: Initialize operators for Crop and Resize
-    nvcvop::CustomCrop cropOp;
-    nvcvop::Resize     resizeOp;
+    cvcuda::CustomCrop cropOp;
+    cvcuda::Resize     resizeOp;
 
     // tag: Executes the CustomCrop operation on the given cuda stream
     cropOp(stream, inTensor, cropTensor, crpRect);

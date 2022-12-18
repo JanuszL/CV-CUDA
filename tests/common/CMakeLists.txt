@@ -58,5 +58,5 @@ target_link_libraries(nvcv_test_common_system
     PUBLIC
         nvcv_types
         nvcv_test_common
-        nvcv_operators_headers
+        cvcuda_headers
 )

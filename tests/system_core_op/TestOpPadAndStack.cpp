@@ -19,13 +19,13 @@
 
 #include <common/BorderUtils.hpp>
 #include <common/ValueTests.hpp>
+#include <cvcuda/OpPadAndStack.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/operators/OpPadAndStack.hpp>
 
 #include <random>
 
@@ -224,7 +224,7 @@ TEST_P(OpPadAndStack, correct_output)
                 borderType, borderValue);
 
     // Generate test result
-    nvcvop::PadAndStack padAndStackOp;
+    cvcuda::PadAndStack padAndStackOp;
 
     EXPECT_NO_THROW(padAndStackOp(stream, imgBatchSrc, imgDst, inTop, inLeft, borderType, borderValue));
 

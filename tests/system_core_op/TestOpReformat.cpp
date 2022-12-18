@@ -18,12 +18,12 @@
 #include "Definitions.hpp"
 
 #include <common/TypedTests.hpp>
+#include <cvcuda/OpReformat.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/operators/OpReformat.hpp>
 #include <nvcv/optools/TypeTraits.hpp>
 
 #include <iostream>
@@ -133,7 +133,7 @@ TYPED_TEST(OpReformat, correct_output)
     ASSERT_EQ(cudaSuccess, cudaMemcpy(inData->basePtr(), inVec.data(), inBufSize, cudaMemcpyHostToDevice));
 
     // run operator
-    nvcvop::Reformat reformatOp;
+    cvcuda::Reformat reformatOp;
 
     EXPECT_NO_THROW(reformatOp(stream, inTensor, outTensor));
 

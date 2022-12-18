@@ -18,7 +18,7 @@
 #include "Operators.hpp"
 
 #include <common/PyUtil.hpp>
-#include <nvcv/operators/OpResize.hpp>
+#include <cvcuda/OpResize.hpp>
 #include <nvcv/python/Image.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
@@ -36,7 +36,7 @@ Tensor ResizeInto(Tensor &output, Tensor &input, NVCVInterpolationType interp, s
         pstream = Stream::Current();
     }
 
-    auto resize = CreateOperator<nvcvop::Resize>();
+    auto resize = CreateOperator<cvcuda::Resize>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});
@@ -64,7 +64,7 @@ ImageBatchVarShape ResizeVarShapeInto(ImageBatchVarShape &output, ImageBatchVarS
         pstream = Stream::Current();
     }
 
-    auto resize = CreateOperator<nvcvop::Resize>();
+    auto resize = CreateOperator<cvcuda::Resize>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});
