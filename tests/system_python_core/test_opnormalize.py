@@ -16,6 +16,10 @@
 import nvcv
 import pytest as t
 import numpy as np
+import util
+
+
+RNG = np.random.default_rng(0)
 
 
 @t.mark.parametrize(
@@ -101,3 +105,95 @@ def test_op_normalize(input, base, scale, globalscale, globalshift, epsilon, fla
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
+
+
+@t.mark.parametrize(
+    "nimages,format,max_size,max_pixel,base,scale,globalscale,globalshift,epsilon,flags",
+    [
+        (
+            5,
+            nvcv.Format.RGB8,
+            (16, 23),
+            128.0,
+            nvcv.Tensor([1, 1, 1, 5], np.float32, "NHWC"),
+            nvcv.Tensor([1, 1, 1, 5], np.float32, "NHWC"),
+            1,
+            2,
+            3,
+            None,
+        ),
+        (
+            5,
+            nvcv.Format.RGB8,
+            (16, 23),
+            256.0,
+            nvcv.Tensor([1, 1, 1, 5], np.float32, "NHWC"),
+            nvcv.Tensor([1, 1, 1, 5], np.float32, "NHWC"),
+            1,
+            2,
+            3,
+            nvcv.NormalizeFlags.SCALE_IS_STDDEV,
+        ),
+    ],
+)
+def test_op_rotatevarshape(
+    nimages,
+    format,
+    max_size,
+    max_pixel,
+    base,
+    scale,
+    globalscale,
+    globalshift,
+    epsilon,
+    flags,
+):
+    input = util.create_image_batch(
+        nimages, format, max_size=max_size, max_random=max_pixel, rng=RNG
+    )
+
+    out = input.normalize(base, scale)
+    assert len(out) == len(input)
+    assert out.capacity == input.capacity
+    assert out.uniqueformat == input.uniqueformat
+    assert out.maxsize == input.maxsize
+
+    out = util.clone_image_batch(input)
+    tmp = input.normalize_into(out, base, scale)
+    assert tmp is out
+    assert len(out) == len(input)
+    assert out.capacity == input.capacity
+    assert out.uniqueformat == input.uniqueformat
+    assert out.maxsize == input.maxsize
+
+    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
+    stream = nvcv.cuda.Stream()
+    out = input.normalize(
+        base=base,
+        scale=scale,
+        flags=flags,
+        globalscale=globalscale,
+        globalshift=globalshift,
+        epsilon=epsilon,
+        stream=stream,
+    )
+    assert len(out) == len(input)
+    assert out.capacity == input.capacity
+    assert out.uniqueformat == input.uniqueformat
+    assert out.maxsize == input.maxsize
+
+    tmp = input.normalize_into(
+        out=out,
+        base=base,
+        scale=scale,
+        flags=flags,
+        globalscale=globalscale,
+        globalshift=globalshift,
+        epsilon=epsilon,
+        stream=stream,
+    )
+    assert tmp is out
+    assert len(out) == len(input)
+    assert out.capacity == input.capacity
+    assert out.uniqueformat == input.uniqueformat
+    assert out.maxsize == input.maxsize
