@@ -132,18 +132,25 @@ target_include_directories(nvcv_util_compat
 # dl-reloc can find the symbols in the correct sonames. Later glibc
 # can resolve symbols in different recorded sonames.
 
+# UPDATE: We're disabling this feature for further tests.
+# There's a change of infinite recursion due to gold linker
+# behavior when using symver + wrapping.
+# ref: https://marc.info/?l=binutils&m=1498883554126845&w=2
+# Moreover using the normal linker on Ubuntu 18.04 results in
+# linking errors.
+
 target_link_options(nvcv_util_compat
     PUBLIC
         -static-libstdc++
         -static-libgcc
-        -Wl,--wrap=__libc_start_main
+        #-Wl,--wrap=__libc_start_main
         -Wl,-u__cxa_thread_atexit_impl
-        ${linkcompat}
-        -Wl,--push-state,--no-as-needed
-        ${CMAKE_CURRENT_SOURCE_DIR}/stubs/libdl-2.17_stub.so
-        ${CMAKE_CURRENT_SOURCE_DIR}/stubs/librt-2.17_stub.so
-        ${CMAKE_CURRENT_SOURCE_DIR}/stubs/libpthread-2.17_stub.so
-        -Wl,--pop-state
+        #${linkcompat}
+        #-Wl,--push-state,--no-as-needed
+        #${CMAKE_CURRENT_SOURCE_DIR}/stubs/libdl-2.17_stub.so
+        #${CMAKE_CURRENT_SOURCE_DIR}/stubs/librt-2.17_stub.so
+        #${CMAKE_CURRENT_SOURCE_DIR}/stubs/libpthread-2.17_stub.so
+        #-Wl,--pop-state
 )
 
 # nvcv_util ---------------------------------
