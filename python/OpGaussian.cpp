@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#include "Image.hpp"
+#include "ImageBatch.hpp"
 #include "Operators.hpp"
 #include "PyUtil.hpp"
 #include "ResourceGuard.hpp"
@@ -64,6 +66,48 @@ std::shared_ptr<Tensor> Gaussian(Tensor &input, const std::tuple<int, int> &kern
     return GaussianInto(input, *output, kernel_size, sigma, border, pstream);
 }
 
+std::shared_ptr<ImageBatchVarShape> VarShapeGaussianInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
+                                                         const std::tuple<int, int> &max_kernel_size, Tensor &ksize,
+                                                         Tensor &sigma, NVCVBorderType border,
+                                                         std::shared_ptr<Stream> pstream)
+{
+    if (pstream == nullptr)
+    {
+        pstream = Stream::Current().shared_from_this();
+    }
+
+    cv::Size2D maxKernelSizeArg{std::get<0>(max_kernel_size), std::get<1>(max_kernel_size)};
+
+    auto gaussian = CreateOperator<cvop::Gaussian>(maxKernelSizeArg, input.capacity());
+
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input, ksize, sigma});
+    guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*gaussian});
+
+    gaussian->submit(pstream->handle(), input.impl(), output.impl(), ksize.impl(), sigma.impl(), border);
+
+    return output.shared_from_this();
+}
+
+std::shared_ptr<ImageBatchVarShape> VarShapeGaussian(ImageBatchVarShape         &input,
+                                                     const std::tuple<int, int> &max_kernel_size, Tensor &ksize,
+                                                     Tensor &sigma, NVCVBorderType border,
+                                                     std::shared_ptr<Stream> pstream)
+{
+    std::shared_ptr<ImageBatchVarShape> output = ImageBatchVarShape::Create(input.capacity());
+
+    for (int i = 0; i < input.numImages(); ++i)
+    {
+        cv::ImageFormat format = input.impl()[i].format();
+        cv::Size2D      size   = input.impl()[i].size();
+        auto            image  = Image::Create(std::tie(size.w, size.h), format);
+        output->pushBack(*image);
+    }
+
+    return VarShapeGaussianInto(input, *output, max_kernel_size, ksize, sigma, border, pstream);
+}
+
 } // namespace
 
 void ExportOpGaussian(py::module &m)
@@ -74,6 +118,13 @@ void ExportOpGaussian(py::module &m)
                            "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
     DefClassMethod<Tensor>("gaussian_into", &GaussianInto, "output"_a, "kernel_size"_a, "sigma"_a,
                            "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(), "stream"_a = nullptr);
+
+    DefClassMethod<ImageBatchVarShape>("gaussian", &VarShapeGaussian, "max_kernel_size"_a, "kernel_size"_a, "sigma"_a,
+                                       "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT, py::kw_only(),
+                                       "stream"_a = nullptr);
+    DefClassMethod<ImageBatchVarShape>("gaussian_into", &VarShapeGaussianInto, "output"_a, "max_kernel_size"_a,
+                                       "kernel_size"_a, "sigma"_a, "border"_a = NVCVBorderType::NVCV_BORDER_CONSTANT,
+                                       py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy

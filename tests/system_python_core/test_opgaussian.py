@@ -16,6 +16,10 @@
 import nvcv
 import pytest as t
 import numpy as np
+import util
+
+
+RNG = np.random.default_rng(0)
 
 
 @t.mark.parametrize(
@@ -73,3 +77,103 @@ def test_op_gaussian(input, kernel_size, sigma, border):
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
+
+
+@t.mark.parametrize(
+    "num_images,img_format,img_size,max_pixel,max_kernel_size,max_sigma,border",
+    [
+        (
+            10,
+            nvcv.Format.RGB8,
+            (123, 321),
+            256,
+            (3, 3),
+            (10, 10),
+            nvcv.Border.CONSTANT,
+        ),
+        (
+            7,
+            nvcv.Format.RGBf32,
+            (62, 35),
+            1.0,
+            (5, 5),
+            (4, 4),
+            nvcv.Border.REPLICATE,
+        ),
+        (
+            1,
+            nvcv.Format.U8,
+            (33, 48),
+            123,
+            (7, 7),
+            (3, 5),
+            nvcv.Border.REFLECT,
+        ),
+        (
+            13,
+            nvcv.Format.S16,
+            (26, 52),
+            1234,
+            (9, 9),
+            (5, 5),
+            nvcv.Border.WRAP,
+        ),
+        (
+            6,
+            nvcv.Format.S32,
+            (77, 42),
+            123456,
+            (11, 11),
+            (3, 3),
+            nvcv.Border.REFLECT101,
+        ),
+    ],
+)
+def test_op_gaussianvarshape(
+    num_images, img_format, img_size, max_pixel, max_kernel_size, max_sigma, border
+):
+
+    input = util.create_image_batch(
+        num_images, img_format, size=img_size, max_random=max_pixel, rng=RNG
+    )
+
+    kernel_size = util.create_tensor(
+        (num_images, 2),
+        np.int32,
+        "NC",
+        max_random=max_kernel_size,
+        rng=RNG,
+        transform_dist=util.dist_odd,
+    )
+
+    sigma = util.create_tensor(
+        (num_images, 2), np.float64, "NC", max_random=max_kernel_size, rng=RNG
+    )
+
+    out = input.gaussian(
+        max_kernel_size,
+        kernel_size,
+        sigma,
+        border,
+    )
+    assert len(out) == len(input)
+    assert out.capacity == input.capacity
+    assert out.uniqueformat == input.uniqueformat
+    assert out.maxsize == input.maxsize
+
+    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
+    stream = nvcv.cuda.Stream()
+    out = util.clone_image_batch(input)
+    tmp = input.gaussian_into(
+        output=out,
+        max_kernel_size=max_kernel_size,
+        kernel_size=kernel_size,
+        sigma=sigma,
+        border=border,
+        stream=stream,
+    )
+    assert tmp is out
+    assert len(out) == len(input)
+    assert out.capacity == input.capacity
+    assert out.uniqueformat == input.uniqueformat
+    assert out.maxsize == input.maxsize
