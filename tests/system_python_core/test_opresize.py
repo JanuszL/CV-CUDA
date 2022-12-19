@@ -49,7 +49,6 @@ def test_op_resize(input, out_shape, interp):
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
-    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
     stream = nvcv.cuda.Stream()
     if interp is None:
         out = input.resize(shape=out_shape, stream=stream)

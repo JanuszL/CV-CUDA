@@ -79,7 +79,6 @@ def test_op_copymakeborder(input, top, bottom, left, right, border_mode, border_
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
-    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
     stream = nvcv.cuda.Stream()
     out = nvcv.Tensor(out_shape, input.dtype, input.layout)
     tmp = input.copymakeborder_into(

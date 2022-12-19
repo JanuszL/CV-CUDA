@@ -73,7 +73,6 @@ def test_op_pillowresize(input, out_shape, interp, fmt):
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
-    nvcv.cuda.Stream.default.sync()
     stream = nvcv.cuda.Stream()
     tmp = input.pillowresize_into(
         out=out,

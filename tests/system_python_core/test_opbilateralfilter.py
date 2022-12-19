@@ -60,7 +60,6 @@ def test_op_bilateral_filter(input, diameter, sigma_color, sigma_space, border):
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
-    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
     stream = nvcv.cuda.Stream()
     out = nvcv.Tensor(input.shape, input.dtype, input.layout)
     tmp = input.bilateral_filter_into(
@@ -155,7 +154,6 @@ def test_op_bilateral_filtervarshape(
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == input.maxsize
 
-    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
     stream = nvcv.cuda.Stream()
 
     out = util.clone_image_batch(input)

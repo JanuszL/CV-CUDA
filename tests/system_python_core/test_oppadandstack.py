@@ -73,7 +73,6 @@ def test_op_padandstack(
     tmp = input.padandstack_into(out, top, left)
     assert tmp is out
 
-    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
     stream = nvcv.cuda.Stream()
     out = input.padandstack(
         left=left, top=top, border=border, bvalue=bvalue, stream=stream
