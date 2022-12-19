@@ -16,6 +16,9 @@
 import nvcv
 import pytest as t
 import numpy as np
+import util
+
+RNG = np.random.default_rng(0)
 
 
 @t.mark.parametrize(
@@ -61,7 +64,7 @@ import numpy as np
 )
 def test_op_pillowresize(input, out_shape, interp, fmt):
 
-    out = input.pillowresize(out_shape, fmt, interp)
+    out = input.pillowresize(out_shape, fmt)
     assert out.layout == input.layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
@@ -75,7 +78,7 @@ def test_op_pillowresize(input, out_shape, interp, fmt):
 
     stream = nvcv.cuda.Stream()
     tmp = input.pillowresize_into(
-        out=out,
+        output=out,
         format=fmt,
         interp=interp,
         stream=stream,
@@ -84,3 +87,79 @@ def test_op_pillowresize(input, out_shape, interp, fmt):
     assert out.layout == input.layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
+
+
+@t.mark.parametrize(
+    "nimages, format, max_size, max_pixel, interp",
+    [
+        (
+            5,
+            nvcv.Format.RGB8,
+            (16, 23),
+            256.0,
+            nvcv.Interp.LINEAR,
+        ),
+        (
+            4,
+            nvcv.Format.RGB8,
+            (14, 14),
+            256.0,
+            nvcv.Interp.LINEAR,
+        ),
+        (
+            7,
+            nvcv.Format.RGBf32,
+            (10, 15),
+            256.0,
+            nvcv.Interp.LINEAR,
+        ),
+    ],
+)
+def test_op_pillowresizevarshape(
+    nimages,
+    format,
+    max_size,
+    max_pixel,
+    interp,
+):
+
+    input = util.create_image_batch(
+        nimages, format, max_size=max_size, max_random=max_pixel, rng=RNG
+    )
+
+    base_output = util.create_image_batch(
+        nimages, format, max_size=max_size, max_random=max_pixel, rng=RNG
+    )
+
+    sizes = []
+    for image in base_output:
+        sizes.append([image.width, image.height])
+
+    out = input.pillowresize(sizes)
+    assert len(out) == len(input)
+    assert out.capacity == input.capacity
+    assert out.uniqueformat == input.uniqueformat
+    assert out.maxsize == base_output.maxsize
+
+    out = input.pillowresize(
+        sizes,
+        interp,
+    )
+    assert len(out) == len(input)
+    assert out.capacity == input.capacity
+    assert out.uniqueformat == input.uniqueformat
+    assert out.maxsize == base_output.maxsize
+
+    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
+    stream = nvcv.cuda.Stream()
+
+    tmp = input.pillowresize_into(
+        output=base_output,
+        interp=interp,
+        stream=stream,
+    )
+    assert tmp is base_output
+    assert len(base_output) == len(input)
+    assert base_output.capacity == input.capacity
+    assert base_output.uniqueformat == input.uniqueformat
+    assert base_output.maxsize == base_output.maxsize
