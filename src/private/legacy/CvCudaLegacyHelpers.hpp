@@ -40,6 +40,7 @@ cuda_op::DataType GetLegacyDataType(ImageFormat fmt);
 
 cuda_op::DataFormat GetLegacyDataFormat(const TensorLayout &layout);
 cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShapeDataPitchDevice &imgBatch);
+cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShape &imgBatch);
 cuda_op::DataFormat GetLegacyDataFormat(const ITensorDataPitchDevice &tensor);
 
 cuda_op::DataShape GetLegacyDataShape(const TensorShapeInfoImage &shapeInfo);

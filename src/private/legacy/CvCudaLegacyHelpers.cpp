@@ -136,6 +136,51 @@ cuda_op::DataShape GetLegacyDataShape(const TensorShapeInfoImage &shapeInfo)
                               shapeInfo.numCols());
 }
 
+cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShape &imgBatch)
+{
+    ImageFormat fmt = imgBatch.uniqueFormat();
+    if (!fmt)
+    {
+        throw Exception(Status::ERROR_INVALID_ARGUMENT, "All images must have the same format");
+    }
+
+    for (int i = 1; i < fmt.numPlanes(); ++i)
+    {
+        if (fmt.planePixelType(i) != fmt.planePixelType(0))
+        {
+            throw Exception(Status::ERROR_INVALID_ARGUMENT, "All planes must have the same pixel type");
+        }
+    }
+
+    if (fmt.numPlanes() >= 2)
+    {
+        if (fmt.numPlanes() != fmt.numChannels())
+        {
+            throw Exception(Status::ERROR_INVALID_ARGUMENT, "Planar images must have one channel per plane");
+        }
+
+        if (imgBatch.numImages() >= 2)
+        {
+            return legacy::cuda_op::DataFormat::kNCHW;
+        }
+        else
+        {
+            return legacy::cuda_op::DataFormat::kCHW;
+        }
+    }
+    else
+    {
+        if (imgBatch.numImages() >= 2)
+        {
+            return legacy::cuda_op::DataFormat::kNHWC;
+        }
+        else
+        {
+            return legacy::cuda_op::DataFormat::kHWC;
+        }
+    }
+}
+
 cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShapeDataPitchDevice &imgBatch)
 {
     ImageFormat fmt = imgBatch.uniqueFormat();

@@ -810,6 +810,8 @@ void PillowResizeCPU::_resampleVertical(TestMat<T> &im_out, const TestMat<T> &im
 NVCV_TEST_SUITE_P(OpPillowResize, test::ValueList<int, int, int, int, NVCVInterpolationType, int, nvcv::ImageFormat>
 {
     // srcWidth, srcHeight, dstWidth, dstHeight,       interpolation, numberImages, imageFormat
+    {        5,          5,        5,         5,  NVCV_INTERP_LINEAR,           1, nvcv::FMT_RGB8},
+    {        5,          5,        5,         5,  NVCV_INTERP_LINEAR,           1, nvcv::FMT_RGBf32},
     {        10,        10,        5,         5,  NVCV_INTERP_LINEAR,           1, nvcv::FMT_RGB8},
     {        42,        40,       21,        20,  NVCV_INTERP_LINEAR,           1, nvcv::FMT_RGB8},
     {        21,        21,       42,        42,  NVCV_INTERP_LINEAR,           1, nvcv::FMT_RGB8},
@@ -921,4 +923,136 @@ TEST_P(OpPillowResize, tensor_correct_output)
         StartTest<uint8_t>(srcWidth, srcHeight, dstWidth, dstHeight, interpolation, numberOfImages, fmt);
     else if (nvcv::FMT_RGBf32 == fmt || nvcv::FMT_RGBAf32 == fmt)
         StartTest<float>(srcWidth, srcHeight, dstWidth, dstHeight, interpolation, numberOfImages, fmt);
+}
+
+template<typename T>
+void StartVarShapeTest(int srcWidthBase, int srcHeightBase, int dstWidthBase, int dstHeightBase,
+                       NVCVInterpolationType interpolation, int numberOfImages, nvcv::ImageFormat fmt)
+{
+    cudaStream_t stream;
+    EXPECT_EQ(cudaSuccess, cudaStreamCreate(&stream));
+
+    // Create input and output
+    std::default_random_engine         randEng;
+    std::uniform_int_distribution<int> rndSrcWidth(srcWidthBase * 0.8, srcWidthBase * 1.1);
+    std::uniform_int_distribution<int> rndSrcHeight(srcHeightBase * 0.8, srcHeightBase * 1.1);
+
+    std::uniform_int_distribution<int> rndDstWidth(dstWidthBase * 0.8, dstWidthBase * 1.1);
+    std::uniform_int_distribution<int> rndDstHeight(dstHeightBase * 0.8, dstHeightBase * 1.1);
+
+    std::vector<std::unique_ptr<nvcv::Image>> imgSrc, imgDst;
+    for (int i = 0; i < numberOfImages; ++i)
+    {
+        imgSrc.emplace_back(
+            std::make_unique<nvcv::Image>(nvcv::Size2D{rndSrcWidth(randEng), rndSrcHeight(randEng)}, fmt));
+        imgDst.emplace_back(
+            std::make_unique<nvcv::Image>(nvcv::Size2D{rndDstWidth(randEng), rndDstHeight(randEng)}, fmt));
+    }
+
+    nvcv::ImageBatchVarShape batchSrc(numberOfImages);
+    batchSrc.pushBack(imgSrc.begin(), imgSrc.end());
+
+    nvcv::ImageBatchVarShape batchDst(numberOfImages);
+    batchDst.pushBack(imgDst.begin(), imgDst.end());
+
+    std::vector<std::vector<T>> srcVec(numberOfImages);
+    std::vector<int>            srcVecRowPitch(numberOfImages);
+
+    // Populate input
+    for (int i = 0; i < numberOfImages; ++i)
+    {
+        const auto *srcData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        assert(srcData->numPlanes() == 1);
+
+        int srcWidth  = srcData->plane(0).width;
+        int srcHeight = srcData->plane(0).height;
+
+        int srcRowPitch = srcWidth * fmt.planePixelStrideBytes(0);
+
+        srcVecRowPitch[i] = srcRowPitch;
+
+        std::default_random_engine             randEng{0};
+        std::uniform_int_distribution<uint8_t> srcRand{0u, 255u};
+
+        srcVec[i].resize(srcHeight * srcRowPitch);
+        if (std::is_same<T, float>::value)
+            std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return srcRand(randEng) / 255.0f; });
+        else
+            std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return srcRand(randEng); });
+
+        // Copy input data to the GPU
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2D(srcData->plane(0).buffer, srcData->plane(0).pitchBytes, srcVec[i].data(), srcRowPitch,
+                               srcRowPitch, // vec has no padding
+                               srcHeight, cudaMemcpyHostToDevice));
+    }
+
+    nv::cv::Size2D maxSrcSize = batchSrc.maxSize();
+    nv::cv::Size2D maxDstSize = batchDst.maxSize();
+
+    // Generate test result
+    nv::cvop::PillowResize pillowResizeOp(
+        nvcv::Size2D{std::max(maxSrcSize.w, maxDstSize.w), std::max(maxSrcSize.h, maxDstSize.h)}, numberOfImages, fmt);
+    EXPECT_NO_THROW(pillowResizeOp(stream, batchSrc, batchDst, interpolation));
+
+    // Get test data back
+    EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
+    EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
+
+    // Check test data against gold
+    for (int i = 0; i < numberOfImages; ++i)
+    {
+        SCOPED_TRACE(i);
+
+        const auto *srcData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        assert(srcData->numPlanes() == 1);
+        int srcWidth  = srcData->plane(0).width;
+        int srcHeight = srcData->plane(0).height;
+
+        const auto *dstData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgDst[i]->exportData());
+        assert(dstData->numPlanes() == 1);
+
+        int dstWidth  = dstData->plane(0).width;
+        int dstHeight = dstData->plane(0).height;
+
+        int dstRowPitch = dstWidth * fmt.planePixelStrideBytes(0);
+
+        std::vector<T> testVec(dstHeight * dstRowPitch);
+
+        // Copy output data to Host
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2D(testVec.data(), dstRowPitch, dstData->plane(0).buffer, dstData->plane(0).pitchBytes,
+                               dstRowPitch, // vec has no padding
+                               dstHeight, cudaMemcpyDeviceToHost));
+
+        TestMat<T> test_in(srcHeight, srcWidth, fmt.planePixelStrideBytes(0), nvcv::DataType::UNSIGNED, srcVec[i]);
+        PillowResizeCPU::InterpolationMethods inter = PillowResizeCPU::getInterpolationMethods(interpolation);
+        TestMat<T> test_out = PillowResizeCPU::resize(test_in, nvcv::Size2D(dstWidth, dstHeight), inter);
+
+        // maximum absolute error
+        std::vector<int> mae(testVec.size());
+        for (size_t i = 0; i < mae.size(); ++i)
+        {
+            mae[i] = abs(static_cast<int>((test_out.data)[i]) - static_cast<int>(testVec[i]));
+        }
+
+        int maeThreshold = 2;
+
+        EXPECT_THAT(mae, t::Each(t::Le(maeThreshold)));
+    }
+}
+
+TEST_P(OpPillowResize, varshape_correct_output)
+{
+    int                   srcWidth       = GetParamValue<0>();
+    int                   srcHeight      = GetParamValue<1>();
+    int                   dstWidth       = GetParamValue<2>();
+    int                   dstHeight      = GetParamValue<3>();
+    NVCVInterpolationType interpolation  = GetParamValue<4>();
+    int                   numberOfImages = GetParamValue<5>();
+    nvcv::ImageFormat     fmt            = GetParamValue<6>();
+    if (nvcv::FMT_RGB8 == fmt || nvcv::FMT_RGBA8 == fmt)
+        StartVarShapeTest<uint8_t>(srcWidth, srcHeight, dstWidth, dstHeight, interpolation, numberOfImages, fmt);
+    else if (nvcv::FMT_RGBf32 == fmt || nvcv::FMT_RGBAf32 == fmt)
+        StartVarShapeTest<float>(srcWidth, srcHeight, dstWidth, dstHeight, interpolation, numberOfImages, fmt);
 }
