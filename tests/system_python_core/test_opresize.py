@@ -16,6 +16,7 @@
 import nvcv
 import pytest as t
 import numpy as np
+import util
 
 
 @t.mark.parametrize(
@@ -66,3 +67,45 @@ def test_op_resize(input, out_shape, interp):
     assert out.layout == input.layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
+
+
+@t.mark.parametrize(
+    "inSize, outSize, interp",
+    [((123, 321), (321, 123), nvcv.Interp.LINEAR), ((123, 321), (321, 123), None)],
+)
+def test_op_resizevarshape(inSize, outSize, interp):
+
+    RNG = np.random.default_rng(0)
+
+    input = util.create_image_batch(
+        10, nvcv.Format.RGBA8, size=inSize, max_random=256, rng=RNG
+    )
+
+    base_output = util.create_image_batch(
+        10, nvcv.Format.RGBA8, size=outSize, max_random=256, rng=RNG
+    )
+
+    sizes = []
+    for image in base_output:
+        sizes.append([image.width, image.height])
+
+    if interp is None:
+        out = input.resize(sizes)
+    else:
+        out = input.resize(sizes=sizes, interp=interp)
+
+    assert len(out) == len(input)
+    assert out.capacity == input.capacity
+    assert out.uniqueformat == input.uniqueformat
+    assert out.maxsize == outSize
+
+    stream = nvcv.cuda.Stream()
+    if interp is None:
+        tmp = input.resize_into(out=base_output, stream=stream)
+    else:
+        tmp = input.resize_into(out=base_output, interp=interp, stream=stream)
+    assert tmp is base_output
+    assert len(base_output) == len(input)
+    assert out.capacity == input.capacity
+    assert out.uniqueformat == input.uniqueformat
+    assert out.maxsize == outSize

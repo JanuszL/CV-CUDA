@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#include "Image.hpp"
+#include "ImageBatch.hpp"
 #include "Operators.hpp"
 #include "PyUtil.hpp"
 #include "ResourceGuard.hpp"
@@ -55,6 +57,46 @@ std::shared_ptr<Tensor> Resize(Tensor &input, const Shape &out_shape, NVCVInterp
     return ResizeInto(input, *output, interp, pstream);
 }
 
+std::shared_ptr<ImageBatchVarShape> ResizeVarShapeInto(ImageBatchVarShape &input, ImageBatchVarShape &output,
+                                                       NVCVInterpolationType interp, std::shared_ptr<Stream> pstream)
+{
+    if (pstream == nullptr)
+    {
+        pstream = Stream::Current().shared_from_this();
+    }
+
+    auto resize = CreateOperator<cvop::Resize>();
+
+    ResourceGuard guard(*pstream);
+    guard.add(LOCK_READ, {input});
+    guard.add(LOCK_WRITE, {output});
+    guard.add(LOCK_NONE, {*resize});
+
+    resize->submit(pstream->handle(), input.impl(), output.impl(), interp);
+
+    return output.shared_from_this();
+}
+
+std::shared_ptr<ImageBatchVarShape> ResizeVarShape(ImageBatchVarShape &input, const std::vector<Size2D> &out_size,
+                                                   NVCVInterpolationType interp, std::shared_ptr<Stream> pstream)
+{
+    if (input.numImages() != (int)out_size.size())
+    {
+        throw std::runtime_error("Number of input images must be equal to the number of elements in output size list ");
+    }
+
+    std::shared_ptr<ImageBatchVarShape> output = ImageBatchVarShape::Create(input.capacity());
+
+    for (int i = 0; i < input.numImages(); ++i)
+    {
+        cv::ImageFormat format = input.impl()[i].format();
+        auto            image  = Image::Create(out_size[i], format);
+        output->pushBack(*image);
+    }
+
+    return ResizeVarShapeInto(input, *output, interp, pstream);
+}
+
 } // namespace
 
 void ExportOpResize(py::module &m)
@@ -65,6 +107,11 @@ void ExportOpResize(py::module &m)
                            "stream"_a = nullptr);
     DefClassMethod<Tensor>("resize_into", &ResizeInto, "out"_a, "interp"_a = NVCV_INTERP_LINEAR, py::kw_only(),
                            "stream"_a = nullptr);
+
+    DefClassMethod<ImageBatchVarShape>("resize", &ResizeVarShape, "sizes"_a, "interp"_a = NVCV_INTERP_LINEAR,
+                                       py::kw_only(), "stream"_a = nullptr);
+    DefClassMethod<ImageBatchVarShape>("resize_into", &ResizeVarShapeInto, "out"_a, "interp"_a = NVCV_INTERP_LINEAR,
+                                       py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace nv::cvpy
