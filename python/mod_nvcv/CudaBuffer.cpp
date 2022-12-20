@@ -165,7 +165,7 @@ bool CudaBuffer::load(PyObject *o)
         return false;
     }
 
-    py::object tmp{o, true /* borrowed */};
+    py::object tmp = py::reinterpret_borrow<py::object>(o);
 
     if (hasattr(tmp, "__cuda_array_interface__"))
     {
@@ -234,7 +234,7 @@ py::buffer_info CudaBuffer::request(bool writable) const
     if (m_cudaArrayInterface.contains("strides"))
     {
         py::object strides = m_cudaArrayInterface["strides"];
-        if (strides != py::none())
+        if (!strides.is(py::none()))
         {
             strides = strides.cast<py::tuple>();
             for (auto &o : strides)

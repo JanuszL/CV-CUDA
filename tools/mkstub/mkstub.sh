@@ -258,7 +258,9 @@ fi
 
 rm -f $tmp_v $tmp_c
 
-$STRIP -s $stub_dso
+# also strips out the gnu properties, they aren't supported with
+# old linkers, leading to spurious warnings.
+$STRIP -s $stub_dso --remove-section=.note.gnu.property
 
 function list_contents()
 {

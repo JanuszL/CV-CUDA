@@ -19,13 +19,8 @@ project(nvcv_python CXX C)
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(COMPILE_WARNINGS
-    -Wno-deprecated-declarations
-    -Wsuggest-override
-    -Wall -Werror -Wpointer-arith
-    -Wmissing-declarations -Wredundant-decls -Wmultichar
-    -Wno-unused-local-typedefs -Wunused -Wno-unknown-pragmas
-)
+include(../cmake/ConfigCompiler.cmake)
+
 set_directory_properties(PROPERTIES COMPILE_OPTIONS "${COMPILE_WARNINGS}")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE true)

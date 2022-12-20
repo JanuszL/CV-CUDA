@@ -48,23 +48,23 @@
 
 # Disabling till we sort out the linker issue when compiling
 # on Ubuntu 18.04.
-#t:compat:centos7:
-#    extends: .test_compat_common
-#    image: nvidia/cuda:11.8.0-runtime-centos7
-#    tags: [ linux-x64, test, cuda11, centos7 ]
+t:compat:centos7:
+    extends: .test_compat_common
+    image: nvidia/cuda:11.8.0-runtime-centos7
+    tags: [ linux-x64, test, cuda11, centos7 ]
 
-#t:compat:ub1804:
-#    variables:
-#      PYTHONVER: '3.7'
-#    extends:
-#      - .test_compat_common
-#      - .install_ubuntu_deps
-#    image: nvidia/cuda:11.8.0-runtime-ubuntu18.04
+t:compat:ub1804:
+    variables:
+      PYTHONVER: '3.7'
+    extends:
+      - .test_compat_common
+      - .install_ubuntu_deps
+    image: nvidia/cuda:11.8.0-runtime-ubuntu18.04
 
-#t:compat:ub2004:
-#    variables:
-#      PYTHONVER: '3.8'
-#    extends:
-#      - .test_compat_common
-#      - .install_ubuntu_deps
-#    image: nvidia/cuda:11.8.0-runtime-ubuntu20.04
+t:compat:ub2004:
+    variables:
+      PYTHONVER: '3.8'
+    extends:
+      - .test_compat_common
+      - .install_ubuntu_deps
+    image: nvidia/cuda:11.8.0-runtime-ubuntu20.04

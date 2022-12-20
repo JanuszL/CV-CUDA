@@ -31,8 +31,11 @@ add_executable(nvcv_test_types_unit
     TestHandleManager.cpp
     TestTensorDataUtils.cpp
     TestAlgorithm.cpp
-    #TestCompat.cpp
 )
+
+if(ENABLE_COMPAT_OLD_GLIBC)
+    target_sources(nvcv_test_types_unit PRIVATE TestCompat.cpp)
+endif()
 
 target_compile_definitions(nvcv_test_types_unit
     PRIVATE

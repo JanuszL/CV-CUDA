@@ -24,6 +24,12 @@ else()
     message(STATUS "    WARNINGS_AS_ERRORS       : off")
 endif()
 
+if(ENABLE_COMPAT_OLD_GLIBC)
+    message(STATUS "    ENABLE_COMPAT_OLD_GLIBC  : ON")
+else()
+    message(STATUS "    ENABLE_COMPAT_OLD_GLIBC  : off")
+endif()
+
 if(BUILD_TESTS)
     message(STATUS "    BUILD_TESTS              : ON")
 else()

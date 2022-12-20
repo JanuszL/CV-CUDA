@@ -39,6 +39,7 @@ endif()
 
 option(EXPOSE_CODE "Expose in resulting binaries parts of our code" ${DEFAULT_EXPOSE_CODE})
 option(WARNINGS_AS_ERRORS "Treat compilation warnings as errors" OFF)
+option(ENABLE_COMPAT_OLD_GLIBC "Generates binaries that work with old distros, with old glibc" ON)
 
 # Needed to get cuda version
 find_package(CUDAToolkit REQUIRED)
