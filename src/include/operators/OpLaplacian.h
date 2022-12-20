@@ -124,9 +124,9 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopLaplacianSubmit(NVCVOperatorHandle handle, cudaS
  * @param[in] in Input image batch.
  * @param[out] out Output image batch.
  * @param[in] ksize Aperture size to compute second-derivative filters, either 1 or 3 per image, as a 1D Tensor of int.
- *                  + Must be of pixel type NVCV_PIXEL_TYPE_S32
+ *                  + Must be of pixel type NVCV_DATA_TYPE_S32
  * @param[in] scale Scale factor Laplacian values as a 1D Tensor of float.
- *                  + Must be of pixel type NVCV_PIXEL_TYPE_F32
+ *                  + Must be of pixel type NVCV_DATA_TYPE_F32
  * @param[in] borderMode Border mode to be used when accessing elements outside input image, cf. \p NVCVBorderType.
  */
 NVCV_OP_PUBLIC NVCVStatus nvcvopLaplacianVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,

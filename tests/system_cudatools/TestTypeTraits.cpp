@@ -304,10 +304,10 @@ template<typename T>
 class TypeTraitsGetElementTest : public TypeTraitsBaseTest<T>
 {
 public:
-    using PixelType                  = typename TypeTraitsBaseTest<T>::Type;
-    static constexpr int NumElements = cuda::NumElements<PixelType>;
+    using DataType                   = typename TypeTraitsBaseTest<T>::Type;
+    static constexpr int NumElements = cuda::NumElements<DataType>;
 
-    PixelType pix;
+    DataType pix;
 
     TypeTraitsGetElementTest()
     {

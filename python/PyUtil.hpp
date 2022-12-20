@@ -18,7 +18,7 @@
 #ifndef NVCV_PYTHON_PYUTIL_HPP
 #define NVCV_PYTHON_PYUTIL_HPP
 
-#include <nvcv/PixelType.hpp>
+#include <nvcv/DataType.hpp>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 

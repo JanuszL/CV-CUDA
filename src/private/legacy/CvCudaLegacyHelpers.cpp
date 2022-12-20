@@ -19,7 +19,7 @@
 
 #include "nvcv/TensorDataAccess.hpp"
 
-#include <nvcv/PixelType.hpp>
+#include <nvcv/DataType.hpp>
 #include <private/core/Exception.hpp>
 #include <private/legacy/CvCudaLegacy.h>
 
@@ -80,29 +80,23 @@ static cuda_op::DataType GetLegacyCvUnsignedType(int32_t bpc)
     throw Exception(Status::ERROR_INVALID_ARGUMENT, "Invalid bpc(%d) for unsigned cuda op type ", bpc);
 }
 
-cuda_op::DataType GetLegacyDataType(int32_t bpc, cv::DataType type)
+cuda_op::DataType GetLegacyDataType(int32_t bpc, cv::DataKind kind)
 {
-    switch (type)
+    switch (kind)
     {
-    case cv::DataType::FLOAT:
-    {
+    case cv::DataKind::FLOAT:
         return GetLegacyCvFloatType(bpc);
-    }
 
-    case cv::DataType::SIGNED:
-    {
+    case cv::DataKind::SIGNED:
         return GetLegacyCvSignedType(bpc);
-    }
 
-    case cv::DataType::UNSIGNED:
-    {
+    case cv::DataKind::UNSIGNED:
         return GetLegacyCvUnsignedType(bpc);
-    }
     }
     throw Exception(Status::ERROR_INVALID_ARGUMENT, "Only planar formats supported ");
 }
 
-cuda_op::DataType GetLegacyDataType(PixelType dtype)
+cuda_op::DataType GetLegacyDataType(DataType dtype)
 {
     auto bpc = dtype.bitsPerChannel();
 
@@ -114,20 +108,20 @@ cuda_op::DataType GetLegacyDataType(PixelType dtype)
         }
     }
 
-    return GetLegacyDataType(bpc[0], (cv::DataType)dtype.dataType());
+    return GetLegacyDataType(bpc[0], (cv::DataKind)dtype.dataKind());
 }
 
 cuda_op::DataType GetLegacyDataType(ImageFormat fmt)
 {
     for (int i = 1; i < fmt.numPlanes(); ++i)
     {
-        if (fmt.planePixelType(i) != fmt.planePixelType(0))
+        if (fmt.planeDataType(i) != fmt.planeDataType(0))
         {
-            throw Exception(Status::ERROR_INVALID_ARGUMENT, "All planes must have the same pixel type");
+            throw Exception(Status::ERROR_INVALID_ARGUMENT, "All planes must have the same data type");
         }
     }
 
-    return GetLegacyDataType(fmt.planePixelType(0));
+    return GetLegacyDataType(fmt.planeDataType(0));
 }
 
 cuda_op::DataShape GetLegacyDataShape(const TensorShapeInfoImage &shapeInfo)
@@ -146,9 +140,9 @@ cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShape &imgBatch)
 
     for (int i = 1; i < fmt.numPlanes(); ++i)
     {
-        if (fmt.planePixelType(i) != fmt.planePixelType(0))
+        if (fmt.planeDataType(i) != fmt.planeDataType(0))
         {
-            throw Exception(Status::ERROR_INVALID_ARGUMENT, "All planes must have the same pixel type");
+            throw Exception(Status::ERROR_INVALID_ARGUMENT, "All planes must have the same data type");
         }
     }
 
@@ -191,9 +185,9 @@ cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShapeDataPitchDevice
 
     for (int i = 1; i < fmt.numPlanes(); ++i)
     {
-        if (fmt.planePixelType(i) != fmt.planePixelType(0))
+        if (fmt.planeDataType(i) != fmt.planeDataType(0))
         {
-            throw Exception(Status::ERROR_INVALID_ARGUMENT, "All planes must have the same pixel type");
+            throw Exception(Status::ERROR_INVALID_ARGUMENT, "All planes must have the same data type");
         }
     }
 

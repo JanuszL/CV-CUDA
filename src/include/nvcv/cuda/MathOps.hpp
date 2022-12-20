@@ -75,10 +75,10 @@ constexpr bool IsIntegralCompound = IsIntegral<T> && IsCompound<T>;
  * @{
  *
  * @code
- * using PixelType = ...;
- * PixelType pix = ...;
+ * using DataType = ...;
+ * DataType pix = ...;
  * float kernel = ...;
- * ConvertBaseTypeTo<float, PixelType> res = {0};
+ * ConvertBaseTypeTo<float, DataType> res = {0};
  * res += kernel * pix;
  * @endcode
  *

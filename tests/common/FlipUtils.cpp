@@ -94,10 +94,10 @@ void FlipCPU(std::vector<uint8_t> &hDst, const long3 &dstPitches, const std::vec
 {
     NVCV_ASSERT(format.numPlanes() == 1);
 
-    switch (format.planePixelType(0))
+    switch (format.planeDataType(0))
     {
-#define NVCV_TEST_CASE(PIXELTYPE, TYPE)                                          \
-    case NVCV_PIXEL_TYPE_##PIXELTYPE:                                            \
+#define NVCV_TEST_CASE(DATATYPE, TYPE)                                           \
+    case NVCV_DATA_TYPE_##DATATYPE:                                              \
         detail::flip<TYPE>(hDst, dstPitches, hSrc, srcPitches, shape, flipCode); \
         break
 

@@ -18,7 +18,7 @@
 #ifndef NVCV_TESTS_DEVICE_SATURATE_CAST_HPP
 #define NVCV_TESTS_DEVICE_SATURATE_CAST_HPP
 
-template<typename TargetPixelType, typename SourcePixelType>
-TargetPixelType DeviceRunSaturateCast(SourcePixelType);
+template<typename TargetDataType, typename SourceDataType>
+TargetDataType DeviceRunSaturateCast(SourceDataType);
 
 #endif // NVCV_TESTS_DEVICE_SATURATE_CAST_HPP

@@ -254,10 +254,10 @@ typedef enum
 /** Defines the channel data type. */
 typedef enum
 {
-    NVCV_DATA_TYPE_UNSIGNED, /**< Channels are unsigned integer values. */
-    NVCV_DATA_TYPE_SIGNED,   /**< Channels are signed integer values. */
-    NVCV_DATA_TYPE_FLOAT     /**< Channels are floating point values. */
-} NVCVDataType;
+    NVCV_DATA_KIND_UNSIGNED, /**< Channels are unsigned integer values. */
+    NVCV_DATA_KIND_SIGNED,   /**< Channels are signed integer values. */
+    NVCV_DATA_KIND_FLOAT     /**< Channels are floating point values. */
+} NVCVDataKind;
 
 /** Defines how the 2D plane pixels are laid out in memory.
  * This defines how a pixel are addressed, i.e., given its \f$(x,y)\f$ coordinate,
@@ -577,7 +577,7 @@ NVCV_PUBLIC const char *nvcvPackingGetName(NVCVPacking fmt);
  * @returns The string representation of the data type.
  *          Returned pointer must not be freed.
  */
-NVCV_PUBLIC const char *nvcvDataTypeGetName(NVCVDataType dtype);
+NVCV_PUBLIC const char *nvcvDataKindGetName(NVCVDataKind dtype);
 
 /** Returns a string representation of a memory layout.
  *

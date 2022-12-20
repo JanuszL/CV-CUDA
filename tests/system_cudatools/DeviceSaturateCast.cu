@@ -24,24 +24,24 @@ namespace cuda = nv::cv::cuda;
 
 // ----------------- To allow testing device-side SaturateCast -----------------
 
-template<typename TargetPixelType, typename SourcePixelType>
-__global__ void RunSaturateCast(TargetPixelType *out, SourcePixelType u)
+template<typename TargetDataType, typename SourceDataType>
+__global__ void RunSaturateCast(TargetDataType *out, SourceDataType u)
 {
-    out[0] = cuda::SaturateCast<cuda::BaseType<TargetPixelType>>(u);
+    out[0] = cuda::SaturateCast<cuda::BaseType<TargetDataType>>(u);
 }
 
-template<typename TargetPixelType, typename SourcePixelType>
-TargetPixelType DeviceRunSaturateCast(SourcePixelType pix)
+template<typename TargetDataType, typename SourceDataType>
+TargetDataType DeviceRunSaturateCast(SourceDataType pix)
 {
-    TargetPixelType *dTest;
-    TargetPixelType  hTest[1];
+    TargetDataType *dTest;
+    TargetDataType  hTest[1];
 
-    EXPECT_EQ(cudaSuccess, cudaMalloc(&dTest, sizeof(TargetPixelType)));
+    EXPECT_EQ(cudaSuccess, cudaMalloc(&dTest, sizeof(TargetDataType)));
 
     RunSaturateCast<<<1, 1>>>(dTest, pix);
 
     EXPECT_EQ(cudaSuccess, cudaDeviceSynchronize());
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(hTest, dTest, sizeof(TargetPixelType), cudaMemcpyDeviceToHost));
+    EXPECT_EQ(cudaSuccess, cudaMemcpy(hTest, dTest, sizeof(TargetDataType), cudaMemcpyDeviceToHost));
 
     EXPECT_EQ(cudaSuccess, cudaFree(dTest));
 
@@ -50,8 +50,8 @@ TargetPixelType DeviceRunSaturateCast(SourcePixelType pix)
 
 // Need to instantiate each test on TestSaturateCast, making sure not to use const types
 
-#define NVCV_TEST_INST(TARGET_PIXEL_TYPE, SOURCE_PIXEL_TYPE) \
-    template TARGET_PIXEL_TYPE DeviceRunSaturateCast(SOURCE_PIXEL_TYPE pix)
+#define NVCV_TEST_INST(TARGET_DATA_TYPE, SOURCE_DATA_TYPE) \
+    template TARGET_DATA_TYPE DeviceRunSaturateCast(SOURCE_DATA_TYPE pix)
 
 NVCV_TEST_INST(char, char);
 NVCV_TEST_INST(short, short);

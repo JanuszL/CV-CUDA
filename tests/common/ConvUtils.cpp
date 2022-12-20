@@ -182,10 +182,10 @@ void Convolve(std::vector<uint8_t> &hDst, const long3 &dstPitches, const std::ve
 {
     NVCV_ASSERT(format.numPlanes() == 1);
 
-    switch (format.planePixelType(0))
+    switch (format.planeDataType(0))
     {
-#define NVCV_TEST_CASE(PIXELTYPE, TYPE)                                                                     \
-    case NVCV_PIXEL_TYPE_##PIXELTYPE:                                                                       \
+#define NVCV_TEST_CASE(DATATYPE, TYPE)                                                                      \
+    case NVCV_DATA_TYPE_##DATATYPE:                                                                         \
         detail::Convolve<TYPE>(hDst, dstPitches, hSrc, srcPitches, shape, kernel, kernelSize, kernelAnchor, \
                                borderMode, borderValue);                                                    \
         break
@@ -210,10 +210,10 @@ void Morph(std::vector<uint8_t> &hDst, const long3 &dstPitches, const std::vecto
 {
     NVCV_ASSERT(format.numPlanes() == 1);
 
-    switch (format.planePixelType(0))
+    switch (format.planeDataType(0))
     {
-#define NVCV_TEST_CASE(PIXELTYPE, TYPE)                                                                             \
-    case NVCV_PIXEL_TYPE_##PIXELTYPE:                                                                               \
+#define NVCV_TEST_CASE(DATATYPE, TYPE)                                                                              \
+    case NVCV_DATA_TYPE_##DATATYPE:                                                                                 \
         detail::Morph<TYPE>(hDst, dstPitches, hSrc, srcPitches, shape, kernelSize, kernelAnchor, borderMode, type); \
         break
 

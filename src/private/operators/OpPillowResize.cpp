@@ -32,10 +32,10 @@ PillowResize::PillowResize(cv::Size2D maxSize, int maxBatchSize, NVCVImageFormat
     nvcvImageFormatGetBitsPerChannel(fmt, bpc);
     int32_t maxChannel = 0;
     nvcvImageFormatGetNumChannels(fmt, &maxChannel);
-    NVCVDataType type;
-    nvcvImageFormatGetDataType(fmt, &type);
-    nv::cv::DataType        dtype     = static_cast<nv::cv::DataType>(type);
-    leg::cuda_op::DataType  data_type = leg::helpers::GetLegacyDataType(bpc[0], dtype);
+    NVCVDataKind dataKind;
+    nvcvImageFormatGetDataKind(fmt, &dataKind);
+    nv::cv::DataKind        dkind     = static_cast<nv::cv::DataKind>(dataKind);
+    leg::cuda_op::DataType  data_type = leg::helpers::GetLegacyDataType(bpc[0], dkind);
     leg::cuda_op::DataShape maxIn(maxBatchSize, maxChannel, maxSize.h, maxSize.w),
         maxOut(maxBatchSize, maxChannel, maxSize.h, maxSize.w);
     m_legacyOp         = std::make_unique<leg::cuda_op::PillowResize>(maxIn, maxOut, data_type);

@@ -35,14 +35,14 @@ struct FormatTLS
     char bufYCbCrEncodingName[128];
     char bufChromaSubsamplingName[128];
 
-    char bufDataTypeName[128];
+    char bufDataKindName[128];
     char bufMemLayoutName[128];
     char bufChannelName[128];
     char bufSwizzleName[128];
     char bufByteOrderName[128];
     char bufPackingName[128];
 
-    char bufPixelTypeName[1024];
+    char bufDataTypeName[1024];
     char bufImageFormatName[1024];
 };
 

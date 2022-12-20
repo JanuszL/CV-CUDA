@@ -106,13 +106,13 @@ TYPED_TEST(MathWrappersRoundDiffTypeTest, correct_output_in_host)
 
 TYPED_TEST(MathWrappersRoundDiffTypeTest, correct_output_in_device)
 {
-    using TargetBaseType  = ttype::GetType<TypeParam, 0>;
-    auto input            = ttype::GetValue<TypeParam, 1>;
-    auto gold             = ttype::GetValue<TypeParam, 2>;
-    using SourcePixelType = decltype(input);
-    using TargetPixelType = cuda::ConvertBaseTypeTo<TargetBaseType, SourcePixelType>;
+    using TargetBaseType = ttype::GetType<TypeParam, 0>;
+    auto input           = ttype::GetValue<TypeParam, 1>;
+    auto gold            = ttype::GetValue<TypeParam, 2>;
+    using SourceDataType = decltype(input);
+    using TargetDataType = cuda::ConvertBaseTypeTo<TargetBaseType, SourceDataType>;
 
-    auto test = DeviceRunRoundDiffType<TargetPixelType>(input);
+    auto test = DeviceRunRoundDiffType<TargetDataType>(input);
 
     EXPECT_TRUE((std::is_same_v<decltype(test), decltype(gold)>));
     EXPECT_EQ(test, gold);

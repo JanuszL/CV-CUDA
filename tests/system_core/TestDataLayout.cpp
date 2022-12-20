@@ -700,8 +700,8 @@ TEST(MemLayoutTests, get_name)
     EXPECT_STREQ("NVCVMemLayout(-1)", nvcvMemLayoutGetName(static_cast<NVCVMemLayout>(-1)));
 }
 
-TEST(DataTypeTests, get_name)
+TEST(DataKindTests, get_name)
 {
-    EXPECT_STREQ("NVCV_DATA_TYPE_FLOAT", nvcvDataTypeGetName(NVCV_DATA_TYPE_FLOAT));
-    EXPECT_STREQ("NVCVDataType(-1)", nvcvDataTypeGetName(static_cast<NVCVDataType>(-1)));
+    EXPECT_STREQ("NVCV_DATA_KIND_FLOAT", nvcvDataKindGetName(NVCV_DATA_KIND_FLOAT));
+    EXPECT_STREQ("NVCVDataKind(-1)", nvcvDataKindGetName(static_cast<NVCVDataKind>(-1)));
 }

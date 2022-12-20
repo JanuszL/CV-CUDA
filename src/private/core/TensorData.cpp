@@ -20,7 +20,7 @@
 #include "Exception.hpp"
 #include "TensorLayout.hpp"
 
-#include <fmt/PixelType.hpp>
+#include <fmt/DataType.hpp>
 #include <nvcv/TensorLayout.h>
 
 namespace nv::cv::priv {
@@ -63,9 +63,9 @@ void FillTensorData(IImage &img, NVCVTensorData &tensorData)
 
     for (int p = 1; p < fmt.numPlanes(); ++p)
     {
-        if (fmt.planePixelType(p) != fmt.planePixelType(0))
+        if (fmt.planeDataType(p) != fmt.planeDataType(0))
         {
-            throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Pixel type of all image planes must be the same";
+            throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Data type of all image planes must be the same";
         }
     }
 
@@ -163,7 +163,7 @@ void FillTensorData(IImage &img, NVCVTensorData &tensorData)
         tensorPitch.pitchBytes[1] = imgPitch.planes[0].pitchBytes;
         tensorPitch.pitchBytes[0] = tensorPitch.pitchBytes[1] * tensorData.shape[1];
 
-        tensorData.dtype = fmt.planePixelType(0).channelType(0).value();
+        tensorData.dtype = fmt.planeDataType(0).channelType(0).value();
     }
     else
     {
@@ -179,7 +179,7 @@ void FillTensorData(IImage &img, NVCVTensorData &tensorData)
         tensorPitch.pitchBytes[1] = tensorPitch.pitchBytes[2] * tensorData.shape[2];
         tensorPitch.pitchBytes[0] = tensorPitch.pitchBytes[1] * tensorData.shape[1];
 
-        tensorData.dtype = fmt.planePixelType(0).value();
+        tensorData.dtype = fmt.planeDataType(0).value();
     }
 
     // Finally, assign the pointer to the memory buffer.

@@ -104,25 +104,25 @@ NVCV_OP_PUBLIC NVCVStatus nvcvopEraseCreate(NVCVOperatorHandle *handle, int32_t 
  *
  *      Must be 'N' (dim = 1) with N = number of eraing area.
  *      Data Type must be 32bit Signed.
- *      PixelType must be TYPE_2S32.
+ *      DataType must be TYPE_2S32.
  *
  *  erasing Tensor
  *
  *      Must be 'N' (dim = 1) with N = number of eraing area.
  *      Data Type must be 32bit Signed.
- *      PixelType must be TYPE_3S32.
+ *      DataType must be TYPE_3S32.
  *
  *  imgIdx Tensor
  *
  *      Must be 'N' (dim = 1) with N = number of eraing area.
  *      Data Type must be 32bit Signed.
- *      PixelType must be TYPE_S32.
+ *      DataType must be TYPE_S32.
  *
  *  values Tensor
  *
  *      Must be 'N' (dim = 1) with W = number of eraing area * 4.
  *      Data Type must be 32bit Float.
- *      PixelType must be TYPE_F32.
+ *      DataType must be TYPE_F32.
  *
  *
  * @param [in] handle Handle to the operator.

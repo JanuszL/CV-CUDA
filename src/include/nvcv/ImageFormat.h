@@ -26,7 +26,7 @@
 
 #include "ColorSpec.h"
 #include "DataLayout.h"
-#include "PixelType.h"
+#include "DataType.h"
 
 #include <assert.h>
 
@@ -43,7 +43,7 @@ extern "C"
  * - \ref NVCVColorSpec
  * - \ref NVCVChromaSubsampling method (when applicable)
  * - \ref NVCVMemLayout
- * - \ref NVCVDataType
+ * - \ref NVCVDataKind
  * - \ref NVCVSwizzle
  * - Number of planes
  * - Format packing of each plane.
@@ -306,7 +306,7 @@ typedef uint64_t NVCVImageFormat;
  * Example to create a YUV422R ITU-R BT.709 full-range with SMPTE240M transfer function, block-linear format.
  * \code{.c}
  * NVCVImageFormat fmt = NVCV_MAKE_YCbCr_IMAGE_FORMAT(NVCV_MAKE_COLOR_SPEC(BT601, SMPTE240M, FULL),
- *                                                  NVCV_CSS_422R, NVCV_BLOCK_LINEAR, NVCV_DATA_TYPE_UNSIGNED, NVCV_SWIZZLE_XYZ0,
+ *                                                  NVCV_CSS_422R, NVCV_BLOCK_LINEAR, NVCV_DATA_KIND_UNSIGNED, NVCV_SWIZZLE_XYZ0,
  *                                                  2, NVCV_PACKING_X8, NVCV_PACKING_X8_Y8);
  * \endcode
  *
@@ -316,7 +316,7 @@ typedef uint64_t NVCVImageFormat;
  * @param[in] colorSpec     \ref NVCVColorSpec to be used.
  * @param[in] chromaSubsamp \ref NVCVChromaSubsampling to be used.
  * @param[in] memLayout     \ref NVCVMemLayout to be used.
- * @param[in] dataType      \ref NVCVDataType to be used.
+ * @param[in] dataKind      \ref NVCVDataKind to be used.
  * @param[in] swizzle       \ref NVCVSwizzle operation to be performed on the channels.
  * @param[in] numPlanes     Number of planes this format has.
  * @param[in] packing0,packing1,packing2,packing3 Format packing of each plane.
@@ -326,7 +326,7 @@ typedef uint64_t NVCVImageFormat;
  */
 #ifdef DOXYGEN_SHOULD_SKIP_THIS
 // WAR sphinx is acting up on this
-//#    define NVCV_MAKE_YCbCr_IMAGE_FORMAT(colorModel, colorSpec, chromaSubsamp, memLayout, dataType, swizzle, numPlanes, packing0, packing1, packing2, packing3)
+//#    define NVCV_MAKE_YCbCr_IMAGE_FORMAT(colorModel, colorSpec, chromaSubsamp, memLayout, dataKind, swizzle, numPlanes, packing0, packing1, packing2, packing3)
 #else
 #    define NVCV_MAKE_YCbCr_IMAGE_FORMAT (NVCVImageFormat) NVCV_DETAIL_MAKE_YCbCr_FORMAT
 #endif
@@ -336,7 +336,7 @@ typedef uint64_t NVCVImageFormat;
  * Example to create a RGB planar ITU-R BT.709 full-range with SMPTE240M encoding, block-linear format.
  * \code{.c}
  * NVCVImageFormat fmt = NVCV_MAKE_COLOR_IMAGE_FORMAT(NVCV_COLOR_MODEL_RGB, NVCV_MAKE_COLOR_SPEC(BT601, SMPTE240M, FULL),
- *                                                  NVCV_MEM_LAYOUT_BL, NVCV_DATA_TYPE_UNSIGNED, NVCV_SWIZZLE_XYZ0,
+ *                                                  NVCV_MEM_LAYOUT_BL, NVCV_DATA_KIND_UNSIGNED, NVCV_SWIZZLE_XYZ0,
  *                                                  2, NVCV_PACKING_X8, NVCV_PACKING_X8, NVCV_PACKING_Y8);
  * \endcode
  *
@@ -346,7 +346,7 @@ typedef uint64_t NVCVImageFormat;
  * @param[in] colorModel \ref NVCVColorModel to be used.
  * @param[in] colorSpec  \ref NVCVColorSpec to be used.
  * @param[in] memLayout  \ref NVCVMemLayout to be used.
- * @param[in] dataType   \ref NVCVDataType to be used.
+ * @param[in] dataKind   \ref NVCVDataKind to be used.
  * @param[in] swizzle    \ref NVCVSwizzle operation to be performed on the channels.
  * @param[in] numPlanes  Number of planes this format has.
  * @param[in] packing0,packing1,packing2,packing3 Format packing of each plane.
@@ -358,7 +358,7 @@ typedef uint64_t NVCVImageFormat;
  */
 #ifdef DOXYGEN_SHOULD_SKIP_THIS
 // WAR sphinx is acting up on this
-//#    define NVCV_MAKE_COLOR_IMAGE_FORMAT(colorModel, colorSpec, memLayout, dataType, swizzle, numPlanes, packing0, packing1, packing2, packing3)
+//#    define NVCV_MAKE_COLOR_IMAGE_FORMAT(colorModel, colorSpec, memLayout, dataKind, swizzle, numPlanes, packing0, packing1, packing2, packing3)
 #else
 #    define NVCV_MAKE_COLOR_IMAGE_FORMAT (NVCVImageFormat) NVCV_DETAIL_MAKE_COLOR_FORMAT
 #endif
@@ -367,12 +367,12 @@ typedef uint64_t NVCVImageFormat;
  *
  * Example to create 3-plane float block-linear image, 1st: 8-bit, 2nd: 16-bit, 3rd: 32-bit
  * \code{.c}
- * NVCVImageFormat fmt = NVCV_MAKE_NONCOLOR_IMAGE_FORMAT(NVCV_MEM_LAYOUT_BL, NVCV_DATA_TYPE_UNSIGNED,
+ * NVCVImageFormat fmt = NVCV_MAKE_NONCOLOR_IMAGE_FORMAT(NVCV_MEM_LAYOUT_BL, NVCV_DATA_KIND_UNSIGNED,
  *                                                    3, NVCV_PACKING_X8, NVCV_PACKING_X16, NVCV_PACKING_X32);
  * \endcode
  *
  * @param[in] memLayout \ref NVCVMemLayout to be used.
- * @param[in] dataType  \ref NVCVDataType to be used.
+ * @param[in] dataKind  \ref NVCVDataKind to be used.
  * @param[in] swizzle   \ref NVCVSwizzle operation to be performed on the channels.
  * @param[in] numPlanes Number of planes this format has.
  * @param[in] packing0,packing1,packing2,packing3 Format packing of each plane.
@@ -384,7 +384,7 @@ typedef uint64_t NVCVImageFormat;
  */
 #ifdef DOXYGEN_SHOULD_SKIP_THIS
 // WAR sphinx is acting up on this
-//#    define NVCV_MAKE_NONCOLOR_IMAGE_FORMAT(memLayout, dataType, swizzle, numPlanes, packing0, packing1, packing2, packing3)
+//#    define NVCV_MAKE_NONCOLOR_IMAGE_FORMAT(memLayout, dataKind, swizzle, numPlanes, packing0, packing1, packing2, packing3)
 #else
 #    define NVCV_MAKE_NONCOLOR_IMAGE_FORMAT (NVCVImageFormat) NVCV_DETAIL_MAKE_NONCOLOR_FORMAT
 #endif
@@ -394,13 +394,13 @@ typedef uint64_t NVCVImageFormat;
  * Example to create a RGGB Bayer pattern format:
  * \code{.c}
  * NVCVImageFormat fmt = NVCV_MAKE_RAW_IMAGE_FORMAT(NVCV_RAW_BAYER_RGGB, NVCV_MEM_LAYOUT_BL,
- *                                                NVCV_DATA_TYPE_UNSIGNED, NVCV_SWIZZLE_X000,
+ *                                                NVCV_DATA_KIND_UNSIGNED, NVCV_SWIZZLE_X000,
  *                                                1, NVCV_PACKING_X8);
  * \endcode
  *
  * @param[in] rawPattern \ref NVCVRawPattern to be used.
  * @param[in] memLayout  \ref NVCVMemLayout to be used.
- * @param[in] dataType   \ref NVCVDataType to be used.
+ * @param[in] dataKind   \ref NVCVDataKind to be used.
  * @param[in] swizzle    \ref NVCVSwizzle operation to be performed on the channels.
  * @param[in] numPlanes  Number of planes this format has.
  * @param[in] packing    Format packing of image plane.
@@ -409,7 +409,7 @@ typedef uint64_t NVCVImageFormat;
  */
 #ifdef DOXYGEN_SHOULD_SKIP_THIS
 // WAR sphinx is acting up on this
-//#    define NVCV_MAKE_RAW_IMAGE_FORMAT(rawPattern, memLayout, dataType, numPlanes, swizzle, packing)
+//#    define NVCV_MAKE_RAW_IMAGE_FORMAT(rawPattern, memLayout, dataKind, numPlanes, swizzle, packing)
 #else
 #    define NVCV_MAKE_RAW_IMAGE_FORMAT (NVCVImageFormat) NVCV_DETAIL_MAKE_RAW_FORMAT
 #endif
@@ -427,7 +427,7 @@ typedef uint64_t NVCVImageFormat;
  * @param[in] colorSpec \ref NVCVColorSpec to be used.
  * @param[in] chromaSub \ref NVCVChromaSubsampling to be used.
  * @param[in] memLayout \ref NVCVMemLayout to be used.
- * @param[in] dataType  \ref NVCVDataType to be used.
+ * @param[in] dataKind  \ref NVCVDataKind to be used.
  * @param[in] swizzle   \ref NVCVSwizzle operation to be performed on the channels.
  * @param[in] packing0,packing1,packing2,packing3 Format packing of each plane.
  *                                                + When remaining planes aren't needed,
@@ -438,7 +438,7 @@ typedef uint64_t NVCVImageFormat;
  */
 NVCV_PUBLIC NVCVStatus nvcvMakeYCbCrImageFormat(NVCVImageFormat *outFormat, NVCVColorSpec colorSpec,
                                                 NVCVChromaSubsampling chromaSub, NVCVMemLayout memLayout,
-                                                NVCVDataType dataType, NVCVSwizzle swizzle, NVCVPacking packing0,
+                                                NVCVDataKind dataKind, NVCVSwizzle swizzle, NVCVPacking packing0,
                                                 NVCVPacking packing1, NVCVPacking packing2, NVCVPacking packing3);
 
 /** Creates a user-defined color image format.
@@ -455,7 +455,7 @@ NVCV_PUBLIC NVCVStatus nvcvMakeYCbCrImageFormat(NVCVImageFormat *outFormat, NVCV
  * @param[in] colorModel \ref NVCVColorModel to be used.
  * @param[in] colorSpec  \ref NVCVColorSpec to be used.
  * @param[in] memLayout  \ref NVCVMemLayout to be used.
- * @param[in] dataType   \ref NVCVDataType to be used.
+ * @param[in] dataKind   \ref NVCVDataKind to be used.
  * @param[in] swizzle    \ref NVCVSwizzle operation to be performed on the channels.
  * @param[in] packing0,packing1,packing2,packing3 Format packing of each plane.
  *                                                + When remaining planes aren't needed, pass \ref NVCV_PACKING_0 for them.
@@ -465,7 +465,7 @@ NVCV_PUBLIC NVCVStatus nvcvMakeYCbCrImageFormat(NVCVImageFormat *outFormat, NVCV
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvMakeColorImageFormat(NVCVImageFormat *outFormat, NVCVColorModel colorModel,
-                                                NVCVColorSpec colorSpec, NVCVMemLayout memLayout, NVCVDataType dataType,
+                                                NVCVColorSpec colorSpec, NVCVMemLayout memLayout, NVCVDataKind dataKind,
                                                 NVCVSwizzle swizzle, NVCVPacking packing0, NVCVPacking packing1,
                                                 NVCVPacking packing2, NVCVPacking packing3);
 
@@ -479,7 +479,7 @@ NVCV_PUBLIC NVCVStatus nvcvMakeColorImageFormat(NVCVImageFormat *outFormat, NVCV
  * @param[out] outFormat The created image format.
  *                       + Cannot be NULL.
  * @param[in] memLayout \ref NVCVMemLayout to be used.
- * @param[in] dataType  \ref NVCVDataType to be used.
+ * @param[in] dataKind  \ref NVCVDataKind to be used.
  * @param[in] swizzle   \ref NVCVSwizzle operation to be performed on the channels.
  * @param[in] packing0,packing1,packing2,packing3 Format packing of each plane.
  *                                                + When remaining planes aren't needed, pass \ref NVCV_PACKING_0 for them.
@@ -489,7 +489,7 @@ NVCV_PUBLIC NVCVStatus nvcvMakeColorImageFormat(NVCVImageFormat *outFormat, NVCV
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvMakeNonColorImageFormat(NVCVImageFormat *outFormat, NVCVMemLayout memLayout,
-                                                   NVCVDataType dataType, NVCVSwizzle swizzle, NVCVPacking packing0,
+                                                   NVCVDataKind dataKind, NVCVSwizzle swizzle, NVCVPacking packing0,
                                                    NVCVPacking packing1, NVCVPacking packing2, NVCVPacking packing3);
 
 /** Creates a user-defined raw image format.
@@ -502,7 +502,7 @@ NVCV_PUBLIC NVCVStatus nvcvMakeNonColorImageFormat(NVCVImageFormat *outFormat, N
  *                       + Cannot be NULL.
  * @param[in] rawPattern \ref NVCVRawPattern to be used.
  * @param[in] memLayout  \ref NVCVMemLayout to be used.
- * @param[in] dataType   \ref NVCVDataType to be used.
+ * @param[in] dataKind   \ref NVCVDataKind to be used.
  * @param[in] swizzle    \ref NVCVSwizzle operation to be performed on the channels.
  * @param[in] packing0,packing1,packing2,packing3 Format packing of each plane.
  *                                                + When remaining planes aren't needed, pass \ref NVCV_PACKING_0 for them.
@@ -512,7 +512,7 @@ NVCV_PUBLIC NVCVStatus nvcvMakeNonColorImageFormat(NVCVImageFormat *outFormat, N
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvMakeRawImageFormat(NVCVImageFormat *outFormat, NVCVRawPattern rawPattern,
-                                              NVCVMemLayout memLayout, NVCVDataType dataType, NVCVSwizzle swizzle,
+                                              NVCVMemLayout memLayout, NVCVDataKind dataKind, NVCVSwizzle swizzle,
                                               NVCVPacking packing0, NVCVPacking packing1, NVCVPacking packing2,
                                               NVCVPacking packing3);
 
@@ -613,24 +613,24 @@ NVCV_PUBLIC NVCVStatus nvcvImageFormatGetPlaneBitsPerPixel(NVCVImageFormat fmt, 
  *
  * @param[inout] fmt      Image format have its data type replaced.
  *                        + Cannot be NULL.
- * @param[in] dataType The new data type.
+ * @param[in] dataKind The new data type.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some argument is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvImageFormatSetDataType(NVCVImageFormat *fmt, NVCVDataType dataType);
+NVCV_PUBLIC NVCVStatus nvcvImageFormatSetDataKind(NVCVImageFormat *fmt, NVCVDataKind dataKind);
 
 /** Get the image format's data type.
  *
  * @param[in] fmt Image format to be queried.
  *
- * @param[out] outDataType The image format's data type.
+ * @param[out] outDataKind The image format's data type.
  *                         + Cannot be NULL.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some argument is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvImageFormatGetDataType(NVCVImageFormat fmt, NVCVDataType *outDataType);
+NVCV_PUBLIC NVCVStatus nvcvImageFormatGetDataKind(NVCVImageFormat fmt, NVCVDataKind *outDataKind);
 
 /** Get the image format's channel swizzle operation.
  *
@@ -795,19 +795,19 @@ NVCV_PUBLIC NVCVStatus nvcvImageFormatGetNumChannels(NVCVImageFormat fmt, int32_
  */
 NVCV_PUBLIC NVCVStatus nvcvImageFormatGetBitsPerChannel(NVCVImageFormat fmt, int32_t *bits);
 
-/** Get the pixel type of image format's plane.
+/** Get the data type of image format's plane.
  *
  * @param[in] fmt   Image format to be queried.
  * @param[in] plane Plane to be queried.
  *                  + Valid values range from 0 (first) to 3 (fourth and last) plane.
  *                  + Cannot be NULL.
  *
- * @param[out] outPixType The pixel type of the given plane.
+ * @param[out] outPixType The data type of the given plane.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some argument is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvImageFormatGetPlanePixelType(NVCVImageFormat fmt, int32_t plane, NVCVPixelType *outPixType);
+NVCV_PUBLIC NVCVStatus nvcvImageFormatGetPlaneDataType(NVCVImageFormat fmt, int32_t plane, NVCVDataType *outPixType);
 
 /** Get the plane format of an image format.
  *

@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
+#include "DataType.hpp"
 #include "Operators.hpp"
-#include "PixelType.hpp"
 #include "PyUtil.hpp"
 #include "ResourceGuard.hpp"
 #include "Stream.hpp"
@@ -47,7 +47,7 @@ std::shared_ptr<Tensor> ConvertToInto(Tensor &input, Tensor &output, float scale
     return output.shared_from_this();
 }
 
-std::shared_ptr<Tensor> ConvertTo(Tensor &input, cv::PixelType dtype, float scale, float offset,
+std::shared_ptr<Tensor> ConvertTo(Tensor &input, cv::DataType dtype, float scale, float offset,
                                   std::shared_ptr<Stream> pstream)
 {
     std::shared_ptr<Tensor> output = Tensor::Create(input.shape(), dtype, input.layout());

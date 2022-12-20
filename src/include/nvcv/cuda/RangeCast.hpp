@@ -50,10 +50,10 @@ namespace nv::cv::cuda {
  * @{
  *
  * @code
- * using PixelType = MakeType<uchar, 4>;
- * using FloatPixelType = ConvertBaseTypeTo<float, PixelType>;
- * FloatPixelType res = ...; // res component values are in [0, 1]
- * PixelType pix = RangeCast<BaseType<PixelType>>(res); // pix are in [0, 255]
+ * using DataType = MakeType<uchar, 4>;
+ * using FloatDataType = ConvertBaseTypeTo<float, DataType>;
+ * FloatDataType res = ...; // res component values are in [0, 1]
+ * DataType pix = RangeCast<BaseType<DataType>>(res); // pix are in [0, 255]
  * @endcode
  *
  * @tparam T Type that defines the target range to cast

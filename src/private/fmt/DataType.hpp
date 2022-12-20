@@ -15,42 +15,42 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_PRIV_PIXEL_TYPE_HPP
-#define NVCV_PRIV_PIXEL_TYPE_HPP
+#ifndef NVCV_PRIV_DATA_TYPE_HPP
+#define NVCV_PRIV_DATA_TYPE_HPP
 
 #include "ImageFormat.hpp"
 
-#include <nvcv/PixelType.h>
+#include <nvcv/DataType.h>
 
 #include <string>
 
 namespace nv::cv::priv {
 
-// Wrapper to NVCVPixelType to make it properly typed.
-class PixelType
+// Wrapper to NVCVDataType to make it properly typed.
+class DataType
 {
 public:
-    constexpr explicit PixelType(NVCVPixelType type)
+    constexpr explicit DataType(NVCVDataType type)
         : m_type{type}
     {
     }
 
-    constexpr PixelType(NVCVDataType dataType, NVCVPacking packing) noexcept
-        : m_type{NVCV_MAKE_PIXEL_TYPE(dataType, packing)}
+    constexpr DataType(NVCVDataKind dataKind, NVCVPacking packing) noexcept
+        : m_type{NVCV_MAKE_DATA_TYPE(dataKind, packing)}
     {
     }
 
-    constexpr NVCVPixelType value() const
+    constexpr NVCVDataType value() const
     {
         return m_type;
     }
 
-    constexpr bool operator==(PixelType that) const
+    constexpr bool operator==(DataType that) const
     {
         return m_type == that.value();
     }
 
-    constexpr bool operator!=(PixelType that) const
+    constexpr bool operator!=(DataType that) const
     {
         return !operator==(that);
     }
@@ -60,9 +60,9 @@ public:
         return ImageFormat{m_type}.planePacking(0);
     }
 
-    constexpr NVCVDataType dataType() const noexcept
+    constexpr NVCVDataKind dataKind() const noexcept
     {
-        return ImageFormat{m_type}.dataType();
+        return ImageFormat{m_type}.dataKind();
     }
 
     int                    bpp() const noexcept;
@@ -70,14 +70,14 @@ public:
     int                    numChannels() const noexcept;
     int                    strideBytes() const noexcept;
     int                    alignment() const noexcept;
-    PixelType              channelType(int ch) const;
+    DataType               channelType(int ch) const;
 
 private:
-    NVCVPixelType m_type;
+    NVCVDataType m_type;
 };
 
-std::ostream &operator<<(std::ostream &out, PixelType type);
+std::ostream &operator<<(std::ostream &out, DataType type);
 
 } // namespace nv::cv::priv
 
-#endif // NVCV_PRIV_PIXEL_TYPE_HPP
+#endif // NVCV_PRIV_DATA_TYPE_HPP

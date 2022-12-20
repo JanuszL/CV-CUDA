@@ -48,7 +48,7 @@ typedef void (*NVCVTensorDataCleanupFunc)(void *ctx, const NVCVTensorData *data)
 typedef struct NVCVTensorRequirementsRec
 {
     /*< Type of each element */
-    NVCVPixelType dtype;
+    NVCVDataType dtype;
 
     /*< Tensor dimension layout.
      * It's optional. If layout not available, set it to NVCV_TENSOR_NONE. */
@@ -100,7 +100,7 @@ typedef struct NVCVTensorRequirementsRec
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvTensorCalcRequirements(int32_t ndim, const int64_t *shape, NVCVPixelType dtype,
+NVCV_PUBLIC NVCVStatus nvcvTensorCalcRequirements(int32_t ndim, const int64_t *shape, NVCVDataType dtype,
                                                   NVCVTensorLayout layout, int32_t baseAddrAlignment,
                                                   int32_t rowAddrAlignment, NVCVTensorRequirements *reqs);
 
@@ -199,7 +199,7 @@ NVCV_PUBLIC NVCVStatus nvcvTensorWrapDataConstruct(const NVCVTensorData *data, N
  * @param [in] img Image to be wrapped
  *                 + Must not be NULL.
  *                 + Must not have subsampled planes
- *                 + All planes must have the same pixel type.
+ *                 + All planes must have the same data type.
  *                 + Distance in memory between consecutive planes must be > 0.
  *                 + Row pitch of all planes must be the same.
  *                 + Image must not be destroyed while it's referenced by a tensor.
@@ -267,7 +267,7 @@ NVCV_PUBLIC NVCVStatus nvcvTensorGetUserPointer(NVCVTensorHandle handle, void **
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvTensorGetDataType(NVCVTensorHandle handle, NVCVPixelType *type);
+NVCV_PUBLIC NVCVStatus nvcvTensorGetDataType(NVCVTensorHandle handle, NVCVDataType *type);
 
 /**
  * Get the tensor layout

@@ -18,8 +18,8 @@
 #ifndef NVCV_TENSORDATA_HPP
 #define NVCV_TENSORDATA_HPP
 
+#include "DataType.hpp"
 #include "ITensorData.hpp"
-#include "PixelType.hpp"
 #include "TensorShape.hpp"
 
 namespace nv { namespace cv {
@@ -31,7 +31,7 @@ class TensorDataPitchDevice : public ITensorDataPitchDevice
 public:
     using Buffer = NVCVTensorBufferPitch;
 
-    explicit TensorDataPitchDevice(const TensorShape &shape, const PixelType &dtype, const Buffer &data);
+    explicit TensorDataPitchDevice(const TensorShape &shape, const DataType &dtype, const Buffer &data);
     explicit TensorDataPitchDevice(const NVCVTensorData &data);
 };
 

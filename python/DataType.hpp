@@ -15,34 +15,34 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_PYTHON_PIXELTYPE_HPP
-#define NVCV_PYTHON_PIXELTYPE_HPP
+#ifndef NVCV_PYTHON_DATATYPE_HPP
+#define NVCV_PYTHON_DATATYPE_HPP
 
-#include <nvcv/PixelType.hpp>
+#include <nvcv/DataType.hpp>
 #include <pybind11/pybind11.h>
 
 namespace nv::cv {
-size_t ComputeHash(const cv::PixelType &pix);
+size_t ComputeHash(const cv::DataType &dtype);
 }
 
 namespace nv::cvpy {
 namespace py = pybind11;
 
-void ExportPixelType(py::module &m);
+void ExportDataType(py::module &m);
 
 } // namespace nv::cvpy
 
 namespace pybind11::detail {
 
 template<>
-struct type_caster<nv::cv::PixelType>
+struct type_caster<nv::cv::DataType>
 {
-    PYBIND11_TYPE_CASTER(nv::cv::PixelType, const_name("nvcv.Type"));
+    PYBIND11_TYPE_CASTER(nv::cv::DataType, const_name("nvcv.Type"));
 
     bool          load(handle src, bool);
-    static handle cast(nv::cv::PixelType type, return_value_policy /* policy */, handle /*parent */);
+    static handle cast(nv::cv::DataType type, return_value_policy /* policy */, handle /*parent */);
 };
 
 } // namespace pybind11::detail
 
-#endif // NVCV_PYTHON_PIXELTYPE_HPP
+#endif // NVCV_PYTHON_DATATYPE_HPP

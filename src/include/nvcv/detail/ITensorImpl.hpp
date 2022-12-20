@@ -60,11 +60,11 @@ inline TensorLayout ITensor::layout() const
     return static_cast<TensorLayout>(layout);
 }
 
-inline PixelType ITensor::dtype() const
+inline DataType ITensor::dtype() const
 {
-    NVCVPixelType out;
+    NVCVDataType out;
     detail::CheckThrow(nvcvTensorGetDataType(this->handle(), &out));
-    return PixelType{out};
+    return DataType{out};
 }
 
 inline const ITensorData *ITensor::exportData() const
@@ -77,7 +77,7 @@ inline const ITensorData *ITensor::exportData() const
         throw Exception(Status::ERROR_INVALID_OPERATION, "Tensor data cannot be exported, buffer type not supported");
     }
 
-    m_cacheData.emplace(TensorShape(data.shape, data.ndim, data.layout), PixelType{data.dtype}, data.buffer.pitch);
+    m_cacheData.emplace(TensorShape(data.shape, data.ndim, data.layout), DataType{data.dtype}, data.buffer.pitch);
 
     return &*m_cacheData;
 }

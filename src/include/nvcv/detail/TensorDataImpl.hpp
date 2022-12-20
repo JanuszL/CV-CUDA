@@ -28,7 +28,7 @@ namespace nv { namespace cv {
 
 // TensorDataPitchDevice implementation -----------------------
 
-inline TensorDataPitchDevice::TensorDataPitchDevice(const TensorShape &tshape, const PixelType &dtype,
+inline TensorDataPitchDevice::TensorDataPitchDevice(const TensorShape &tshape, const DataType &dtype,
                                                     const Buffer &buffer)
 {
     NVCVTensorData &data = this->cdata();

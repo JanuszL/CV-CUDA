@@ -164,11 +164,11 @@ enum class Packing : int32_t
     X64_Y64_Z64_W64 = NVCV_PACKING_X64_Y64_Z64_W64,
 };
 
-enum class DataType : int8_t
+enum class DataKind : int8_t
 {
-    UNSIGNED = NVCV_DATA_TYPE_UNSIGNED,
-    SIGNED   = NVCV_DATA_TYPE_SIGNED,
-    FLOAT    = NVCV_DATA_TYPE_FLOAT
+    UNSIGNED = NVCV_DATA_KIND_UNSIGNED,
+    SIGNED   = NVCV_DATA_KIND_SIGNED,
+    FLOAT    = NVCV_DATA_KIND_FLOAT
 };
 
 enum class MemLayout : int8_t
@@ -360,9 +360,9 @@ inline int32_t GetAlignment(Packing packing)
     return out;
 }
 
-inline std::ostream &operator<<(std::ostream &out, DataType dataType)
+inline std::ostream &operator<<(std::ostream &out, DataKind dataKind)
 {
-    return out << nvcvDataTypeGetName(static_cast<NVCVDataType>(dataType));
+    return out << nvcvDataKindGetName(static_cast<NVCVDataKind>(dataKind));
 }
 
 inline std::ostream &operator<<(std::ostream &out, Packing packing)
@@ -392,9 +392,9 @@ inline std::ostream &operator<<(std::ostream &out, ByteOrder byteOrder)
 
 }} // namespace nv::cv
 
-inline std::ostream &operator<<(std::ostream &out, NVCVDataType dataType)
+inline std::ostream &operator<<(std::ostream &out, NVCVDataKind dataKind)
 {
-    return out << nvcvDataTypeGetName(dataType);
+    return out << nvcvDataKindGetName(dataKind);
 }
 
 inline std::ostream &operator<<(std::ostream &out, NVCVPacking packing)

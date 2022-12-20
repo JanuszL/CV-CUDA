@@ -34,8 +34,8 @@ namespace nv::cv::legacy::helpers {
 
 cuda_op::DataFormat GetLegacyDataFormat(int32_t numberChannels, int32_t numberPlanes, int32_t numberInBatch);
 
-cuda_op::DataType GetLegacyDataType(int32_t bpc, cv::DataType type);
-cuda_op::DataType GetLegacyDataType(PixelType dtype);
+cuda_op::DataType GetLegacyDataType(int32_t bpc, cv::DataKind kind);
+cuda_op::DataType GetLegacyDataType(DataType dtype);
 cuda_op::DataType GetLegacyDataType(ImageFormat fmt);
 
 cuda_op::DataFormat GetLegacyDataFormat(const TensorLayout &layout);

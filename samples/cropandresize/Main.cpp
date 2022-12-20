@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
 
     // Create a tensor buffer to store the data pointer and pitch bytes for each plane
     nv::cv::TensorDataPitchDevice inData(nv::cv::TensorShape{inReqs.shape, inReqs.ndim, inReqs.layout},
-                                         nv::cv::PixelType{inReqs.dtype}, inBuf);
+                                         nv::cv::DataType{inReqs.dtype}, inBuf);
 
     // TensorWrapData allows for interoperation of external tensor representations with CVCUDA Tensor.
     nv::cv::TensorWrapData inTensor(inData);

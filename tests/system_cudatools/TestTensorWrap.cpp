@@ -118,13 +118,13 @@ TYPED_TEST(Tensor1DWrapCopyTest, can_change_content)
 // clang-format off
 NVCV_TYPED_TEST_SUITE(
     Tensor1DWrapTensorTest, ttype::Types<
-    ttype::Types<int, ttype::Value<NVCV_PIXEL_TYPE_S32>>,
-    ttype::Types<uchar1, ttype::Value<NVCV_PIXEL_TYPE_U8>>,
-    ttype::Types<const short2, ttype::Value<NVCV_PIXEL_TYPE_2S16>>,
-    ttype::Types<uchar3, ttype::Value<NVCV_PIXEL_TYPE_3U8>>,
-    ttype::Types<const uchar4, ttype::Value<NVCV_PIXEL_TYPE_4U8>>,
-    ttype::Types<float3, ttype::Value<NVCV_PIXEL_TYPE_3F32>>,
-    ttype::Types<const float4, ttype::Value<NVCV_PIXEL_TYPE_4F32>>
+    ttype::Types<int, ttype::Value<NVCV_DATA_TYPE_S32>>,
+    ttype::Types<uchar1, ttype::Value<NVCV_DATA_TYPE_U8>>,
+    ttype::Types<const short2, ttype::Value<NVCV_DATA_TYPE_2S16>>,
+    ttype::Types<uchar3, ttype::Value<NVCV_DATA_TYPE_3U8>>,
+    ttype::Types<const uchar4, ttype::Value<NVCV_DATA_TYPE_4U8>>,
+    ttype::Types<float3, ttype::Value<NVCV_DATA_TYPE_3F32>>,
+    ttype::Types<const float4, ttype::Value<NVCV_DATA_TYPE_4F32>>
 >);
 
 // clang-format on
@@ -132,9 +132,9 @@ NVCV_TYPED_TEST_SUITE(
 TYPED_TEST(Tensor1DWrapTensorTest, correct_with_tensor)
 {
     using ValueType = ttype::GetType<TypeParam, 0>;
-    auto pixelType  = ttype::GetValue<TypeParam, 1>;
+    auto dataType   = ttype::GetValue<TypeParam, 1>;
 
-    nv::cv::Tensor tensor({{123}, "N"}, nv::cv::PixelType{pixelType});
+    nv::cv::Tensor tensor({{123}, "N"}, nv::cv::DataType{dataType});
 
     const auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(tensor.exportData());
     ASSERT_NE(dev, nullptr);
@@ -152,12 +152,12 @@ TYPED_TEST(Tensor1DWrapTensorTest, correct_with_tensor)
 TYPED_TEST(Tensor1DWrapTensorTest, it_works_in_device)
 {
     using ValueType = std::remove_cv_t<ttype::GetType<TypeParam, 0>>;
-    auto pixelType  = ttype::GetValue<TypeParam, 1>;
+    auto dataType   = ttype::GetValue<TypeParam, 1>;
 
     cudaStream_t stream;
     ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
 
-    nv::cv::Tensor tensor({{123}, "N"}, nv::cv::PixelType{pixelType});
+    nv::cv::Tensor tensor({{123}, "N"}, nv::cv::DataType{dataType});
 
     int1 size{static_cast<int>(tensor.shape()[0])};
 
@@ -571,7 +571,7 @@ TEST(Tensor3DWrapBigPitchDeathTest, it_dies)
     int64_t height = 2;
     int64_t width  = std::numeric_limits<int>::max();
 
-    nv::cv::PixelType                     dt{NVCV_PIXEL_TYPE_U8};
+    nv::cv::DataType                      dt{NVCV_DATA_TYPE_U8};
     nv::cv::TensorDataPitchDevice::Buffer buf;
     buf.pitchBytes[2] = sizeof(DataType);
     buf.pitchBytes[1] = width * buf.pitchBytes[2];
@@ -593,16 +593,16 @@ TEST(Tensor3DWrapBigPitchDeathTest, it_dies)
 // clang-format off
 NVCV_TYPED_TEST_SUITE(
     Tensor3DWrapTensorWrapTest, ttype::Types<
-    ttype::Types<ttype::Value<NVCV_PIXEL_TYPE_S32>, ttype::Value<PackedTensor3D<int, 1, 2, 2>{
+    ttype::Types<ttype::Value<NVCV_DATA_TYPE_S32>, ttype::Value<PackedTensor3D<int, 1, 2, 2>{
         2, 3,
        -5, 1}>>,
-    ttype::Types<ttype::Value<NVCV_PIXEL_TYPE_2S16>, ttype::Value<PackedTensor3D<short2, 2, 2, 1>{
+    ttype::Types<ttype::Value<NVCV_DATA_TYPE_2S16>, ttype::Value<PackedTensor3D<short2, 2, 2, 1>{
         short2{-12, 2}, short2{5678, -2345},
         short2{123, 0}, short2{-9876, 4321}}>>,
-    ttype::Types<ttype::Value<NVCV_PIXEL_TYPE_F32>, ttype::Value<PackedTensor3D<float1, 2, 2, 2>{
+    ttype::Types<ttype::Value<NVCV_DATA_TYPE_F32>, ttype::Value<PackedTensor3D<float1, 2, 2, 2>{
         float1{-1.23f}, float1{2.3f}, float1{3.45f}, float1{-4.5f},
         float1{1.23f}, float1{-2.3f}, float1{-3.45f}, float1{4.5f}}>>,
-    ttype::Types<ttype::Value<NVCV_PIXEL_TYPE_4U8>, ttype::Value<PackedTensor3D<uchar4, 3, 3, 1>{
+    ttype::Types<ttype::Value<NVCV_DATA_TYPE_4U8>, ttype::Value<PackedTensor3D<uchar4, 3, 3, 1>{
         uchar4{0, 127, 231, 32}, uchar4{56, 255, 1, 2}, uchar4{42, 3, 5, 7},
         uchar4{12, 17, 230, 31}, uchar4{57, 254, 8, 1}, uchar4{41, 2, 4, 6},
         uchar4{0, 128, 233, 33}, uchar4{55, 253, 9, 1}, uchar4{40, 1, 3, 5}}>>
@@ -629,7 +629,7 @@ TYPED_TEST(Tensor3DWrapTensorWrapTest, correct_with_tensor_wrap)
     buf.data          = reinterpret_cast<void *>(input.data());
 
     nv::cv::TensorWrapData tensor{
-        nv::cv::TensorDataPitchDevice{nv::cv::TensorShape{{n, h, w}, "NHW"}, nv::cv::PixelType{dataType}, buf}
+        nv::cv::TensorDataPitchDevice{nv::cv::TensorShape{{n, h, w}, "NHW"}, nv::cv::DataType{dataType}, buf}
     };
 
     const auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(tensor.exportData());
@@ -891,16 +891,16 @@ TYPED_TEST(Tensor4DWrapCopyTest, can_change_content)
 // clang-format off
 NVCV_TYPED_TEST_SUITE(
     Tensor4DWrapTensorWrapTest, ttype::Types<
-    ttype::Types<ttype::Value<NVCV_PIXEL_TYPE_S32>, ttype::Value<PackedTensor4D<int, 1, 2, 2, 2>{
+    ttype::Types<ttype::Value<NVCV_DATA_TYPE_S32>, ttype::Value<PackedTensor4D<int, 1, 2, 2, 2>{
         2, 3, 4, 5,
        -5, 1, 6, 7}>>,
-    ttype::Types<ttype::Value<NVCV_PIXEL_TYPE_2S16>, ttype::Value<PackedTensor4D<short2, 2, 2, 1, 2>{
+    ttype::Types<ttype::Value<NVCV_DATA_TYPE_2S16>, ttype::Value<PackedTensor4D<short2, 2, 2, 1, 2>{
         short2{-12, 2}, short2{5678, -2345}, short2{123, -321}, short2{-567, 234},
         short2{123, 0}, short2{-9876, 4321}, short2{12, -32}, short2{567, -234}}>>,
-    ttype::Types<ttype::Value<NVCV_PIXEL_TYPE_F32>, ttype::Value<PackedTensor4D<float1, 2, 2, 2, 1>{
+    ttype::Types<ttype::Value<NVCV_DATA_TYPE_F32>, ttype::Value<PackedTensor4D<float1, 2, 2, 2, 1>{
         float1{-1.23f}, float1{2.3f}, float1{3.45f}, float1{-4.5f},
         float1{1.23f}, float1{-2.3f}, float1{-3.45f}, float1{4.5f}}>>,
-    ttype::Types<ttype::Value<NVCV_PIXEL_TYPE_4U8>, ttype::Value<PackedTensor4D<uchar4, 3, 3, 1, 1>{
+    ttype::Types<ttype::Value<NVCV_DATA_TYPE_4U8>, ttype::Value<PackedTensor4D<uchar4, 3, 3, 1, 1>{
         uchar4{0, 127, 231, 32}, uchar4{56, 255, 1, 2}, uchar4{42, 3, 5, 7},
         uchar4{12, 17, 230, 31}, uchar4{57, 254, 8, 1}, uchar4{41, 2, 4, 6},
         uchar4{0, 128, 233, 33}, uchar4{55, 253, 9, 1}, uchar4{40, 1, 3, 5}}>>
@@ -929,7 +929,7 @@ TYPED_TEST(Tensor4DWrapTensorWrapTest, correct_with_tensor_wrap)
     buf.data          = reinterpret_cast<void *>(input.data());
 
     nv::cv::TensorWrapData tensor{
-        nv::cv::TensorDataPitchDevice{nv::cv::TensorShape{{n, h, w, c}, "NHWC"}, nv::cv::PixelType{dataType}, buf}
+        nv::cv::TensorDataPitchDevice{nv::cv::TensorShape{{n, h, w, c}, "NHWC"}, nv::cv::DataType{dataType}, buf}
     };
 
     const auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(tensor.exportData());
@@ -965,13 +965,13 @@ TYPED_TEST(Tensor4DWrapTensorWrapTest, correct_with_tensor_wrap)
 // clang-format off
 NVCV_TYPED_TEST_SUITE(
     Tensor4DWrapTensorTest, ttype::Types<
-    ttype::Types<int, ttype::Value<NVCV_PIXEL_TYPE_S32>>,
-    ttype::Types<uchar1, ttype::Value<NVCV_PIXEL_TYPE_U8>>,
-    ttype::Types<const short2, ttype::Value<NVCV_PIXEL_TYPE_2S16>>,
-    ttype::Types<uchar3, ttype::Value<NVCV_PIXEL_TYPE_3U8>>,
-    ttype::Types<const uchar4, ttype::Value<NVCV_PIXEL_TYPE_4U8>>,
-    ttype::Types<float3, ttype::Value<NVCV_PIXEL_TYPE_3F32>>,
-    ttype::Types<const float4, ttype::Value<NVCV_PIXEL_TYPE_4F32>>
+    ttype::Types<int, ttype::Value<NVCV_DATA_TYPE_S32>>,
+    ttype::Types<uchar1, ttype::Value<NVCV_DATA_TYPE_U8>>,
+    ttype::Types<const short2, ttype::Value<NVCV_DATA_TYPE_2S16>>,
+    ttype::Types<uchar3, ttype::Value<NVCV_DATA_TYPE_3U8>>,
+    ttype::Types<const uchar4, ttype::Value<NVCV_DATA_TYPE_4U8>>,
+    ttype::Types<float3, ttype::Value<NVCV_DATA_TYPE_3F32>>,
+    ttype::Types<const float4, ttype::Value<NVCV_DATA_TYPE_4F32>>
 >);
 
 // clang-format on
@@ -979,14 +979,14 @@ NVCV_TYPED_TEST_SUITE(
 TYPED_TEST(Tensor4DWrapTensorTest, correct_with_tensor)
 {
     using ValueType = ttype::GetType<TypeParam, 0>;
-    auto pixelType  = ttype::GetValue<TypeParam, 1>;
+    auto dataType   = ttype::GetValue<TypeParam, 1>;
 
     nv::cv::Tensor tensor(
         {
             {3, 213, 211, 4},
             "NHWC"
     },
-        nv::cv::PixelType{pixelType});
+        nv::cv::DataType{dataType});
 
     const auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(tensor.exportData());
     ASSERT_NE(dev, nullptr);
@@ -1016,14 +1016,14 @@ TYPED_TEST(Tensor4DWrapTensorTest, correct_with_tensor)
 TYPED_TEST(Tensor4DWrapTensorTest, it_works_in_device)
 {
     using ValueType = std::remove_cv_t<ttype::GetType<TypeParam, 0>>;
-    auto pixelType  = ttype::GetValue<TypeParam, 1>;
+    auto dataType   = ttype::GetValue<TypeParam, 1>;
 
     nv::cv::Tensor tensor(
         {
             {3, 213, 211, 4},
             "NHWC"
     },
-        nv::cv::PixelType{pixelType});
+        nv::cv::DataType{dataType});
 
     cudaStream_t stream;
     ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));

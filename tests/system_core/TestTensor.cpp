@@ -35,16 +35,15 @@ namespace t    = ::testing;
 namespace test = nv::cv::test;
 
 class TensorTests
-    : public t::TestWithParam<
-          std::tuple<test::Param<"numImages", int>, test::Param<"width", int>, test::Param<"height", int>,
-                     test::Param<"format", nvcv::ImageFormat>, test::Param<"shape", nvcv::TensorShape>,
-                     test::Param<"dtype", nvcv::PixelType>>>
+    : public t::TestWithParam<std::tuple<test::Param<"numImages", int>, test::Param<"width", int>,
+                                         test::Param<"height", int>, test::Param<"format", nvcv::ImageFormat>,
+                                         test::Param<"shape", nvcv::TensorShape>, test::Param<"dtype", nvcv::DataType>>>
 {
 };
 
 // clang-format off
 NVCV_INSTANTIATE_TEST_SUITE_P(_, TensorTests,
-    test::ValueList<int, int, int, nvcv::ImageFormat, nvcv::TensorShape, nvcv::PixelType>
+    test::ValueList<int, int, int, nvcv::ImageFormat, nvcv::TensorShape, nvcv::DataType>
     {
         {53, 32, 16, nvcv::FMT_RGBA8p, nvcv::TensorShape{{53, 4, 16, 32},nvcv::TensorLayout::NCHW} , nvcv::TYPE_U8},
         {14, 64, 18, nvcv::FMT_RGB8, nvcv::TensorShape{{14, 18, 64, 3},nvcv::TensorLayout::NHWC}, nvcv::TYPE_U8}
@@ -60,7 +59,7 @@ TEST_P(TensorTests, wip_create)
     const int               PARAM_HEIGHT     = std::get<2>(GetParam());
     const nvcv::ImageFormat PARAM_FORMAT     = std::get<3>(GetParam());
     const nvcv::TensorShape GOLD_SHAPE       = std::get<4>(GetParam());
-    const nvcv::PixelType   GOLD_DTYPE       = std::get<5>(GetParam());
+    const nvcv::DataType    GOLD_DTYPE       = std::get<5>(GetParam());
     const int               GOLD_NDIM        = 4;
 
     nvcv::Tensor tensor(PARAM_NUM_IMAGES, {PARAM_WIDTH, PARAM_HEIGHT}, PARAM_FORMAT);
@@ -260,9 +259,9 @@ TEST(Tensor, wip_user_pointer)
 TEST(TensorWrapData, wip_create)
 {
     nvcv::ImageFormat fmt
-        = nvcv::ImageFormat(nvcv::ColorModel::RGB, nvcv::CSPEC_BT601_ER, nvcv::MemLayout::PL, nvcv::DataType::FLOAT,
+        = nvcv::ImageFormat(nvcv::ColorModel::RGB, nvcv::CSPEC_BT601_ER, nvcv::MemLayout::PL, nvcv::DataKind::FLOAT,
                             nvcv::Swizzle::S_XY00, nvcv::Packing::X16, nvcv::Packing::X16);
-    nvcv::PixelType GOLD_DTYPE = fmt.planePixelType(0);
+    nvcv::DataType GOLD_DTYPE = fmt.planeDataType(0);
 
     nvcv::Tensor origTensor(5, {173, 79}, fmt, nvcv::MemAlignment{}.rowAddr(1).baseAddr(32)); // packed rows
 
@@ -327,13 +326,13 @@ TEST(TensorWrapData, wip_create)
 class TensorWrapImageTests
     : public t::TestWithParam<
           std::tuple<test::Param<"size", nvcv::Size2D>, test::Param<"format", nvcv::ImageFormat>,
-                     test::Param<"gold_shape", nvcv::TensorShape>, test::Param<"dtype", nvcv::PixelType>>>
+                     test::Param<"gold_shape", nvcv::TensorShape>, test::Param<"dtype", nvcv::DataType>>>
 {
 };
 
 // clang-format off
 NVCV_INSTANTIATE_TEST_SUITE_P(_, TensorWrapImageTests,
-    test::ValueList<nvcv::Size2D, nvcv::ImageFormat, nvcv::TensorShape, nvcv::PixelType>
+    test::ValueList<nvcv::Size2D, nvcv::ImageFormat, nvcv::TensorShape, nvcv::DataType>
     {
         {{61,23}, nvcv::FMT_RGBA8p, nvcv::TensorShape{{1,4,23,61},nvcv::TensorLayout::NCHW}, nvcv::TYPE_U8},
         {{61,23}, nvcv::FMT_RGBA8, nvcv::TensorShape{{1,23,61,4},nvcv::TensorLayout::NHWC}, nvcv::TYPE_U8},
@@ -351,7 +350,7 @@ TEST_P(TensorWrapImageTests, wip_create)
     const nvcv::Size2D      PARAM_SIZE   = std::get<0>(GetParam());
     const nvcv::ImageFormat PARAM_FORMAT = std::get<1>(GetParam());
     const nvcv::TensorShape GOLD_SHAPE   = std::get<2>(GetParam());
-    const nvcv::PixelType   GOLD_DTYPE   = std::get<3>(GetParam());
+    const nvcv::DataType    GOLD_DTYPE   = std::get<3>(GetParam());
 
     nvcv::Image img(PARAM_SIZE, PARAM_FORMAT);
 

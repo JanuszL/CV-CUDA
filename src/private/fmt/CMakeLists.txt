@@ -18,7 +18,7 @@ add_library(nvcv_format STATIC
     ColorSpec.cpp
     DataLayout.cpp
     ColorFormat.cpp
-    PixelType.cpp
+    DataType.cpp
     ImageFormat.cpp
 )
 
