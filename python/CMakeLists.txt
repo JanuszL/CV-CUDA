@@ -19,116 +19,78 @@ project(nvcv_python CXX C)
 
 set(CMAKE_CXX_STANDARD 20)
 
+set(COMPILE_WARNINGS
+    -Wno-deprecated-declarations
+    -Wsuggest-override
+    -Wall -Werror -Wpointer-arith
+    -Wmissing-declarations -Wredundant-decls -Wmultichar
+    -Wno-unused-local-typedefs -Wunused -Wno-unknown-pragmas
+)
+set_directory_properties(PROPERTIES COMPILE_OPTIONS "${COMPILE_WARNINGS}")
+
+set(CMAKE_POSITION_INDEPENDENT_CODE true)
+
 set(PYBIND11_PYTHON_VERSION ${PYTHON_VERSION})
 add_subdirectory(${PYBIND11_SOURCE_DIR} pybind11)
 
-find_package(CUDAToolkit REQUIRED)
-find_package(nvcv REQUIRED)
-find_package(nvcv_operators REQUIRED)
-
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../src/util nvcv_util)
 
-set(imgformat_defs ${CMAKE_CURRENT_BINARY_DIR}/NVCVPythonImageFormatDefs.inc)
-set(imgformat_script ${CMAKE_CURRENT_SOURCE_DIR}/gen_imgformat_list.sh)
-set(imgformat_header ${CMAKE_CURRENT_SOURCE_DIR}/../src/format/include/nvcv/ImageFormat.h)
-add_custom_command(OUTPUT ${imgformat_defs}
-    COMMAND ${imgformat_script} "${imgformat_header}" > ${imgformat_defs}
-    DEPENDS ${imgformat_script} ${imgformat_header}
-)
-
-set(dtype_defs ${CMAKE_CURRENT_BINARY_DIR}/NVCVPythonDataTypeDefs.inc)
-set(dtype_script ${CMAKE_CURRENT_SOURCE_DIR}/gen_dtype_list.sh)
-set(dtype_header ${CMAKE_CURRENT_SOURCE_DIR}/../src/format/include/nvcv/DataType.h)
-add_custom_command(OUTPUT ${dtype_defs}
-    COMMAND ${dtype_script} "${dtype_header}" > ${dtype_defs}
-    DEPENDS ${dtype_script} ${dtype_header}
-)
-
-pybind11_add_module(nvcv_python MODULE
-    ${imgformat_defs}
-    ${dtype_defs}
-    Assert.cpp
-    Cache.cpp
-    CheckError.cpp
-    PyUtil.cpp
-    String.cpp
-    Main.cpp
-    ImageFormat.cpp
-    DataType.cpp
-    BorderType.cpp
-    MorphologyType.cpp
-    ColorConversionCode.cpp
-    Object.cpp
-    Stream.cpp
-    StreamStack.cpp
-    Resource.cpp
-    ResourceGuard.cpp
-    Container.cpp
-    Tensor.cpp
-    Image.cpp
-    ImageBatch.cpp
-    CudaBuffer.cpp
-    InterpolationType.cpp
-    Rect.cpp
-    OpReformat.cpp
-    OpResize.cpp
-    OpCustomCrop.cpp
-    OpNormalize.cpp
-    OpConvertTo.cpp
-    OpPadAndStack.cpp
-    OpCopyMakeBorder.cpp
-    OpRotate.cpp
-    OpErase.cpp
-    OpGaussian.cpp
-    OpMedianBlur.cpp
-    OpLaplacian.cpp
-    OpAverageBlur.cpp
-    OpConv2D.cpp
-    OpBilateralFilter.cpp
-    OpCenterCrop.cpp
-    OpWarpAffine.cpp
-    OpWarpPerspective.cpp
-    OpChannelReorder.cpp
-    OpMorphology.cpp
-    OpFlip.cpp
-    OpCvtColor.cpp
-    OpComposite.cpp
-    OpGammaContrast.cpp
-    OpPillowResize.cpp
-)
-
-target_include_directories(nvcv_python
-    PRIVATE
-        # for imgformat_defs
-        ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-set_target_properties(nvcv_python PROPERTIES
-    OUTPUT_NAME nvcv
-    DEBUG_POSTFIX ""
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
-)
-
-target_link_libraries(nvcv_python
-    PRIVATE
-        nvcv
-        nvcv_util_compat
-        nvcv_operators
-        CUDA::cudart_static
-        -static-libstdc++
-)
-
-target_compile_options(nvcv_python
-    PRIVATE
-        -Wno-deprecated-declarations
-        -Wsuggest-override
-        -Wall -Werror -Wpointer-arith
-        -Wmissing-declarations -Wredundant-decls -Wmultichar
-        -Wno-unused-local-typedefs -Wunused -Wno-unknown-pragmas
-)
+set(PYTHON_MODULE_NAME python${PYTHON_VERSION})
+string(REPLACE "." "" PYTHON_MODULE_NAME "${PYTHON_MODULE_NAME}")
 
 include(GNUInstallDirs)
+set(PYTHON_MODULE_FILENAME_LIST "" CACHE INTERNAL "")
+function(nvcv_python_add_module)
+    cmake_parse_arguments(ARG "SHARED;MODULE" "TARGET;OUTPUT_NAME" "SOURCES" ${ARGV})
 
-install(TARGETS nvcv_python
-    LIBRARY DESTINATION lib
+    if(ARG_SHARED AND ARG_MODULE)
+        message(FATAL_ERROR "Must specify either SHARED or MODULE")
+    elseif(ARG_SHARED)
+        set(type "SHARED")
+    else()
+        set(type "MODULE")
+    endif()
+
+    pybind11_add_module(${ARG_TARGET} ${type} ${ARG_SOURCES})
+
+    set_target_properties(${ARG_TARGET} PROPERTIES
+        DEBUG_POSTFIX ""
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
+    )
+
+    if(ARG_OUTPUT_NAME)
+        set_target_properties(${ARG_TARGET} PROPERTIES
+            OUTPUT_NAME "${ARG_OUTPUT_NAME}"
+        )
+    else()
+        set(ARG_OUTPUT_NAME ${ARG_TARGET})
+    endif()
+
+    target_link_libraries(${ARG_TARGET}
+        PRIVATE
+            -static-libstdc++
+    )
+
+    get_target_property(prefix ${ARG_TARGET} PREFIX)
+    get_target_property(suffix ${ARG_TARGET} SUFFIX)
+
+    set(PYTHON_MODULE_FILENAME_LIST
+        "${PYTHON_MODULE_FILENAME_LIST};${prefix}${ARG_OUTPUT_NAME}${suffix}" CACHE INTERNAL "")
+
+    install(TARGETS ${ARG_TARGET}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/python
+        COMPONENT ${PYTHON_MODULE_NAME}
 )
+endfunction()
+
+add_subdirectory(common)
+add_subdirectory(mod_core)
+add_subdirectory(mod_operators)
+
+# Set up debian control files
+set(SRC_PYTHON_MODULE_PATH ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/python)
+set(DST_PYTHON_MODULE_PATH /usr/lib/python3/dist-packages)
+string(JOIN " " PYTHON_MODULE_FILENAME_LIST ${PYTHON_MODULE_FILENAME_LIST})
+
+configure_file(cpack/debian_python_postinst.in cpack/postinst @ONLY)
+configure_file(cpack/debian_python_prerm.in cpack/prerm @ONLY)

@@ -21,6 +21,8 @@ find_package(OpenSSL COMPONENTS Crypto REQUIRED)
 set(ZLIB_USE_STATIC_LIBS TRUE)
 find_package(ZLIB REQUIRED)
 
+find_package(CUDAToolkit REQUIRED)
+
 set(CMAKE_POSITION_INDEPENDENT_CODE on)
 
 # nvcv_util_sanitizer ---------------------------------
@@ -106,7 +108,7 @@ safe_configure_file(Compat.c.in Compat.c @ONLY)
 
 add_library(nvcv_util_compat OBJECT
     Compat.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/Compat.c
+    #${CMAKE_CURRENT_BINARY_DIR}/Compat.c
 )
 
 # Compat.c needs Compat.h

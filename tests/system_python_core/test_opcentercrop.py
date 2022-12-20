@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import nvcv
+import nvcv_operators  # noqa: F401
 import pytest as t
 import numpy as np
 

@@ -24,14 +24,20 @@ if(CMAKE_BUILD_TYPE)
     list(APPEND PYPROJ_COMMON_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
 endif()
 
+get_target_property(NVCV_FORMAT_SOURCE_DIR nvcv_format SOURCE_DIR)
+
 # Needed so that nvcv library's build path gets added
 # as RPATH to the plugin module. When outer project gets installed,
 # it shall overwrite the RPATH with the final installation path.
 list(APPEND PYPROJ_COMMON_ARGS
     -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=true
     -DCMAKE_BUILD_RPATH_USE_ORIGIN=true
+    -DCMAKE_INSTALL_LIBDIR=${CMAKE_INSTALL_LIBDIR}
+    -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
     -DCMAKE_MODULE_PATH=${CMAKE_CURRENT_BINARY_DIR}/cmake
+    -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
     -DPYBIND11_SOURCE_DIR=${PYBIND11_SOURCE_DIR}
+    -DNVCV_FORMAT_SOURCE_DIR=${NVCV_FORMAT_SOURCE_DIR}
 )
 
 foreach(VER ${PYTHON_VERSIONS})
@@ -45,5 +51,7 @@ foreach(VER ${PYTHON_VERSIONS})
         TMP_DIR ${BASEDIR}/tmp
         STAMP_DIR ${BASEDIR}/stamp
         BUILD_ALWAYS true
-        DEPENDS nvcv nvcv_operators)
+        DEPENDS nvcv nvcv_operators
+        INSTALL_COMMAND ""
+    )
 endforeach()

@@ -25,6 +25,7 @@ import argparse
 
 # tag: Import CVCUDA module
 import nvcv
+import nvcv_operators  # noqa: F401
 
 # tag: Classification Sample
 
