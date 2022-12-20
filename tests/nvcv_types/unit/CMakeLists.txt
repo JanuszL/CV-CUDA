@@ -31,7 +31,7 @@ add_executable(nvcv_test_types_unit
     TestHandleManager.cpp
     TestTensorDataUtils.cpp
     TestAlgorithm.cpp
-    #TestCompat.cpp
+    TestCompat.cpp
 )
 
 target_compile_definitions(nvcv_test_types_unit

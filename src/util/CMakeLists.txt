@@ -66,7 +66,7 @@ __attribute__((used,naked))
 void __wrap_${fnname}()
 {
     asm(\".symver __my_${fnname},${sym}\");
-    asm(\"jmp __my_${fnname}\" ::);
+    asm(\"jmp __my_${fnname}@PLT\" ::);
 }
 ")
     endif()
@@ -108,7 +108,7 @@ safe_configure_file(Compat.c.in Compat.c @ONLY)
 
 add_library(nvcv_util_compat OBJECT
     Compat.cpp
-    #${CMAKE_CURRENT_BINARY_DIR}/Compat.c
+    ${CMAKE_CURRENT_BINARY_DIR}/Compat.c
 )
 
 # Compat.c needs Compat.h
@@ -145,14 +145,14 @@ target_link_options(nvcv_util_compat
     PUBLIC
         -static-libstdc++
         -static-libgcc
-        #-Wl,--wrap=__libc_start_main
+        -Wl,--wrap=__libc_start_main
         -Wl,-u__cxa_thread_atexit_impl
-        #${linkcompat}
-        #-Wl,--push-state,--no-as-needed
-        #${CMAKE_CURRENT_SOURCE_DIR}/stubs/libdl-2.17_stub.so
-        #${CMAKE_CURRENT_SOURCE_DIR}/stubs/librt-2.17_stub.so
-        #${CMAKE_CURRENT_SOURCE_DIR}/stubs/libpthread-2.17_stub.so
-        #-Wl,--pop-state
+        ${linkcompat}
+        -Wl,--push-state,--no-as-needed
+        ${CMAKE_CURRENT_SOURCE_DIR}/stubs/libdl-2.17_stub.so
+        ${CMAKE_CURRENT_SOURCE_DIR}/stubs/librt-2.17_stub.so
+        ${CMAKE_CURRENT_SOURCE_DIR}/stubs/libpthread-2.17_stub.so
+        -Wl,--pop-state
 )
 
 # nvcv_util ---------------------------------
