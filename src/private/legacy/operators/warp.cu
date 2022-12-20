@@ -97,8 +97,8 @@ void warp_caller(const Ptr2dNHWC<T> src, Ptr2dNHWC<T> dst, Transform transform, 
 }
 
 template<typename T>
-void warpAffine(const nvcv::TensorDataAccessPitchImagePlanar &inData,
-                const nvcv::TensorDataAccessPitchImagePlanar &outData, WarpAffineTransform transform,
+void warpAffine(const nvcv::TensorDataAccessStridedImagePlanar &inData,
+                const nvcv::TensorDataAccessStridedImagePlanar &outData, WarpAffineTransform transform,
                 const int interpolation, int borderMode, const float4 borderValue, cudaStream_t stream)
 {
     Ptr2dNHWC<T> src_ptr(inData);
@@ -107,8 +107,8 @@ void warpAffine(const nvcv::TensorDataAccessPitchImagePlanar &inData,
 }
 
 template<typename T>
-void warpPerspective(const nvcv::TensorDataAccessPitchImagePlanar &inData,
-                     const nvcv::TensorDataAccessPitchImagePlanar &outData, PerspectiveTransform transform,
+void warpPerspective(const nvcv::TensorDataAccessStridedImagePlanar &inData,
+                     const nvcv::TensorDataAccessStridedImagePlanar &outData, PerspectiveTransform transform,
                      const int interpolation, int borderMode, const float4 borderValue, cudaStream_t stream)
 {
     Ptr2dNHWC<T> src_ptr(inData);
@@ -131,7 +131,7 @@ static void invertMat(const float *M, float *h_aCoeffs)
 
 namespace nv::cv::legacy::cuda_op {
 
-ErrorCode WarpAffine::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+ErrorCode WarpAffine::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                             const float *xform, const int32_t flags, const NVCVBorderType borderMode,
                             const float4 borderValue, cudaStream_t stream)
 {
@@ -152,10 +152,10 @@ ErrorCode WarpAffine::infer(const ITensorDataPitchDevice &inData, const ITensorD
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     cuda_op::DataType  data_type   = GetLegacyDataType(inData.dtype());
@@ -183,8 +183,8 @@ ErrorCode WarpAffine::infer(const ITensorDataPitchDevice &inData, const ITensorD
                 || borderMode == NVCV_BORDER_CONSTANT || borderMode == NVCV_BORDER_REFLECT
                 || borderMode == NVCV_BORDER_WRAP);
 
-    typedef void (*func_t)(const nvcv::TensorDataAccessPitchImagePlanar &inData,
-                           const nvcv::TensorDataAccessPitchImagePlanar &outData, WarpAffineTransform transform,
+    typedef void (*func_t)(const nvcv::TensorDataAccessStridedImagePlanar &inData,
+                           const nvcv::TensorDataAccessStridedImagePlanar &outData, WarpAffineTransform transform,
                            const int interpolation, int borderMode, const float4 borderValue, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {
@@ -222,7 +222,7 @@ size_t WarpPerspective::calBufferSize(DataShape max_input_shape, DataShape max_o
     return 9 * sizeof(float);
 }
 
-ErrorCode WarpPerspective::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+ErrorCode WarpPerspective::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                                  const float *transMatrix, const int32_t flags, const NVCVBorderType borderMode,
                                  const float4 borderValue, cudaStream_t stream)
 {
@@ -243,10 +243,10 @@ ErrorCode WarpPerspective::infer(const ITensorDataPitchDevice &inData, const ITe
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     cuda_op::DataType  data_type   = GetLegacyDataType(inData.dtype());
@@ -274,8 +274,8 @@ ErrorCode WarpPerspective::infer(const ITensorDataPitchDevice &inData, const ITe
                 || borderMode == NVCV_BORDER_CONSTANT || borderMode == NVCV_BORDER_REFLECT
                 || borderMode == NVCV_BORDER_WRAP);
 
-    typedef void (*func_t)(const nvcv::TensorDataAccessPitchImagePlanar &inData,
-                           const nvcv::TensorDataAccessPitchImagePlanar &outData, PerspectiveTransform transform,
+    typedef void (*func_t)(const nvcv::TensorDataAccessStridedImagePlanar &inData,
+                           const nvcv::TensorDataAccessStridedImagePlanar &outData, PerspectiveTransform transform,
                            const int interpolation, int borderMode, const float4 borderValue, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {

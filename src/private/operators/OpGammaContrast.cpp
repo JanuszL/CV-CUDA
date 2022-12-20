@@ -35,21 +35,21 @@ GammaContrast::GammaContrast(const int32_t maxVarShapeBatchSize, const int32_t m
 void GammaContrast::operator()(cudaStream_t stream, const cv::IImageBatchVarShape &in, cv::IImageBatchVarShape &out,
                                const cv::ITensor &gamma) const
 {
-    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(in.exportData(stream));
+    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(in.exportData(stream));
     if (inData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
                             "Input must be device-acessible, varshape pitch-linear image batch");
     }
 
-    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(out.exportData(stream));
+    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(out.exportData(stream));
     if (outData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT,
                             "Output must be device-acessible, varshape pitch-linear image batch");
     }
 
-    auto *gammaData = dynamic_cast<const cv::ITensorDataPitchDevice *>(gamma.exportData());
+    auto *gammaData = dynamic_cast<const cv::ITensorDataStridedCuda *>(gamma.exportData());
     if (gammaData == nullptr)
     {
         throw cv::Exception(cv::Status::ERROR_INVALID_ARGUMENT, "Gamma must be device-acessible, pitch-linear tensor");

@@ -336,8 +336,8 @@ __global__ void medianForSmallKernel(const Ptr2dVarShapeNHWC<T> src, Ptr2dVarSha
 #undef fetchAs1d
 
 template<typename T>
-void median(const IImageBatchVarShapeDataPitchDevice &in, const IImageBatchVarShapeDataPitchDevice &out,
-            const ITensorDataPitchDevice &ksize, int maxKHeight, int maxKWidth, cudaStream_t stream)
+void median(const IImageBatchVarShapeDataStridedCuda &in, const IImageBatchVarShapeDataStridedCuda &out,
+            const ITensorDataStridedCuda &ksize, int maxKHeight, int maxKWidth, cudaStream_t stream)
 {
     Size2D outMaxSize = out.maxSize();
 
@@ -399,9 +399,9 @@ MedianBlurVarShape::~MedianBlurVarShape()
     m_kernelSizes.shrink_to_fit();
 }
 
-ErrorCode MedianBlurVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData,
-                                    const IImageBatchVarShapeDataPitchDevice &outData,
-                                    const ITensorDataPitchDevice &ksize, cudaStream_t stream)
+ErrorCode MedianBlurVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData,
+                                    const IImageBatchVarShapeDataStridedCuda &outData,
+                                    const ITensorDataStridedCuda &ksize, cudaStream_t stream)
 {
     if (m_maxBatchSize <= 0)
     {
@@ -449,12 +449,12 @@ ErrorCode MedianBlurVarShape::infer(const IImageBatchVarShapeDataPitchDevice &in
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    auto ksizeDataAccess = nv::cv::TensorDataAccessPitch::Create(ksize);
+    auto ksizeDataAccess = nv::cv::TensorDataAccessStrided::Create(ksize);
     NVCV_ASSERT(ksizeDataAccess);
 
     // Copy the data to host
     checkCudaErrors(cudaMemcpy2DAsync(m_kernelSizes.data(), sizeof(int) * 2, ksizeDataAccess->sampleData(0),
-                                      ksizeDataAccess->samplePitchBytes(), sizeof(int) * 2, inData.numImages(),
+                                      ksizeDataAccess->sampleStride(), sizeof(int) * 2, inData.numImages(),
                                       cudaMemcpyDeviceToHost, stream));
     checkCudaErrors(cudaStreamSynchronize(stream));
 
@@ -482,8 +482,8 @@ ErrorCode MedianBlurVarShape::infer(const IImageBatchVarShapeDataPitchDevice &in
         }
     }
 
-    typedef void (*median_t)(const IImageBatchVarShapeDataPitchDevice &in,
-                             const IImageBatchVarShapeDataPitchDevice &out, const ITensorDataPitchDevice &ksize,
+    typedef void (*median_t)(const IImageBatchVarShapeDataStridedCuda &in,
+                             const IImageBatchVarShapeDataStridedCuda &out, const ITensorDataStridedCuda &ksize,
                              int maxKHeight, int maxKWidth, cudaStream_t stream);
 
     static const median_t funcs[6] = {

@@ -86,7 +86,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageBatchVarShapeCalcRequirements(int32_t           
  * @param [in] alloc        Allocator to be used to allocate needed memory buffers.
  *                          The following resources are used:
  *                          - host memory
- *                          - device memory
+ *                          - cuda memory
  *                          If NULL, it'll use the internal default allocator.
  *                          + Allocator must not be destroyed while an image batch still refers to it.
  *

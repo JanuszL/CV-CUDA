@@ -26,7 +26,7 @@
  *
  * NVCV currently support three resource types:
  * - host memory: memory directly accessible by CPU.
- * - device memory : memory directly accessible by cuda-enabled GPU.
+ * - cuda memory : memory directly accessible by cuda-enabled GPU.
  * - host pinned memory: memory directly accessible by both CPU and cuda-enabled GPU.
  *
  * By default, the following functions are used to allocate
@@ -37,7 +37,7 @@
  * | Resource type      | Malloc        | Free         |
  * |--------------------|---------------|--------------|
  * | host memory        | malloc        | free         |
- * | device memory      | cudaMalloc    | cudaFree     |
+ * | cuda memory        | cudaMalloc    | cudaFree     |
  * | host pinned memory | cudaHostAlloc | cudaHostFree |
  *
  * By using defining custom resource allocators, user can override the allocation
@@ -90,8 +90,8 @@ typedef void (*NVCVMemFreeFunc)(void *ctx, void *ptr, int64_t sizeBytes, int32_t
 typedef enum
 {
     NVCV_RESOURCE_MEM_HOST,       /**< Memory accessible by host (CPU). */
-    NVCV_RESOURCE_MEM_DEVICE,     /**< Memory accessible by device (GPU). */
-    NVCV_RESOURCE_MEM_HOST_PINNED /**< Memory accessible by both host and device. */
+    NVCV_RESOURCE_MEM_CUDA,       /**< Memory accessible by cuda (GPU). */
+    NVCV_RESOURCE_MEM_HOST_PINNED /**< Memory accessible by both host and cuda. */
 } NVCVResourceType;
 
 #define NVCV_NUM_RESOURCE_TYPES (3)
@@ -237,7 +237,7 @@ NVCV_PUBLIC NVCVStatus nvcvAllocatorAllocHostMemory(NVCVAllocatorHandle halloc, 
 NVCV_PUBLIC NVCVStatus nvcvAllocatorFreeHostMemory(NVCVAllocatorHandle halloc, void *ptr, int64_t sizeBytes,
                                                    int32_t alignBytes);
 
-/** Allocates a memory buffer of both host- and device-accessible memory.
+/** Allocates a memory buffer of both host- and cuda-accessible memory.
  *
  * It's usually used when implementing operators.
  *
@@ -259,7 +259,7 @@ NVCV_PUBLIC NVCVStatus nvcvAllocatorFreeHostMemory(NVCVAllocatorHandle halloc, v
 NVCV_PUBLIC NVCVStatus nvcvAllocatorAllocHostPinnedMemory(NVCVAllocatorHandle halloc, void **ptr, int64_t sizeBytes,
                                                           int32_t alignBytes);
 
-/** Frees a both host- and device-accessible memory buffer.
+/** Frees a both host- and cuda-accessible memory buffer.
  *
  * It's usually used when implementing operators.
  *
@@ -279,7 +279,7 @@ NVCV_PUBLIC NVCVStatus nvcvAllocatorAllocHostPinnedMemory(NVCVAllocatorHandle ha
 NVCV_PUBLIC NVCVStatus nvcvAllocatorFreeHostPinnedMemory(NVCVAllocatorHandle halloc, void *ptr, int64_t sizeBytes,
                                                          int32_t alignBytes);
 
-/** Allocates a memory buffer of device-accessible memory.
+/** Allocates a memory buffer of cuda-accessible memory.
  *
  * It's usually used when implementing operators.
  *
@@ -298,10 +298,10 @@ NVCV_PUBLIC NVCVStatus nvcvAllocatorFreeHostPinnedMemory(NVCVAllocatorHandle hal
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough free memory.
  * @retval #NVCV_SUCCESS                Operation completed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvAllocatorAllocDeviceMemory(NVCVAllocatorHandle halloc, void **ptr, int64_t sizeBytes,
-                                                      int32_t alignBytes);
+NVCV_PUBLIC NVCVStatus nvcvAllocatorAllocCudaMemory(NVCVAllocatorHandle halloc, void **ptr, int64_t sizeBytes,
+                                                    int32_t alignBytes);
 
-/** Frees a device-accessible memory buffer.
+/** Frees a cuda-accessible memory buffer.
  *
  * It's usually used when implementing operators.
  *
@@ -310,7 +310,7 @@ NVCV_PUBLIC NVCVStatus nvcvAllocatorAllocDeviceMemory(NVCVAllocatorHandle halloc
  * @param [in] memType    Type of memory to be freed.
  * @param [in] ptr        Pointer to the memory buffer to be freed.
  *                        It can be NULL. In this case, no operation is performed.
- *                        + Must have been allocated by @ref nvcvAllocatorAllocDeviceMemory.
+ *                        + Must have been allocated by @ref nvcvAllocatorAllocCudaMemory.
  * @param [in] sizeBytes,alignBytes Parameters passed during buffer allocation.
  *                                  + Not passing the exact same parameters
  *                                    passed during allocation will lead to undefined behavior.
@@ -318,8 +318,8 @@ NVCV_PUBLIC NVCVStatus nvcvAllocatorAllocDeviceMemory(NVCVAllocatorHandle halloc
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside its valid range.
  * @retval #NVCV_SUCCESS                Operation completed successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvAllocatorFreeDeviceMemory(NVCVAllocatorHandle halloc, void *ptr, int64_t sizeBytes,
-                                                     int32_t alignBytes);
+NVCV_PUBLIC NVCVStatus nvcvAllocatorFreeCudaMemory(NVCVAllocatorHandle halloc, void *ptr, int64_t sizeBytes,
+                                                   int32_t alignBytes);
 
 #ifdef __cplusplus
 }

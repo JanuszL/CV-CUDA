@@ -31,7 +31,7 @@ class ITensorData
 public:
     virtual ~ITensorData() = 0;
 
-    int                         ndim() const;
+    int                         rank() const;
     const TensorShape          &shape() const;
     const TensorShape::DimType &shape(int d) const;
 
@@ -52,26 +52,26 @@ private:
     mutable detail::Optional<TensorShape> m_cacheShape;
 };
 
-class ITensorDataPitch : public ITensorData
+class ITensorDataStrided : public ITensorData
 {
 public:
-    virtual ~ITensorDataPitch() = 0;
+    virtual ~ITensorDataStrided() = 0;
 
-    void *data() const;
+    Byte *basePtr() const;
 
-    const int64_t &pitchBytes(int d) const;
+    const int64_t &stride(int d) const;
 
 protected:
     using ITensorData::ITensorData;
 };
 
-class ITensorDataPitchDevice : public ITensorDataPitch
+class ITensorDataStridedCuda : public ITensorDataStrided
 {
 public:
-    virtual ~ITensorDataPitchDevice() = 0;
+    virtual ~ITensorDataStridedCuda() = 0;
 
 protected:
-    using ITensorDataPitch::ITensorDataPitch;
+    using ITensorDataStrided::ITensorDataStrided;
 };
 
 }} // namespace nv::cv

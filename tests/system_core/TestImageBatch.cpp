@@ -29,12 +29,12 @@ namespace nvcv = nv::cv;
 namespace t    = ::testing;
 namespace test = nv::cv::test;
 
-static bool operator==(const NVCVImagePlanePitch &a, const NVCVImagePlanePitch &b)
+static bool operator==(const NVCVImagePlaneStrided &a, const NVCVImagePlaneStrided &b)
 {
-    return a.width == b.width && a.height == b.height && a.pitchBytes == b.pitchBytes && a.buffer == b.buffer;
+    return a.width == b.width && a.height == b.height && a.rowStride == b.rowStride && a.basePtr == b.basePtr;
 }
 
-static bool operator==(const NVCVImageBufferPitch &a, const NVCVImageBufferPitch &b)
+static bool operator==(const NVCVImageBufferStrided &a, const NVCVImageBufferStrided &b)
 {
     if (a.numPlanes != b.numPlanes)
     {
@@ -53,12 +53,12 @@ static bool operator==(const NVCVImageBufferPitch &a, const NVCVImageBufferPitch
     return true;
 }
 
-static std::ostream &operator<<(std::ostream &out, const NVCVImagePlanePitch &a)
+static std::ostream &operator<<(std::ostream &out, const NVCVImagePlaneStrided &a)
 {
-    return out << a.width << 'x' << a.height << '@' << a.pitchBytes << ':' << a.buffer;
+    return out << a.width << 'x' << a.height << '@' << a.rowStride << ':' << a.basePtr;
 }
 
-static std::ostream &operator<<(std::ostream &out, const NVCVImageBufferPitch &a)
+static std::ostream &operator<<(std::ostream &out, const NVCVImageBufferStrided &a)
 {
     out << "{";
     for (int i = 0; i < a.numPlanes; ++i)
@@ -89,7 +89,7 @@ TEST(ImageBatchVarShape, wip_create)
         const nvcv::IImageBatchData *data = batch.exportData(0);
         ASSERT_NE(nullptr, data);
 
-        auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataPitchDevice *>(data);
+        auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(data);
         ASSERT_NE(nullptr, devdata);
 
         ASSERT_EQ(0, devdata->numImages());
@@ -102,17 +102,17 @@ TEST(ImageBatchVarShape, wip_create)
         ASSERT_EQ(devdata->uniqueFormat(), batch.uniqueFormat());
     }
 
-    std::vector<NVCVImageBufferPitch> goldImages;
-    std::vector<NVCVImageFormat>      goldFormats;
-    std::vector<NVCVImageHandle>      goldHandles;
+    std::vector<NVCVImageBufferStrided> goldImages;
+    std::vector<NVCVImageFormat>        goldFormats;
+    std::vector<NVCVImageHandle>        goldHandles;
 
     auto addToGold = [&goldImages, &goldFormats, &goldHandles](const nvcv::IImage &img)
     {
-        auto *imgdata = dynamic_cast<const nvcv::IImageDataPitchDevice *>(img.exportData());
+        auto *imgdata = dynamic_cast<const nvcv::IImageDataStridedCuda *>(img.exportData());
         EXPECT_NE(nullptr, imgdata);
         if (imgdata)
         {
-            goldImages.push_back(imgdata->cdata().buffer.pitch);
+            goldImages.push_back(imgdata->cdata().buffer.strided);
             goldFormats.push_back(imgdata->cdata().format);
             goldHandles.push_back(img.handle());
         }
@@ -166,7 +166,7 @@ TEST(ImageBatchVarShape, wip_create)
 
     // To synchronize buffers
     const nvcv::IImageBatchVarShapeData *vsdata = batch.exportData(stream); // test output type
-    const auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataPitchDevice *>(vsdata);
+    const auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(vsdata);
     ASSERT_NE(nullptr, devdata);
     EXPECT_EQ(calcMaxSize(), devdata->maxSize());
     EXPECT_EQ(devdata->maxSize(), batch.maxSize());
@@ -194,7 +194,7 @@ TEST(ImageBatchVarShape, wip_create)
     goldHandles.erase(goldHandles.end() - 5, goldHandles.end());
 
     // To synchronize buffers
-    devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataPitchDevice *>(batch.exportData(stream));
+    devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(batch.exportData(stream));
     ASSERT_NE(nullptr, devdata);
     EXPECT_EQ(calcMaxSize(), devdata->maxSize());
     EXPECT_EQ(devdata->maxSize(), batch.maxSize());
@@ -235,7 +235,7 @@ TEST(ImageBatchVarShape, wip_create)
         const nvcv::IImageBatchData *data = batch.exportData(stream);
         ASSERT_NE(nullptr, data);
 
-        auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataPitchDevice *>(data);
+        auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(data);
         ASSERT_NE(nullptr, devdata);
 
         ASSERT_EQ(devdata->uniqueFormat(), batch.uniqueFormat());
@@ -248,7 +248,7 @@ TEST(ImageBatchVarShape, wip_create)
         EXPECT_EQ(calcMaxSize(), devdata->maxSize());
         EXPECT_EQ(devdata->maxSize(), batch.maxSize());
 
-        std::vector<NVCVImageBufferPitch> images(devdata->numImages());
+        std::vector<NVCVImageBufferStrided> images(devdata->numImages());
         ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(images.data(), devdata->imageList(), sizeof(images[0]) * images.size(),
                                                cudaMemcpyDeviceToHost, stream));
 
@@ -293,17 +293,17 @@ TEST(ImageBatchVarShape, wip_create)
 
 TEST(ImageBatchVarShape, wip_sync)
 {
-    std::vector<NVCVImageBufferPitch> goldImages;
-    std::vector<NVCVImageFormat>      goldFormats;
-    std::vector<NVCVImageHandle>      goldHandles;
+    std::vector<NVCVImageBufferStrided> goldImages;
+    std::vector<NVCVImageFormat>        goldFormats;
+    std::vector<NVCVImageHandle>        goldHandles;
 
     auto addToGold = [&goldImages, &goldFormats, &goldHandles](const nvcv::IImage &img)
     {
-        auto *imgdata = dynamic_cast<const nvcv::IImageDataPitchDevice *>(img.exportData());
+        auto *imgdata = dynamic_cast<const nvcv::IImageDataStridedCuda *>(img.exportData());
         EXPECT_NE(nullptr, imgdata);
         if (imgdata)
         {
-            goldImages.push_back(imgdata->cdata().buffer.pitch);
+            goldImages.push_back(imgdata->cdata().buffer.strided);
             goldFormats.push_back(imgdata->format());
             goldHandles.push_back(img.handle());
         }
@@ -335,7 +335,7 @@ TEST(ImageBatchVarShape, wip_sync)
     batch.pushBack(vec0.begin(), vec0.end());
 
     // trigger host->dev async copy
-    auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataPitchDevice *>(batch.exportData(stream));
+    auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(batch.exportData(stream));
 
     // Re-write batch contents in host-side, must have waited
     // until async copy finishes
@@ -349,7 +349,7 @@ TEST(ImageBatchVarShape, wip_sync)
         EXPECT_NE(nullptr, devdata->imageList());
         EXPECT_NE(nullptr, devdata->formatList());
 
-        std::vector<NVCVImageBufferPitch> images(devdata->numImages());
+        std::vector<NVCVImageBufferStrided> images(devdata->numImages());
         ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(images.data(), devdata->imageList(), sizeof(images[0]) * images.size(),
                                                cudaMemcpyDeviceToHost, stream));
         ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));

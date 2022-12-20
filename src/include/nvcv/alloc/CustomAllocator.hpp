@@ -116,9 +116,9 @@ private:
                 return NVCV_RESOURCE_MEM_HOST_PINNED;
             }
 
-            NVCVResourceType operator()(const IDeviceMemAllocator &alloc) const
+            NVCVResourceType operator()(const ICudaMemAllocator &alloc) const
             {
-                return NVCV_RESOURCE_MEM_DEVICE;
+                return NVCV_RESOURCE_MEM_CUDA;
             }
         };
 
@@ -204,15 +204,15 @@ private:
         }
     }
 
-    IDeviceMemAllocator &doGetDeviceMemAllocator() override
+    ICudaMemAllocator &doGetCudaMemAllocator() override
     {
-        if (auto *devAlloc = doGetResAllocator<IDeviceMemAllocator>(detail::MakeIndexSequence<sizeof...(AA)>()))
+        if (auto *devAlloc = doGetResAllocator<ICudaMemAllocator>(detail::MakeIndexSequence<sizeof...(AA)>()))
         {
             return *devAlloc;
         }
         else
         {
-            return m_wrap.deviceMem();
+            return m_wrap.cudaMem();
         }
     }
 };

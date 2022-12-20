@@ -62,7 +62,7 @@ protected:
         : m_layout(layout)
     {
         // isBatch ----------------
-        m_cacheIsBatch = m_layout.ndim() > 0 && m_layout[0] == LABEL_BATCH;
+        m_cacheIsBatch = m_layout.rank() > 0 && m_layout[0] == LABEL_BATCH;
 
         // isImage ----------------
         if (m_layout != TensorLayout::NONE)
@@ -206,7 +206,7 @@ protected:
         // isChannelLast --------------
         if (layout != TensorLayout::NONE)
         {
-            m_cacheIsChannelLast = layout[layout.ndim() - 1] == LABEL_CHANNEL || !this->hasChannel();
+            m_cacheIsChannelLast = layout[layout.rank() - 1] == LABEL_CHANNEL || !this->hasChannel();
         }
         else
         {

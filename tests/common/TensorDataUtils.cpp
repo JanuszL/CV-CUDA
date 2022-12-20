@@ -23,12 +23,12 @@ namespace nvcv = nv::cv;
 
 namespace nv::cv::test {
 
-static void printPlane(const uint8_t *data, int width, int height, int rowPitch, int bytesPC, int numC)
+static void printPlane(const uint8_t *data, int width, int height, int rowStride, int bytesPC, int numC)
 {
     std::cout << "[";
     printf("%02x", data[0]);
     bool endB = false;
-    int  size = height * rowPitch;
+    int  size = height * rowStride;
     int  x    = 1;
     for (int i = 1; i < size; i++)
     {
@@ -48,7 +48,7 @@ static void printPlane(const uint8_t *data, int width, int height, int rowPitch,
                 std::cout << ",";
             }
         }
-        if (i % rowPitch == 0)
+        if (i % rowStride == 0)
         {
             std::cout << "\n[";
             endB = false;
@@ -71,22 +71,21 @@ static void printPlane(const uint8_t *data, int width, int height, int rowPitch,
 }
 
 TensorImageData::TensorImageData(const ITensorData *tensorData, int sampleIndex)
-    : m_planePitchBytes(0)
+    : m_planeStride(0)
 {
     assert(tensorData);
-    if (!nvcv::TensorDataAccessPitchImage::IsCompatible(*tensorData))
+    if (!nvcv::TensorDataAccessStridedImage::IsCompatible(*tensorData))
         throw Exception(Status::ERROR_INVALID_ARGUMENT, "Tensor Data not compatible with Pitch Access");
 
-    auto tDataAc = nvcv::TensorDataAccessPitchImage::Create(*tensorData);
+    auto tDataAc = nvcv::TensorDataAccessStridedImage::Create(*tensorData);
 
-    int sizeSampleBytes = tDataAc->samplePitchBytes();
-    m_rowPitchBytes     = tDataAc->rowPitchBytes();
+    int sizeSampleBytes = tDataAc->sampleStride();
+    m_rowStride         = tDataAc->rowStride();
 
     m_data.resize(sizeSampleBytes);
 
     if (cudaSuccess
-        != cudaMemcpy(m_data.data(), tDataAc->sampleData(sampleIndex), tDataAc->samplePitchBytes(),
-                      cudaMemcpyDeviceToHost))
+        != cudaMemcpy(m_data.data(), tDataAc->sampleData(sampleIndex), tDataAc->sampleStride(), cudaMemcpyDeviceToHost))
     {
         throw Exception(Status::ERROR_INTERNAL, "cudaMemcpy filed");
     }
@@ -127,11 +126,11 @@ TensorImageData::TensorImageData(const ITensorData *tensorData, int sampleIndex)
 
     if (m_planar)
     {
-        if (!nvcv::TensorDataAccessPitchImagePlanar::IsCompatible(*tensorData))
+        if (!nvcv::TensorDataAccessStridedImagePlanar::IsCompatible(*tensorData))
             throw std::runtime_error("Tensor Data not compatible with Pitch Planar Access");
 
-        auto tDataACp     = nvcv::TensorDataAccessPitchImagePlanar::Create(*tensorData);
-        m_planePitchBytes = tDataACp->planePitchBytes();
+        auto tDataACp = nvcv::TensorDataAccessStridedImagePlanar::Create(*tensorData);
+        m_planeStride = tDataACp->planeStride();
     }
 
     return;
@@ -141,12 +140,12 @@ std::ostream &operator<<(std::ostream &out, const TensorImageData &cvImageData)
 {
     out << "\n[H = " << cvImageData.m_size.h << " W = " << cvImageData.m_size.w << " C = " << cvImageData.m_numC
         << "]\n[planar = " << cvImageData.m_planar << " bytesPerC = " << cvImageData.m_bytesPerC
-        << " rowPitchBytes = " << cvImageData.m_rowPitchBytes << " planePitchBytes = " << cvImageData.m_planePitchBytes
-        << " samplePitchBytes = " << cvImageData.m_data.size() << "]\n";
+        << " rowStride = " << cvImageData.m_rowStride << " planeStride = " << cvImageData.m_planeStride
+        << " sampleStride = " << cvImageData.m_data.size() << "]\n";
 
     if (!cvImageData.m_planar)
     {
-        printPlane(&cvImageData.m_data[0], cvImageData.m_size.w, cvImageData.m_size.h, cvImageData.m_rowPitchBytes,
+        printPlane(&cvImageData.m_data[0], cvImageData.m_size.w, cvImageData.m_size.h, cvImageData.m_rowStride,
                    cvImageData.m_bytesPerC, cvImageData.m_numC);
     }
     else
@@ -154,8 +153,8 @@ std::ostream &operator<<(std::ostream &out, const TensorImageData &cvImageData)
         for (int i = 0; i < cvImageData.m_numC; i++)
         {
             out << "\nPlane = " << i << "\n";
-            printPlane(&cvImageData.m_data[cvImageData.m_planePitchBytes * i], cvImageData.m_size.w,
-                       cvImageData.m_size.h, cvImageData.m_rowPitchBytes, cvImageData.m_bytesPerC, 1);
+            printPlane(&cvImageData.m_data[cvImageData.m_planeStride * i], cvImageData.m_size.w, cvImageData.m_size.h,
+                       cvImageData.m_rowStride, cvImageData.m_bytesPerC, 1);
         }
     }
     return out << "\n";
@@ -163,10 +162,9 @@ std::ostream &operator<<(std::ostream &out, const TensorImageData &cvImageData)
 
 bool TensorImageData::operator==(const TensorImageData &that) const
 {
-    return ((this->m_size == that.m_size) && (this->m_rowPitchBytes == that.m_rowPitchBytes)
-            && (this->m_numC == that.m_numC) && (this->m_planar == that.m_planar)
-            && (this->m_bytesPerC == that.m_bytesPerC) && (this->m_layout == that.m_layout)
-            && (this->m_data.size() == that.m_data.size())
+    return ((this->m_size == that.m_size) && (this->m_rowStride == that.m_rowStride) && (this->m_numC == that.m_numC)
+            && (this->m_planar == that.m_planar) && (this->m_bytesPerC == that.m_bytesPerC)
+            && (this->m_layout == that.m_layout) && (this->m_data.size() == that.m_data.size())
             && (memcmp(this->m_data.data(), that.m_data.data(), this->m_data.size()) == 0));
 }
 

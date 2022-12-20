@@ -24,7 +24,7 @@
 
 #include <stdint.h>
 
-typedef struct NVCVImagePlanePitchRec
+typedef struct NVCVImagePlaneStridedRec
 {
     /** Width of this plane in pixels.
      *  + It must be >= 1. */
@@ -37,24 +37,24 @@ typedef struct NVCVImagePlanePitchRec
     /** Difference in bytes of beginning of one row and the beginning of the previous.
          This is used to address every row (and ultimately every pixel) in the plane.
          @code
-            T *pix_addr = (T *)((uint8_t *)data + pitchBytes*height)+width;
+            T *pix_addr = (T *)(basePtr + rowStride*height)+width;
          @endcode
          where T is the C type related to dataType.
 
          + It must be at least `(width * bits-per-pixel + 7)/8`.
     */
-    int32_t pitchBytes;
+    int32_t rowStride;
 
     /** Pointer to the beginning of the first row of this plane.
         This points to the actual plane contents. */
-    void *buffer;
-} NVCVImagePlanePitch;
+    NVCVByte *basePtr;
+} NVCVImagePlaneStrided;
 
 /** Maximum number of data planes an image can have. */
 #define NVCV_MAX_PLANE_COUNT (6)
 
 /** Stores the image plane contents. */
-typedef struct NVCVImageBufferPitchRec
+typedef struct NVCVImageBufferStridedRec
 {
     /** Number of planes.
      *  + Must be >= 1. */
@@ -62,8 +62,8 @@ typedef struct NVCVImageBufferPitchRec
 
     /** Data of all image planes in pitch-linear layout.
      *  + Only the first \ref numPlanes elements must have valid data. */
-    NVCVImagePlanePitch planes[NVCV_MAX_PLANE_COUNT];
-} NVCVImageBufferPitch;
+    NVCVImagePlaneStrided planes[NVCV_MAX_PLANE_COUNT];
+} NVCVImageBufferStrided;
 
 typedef struct NVCVImageBufferCudaArrayRec
 {
@@ -84,10 +84,10 @@ typedef enum
     NVCV_IMAGE_BUFFER_NONE = 0,
 
     /** GPU-accessible with planes in pitch-linear layout. */
-    NVCV_IMAGE_BUFFER_PITCH_DEVICE,
+    NVCV_IMAGE_BUFFER_STRIDED_CUDA,
 
     /** Host-accessible with planes in pitch-linear layout. */
-    NVCV_IMAGE_BUFFER_PITCH_HOST,
+    NVCV_IMAGE_BUFFER_STRIDED_HOST,
 
     /** Buffer stored in a cudaArray_t.
      * Please consult <a href="https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#cuda-arrays">cudaArray_t</a>
@@ -101,10 +101,10 @@ typedef union NVCVImageBufferRec
 {
     /** Image stored in pitch-linear layout.
      * To be used when \ref NVCVImageData::bufferType is:
-     * - \ref NVCV_IMAGE_BUFFER_PITCH_DEVICE
-     * - \ref NVCV_IMAGE_BUFFER_PITCH_HOST
+     * - \ref NVCV_IMAGE_BUFFER_STRIDED_CUDA
+     * - \ref NVCV_IMAGE_BUFFER_STRIDED_HOST
      */
-    NVCVImageBufferPitch pitch;
+    NVCVImageBufferStrided strided;
 
     /** Image stored in a `cudaArray_t`.
      * To be used when \ref NVCVImageData::bufferType is:

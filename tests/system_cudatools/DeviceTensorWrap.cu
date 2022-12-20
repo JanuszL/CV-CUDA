@@ -126,8 +126,8 @@ void DeviceUseTensor2DWrap(PackedImage<ValueType, H, W> &hGold)
     ASSERT_EQ(cudaSuccess, cudaMalloc(&dInput, H * W * sizeof(ValueType)));
     ASSERT_EQ(cudaSuccess, cudaMalloc(&dTest, H * W * sizeof(ValueType)));
 
-    cuda::Tensor2DWrap<const ValueType> src(dInput, hGold.pitchBytes);
-    cuda::Tensor2DWrap<ValueType>       dst(dTest, hGold.pitchBytes);
+    cuda::Tensor2DWrap<const ValueType> src(dInput, hGold.rowStride);
+    cuda::Tensor2DWrap<ValueType>       dst(dTest, hGold.rowStride);
 
     ASSERT_EQ(cudaSuccess, cudaMemcpy(dInput, hGold.data(), H * W * sizeof(ValueType), cudaMemcpyHostToDevice));
 
@@ -209,8 +209,8 @@ void DeviceUseTensor3DWrap(PackedTensor3D<ValueType, N, H, W> &hGold)
     ASSERT_EQ(cudaSuccess, cudaMalloc(&dInput, N * H * W * sizeof(ValueType)));
     ASSERT_EQ(cudaSuccess, cudaMalloc(&dTest, N * H * W * sizeof(ValueType)));
 
-    cuda::Tensor3DWrap<const ValueType> src(dInput, hGold.pitchBytes1, hGold.pitchBytes2);
-    cuda::Tensor3DWrap<ValueType>       dst(dTest, hGold.pitchBytes1, hGold.pitchBytes2);
+    cuda::Tensor3DWrap<const ValueType> src(dInput, hGold.stride1, hGold.stride2);
+    cuda::Tensor3DWrap<ValueType>       dst(dTest, hGold.stride1, hGold.stride2);
 
     ASSERT_EQ(cudaSuccess, cudaMemcpy(dInput, hGold.data(), N * H * W * sizeof(ValueType), cudaMemcpyHostToDevice));
 
@@ -297,8 +297,8 @@ void DeviceUseTensor4DWrap(PackedTensor4D<ValueType, N, H, W, C> &hGold)
     ASSERT_EQ(cudaSuccess, cudaMalloc(&dInput, N * H * W * C * sizeof(ValueType)));
     ASSERT_EQ(cudaSuccess, cudaMalloc(&dTest, N * H * W * C * sizeof(ValueType)));
 
-    cuda::Tensor4DWrap<const ValueType> src(dInput, hGold.pitchBytes1, hGold.pitchBytes2, hGold.pitchBytes3);
-    cuda::Tensor4DWrap<ValueType>       dst(dTest, hGold.pitchBytes1, hGold.pitchBytes2, hGold.pitchBytes3);
+    cuda::Tensor4DWrap<const ValueType> src(dInput, hGold.stride1, hGold.stride2, hGold.stride3);
+    cuda::Tensor4DWrap<ValueType>       dst(dTest, hGold.stride1, hGold.stride2, hGold.stride3);
 
     ASSERT_EQ(cudaSuccess, cudaMemcpy(dInput, hGold.data(), N * H * W * C * sizeof(ValueType), cudaMemcpyHostToDevice));
 

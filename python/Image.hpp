@@ -46,9 +46,8 @@ public:
     static std::shared_ptr<Image> CreateHost(py::buffer buffer, cv::ImageFormat fmt);
     static std::shared_ptr<Image> CreateHostVector(std::vector<py::buffer> buffer, cv::ImageFormat fmt);
 
-    static std::shared_ptr<Image> WrapDevice(CudaBuffer &buffer, cv::ImageFormat fmt);
-    static std::shared_ptr<Image> WrapDeviceVector(std::vector<std::shared_ptr<CudaBuffer>> buffer,
-                                                   cv::ImageFormat                          fmt);
+    static std::shared_ptr<Image> WrapCuda(CudaBuffer &buffer, cv::ImageFormat fmt);
+    static std::shared_ptr<Image> WrapCudaVector(std::vector<std::shared_ptr<CudaBuffer>> buffer, cv::ImageFormat fmt);
 
     std::shared_ptr<Image>       shared_from_this();
     std::shared_ptr<const Image> shared_from_this() const;
@@ -104,8 +103,8 @@ public:
 
 private:
     explicit Image(const Size2D &size, cv::ImageFormat fmt);
-    explicit Image(std::vector<std::shared_ptr<CudaBuffer>> buf, const cv::IImageDataPitchDevice &imgData);
-    explicit Image(std::vector<py::buffer> buf, const cv::IImageDataPitchHost &imgData);
+    explicit Image(std::vector<std::shared_ptr<CudaBuffer>> buf, const cv::IImageDataStridedCuda &imgData);
+    explicit Image(std::vector<py::buffer> buf, const cv::IImageDataStridedHost &imgData);
 
     std::unique_ptr<cv::IImage> m_impl; // must come before m_key
     Key                         m_key;

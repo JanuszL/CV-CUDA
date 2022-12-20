@@ -38,7 +38,7 @@ std::shared_ptr<Tensor> EraseInto(Tensor &input, Tensor &output, Tensor &anchor,
         pstream = Stream::Current().shared_from_this();
     }
 
-    if (anchor.layout()->ndim() != 1 || (*anchor.layout())[0] != 'N')
+    if (anchor.layout()->rank() != 1 || (*anchor.layout())[0] != 'N')
     {
         throw std::runtime_error("Layout of anchor must be 'N'.");
     }
@@ -75,7 +75,7 @@ std::shared_ptr<ImageBatchVarShape> EraseVarShapeInto(ImageBatchVarShape &input,
         pstream = Stream::Current().shared_from_this();
     }
 
-    if (anchor.layout()->ndim() != 1 || (*anchor.layout())[0] != 'N')
+    if (anchor.layout()->rank() != 1 || (*anchor.layout())[0] != 'N')
     {
         throw std::runtime_error("Layout of anchor must be 'N'.");
     }

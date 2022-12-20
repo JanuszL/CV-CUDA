@@ -65,10 +65,10 @@ __global__ void filter2D(SrcWrapper src, DstWrapper dst, Size2D dstSize, KernelW
 }
 
 template<typename T, NVCVBorderType B, class KernelWrapper>
-void Filter2DCaller(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, KernelWrapper kernel,
+void Filter2DCaller(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData, KernelWrapper kernel,
                     Size2D kernelSize, int2 kernelAnchor, float borderValue, cudaStream_t stream)
 {
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     Size2D dstSize{outAccess->numCols(), outAccess->numRows()};
@@ -89,7 +89,7 @@ void Filter2DCaller(const ITensorDataPitchDevice &inData, const ITensorDataPitch
 }
 
 template<typename T, class KernelWrapper>
-void Filter2D(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, KernelWrapper kernel,
+void Filter2D(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData, KernelWrapper kernel,
               Size2D kernelSize, int2 kernelAnchor, NVCVBorderType borderMode, float borderValue, cudaStream_t stream)
 {
     switch (borderMode)
@@ -136,7 +136,7 @@ size_t Laplacian::calBufferSize(DataShape max_input_shape, DataShape max_output_
     return 0;
 }
 
-ErrorCode Laplacian::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, int ksize,
+ErrorCode Laplacian::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData, int ksize,
                            float scale, NVCVBorderType borderMode, cudaStream_t stream)
 {
     if (!(ksize == 1 || ksize == 3))
@@ -175,7 +175,7 @@ ErrorCode Laplacian::infer(const ITensorDataPitchDevice &inData, const ITensorDa
         return ErrorCode::INVALID_PARAMETER;
     }
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
     cuda_op::DataType  data_type   = GetLegacyDataType(inData.dtype());
@@ -193,7 +193,7 @@ ErrorCode Laplacian::infer(const ITensorDataPitchDevice &inData, const ITensorDa
     normalizeAnchor(kernelAnchor, kLaplacianKernelSize);
     float borderValue = .0f;
 
-    typedef void (*filter2D_t)(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+    typedef void (*filter2D_t)(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                                cuda::math::Vector<float, 9> kernel, Size2D kernelSize, int2 kernelAnchor,
                                NVCVBorderType borderMode, float borderValue, cudaStream_t stream);
 
@@ -279,7 +279,7 @@ size_t Gaussian::calBufferSize(DataShape max_input_shape, DataShape max_output_s
     return maxKernelSize.w * maxKernelSize.h * sizeof(float);
 }
 
-ErrorCode Gaussian::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+ErrorCode Gaussian::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                           Size2D kernelSize, double2 sigma, NVCVBorderType borderMode, cudaStream_t stream)
 {
     if (inData.dtype() != outData.dtype())
@@ -312,7 +312,7 @@ ErrorCode Gaussian::infer(const ITensorDataPitchDevice &inData, const ITensorDat
         return ErrorCode::INVALID_PARAMETER;
     }
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
     cuda_op::DataType  data_type   = GetLegacyDataType(inData.dtype());
@@ -363,7 +363,7 @@ ErrorCode Gaussian::infer(const ITensorDataPitchDevice &inData, const ITensorDat
     normalizeAnchor(kernelAnchor, kernelSize);
     float borderValue = .0f;
 
-    typedef void (*filter2D_t)(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+    typedef void (*filter2D_t)(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                                float *kernel, Size2D kernelSize, int2 kernelAnchor, NVCVBorderType borderMode,
                                float borderValue, cudaStream_t stream);
 
@@ -412,7 +412,7 @@ size_t AverageBlur::calBufferSize(DataShape max_input_shape, DataShape max_outpu
     return maxKernelSize.w * maxKernelSize.h * sizeof(float);
 }
 
-ErrorCode AverageBlur::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+ErrorCode AverageBlur::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                              Size2D kernelSize, int2 kernelAnchor, NVCVBorderType borderMode, cudaStream_t stream)
 {
     if (inData.dtype() != outData.dtype())
@@ -445,7 +445,7 @@ ErrorCode AverageBlur::infer(const ITensorDataPitchDevice &inData, const ITensor
         return ErrorCode::INVALID_PARAMETER;
     }
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
     cuda_op::DataType  data_type   = GetLegacyDataType(inData.dtype());
@@ -482,7 +482,7 @@ ErrorCode AverageBlur::infer(const ITensorDataPitchDevice &inData, const ITensor
     normalizeAnchor(kernelAnchor, kernelSize);
     float borderValue = .0f;
 
-    typedef void (*filter2D_t)(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+    typedef void (*filter2D_t)(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                                float *kernel, Size2D kernelSize, int2 kernelAnchor, NVCVBorderType borderMode,
                                float borderValue, cudaStream_t stream);
 

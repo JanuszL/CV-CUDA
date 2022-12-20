@@ -40,35 +40,35 @@ using namespace test;
 //#define DBG 1
 
 template<typename T>
-static T getPixel(const T *srcPtr, const int y, const int x, int k, int width, int height, int srcRowPitch,
+static T getPixel(const T *srcPtr, const int y, const int x, int k, int width, int height, int srcStride,
                   int elementsPerPixel, NVCVBorderType borderMode, const float4 borderVal)
 {
     int2 coord = {x, y};
     int2 size  = {width, height};
     if (borderMode == NVCV_BORDER_CONSTANT)
     {
-        return (x >= 0 && x < width && y >= 0 && y < height) ? srcPtr[y * srcRowPitch + x * elementsPerPixel + k]
+        return (x >= 0 && x < width && y >= 0 && y < height) ? srcPtr[y * srcStride + x * elementsPerPixel + k]
                                                              : static_cast<T>(GetElement(borderVal, k));
     }
     else if (borderMode == NVCV_BORDER_REPLICATE)
     {
         ReplicateBorderIndex(coord, size);
-        return srcPtr[coord.y * srcRowPitch + coord.x * elementsPerPixel + k];
+        return srcPtr[coord.y * srcStride + coord.x * elementsPerPixel + k];
     }
     else if (borderMode == NVCV_BORDER_REFLECT)
     {
         ReflectBorderIndex(coord, size);
-        return srcPtr[coord.y * srcRowPitch + coord.x * elementsPerPixel + k];
+        return srcPtr[coord.y * srcStride + coord.x * elementsPerPixel + k];
     }
     else if (borderMode == NVCV_BORDER_REFLECT101)
     {
         Reflect101BorderIndex(coord, size);
-        return srcPtr[coord.y * srcRowPitch + coord.x * elementsPerPixel + k];
+        return srcPtr[coord.y * srcStride + coord.x * elementsPerPixel + k];
     }
     else if (borderMode == NVCV_BORDER_WRAP)
     {
         WrapBorderIndex(coord, size);
-        return srcPtr[coord.y * srcRowPitch + coord.x * elementsPerPixel + k];
+        return srcPtr[coord.y * srcStride + coord.x * elementsPerPixel + k];
     }
     else
     {
@@ -106,10 +106,10 @@ static void invertAffineTransform(const NVCVAffineTransform xform, NVCVAffineTra
 }
 
 template<typename T>
-static void WarpAffineGold(std::vector<uint8_t> &hDst, int dstRowPitch, nvcv::Size2D dstSize,
-                           const std::vector<uint8_t> &hSrc, int srcRowPitch, nvcv::Size2D srcSize,
-                           nvcv::ImageFormat fmt, const NVCVAffineTransform xform, const int flags,
-                           NVCVBorderType borderMode, const float4 borderVal)
+static void WarpAffineGold(std::vector<uint8_t> &hDst, int dstStride, nvcv::Size2D dstSize,
+                           const std::vector<uint8_t> &hSrc, int srcStride, nvcv::Size2D srcSize, nvcv::ImageFormat fmt,
+                           const NVCVAffineTransform xform, const int flags, NVCVBorderType borderMode,
+                           const float4 borderVal)
 {
     assert(fmt.numPlanes() == 1);
 
@@ -156,24 +156,24 @@ static void WarpAffineGold(std::vector<uint8_t> &hDst, int dstRowPitch, nvcv::Si
                 {
                     float out = 0;
 
-                    T src_reg = getPixel<T>(srcPtr, y1, x1, k, srcWidth, srcHeight, srcRowPitch, elementsPerPixel,
+                    T src_reg = getPixel<T>(srcPtr, y1, x1, k, srcWidth, srcHeight, srcStride, elementsPerPixel,
                                             borderMode, borderVal);
                     out += src_reg * ((x2 - src_x) * (y2 - src_y));
 
-                    src_reg = getPixel<T>(srcPtr, y1, x2, k, srcWidth, srcHeight, srcRowPitch, elementsPerPixel,
+                    src_reg = getPixel<T>(srcPtr, y1, x2, k, srcWidth, srcHeight, srcStride, elementsPerPixel,
                                           borderMode, borderVal);
                     out     = out + src_reg * ((src_x - x1) * (y2 - src_y));
 
-                    src_reg = getPixel<T>(srcPtr, y2, x1, k, srcWidth, srcHeight, srcRowPitch, elementsPerPixel,
+                    src_reg = getPixel<T>(srcPtr, y2, x1, k, srcWidth, srcHeight, srcStride, elementsPerPixel,
                                           borderMode, borderVal);
                     out     = out + src_reg * ((x2 - src_x) * (src_y - y1));
 
-                    src_reg = getPixel<T>(srcPtr, y2, x2, k, srcWidth, srcHeight, srcRowPitch, elementsPerPixel,
+                    src_reg = getPixel<T>(srcPtr, y2, x2, k, srcWidth, srcHeight, srcStride, elementsPerPixel,
                                           borderMode, borderVal);
                     out     = out + src_reg * ((src_x - x1) * (src_y - y1));
 
-                    out                                                        = std::rint(out);
-                    dstPtr[dst_y * dstRowPitch + dst_x * elementsPerPixel + k] = out < 0 ? 0 : (out > 255 ? 255 : out);
+                    out                                                      = std::rint(out);
+                    dstPtr[dst_y * dstStride + dst_x * elementsPerPixel + k] = out < 0 ? 0 : (out > 255 ? 255 : out);
                 }
             }
             else if (interpolation == NVCV_INTERP_NEAREST)
@@ -182,9 +182,9 @@ static void WarpAffineGold(std::vector<uint8_t> &hDst, int dstRowPitch, nvcv::Si
                 const int y1 = std::trunc(src_y);
                 for (int k = 0; k < elementsPerPixel; k++)
                 {
-                    T src_reg = getPixel<T>(srcPtr, y1, x1, k, srcWidth, srcHeight, srcRowPitch, elementsPerPixel,
+                    T src_reg = getPixel<T>(srcPtr, y1, x1, k, srcWidth, srcHeight, srcStride, elementsPerPixel,
                                             borderMode, borderVal);
-                    dstPtr[dst_y * dstRowPitch + dst_x * elementsPerPixel + k] = src_reg;
+                    dstPtr[dst_y * dstStride + dst_x * elementsPerPixel + k] = src_reg;
                 }
             }
             else if (interpolation == NVCV_INTERP_CUBIC)
@@ -204,17 +204,17 @@ static void WarpAffineGold(std::vector<uint8_t> &hDst, int dstRowPitch, nvcv::Si
                     {
                         for (int cx = xmin; cx <= xmax; cx += 1)
                         {
-                            const float w       = calcBicubicCoeff(src_x - cx) * calcBicubicCoeff(src_y - cy);
-                            T           src_reg = getPixel<T>(srcPtr, cy, cx, k, srcWidth, srcHeight, srcRowPitch,
-                                                    elementsPerPixel, borderMode, borderVal);
+                            const float w = calcBicubicCoeff(src_x - cx) * calcBicubicCoeff(src_y - cy);
+                            T src_reg = getPixel<T>(srcPtr, cy, cx, k, srcWidth, srcHeight, srcStride, elementsPerPixel,
+                                                    borderMode, borderVal);
                             sum += w * src_reg;
                             wsum += w;
                         }
                     }
 
-                    float res                                                  = (!wsum) ? 0 : sum / wsum;
-                    res                                                        = std::rint(res);
-                    dstPtr[dst_y * dstRowPitch + dst_x * elementsPerPixel + k] = res < 0 ? 0 : (res > 255 ? 255 : res);
+                    float res                                                = (!wsum) ? 0 : sum / wsum;
+                    res                                                      = std::rint(res);
+                    dstPtr[dst_y * dstStride + dst_x * elementsPerPixel + k] = res < 0 ? 0 : (res > 255 ? 255 : res);
                 }
             }
             else
@@ -353,15 +353,15 @@ TEST_P(OpWarpAffine, tensor_correct_output)
     // Generate input
     nvcv::Tensor imgSrc(numberOfImages, {srcWidth, srcHeight}, fmt);
 
-    const auto *srcData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgSrc.exportData());
+    const auto *srcData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgSrc.exportData());
 
     ASSERT_NE(nullptr, srcData);
 
-    auto srcAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*srcData);
+    auto srcAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*srcData);
     ASSERT_TRUE(srcAccess);
 
     std::vector<std::vector<uint8_t>> srcVec(numberOfImages);
-    int                               srcVecRowPitch = srcWidth * fmt.planePixelStrideBytes(0);
+    int                               srcVecStride = srcWidth * fmt.planePixelStrideBytes(0);
 
     std::default_random_engine randEng;
 
@@ -369,13 +369,13 @@ TEST_P(OpWarpAffine, tensor_correct_output)
     {
         std::uniform_int_distribution<uint8_t> rand(0, 255);
 
-        srcVec[i].resize(srcHeight * srcVecRowPitch);
+        srcVec[i].resize(srcHeight * srcVecStride);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return rand(randEng); });
 
         // Copy input data to the GPU
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(srcAccess->sampleData(i), srcAccess->rowPitchBytes(), srcVec[i].data(), srcVecRowPitch,
-                               srcVecRowPitch, // vec has no padding
+                  cudaMemcpy2D(srcAccess->sampleData(i), srcAccess->rowStride(), srcVec[i].data(), srcVecStride,
+                               srcVecStride, // vec has no padding
                                srcHeight, cudaMemcpyHostToDevice));
     }
 
@@ -389,38 +389,38 @@ TEST_P(OpWarpAffine, tensor_correct_output)
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
     // Check result
-    const auto *dstData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgDst.exportData());
+    const auto *dstData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgDst.exportData());
     ASSERT_NE(nullptr, dstData);
 
-    auto dstAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*dstData);
+    auto dstAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*dstData);
     ASSERT_TRUE(dstAccess);
 
-    int dstVecRowPitch = dstWidth * fmt.planePixelStrideBytes(0);
+    int dstVecStride = dstWidth * fmt.planePixelStrideBytes(0);
     for (int i = 0; i < numberOfImages; ++i)
     {
         SCOPED_TRACE(i);
 
-        std::vector<uint8_t> testVec(dstHeight * dstVecRowPitch);
+        std::vector<uint8_t> testVec(dstHeight * dstVecStride);
 
         // Copy output data to Host
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(testVec.data(), dstVecRowPitch, dstAccess->sampleData(i), dstAccess->rowPitchBytes(),
-                               dstVecRowPitch, // vec has no padding
+                  cudaMemcpy2D(testVec.data(), dstVecStride, dstAccess->sampleData(i), dstAccess->rowStride(),
+                               dstVecStride, // vec has no padding
                                dstHeight, cudaMemcpyDeviceToHost));
 
-        std::vector<uint8_t> goldVec(dstHeight * dstVecRowPitch);
+        std::vector<uint8_t> goldVec(dstHeight * dstVecStride);
 
         // Generate gold result
-        WarpAffineGold<uint8_t>(goldVec, dstVecRowPitch, {dstWidth, dstHeight}, srcVec[i], srcVecRowPitch,
+        WarpAffineGold<uint8_t>(goldVec, dstVecStride, {dstWidth, dstHeight}, srcVec[i], srcVecStride,
                                 {srcWidth, srcHeight}, fmt, xform, flags, borderMode, borderValue);
 
 #if DBG
         std::cout << "\nPrint src vec " << std::endl;
         for (int k = 0; k < srcHeight; k++)
         {
-            for (int j = 0; j < srcVecRowPitch; j++)
+            for (int j = 0; j < srcVecStride; j++)
             {
-                std::cout << static_cast<int>(srcVec[i][k * srcVecRowPitch + j]) << ",";
+                std::cout << static_cast<int>(srcVec[i][k * srcVecStride + j]) << ",";
             }
             std::cout << std::endl;
         }
@@ -429,9 +429,9 @@ TEST_P(OpWarpAffine, tensor_correct_output)
 
         for (int k = 0; k < dstHeight; k++)
         {
-            for (int j = 0; j < dstVecRowPitch; j++)
+            for (int j = 0; j < dstVecStride; j++)
             {
-                std::cout << static_cast<int>(goldVec[k * dstVecRowPitch + j]) << ",";
+                std::cout << static_cast<int>(goldVec[k * dstVecStride + j]) << ",";
             }
             std::cout << std::endl;
         }
@@ -440,9 +440,9 @@ TEST_P(OpWarpAffine, tensor_correct_output)
 
         for (int k = 0; k < dstHeight; k++)
         {
-            for (int j = 0; j < dstVecRowPitch; j++)
+            for (int j = 0; j < dstVecStride; j++)
             {
-                std::cout << static_cast<int>(testVec[k * dstVecRowPitch + j]) << ",";
+                std::cout << static_cast<int>(testVec[k * dstVecStride + j]) << ",";
             }
             std::cout << std::endl;
         }
@@ -487,10 +487,10 @@ TEST_P(OpWarpAffine, varshape_correct_output)
 
     nvcv::Tensor transMatrixTensor(nvcv::TensorShape({numberOfImages, 6}, nvcv::TensorLayout::NW), nvcv::TYPE_F32);
     const auto  *transMatrixTensorData
-        = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(transMatrixTensor.exportData());
+        = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(transMatrixTensor.exportData());
     ASSERT_NE(nullptr, transMatrixTensorData);
 
-    auto transMatrixTensorDataAccess = nvcv::TensorDataAccessPitch::Create(*transMatrixTensorData);
+    auto transMatrixTensorDataAccess = nvcv::TensorDataAccessStrided::Create(*transMatrixTensorData);
     ASSERT_TRUE(transMatrixTensorDataAccess);
 
     // Create input and output
@@ -544,7 +544,7 @@ TEST_P(OpWarpAffine, varshape_correct_output)
 
         ASSERT_EQ(cudaSuccess,
                   cudaMemcpy2DAsync(transMatrixTensorDataAccess->sampleData(i),
-                                    transMatrixTensorDataAccess->samplePitchBytes(), transMatrixHostVec[i].data(),
+                                    transMatrixTensorDataAccess->sampleStride(), transMatrixHostVec[i].data(),
                                     sizeof(float) * 6, sizeof(float) * 6, 1, cudaMemcpyHostToDevice, stream));
     }
 
@@ -555,30 +555,30 @@ TEST_P(OpWarpAffine, varshape_correct_output)
     batchDst.pushBack(imgDst.begin(), imgDst.end());
 
     std::vector<std::vector<uint8_t>> srcVec(numberOfImages);
-    std::vector<int>                  srcVecRowPitch(numberOfImages);
+    std::vector<int>                  srcVecStride(numberOfImages);
 
     // Populate input
     for (int i = 0; i < numberOfImages; ++i)
     {
-        const auto *srcData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         assert(srcData->numPlanes() == 1);
 
         int srcWidth  = srcData->plane(0).width;
         int srcHeight = srcData->plane(0).height;
 
-        int srcRowPitch = srcWidth * fmt.planePixelStrideBytes(0);
+        int srcStride = srcWidth * fmt.planePixelStrideBytes(0);
 
-        srcVecRowPitch[i] = srcRowPitch;
+        srcVecStride[i] = srcStride;
 
         std::uniform_int_distribution<uint8_t> rand(0, 255);
 
-        srcVec[i].resize(srcHeight * srcRowPitch);
+        srcVec[i].resize(srcHeight * srcStride);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return rand(randEng); });
 
         // Copy input data to the GPU
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(srcData->plane(0).buffer, srcData->plane(0).pitchBytes, srcVec[i].data(), srcRowPitch,
-                               srcRowPitch, // vec has no padding
+                  cudaMemcpy2D(srcData->plane(0).basePtr, srcData->plane(0).rowStride, srcVec[i].data(), srcStride,
+                               srcStride, // vec has no padding
                                srcHeight, cudaMemcpyHostToDevice));
     }
 
@@ -595,29 +595,29 @@ TEST_P(OpWarpAffine, varshape_correct_output)
     {
         SCOPED_TRACE(i);
 
-        const auto *srcData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         assert(srcData->numPlanes() == 1);
         int srcWidth  = srcData->plane(0).width;
         int srcHeight = srcData->plane(0).height;
 
-        const auto *dstData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgDst[i]->exportData());
+        const auto *dstData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgDst[i]->exportData());
         assert(dstData->numPlanes() == 1);
 
         int dstWidth  = dstData->plane(0).width;
         int dstHeight = dstData->plane(0).height;
 
-        int srcRowPitch = srcWidth * fmt.planePixelStrideBytes(0);
-        int dstRowPitch = dstWidth * fmt.planePixelStrideBytes(0);
+        int srcStride = srcWidth * fmt.planePixelStrideBytes(0);
+        int dstStride = dstWidth * fmt.planePixelStrideBytes(0);
 
-        std::vector<uint8_t> testVec(dstHeight * dstRowPitch);
+        std::vector<uint8_t> testVec(dstHeight * dstStride);
 
         // Copy output data to Host
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(testVec.data(), dstRowPitch, dstData->plane(0).buffer, dstData->plane(0).pitchBytes,
-                               dstRowPitch, // vec has no padding
+                  cudaMemcpy2D(testVec.data(), dstStride, dstData->plane(0).basePtr, dstData->plane(0).rowStride,
+                               dstStride, // vec has no padding
                                dstHeight, cudaMemcpyDeviceToHost));
 
-        std::vector<uint8_t> goldVec(dstHeight * dstRowPitch);
+        std::vector<uint8_t> goldVec(dstHeight * dstStride);
         std::generate(goldVec.begin(), goldVec.end(), [&]() { return 0; });
 
         NVCVAffineTransform transMatrixForGold;
@@ -629,16 +629,16 @@ TEST_P(OpWarpAffine, varshape_correct_output)
         transMatrixForGold[5] = transMatrixHostVec[i][5];
 
         // Generate gold result
-        WarpAffineGold<uint8_t>(goldVec, dstRowPitch, {dstWidth, dstHeight}, srcVec[i], srcRowPitch,
-                                {srcWidth, srcHeight}, fmt, transMatrixForGold, flags, borderMode, borderValue);
+        WarpAffineGold<uint8_t>(goldVec, dstStride, {dstWidth, dstHeight}, srcVec[i], srcStride, {srcWidth, srcHeight},
+                                fmt, transMatrixForGold, flags, borderMode, borderValue);
 
 #if DBG
         std::cout << "\nPrint src vec " << std::endl;
         for (int k = 0; k < srcHeight; k++)
         {
-            for (int j = 0; j < srcVecRowPitch; j++)
+            for (int j = 0; j < srcVecStride; j++)
             {
-                std::cout << static_cast<int>(srcVec[i][k * srcVecRowPitch + j]) << ",";
+                std::cout << static_cast<int>(srcVec[i][k * srcVecStride + j]) << ",";
             }
             std::cout << std::endl;
         }
@@ -647,9 +647,9 @@ TEST_P(OpWarpAffine, varshape_correct_output)
 
         for (int k = 0; k < dstHeight; k++)
         {
-            for (int j = 0; j < dstVecRowPitch; j++)
+            for (int j = 0; j < dstVecStride; j++)
             {
-                std::cout << static_cast<int>(goldVec[k * dstVecRowPitch + j]) << ",";
+                std::cout << static_cast<int>(goldVec[k * dstVecStride + j]) << ",";
             }
             std::cout << std::endl;
         }
@@ -658,9 +658,9 @@ TEST_P(OpWarpAffine, varshape_correct_output)
 
         for (int k = 0; k < dstHeight; k++)
         {
-            for (int j = 0; j < dstVecRowPitch; j++)
+            for (int j = 0; j < dstVecStride; j++)
             {
-                std::cout << static_cast<int>(testVec[k * dstVecRowPitch + j]) << ",";
+                std::cout << static_cast<int>(testVec[k * dstVecStride + j]) << ",";
             }
             std::cout << std::endl;
         }

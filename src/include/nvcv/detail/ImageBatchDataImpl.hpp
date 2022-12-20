@@ -24,14 +24,14 @@
 
 namespace nv { namespace cv {
 
-// ImageBatchVarShapeDataPitchDevice implementation -----------------------
-inline ImageBatchVarShapeDataPitchDevice::ImageBatchVarShapeDataPitchDevice(int32_t numImages, const Buffer &buffer)
+// ImageBatchVarShapeDataStridedCuda implementation -----------------------
+inline ImageBatchVarShapeDataStridedCuda::ImageBatchVarShapeDataStridedCuda(int32_t numImages, const Buffer &buffer)
 {
     NVCVImageBatchData &data = this->cdata();
 
-    data.numImages            = numImages;
-    data.bufferType           = NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_PITCH_DEVICE;
-    data.buffer.varShapePitch = buffer;
+    data.numImages              = numImages;
+    data.bufferType             = NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_STRIDED_CUDA;
+    data.buffer.varShapeStrided = buffer;
 }
 
 }} // namespace nv::cv

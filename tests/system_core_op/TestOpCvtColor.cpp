@@ -121,13 +121,13 @@ TEST_P(OpCvtColor, correct_output)
     nvcv::Tensor srcTensor(batches, {width, height}, srcFormat);
     nvcv::Tensor dstTensor(batches, {width, height}, dstFormat);
 
-    const auto *srcData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(srcTensor.exportData());
-    const auto *dstData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(dstTensor.exportData());
+    const auto *srcData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(srcTensor.exportData());
+    const auto *dstData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(dstTensor.exportData());
 
     ASSERT_NE(srcData, nullptr);
     ASSERT_NE(dstData, nullptr);
 
-    long srcBufSize = srcData->pitchBytes(0) * srcData->shape(0);
+    long srcBufSize = srcData->stride(0) * srcData->shape(0);
 
     std::vector<uint8_t> srcVec(srcBufSize);
 
@@ -137,7 +137,7 @@ TEST_P(OpCvtColor, correct_output)
     std::generate(srcVec.begin(), srcVec.end(), [&]() { return rand(randEng); });
 
     // copy random input to device
-    ASSERT_EQ(cudaSuccess, cudaMemcpy(srcData->data(), srcVec.data(), srcBufSize, cudaMemcpyHostToDevice));
+    ASSERT_EQ(cudaSuccess, cudaMemcpy(srcData->basePtr(), srcVec.data(), srcBufSize, cudaMemcpyHostToDevice));
 
     cudaStream_t stream;
     ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
@@ -155,7 +155,7 @@ TEST_P(OpCvtColor, correct_output)
     std::vector<uint8_t> testVec(srcBufSize);
 
     // copy output back to host
-    ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), srcData->data(), srcBufSize, cudaMemcpyDeviceToHost));
+    ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), srcData->basePtr(), srcBufSize, cudaMemcpyDeviceToHost));
 
     VEC_EXPECT_NEAR(testVec, srcVec, maxDiff);
 }
@@ -185,28 +185,28 @@ TEST_P(OpCvtColor, varshape_correct_output)
     std::vector<std::unique_ptr<nv::cv::Image>> imgSrc;
 
     std::vector<std::vector<uint8_t>> srcVec(batches);
-    std::vector<int>                  srcVecRowPitch(batches);
+    std::vector<int>                  srcVecRowStride(batches);
 
     for (int i = 0; i < batches; ++i)
     {
         imgSrc.emplace_back(
             std::make_unique<nv::cv::Image>(nv::cv::Size2D{udistWidth(rng), udistHeight(rng)}, srcFormat));
 
-        int srcRowPitch   = imgSrc[i]->size().w * srcFormat.planePixelStrideBytes(0);
-        srcVecRowPitch[i] = srcRowPitch;
+        int srcRowStride   = imgSrc[i]->size().w * srcFormat.planePixelStrideBytes(0);
+        srcVecRowStride[i] = srcRowStride;
 
         std::uniform_int_distribution<uint8_t> udist(0, 255);
 
-        srcVec[i].resize(imgSrc[i]->size().h * srcRowPitch);
+        srcVec[i].resize(imgSrc[i]->size().h * srcRowStride);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
 
-        auto *imgData = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        auto *imgData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_NE(imgData, nullptr);
 
         // Copy input data to the GPU
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2DAsync(imgData->plane(0).buffer, imgData->plane(0).pitchBytes, srcVec[i].data(),
-                                    srcRowPitch, srcRowPitch, imgSrc[i]->size().h, cudaMemcpyHostToDevice, stream));
+                  cudaMemcpy2DAsync(imgData->plane(0).basePtr, imgData->plane(0).rowStride, srcVec[i].data(),
+                                    srcRowStride, srcRowStride, imgSrc[i]->size().h, cudaMemcpyHostToDevice, stream));
     }
 
     nv::cv::ImageBatchVarShape batchSrc(batches);
@@ -238,15 +238,15 @@ TEST_P(OpCvtColor, varshape_correct_output)
     {
         SCOPED_TRACE(i);
 
-        const auto *imgData = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        const auto *imgData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_NE(imgData, nullptr);
         ASSERT_EQ(imgData->numPlanes(), 1);
 
-        std::vector<uint8_t> testVec(imgSrc[i]->size().h * srcVecRowPitch[i]);
+        std::vector<uint8_t> testVec(imgSrc[i]->size().h * srcVecRowStride[i]);
 
         // Copy output data to Host
-        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(testVec.data(), srcVecRowPitch[i], imgData->plane(0).buffer,
-                                            imgData->plane(0).pitchBytes, srcVecRowPitch[i], imgSrc[i]->size().h,
+        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(testVec.data(), srcVecRowStride[i], imgData->plane(0).basePtr,
+                                            imgData->plane(0).rowStride, srcVecRowStride[i], imgSrc[i]->size().h,
                                             cudaMemcpyDeviceToHost));
 
         VEC_EXPECT_NEAR(testVec, srcVec[i], maxDiff);

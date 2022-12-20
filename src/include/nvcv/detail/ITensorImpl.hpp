@@ -35,22 +35,22 @@ inline TensorShape ITensor::shape() const
 {
     NVCVTensorHandle htensor = this->handle();
 
-    int32_t ndim = 0;
-    detail::CheckThrow(nvcvTensorGetShape(htensor, &ndim, nullptr));
+    int32_t rank = 0;
+    detail::CheckThrow(nvcvTensorGetShape(htensor, &rank, nullptr));
 
     NVCVTensorLayout layout;
     detail::CheckThrow(nvcvTensorGetLayout(htensor, &layout));
 
-    TensorShape::ShapeType shape(ndim);
-    detail::CheckThrow(nvcvTensorGetShape(htensor, &ndim, shape.begin()));
+    TensorShape::ShapeType shape(rank);
+    detail::CheckThrow(nvcvTensorGetShape(htensor, &rank, shape.begin()));
     return {shape, layout};
 }
 
-inline int ITensor::ndim() const
+inline int ITensor::rank() const
 {
-    int32_t ndim = 0;
-    detail::CheckThrow(nvcvTensorGetShape(this->handle(), &ndim, nullptr));
-    return ndim;
+    int32_t rank = 0;
+    detail::CheckThrow(nvcvTensorGetShape(this->handle(), &rank, nullptr));
+    return rank;
 }
 
 inline TensorLayout ITensor::layout() const
@@ -72,12 +72,12 @@ inline const ITensorData *ITensor::exportData() const
     NVCVTensorData data;
     detail::CheckThrow(nvcvTensorExportData(this->handle(), &data));
 
-    if (data.bufferType != NVCV_TENSOR_BUFFER_PITCH_DEVICE)
+    if (data.bufferType != NVCV_TENSOR_BUFFER_STRIDED_CUDA)
     {
         throw Exception(Status::ERROR_INVALID_OPERATION, "Tensor data cannot be exported, buffer type not supported");
     }
 
-    m_cacheData.emplace(TensorShape(data.shape, data.ndim, data.layout), DataType{data.dtype}, data.buffer.pitch);
+    m_cacheData.emplace(TensorShape(data.shape, data.rank, data.layout), DataType{data.dtype}, data.buffer.strided);
 
     return &*m_cacheData;
 }

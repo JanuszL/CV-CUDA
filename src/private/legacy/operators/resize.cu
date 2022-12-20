@@ -82,7 +82,7 @@ inline __device__ T *_cacheAlignedBufferedRead(cuda::Tensor3DWrap<const T> srcIm
 } //_cacheAlignedBufferedRead
 
 template<typename T>
-inline void __device__ _alignedDeviceMemcpyQuad(T *pDst, T *pSrc)
+inline void __device__ _alignedCudaMemcpyQuad(T *pDst, T *pSrc)
 {
     //copy 4 T's, assuming 32-bit alignment for both pSrc and pDst
     uint *uPtrSrc = (uint *)pSrc;
@@ -91,7 +91,7 @@ inline void __device__ _alignedDeviceMemcpyQuad(T *pDst, T *pSrc)
 #pragma unroll
     for (int i = 0; i < sizeof(T); ++i) uPtrDst[i] = uPtrSrc[i];
 
-} //_alignedDeviceMemcpyQuad
+} //_alignedCudaMemcpyQuad
 
 //******************** NN = Nearest Neighbor
 
@@ -146,7 +146,7 @@ __global__ void resize_NN_quad_alignread(cuda::Tensor3DWrap<const T> src, cuda::
         T gather[4] = {aPtr[0], aPtr[sx1 - sx0], aPtr[sx2 - sx0], aPtr[sx3 - sx0]};
 
         //4 - aligned write back out
-        _alignedDeviceMemcpyQuad<T>(dst.ptr(batch_idx, dst_y, dst_x), gather);
+        _alignedCudaMemcpyQuad<T>(dst.ptr(batch_idx, dst_y, dst_x), gather);
     }
     else //6 - standard sampling, no optimization
     {
@@ -155,7 +155,7 @@ __global__ void resize_NN_quad_alignread(cuda::Tensor3DWrap<const T> src, cuda::
         const T *aPtr      = src.ptr(batch_idx, sy, 0);
         T        gather[4] = {aPtr[0], aPtr[sx1 - sx0], aPtr[sx2 - sx0], aPtr[sx3 - sx0]};
 
-        _alignedDeviceMemcpyQuad<T>(dst.ptr(batch_idx, dst_y, dst_x), gather);
+        _alignedCudaMemcpyQuad<T>(dst.ptr(batch_idx, dst_y, dst_x), gather);
     }
 } //resize_NN_quad_alignread
 
@@ -310,7 +310,7 @@ __global__ void resize_bilinear_quad_alignread(cuda::Tensor3DWrap<const T> src, 
     }
 
     //aligned write 4 pixels
-    _alignedDeviceMemcpyQuad<T>(dst.ptr(batch_idx, dst_y, dst_x), result);
+    _alignedCudaMemcpyQuad<T>(dst.ptr(batch_idx, dst_y, dst_x), result);
 } //resize_bilinear_quad_alignread
 
 //******************** Bicubic
@@ -506,7 +506,7 @@ __global__ void resize_bicubic_quad_alignread(cuda::Tensor3DWrap<const T> src, c
     }
 
     //aligned write 4 pixels
-    _alignedDeviceMemcpyQuad<T>(dst.ptr(batch_idx, dst_y, dst_x), result);
+    _alignedCudaMemcpyQuad<T>(dst.ptr(batch_idx, dst_y, dst_x), result);
 } //resize_bicubic_quad_alignread
 
 template<typename T, typename IntegerAreaFilter, typename AreaFilter>
@@ -578,14 +578,14 @@ __global__ void resize_area_ocv_align(const Ptr2dNHWC<T> src, const IntegerAreaF
 }
 
 template<typename T>
-void resize(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+void resize(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
             NVCVInterpolationType interpolation, cudaStream_t stream)
 
 {
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     const int batch_size = inAccess->numSamples();
@@ -688,7 +688,7 @@ size_t Resize::calBufferSize(DataShape max_input_shape, DataShape max_output_sha
     return 0;
 } //Resize::calBufferSize
 
-ErrorCode Resize::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+ErrorCode Resize::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                         const NVCVInterpolationType interpolation, cudaStream_t stream)
 {
     DataFormat input_format  = GetLegacyDataFormat(inData.layout());
@@ -708,7 +708,7 @@ ErrorCode Resize::infer(const ITensorDataPitchDevice &inData, const ITensorDataP
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
     cuda_op::DataType  data_type   = GetLegacyDataType(inData.dtype());
@@ -728,7 +728,7 @@ ErrorCode Resize::infer(const ITensorDataPitchDevice &inData, const ITensorDataP
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    typedef void (*func_t)(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+    typedef void (*func_t)(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                            const NVCVInterpolationType interpolation, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {

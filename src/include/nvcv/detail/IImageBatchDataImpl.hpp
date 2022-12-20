@@ -60,41 +60,41 @@ inline IImageBatchVarShapeData::~IImageBatchVarShapeData()
 
 inline const NVCVImageFormat *IImageBatchVarShapeData::formatList() const
 {
-    return this->cdata().buffer.varShapePitch.formatList;
+    return this->cdata().buffer.varShapeStrided.formatList;
 }
 
 inline const NVCVImageFormat *IImageBatchVarShapeData::hostFormatList() const
 {
-    return this->cdata().buffer.varShapePitch.hostFormatList;
+    return this->cdata().buffer.varShapeStrided.hostFormatList;
 }
 
 inline Size2D IImageBatchVarShapeData::maxSize() const
 {
-    const NVCVImageBatchVarShapeBufferPitch &buffer = this->cdata().buffer.varShapePitch;
+    const NVCVImageBatchVarShapeBufferStrided &buffer = this->cdata().buffer.varShapeStrided;
 
     return {buffer.maxWidth, buffer.maxHeight};
 }
 
 inline ImageFormat IImageBatchVarShapeData::uniqueFormat() const
 {
-    return ImageFormat{this->cdata().buffer.varShapePitch.uniqueFormat};
+    return ImageFormat{this->cdata().buffer.varShapeStrided.uniqueFormat};
 }
 
-// Implementation - IImageBatchVarShapeDataPitch
+// Implementation - IImageBatchVarShapeDataStrided
 
-inline IImageBatchVarShapeDataPitch::~IImageBatchVarShapeDataPitch()
+inline IImageBatchVarShapeDataStrided::~IImageBatchVarShapeDataStrided()
 {
     // required dtor implementation
 }
 
-inline const NVCVImageBufferPitch *IImageBatchVarShapeDataPitch::imageList() const
+inline const NVCVImageBufferStrided *IImageBatchVarShapeDataStrided::imageList() const
 {
-    return this->cdata().buffer.varShapePitch.imageList;
+    return this->cdata().buffer.varShapeStrided.imageList;
 }
 
-// Implementation - IImageBatchVarShapeDataPitchDevice
+// Implementation - IImageBatchVarShapeDataStridedCuda
 
-inline IImageBatchVarShapeDataPitchDevice::~IImageBatchVarShapeDataPitchDevice()
+inline IImageBatchVarShapeDataStridedCuda::~IImageBatchVarShapeDataStridedCuda()
 {
     // required dtor implementation
 }

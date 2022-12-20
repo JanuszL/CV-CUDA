@@ -26,24 +26,24 @@
 
 namespace nv { namespace cv {
 
-// TensorDataPitchDevice implementation -----------------------
+// TensorDataStridedCuda implementation -----------------------
 
-inline TensorDataPitchDevice::TensorDataPitchDevice(const TensorShape &tshape, const DataType &dtype,
+inline TensorDataStridedCuda::TensorDataStridedCuda(const TensorShape &tshape, const DataType &dtype,
                                                     const Buffer &buffer)
 {
     NVCVTensorData &data = this->cdata();
 
     std::copy(tshape.shape().begin(), tshape.shape().end(), data.shape);
-    data.ndim   = tshape.ndim();
+    data.rank   = tshape.rank();
     data.dtype  = dtype;
     data.layout = tshape.layout();
 
-    data.bufferType   = NVCV_TENSOR_BUFFER_PITCH_DEVICE;
-    data.buffer.pitch = buffer;
+    data.bufferType     = NVCV_TENSOR_BUFFER_STRIDED_CUDA;
+    data.buffer.strided = buffer;
 }
 
-inline TensorDataPitchDevice::TensorDataPitchDevice(const NVCVTensorData &data)
-    : ITensorDataPitchDevice(data)
+inline TensorDataStridedCuda::TensorDataStridedCuda(const NVCVTensorData &data)
+    : ITensorDataStridedCuda(data)
 {
 }
 

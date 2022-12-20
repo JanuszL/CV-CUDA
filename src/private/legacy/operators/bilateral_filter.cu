@@ -162,7 +162,7 @@ __global__ void BilateralFilterKernel(SrcWrapper src, DstWrapper dst, const int 
 }
 
 template<typename T, NVCVBorderType B>
-void BilateralFilterCaller(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, const int batch,
+void BilateralFilterCaller(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData, const int batch,
                            int rows, int columns, int radius, float sigmaColor, float sigmaSpace, float borderValue,
                            cudaStream_t stream)
 {
@@ -185,7 +185,7 @@ void BilateralFilterCaller(const ITensorDataPitchDevice &inData, const ITensorDa
 #endif
 }
 
-ErrorCode BilateralFilter::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, int d,
+ErrorCode BilateralFilter::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData, int d,
                                  float sigmaColor, float sigmaSpace, NVCVBorderType borderMode, cudaStream_t stream)
 {
     cuda_op::DataFormat input_format  = GetLegacyDataFormat(inData.layout());
@@ -250,7 +250,7 @@ ErrorCode BilateralFilter::infer(const ITensorDataPitchDevice &inData, const ITe
     }
     assert(radius < 10000);
 
-    auto inAccess = cv::TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = cv::TensorDataAccessStridedImagePlanar::Create(inData);
     if (!inAccess)
     {
         return ErrorCode::INVALID_DATA_FORMAT;
@@ -267,7 +267,7 @@ ErrorCode BilateralFilter::infer(const ITensorDataPitchDevice &inData, const ITe
 
     float borderValue = .0f;
 
-    typedef void (*bilateral_filter_t)(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+    typedef void (*bilateral_filter_t)(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                                        int batch, int rows, int columns, int radius, float sigmaColor, float sigmaSpace,
                                        float borderValue, cudaStream_t stream);
 

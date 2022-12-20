@@ -118,7 +118,7 @@ __global__ void gamma_contrast_float_kernel(const Ptr2dVarShapeNHWC<D> src, Ptr2
 }
 
 template<typename T>
-void gamma_contrast(const IImageBatchVarShapeDataPitchDevice &in, const IImageBatchVarShapeDataPitchDevice &out,
+void gamma_contrast(const IImageBatchVarShapeDataStridedCuda &in, const IImageBatchVarShapeDataStridedCuda &out,
                     float *gammaValues, cudaStream_t stream)
 {
     int max_width  = in.maxSize().w;
@@ -142,7 +142,7 @@ void gamma_contrast(const IImageBatchVarShapeDataPitchDevice &in, const IImageBa
 }
 
 template<typename T>
-void gamma_contrast_float(const IImageBatchVarShapeDataPitchDevice &in, const IImageBatchVarShapeDataPitchDevice &out,
+void gamma_contrast_float(const IImageBatchVarShapeDataStridedCuda &in, const IImageBatchVarShapeDataStridedCuda &out,
                           float *gammaValues, cudaStream_t stream)
 {
     int max_width  = in.maxSize().w;
@@ -176,9 +176,9 @@ GammaContrastVarShape::~GammaContrastVarShape()
     NVCV_CHECK_LOG(cudaFree(m_gammaArray));
 }
 
-ErrorCode GammaContrastVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData,
-                                       const IImageBatchVarShapeDataPitchDevice &outData,
-                                       const ITensorDataPitchDevice &gammas, cudaStream_t stream)
+ErrorCode GammaContrastVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData,
+                                       const IImageBatchVarShapeDataStridedCuda &outData,
+                                       const ITensorDataStridedCuda &gammas, cudaStream_t stream)
 {
     if (m_maxBatchSize <= 0 || inData.numImages() > m_maxBatchSize)
     {
@@ -244,11 +244,11 @@ ErrorCode GammaContrastVarShape::infer(const IImageBatchVarShapeDataPitchDevice 
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    auto gammasAccess = nv::cv::TensorDataAccessPitch::Create(gammas);
+    auto gammasAccess = nv::cv::TensorDataAccessStrided::Create(gammas);
     NVCV_ASSERT(gammasAccess);
 
     int numElements = 1;
-    for (int i = 0; i < gammas.ndim(); i++)
+    for (int i = 0; i < gammas.rank(); i++)
     {
         numElements *= gammas.shape(i);
     }
@@ -268,8 +268,8 @@ ErrorCode GammaContrastVarShape::infer(const IImageBatchVarShapeDataPitchDevice 
         checkKernelErrors();
     }
 
-    typedef void (*func_t)(const nv::cv::IImageBatchVarShapeDataPitchDevice &in,
-                           const nv::cv::IImageBatchVarShapeDataPitchDevice &out, float *gammas, cudaStream_t stream);
+    typedef void (*func_t)(const nv::cv::IImageBatchVarShapeDataStridedCuda &in,
+                           const nv::cv::IImageBatchVarShapeDataStridedCuda &out, float *gammas, cudaStream_t stream);
 
     static const func_t funcs[5][4] = {
         {      gamma_contrast<uchar>,      gamma_contrast<uchar2>,      gamma_contrast<uchar3>,gamma_contrast<uchar4>                                                                                               },

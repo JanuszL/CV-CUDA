@@ -61,8 +61,8 @@ __global__ void flip_kernel(const Ptr2dVarShapeNHWC<T> src, Ptr2dVarShapeNHWC<T>
 }
 
 template<typename T>
-void flip(const IImageBatchVarShapeDataPitchDevice &input, const IImageBatchVarShapeDataPitchDevice &output,
-          const ITensorDataPitchDevice &flipCode, cudaStream_t stream)
+void flip(const IImageBatchVarShapeDataStridedCuda &input, const IImageBatchVarShapeDataStridedCuda &output,
+          const ITensorDataStridedCuda &flipCode, cudaStream_t stream)
 {
     constexpr uint32_t BLOCK = 32;
 
@@ -91,9 +91,9 @@ size_t FlipOrCopyVarShape::calBufferSize(int maxBatchSize)
     return (sizeof(void *) * 2 + sizeof(int) * 3) * maxBatchSize;
 }
 
-ErrorCode FlipOrCopyVarShape::infer(const IImageBatchVarShapeDataPitchDevice &input,
-                                    const IImageBatchVarShapeDataPitchDevice &output,
-                                    const ITensorDataPitchDevice &flipCode, cudaStream_t stream)
+ErrorCode FlipOrCopyVarShape::infer(const IImageBatchVarShapeDataStridedCuda &input,
+                                    const IImageBatchVarShapeDataStridedCuda &output,
+                                    const ITensorDataStridedCuda &flipCode, cudaStream_t stream)
 {
     DataFormat inputFormat  = helpers::GetLegacyDataFormat(input);
     DataFormat outputFormat = helpers::GetLegacyDataFormat(output);
@@ -131,12 +131,12 @@ ErrorCode FlipOrCopyVarShape::infer(const IImageBatchVarShapeDataPitchDevice &in
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    // using flip_t = void(const IImageBatchVarShapeDataPitchDevice & input,
-    //                     const IImageBatchVarShapeDataPitchDevice & output,
-    //                     const ITensorDataPitchDevice & flipCode,
+    // using flip_t = void(const IImageBatchVarShapeDataStridedCuda & input,
+    //                     const IImageBatchVarShapeDataStridedCuda & output,
+    //                     const ITensorDataStridedCuda & flipCode,
     //                     cudaStream_t stream);
-    typedef void (*flip_t)(const IImageBatchVarShapeDataPitchDevice &input,
-                           const IImageBatchVarShapeDataPitchDevice &output, const ITensorDataPitchDevice &flipCode,
+    typedef void (*flip_t)(const IImageBatchVarShapeDataStridedCuda &input,
+                           const IImageBatchVarShapeDataStridedCuda &output, const ITensorDataStridedCuda &flipCode,
                            cudaStream_t stream);
 
     static const flip_t funcs[6][4] = {

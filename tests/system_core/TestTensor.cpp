@@ -60,13 +60,13 @@ TEST_P(TensorTests, wip_create)
     const nvcv::ImageFormat PARAM_FORMAT     = std::get<3>(GetParam());
     const nvcv::TensorShape GOLD_SHAPE       = std::get<4>(GetParam());
     const nvcv::DataType    GOLD_DTYPE       = std::get<5>(GetParam());
-    const int               GOLD_NDIM        = 4;
+    const int               GOLD_RANK        = 4;
 
     nvcv::Tensor tensor(PARAM_NUM_IMAGES, {PARAM_WIDTH, PARAM_HEIGHT}, PARAM_FORMAT);
 
     EXPECT_EQ(GOLD_DTYPE, tensor.dtype());
     EXPECT_EQ(GOLD_SHAPE, tensor.shape());
-    EXPECT_EQ(GOLD_NDIM, tensor.ndim());
+    EXPECT_EQ(GOLD_RANK, tensor.rank());
     EXPECT_EQ(GOLD_SHAPE.layout(), tensor.layout());
     ASSERT_NE(nullptr, tensor.handle());
 
@@ -76,31 +76,31 @@ TEST_P(TensorTests, wip_create)
 
         ASSERT_EQ(tensor.dtype(), data->dtype());
 
-        auto *devdata = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(data);
+        auto *devdata = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(data);
         ASSERT_NE(nullptr, devdata);
 
-        EXPECT_EQ(GOLD_NDIM, devdata->ndim());
+        EXPECT_EQ(GOLD_RANK, devdata->rank());
         ASSERT_EQ(GOLD_SHAPE, devdata->shape());
         ASSERT_EQ(GOLD_SHAPE.layout(), devdata->layout());
         ASSERT_EQ(GOLD_DTYPE, devdata->dtype());
 
-        auto access = nvcv::TensorDataAccessPitchImagePlanar::Create(*devdata);
+        auto access = nvcv::TensorDataAccessStridedImagePlanar::Create(*devdata);
         ASSERT_TRUE(access);
 
-        EXPECT_EQ(access->samplePitchBytes(), devdata->pitchBytes(0));
-        EXPECT_EQ(access->planePitchBytes(), access->infoLayout().isChannelFirst() ? devdata->pitchBytes(1) : 0);
+        EXPECT_EQ(access->sampleStride(), devdata->stride(0));
+        EXPECT_EQ(access->planeStride(), access->infoLayout().isChannelFirst() ? devdata->stride(1) : 0);
         EXPECT_EQ(access->numSamples(), devdata->shape(0));
 
         // Write data to each plane
         for (int i = 0; i < access->numSamples(); ++i)
         {
-            void *sampleBuffer = access->sampleData(i);
+            nvcv::Byte *sampleBuffer = access->sampleData(i);
             for (int p = 0; p < access->numPlanes(); ++p)
             {
-                void *planeBuffer = access->planeData(p, sampleBuffer);
+                nvcv::Byte *planeBuffer = access->planeData(p, sampleBuffer);
 
-                ASSERT_EQ(cudaSuccess, cudaMemset2D(planeBuffer, access->rowPitchBytes(), i * 3 + p * 7,
-                                                    access->numCols() * access->colPitchBytes(), access->numRows()))
+                ASSERT_EQ(cudaSuccess, cudaMemset2D(planeBuffer, access->rowStride(), i * 3 + p * 7,
+                                                    access->numCols() * access->colStride(), access->numRows()))
                     << "Image #" << i << ", plane #" << p;
             }
         }
@@ -108,18 +108,17 @@ TEST_P(TensorTests, wip_create)
         // Check if no overwrites
         for (int i = 0; i < access->numSamples(); ++i)
         {
-            void *sampleBuffer = access->sampleData(i);
+            nvcv::Byte *sampleBuffer = access->sampleData(i);
             for (int p = 1; p < access->numPlanes(); ++p)
             {
-                void *planeBuffer = access->planeData(p, sampleBuffer);
+                nvcv::Byte *planeBuffer = access->planeData(p, sampleBuffer);
 
                 // enough for one plane
-                std::vector<uint8_t> buf(access->numCols() * access->colPitchBytes() * access->numRows());
+                std::vector<uint8_t> buf(access->numCols() * access->colStride() * access->numRows());
 
-                ASSERT_EQ(cudaSuccess,
-                          cudaMemcpy2D(&buf[0], access->numCols() * access->colPitchBytes(), planeBuffer,
-                                       access->rowPitchBytes(), access->numCols() * access->colPitchBytes(),
-                                       access->numRows(), cudaMemcpyDeviceToHost))
+                ASSERT_EQ(cudaSuccess, cudaMemcpy2D(&buf[0], access->numCols() * access->colStride(), planeBuffer,
+                                                    access->rowStride(), access->numCols() * access->colStride(),
+                                                    access->numRows(), cudaMemcpyDeviceToHost))
                     << "Image #" << i << ", plane #" << p;
 
                 ASSERT_TRUE(
@@ -140,7 +139,7 @@ TEST(TensorTests, wip_create_allocator)
     // clang-format off
     nvcv::CustomAllocator myAlloc
     {
-        nvcv::CustomDeviceMemAllocator
+        nvcv::CustomCudaMemAllocator
         {
             [&setBufLen, &setBufAlign](int64_t size, int32_t bufAlign)
             {
@@ -166,13 +165,13 @@ TEST(TensorTests, wip_create_allocator)
     const nvcv::ITensorData *data = tensor.exportData();
     ASSERT_NE(nullptr, data);
 
-    auto *devdata = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(data);
+    auto *devdata = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(data);
     ASSERT_NE(nullptr, devdata);
 
-    EXPECT_EQ(1, devdata->pitchBytes(3));
-    EXPECT_EQ(4 * 1, devdata->pitchBytes(2));
-    EXPECT_EQ(163 * 4 * 1, devdata->pitchBytes(1));
-    EXPECT_EQ(117 * 163 * 4 * 1, devdata->pitchBytes(0));
+    EXPECT_EQ(1, devdata->stride(3));
+    EXPECT_EQ(4 * 1, devdata->stride(2));
+    EXPECT_EQ(163 * 4 * 1, devdata->stride(1));
+    EXPECT_EQ(117 * 163 * 4 * 1, devdata->stride(0));
 }
 
 TEST(Tensor, wip_cast)
@@ -221,7 +220,7 @@ TEST(Tensor, wip_cast)
     nvcv::ITensor *ptensor = nvcv::StaticCast<nvcv::ITensor *>(handle);
     ASSERT_NE(nullptr, ptensor);
     EXPECT_EQ(handle, ptensor->handle());
-    ASSERT_EQ(4, ptensor->ndim());
+    ASSERT_EQ(4, ptensor->rank());
     EXPECT_EQ(4, ptensor->shape()[3]);
     EXPECT_EQ(163, ptensor->shape()[2]);
     EXPECT_EQ(117, ptensor->shape()[1]);
@@ -265,9 +264,9 @@ TEST(TensorWrapData, wip_create)
 
     nvcv::Tensor origTensor(5, {173, 79}, fmt, nvcv::MemAlignment{}.rowAddr(1).baseAddr(32)); // packed rows
 
-    auto *tdata = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(origTensor.exportData());
+    auto *tdata = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(origTensor.exportData());
 
-    auto access = nvcv::TensorDataAccessPitchImagePlanar::Create(*tdata);
+    auto access = nvcv::TensorDataAccessStridedImagePlanar::Create(*tdata);
     ASSERT_TRUE(access);
 
     EXPECT_EQ(nvcv::TensorLayout::NCHW, tdata->layout());
@@ -280,10 +279,10 @@ TEST(TensorWrapData, wip_create)
     EXPECT_EQ(173, tdata->shape()[3]);
     EXPECT_EQ(79, tdata->shape()[2]);
     EXPECT_EQ(2, tdata->shape()[1]);
-    EXPECT_EQ(4, tdata->ndim());
+    EXPECT_EQ(4, tdata->rank());
 
-    EXPECT_EQ(2, tdata->pitchBytes(3));
-    EXPECT_EQ(173 * 2, tdata->pitchBytes(2));
+    EXPECT_EQ(2, tdata->stride(3));
+    EXPECT_EQ(173 * 2, tdata->stride(2));
 
     nvcv::TensorWrapData tensor{*tdata};
 
@@ -291,35 +290,35 @@ TEST(TensorWrapData, wip_create)
 
     EXPECT_EQ(tdata->shape(), tensor.shape());
     EXPECT_EQ(tdata->layout(), tensor.layout());
-    EXPECT_EQ(tdata->ndim(), tensor.ndim());
+    EXPECT_EQ(tdata->rank(), tensor.rank());
     EXPECT_EQ(GOLD_DTYPE, tensor.dtype());
 
     const nvcv::ITensorData *data = tensor.exportData();
     ASSERT_NE(nullptr, data);
 
-    auto *devdata = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(data);
+    auto *devdata = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(data);
     ASSERT_NE(nullptr, devdata);
 
-    auto accessRef = nvcv::TensorDataAccessPitchImagePlanar::Create(*devdata);
+    auto accessRef = nvcv::TensorDataAccessStridedImagePlanar::Create(*devdata);
     ASSERT_TRUE(access);
 
     EXPECT_EQ(tdata->dtype(), devdata->dtype());
     EXPECT_EQ(tdata->shape(), devdata->shape());
-    EXPECT_EQ(tdata->ndim(), devdata->ndim());
+    EXPECT_EQ(tdata->rank(), devdata->rank());
 
-    EXPECT_EQ(tdata->data(), devdata->data());
+    EXPECT_EQ(tdata->basePtr(), devdata->basePtr());
 
-    auto *mem = reinterpret_cast<std::byte *>(tdata->data());
+    auto *mem = tdata->basePtr();
 
-    EXPECT_LE(mem + access->samplePitchBytes() * 4, accessRef->sampleData(4));
-    EXPECT_LE(mem + access->samplePitchBytes() * 3, accessRef->sampleData(3));
+    EXPECT_LE(mem + access->sampleStride() * 4, accessRef->sampleData(4));
+    EXPECT_LE(mem + access->sampleStride() * 3, accessRef->sampleData(3));
 
-    EXPECT_LE(mem + access->samplePitchBytes() * 4, accessRef->sampleData(4, accessRef->planeData(0)));
-    EXPECT_LE(mem + access->samplePitchBytes() * 4 + access->planePitchBytes() * 1,
+    EXPECT_LE(mem + access->sampleStride() * 4, accessRef->sampleData(4, accessRef->planeData(0)));
+    EXPECT_LE(mem + access->sampleStride() * 4 + access->planeStride() * 1,
               accessRef->sampleData(4, accessRef->planeData(1)));
 
-    EXPECT_LE(mem + access->samplePitchBytes() * 3, accessRef->sampleData(3, accessRef->planeData(0)));
-    EXPECT_LE(mem + access->samplePitchBytes() * 3 + access->planePitchBytes() * 1,
+    EXPECT_LE(mem + access->sampleStride() * 3, accessRef->sampleData(3, accessRef->planeData(0)));
+    EXPECT_LE(mem + access->sampleStride() * 3 + access->planeStride() * 1,
               accessRef->sampleData(3, accessRef->planeData(1)));
 }
 
@@ -359,18 +358,18 @@ TEST_P(TensorWrapImageTests, wip_create)
     EXPECT_EQ(GOLD_SHAPE, tensor.shape());
     EXPECT_EQ(GOLD_DTYPE, tensor.dtype());
 
-    auto *imgData    = dynamic_cast<const nvcv::IImageDataPitchDevice *>(img.exportData());
-    auto *tensorData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(tensor.exportData());
+    auto *imgData    = dynamic_cast<const nvcv::IImageDataStridedCuda *>(img.exportData());
+    auto *tensorData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(tensor.exportData());
 
-    auto tensorAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*tensorData);
+    auto tensorAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*tensorData);
     EXPECT_TRUE(tensorAccess);
 
-    EXPECT_EQ(imgData->plane(0).buffer, tensorData->data());
+    EXPECT_EQ(imgData->plane(0).basePtr, reinterpret_cast<NVCVByte *>(tensorData->basePtr()));
 
     for (int p = 0; p < imgData->numPlanes(); ++p)
     {
-        EXPECT_EQ(imgData->plane(p).buffer, tensorAccess->planeData(p));
-        EXPECT_EQ(imgData->plane(p).pitchBytes, tensorAccess->rowPitchBytes());
-        EXPECT_EQ(img.format().planePixelStrideBytes(p), tensorAccess->colPitchBytes());
+        EXPECT_EQ(imgData->plane(p).basePtr, reinterpret_cast<NVCVByte *>(tensorAccess->planeData(p)));
+        EXPECT_EQ(imgData->plane(p).rowStride, tensorAccess->rowStride());
+        EXPECT_EQ(img.format().planePixelStrideBytes(p), tensorAccess->colStride());
     }
 }

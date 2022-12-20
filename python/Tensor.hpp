@@ -55,7 +55,7 @@ public:
     std::optional<cv::TensorLayout> layout() const;
     Shape                           shape() const;
     cv::DataType                    dtype() const;
-    int                             ndim() const;
+    int                             rank() const;
 
     cv::ITensor       &impl();
     const cv::ITensor &impl() const;

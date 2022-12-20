@@ -31,27 +31,27 @@ struct Size2D
     + h: int32_t
 }
 
-struct ImagePlanePitch
+struct ImagePlaneStrided
 {
     + width: int32_t
     + height: int32_t
-    + pitchBytes: int32_t
+    + rowStride: int32_t
     + mem: void *
 }
 
-interface IImageDataPitch extends IImageData
+interface IImageDataStrided extends IImageData
 {
     + {abstract} size() const: Size2D
 
     + {abstract} numPlanes() const: int32_t
-    + {abstract} plane(int p) const: const ImagePlanePitch &
+    + {abstract} plane(int p) const: const ImagePlaneStrided &
 }
 
-interface IImageDataPitchDevice implements IImageDataPitch
+interface IImageDataStridedCuda implements IImageDataStrided
 {
 }
 
-interface IImageDataPitchHost implements IImageDataPitch
+interface IImageDataStridedHost implements IImageDataStrided
 {
 }
 
@@ -67,27 +67,27 @@ class ImageDataCudaArray implements IImageDataCudaArray
                          const ImageBufferCudaArray &buffer)
 }
 
-struct ImageBufferPitch
+struct ImageBufferStrided
 {
     + numPlanes: int32_t
-    + planes: ImagePlanePitch[MAX_PLANES]
+    + planes: ImagePlaneStrided[MAX_PLANES]
 }
 
-class ImageDataPitchDevice implements IImageDataPitchDevice
+class ImageDataStridedCuda implements IImageDataStridedCuda
 {
-    + ImageDataPitchDevice(ImageFormat fmt,
-                           const ImageBufferPitch &buffer)
+    + ImageDataStridedCuda(ImageFormat fmt,
+                           const ImageBufferStrided &buffer)
 }
 
-class ImageDataPitchHost implements IImageDataPitchHost
+class ImageDataStridedHost implements IImageDataStridedHost
 {
-    + ImageDataPitchHost(ImageFormat fmt,
-                         const ImageBufferPitch &buffer)
+    + ImageDataStridedHost(ImageFormat fmt,
+                         const ImageBufferStrided &buffer)
 }
 
-ImageBufferPitch -up-o ImageDataPitchHost: contains <
-ImageBufferPitch -up-o ImageDataPitchDevice: contains <
-ImagePlanePitch -right-o ImageBufferPitch: contains <
+ImageBufferStrided -up-o ImageDataStridedHost: contains <
+ImageBufferStrided -up-o ImageDataStridedCuda: contains <
+ImagePlaneStrided -right-o ImageBufferStrided: contains <
 
 ImageBufferCudaArray -up-o ImageDataCudaArray: contains <
 

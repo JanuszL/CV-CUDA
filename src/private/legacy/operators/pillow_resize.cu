@@ -260,9 +260,9 @@ __global__ void vertical_pass(const cuda_op::Ptr2dNHWC<T> src, cuda_op::Ptr2dNHW
 }
 
 template<typename Filter, typename elem_type>
-void pillow_resize_v2(const TensorDataAccessPitchImagePlanar &inData, const TensorDataAccessPitchImagePlanar &outData,
-                      void *gpu_workspace, bool normalize_coeff, work_type init_buffer, bool round_up,
-                      cudaStream_t stream)
+void pillow_resize_v2(const TensorDataAccessStridedImagePlanar &inData,
+                      const TensorDataAccessStridedImagePlanar &outData, void *gpu_workspace, bool normalize_coeff,
+                      work_type init_buffer, bool round_up, cudaStream_t stream)
 {
     cuda_op::DataShape   input_shape = GetLegacyDataShape(inData.infoShape());
     Ptr2dNHWC<elem_type> src_ptr(inData);
@@ -369,8 +369,8 @@ void pillow_resize_v2(const TensorDataAccessPitchImagePlanar &inData, const Tens
 }
 
 template<typename Filter>
-void pillow_resize_filter(const TensorDataAccessPitchImagePlanar &inData,
-                          const TensorDataAccessPitchImagePlanar &outData, void *gpu_workspace,
+void pillow_resize_filter(const TensorDataAccessStridedImagePlanar &inData,
+                          const TensorDataAccessStridedImagePlanar &outData, void *gpu_workspace,
                           NVCVInterpolationType interpolation, cudaStream_t stream)
 {
     cuda_op::DataType data_type = GetLegacyDataType(inData.dtype());
@@ -435,7 +435,7 @@ size_t PillowResize::calBufferSize(DataShape max_input_shape, DataShape max_outp
     return size;
 }
 
-ErrorCode PillowResize::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+ErrorCode PillowResize::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                               const NVCVInterpolationType interpolation, cudaStream_t stream)
 {
     DataFormat format        = GetLegacyDataFormat(inData.layout());
@@ -452,10 +452,10 @@ ErrorCode PillowResize::infer(const ITensorDataPitchDevice &inData, const ITenso
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     cuda_op::DataType  data_type   = GetLegacyDataType(inData.dtype());

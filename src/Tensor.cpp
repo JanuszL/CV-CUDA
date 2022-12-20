@@ -27,7 +27,7 @@
 #include <private/core/TensorData.hpp>
 #include <private/core/TensorLayout.hpp>
 #include <private/core/TensorManager.hpp>
-#include <private/core/TensorWrapDataPitch.hpp>
+#include <private/core/TensorWrapDataStrided.hpp>
 #include <private/fmt/DataType.hpp>
 #include <private/fmt/ImageFormat.hpp>
 
@@ -54,7 +54,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorCalcRequirementsForImages,
 }
 
 NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorCalcRequirements,
-                (int32_t ndim, const int64_t *shape, NVCVDataType dtype, NVCVTensorLayout layout, int32_t baseAlign,
+                (int32_t rank, const int64_t *shape, NVCVDataType dtype, NVCVTensorLayout layout, int32_t baseAlign,
                  int32_t rowAlign, NVCVTensorRequirements *reqs))
 {
     return priv::ProtectCall(
@@ -67,7 +67,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorCalcRequirements,
 
             priv::DataType type{dtype};
 
-            *reqs = priv::Tensor::CalcRequirements(ndim, shape, type, layout, baseAlign, rowAlign);
+            *reqs = priv::Tensor::CalcRequirements(rank, shape, type, layout, baseAlign, rowAlign);
         });
 }
 
@@ -113,8 +113,8 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorWrapDataConstruct,
 
             switch (data->bufferType)
             {
-            case NVCV_TENSOR_BUFFER_PITCH_DEVICE:
-                *handle = priv::CreateCoreObject<priv::TensorWrapDataPitch>(*data, cleanup, ctxCleanup);
+            case NVCV_TENSOR_BUFFER_STRIDED_CUDA:
+                *handle = priv::CreateCoreObject<priv::TensorWrapDataStrided>(*data, cleanup, ctxCleanup);
                 break;
 
             default:
@@ -143,7 +143,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorWrapImageConstruct, (NVCVImageHandle
             NVCVTensorData tensorData;
             FillTensorData(img, tensorData);
 
-            *handle = priv::CreateCoreObject<priv::TensorWrapDataPitch>(tensorData, nullptr, nullptr);
+            *handle = priv::CreateCoreObject<priv::TensorWrapDataStrided>(tensorData, nullptr, nullptr);
         });
 }
 
@@ -199,22 +199,22 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorExportData, (NVCVTensorHandle handle
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorGetShape, (NVCVTensorHandle handle, int32_t *ndim, int64_t *shape))
+NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorGetShape, (NVCVTensorHandle handle, int32_t *rank, int64_t *shape))
 {
     return priv::ProtectCall(
         [&]
         {
             auto &tensor = priv::ToStaticRef<const priv::ITensor>(handle);
 
-            if (ndim == nullptr)
+            if (rank == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input pointer to ndim cannot be NULL");
+                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Input pointer to rank cannot be NULL");
             }
 
             if (shape != nullptr)
             {
                 // Number of shape elements to copy
-                int n = std::min(*ndim, tensor.ndim());
+                int n = std::min(*rank, tensor.rank());
                 if (n > 0)
                 {
                     if (shape == nullptr)
@@ -222,13 +222,13 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorGetShape, (NVCVTensorHandle handle, 
                         throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to shape output cannot be NULL");
                     }
 
-                    NVCV_ASSERT(*ndim - n >= 0);
-                    std::fill_n(shape, *ndim - n, 1);
-                    std::copy_n(tensor.shape() + tensor.ndim() - n, n, shape + *ndim - n);
+                    NVCV_ASSERT(*rank - n >= 0);
+                    std::fill_n(shape, *rank - n, 1);
+                    std::copy_n(tensor.shape() + tensor.rank() - n, n, shape + *rank - n);
                 }
             }
 
-            *ndim = tensor.ndim();
+            *rank = tensor.rank();
         });
 }
 

@@ -60,7 +60,7 @@ void DefaultAllocator::doFreeHostPinnedMem(void *ptr, int64_t size, int32_t alig
     NVCV_CHECK_LOG(::cudaFreeHost(ptr));
 }
 
-void *DefaultAllocator::doAllocDeviceMem(int64_t size, int32_t align)
+void *DefaultAllocator::doAllocCudaMem(int64_t size, int32_t align)
 {
     void *ptr = nullptr;
     NVCV_CHECK_THROW(::cudaMalloc(&ptr, size));
@@ -75,7 +75,7 @@ void *DefaultAllocator::doAllocDeviceMem(int64_t size, int32_t align)
     return ptr;
 }
 
-void DefaultAllocator::doFreeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept
+void DefaultAllocator::doFreeCudaMem(void *ptr, int64_t size, int32_t align) noexcept
 {
     (void)size;
     (void)align;

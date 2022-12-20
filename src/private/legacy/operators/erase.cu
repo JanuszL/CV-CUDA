@@ -76,9 +76,9 @@ __global__ void erase(nvcv::cuda::Tensor4DWrap<D> img, int imgH, int imgW, nvcv:
 }
 
 template<typename D>
-void eraseCaller(const nvcv::ITensorDataPitchDevice &imgs, const nvcv::ITensorDataPitchDevice &anchor,
-                 const nvcv::ITensorDataPitchDevice &erasing, const nvcv::ITensorDataPitchDevice &imgIdx,
-                 const nvcv::ITensorDataPitchDevice &values, int max_eh, int max_ew, int num_erasing_area, bool random,
+void eraseCaller(const nvcv::ITensorDataStridedCuda &imgs, const nvcv::ITensorDataStridedCuda &anchor,
+                 const nvcv::ITensorDataStridedCuda &erasing, const nvcv::ITensorDataStridedCuda &imgIdx,
+                 const nvcv::ITensorDataStridedCuda &values, int max_eh, int max_ew, int num_erasing_area, bool random,
                  unsigned int seed, int rows, int cols, int channels, cudaStream_t stream)
 {
     nvcv::cuda::Tensor4DWrap<D> src(imgs);
@@ -153,9 +153,9 @@ Erase::~Erase()
     temp_storage = nullptr;
 }
 
-ErrorCode Erase::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
-                       const ITensorDataPitchDevice &anchor, const ITensorDataPitchDevice &erasing,
-                       const ITensorDataPitchDevice &values, const ITensorDataPitchDevice &imgIdx, bool random,
+ErrorCode Erase::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
+                       const ITensorDataStridedCuda &anchor, const ITensorDataStridedCuda &erasing,
+                       const ITensorDataStridedCuda &values, const ITensorDataStridedCuda &imgIdx, bool random,
                        unsigned int seed, bool inplace, cudaStream_t stream)
 {
     DataFormat format    = GetLegacyDataFormat(inData.layout());
@@ -180,7 +180,7 @@ ErrorCode Erase::infer(const ITensorDataPitchDevice &inData, const ITensorDataPi
         LOG_ERROR("Invalid anchor DataType " << anchor_data_type);
         return ErrorCode::INVALID_DATA_TYPE;
     }
-    int anchor_dim = anchor.layout().ndim();
+    int anchor_dim = anchor.layout().rank();
     if (anchor_dim != 1)
     {
         LOG_ERROR("Invalid anchor Dim " << anchor_dim);
@@ -205,7 +205,7 @@ ErrorCode Erase::infer(const ITensorDataPitchDevice &inData, const ITensorDataPi
         LOG_ERROR("Invalid erasing_w DataType " << erasing_data_type);
         return ErrorCode::INVALID_DATA_TYPE;
     }
-    int erasing_dim = erasing.layout().ndim();
+    int erasing_dim = erasing.layout().rank();
     if (erasing_dim != 1)
     {
         LOG_ERROR("Invalid erasing Dim " << erasing_dim);
@@ -218,7 +218,7 @@ ErrorCode Erase::infer(const ITensorDataPitchDevice &inData, const ITensorDataPi
         LOG_ERROR("Invalid imgIdx DataType " << imgidx_data_type);
         return ErrorCode::INVALID_DATA_TYPE;
     }
-    int imgidx_dim = imgIdx.layout().ndim();
+    int imgidx_dim = imgIdx.layout().rank();
     if (imgidx_dim != 1)
     {
         LOG_ERROR("Invalid imgIdx Dim " << imgidx_dim);
@@ -231,17 +231,17 @@ ErrorCode Erase::infer(const ITensorDataPitchDevice &inData, const ITensorDataPi
         LOG_ERROR("Invalid values DataType " << values_data_type);
         return ErrorCode::INVALID_DATA_TYPE;
     }
-    int values_dim = values.layout().ndim();
+    int values_dim = values.layout().rank();
     if (values_dim != 1)
     {
         LOG_ERROR("Invalid values Dim " << values_dim);
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     if (!inplace)
@@ -251,9 +251,8 @@ ErrorCode Erase::infer(const ITensorDataPitchDevice &inData, const ITensorDataPi
             void *inSampData  = inAccess->sampleData(i);
             void *outSampData = outAccess->sampleData(i);
 
-            checkCudaErrors(cudaMemcpy2DAsync(outSampData, outAccess->rowPitchBytes(), inSampData,
-                                              inAccess->rowPitchBytes(),
-                                              inAccess->numCols() * inAccess->colPitchBytes(), inAccess->numRows(),
+            checkCudaErrors(cudaMemcpy2DAsync(outSampData, outAccess->rowStride(), inSampData, inAccess->rowStride(),
+                                              inAccess->numCols() * inAccess->colStride(), inAccess->numRows(),
                                               cudaMemcpyDeviceToDevice, stream));
         }
     }
@@ -263,7 +262,7 @@ ErrorCode Erase::infer(const ITensorDataPitchDevice &inData, const ITensorDataPi
         return SUCCESS;
     }
 
-    int3 *d_erasing = (int3 *)erasing.data();
+    int3 *d_erasing = (int3 *)erasing.basePtr();
     int3  h_max_values;
     MaxWH maxwh;
     int3  init = {0, 0, 0};
@@ -282,9 +281,9 @@ ErrorCode Erase::infer(const ITensorDataPitchDevice &inData, const ITensorDataPi
         return SUCCESS;
     }
 
-    typedef void (*erase_t)(const ITensorDataPitchDevice &imgs, const ITensorDataPitchDevice &anchor,
-                            const ITensorDataPitchDevice &erasing, const ITensorDataPitchDevice &imgIdx,
-                            const ITensorDataPitchDevice &values, int max_eh, int max_ew, int num_erasing_area,
+    typedef void (*erase_t)(const ITensorDataStridedCuda &imgs, const ITensorDataStridedCuda &anchor,
+                            const ITensorDataStridedCuda &erasing, const ITensorDataStridedCuda &imgIdx,
+                            const ITensorDataStridedCuda &values, int max_eh, int max_ew, int num_erasing_area,
                             bool random, unsigned int seed, int rows, int cols, int channels, cudaStream_t stream);
 
     static const erase_t funcs[6] = {eraseCaller<uchar>, eraseCaller<char>, eraseCaller<ushort>,

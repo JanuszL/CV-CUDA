@@ -62,8 +62,8 @@ typedef struct NVCVImageRequirementsRec
     int32_t         width, height; /*< Image dimensions. */
     NVCVImageFormat format;        /*< Image format. */
 
-    /** Row pitch of each plane, in bytes */
-    int32_t planeRowPitchBytes[NVCV_MAX_PLANE_COUNT];
+    /** Row stride of each plane, in bytes */
+    int32_t planeRowStride[NVCV_MAX_PLANE_COUNT];
 
     int32_t          alignBytes; /*< Alignment/block size in bytes */
     NVCVRequirements mem;        /*< Image resource requirements. */
@@ -107,7 +107,7 @@ NVCV_PUBLIC NVCVStatus nvcvImageCalcRequirements(int32_t width, int32_t height, 
  * @param [in] alloc Allocator to be used to allocate needed memory buffers.
  *                   - The following resources are used:
  *                     - host memory: for internal structures.
- *                     - device memory: for image contents buffer.
+ *                     - cuda memory: for image contents buffer.
  *                       If NULL, it'll use the internal default allocator.
  *                   + Allocator must not be destroyed while an image still refers to it.
  *

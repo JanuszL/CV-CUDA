@@ -20,13 +20,13 @@
 
 #include "IContext.hpp"
 #include "Tensor.hpp"
-#include "TensorWrapDataPitch.hpp"
+#include "TensorWrapDataStrided.hpp"
 
 namespace nv::cv::priv {
 
 using TensorManager = CoreObjManager<NVCVTensorHandle>;
 
-using TensorStorage = CompatibleStorage<Tensor, TensorWrapDataPitch>;
+using TensorStorage = CompatibleStorage<Tensor, TensorWrapDataStrided>;
 
 template<>
 class CoreObjManager<NVCVTensorHandle> : public HandleManager<ITensor, TensorStorage>

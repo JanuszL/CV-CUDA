@@ -59,24 +59,24 @@ protected:
     using IImageBatchData::IImageBatchData;
 };
 
-class IImageBatchVarShapeDataPitch : public IImageBatchVarShapeData
+class IImageBatchVarShapeDataStrided : public IImageBatchVarShapeData
 {
 public:
-    virtual ~IImageBatchVarShapeDataPitch() = 0;
+    virtual ~IImageBatchVarShapeDataStrided() = 0;
 
-    const NVCVImageBufferPitch *imageList() const;
+    const NVCVImageBufferStrided *imageList() const;
 
 protected:
     using IImageBatchVarShapeData::IImageBatchVarShapeData;
 };
 
-class IImageBatchVarShapeDataPitchDevice : public IImageBatchVarShapeDataPitch
+class IImageBatchVarShapeDataStridedCuda : public IImageBatchVarShapeDataStrided
 {
 public:
-    virtual ~IImageBatchVarShapeDataPitchDevice() = 0;
+    virtual ~IImageBatchVarShapeDataStridedCuda() = 0;
 
 protected:
-    using IImageBatchVarShapeDataPitch::IImageBatchVarShapeDataPitch;
+    using IImageBatchVarShapeDataStrided::IImageBatchVarShapeDataStrided;
 };
 
 }} // namespace nv::cv

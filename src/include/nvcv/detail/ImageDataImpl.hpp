@@ -45,42 +45,42 @@ inline ImageDataCudaArray::ImageDataCudaArray(const NVCVImageData &data)
     }
 }
 
-// ImageDataPitchDevice implementation -----------------------
+// ImageDataStridedCuda implementation -----------------------
 
-inline ImageDataPitchDevice::ImageDataPitchDevice(ImageFormat format, const Buffer &buffer)
+inline ImageDataStridedCuda::ImageDataStridedCuda(ImageFormat format, const Buffer &buffer)
 {
     NVCVImageData &data = this->cdata();
 
-    data.format       = format;
-    data.bufferType   = NVCV_IMAGE_BUFFER_PITCH_DEVICE;
-    data.buffer.pitch = buffer;
+    data.format         = format;
+    data.bufferType     = NVCV_IMAGE_BUFFER_STRIDED_CUDA;
+    data.buffer.strided = buffer;
 }
 
-inline ImageDataPitchDevice::ImageDataPitchDevice(const NVCVImageData &data)
-    : IImageDataPitchDevice(data)
+inline ImageDataStridedCuda::ImageDataStridedCuda(const NVCVImageData &data)
+    : IImageDataStridedCuda(data)
 {
-    if (data.bufferType != NVCV_IMAGE_BUFFER_PITCH_DEVICE)
+    if (data.bufferType != NVCV_IMAGE_BUFFER_STRIDED_CUDA)
     {
         throw Exception(Status::ERROR_INVALID_ARGUMENT,
                         "Image buffer format must be suitable for pitch-linear CUDA-accessible data");
     }
 }
 
-// ImageDataPitchHost implementation -----------------------
+// ImageDataStridedHost implementation -----------------------
 
-inline ImageDataPitchHost::ImageDataPitchHost(ImageFormat format, const Buffer &buffer)
+inline ImageDataStridedHost::ImageDataStridedHost(ImageFormat format, const Buffer &buffer)
 {
     NVCVImageData &data = this->cdata();
 
-    data.format       = format;
-    data.bufferType   = NVCV_IMAGE_BUFFER_PITCH_HOST;
-    data.buffer.pitch = buffer;
+    data.format         = format;
+    data.bufferType     = NVCV_IMAGE_BUFFER_STRIDED_HOST;
+    data.buffer.strided = buffer;
 }
 
-inline ImageDataPitchHost::ImageDataPitchHost(const NVCVImageData &data)
-    : IImageDataPitchHost(data)
+inline ImageDataStridedHost::ImageDataStridedHost(const NVCVImageData &data)
+    : IImageDataStridedHost(data)
 {
-    if (data.bufferType != NVCV_IMAGE_BUFFER_PITCH_DEVICE)
+    if (data.bufferType != NVCV_IMAGE_BUFFER_STRIDED_CUDA)
     {
         throw Exception(Status::ERROR_INVALID_ARGUMENT,
                         "Image buffer format must be suitable for pitch-linear host-accessible data");

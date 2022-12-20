@@ -50,10 +50,11 @@ __global__ void padAndStack(const BrdRd src, Ptr2D dst, const Ptr2DVec topVec, c
 }
 
 template<typename D, template<typename> class Brd>
-void padAndStackCaller(const nvcv::IImageBatchVarShapeDataPitchDevice &inData,
-                       const nvcv::TensorDataAccessPitchImagePlanar   &outData,
-                       const nvcv::TensorDataAccessPitchImagePlanar   &top,
-                       const nvcv::TensorDataAccessPitchImagePlanar &left, const float borderValue, cudaStream_t stream)
+void padAndStackCaller(const nvcv::IImageBatchVarShapeDataStridedCuda &inData,
+                       const nvcv::TensorDataAccessStridedImagePlanar &outData,
+                       const nvcv::TensorDataAccessStridedImagePlanar &top,
+                       const nvcv::TensorDataAccessStridedImagePlanar &left, const float borderValue,
+                       cudaStream_t stream)
 {
     Ptr2dVarShapeNHWC<D> src(inData);
 
@@ -84,14 +85,15 @@ void padAndStackCaller(const nvcv::IImageBatchVarShapeDataPitchDevice &inData,
 }
 
 template<typename D>
-void padAndStack(const nvcv::IImageBatchVarShapeDataPitchDevice &inData,
-                 const nvcv::TensorDataAccessPitchImagePlanar   &outData,
-                 const nvcv::TensorDataAccessPitchImagePlanar &top, const nvcv::TensorDataAccessPitchImagePlanar &left,
-                 const NVCVBorderType borderMode, const float borderValue, cudaStream_t stream)
+void padAndStack(const nvcv::IImageBatchVarShapeDataStridedCuda &inData,
+                 const nvcv::TensorDataAccessStridedImagePlanar &outData,
+                 const nvcv::TensorDataAccessStridedImagePlanar &top,
+                 const nvcv::TensorDataAccessStridedImagePlanar &left, const NVCVBorderType borderMode,
+                 const float borderValue, cudaStream_t stream)
 {
     typedef void (*padAndStack_caller)(
-        const nvcv::IImageBatchVarShapeDataPitchDevice &inData, const nvcv::TensorDataAccessPitchImagePlanar &outData,
-        const nvcv::TensorDataAccessPitchImagePlanar &top, const nvcv::TensorDataAccessPitchImagePlanar &left,
+        const nvcv::IImageBatchVarShapeDataStridedCuda &inData, const nvcv::TensorDataAccessStridedImagePlanar &outData,
+        const nvcv::TensorDataAccessStridedImagePlanar &top, const nvcv::TensorDataAccessStridedImagePlanar &left,
         const float borderValue, cudaStream_t stream);
 
     static const padAndStack_caller funcs[]
@@ -108,8 +110,8 @@ size_t PadAndStack::calBufferSize(int batch_size)
     return 0;
 }
 
-ErrorCode PadAndStack::infer(const IImageBatchVarShapeDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
-                             const ITensorDataPitchDevice &top, const ITensorDataPitchDevice &left,
+ErrorCode PadAndStack::infer(const IImageBatchVarShapeDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
+                             const ITensorDataStridedCuda &top, const ITensorDataStridedCuda &left,
                              const NVCVBorderType borderMode, const float borderValue, cudaStream_t stream)
 {
     DataFormat format    = GetLegacyDataFormat(outData.layout());
@@ -135,7 +137,7 @@ ErrorCode PadAndStack::infer(const IImageBatchVarShapeDataPitchDevice &inData, c
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     DataType   left_data_type = GetLegacyDataType(left.dtype());
@@ -151,7 +153,7 @@ ErrorCode PadAndStack::infer(const IImageBatchVarShapeDataPitchDevice &inData, c
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    auto leftAccess = TensorDataAccessPitchImagePlanar::Create(left);
+    auto leftAccess = TensorDataAccessStridedImagePlanar::Create(left);
     if (!leftAccess)
     {
         return ErrorCode::INVALID_DATA_TYPE;
@@ -170,7 +172,7 @@ ErrorCode PadAndStack::infer(const IImageBatchVarShapeDataPitchDevice &inData, c
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    auto topAccess = TensorDataAccessPitchImagePlanar::Create(top);
+    auto topAccess = TensorDataAccessStridedImagePlanar::Create(top);
     if (!topAccess)
     {
         return ErrorCode::INVALID_DATA_TYPE;
@@ -184,10 +186,10 @@ ErrorCode PadAndStack::infer(const IImageBatchVarShapeDataPitchDevice &inData, c
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    typedef void (*func_t)(const nvcv::IImageBatchVarShapeDataPitchDevice &inData,
-                           const TensorDataAccessPitchImagePlanar &outData, const TensorDataAccessPitchImagePlanar &top,
-                           const TensorDataAccessPitchImagePlanar &left, const NVCVBorderType borderMode,
-                           const float borderValue, cudaStream_t stream);
+    typedef void (*func_t)(
+        const nvcv::IImageBatchVarShapeDataStridedCuda &inData, const TensorDataAccessStridedImagePlanar &outData,
+        const TensorDataAccessStridedImagePlanar &top, const TensorDataAccessStridedImagePlanar &left,
+        const NVCVBorderType borderMode, const float borderValue, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {
         { padAndStack<uchar1>, padAndStack<uchar2>,  padAndStack<uchar3>,  padAndStack<uchar4>},

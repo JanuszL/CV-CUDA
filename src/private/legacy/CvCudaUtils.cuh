@@ -19,8 +19,8 @@
 #define CV_CUDA_UTILS_CUH
 
 #include <nvcv/IImageBatchData.hpp>
-#include <nvcv/IImageData.hpp>  // for IImageDataPitchDevice, etc.
-#include <nvcv/ITensorData.hpp> // for ITensorDataPitchDevice, etc.
+#include <nvcv/IImageData.hpp>  // for IImageDataStridedCuda, etc.
+#include <nvcv/ITensorData.hpp> // for ITensorDataStridedCuda, etc.
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/cuda/BorderWrap.hpp>   // for BorderWrap, etc.
 #include <nvcv/cuda/DropCast.hpp>     // for DropCast, etc.
@@ -69,25 +69,25 @@ struct DefaultTransformPolicy
 };
 
 template<class T> // base type
-__host__ __device__ int32_t CalcNCHWImagePitchBytes(int rows, int cols, int channels)
+__host__ __device__ int32_t CalcNCHWImageStride(int rows, int cols, int channels)
 {
     return rows * cols * channels * sizeof(T);
 }
 
 template<class T> // base type
-__host__ __device__ int32_t CalcNCHWRowPitchBytes(int cols, int channels)
+__host__ __device__ int32_t CalcNCHWRowStride(int cols, int channels)
 {
     return cols * sizeof(T);
 }
 
 template<class T> // base type
-__host__ __device__ int32_t CalcNHWCImagePitchBytes(int rows, int cols, int channels)
+__host__ __device__ int32_t CalcNHWCImageStride(int rows, int cols, int channels)
 {
     return rows * cols * channels * sizeof(T);
 }
 
 template<class T> // base type
-__host__ __device__ int32_t CalcNHWCRowPitchBytes(int cols, int channels)
+__host__ __device__ int32_t CalcNHWCRowStride(int cols, int channels)
 {
     return cols * channels * sizeof(T);
 }
@@ -110,8 +110,8 @@ struct Ptr2dNCHW
         , rows(0)
         , cols(0)
         , ch(0)
-        , imgPitchBytes(0)
-        , chPitchBytes(0)
+        , imgStride(0)
+        , chStride(0)
         , data{}
     {
     }
@@ -121,11 +121,11 @@ struct Ptr2dNCHW
         , rows(rows_)
         , cols(cols_)
         , ch(ch_)
-        , imgPitchBytes(0)
-        , rowPitchBytes(CalcNCHWRowPitchBytes<T>(cols, ch_))
+        , imgStride(0)
+        , rowStride(CalcNCHWRowStride<T>(cols, ch_))
         , data(data_)
     {
-        chPitchBytes = rowPitchBytes * rows_;
+        chStride = rowStride * rows_;
     }
 
     __host__ __device__ __forceinline__ Ptr2dNCHW(int batches_, int rows_, int cols_, int ch_, T *data_)
@@ -133,42 +133,42 @@ struct Ptr2dNCHW
         , rows(rows_)
         , cols(cols_)
         , ch(ch_)
-        , imgPitchBytes(CalcNCHWImagePitchBytes<T>(rows_, cols_, ch_))
-        , rowPitchBytes(CalcNCHWRowPitchBytes<T>(cols, ch_))
+        , imgStride(CalcNCHWImageStride<T>(rows_, cols_, ch_))
+        , rowStride(CalcNCHWRowStride<T>(cols, ch_))
         , data(data_)
     {
-        chPitchBytes = rowPitchBytes * rows_;
+        chStride = rowStride * rows_;
     }
 
-    __host__ __forceinline__ Ptr2dNCHW(const IImageDataPitchDevice &inData)
+    __host__ __forceinline__ Ptr2dNCHW(const IImageDataStridedCuda &inData)
         : batches(1)
         , rows(inData.size().h)
         , cols(inData.size().w)
         , ch(inData.format().numPlanes())
-        , imgPitchBytes(0)
+        , imgStride(0)
     {
         if (inData.format().numPlanes() != inData.format().numChannels())
         {
             throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Image must be planar");
         }
 
-        rowPitchBytes = inData.plane(0).pitchBytes;
-        chPitchBytes  = rowPitchBytes * inData.plane(0).height;
-        data          = reinterpret_cast<T *>(inData.plane(0).buffer);
+        rowStride = inData.plane(0).rowStride;
+        chStride  = rowStride * inData.plane(0).height;
+        data      = reinterpret_cast<T *>(inData.plane(0).basePtr);
 
         for (int i = 0; i < ch; ++i)
         {
-            const ImagePlanePitch &plane = inData.plane(i);
+            const ImagePlaneStrided &plane = inData.plane(i);
 
             if (i > 0)
             {
-                if (plane.pitchBytes != rowPitchBytes)
+                if (plane.rowStride != rowStride)
                 {
                     throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT,
                                               "All image planes' row pitch must be the same");
                 }
 
-                if (plane.buffer != reinterpret_cast<const std::byte *>(data) + rowPitchBytes * plane.height * i)
+                if (plane.basePtr != reinterpret_cast<const NVCVByte *>(data) + rowStride * plane.height * i)
                 {
                     throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "All image buffer must be packed");
                 }
@@ -187,17 +187,17 @@ struct Ptr2dNCHW
         }
     }
 
-    __host__ __forceinline__ Ptr2dNCHW(const TensorDataAccessPitchImagePlanar &tensor)
+    __host__ __forceinline__ Ptr2dNCHW(const TensorDataAccessStridedImagePlanar &tensor)
     {
         batches = tensor.numSamples();
         rows    = tensor.numRows();
         cols    = tensor.numCols();
         ch      = tensor.numChannels();
 
-        imgPitchBytes = tensor.samplePitchBytes();
-        chPitchBytes  = tensor.planePitchBytes();
-        rowPitchBytes = tensor.rowPitchBytes();
-        data          = tensor.sampleData(0);
+        imgStride = tensor.sampleStride();
+        chStride  = tensor.planeStride();
+        rowStride = tensor.rowStride();
+        data      = tensor.sampleData(0);
     }
 
     // ptr for uchar, ushort, float, typename T -> uchar etc.
@@ -205,24 +205,24 @@ struct Ptr2dNCHW
     __host__ __device__ __forceinline__ T *ptr(int b, int y, int x, int c)
     {
         //return (T *)(data + b * ch * rows * cols + c * rows * cols + y * cols + x);
-        return (T *)(reinterpret_cast<std::byte *>(data) + b * imgPitchBytes + c * chPitchBytes + y * rowPitchBytes
+        return (T *)(reinterpret_cast<std::byte *>(data) + b * imgStride + c * chStride + y * rowStride
                      + x * sizeof(T));
     }
 
     const __host__ __device__ __forceinline__ T *ptr(int b, int y, int x, int c) const
     {
         //return (const T *)(data + b * ch * rows * cols + c * rows * cols + y * cols + x);
-        return (const T *)(reinterpret_cast<const std::byte *>(data) + b * imgPitchBytes + c * chPitchBytes
-                           + y * rowPitchBytes + x * sizeof(T));
+        return (const T *)(reinterpret_cast<const std::byte *>(data) + b * imgStride + c * chStride + y * rowStride
+                           + x * sizeof(T));
     }
 
     int   batches;
     int   rows;
     int   cols;
     int   ch;
-    int   imgPitchBytes;
-    int   rowPitchBytes;
-    int   chPitchBytes;
+    int   imgStride;
+    int   rowStride;
+    int   chStride;
     void *data;
 };
 
@@ -235,8 +235,8 @@ struct Ptr2dNHWC
         : batches(0)
         , rows(0)
         , cols(0)
-        , imgPitchBytes(0)
-        , rowPitchBytes(0)
+        , imgStride(0)
+        , rowStride(0)
         , ch(0)
     {
     }
@@ -246,8 +246,8 @@ struct Ptr2dNHWC
         , rows(rows_)
         , cols(cols_)
         , ch(ch_)
-        , imgPitchBytes(0)
-        , rowPitchBytes(CalcNHWCRowPitchBytes<T>(cols_, ch_))
+        , imgStride(0)
+        , rowStride(CalcNHWCRowStride<T>(cols_, ch_))
         , data(data_)
     {
     }
@@ -257,64 +257,63 @@ struct Ptr2dNHWC
         , rows(rows_)
         , cols(cols_)
         , ch(ch_)
-        , imgPitchBytes(CalcNHWCImagePitchBytes<T>(rows_, cols_, ch_))
-        , rowPitchBytes(CalcNHWCRowPitchBytes<T>(cols_, ch_))
+        , imgStride(CalcNHWCImageStride<T>(rows_, cols_, ch_))
+        , rowStride(CalcNHWCRowStride<T>(cols_, ch_))
         , data(data_)
     {
     }
 
-    __host__ __device__ __forceinline__ Ptr2dNHWC(NewAPITag, int rows_, int cols_, int ch_, int rowPitchBytes_,
-                                                  T *data_)
+    __host__ __device__ __forceinline__ Ptr2dNHWC(NewAPITag, int rows_, int cols_, int ch_, int rowStride_, T *data_)
         : batches(1)
         , rows(rows_)
         , cols(cols_)
         , ch(ch_)
-        , imgPitchBytes(0)
-        , rowPitchBytes(rowPitchBytes_)
+        , imgStride(0)
+        , rowStride(rowStride_)
         , data(data_)
     {
     }
 
-    __host__ __forceinline__ Ptr2dNHWC(const IImageDataPitchDevice &inData)
+    __host__ __forceinline__ Ptr2dNHWC(const IImageDataStridedCuda &inData)
         : batches(1)
         , rows(inData.size().h)
         , cols(inData.size().w)
         , ch(inData.format().numChannels())
-        , imgPitchBytes(0)
+        , imgStride(0)
     {
         if (inData.format().numPlanes() != 1)
         {
             throw cv::priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Image must have only one plane");
         }
 
-        const ImagePlanePitch &plane = inData.plane(0);
+        const ImagePlaneStrided &plane = inData.plane(0);
 
-        rowPitchBytes = inData.plane(0).pitchBytes;
-        data          = reinterpret_cast<T *>(inData.plane(0).buffer);
+        rowStride = inData.plane(0).rowStride;
+        data      = reinterpret_cast<T *>(inData.plane(0).basePtr);
     }
 
-    __host__ __forceinline__ Ptr2dNHWC(const TensorDataAccessPitchImagePlanar &tensor, int cols_, int rows_)
+    __host__ __forceinline__ Ptr2dNHWC(const TensorDataAccessStridedImagePlanar &tensor, int cols_, int rows_)
     {
         batches = tensor.numSamples();
         rows    = rows_; // allow override of rows and cols with smaller crop rect
         cols    = cols_;
         ch      = tensor.numChannels();
 
-        imgPitchBytes = tensor.samplePitchBytes();
-        rowPitchBytes = tensor.rowPitchBytes();
-        data          = reinterpret_cast<T *>(tensor.sampleData(0));
+        imgStride = tensor.sampleStride();
+        rowStride = tensor.rowStride();
+        data      = reinterpret_cast<T *>(tensor.sampleData(0));
     }
 
-    __host__ __forceinline__ Ptr2dNHWC(const TensorDataAccessPitchImagePlanar &tensor)
+    __host__ __forceinline__ Ptr2dNHWC(const TensorDataAccessStridedImagePlanar &tensor)
     {
         batches = tensor.numSamples();
         rows    = tensor.numRows();
         cols    = tensor.numCols();
         ch      = tensor.numChannels();
 
-        imgPitchBytes = tensor.samplePitchBytes();
-        rowPitchBytes = tensor.rowPitchBytes();
-        data          = reinterpret_cast<T *>(tensor.sampleData(0));
+        imgStride = tensor.sampleStride();
+        rowStride = tensor.rowStride();
+        data      = reinterpret_cast<T *>(tensor.sampleData(0));
     }
 
     // ptr for uchar1/3/4, ushort1/3/4, float1/3/4, typename T -> uchar3 etc.
@@ -322,14 +321,13 @@ struct Ptr2dNHWC
     __host__ __device__ __forceinline__ T *ptr(int b, int y, int x)
     {
         //return (T *)(data + b * rows * cols + y * cols + x);
-        return (T *)(reinterpret_cast<std::byte *>(data) + b * imgPitchBytes + y * rowPitchBytes + x * sizeof(T));
+        return (T *)(reinterpret_cast<std::byte *>(data) + b * imgStride + y * rowStride + x * sizeof(T));
     }
 
     const __host__ __device__ __forceinline__ T *ptr(int b, int y, int x) const
     {
         //return (const T *)(data + b * rows * cols + y * cols + x);
-        return (const T *)(reinterpret_cast<const std::byte *>(data) + b * imgPitchBytes + y * rowPitchBytes
-                           + x * sizeof(T));
+        return (const T *)(reinterpret_cast<const std::byte *>(data) + b * imgStride + y * rowStride + x * sizeof(T));
     }
 
     // ptr for uchar, ushort, float, typename T -> uchar etc.
@@ -337,14 +335,13 @@ struct Ptr2dNHWC
     __host__ __device__ __forceinline__ T *ptr(int b, int y, int x, int c)
     {
         //return (T *)(data + b * rows * cols * ch + y * cols * ch + x * ch + c);
-        return (T *)(reinterpret_cast<std::byte *>(data) + b * imgPitchBytes + y * rowPitchBytes
-                     + (x * ch + c) * sizeof(T));
+        return (T *)(reinterpret_cast<std::byte *>(data) + b * imgStride + y * rowStride + (x * ch + c) * sizeof(T));
     }
 
     const __host__ __device__ __forceinline__ T *ptr(int b, int y, int x, int c) const
     {
         //return (const T *)(data + b * rows * cols * ch + y * cols * ch + x * ch + c);
-        return (const T *)(reinterpret_cast<const std::byte *>(data) + b * imgPitchBytes + y * rowPitchBytes
+        return (const T *)(reinterpret_cast<const std::byte *>(data) + b * imgStride + y * rowStride
                            + (x * ch + c) * sizeof(T));
     }
 
@@ -372,8 +369,8 @@ struct Ptr2dNHWC
     int rows;
     int cols;
     int ch;
-    int imgPitchBytes;
-    int rowPitchBytes;
+    int imgStride;
+    int rowStride;
     T  *data;
 };
 
@@ -389,7 +386,7 @@ struct Ptr2dVarShapeNHWC
     {
     }
 
-    __host__ __forceinline__ Ptr2dVarShapeNHWC(const cv::IImageBatchVarShapeDataPitchDevice &data, int nch_ = -1)
+    __host__ __forceinline__ Ptr2dVarShapeNHWC(const cv::IImageBatchVarShapeDataStridedCuda &data, int nch_ = -1)
         : batches(data.numImages())
         , imgList(data.imageList())
         , nch(
@@ -423,37 +420,30 @@ struct Ptr2dVarShapeNHWC
     // each fetch operation get a x-channel elements
     __host__ __device__ __forceinline__ T *ptr(int b, int y, int x)
     {
-        return reinterpret_cast<T *>(reinterpret_cast<uint8_t *>(imgList[b].planes[0].buffer)
-                                     + imgList[b].planes[0].pitchBytes * y)
-             + x;
+        return reinterpret_cast<T *>(imgList[b].planes[0].basePtr + imgList[b].planes[0].rowStride * y) + x;
     }
 
     const __host__ __device__ __forceinline__ T *ptr(int b, int y, int x) const
     {
-        return reinterpret_cast<const T *>(reinterpret_cast<const uint8_t *>(imgList[b].planes[0].buffer)
-                                           + imgList[b].planes[0].pitchBytes * y)
-             + x;
+        return reinterpret_cast<const T *>(imgList[b].planes[0].basePtr + imgList[b].planes[0].rowStride * y) + x;
     }
 
     // ptr for uchar, ushort, float, typename T -> uchar etc.
     // each fetch operation get a single channel element
     __host__ __device__ __forceinline__ T *ptr(int b, int y, int x, int c)
     {
-        return reinterpret_cast<T *>(reinterpret_cast<uint8_t *>(imgList[b].planes[0].buffer)
-                                     + imgList[b].planes[0].pitchBytes * y)
-             + (x * nch + c);
+        return reinterpret_cast<T *>(imgList[b].planes[0].basePtr + imgList[b].planes[0].rowStride * y) + (x * nch + c);
     }
 
     const __host__ __device__ __forceinline__ T *ptr(int b, int y, int x, int c) const
     {
-        return reinterpret_cast<const T *>(reinterpret_cast<const uint8_t *>(imgList[b].planes[0].buffer)
-                                           + imgList[b].planes[0].pitchBytes * y)
+        return reinterpret_cast<const T *>(imgList[b].planes[0].basePtr + imgList[b].planes[0].rowStride * y)
              + (x * nch + c);
     }
 
     // Commented out, "offset" doesn't take into account row pitch, but this info is needed.
     // If this function is actually needed, the kernel that calls it has to take into account
-    // the pitch info. Use "at_pitchBytes" to get it.
+    // the pitch info. Use "at_strides" to get it.
 #if 0
     // ptr for direct offset, less duplicated computation for higher performance
     __host__ __device__ __forceinline__ T *ptr(int b, int offset)
@@ -466,9 +456,9 @@ struct Ptr2dVarShapeNHWC
     }
 #endif
 
-    __host__ __device__ __forceinline__ int at_pitchBytes(int b) const
+    __host__ __device__ __forceinline__ int at_strides(int b) const
     {
-        return imgList[b].planes[0].pitchBytes;
+        return imgList[b].planes[0].rowStride;
     }
 
     __host__ __device__ __forceinline__ int at_rows(int b) const
@@ -481,9 +471,9 @@ struct Ptr2dVarShapeNHWC
         return imgList[b].planes[0].width;
     }
 
-    const int                   batches;
-    const NVCVImageBufferPitch *imgList;
-    const int                   nch;
+    const int                     batches;
+    const NVCVImageBufferStrided *imgList;
+    const int                     nch;
 };
 
 template<typename D>

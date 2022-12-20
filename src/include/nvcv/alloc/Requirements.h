@@ -54,7 +54,7 @@ typedef struct NVCVMemRequirementsRec
 /** Stores resource requirements. */
 typedef struct NVCVRequirementsRec
 {
-    NVCVMemRequirements deviceMem;     /*< Device memory */
+    NVCVMemRequirements cudaMem;       /*< Device memory */
     NVCVMemRequirements hostMem;       /*< Host memory */
     NVCVMemRequirements hostPinnedMem; /*< Host-pinned memory */
 } NVCVRequirements;

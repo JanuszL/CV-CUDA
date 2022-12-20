@@ -22,7 +22,7 @@
 #include "ImageFormat.h"
 
 /** Stores the image plane in a variable shape image batch. */
-typedef struct NVCVImageBatchVarShapeBufferPitchRec
+typedef struct NVCVImageBatchVarShapeBufferStridedRec
 {
     /** Format of all images in the batch.
      * If images don't have all the same format, or the batch is empty,
@@ -45,20 +45,20 @@ typedef struct NVCVImageBatchVarShapeBufferPitchRec
      * in the image can be fetched from the image batch's format. With that,
      * plane P of image N can be indexed as imgPlanes[N*numPlanesPerImage + P].
      */
-    NVCVImageBufferPitch *imageList;
-} NVCVImageBatchVarShapeBufferPitch;
+    NVCVImageBufferStrided *imageList;
+} NVCVImageBatchVarShapeBufferStrided;
 
 /** Stores the tensor plane contents. */
-typedef struct NVCVImageBatchTensorBufferPitchRec
+typedef struct NVCVImageBatchTensorBufferStridedRec
 {
     /** Distance in bytes from beginning of first plane of one image to the
      *  first plane of the next image.
      *  + Must be >= 1. */
-    int64_t imgPitchBytes;
+    int64_t imgStride;
 
     /** Distance in bytes from beginning of one row to the next.
      *  + Must be >= 1. */
-    int32_t rowPitchBytes;
+    int32_t rowStride;
 
     /** Dimensions of each image.
      * + Must be >= 1x1 */
@@ -70,7 +70,7 @@ typedef struct NVCVImageBatchTensorBufferPitchRec
      *  + Only the first N elements must have valid data, where N is the number of planes
      *    defined by @ref NVCVImageBatchData::format. */
     void *planeBuffer[NVCV_MAX_PLANE_COUNT];
-} NVCVImageBatchTensorBufferPitch;
+} NVCVImageBatchTensorBufferStrided;
 
 /** Represents how the image buffer data is stored. */
 typedef enum
@@ -80,7 +80,7 @@ typedef enum
     NVCV_IMAGE_BATCH_BUFFER_NONE = 0,
 
     /** GPU-accessible with variable-shape planes in pitch-linear layout. */
-    NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_PITCH_DEVICE,
+    NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_STRIDED_CUDA,
 } NVCVImageBatchBufferType;
 
 /** Represents the available methods to access image batch contents.
@@ -89,9 +89,9 @@ typedef union NVCVImageBatchBufferRec
 {
     /** Varshape image batch stored in pitch-linear layout.
      * To be used when \ref NVCVImageBatchData::bufferType is:
-     * - \ref NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_PITCH_DEVICE
+     * - \ref NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_STRIDED_CUDA
      */
-    NVCVImageBatchVarShapeBufferPitch varShapePitch;
+    NVCVImageBatchVarShapeBufferStrided varShapeStrided;
 } NVCVImageBatchBuffer;
 
 /** Stores information about image batch characteristics and content. */

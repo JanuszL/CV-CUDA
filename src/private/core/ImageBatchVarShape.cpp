@@ -40,7 +40,7 @@ NVCVImageBatchVarShapeRequirements ImageBatchVarShape::CalcRequirements(int32_t 
     reqs.capacity = capacity;
     reqs.mem      = {};
 
-    reqs.alignBytes = alignof(NVCVImageBufferPitch);
+    reqs.alignBytes = alignof(NVCVImageBufferStrided);
     reqs.alignBytes = std::lcm(alignof(NVCVImageHandle), reqs.alignBytes);
     reqs.alignBytes = std::lcm(alignof(NVCVImageFormat), reqs.alignBytes);
 
@@ -53,10 +53,10 @@ NVCVImageBatchVarShapeRequirements ImageBatchVarShape::CalcRequirements(int32_t 
                         NVCV_MAX_MEM_REQUIREMENTS_BLOCK_SIZE);
     }
 
-    AddBuffer(reqs.mem.deviceMem, capacity * sizeof(NVCVImageBufferPitch), reqs.alignBytes);
-    AddBuffer(reqs.mem.deviceMem, capacity * sizeof(NVCVImageFormat), reqs.alignBytes);
+    AddBuffer(reqs.mem.cudaMem, capacity * sizeof(NVCVImageBufferStrided), reqs.alignBytes);
+    AddBuffer(reqs.mem.cudaMem, capacity * sizeof(NVCVImageFormat), reqs.alignBytes);
 
-    AddBuffer(reqs.mem.hostMem, capacity * sizeof(NVCVImageBufferPitch), reqs.alignBytes);
+    AddBuffer(reqs.mem.hostMem, capacity * sizeof(NVCVImageBufferStrided), reqs.alignBytes);
     AddBuffer(reqs.mem.hostMem, capacity * sizeof(NVCVImageFormat), reqs.alignBytes);
 
     AddBuffer(reqs.mem.hostMem, capacity * sizeof(NVCVImageHandle), reqs.alignBytes);
@@ -76,22 +76,22 @@ ImageBatchVarShape::ImageBatchVarShape(NVCVImageBatchVarShapeRequirements reqs, 
     m_devFormatsBuffer = m_hostFormatsBuffer = nullptr;
     m_imgHandleBuffer                        = nullptr;
 
-    int64_t bufImagesSize  = m_reqs.capacity * sizeof(NVCVImageBufferPitch);
+    int64_t bufImagesSize  = m_reqs.capacity * sizeof(NVCVImageBufferStrided);
     int64_t bufFormatsSize = m_reqs.capacity * sizeof(NVCVImageFormat);
     int64_t imgHandlesSize = m_reqs.capacity * sizeof(NVCVImageHandle);
 
     try
     {
         m_devImagesBuffer
-            = reinterpret_cast<NVCVImageBufferPitch *>(m_alloc.allocDeviceMem(bufImagesSize, m_reqs.alignBytes));
+            = reinterpret_cast<NVCVImageBufferStrided *>(m_alloc.allocCudaMem(bufImagesSize, m_reqs.alignBytes));
         NVCV_ASSERT(m_devImagesBuffer != nullptr);
 
         m_hostImagesBuffer
-            = reinterpret_cast<NVCVImageBufferPitch *>(m_alloc.allocHostMem(bufImagesSize, m_reqs.alignBytes));
+            = reinterpret_cast<NVCVImageBufferStrided *>(m_alloc.allocHostMem(bufImagesSize, m_reqs.alignBytes));
         NVCV_ASSERT(m_devImagesBuffer != nullptr);
 
         m_devFormatsBuffer
-            = reinterpret_cast<NVCVImageFormat *>(m_alloc.allocDeviceMem(bufFormatsSize, m_reqs.alignBytes));
+            = reinterpret_cast<NVCVImageFormat *>(m_alloc.allocCudaMem(bufFormatsSize, m_reqs.alignBytes));
         NVCV_ASSERT(m_devFormatsBuffer != nullptr);
 
         m_hostFormatsBuffer
@@ -111,10 +111,10 @@ ImageBatchVarShape::ImageBatchVarShape(NVCVImageBatchVarShapeRequirements reqs, 
             NVCV_CHECK_LOG(cudaEventDestroy(m_evPostFence));
         }
 
-        m_alloc.freeDeviceMem(m_devImagesBuffer, bufImagesSize, m_reqs.alignBytes);
+        m_alloc.freeCudaMem(m_devImagesBuffer, bufImagesSize, m_reqs.alignBytes);
         m_alloc.freeHostMem(m_hostImagesBuffer, bufImagesSize, m_reqs.alignBytes);
 
-        m_alloc.freeDeviceMem(m_devFormatsBuffer, bufFormatsSize, m_reqs.alignBytes);
+        m_alloc.freeCudaMem(m_devFormatsBuffer, bufFormatsSize, m_reqs.alignBytes);
         m_alloc.freeHostMem(m_hostFormatsBuffer, bufFormatsSize, m_reqs.alignBytes);
 
         m_alloc.freeHostMem(m_imgHandleBuffer, imgHandlesSize, m_reqs.alignBytes);
@@ -126,14 +126,14 @@ ImageBatchVarShape::~ImageBatchVarShape()
 {
     NVCV_CHECK_LOG(cudaEventSynchronize(m_evPostFence));
 
-    int64_t bufImagesSize  = m_reqs.capacity * sizeof(NVCVImageBufferPitch);
+    int64_t bufImagesSize  = m_reqs.capacity * sizeof(NVCVImageBufferStrided);
     int64_t bufFormatsSize = m_reqs.capacity * sizeof(NVCVImageFormat);
     int64_t imgHandlesSize = m_reqs.capacity * sizeof(NVCVImageHandle);
 
-    m_alloc.freeDeviceMem(m_devImagesBuffer, bufImagesSize, m_reqs.alignBytes);
+    m_alloc.freeCudaMem(m_devImagesBuffer, bufImagesSize, m_reqs.alignBytes);
     m_alloc.freeHostMem(m_hostImagesBuffer, bufImagesSize, m_reqs.alignBytes);
 
-    m_alloc.freeDeviceMem(m_devFormatsBuffer, bufFormatsSize, m_reqs.alignBytes);
+    m_alloc.freeCudaMem(m_devFormatsBuffer, bufFormatsSize, m_reqs.alignBytes);
     m_alloc.freeHostMem(m_hostFormatsBuffer, bufFormatsSize, m_reqs.alignBytes);
 
     m_alloc.freeHostMem(m_imgHandleBuffer, imgHandlesSize, m_reqs.alignBytes);
@@ -216,12 +216,12 @@ void ImageBatchVarShape::doUpdateCache() const
 void ImageBatchVarShape::exportData(CUstream stream, NVCVImageBatchData &data) const
 {
     data.numImages  = m_numImages;
-    data.bufferType = NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_PITCH_DEVICE;
+    data.bufferType = NVCV_IMAGE_BATCH_VARSHAPE_BUFFER_STRIDED_CUDA;
 
-    NVCVImageBatchVarShapeBufferPitch &buf = data.buffer.varShapePitch;
-    buf.imageList                          = m_devImagesBuffer;
-    buf.formatList                         = m_devFormatsBuffer;
-    buf.hostFormatList                     = m_hostFormatsBuffer;
+    NVCVImageBatchVarShapeBufferStrided &buf = data.buffer.varShapeStrided;
+    buf.imageList                            = m_devImagesBuffer;
+    buf.formatList                           = m_devFormatsBuffer;
+    buf.hostFormatList                       = m_hostFormatsBuffer;
 
     NVCV_ASSERT(m_dirtyStartingFromIndex <= m_numImages);
 
@@ -334,12 +334,12 @@ void ImageBatchVarShape::doPushImage(NVCVImageHandle imgHandle)
     NVCVImageData imgData;
     img.exportData(imgData);
 
-    if (imgData.bufferType != NVCV_IMAGE_BUFFER_PITCH_DEVICE)
+    if (imgData.bufferType != NVCV_IMAGE_BUFFER_STRIDED_CUDA)
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Data buffer of image to be added isn't gpu-accessible";
     }
 
-    m_hostImagesBuffer[m_numImages]  = imgData.buffer.pitch;
+    m_hostImagesBuffer[m_numImages]  = imgData.buffer.strided;
     m_hostFormatsBuffer[m_numImages] = imgData.format;
     m_imgHandleBuffer[m_numImages]   = imgHandle;
 

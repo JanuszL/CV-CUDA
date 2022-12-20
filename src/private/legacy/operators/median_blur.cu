@@ -331,8 +331,8 @@ __global__ void medianForSmallKernel(const Ptr2dNHWC<T> src, Ptr2dNHWC<T> dst, c
 #undef fetchAs1d
 
 template<typename T>
-void median(const nvcv::TensorDataAccessPitchImagePlanar &inData, const nvcv::TensorDataAccessPitchImagePlanar &outData,
-            int kWidth, int kHeight, cudaStream_t stream)
+void median(const nvcv::TensorDataAccessStridedImagePlanar &inData,
+            const nvcv::TensorDataAccessStridedImagePlanar &outData, int kWidth, int kHeight, cudaStream_t stream)
 {
     Ptr2dNHWC<T> src(inData);  //inputShape.N, inputShape.H, inputShape.W, inputShape.C, (T *) input);
     Ptr2dNHWC<T> dst(outData); //inputShape.N, inputShape.H, inputShape.W, inputShape.C, (T *) output);
@@ -370,7 +370,7 @@ size_t MedianBlur::calBufferSize(DataShape max_input_shape, DataShape max_output
     return 0;
 }
 
-ErrorCode MedianBlur::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+ErrorCode MedianBlur::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                             const cv::Size2D ksize, cudaStream_t stream)
 {
     DataFormat input_format  = GetLegacyDataFormat(inData.layout());
@@ -390,10 +390,10 @@ ErrorCode MedianBlur::infer(const ITensorDataPitchDevice &inData, const ITensorD
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     cuda_op::DataType  data_type   = GetLegacyDataType(inData.dtype());
@@ -419,8 +419,8 @@ ErrorCode MedianBlur::infer(const ITensorDataPitchDevice &inData, const ITensorD
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    typedef void (*median_t)(const nvcv::TensorDataAccessPitchImagePlanar &inData,
-                             const nvcv::TensorDataAccessPitchImagePlanar &outData, int kWidth, int kHeight,
+    typedef void (*median_t)(const nvcv::TensorDataAccessStridedImagePlanar &inData,
+                             const nvcv::TensorDataAccessStridedImagePlanar &outData, int kWidth, int kHeight,
                              cudaStream_t stream);
 
     static const median_t funcs[6] = {

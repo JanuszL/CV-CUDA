@@ -68,7 +68,7 @@ struct copyMakeBorderDispatcher
 };
 
 template<typename T, int cn> // uchar3 float3 uchar float
-void copyMakeBorder(const TensorDataAccessPitchImagePlanar &d_in, const TensorDataAccessPitchImagePlanar &d_out,
+void copyMakeBorder(const TensorDataAccessStridedImagePlanar &d_in, const TensorDataAccessStridedImagePlanar &d_out,
                     const int batch_size, const int height, const int width, const int top, const int left,
                     const NVCVBorderType border_type, const float4 value, cudaStream_t stream)
 {
@@ -94,7 +94,7 @@ void copyMakeBorder(const TensorDataAccessPitchImagePlanar &d_in, const TensorDa
 
 namespace nv::cv::legacy::cuda_op {
 
-ErrorCode CopyMakeBorder::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+ErrorCode CopyMakeBorder::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                                 const int top, const int left, const NVCVBorderType border_type, const float4 value,
                                 cudaStream_t stream)
 {
@@ -114,10 +114,10 @@ ErrorCode CopyMakeBorder::infer(const ITensorDataPitchDevice &inData, const ITen
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     cuda_op::DataType  data_type   = GetLegacyDataType(inData.dtype());
@@ -162,9 +162,10 @@ ErrorCode CopyMakeBorder::infer(const ITensorDataPitchDevice &inData, const ITen
         return ErrorCode::INVALID_PARAMETER;
     }
 
-    typedef void (*func_t)(const TensorDataAccessPitchImagePlanar &d_in, const TensorDataAccessPitchImagePlanar &d_out,
-                           const int batch_size, const int rows, const int cols, const int top, const int left,
-                           const NVCVBorderType border_type, const float4 value, cudaStream_t stream);
+    typedef void (*func_t)(const TensorDataAccessStridedImagePlanar &d_in,
+                           const TensorDataAccessStridedImagePlanar &d_out, const int batch_size, const int rows,
+                           const int cols, const int top, const int left, const NVCVBorderType border_type,
+                           const float4 value, cudaStream_t stream);
 
     // clang-format off
     static const func_t funcs[6][4] = {

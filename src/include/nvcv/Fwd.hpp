@@ -32,22 +32,22 @@ namespace nv::cv {
 class IImage;
 class IImageData;
 class IImageDataCudaArray;
-class IImageDataPitch;
-class IImageDataPitchDevice;
-class IImageDataPitchHost;
+class IImageDataStrided;
+class IImageDataStridedCuda;
+class IImageDataStridedHost;
 
 class IImageBatch;
 class IImageBatchData;
 
 class IImageBatchVarShape;
 class IImageBatchVarShapeData;
-class IImageBatchVarShapeDataPitch;
-class IImageBatchVarShapeDataPitchDevice;
+class IImageBatchVarShapeDataStrided;
+class IImageBatchVarShapeDataStridedCuda;
 
 class ITensor;
 class ITensorData;
-class ITensorDataPitch;
-class ITensorDataPitchDevice;
+class ITensorDataStrided;
+class ITensorDataStridedCuda;
 
 } // namespace nv::cv
 

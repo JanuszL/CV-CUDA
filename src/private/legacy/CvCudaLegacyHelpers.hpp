@@ -39,14 +39,14 @@ cuda_op::DataType GetLegacyDataType(DataType dtype);
 cuda_op::DataType GetLegacyDataType(ImageFormat fmt);
 
 cuda_op::DataFormat GetLegacyDataFormat(const TensorLayout &layout);
-cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShapeDataPitchDevice &imgBatch);
+cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShapeDataStridedCuda &imgBatch);
 cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShape &imgBatch);
-cuda_op::DataFormat GetLegacyDataFormat(const ITensorDataPitchDevice &tensor);
+cuda_op::DataFormat GetLegacyDataFormat(const ITensorDataStridedCuda &tensor);
 
 cuda_op::DataShape GetLegacyDataShape(const TensorShapeInfoImage &shapeInfo);
 
-Size2D GetMaxImageSize(const ITensorDataPitchDevice &tensor);
-Size2D GetMaxImageSize(const IImageBatchVarShapeDataPitchDevice &imageBatch);
+Size2D GetMaxImageSize(const ITensorDataStridedCuda &tensor);
+Size2D GetMaxImageSize(const IImageBatchVarShapeDataStridedCuda &imageBatch);
 
 } // namespace nv::cv::legacy::helpers
 

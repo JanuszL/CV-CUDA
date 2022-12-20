@@ -60,8 +60,8 @@ __global__ void channel_reorder_kernel(const cuda_op::Ptr2dVarShapeNHWC<T> src, 
 }
 
 template<typename T>
-void reorder(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
-             const ITensorDataPitchDevice &orderData, int numChannels, cudaStream_t stream)
+void reorder(const IImageBatchVarShapeDataStridedCuda &inData, const IImageBatchVarShapeDataStridedCuda &outData,
+             const ITensorDataStridedCuda &orderData, int numChannels, cudaStream_t stream)
 {
     int batch_size = inData.numImages();
 
@@ -82,9 +82,9 @@ void reorder(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatch
 #endif
 }
 
-ErrorCode ChannelReorderVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData,
-                                        const IImageBatchVarShapeDataPitchDevice &outData,
-                                        const ITensorDataPitchDevice &orderData, cudaStream_t stream)
+ErrorCode ChannelReorderVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData,
+                                        const IImageBatchVarShapeDataStridedCuda &outData,
+                                        const ITensorDataStridedCuda &orderData, cudaStream_t stream)
 {
     if (inData.numImages() != outData.numImages())
     {
@@ -107,9 +107,9 @@ ErrorCode ChannelReorderVarShape::infer(const IImageBatchVarShapeDataPitchDevice
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    if (orderData.ndim() != 2)
+    if (orderData.rank() != 2)
     {
-        LOG_ERROR("order tensor must have 2 dimensions, not " << orderData.ndim());
+        LOG_ERROR("order tensor must have 2 dimensions, not " << orderData.rank());
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
@@ -191,8 +191,8 @@ ErrorCode ChannelReorderVarShape::infer(const IImageBatchVarShapeDataPitchDevice
         return ErrorCode::SUCCESS;
     }
 
-    typedef void (*func_t)(const IImageBatchVarShapeDataPitchDevice &inData,
-                           const IImageBatchVarShapeDataPitchDevice &outData, const ITensorDataPitchDevice &orderData,
+    typedef void (*func_t)(const IImageBatchVarShapeDataStridedCuda &inData,
+                           const IImageBatchVarShapeDataStridedCuda &outData, const ITensorDataStridedCuda &orderData,
                            int numChannels, cudaStream_t stream);
 
     static const func_t funcs[6] = {reorder<uchar>, 0, reorder<ushort>, reorder<short>, reorder<int>, reorder<float>};

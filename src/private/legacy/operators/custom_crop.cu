@@ -47,10 +47,10 @@ __global__ void custom_crop_kernel(const Ptr2D src, Ptr2D dst, int start_x, int 
 }
 
 template<typename T>
-void customCrop(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData, NVCVRectI roi,
+void customCrop(const nvcv::ITensorDataStridedCuda &inData, const nvcv::ITensorDataStridedCuda &outData, NVCVRectI roi,
                 cudaStream_t stream)
 {
-    auto outAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     nvcv::cuda::Tensor3DWrap<T> src(inData);
@@ -70,7 +70,7 @@ size_t CustomCrop::calBufferSize(DataShape max_input_shape, DataShape max_output
     return 0;
 }
 
-ErrorCode CustomCrop::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, NVCVRectI roi,
+ErrorCode CustomCrop::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData, NVCVRectI roi,
                             cudaStream_t stream)
 {
     cuda_op::DataFormat input_format  = GetLegacyDataFormat(inData.layout());
@@ -89,7 +89,7 @@ ErrorCode CustomCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    auto inAccess = cv::TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = cv::TensorDataAccessStridedImagePlanar::Create(inData);
     if (!inAccess)
     {
         return ErrorCode::INVALID_DATA_FORMAT;
@@ -106,7 +106,7 @@ ErrorCode CustomCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    auto outAccess = cv::TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = cv::TensorDataAccessStridedImagePlanar::Create(outData);
     if (!outAccess)
     {
         return ErrorCode::INVALID_DATA_FORMAT;
@@ -134,7 +134,7 @@ ErrorCode CustomCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
         return ErrorCode::INVALID_PARAMETER;
     }
 
-    typedef void (*func_t)(const cv::ITensorDataPitchDevice &inData, const cv::ITensorDataPitchDevice &outData,
+    typedef void (*func_t)(const cv::ITensorDataStridedCuda &inData, const cv::ITensorDataStridedCuda &outData,
                            NVCVRectI roi, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {

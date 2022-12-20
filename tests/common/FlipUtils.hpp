@@ -27,8 +27,8 @@
 
 namespace nv::cv::test {
 
-void FlipCPU(std::vector<uint8_t> &hDst, const long3 &dstPitches, const std::vector<uint8_t> &hSrc,
-             const long3 &srcPitches, const int3 &shape, const ImageFormat &format, int flipCode);
+void FlipCPU(std::vector<uint8_t> &hDst, const long3 &dstStrides, const std::vector<uint8_t> &hSrc,
+             const long3 &srcStrides, const int3 &shape, const ImageFormat &format, int flipCode);
 
 } // namespace nv::cv::test
 

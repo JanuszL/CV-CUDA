@@ -17,7 +17,7 @@ interface IAllocator
      + {abstract} handle() const: NVCVAllocator
 
      + {abstract} hostMem(): IHostMemAllocator &
-     + {abstract} deviceMem(): IDeviceMemAllocator &
+     + {abstract} cudaMem(): ICudaMemAllocator &
      + {abstract} hostPinnedMem(): IHostPinnedMemAllocator &
 }
 
@@ -32,18 +32,18 @@ class CustomAllocator<ALLOCATORS...> implements IAllocator
 
      - m_allocHostMem: IHostMemAllocator &
      - m_allocHostPinnedMem: IHostPinnedMemAllocator &
-     - m_allocDeviceMem: IDeviceMemAllocator &
+     - m_allocCudaMem: ICudaMemAllocator &
      - m_allocCudaArray: ICudaArrayAllocator &
 }
 
 interface IHostMemAllocator
 interface IHostPinnedMemAllocator
-interface IDeviceMemAllocator
+interface ICudaMemAllocator
 interface ICudaArrayAllocator
 
 CustomAllocator::m_allocHostMem *-- IHostMemAllocator
 CustomAllocator::m_allocHostPinnedMem *-- IHostPinnedMemAllocator
-CustomAllocator::m_allocDeviceMem *-- IDeviceMemAllocator
+CustomAllocator::m_allocCudaMem *-- ICudaMemAllocator
 CustomAllocator::m_allocCudaArray *-- ICudaArrayAllocator
 
 @enduml

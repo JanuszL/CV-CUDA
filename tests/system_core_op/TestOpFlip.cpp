@@ -65,17 +65,17 @@ TEST_P(OpFlip, correct_output)
     nvcv::Tensor inTensor(batches, {width, height}, format);
     nvcv::Tensor outTensor(batches, {width, height}, format);
 
-    const auto *input  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(inTensor.exportData());
-    const auto *output = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(outTensor.exportData());
+    const auto *input  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inTensor.exportData());
+    const auto *output = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(outTensor.exportData());
 
     ASSERT_NE(input, nullptr);
     ASSERT_NE(output, nullptr);
 
-    long3 inPitches{input->pitchBytes(0), input->pitchBytes(1), input->pitchBytes(2)};
-    long3 outPitches{output->pitchBytes(0), output->pitchBytes(1), output->pitchBytes(2)};
+    long3 inStrides{input->stride(0), input->stride(1), input->stride(2)};
+    long3 outStrides{output->stride(0), output->stride(1), output->stride(2)};
 
-    long inBufSize  = inPitches.x * input->shape(0);
-    long outBufSize = outPitches.x * output->shape(0);
+    long inBufSize  = inStrides.x * input->shape(0);
+    long outBufSize = outStrides.x * output->shape(0);
 
     std::vector<uint8_t> inVec(inBufSize);
 
@@ -84,10 +84,10 @@ TEST_P(OpFlip, correct_output)
 
     std::generate(inVec.begin(), inVec.end(), [&]() { return rand(randEng); });
     std::vector<uint8_t> goldVec(outBufSize);
-    test::FlipCPU(goldVec, outPitches, inVec, inPitches, shape, format, flipCode);
+    test::FlipCPU(goldVec, outStrides, inVec, inStrides, shape, format, flipCode);
 
     // copy random input to device
-    ASSERT_EQ(cudaSuccess, cudaMemcpy(input->data(), inVec.data(), inBufSize, cudaMemcpyHostToDevice));
+    ASSERT_EQ(cudaSuccess, cudaMemcpy(input->basePtr(), inVec.data(), inBufSize, cudaMemcpyHostToDevice));
 
     // run operator
     nv::cvop::Flip flipOp;
@@ -98,7 +98,7 @@ TEST_P(OpFlip, correct_output)
 
     // copy output back to host
     std::vector<uint8_t> testVec(outBufSize);
-    ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), output->data(), outBufSize, cudaMemcpyDeviceToHost));
+    ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), output->basePtr(), outBufSize, cudaMemcpyDeviceToHost));
 
     EXPECT_EQ(testVec, goldVec);
 }
@@ -124,27 +124,27 @@ TEST_P(OpFlip, varshape_correct_output)
     std::vector<std::unique_ptr<nv::cv::Image>> imgSrc;
 
     std::vector<std::vector<uint8_t>> srcVec(batches);
-    std::vector<int>                  srcVecRowPitch(batches);
+    std::vector<int>                  srcVecRowStride(batches);
 
     for (int i = 0; i < batches; ++i)
     {
         imgSrc.emplace_back(std::make_unique<nv::cv::Image>(nv::cv::Size2D{udistWidth(rng), udistHeight(rng)}, format));
 
-        int srcRowPitch   = imgSrc[i]->size().w * format.planePixelStrideBytes(0);
-        srcVecRowPitch[i] = srcRowPitch;
+        int srcRowStride   = imgSrc[i]->size().w * format.planePixelStrideBytes(0);
+        srcVecRowStride[i] = srcRowStride;
 
         std::uniform_int_distribution<uint8_t> udist(0, 255);
 
-        srcVec[i].resize(imgSrc[i]->size().h * srcRowPitch);
+        srcVec[i].resize(imgSrc[i]->size().h * srcRowStride);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
 
-        auto *imgData = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        auto *imgData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_NE(imgData, nullptr);
 
         // Copy input data to the GPU
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2DAsync(imgData->plane(0).buffer, imgData->plane(0).pitchBytes, srcVec[i].data(),
-                                    srcRowPitch, srcRowPitch, imgSrc[i]->size().h, cudaMemcpyHostToDevice, stream));
+                  cudaMemcpy2DAsync(imgData->plane(0).basePtr, imgData->plane(0).rowStride, srcVec[i].data(),
+                                    srcRowStride, srcRowStride, imgSrc[i]->size().h, cudaMemcpyHostToDevice, stream));
     }
 
     nv::cv::ImageBatchVarShape batchSrc(batches);
@@ -162,13 +162,13 @@ TEST_P(OpFlip, varshape_correct_output)
     // Create flip code tensor
     nv::cv::Tensor flip_code({{batches}, "N"}, nv::cv::TYPE_S32);
     {
-        auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(flip_code.exportData());
+        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(flip_code.exportData());
         ASSERT_NE(dev, nullptr);
 
         std::vector<int> vec(batches, flipCode);
 
-        ASSERT_EQ(cudaSuccess,
-                  cudaMemcpyAsync(dev->data(), vec.data(), vec.size() * sizeof(int), cudaMemcpyHostToDevice, stream));
+        ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(dev->basePtr(), vec.data(), vec.size() * sizeof(int),
+                                               cudaMemcpyHostToDevice, stream));
     }
 
     // Run operator
@@ -184,23 +184,23 @@ TEST_P(OpFlip, varshape_correct_output)
     {
         SCOPED_TRACE(i);
 
-        const auto *srcData = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_EQ(srcData->numPlanes(), 1);
 
-        const auto *dstData = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(imgDst[i]->exportData());
+        const auto *dstData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgDst[i]->exportData());
         ASSERT_EQ(dstData->numPlanes(), 1);
 
-        int dstRowPitch = srcVecRowPitch[i];
+        int dstRowStride = srcVecRowStride[i];
 
         int3  shape{srcData->plane(0).width, srcData->plane(0).height, 1};
-        long3 pitches{shape.y * dstRowPitch, dstRowPitch, format.planePixelStrideBytes(0)};
+        long3 pitches{shape.y * dstRowStride, dstRowStride, format.planePixelStrideBytes(0)};
 
         std::vector<uint8_t> testVec(shape.y * pitches.y);
 
         // Copy output data to Host
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(testVec.data(), dstRowPitch, dstData->plane(0).buffer, dstData->plane(0).pitchBytes,
-                               dstRowPitch, shape.y, cudaMemcpyDeviceToHost));
+                  cudaMemcpy2D(testVec.data(), dstRowStride, dstData->plane(0).basePtr, dstData->plane(0).rowStride,
+                               dstRowStride, shape.y, cudaMemcpyDeviceToHost));
 
         // Generate gold result
         std::vector<uint8_t> goldVec(shape.y * pitches.y);

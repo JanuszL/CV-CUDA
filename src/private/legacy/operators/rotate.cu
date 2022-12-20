@@ -133,9 +133,9 @@ __global__ void rotate_cubic(CubicFilter<BorderReader<Ptr2dNHWC<T>, BrdReplicate
 }
 
 template<typename T> // uchar3 float3 uchar1 float3
-void rotate(const nvcv::TensorDataAccessPitchImagePlanar &inData, const nvcv::TensorDataAccessPitchImagePlanar &outData,
-            double *d_aCoeffs, const double angleDeg, const double2 shift, const NVCVInterpolationType interpolation,
-            cudaStream_t stream)
+void rotate(const nvcv::TensorDataAccessStridedImagePlanar &inData,
+            const nvcv::TensorDataAccessStridedImagePlanar &outData, double *d_aCoeffs, const double angleDeg,
+            const double2 shift, const NVCVInterpolationType interpolation, cudaStream_t stream)
 {
     const int batch_size = inData.numSamples();
     const int in_width   = inData.numCols();
@@ -210,7 +210,7 @@ size_t Rotate::calBufferSize(DataShape max_input_shape, DataShape max_output_sha
     return 6 * sizeof(double);
 }
 
-ErrorCode Rotate::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData,
+ErrorCode Rotate::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
                         const double angleDeg, const double2 shift, const NVCVInterpolationType interpolation,
                         cudaStream_t stream)
 {
@@ -231,10 +231,10 @@ ErrorCode Rotate::infer(const ITensorDataPitchDevice &inData, const ITensorDataP
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    auto inAccess = TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
 
-    auto outAccess = TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
     NVCV_ASSERT(outAccess);
 
     DataType  data_type   = GetLegacyDataType(inData.dtype());
@@ -261,8 +261,8 @@ ErrorCode Rotate::infer(const ITensorDataPitchDevice &inData, const ITensorDataP
         return ErrorCode::INVALID_PARAMETER;
     }
 
-    typedef void (*func_t)(const nvcv::TensorDataAccessPitchImagePlanar &inData,
-                           const nvcv::TensorDataAccessPitchImagePlanar &outData, double *d_aCoeffs,
+    typedef void (*func_t)(const nvcv::TensorDataAccessStridedImagePlanar &inData,
+                           const nvcv::TensorDataAccessStridedImagePlanar &outData, double *d_aCoeffs,
                            const double angleDeg, const double2 shift, const NVCVInterpolationType interpolation,
                            cudaStream_t stream);
 

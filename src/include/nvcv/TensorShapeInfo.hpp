@@ -275,7 +275,7 @@ public:
                 // Has explicit height?
                 if (iheight >= 0)
                 {
-                    assert(iheight + 1 < layout.ndim());
+                    assert(iheight + 1 < layout.rank());
                     // *HWC, [^C]*HW, *CHW
                     return layout[iheight + 1] == LABEL_WIDTH
                         && (iheight == 0 || infoLayout->isChannelLast() || layout[iheight - 1] == LABEL_CHANNEL);
@@ -285,7 +285,7 @@ public:
                     int ichannel = infoLayout->idxChannel();
 
                     // [^HC]*W, [^H]*CW, [^H]*WC
-                    return ichannel == -1 || ichannel >= layout.ndim() - 2;
+                    return ichannel == -1 || ichannel >= layout.rank() - 2;
                 }
             }
         }

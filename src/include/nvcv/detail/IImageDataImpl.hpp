@@ -74,16 +74,16 @@ inline cudaArray_t IImageDataCudaArray::plane(int p) const
     return data.planes[p];
 }
 
-// Implementation - IImageDataPitch ------------------------------
+// Implementation - IImageDataStrided ------------------------------
 
-inline IImageDataPitch::~IImageDataPitch()
+inline IImageDataStrided::~IImageDataStrided()
 {
     // required dtor implementation
 }
 
-inline Size2D IImageDataPitch::size() const
+inline Size2D IImageDataStrided::size() const
 {
-    const NVCVImageBufferPitch &data = this->cdata().buffer.pitch;
+    const NVCVImageBufferStrided &data = this->cdata().buffer.strided;
     if (data.numPlanes > 0)
     {
         return {data.planes[0].width, data.planes[0].height};
@@ -94,15 +94,15 @@ inline Size2D IImageDataPitch::size() const
     }
 }
 
-inline int32_t IImageDataPitch::numPlanes() const
+inline int32_t IImageDataStrided::numPlanes() const
 {
-    const NVCVImageBufferPitch &data = this->cdata().buffer.pitch;
+    const NVCVImageBufferStrided &data = this->cdata().buffer.strided;
     return data.numPlanes;
 }
 
-inline const ImagePlanePitch &IImageDataPitch::plane(int p) const
+inline const ImagePlaneStrided &IImageDataStrided::plane(int p) const
 {
-    const NVCVImageBufferPitch &data = this->cdata().buffer.pitch;
+    const NVCVImageBufferStrided &data = this->cdata().buffer.strided;
     if (p < 0 || p >= data.numPlanes)
     {
         throw Exception(Status::ERROR_INVALID_ARGUMENT, "Plane out of bounds");
@@ -110,14 +110,14 @@ inline const ImagePlanePitch &IImageDataPitch::plane(int p) const
     return data.planes[p];
 }
 
-// Implementation - IImageDataPitchDevice ------------------------------
-inline IImageDataPitchDevice::~IImageDataPitchDevice()
+// Implementation - IImageDataStridedCuda ------------------------------
+inline IImageDataStridedCuda::~IImageDataStridedCuda()
 {
     // required dtor implementation
 }
 
-// Implementation - IImageDataPitchHost ------------------------------
-inline IImageDataPitchHost::~IImageDataPitchHost()
+// Implementation - IImageDataStridedHost ------------------------------
+inline IImageDataStridedHost::~IImageDataStridedHost()
 {
     // required dtor implementation
 }

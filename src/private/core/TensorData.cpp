@@ -72,28 +72,28 @@ void FillTensorData(IImage &img, NVCVTensorData &tensorData)
     NVCVImageData imgData;
     img.exportData(imgData);
 
-    if (imgData.bufferType != NVCV_IMAGE_BUFFER_PITCH_DEVICE)
+    if (imgData.bufferType != NVCV_IMAGE_BUFFER_STRIDED_CUDA)
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
-            << "Only device-accessible images with pitch-linear data are accepted";
+            << "Only cuda-accessible images with pitch-linear data are accepted";
     }
 
-    NVCVImageBufferPitch &imgPitch = imgData.buffer.pitch;
+    NVCVImageBufferStrided &imgStrided = imgData.buffer.strided;
 
-    for (int p = 1; p < imgPitch.numPlanes; ++p)
+    for (int p = 1; p < imgStrided.numPlanes; ++p)
     {
-        if (imgPitch.planes[p].width != imgPitch.planes[0].width
-            || imgPitch.planes[p].height != imgPitch.planes[0].height)
+        if (imgStrided.planes[p].width != imgStrided.planes[0].width
+            || imgStrided.planes[p].height != imgStrided.planes[0].height)
         {
             throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "All image planes must have the same dimensions";
         }
 
-        if (imgPitch.planes[p].pitchBytes != imgPitch.planes[0].pitchBytes)
+        if (imgStrided.planes[p].rowStride != imgStrided.planes[0].rowStride)
         {
             throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "All image planes must have the same row pitch";
         }
 
-        if (imgPitch.planes[p].buffer <= imgPitch.planes[0].buffer)
+        if (imgStrided.planes[p].basePtr <= imgStrided.planes[0].basePtr)
         {
             throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
                 << "Consecutive image planes must have increasing memory addresses";
@@ -101,12 +101,12 @@ void FillTensorData(IImage &img, NVCVTensorData &tensorData)
 
         if (p >= 2)
         {
-            intptr_t planePitchBytes = reinterpret_cast<const std::byte *>(imgPitch.planes[1].buffer)
-                                     - reinterpret_cast<const std::byte *>(imgPitch.planes[0].buffer);
+            intptr_t planeStride = reinterpret_cast<const std::byte *>(imgStrided.planes[1].basePtr)
+                                 - reinterpret_cast<const std::byte *>(imgStrided.planes[0].basePtr);
 
-            if (reinterpret_cast<const std::byte *>(imgPitch.planes[p].buffer)
-                    - reinterpret_cast<const std::byte *>(imgPitch.planes[p - 1].buffer)
-                != planePitchBytes)
+            if (reinterpret_cast<const std::byte *>(imgStrided.planes[p].basePtr)
+                    - reinterpret_cast<const std::byte *>(imgStrided.planes[p - 1].basePtr)
+                != planeStride)
             {
                 throw Exception(NVCV_ERROR_INVALID_ARGUMENT) << "Image planes must have the same plane pitch";
             }
@@ -116,9 +116,9 @@ void FillTensorData(IImage &img, NVCVTensorData &tensorData)
     // Now fill up tensor data with image data
 
     tensorData            = {}; // start everything afresh
-    tensorData.bufferType = NVCV_TENSOR_BUFFER_PITCH_DEVICE;
+    tensorData.bufferType = NVCV_TENSOR_BUFFER_STRIDED_CUDA;
 
-    NVCVTensorBufferPitch &tensorPitch = tensorData.buffer.pitch;
+    NVCVTensorBufferStrided &tensorStrided = tensorData.buffer.strided;
 
     // Infer layout and shape
     std::array<int32_t, 4> bits    = fmt.bpc();
@@ -132,7 +132,7 @@ void FillTensorData(IImage &img, NVCVTensorData &tensorData)
         }
     }
 
-    if (imgPitch.numPlanes == 1)
+    if (imgStrided.numPlanes == 1)
     {
         if (fmt.numChannels() >= 2 && sameBPC)
         {
@@ -150,18 +150,18 @@ void FillTensorData(IImage &img, NVCVTensorData &tensorData)
         tensorData.layout = NVCV_TENSOR_NCHW;
     }
 
-    tensorData.ndim = 4;
+    tensorData.rank = 4;
     if (tensorData.layout == NVCV_TENSOR_NHWC)
     {
         tensorData.shape[0] = 1;
-        tensorData.shape[1] = imgPitch.planes[0].height;
-        tensorData.shape[2] = imgPitch.planes[0].width;
+        tensorData.shape[1] = imgStrided.planes[0].height;
+        tensorData.shape[2] = imgStrided.planes[0].width;
         tensorData.shape[3] = fmt.numChannels();
 
-        tensorPitch.pitchBytes[3] = fmt.planePixelStrideBytes(0) / fmt.numChannels();
-        tensorPitch.pitchBytes[2] = fmt.planePixelStrideBytes(0);
-        tensorPitch.pitchBytes[1] = imgPitch.planes[0].pitchBytes;
-        tensorPitch.pitchBytes[0] = tensorPitch.pitchBytes[1] * tensorData.shape[1];
+        tensorStrided.strides[3] = fmt.planePixelStrideBytes(0) / fmt.numChannels();
+        tensorStrided.strides[2] = fmt.planePixelStrideBytes(0);
+        tensorStrided.strides[1] = imgStrided.planes[0].rowStride;
+        tensorStrided.strides[0] = tensorStrided.strides[1] * tensorData.shape[1];
 
         tensorData.dtype = fmt.planeDataType(0).channelType(0).value();
     }
@@ -170,20 +170,20 @@ void FillTensorData(IImage &img, NVCVTensorData &tensorData)
         NVCV_ASSERT(tensorData.layout == NVCV_TENSOR_NCHW);
 
         tensorData.shape[0] = 1;
-        tensorData.shape[1] = imgPitch.numPlanes;
-        tensorData.shape[2] = imgPitch.planes[0].height;
-        tensorData.shape[3] = imgPitch.planes[0].width;
+        tensorData.shape[1] = imgStrided.numPlanes;
+        tensorData.shape[2] = imgStrided.planes[0].height;
+        tensorData.shape[3] = imgStrided.planes[0].width;
 
-        tensorPitch.pitchBytes[3] = fmt.planePixelStrideBytes(0);
-        tensorPitch.pitchBytes[2] = imgPitch.planes[0].pitchBytes;
-        tensorPitch.pitchBytes[1] = tensorPitch.pitchBytes[2] * tensorData.shape[2];
-        tensorPitch.pitchBytes[0] = tensorPitch.pitchBytes[1] * tensorData.shape[1];
+        tensorStrided.strides[3] = fmt.planePixelStrideBytes(0);
+        tensorStrided.strides[2] = imgStrided.planes[0].rowStride;
+        tensorStrided.strides[1] = tensorStrided.strides[2] * tensorData.shape[2];
+        tensorStrided.strides[0] = tensorStrided.strides[1] * tensorData.shape[1];
 
         tensorData.dtype = fmt.planeDataType(0).value();
     }
 
     // Finally, assign the pointer to the memory buffer.
-    tensorPitch.data = imgPitch.planes[0].buffer;
+    tensorStrided.basePtr = imgStrided.planes[0].basePtr;
 }
 
 } // namespace nv::cv::priv

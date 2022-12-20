@@ -66,9 +66,9 @@ __global__ void filter2D(const BrdRd src, Ptr2dVarShapeNHWC<D> dst, Ptr2dVarShap
 }
 
 template<typename D, template<typename> class Brd>
-void Filter2DCaller(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
-                    const IImageBatchVarShapeDataPitchDevice &kernelData,
-                    const ITensorDataPitchDevice &kernelAnchorData, float borderValue, cudaStream_t stream)
+void Filter2DCaller(const IImageBatchVarShapeDataStridedCuda &inData, const IImageBatchVarShapeDataStridedCuda &outData,
+                    const IImageBatchVarShapeDataStridedCuda &kernelData,
+                    const ITensorDataStridedCuda &kernelAnchorData, float borderValue, cudaStream_t stream)
 {
     Ptr2dVarShapeNHWC<D> src(inData);
     Ptr2dVarShapeNHWC<D> dst(outData);
@@ -99,14 +99,14 @@ void Filter2DCaller(const IImageBatchVarShapeDataPitchDevice &inData, const IIma
 }
 
 template<typename D>
-void Filter2D(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
-              const IImageBatchVarShapeDataPitchDevice &kernelData, const ITensorDataPitchDevice &kernelAnchorData,
+void Filter2D(const IImageBatchVarShapeDataStridedCuda &inData, const IImageBatchVarShapeDataStridedCuda &outData,
+              const IImageBatchVarShapeDataStridedCuda &kernelData, const ITensorDataStridedCuda &kernelAnchorData,
               NVCVBorderType borderMode, float borderValue, cudaStream_t stream)
 {
-    typedef void (*func_t)(const IImageBatchVarShapeDataPitchDevice &inData,
-                           const IImageBatchVarShapeDataPitchDevice &outData,
-                           const IImageBatchVarShapeDataPitchDevice &kernelData,
-                           const ITensorDataPitchDevice &kernelAnchorData, float borderValue, cudaStream_t stream);
+    typedef void (*func_t)(const IImageBatchVarShapeDataStridedCuda &inData,
+                           const IImageBatchVarShapeDataStridedCuda &outData,
+                           const IImageBatchVarShapeDataStridedCuda &kernelData,
+                           const ITensorDataStridedCuda &kernelAnchorData, float borderValue, cudaStream_t stream);
 
     static const func_t funcs[]
         = {Filter2DCaller<D, BrdConstant>, Filter2DCaller<D, BrdReplicate>, Filter2DCaller<D, BrdReflect>,
@@ -117,10 +117,10 @@ void Filter2D(const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatc
 
 // Conv2DVarShape --------------------------------------------------------------
 
-ErrorCode Conv2DVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData,
-                                const IImageBatchVarShapeDataPitchDevice &outData,
-                                const IImageBatchVarShapeDataPitchDevice &kernelData,
-                                const ITensorDataPitchDevice &kernelAnchorData, NVCVBorderType borderMode,
+ErrorCode Conv2DVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData,
+                                const IImageBatchVarShapeDataStridedCuda &outData,
+                                const IImageBatchVarShapeDataStridedCuda &kernelData,
+                                const ITensorDataStridedCuda &kernelAnchorData, NVCVBorderType borderMode,
                                 cudaStream_t stream)
 {
     DataFormat input_format  = helpers::GetLegacyDataFormat(inData);
@@ -172,8 +172,8 @@ ErrorCode Conv2DVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData
     float borderValue = .0f;
 
     typedef void (*filter2D_t)(
-        const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
-        const IImageBatchVarShapeDataPitchDevice &kernelData, const ITensorDataPitchDevice &kernelAnchorData,
+        const IImageBatchVarShapeDataStridedCuda &inData, const IImageBatchVarShapeDataStridedCuda &outData,
+        const IImageBatchVarShapeDataStridedCuda &kernelData, const ITensorDataStridedCuda &kernelAnchorData,
         NVCVBorderType borderMode, float borderValue, cudaStream_t stream);
 
     static const filter2D_t funcs[6][4] = {
@@ -254,9 +254,9 @@ __global__ void laplacianFilter2D(const BrdRd src, Ptr2dVarShapeNHWC<D> dst, cud
 }
 
 template<typename D, template<typename> class Brd>
-void LaplacianFilter2DCaller(const IImageBatchVarShapeDataPitchDevice &inData,
-                             const IImageBatchVarShapeDataPitchDevice &outData, const ITensorDataPitchDevice &ksize,
-                             const ITensorDataPitchDevice &scale, float borderValue, cudaStream_t stream)
+void LaplacianFilter2DCaller(const IImageBatchVarShapeDataStridedCuda &inData,
+                             const IImageBatchVarShapeDataStridedCuda &outData, const ITensorDataStridedCuda &ksize,
+                             const ITensorDataStridedCuda &scale, float borderValue, cudaStream_t stream)
 {
     Ptr2dVarShapeNHWC<D> src(inData);
     Ptr2dVarShapeNHWC<D> dst(outData);
@@ -287,14 +287,14 @@ void LaplacianFilter2DCaller(const IImageBatchVarShapeDataPitchDevice &inData,
 }
 
 template<typename D>
-void LaplacianFilter2D(const IImageBatchVarShapeDataPitchDevice &inData,
-                       const IImageBatchVarShapeDataPitchDevice &outData, const ITensorDataPitchDevice &ksize,
-                       const ITensorDataPitchDevice &scale, NVCVBorderType borderMode, float borderValue,
+void LaplacianFilter2D(const IImageBatchVarShapeDataStridedCuda &inData,
+                       const IImageBatchVarShapeDataStridedCuda &outData, const ITensorDataStridedCuda &ksize,
+                       const ITensorDataStridedCuda &scale, NVCVBorderType borderMode, float borderValue,
                        cudaStream_t stream)
 {
-    typedef void (*func_t)(const IImageBatchVarShapeDataPitchDevice &inData,
-                           const IImageBatchVarShapeDataPitchDevice &outData, const ITensorDataPitchDevice &ksize,
-                           const ITensorDataPitchDevice &scale, float borderValue, cudaStream_t stream);
+    typedef void (*func_t)(const IImageBatchVarShapeDataStridedCuda &inData,
+                           const IImageBatchVarShapeDataStridedCuda &outData, const ITensorDataStridedCuda &ksize,
+                           const ITensorDataStridedCuda &scale, float borderValue, cudaStream_t stream);
 
     static const func_t funcs[] = {LaplacianFilter2DCaller<D, BrdConstant>, LaplacianFilter2DCaller<D, BrdReplicate>,
                                    LaplacianFilter2DCaller<D, BrdReflect>, LaplacianFilter2DCaller<D, BrdWrap>,
@@ -303,9 +303,9 @@ void LaplacianFilter2D(const IImageBatchVarShapeDataPitchDevice &inData,
     funcs[borderMode](inData, outData, ksize, scale, borderValue, stream);
 }
 
-ErrorCode LaplacianVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData,
-                                   const IImageBatchVarShapeDataPitchDevice &outData,
-                                   const ITensorDataPitchDevice &ksize, const ITensorDataPitchDevice &scale,
+ErrorCode LaplacianVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData,
+                                   const IImageBatchVarShapeDataStridedCuda &outData,
+                                   const ITensorDataStridedCuda &ksize, const ITensorDataStridedCuda &scale,
                                    NVCVBorderType borderMode, cudaStream_t stream)
 {
     DataFormat input_format  = GetLegacyDataFormat(inData);
@@ -355,9 +355,9 @@ ErrorCode LaplacianVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inD
 
     float borderValue = .0f;
 
-    typedef void (*filter2D_t)(const IImageBatchVarShapeDataPitchDevice &inData,
-                               const IImageBatchVarShapeDataPitchDevice &outData, const ITensorDataPitchDevice &ksize,
-                               const ITensorDataPitchDevice &scale, NVCVBorderType borderMode, float borderValue,
+    typedef void (*filter2D_t)(const IImageBatchVarShapeDataStridedCuda &inData,
+                               const IImageBatchVarShapeDataStridedCuda &outData, const ITensorDataStridedCuda &ksize,
+                               const ITensorDataStridedCuda &scale, NVCVBorderType borderMode, float borderValue,
                                cudaStream_t stream);
 
     static const filter2D_t funcs[6][4] = {
@@ -463,8 +463,8 @@ __global__ void gaussianFilter2D(const BrdRd src, Ptr2dVarShapeNHWC<D> dst, cuda
 }
 
 template<typename D, template<typename> class Brd>
-void GaussianFilter2DCaller(const IImageBatchVarShapeDataPitchDevice &inData,
-                            const IImageBatchVarShapeDataPitchDevice &outData,
+void GaussianFilter2DCaller(const IImageBatchVarShapeDataStridedCuda &inData,
+                            const IImageBatchVarShapeDataStridedCuda &outData,
                             const cuda::Tensor3DWrap<float>          &kernelTensor,
                             const cuda::Tensor1DWrap<int2> &kernelSizeTensor, float borderValue, cudaStream_t stream)
 {
@@ -494,13 +494,13 @@ void GaussianFilter2DCaller(const IImageBatchVarShapeDataPitchDevice &inData,
 }
 
 template<typename D>
-void GaussianFilter2D(const IImageBatchVarShapeDataPitchDevice &inData,
-                      const IImageBatchVarShapeDataPitchDevice &outData, const cuda::Tensor3DWrap<float> &kernelTensor,
+void GaussianFilter2D(const IImageBatchVarShapeDataStridedCuda &inData,
+                      const IImageBatchVarShapeDataStridedCuda &outData, const cuda::Tensor3DWrap<float> &kernelTensor,
                       const cuda::Tensor1DWrap<int2> &kernelSizeTensor, NVCVBorderType borderMode, float borderValue,
                       cudaStream_t stream)
 {
-    typedef void (*func_t)(const IImageBatchVarShapeDataPitchDevice &inData,
-                           const IImageBatchVarShapeDataPitchDevice &outData,
+    typedef void (*func_t)(const IImageBatchVarShapeDataStridedCuda &inData,
+                           const IImageBatchVarShapeDataStridedCuda &outData,
                            const cuda::Tensor3DWrap<float>          &kernelTensor,
                            const cuda::Tensor1DWrap<int2> &kernelSizeTensor, float borderValue, cudaStream_t stream);
 
@@ -533,9 +533,9 @@ size_t GaussianVarShape::calBufferSize(Size2D maxKernelSize, int maxBatchSize)
     return maxKernelSize.w * maxKernelSize.h * maxBatchSize * sizeof(float);
 }
 
-ErrorCode GaussianVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData,
-                                  const IImageBatchVarShapeDataPitchDevice &outData,
-                                  const ITensorDataPitchDevice &kernelSize, const ITensorDataPitchDevice &sigma,
+ErrorCode GaussianVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData,
+                                  const IImageBatchVarShapeDataStridedCuda &outData,
+                                  const ITensorDataStridedCuda &kernelSize, const ITensorDataStridedCuda &sigma,
                                   NVCVBorderType borderMode, cudaStream_t stream)
 {
     if (m_maxBatchSize <= 0 || inData.numImages() > m_maxBatchSize)
@@ -611,7 +611,7 @@ ErrorCode GaussianVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inDa
     checkKernelErrors();
 
     typedef void (*filter2D_t)(
-        const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
+        const IImageBatchVarShapeDataStridedCuda &inData, const IImageBatchVarShapeDataStridedCuda &outData,
         const cuda::Tensor3DWrap<float> &kernelTensor, const cuda::Tensor1DWrap<int2> &kernelSizeTensor,
         NVCVBorderType borderMode, float borderValue, cudaStream_t stream);
 
@@ -700,8 +700,8 @@ __global__ void avgBlurFilter2D(const BrdRd src, Ptr2dVarShapeNHWC<D> dst, cuda:
 }
 
 template<typename D, template<typename> class Brd>
-void AverageBlurFilter2DCaller(const IImageBatchVarShapeDataPitchDevice &inData,
-                               const IImageBatchVarShapeDataPitchDevice &outData,
+void AverageBlurFilter2DCaller(const IImageBatchVarShapeDataStridedCuda &inData,
+                               const IImageBatchVarShapeDataStridedCuda &outData,
                                const cuda::Tensor3DWrap<float>          &kernelTensor,
                                const cuda::Tensor1DWrap<int2>           &kernelSizeTensor,
                                const cuda::Tensor1DWrap<int2> &kernelAnchorTensor, float borderValue,
@@ -733,15 +733,15 @@ void AverageBlurFilter2DCaller(const IImageBatchVarShapeDataPitchDevice &inData,
 }
 
 template<typename D>
-void AverageBlurFilter2D(const IImageBatchVarShapeDataPitchDevice &inData,
-                         const IImageBatchVarShapeDataPitchDevice &outData,
+void AverageBlurFilter2D(const IImageBatchVarShapeDataStridedCuda &inData,
+                         const IImageBatchVarShapeDataStridedCuda &outData,
                          const cuda::Tensor3DWrap<float>          &kernelTensor,
                          const cuda::Tensor1DWrap<int2>           &kernelSizeTensor,
                          const cuda::Tensor1DWrap<int2> &kernelAnchorTensor, NVCVBorderType borderMode,
                          float borderValue, cudaStream_t stream)
 {
     typedef void (*func_t)(
-        const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
+        const IImageBatchVarShapeDataStridedCuda &inData, const IImageBatchVarShapeDataStridedCuda &outData,
         const cuda::Tensor3DWrap<float> &kernelTensor, const cuda::Tensor1DWrap<int2> &kernelSizeTensor,
         const cuda::Tensor1DWrap<int2> &kernelAnchorTensor, float borderValue, cudaStream_t stream);
 
@@ -774,10 +774,10 @@ size_t AverageBlurVarShape::calBufferSize(Size2D maxKernelSize, int maxBatchSize
     return maxKernelSize.w * maxKernelSize.h * maxBatchSize * sizeof(float);
 }
 
-ErrorCode AverageBlurVarShape::infer(const IImageBatchVarShapeDataPitchDevice &inData,
-                                     const IImageBatchVarShapeDataPitchDevice &outData,
-                                     const ITensorDataPitchDevice             &kernelSize,
-                                     const ITensorDataPitchDevice &kernelAnchor, NVCVBorderType borderMode,
+ErrorCode AverageBlurVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData,
+                                     const IImageBatchVarShapeDataStridedCuda &outData,
+                                     const ITensorDataStridedCuda             &kernelSize,
+                                     const ITensorDataStridedCuda &kernelAnchor, NVCVBorderType borderMode,
                                      cudaStream_t stream)
 {
     if (m_maxBatchSize <= 0 || inData.numImages() > m_maxBatchSize)
@@ -850,7 +850,7 @@ ErrorCode AverageBlurVarShape::infer(const IImageBatchVarShapeDataPitchDevice &i
     checkKernelErrors();
 
     typedef void (*filter2D_t)(
-        const IImageBatchVarShapeDataPitchDevice &inData, const IImageBatchVarShapeDataPitchDevice &outData,
+        const IImageBatchVarShapeDataStridedCuda &inData, const IImageBatchVarShapeDataStridedCuda &outData,
         const cuda::Tensor3DWrap<float> &kernelTensor, const cuda::Tensor1DWrap<int2> &kernelSizeTensor,
         const cuda::Tensor1DWrap<int2> &kernelAnchorTensor, NVCVBorderType borderMode, float borderValue,
         cudaStream_t stream);

@@ -39,7 +39,7 @@ public:
     HandleType      handle() const;
     static ITensor *cast(HandleType h);
 
-    int          ndim() const;
+    int          rank() const;
     TensorShape  shape() const;
     DataType     dtype() const;
     TensorLayout layout() const;
@@ -52,7 +52,7 @@ public:
 private:
     virtual NVCVTensorHandle doGetHandle() const = 0;
 
-    mutable detail::Optional<TensorDataPitchDevice> m_cacheData;
+    mutable detail::Optional<TensorDataStridedCuda> m_cacheData;
 };
 
 }} // namespace nv::cv

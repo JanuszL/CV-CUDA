@@ -24,13 +24,13 @@
 
 namespace nv::cv::priv {
 
-class TensorWrapDataPitch final : public CoreObjectBase<ITensor>
+class TensorWrapDataStrided final : public CoreObjectBase<ITensor>
 {
 public:
-    explicit TensorWrapDataPitch(const NVCVTensorData &tdata, NVCVTensorDataCleanupFunc cleanup, void *ctxCleanup);
-    ~TensorWrapDataPitch();
+    explicit TensorWrapDataStrided(const NVCVTensorData &tdata, NVCVTensorDataCleanupFunc cleanup, void *ctxCleanup);
+    ~TensorWrapDataStrided();
 
-    int32_t        ndim() const override;
+    int32_t        rank() const override;
     const int64_t *shape() const override;
 
     const NVCVTensorLayout &layout() const override;

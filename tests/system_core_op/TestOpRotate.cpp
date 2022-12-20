@@ -54,17 +54,17 @@ static void compute_center_shift(const int center_x, const int center_y, const d
     yShift = sin(angle * PI / 180) * center_x + (1 - cos(angle * PI / 180)) * center_y;
 }
 
-static void assignCustomValuesInSrc(std::vector<uint8_t> &srcVec, int srcWidth, int srcHeight, int srcVecRowPitch)
+static void assignCustomValuesInSrc(std::vector<uint8_t> &srcVec, int srcWidth, int srcHeight, int srcVecRowStride)
 {
     int initialValue = 1;
-    int pixelBytes   = static_cast<int>(srcVecRowPitch / srcWidth);
+    int pixelBytes   = static_cast<int>(srcVecRowStride / srcWidth);
     for (int i = 0; i < srcHeight; i++)
     {
-        for (int j = 0; j < srcVecRowPitch; j = j + pixelBytes)
+        for (int j = 0; j < srcVecRowStride; j = j + pixelBytes)
         {
             for (int k = 0; k < pixelBytes; k++)
             {
-                srcVec[i * srcVecRowPitch + j + k] = initialValue;
+                srcVec[i * srcVecRowStride + j + k] = initialValue;
             }
             initialValue++;
         }
@@ -75,9 +75,9 @@ static void assignCustomValuesInSrc(std::vector<uint8_t> &srcVec, int srcWidth, 
 
     for (int i = 0; i < srcHeight; i++)
     {
-        for (int j = 0; j < srcVecRowPitch; j++)
+        for (int j = 0; j < srcVecRowStride; j++)
         {
-            std::cout << static_cast<int>(srcVec[i * srcVecRowPitch + j]) << ",";
+            std::cout << static_cast<int>(srcVec[i * srcVecRowStride + j]) << ",";
         }
         std::cout << std::endl;
     }
@@ -85,8 +85,8 @@ static void assignCustomValuesInSrc(std::vector<uint8_t> &srcVec, int srcWidth, 
 }
 
 template<typename T>
-static void Rotate(std::vector<T> &hDst, int dstRowPitch, nvcv::Size2D dstSize, const std::vector<T> &hSrc,
-                   int srcRowPitch, nvcv::Size2D srcSize, nvcv::ImageFormat fmt, const double angleDeg,
+static void Rotate(std::vector<T> &hDst, int dstRowStride, nvcv::Size2D dstSize, const std::vector<T> &hSrc,
+                   int srcRowStride, nvcv::Size2D srcSize, nvcv::ImageFormat fmt, const double angleDeg,
                    const double2 shift, NVCVInterpolationType interpolation)
 {
     assert(fmt.numPlanes() == 1);
@@ -128,20 +128,20 @@ static void Rotate(std::vector<T> &hDst, int dstRowPitch, nvcv::Size2D dstSize, 
                     {
                         float out = 0.;
 
-                        T src_reg = srcPtr[y1 * srcRowPitch + x1 * elementsPerPixel + k];
+                        T src_reg = srcPtr[y1 * srcRowStride + x1 * elementsPerPixel + k];
                         out       = out + src_reg * ((x2 - src_x) * (y2 - src_y));
 
-                        src_reg = srcPtr[y1 * srcRowPitch + x2_read * elementsPerPixel + k];
+                        src_reg = srcPtr[y1 * srcRowStride + x2_read * elementsPerPixel + k];
                         out     = out + src_reg * ((src_x - x1) * (y2 - src_y));
 
-                        src_reg = srcPtr[y2_read * srcRowPitch + x1 * elementsPerPixel + k];
+                        src_reg = srcPtr[y2_read * srcRowStride + x1 * elementsPerPixel + k];
                         out     = out + src_reg * ((x2 - src_x) * (src_y - y1));
 
-                        src_reg = srcPtr[y2_read * srcRowPitch + x2_read * elementsPerPixel + k];
+                        src_reg = srcPtr[y2_read * srcRowStride + x2_read * elementsPerPixel + k];
                         out     = out + src_reg * ((src_x - x1) * (src_y - y1));
 
                         out = std::rint(out);
-                        dstPtr[dst_y * dstRowPitch + dst_x * elementsPerPixel + k]
+                        dstPtr[dst_y * dstRowStride + dst_x * elementsPerPixel + k]
                             = out < 0 ? 0 : (out > 255 ? 255 : out);
                     }
                 }
@@ -165,8 +165,8 @@ static void Rotate(std::vector<T> &hDst, int dstRowPitch, nvcv::Size2D dstSize, 
 
                     for (int k = 0; k < elementsPerPixel; k++)
                     {
-                        dstPtr[dst_y * dstRowPitch + dst_x * elementsPerPixel + k]
-                            = srcPtr[y1 * srcRowPitch + x1 * elementsPerPixel + k];
+                        dstPtr[dst_y * dstRowStride + dst_x * elementsPerPixel + k]
+                            = srcPtr[y1 * srcRowStride + x1 * elementsPerPixel + k];
                     }
                 }
             }
@@ -225,28 +225,28 @@ TEST_P(OpRotate, tensor_correct_output)
     // Generate input
     nvcv::Tensor imgSrc(numberOfImages, {srcWidth, srcHeight}, fmt);
 
-    const auto *srcData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgSrc.exportData());
+    const auto *srcData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgSrc.exportData());
 
     ASSERT_NE(nullptr, srcData);
 
-    auto srcAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*srcData);
+    auto srcAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*srcData);
     ASSERT_TRUE(srcAccess);
 
     std::vector<std::vector<uint8_t>> srcVec(numberOfImages);
-    int                               srcVecRowPitch = srcWidth * fmt.planePixelStrideBytes(0);
+    int                               srcVecRowStride = srcWidth * fmt.planePixelStrideBytes(0);
 
     for (int i = 0; i < numberOfImages; ++i)
     {
-        srcVec[i].resize(srcHeight * srcVecRowPitch);
+        srcVec[i].resize(srcHeight * srcVecRowStride);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return 0; });
 
         // Assign custom values in input vector
-        assignCustomValuesInSrc(srcVec[i], srcWidth, srcHeight, srcVecRowPitch);
+        assignCustomValuesInSrc(srcVec[i], srcWidth, srcHeight, srcVecRowStride);
 
         // Copy input data to the GPU
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(srcAccess->sampleData(i), srcAccess->rowPitchBytes(), srcVec[i].data(), srcVecRowPitch,
-                               srcVecRowPitch, // vec has no padding
+                  cudaMemcpy2D(srcAccess->sampleData(i), srcAccess->rowStride(), srcVec[i].data(), srcVecRowStride,
+                               srcVecRowStride, // vec has no padding
                                srcHeight, cudaMemcpyHostToDevice));
     }
 
@@ -265,30 +265,30 @@ TEST_P(OpRotate, tensor_correct_output)
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
     // Check result
-    const auto *dstData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgDst.exportData());
+    const auto *dstData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgDst.exportData());
     ASSERT_NE(nullptr, dstData);
 
-    auto dstAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*dstData);
+    auto dstAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*dstData);
     ASSERT_TRUE(dstAccess);
 
-    int dstVecRowPitch = dstWidth * fmt.planePixelStrideBytes(0);
+    int dstVecRowStride = dstWidth * fmt.planePixelStrideBytes(0);
     for (int i = 0; i < numberOfImages; ++i)
     {
         SCOPED_TRACE(i);
 
-        std::vector<uint8_t> testVec(dstHeight * dstVecRowPitch);
+        std::vector<uint8_t> testVec(dstHeight * dstVecRowStride);
 
         // Copy output data to Host
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(testVec.data(), dstVecRowPitch, dstAccess->sampleData(i), dstAccess->rowPitchBytes(),
-                               dstVecRowPitch, // vec has no padding
+                  cudaMemcpy2D(testVec.data(), dstVecRowStride, dstAccess->sampleData(i), dstAccess->rowStride(),
+                               dstVecRowStride, // vec has no padding
                                dstHeight, cudaMemcpyDeviceToHost));
 
-        std::vector<uint8_t> goldVec(dstHeight * dstVecRowPitch);
+        std::vector<uint8_t> goldVec(dstHeight * dstVecRowStride);
         std::generate(goldVec.begin(), goldVec.end(), [&]() { return 0; });
 
         // Generate gold result
-        Rotate<uint8_t>(goldVec, dstVecRowPitch, {dstWidth, dstHeight}, srcVec[i], srcVecRowPitch,
+        Rotate<uint8_t>(goldVec, dstVecRowStride, {dstWidth, dstHeight}, srcVec[i], srcVecRowStride,
                         {srcWidth, srcHeight}, fmt, angleDeg, shift, interpolation);
 
 #if DBG_ROTATE
@@ -296,9 +296,9 @@ TEST_P(OpRotate, tensor_correct_output)
 
         for (int k = 0; k < dstHeight; k++)
         {
-            for (int j = 0; j < dstVecRowPitch; j++)
+            for (int j = 0; j < dstVecRowStride; j++)
             {
-                std::cout << static_cast<int>(goldVec[k * dstVecRowPitch + j]) << ",";
+                std::cout << static_cast<int>(goldVec[k * dstVecRowStride + j]) << ",";
             }
             std::cout << std::endl;
         }
@@ -307,9 +307,9 @@ TEST_P(OpRotate, tensor_correct_output)
 
         for (int k = 0; k < dstHeight; k++)
         {
-            for (int j = 0; j < dstVecRowPitch; j++)
+            for (int j = 0; j < dstVecRowStride; j++)
             {
-                std::cout << static_cast<int>(testVec[k * dstVecRowPitch + j]) << ",";
+                std::cout << static_cast<int>(testVec[k * dstVecRowStride + j]) << ",";
             }
             std::cout << std::endl;
         }
@@ -342,14 +342,14 @@ TEST_P(OpRotate, varshape_correct_output)
     std::uniform_int_distribution<int> rndAngle(0, 360);
 
     nvcv::Tensor angleDegTensor(nvcv::TensorShape({numberOfImages}, "N"), nvcv::TYPE_F64);
-    const auto  *angleDegTensorData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(angleDegTensor.exportData());
+    const auto  *angleDegTensorData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(angleDegTensor.exportData());
     ASSERT_NE(nullptr, angleDegTensorData);
 
     nvcv::Tensor shiftTensor(nvcv::TensorShape({numberOfImages, 2}, nvcv::TensorLayout::NW), nvcv::TYPE_F64);
-    const auto  *shiftTensorData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(shiftTensor.exportData());
+    const auto  *shiftTensorData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(shiftTensor.exportData());
     ASSERT_NE(nullptr, shiftTensorData);
 
-    auto shiftTensorDataAccess = nvcv::TensorDataAccessPitch::Create(*shiftTensorData);
+    auto shiftTensorDataAccess = nvcv::TensorDataAccessStrided::Create(*shiftTensorData);
     ASSERT_TRUE(shiftTensorDataAccess);
 
     std::vector<std::unique_ptr<nvcv::Image>> imgSrc, imgDst;
@@ -384,13 +384,12 @@ TEST_P(OpRotate, varshape_correct_output)
         shiftVecs.push_back(shift);
     }
 
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(angleDegTensorData->data(), angleDegVecs.data(),
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(angleDegTensorData->basePtr(), angleDegVecs.data(),
                                            angleDegVecs.size() * sizeof(double), cudaMemcpyHostToDevice, stream));
 
-    ASSERT_EQ(cudaSuccess,
-              cudaMemcpy2DAsync(shiftTensorDataAccess->sampleData(0), shiftTensorDataAccess->samplePitchBytes(),
-                                shiftVecs.data(), sizeof(double2), sizeof(double2), numberOfImages,
-                                cudaMemcpyHostToDevice, stream));
+    ASSERT_EQ(cudaSuccess, cudaMemcpy2DAsync(shiftTensorDataAccess->sampleData(0),
+                                             shiftTensorDataAccess->sampleStride(), shiftVecs.data(), sizeof(double2),
+                                             sizeof(double2), numberOfImages, cudaMemcpyHostToDevice, stream));
 
     nvcv::ImageBatchVarShape batchSrc(numberOfImages);
     batchSrc.pushBack(imgSrc.begin(), imgSrc.end());
@@ -399,33 +398,33 @@ TEST_P(OpRotate, varshape_correct_output)
     batchDst.pushBack(imgDst.begin(), imgDst.end());
 
     std::vector<std::vector<uint8_t>> srcVec(numberOfImages);
-    std::vector<int>                  srcVecRowPitch(numberOfImages);
+    std::vector<int>                  srcVecRowStride(numberOfImages);
 
     // Populate input
     for (int i = 0; i < numberOfImages; ++i)
     {
-        const auto *srcData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         assert(srcData->numPlanes() == 1);
 
         int srcWidth  = srcData->plane(0).width;
         int srcHeight = srcData->plane(0).height;
 
-        int srcRowPitch = srcWidth * fmt.planePixelStrideBytes(0);
+        int srcRowStride = srcWidth * fmt.planePixelStrideBytes(0);
 
-        srcVecRowPitch[i] = srcRowPitch;
+        srcVecRowStride[i] = srcRowStride;
 
         std::uniform_int_distribution<uint8_t> rand(0, 255);
 
-        srcVec[i].resize(srcHeight * srcRowPitch);
+        srcVec[i].resize(srcHeight * srcRowStride);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return 0; });
 
         // Assign custom values in input vector
-        assignCustomValuesInSrc(srcVec[i], srcWidth, srcHeight, srcRowPitch);
+        assignCustomValuesInSrc(srcVec[i], srcWidth, srcHeight, srcRowStride);
 
         // Copy input data to the GPU
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(srcData->plane(0).buffer, srcData->plane(0).pitchBytes, srcVec[i].data(), srcRowPitch,
-                               srcRowPitch, // vec has no padding
+                  cudaMemcpy2D(srcData->plane(0).basePtr, srcData->plane(0).rowStride, srcVec[i].data(), srcRowStride,
+                               srcRowStride, // vec has no padding
                                srcHeight, cudaMemcpyHostToDevice));
     }
 
@@ -442,34 +441,34 @@ TEST_P(OpRotate, varshape_correct_output)
     {
         SCOPED_TRACE(i);
 
-        const auto *srcData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         assert(srcData->numPlanes() == 1);
         int srcWidth  = srcData->plane(0).width;
         int srcHeight = srcData->plane(0).height;
 
-        const auto *dstData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgDst[i]->exportData());
+        const auto *dstData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgDst[i]->exportData());
         assert(dstData->numPlanes() == 1);
 
         int dstWidth  = dstData->plane(0).width;
         int dstHeight = dstData->plane(0).height;
 
-        int dstRowPitch = dstWidth * fmt.planePixelStrideBytes(0);
-        int srcRowPitch = dstWidth * fmt.planePixelStrideBytes(0);
+        int dstRowStride = dstWidth * fmt.planePixelStrideBytes(0);
+        int srcRowStride = dstWidth * fmt.planePixelStrideBytes(0);
 
-        std::vector<uint8_t> testVec(dstHeight * dstRowPitch);
+        std::vector<uint8_t> testVec(dstHeight * dstRowStride);
 
         // Copy output data to Host
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(testVec.data(), dstRowPitch, dstData->plane(0).buffer, dstData->plane(0).pitchBytes,
-                               dstRowPitch, // vec has no padding
+                  cudaMemcpy2D(testVec.data(), dstRowStride, dstData->plane(0).basePtr, dstData->plane(0).rowStride,
+                               dstRowStride, // vec has no padding
                                dstHeight, cudaMemcpyDeviceToHost));
 
-        std::vector<uint8_t> goldVec(dstHeight * dstRowPitch);
+        std::vector<uint8_t> goldVec(dstHeight * dstRowStride);
         std::generate(goldVec.begin(), goldVec.end(), [&]() { return 0; });
 
         // Generate gold result
-        Rotate<uint8_t>(goldVec, dstRowPitch, {dstWidth, dstHeight}, srcVec[i], srcRowPitch, {srcWidth, srcHeight}, fmt,
-                        angleDegVecs[i], shiftVecs[i], interpolation);
+        Rotate<uint8_t>(goldVec, dstRowStride, {dstWidth, dstHeight}, srcVec[i], srcRowStride, {srcWidth, srcHeight},
+                        fmt, angleDegVecs[i], shiftVecs[i], interpolation);
 
         EXPECT_EQ(goldVec, testVec);
     }

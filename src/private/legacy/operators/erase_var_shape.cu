@@ -78,9 +78,9 @@ __global__ void erase(Ptr2dVarShapeNHWC<D> img, nvcv::cuda::Tensor1DWrap<int2> a
 }
 
 template<typename D>
-void eraseCaller(const nvcv::IImageBatchVarShapeDataPitchDevice &imgs, const nvcv::ITensorDataPitchDevice &anchor,
-                 const nvcv::ITensorDataPitchDevice &erasing, const nvcv::ITensorDataPitchDevice &imgIdx,
-                 const nvcv::ITensorDataPitchDevice &values, int max_eh, int max_ew, int num_erasing_area, bool random,
+void eraseCaller(const nvcv::IImageBatchVarShapeDataStridedCuda &imgs, const nvcv::ITensorDataStridedCuda &anchor,
+                 const nvcv::ITensorDataStridedCuda &erasing, const nvcv::ITensorDataStridedCuda &imgIdx,
+                 const nvcv::ITensorDataStridedCuda &values, int max_eh, int max_ew, int num_erasing_area, bool random,
                  unsigned int seed, cudaStream_t stream)
 {
     Ptr2dVarShapeNHWC<D> src(imgs);
@@ -156,16 +156,16 @@ EraseVarShape::~EraseVarShape()
 }
 
 ErrorCode EraseVarShape::infer(const cv::IImageBatchVarShape &inbatch, const cv::IImageBatchVarShape &outbatch,
-                               const ITensorDataPitchDevice &anchor, const ITensorDataPitchDevice &erasing,
-                               const ITensorDataPitchDevice &values, const ITensorDataPitchDevice &imgIdx, bool random,
+                               const ITensorDataStridedCuda &anchor, const ITensorDataStridedCuda &erasing,
+                               const ITensorDataStridedCuda &values, const ITensorDataStridedCuda &imgIdx, bool random,
                                unsigned int seed, bool inplace, cudaStream_t stream)
 {
-    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(inbatch.exportData(stream));
+    auto *inData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(inbatch.exportData(stream));
     if (inData == nullptr)
     {
         LOG_ERROR("Input must be varshape image batch");
     }
-    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataPitchDevice *>(outbatch.exportData(stream));
+    auto *outData = dynamic_cast<const cv::IImageBatchVarShapeDataStridedCuda *>(outbatch.exportData(stream));
     if (outData == nullptr)
     {
         LOG_ERROR("Output must be varshape image batch");
@@ -198,7 +198,7 @@ ErrorCode EraseVarShape::infer(const cv::IImageBatchVarShape &inbatch, const cv:
         LOG_ERROR("Invalid anchor DataType " << anchor_data_type);
         return ErrorCode::INVALID_DATA_TYPE;
     }
-    int anchor_dim = anchor.layout().ndim();
+    int anchor_dim = anchor.layout().rank();
     if (anchor_dim != 1)
     {
         LOG_ERROR("Invalid anchor Dim " << anchor_dim);
@@ -223,7 +223,7 @@ ErrorCode EraseVarShape::infer(const cv::IImageBatchVarShape &inbatch, const cv:
         LOG_ERROR("Invalid erasing DataType " << erasing_data_type);
         return ErrorCode::INVALID_DATA_TYPE;
     }
-    int erasing_dim = erasing.layout().ndim();
+    int erasing_dim = erasing.layout().rank();
     if (erasing_dim != 1)
     {
         LOG_ERROR("Invalid erasing_w Dim " << erasing_dim);
@@ -236,7 +236,7 @@ ErrorCode EraseVarShape::infer(const cv::IImageBatchVarShape &inbatch, const cv:
         LOG_ERROR("Invalid imgIdx DataType " << imgidx_data_type);
         return ErrorCode::INVALID_DATA_TYPE;
     }
-    int imgidx_dim = imgIdx.layout().ndim();
+    int imgidx_dim = imgIdx.layout().rank();
     if (imgidx_dim != 1)
     {
         LOG_ERROR("Invalid imgIdx Dim " << imgidx_dim);
@@ -249,7 +249,7 @@ ErrorCode EraseVarShape::infer(const cv::IImageBatchVarShape &inbatch, const cv:
         LOG_ERROR("Invalid values DataType " << values_data_type);
         return ErrorCode::INVALID_DATA_TYPE;
     }
-    int values_dim = values.layout().ndim();
+    int values_dim = values.layout().rank();
     if (values_dim != 1)
     {
         LOG_ERROR("Invalid values Dim " << values_dim);
@@ -261,14 +261,14 @@ ErrorCode EraseVarShape::infer(const cv::IImageBatchVarShape &inbatch, const cv:
         for (auto init = inbatch.begin(), outit = outbatch.begin(); init != inbatch.end(), outit != outbatch.end();
              ++init, ++outit)
         {
-            const IImage          &inimg      = *init;
-            const IImage          &outimg     = *outit;
-            auto                  *inimgdata  = dynamic_cast<const IImageDataPitchDevice *>(inimg.exportData());
-            auto                  *outimgdata = dynamic_cast<const IImageDataPitchDevice *>(outimg.exportData());
-            const ImagePlanePitch &inplane    = inimgdata->plane(0);
-            const ImagePlanePitch &outplane   = outimgdata->plane(0);
-            checkCudaErrors(cudaMemcpy2DAsync(outplane.buffer, outplane.pitchBytes, inplane.buffer, inplane.pitchBytes,
-                                              inplane.pitchBytes, inplane.height, cudaMemcpyDeviceToDevice, stream));
+            const IImage            &inimg      = *init;
+            const IImage            &outimg     = *outit;
+            auto                    *inimgdata  = dynamic_cast<const IImageDataStridedCuda *>(inimg.exportData());
+            auto                    *outimgdata = dynamic_cast<const IImageDataStridedCuda *>(outimg.exportData());
+            const ImagePlaneStrided &inplane    = inimgdata->plane(0);
+            const ImagePlaneStrided &outplane   = outimgdata->plane(0);
+            checkCudaErrors(cudaMemcpy2DAsync(outplane.basePtr, outplane.rowStride, inplane.basePtr, inplane.rowStride,
+                                              inplane.rowStride, inplane.height, cudaMemcpyDeviceToDevice, stream));
         }
     }
 
@@ -277,7 +277,7 @@ ErrorCode EraseVarShape::infer(const cv::IImageBatchVarShape &inbatch, const cv:
         return SUCCESS;
     }
 
-    int3 *d_erasing = (int3 *)erasing.data();
+    int3 *d_erasing = (int3 *)erasing.basePtr();
     int3  h_max_values;
     MaxWH maxwh;
     int3  init = {0, 0, 0};
@@ -296,9 +296,9 @@ ErrorCode EraseVarShape::infer(const cv::IImageBatchVarShape &inbatch, const cv:
         return SUCCESS;
     }
 
-    typedef void (*erase_t)(const IImageBatchVarShapeDataPitchDevice &imgs, const ITensorDataPitchDevice &anchor,
-                            const ITensorDataPitchDevice &erasing, const ITensorDataPitchDevice &imgIdx,
-                            const ITensorDataPitchDevice &values, int max_eh, int max_ew, int num_erasing_area,
+    typedef void (*erase_t)(const IImageBatchVarShapeDataStridedCuda &imgs, const ITensorDataStridedCuda &anchor,
+                            const ITensorDataStridedCuda &erasing, const ITensorDataStridedCuda &imgIdx,
+                            const ITensorDataStridedCuda &values, int max_eh, int max_ew, int num_erasing_area,
                             bool random, unsigned int seed, cudaStream_t stream);
 
     static const erase_t funcs[6] = {eraseCaller<uchar>, eraseCaller<char>, eraseCaller<ushort>,

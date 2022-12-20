@@ -36,11 +36,11 @@ TEST(Allocator, wip_test_default)
 {
     nvcv::CustomAllocator myalloc;
 
-    void *ptrDev        = myalloc.deviceMem().alloc(768, 256);
+    void *ptrDev        = myalloc.cudaMem().alloc(768, 256);
     void *ptrHost       = myalloc.hostMem().alloc(160, 16);
     void *ptrHostPinned = myalloc.hostPinnedMem().alloc(144, 16);
 
-    myalloc.deviceMem().free(ptrDev, 768, 256);
+    myalloc.cudaMem().free(ptrDev, 768, 256);
     myalloc.hostMem().free(ptrHost, 160, 16);
     myalloc.hostPinnedMem().free(ptrHostPinned, 144, 16);
 }
@@ -69,7 +69,7 @@ TEST(Allocator, wip_test_custom_functors)
                 assert(hostCounter == reinterpret_cast<ptrdiff_t>(ptr));
             }
         },
-        nvcv::CustomDeviceMemAllocator
+        nvcv::CustomCudaMemAllocator
         {
             [&devCounter](int64_t size, int32_t align)
             {
@@ -106,23 +106,23 @@ TEST(Allocator, wip_test_custom_functors)
     ASSERT_EQ((void *)1, myalloc1.hostPinnedMem().alloc(10));
     EXPECT_EQ(11, hostPinnedCounter);
 
-    ASSERT_EQ((void *)1, myalloc1.deviceMem().alloc(7));
+    ASSERT_EQ((void *)1, myalloc1.cudaMem().alloc(7));
     EXPECT_EQ(8, devCounter);
 
-    ASSERT_EQ((void *)8, myalloc1.deviceMem().alloc(2));
+    ASSERT_EQ((void *)8, myalloc1.cudaMem().alloc(2));
     EXPECT_EQ(10, devCounter);
 
-    myalloc1.deviceMem().free((void *)8, 2);
+    myalloc1.cudaMem().free((void *)8, 2);
     EXPECT_EQ(8, devCounter);
 
-    myalloc1.deviceMem().free((void *)1, 7);
+    myalloc1.cudaMem().free((void *)1, 7);
     EXPECT_EQ(1, devCounter);
 }
 
 // WIP: just to check if it compiles.
 TEST(Allocator, wip_test_custom_object)
 {
-    class MyDeviceAlloc : public nvcv::IDeviceMemAllocator
+    class MyCudaAlloc : public nvcv::ICudaMemAllocator
     {
     private:
         void *doAlloc(int64_t size, int32_t align) override
@@ -152,12 +152,12 @@ TEST(Allocator, wip_test_custom_object)
         }
     };
 
-    nvcv::CustomAllocator myalloc1{MyHostAlloc{}, MyDeviceAlloc{}};
+    nvcv::CustomAllocator myalloc1{MyHostAlloc{}, MyCudaAlloc{}};
 }
 
 TEST(Allocator, wip_test_custom_object_functor)
 {
-    class MyDeviceAlloc
+    class MyCudaAlloc
     {
     public:
         void *alloc(int64_t size, int32_t align)
@@ -187,8 +187,8 @@ TEST(Allocator, wip_test_custom_object_functor)
         }
     };
 
-    auto myDeviceAlloc = std::make_shared<MyDeviceAlloc>();
-    auto myHostAlloc   = std::make_shared<MyHostAlloc>();
+    auto myCudaAlloc = std::make_shared<MyCudaAlloc>();
+    auto myHostAlloc = std::make_shared<MyHostAlloc>();
 
     // clang-format off
     nvcv::CustomAllocator myalloc1
@@ -203,14 +203,14 @@ TEST(Allocator, wip_test_custom_object_functor)
                 return myHostAlloc->dealloc(ptr, size, align);
             }
         },
-        nvcv::CustomDeviceMemAllocator{
-            [myDeviceAlloc](int64_t size, int32_t align)
+        nvcv::CustomCudaMemAllocator{
+            [myCudaAlloc](int64_t size, int32_t align)
             {
-                return myDeviceAlloc->alloc(size, align);
+                return myCudaAlloc->alloc(size, align);
             },
-            [myDeviceAlloc](void *ptr, int64_t size, int32_t align)
+            [myCudaAlloc](void *ptr, int64_t size, int32_t align)
             {
-                return myDeviceAlloc->dealloc(ptr, size, align);
+                return myCudaAlloc->dealloc(ptr, size, align);
             }
         },
     };
@@ -245,10 +245,10 @@ TEST(Allocator, wip_test_custom_object_ref)
     auto myalloc3 = nvcv::CreateCustomAllocator(std::ref(myHostAlloc));
 
     EXPECT_EQ(&myHostAlloc, dynamic_cast<MyHostAlloc *>(&myalloc3.hostMem()));
-    EXPECT_EQ(nullptr, dynamic_cast<MyHostAlloc *>(&myalloc3.deviceMem()));
+    EXPECT_EQ(nullptr, dynamic_cast<MyHostAlloc *>(&myalloc3.cudaMem()));
 }
 
-class MyAsyncAlloc : public nvcv::IDeviceMemAllocator
+class MyAsyncAlloc : public nvcv::ICudaMemAllocator
 {
 public:
     void setStream(cudaStream_t stream)
@@ -285,8 +285,8 @@ TEST(Allocator, wip_test_dali_stream_async)
 
         myAsyncAlloc.setStream(stream);
 
-        void *ptr = myalloc.deviceMem().alloc(123, 5);
-        myalloc.deviceMem().free(ptr, 123, 5);
+        void *ptr = myalloc.cudaMem().alloc(123, 5);
+        myalloc.cudaMem().free(ptr, 123, 5);
     };
 
     std::thread thread1(fn, stream1);

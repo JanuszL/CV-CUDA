@@ -21,7 +21,7 @@
 #include <common/Printers.hpp>       // for stream operator, etc.
 #include <common/TypedTests.hpp>     // for NVCV_TYPED_TEST_SUITE, etc.
 #include <nvcv/Tensor.hpp>           // for Tensor, etc.
-#include <nvcv/TensorDataAccess.hpp> // for TensorDataAccessPitchImagePlanar, etc.
+#include <nvcv/TensorDataAccess.hpp> // for TensorDataAccessStridedImagePlanar, etc.
 #include <nvcv/cuda/BorderWrap.hpp>  // the object of this test
 #include <nvcv/cuda/MathOps.hpp>     // for operator == to allow EXPECT_EQ
 #include <nvcv/cuda/TensorWrap.hpp>  // for Tensor3DWrap, etc.
@@ -137,14 +137,14 @@ TYPED_TEST(BorderWrapNHWTest, correct_fill)
     nv::cv::Tensor srcTensor(batches, {width, height}, format);
     nv::cv::Tensor dstTensor(batches, {width + borderSize * 2, height + borderSize * 2}, format);
 
-    const auto *srcDev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(srcTensor.exportData());
-    const auto *dstDev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(dstTensor.exportData());
+    const auto *srcDev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(srcTensor.exportData());
+    const auto *dstDev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(dstTensor.exportData());
 
     ASSERT_NE(srcDev, nullptr);
     ASSERT_NE(dstDev, nullptr);
 
-    auto srcAccess = nv::cv::TensorDataAccessPitchImagePlanar::Create(*srcDev);
-    auto dstAccess = nv::cv::TensorDataAccessPitchImagePlanar::Create(*dstDev);
+    auto srcAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(*srcDev);
+    auto dstAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(*dstDev);
 
     ASSERT_TRUE(srcAccess);
     ASSERT_TRUE(dstAccess);
@@ -160,8 +160,8 @@ TYPED_TEST(BorderWrapNHWTest, correct_fill)
     srcSize.z = srcAccess->numSamples();
     dstSize.z = dstAccess->numSamples();
 
-    int srcSizeBytes = srcDev->pitchBytes(0) * srcSize.z;
-    int dstSizeBytes = dstDev->pitchBytes(0) * dstSize.z;
+    int srcSizeBytes = srcDev->stride(0) * srcSize.z;
+    int dstSizeBytes = dstDev->stride(0) * dstSize.z;
 
     std::vector<uint8_t> srcVec(srcSizeBytes);
 
@@ -169,7 +169,7 @@ TYPED_TEST(BorderWrapNHWTest, correct_fill)
     std::uniform_int_distribution<uint8_t> srcRand{0u, 255u};
     std::generate(srcVec.begin(), srcVec.end(), [&]() { return srcRand(randEng); });
 
-    ASSERT_EQ(cudaSuccess, cudaMemcpy(srcDev->data(), srcVec.data(), srcVec.size(), cudaMemcpyHostToDevice));
+    ASSERT_EQ(cudaSuccess, cudaMemcpy(srcDev->basePtr(), srcVec.data(), srcVec.size(), cudaMemcpyHostToDevice));
 
     cuda::BorderWrapNHW<const ValueType, kBorderType> srcWrap(*srcDev, borderValue);
     cuda::Tensor3DWrap<ValueType>                     dstWrap(*dstDev);
@@ -186,7 +186,7 @@ TYPED_TEST(BorderWrapNHWTest, correct_fill)
     std::vector<uint8_t> gold(dstSizeBytes);
 
     // Get test fill border
-    ASSERT_EQ(cudaSuccess, cudaMemcpy(test.data(), dstDev->data(), test.size(), cudaMemcpyDeviceToHost));
+    ASSERT_EQ(cudaSuccess, cudaMemcpy(test.data(), dstDev->basePtr(), test.size(), cudaMemcpyDeviceToHost));
 
     // Run gold fill border
     for (int z = 0; z < dstSize.z; ++z)
@@ -204,11 +204,11 @@ TYPED_TEST(BorderWrapNHWTest, correct_fill)
                 bool isInside = test::IsInside(srcCoord, {width, height}, kBorderType);
 
                 *reinterpret_cast<ValueType *>(
-                    &gold[z * dstDev->pitchBytes(0) + y * dstDev->pitchBytes(1) + x * dstDev->pitchBytes(2)])
-                    = isInside ? *reinterpret_cast<ValueType *>(
-                          &srcVec[z * srcDev->pitchBytes(0) + srcCoord.y * srcDev->pitchBytes(1)
-                                  + srcCoord.x * srcDev->pitchBytes(2)])
-                               : borderValue;
+                    &gold[z * dstDev->stride(0) + y * dstDev->stride(1) + x * dstDev->stride(2)])
+                    = isInside
+                        ? *reinterpret_cast<ValueType *>(&srcVec[z * srcDev->stride(0) + srcCoord.y * srcDev->stride(1)
+                                                                 + srcCoord.x * srcDev->stride(2)])
+                        : borderValue;
             }
         }
     }
@@ -243,14 +243,14 @@ TYPED_TEST(BorderWrapNHWCTest, correct_fill)
     nv::cv::Tensor srcTensor(batches, {width, height}, format);
     nv::cv::Tensor dstTensor(batches, {width + borderSize * 2, height + borderSize * 2}, format);
 
-    const auto *srcDev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(srcTensor.exportData());
-    const auto *dstDev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(dstTensor.exportData());
+    const auto *srcDev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(srcTensor.exportData());
+    const auto *dstDev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(dstTensor.exportData());
 
     ASSERT_NE(srcDev, nullptr);
     ASSERT_NE(dstDev, nullptr);
 
-    auto srcAccess = nv::cv::TensorDataAccessPitchImagePlanar::Create(*srcDev);
-    auto dstAccess = nv::cv::TensorDataAccessPitchImagePlanar::Create(*dstDev);
+    auto srcAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(*srcDev);
+    auto dstAccess = nv::cv::TensorDataAccessStridedImagePlanar::Create(*dstDev);
 
     ASSERT_TRUE(srcAccess);
     ASSERT_TRUE(dstAccess);
@@ -269,8 +269,8 @@ TYPED_TEST(BorderWrapNHWCTest, correct_fill)
     srcSize.w = srcAccess->numChannels();
     dstSize.w = dstAccess->numChannels();
 
-    int srcSizeBytes = srcDev->pitchBytes(0) * srcSize.z;
-    int dstSizeBytes = dstDev->pitchBytes(0) * dstSize.z;
+    int srcSizeBytes = srcDev->stride(0) * srcSize.z;
+    int dstSizeBytes = dstDev->stride(0) * dstSize.z;
 
     std::vector<uint8_t> srcVec(srcSizeBytes);
 
@@ -278,7 +278,7 @@ TYPED_TEST(BorderWrapNHWCTest, correct_fill)
     std::uniform_int_distribution<uint8_t> srcRand{0u, 255u};
     std::generate(srcVec.begin(), srcVec.end(), [&]() { return srcRand(randEng); });
 
-    ASSERT_EQ(cudaSuccess, cudaMemcpy(srcDev->data(), srcVec.data(), srcVec.size(), cudaMemcpyHostToDevice));
+    ASSERT_EQ(cudaSuccess, cudaMemcpy(srcDev->basePtr(), srcVec.data(), srcVec.size(), cudaMemcpyHostToDevice));
 
     cuda::BorderWrapNHWC<const ValueType, kBorderType> srcWrap(*srcDev, borderValue);
     cuda::Tensor4DWrap<ValueType>                      dstWrap(*dstDev);
@@ -295,7 +295,7 @@ TYPED_TEST(BorderWrapNHWCTest, correct_fill)
     std::vector<uint8_t> gold(dstSizeBytes);
 
     // Get test fill border
-    ASSERT_EQ(cudaSuccess, cudaMemcpy(test.data(), dstDev->data(), test.size(), cudaMemcpyDeviceToHost));
+    ASSERT_EQ(cudaSuccess, cudaMemcpy(test.data(), dstDev->basePtr(), test.size(), cudaMemcpyDeviceToHost));
 
     // Run gold fill border
     for (int z = 0; z < dstSize.z; ++z)
@@ -314,11 +314,11 @@ TYPED_TEST(BorderWrapNHWCTest, correct_fill)
 
                 for (int w = 0; w < dstSize.w; ++w)
                 {
-                    *reinterpret_cast<ValueType *>(&gold[z * dstDev->pitchBytes(0) + y * dstDev->pitchBytes(1)
-                                                         + x * dstDev->pitchBytes(2) + w * dstDev->pitchBytes(3)])
+                    *reinterpret_cast<ValueType *>(&gold[z * dstDev->stride(0) + y * dstDev->stride(1)
+                                                         + x * dstDev->stride(2) + w * dstDev->stride(3)])
                         = isInside ? *reinterpret_cast<ValueType *>(
-                              &srcVec[z * srcDev->pitchBytes(0) + srcCoord.y * srcDev->pitchBytes(1)
-                                      + srcCoord.x * srcDev->pitchBytes(2) + w * srcDev->pitchBytes(3)])
+                              &srcVec[z * srcDev->stride(0) + srcCoord.y * srcDev->stride(1)
+                                      + srcCoord.x * srcDev->stride(2) + w * srcDev->stride(3)])
                                    : borderValue;
                 }
             }

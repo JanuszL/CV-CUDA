@@ -41,7 +41,7 @@ TEST(Image, wip_create)
     const nvcv::IImageData *data = img.exportData();
     ASSERT_NE(nullptr, data);
 
-    auto *devdata = dynamic_cast<const nvcv::IImageDataPitchDevice *>(data);
+    auto *devdata = dynamic_cast<const nvcv::IImageDataStridedCuda *>(data);
     ASSERT_NE(nullptr, devdata);
 
     ASSERT_EQ(1, devdata->numPlanes());
@@ -49,12 +49,12 @@ TEST(Image, wip_create)
     EXPECT_EQ(img.size(), devdata->size());
     EXPECT_EQ(img.size().w, devdata->plane(0).width);
     EXPECT_EQ(img.size().h, devdata->plane(0).height);
-    EXPECT_LE(163 * 4, devdata->plane(0).pitchBytes);
-    EXPECT_NE(nullptr, devdata->plane(0).buffer);
+    EXPECT_LE(163 * 4, devdata->plane(0).rowStride);
+    EXPECT_NE(nullptr, devdata->plane(0).basePtr);
 
-    const nvcv::ImagePlanePitch &plane = devdata->plane(0);
+    const nvcv::ImagePlaneStrided &plane = devdata->plane(0);
 
-    EXPECT_EQ(cudaSuccess, cudaMemset2D(plane.buffer, plane.pitchBytes, 123, plane.width * 4, plane.height));
+    EXPECT_EQ(cudaSuccess, cudaMemset2D(plane.basePtr, plane.rowStride, 123, plane.width * 4, plane.height));
 }
 
 TEST(Image, wip_cast)
@@ -148,7 +148,7 @@ TEST(Image, wip_create_managed)
     // clang-format off
     nvcv::CustomAllocator managedAlloc
     {
-        nvcv::CustomDeviceMemAllocator
+        nvcv::CustomCudaMemAllocator
         {
             [&setBufLen, &setBufAlign](int64_t size, int32_t bufAlign)
             {
@@ -174,20 +174,20 @@ TEST(Image, wip_create_managed)
     const nvcv::IImageData *data = img.exportData();
     ASSERT_NE(nullptr, data);
 
-    auto *devdata = dynamic_cast<const nvcv::IImageDataPitchDevice *>(data);
+    auto *devdata = dynamic_cast<const nvcv::IImageDataStridedCuda *>(data);
     ASSERT_NE(nullptr, devdata);
 
     ASSERT_EQ(1, devdata->numPlanes());
-    EXPECT_LE(163 * 4, devdata->plane(0).pitchBytes);
-    EXPECT_NE(nullptr, devdata->plane(0).buffer);
+    EXPECT_LE(163 * 4, devdata->plane(0).rowStride);
+    EXPECT_NE(nullptr, devdata->plane(0).basePtr);
 
-    const nvcv::ImagePlanePitch &plane = devdata->plane(0);
+    const nvcv::ImagePlaneStrided &plane = devdata->plane(0);
 
-    EXPECT_EQ(cudaSuccess, cudaMemset2D(plane.buffer, plane.pitchBytes, 123, plane.width * 4, plane.height));
+    EXPECT_EQ(cudaSuccess, cudaMemset2D(plane.basePtr, plane.rowStride, 123, plane.width * 4, plane.height));
 
     for (int i = 0; i < plane.height; ++i)
     {
-        std::byte *beg = reinterpret_cast<std::byte *>(plane.buffer) + plane.pitchBytes * i;
+        std::byte *beg = reinterpret_cast<std::byte *>(plane.basePtr) + plane.rowStride * i;
         std::byte *end = beg + plane.width * 4;
 
         ASSERT_EQ(end, std::find_if(beg, end, [](std::byte b) { return b != std::byte{123}; }))
@@ -197,15 +197,15 @@ TEST(Image, wip_create_managed)
 
 TEST(ImageWrapData, wip_create)
 {
-    nvcv::ImageDataPitchDevice::Buffer buf;
-    buf.numPlanes            = 1;
-    buf.planes[0].width      = 173;
-    buf.planes[0].height     = 79;
-    buf.planes[0].pitchBytes = 190;
-    buf.planes[0].buffer     = reinterpret_cast<void *>(678);
+    nvcv::ImageDataStridedCuda::Buffer buf;
+    buf.numPlanes           = 1;
+    buf.planes[0].width     = 173;
+    buf.planes[0].height    = 79;
+    buf.planes[0].rowStride = 190;
+    buf.planes[0].basePtr   = reinterpret_cast<NVCVByte *>(678);
 
     nvcv::ImageWrapData img{
-        nvcv::ImageDataPitchDevice{nvcv::FMT_U8, buf}
+        nvcv::ImageDataStridedCuda{nvcv::FMT_U8, buf}
     };
 
     EXPECT_EQ(nvcv::Size2D(173, 79), img.size());
@@ -219,7 +219,7 @@ TEST(ImageWrapData, wip_create)
     const nvcv::IImageData *data = img.exportData();
     ASSERT_NE(nullptr, data);
 
-    auto *devdata = dynamic_cast<const nvcv::IImageDataPitchDevice *>(data);
+    auto *devdata = dynamic_cast<const nvcv::IImageDataStridedCuda *>(data);
     ASSERT_NE(nullptr, devdata);
 
     ASSERT_EQ(1, devdata->numPlanes());
@@ -227,21 +227,21 @@ TEST(ImageWrapData, wip_create)
     EXPECT_EQ(img.size(), devdata->size());
     EXPECT_EQ(img.size().w, devdata->plane(0).width);
     EXPECT_EQ(img.size().h, devdata->plane(0).height);
-    EXPECT_LE(190, devdata->plane(0).pitchBytes);
-    EXPECT_EQ(buf.planes[0].buffer, devdata->plane(0).buffer);
+    EXPECT_LE(190, devdata->plane(0).rowStride);
+    EXPECT_EQ(buf.planes[0].basePtr, devdata->plane(0).basePtr);
 }
 
 TEST(ImageWrapData, wip_user_pointer)
 {
-    nvcv::ImageDataPitchDevice::Buffer buf;
-    buf.numPlanes            = 1;
-    buf.planes[0].width      = 173;
-    buf.planes[0].height     = 79;
-    buf.planes[0].pitchBytes = 190;
-    buf.planes[0].buffer     = reinterpret_cast<void *>(678);
+    nvcv::ImageDataStridedCuda::Buffer buf;
+    buf.numPlanes           = 1;
+    buf.planes[0].width     = 173;
+    buf.planes[0].height    = 79;
+    buf.planes[0].rowStride = 190;
+    buf.planes[0].basePtr   = reinterpret_cast<NVCVByte *>(678);
 
     nvcv::ImageWrapData img{
-        nvcv::ImageDataPitchDevice{nvcv::FMT_U8, buf}
+        nvcv::ImageDataStridedCuda{nvcv::FMT_U8, buf}
     };
 
     EXPECT_EQ(nullptr, img.userPointer());
@@ -266,12 +266,12 @@ TEST(Image, wip_operator)
         nvcv::FMT_RGBA8
     };
 
-    auto *inData  = dynamic_cast<const nvcv::IImageDataPitchDevice *>(in.exportData());
-    auto *outData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(out.exportData());
+    auto *inData  = dynamic_cast<const nvcv::IImageDataStridedCuda *>(in.exportData());
+    auto *outData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(out.exportData());
 
     if (inData == nullptr || outData == nullptr)
     {
-        throw std::runtime_error("Input and output images must have device-accessible pitch-linear memory");
+        throw std::runtime_error("Input and output images must have cuda-accessible pitch-linear memory");
     }
     if (inData->format() != outData->format())
     {
@@ -286,10 +286,10 @@ TEST(Image, wip_operator)
 
     for (int p = 0; p < inData->numPlanes(); ++p)
     {
-        const nvcv::ImagePlanePitch &inPlane  = inData->plane(p);
-        const nvcv::ImagePlanePitch &outPlane = outData->plane(p);
+        const nvcv::ImagePlaneStrided &inPlane  = inData->plane(p);
+        const nvcv::ImagePlaneStrided &outPlane = outData->plane(p);
 
-        cudaMemcpy2D(outPlane.buffer, outPlane.pitchBytes, inPlane.buffer, inPlane.pitchBytes,
+        cudaMemcpy2D(outPlane.basePtr, outPlane.rowStride, inPlane.basePtr, inPlane.rowStride,
                      (inData->format().planeBitsPerPixel(p) + 7) / 8 * inPlane.width, inPlane.height,
                      cudaMemcpyDeviceToDevice);
     }
@@ -297,12 +297,12 @@ TEST(Image, wip_operator)
 
 TEST(ImageWrapData, wip_cleanup)
 {
-    nvcv::ImageDataPitchDevice::Buffer buf;
-    buf.numPlanes            = 1;
-    buf.planes[0].width      = 173;
-    buf.planes[0].height     = 79;
-    buf.planes[0].pitchBytes = 190;
-    buf.planes[0].buffer     = reinterpret_cast<void *>(678);
+    nvcv::ImageDataStridedCuda::Buffer buf;
+    buf.numPlanes           = 1;
+    buf.planes[0].width     = 173;
+    buf.planes[0].height    = 79;
+    buf.planes[0].rowStride = 190;
+    buf.planes[0].basePtr   = reinterpret_cast<NVCVByte *>(678);
 
     int  cleanupCalled = 0;
     auto cleanup       = [&cleanupCalled](const nvcv::IImageData &data)
@@ -311,7 +311,7 @@ TEST(ImageWrapData, wip_cleanup)
     };
 
     {
-        nvcv::ImageWrapData img(nvcv::ImageDataPitchDevice{nvcv::FMT_U8, buf}, cleanup);
+        nvcv::ImageWrapData img(nvcv::ImageDataStridedCuda{nvcv::FMT_U8, buf}, cleanup);
         EXPECT_EQ(0, cleanupCalled);
     }
     EXPECT_EQ(1, cleanupCalled) << "Cleanup must have been called when img got destroyed";
@@ -327,7 +327,7 @@ TEST(ImageWrapData, wip_mem_reqs)
     EXPECT_EQ(256, img.size().h);
     EXPECT_EQ(nvcv::FMT_NV12, img.format());
 
-    const auto *data = dynamic_cast<const nvcv::IImageDataPitchDevice *>(img.exportData());
+    const auto *data = dynamic_cast<const nvcv::IImageDataStridedCuda *>(img.exportData());
 
     ASSERT_NE(nullptr, data);
     ASSERT_EQ(2, data->numPlanes());
@@ -337,13 +337,12 @@ TEST(ImageWrapData, wip_mem_reqs)
     EXPECT_EQ(256, data->plane(1).width);
     EXPECT_EQ(128, data->plane(1).height);
 
-    EXPECT_EQ(data->plane(1).buffer,
-              reinterpret_cast<std::byte *>(data->plane(0).buffer) + data->plane(0).pitchBytes * 256);
+    EXPECT_EQ(data->plane(1).basePtr, data->plane(0).basePtr + data->plane(0).rowStride * 256);
 
     for (int p = 0; p < 2; ++p)
     {
         EXPECT_EQ(cudaSuccess,
-                  cudaMemset2D(data->plane(p).buffer, data->plane(p).pitchBytes, 123,
+                  cudaMemset2D(data->plane(p).basePtr, data->plane(p).rowStride, 123,
                                data->plane(p).width * img.format().planePixelStrideBytes(p), data->plane(p).height))
             << "Plane " << p;
     }
@@ -357,7 +356,7 @@ TEST(Image, wip_image_managed_memory)
 
     nvcv::CustomAllocator managedAlloc
     {
-        nvcv::CustomDeviceMemAllocator
+        nvcv::CustomCudaMemAllocator
         {
             [](int64_t size, int32_t)
             {
@@ -379,11 +378,11 @@ TEST(Image, wip_image_managed_memory)
 
     {
         nvcv::LockImageData lkData = img.lock(nvcv::READ);
-        if(auto *data = dynamic_cast<const nvcv::IImageDataDeviceMem *>(lkData->data()))
+        if(auto *data = dynamic_cast<const nvcv::IImageDataCudaMem *>(lkData->data()))
         {
             cv::GpuMat ocvGPU{data->size.h, data->size.w,
                               data->plane(0).buffer,
-                              data->plane(0).pitchBytes};
+                              data->plane(0).rowStride};
             // ...
 
         }
@@ -394,21 +393,21 @@ TEST(Image, wip_image_managed_memory)
         }
     }
 
-    if(nvcv::LockImageData lkData = img.lock<nvcv::IImageDataDeviceMem>(nvcv::READ))
+    if(nvcv::LockImageData lkData = img.lock<nvcv::IImageDataCudaMem>(nvcv::READ))
     {
         cv::GpuMat ocvGPU{lkData->size.h, lkData->size.w,
                           lkData->plane(0).buffer,
-                          lkData->plane(0).pitchBytes};
+                          lkData->plane(0).rowStride};
         // ...
     }
 
     // alternative?
-    if(nvcv::LockImageData lkData = img.lockDeviceMem(nvcv::READ))
+    if(nvcv::LockImageData lkData = img.lockCudaMem(nvcv::READ))
     {
         // If we know image holds managed memory, we can do this:
         cv::Mat ocvCPU{lkData->size.h, lkData->size.w,
                        lkData->plane(0).buffer,
-                       lkData->plane(0).pitchBytes};
+                       lkData->plane(0).rowStride};
         // ...
     }
 
@@ -419,12 +418,12 @@ TEST(Image, wip_image_managed_memory)
         ProcessImageVisitor(cudaStream_t stream)
             : m_stream(stream) {}
 
-        bool visit(IImageDataDeviceMem &data) override
+        bool visit(IImageDataCudaMem &data) override
         {
             // pitch-linear processing
             cv::GpuMat ocvGPU{data->size.h, data->size.w,
                               data->plane(0).buffer,
-                              data->plane(0).pitchBytes};
+                              data->plane(0).rowStride};
             // process image in m_stream
             return true;
         }

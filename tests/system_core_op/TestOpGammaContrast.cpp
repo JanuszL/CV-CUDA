@@ -56,8 +56,8 @@ static void printVec(std::vector<uint8_t> &vec, int height, int rowPitch, int by
 #endif
 }
 
-static void GammaContrastVarShapeCpuOp(std::vector<uint8_t> &hDst, int dstRowPitch, nvcv::Size2D dstSize, const std::vector<uint8_t> &hSrc,
-                   int srcRowPitch, nvcv::Size2D srcSize, nvcv::ImageFormat fmt, const std::vector<float> gamma, const int imageIndex, bool perChannel)
+static void GammaContrastVarShapeCpuOp(std::vector<uint8_t> &hDst, int dstRowStride, nvcv::Size2D dstSize, const std::vector<uint8_t> &hSrc,
+                   int srcRowStride, nvcv::Size2D srcSize, nvcv::ImageFormat fmt, const std::vector<float> gamma, const int imageIndex, bool perChannel)
 {
     assert(fmt.numPlanes() == 1);
 
@@ -72,7 +72,7 @@ static void GammaContrastVarShapeCpuOp(std::vector<uint8_t> &hDst, int dstRowPit
         {
             for (int k = 0; k < elementsPerPixel; k++)
             {
-                int index = dst_y * dstRowPitch + dst_x * elementsPerPixel + k;
+                int index = dst_y * dstRowStride + dst_x * elementsPerPixel + k;
                 float gamma_tmp = perChannel ? gamma[imageIndex * elementsPerPixel + k] : gamma[imageIndex];
                 float tmp   = (srcPtr[index] + 0.0f) / 255.0f;
                 uint8_t out  = std::rint(pow(tmp, gamma_tmp) * 255.0f);
@@ -126,29 +126,29 @@ TEST_P(OpGammaContrast, varshape_correct_output)
     std::vector<std::unique_ptr<nv::cv::Image>> imgSrc;
 
     std::vector<std::vector<uint8_t>> srcVec(batches);
-    std::vector<int>                  srcVecRowPitch(batches);
+    std::vector<int>                  srcVecRowStride(batches);
 
     for (int i = 0; i < batches; ++i)
     {
         imgSrc.emplace_back(std::make_unique<nv::cv::Image>(nv::cv::Size2D{udistWidth(rng), udistHeight(rng)}, format));
 
-        int srcRowPitch   = imgSrc[i]->size().w * format.planePixelStrideBytes(0);
-        srcVecRowPitch[i] = srcRowPitch;
+        int srcRowStride   = imgSrc[i]->size().w * format.planePixelStrideBytes(0);
+        srcVecRowStride[i] = srcRowStride;
 
         std::uniform_int_distribution<uint8_t> udist(0, 255);
 
-        srcVec[i].resize(imgSrc[i]->size().h * srcRowPitch);
+        srcVec[i].resize(imgSrc[i]->size().h * srcRowStride);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
 
-        auto *imgData = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        auto *imgData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_NE(imgData, nullptr);
 
-        printVec(srcVec[i], imgSrc[i]->size().h, srcVecRowPitch[i], format.numChannels(), "input");
+        printVec(srcVec[i], imgSrc[i]->size().h, srcVecRowStride[i], format.numChannels(), "input");
 
         // Copy input data to the GPU
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2DAsync(imgData->plane(0).buffer, imgData->plane(0).pitchBytes, srcVec[i].data(),
-                                    srcRowPitch, srcRowPitch, imgSrc[i]->size().h, cudaMemcpyHostToDevice, stream));
+                  cudaMemcpy2DAsync(imgData->plane(0).basePtr, imgData->plane(0).rowStride, srcVec[i].data(),
+                                    srcRowStride, srcRowStride, imgSrc[i]->size().h, cudaMemcpyHostToDevice, stream));
     }
 
     nv::cv::ImageBatchVarShape batchSrc(batches);
@@ -178,10 +178,10 @@ TEST_P(OpGammaContrast, varshape_correct_output)
     int            nElements = gammaVec.size();
     nv::cv::Tensor gammaTensor({{nElements}, "N"}, nv::cv::TYPE_F32);
     {
-        auto *dev = dynamic_cast<const nv::cv::ITensorDataPitchDevice *>(gammaTensor.exportData());
+        auto *dev = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(gammaTensor.exportData());
         ASSERT_NE(dev, nullptr);
 
-        ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(dev->data(), gammaVec.data(), gammaVec.size() * sizeof(float),
+        ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(dev->basePtr(), gammaVec.data(), gammaVec.size() * sizeof(float),
                                                cudaMemcpyHostToDevice, stream));
     }
 
@@ -198,43 +198,43 @@ TEST_P(OpGammaContrast, varshape_correct_output)
     {
         SCOPED_TRACE(i);
 
-        const auto *srcData = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         ASSERT_EQ(srcData->numPlanes(), 1);
         int srcWidth  = srcData->plane(0).width;
         int srcHeight = srcData->plane(0).height;
 
-        const auto *dstData = dynamic_cast<const nv::cv::IImageDataPitchDevice *>(imgDst[i]->exportData());
+        const auto *dstData = dynamic_cast<const nv::cv::IImageDataStridedCuda *>(imgDst[i]->exportData());
         ASSERT_EQ(dstData->numPlanes(), 1);
 
         int dstWidth  = dstData->plane(0).width;
         int dstHeight = dstData->plane(0).height;
 
-        int dstRowPitch = dstWidth * format.planePixelStrideBytes(0);
-        int srcRowPitch = dstWidth * format.planePixelStrideBytes(0);
+        int dstRowStride = dstWidth * format.planePixelStrideBytes(0);
+        int srcRowStride = dstWidth * format.planePixelStrideBytes(0);
 
-        std::vector<uint8_t> testVec(dstHeight * dstRowPitch);
-
-        // Copy output data to Host
-        ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(testVec.data(), dstRowPitch, dstData->plane(0).buffer, dstData->plane(0).pitchBytes,
-                               dstRowPitch, dstHeight, cudaMemcpyDeviceToHost));
+        std::vector<uint8_t> testVec(dstHeight * dstRowStride);
 
         // Copy output data to Host
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(testVec.data(), dstRowPitch, dstData->plane(0).buffer, dstData->plane(0).pitchBytes,
-                               dstRowPitch, // vec has no padding
+                  cudaMemcpy2D(testVec.data(), dstRowStride, dstData->plane(0).basePtr, dstData->plane(0).rowStride,
+                               dstRowStride, dstHeight, cudaMemcpyDeviceToHost));
+
+        // Copy output data to Host
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2D(testVec.data(), dstRowStride, dstData->plane(0).basePtr, dstData->plane(0).rowStride,
+                               dstRowStride, // vec has no padding
                                dstHeight, cudaMemcpyDeviceToHost));
 
-        std::vector<uint8_t> goldVec(dstHeight * dstRowPitch);
+        std::vector<uint8_t> goldVec(dstHeight * dstRowStride);
         std::generate(goldVec.begin(), goldVec.end(), [&]() { return 0; });
 
         // Generate gold result
-        GammaContrastVarShapeCpuOp(goldVec, dstRowPitch, {dstWidth, dstHeight}, srcVec[i], srcRowPitch,
+        GammaContrastVarShapeCpuOp(goldVec, dstRowStride, {dstWidth, dstHeight}, srcVec[i], srcRowStride,
                                    {srcWidth, srcHeight}, format, gammaVec, i, perChannel);
 
-        printVec(goldVec, srcHeight, dstRowPitch, format.numChannels(), "golden output");
+        printVec(goldVec, srcHeight, dstRowStride, format.numChannels(), "golden output");
 
-        printVec(testVec, srcHeight, dstRowPitch, format.numChannels(), "operator output");
+        printVec(testVec, srcHeight, dstRowStride, format.numChannels(), "operator output");
 
         EXPECT_EQ(testVec, goldVec);
     }

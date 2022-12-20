@@ -42,13 +42,13 @@ namespace test = nv::cv::test;
 
 template<typename T>
 static void CopyMakeBorder(std::vector<T> &hDst, const std::vector<T> &hSrc,
-                           const nvcv::TensorDataAccessPitchImagePlanar &dDstData, const int srcWidth,
-                           const int srcHeight, const int srcRowPitch, const int srcPixPitch, const int srcImgPitch,
+                           const nvcv::TensorDataAccessStridedImagePlanar &dDstData, const int srcWidth,
+                           const int srcHeight, const int srcRowStride, const int srcPixPitch, const int srcImgPitch,
                            const int top, const int left, const NVCVBorderType borderType, const float4 borderValue)
 {
-    int dstPixPitch = dDstData.numChannels();
-    int dstRowPitch = dDstData.rowPitchBytes() / sizeof(T);
-    int dstImgPitch = dDstData.samplePitchBytes() / sizeof(T);
+    int dstPixPitch  = dDstData.numChannels();
+    int dstRowStride = dDstData.rowStride() / sizeof(T);
+    int dstImgPitch  = dDstData.sampleStride() / sizeof(T);
 
     int2 coords, size{srcWidth, srcHeight};
     for (int db = 0; db < dDstData.numSamples(); db++)
@@ -67,7 +67,7 @@ static void CopyMakeBorder(std::vector<T> &hDst, const std::vector<T> &hSrc,
 
                     if (coords.x >= 0 && coords.x < srcWidth && coords.y >= 0 && coords.y < srcHeight)
                     {
-                        out = hSrc[db * srcImgPitch + coords.y * srcRowPitch + coords.x * srcPixPitch + dk];
+                        out = hSrc[db * srcImgPitch + coords.y * srcRowStride + coords.x * srcPixPitch + dk];
                     }
                     else
                     {
@@ -86,11 +86,11 @@ static void CopyMakeBorder(std::vector<T> &hDst, const std::vector<T> &hSrc,
                             else if (borderType == NVCV_BORDER_REFLECT101)
                                 test::Reflect101BorderIndex(coords, size);
 
-                            out = hSrc[db * srcImgPitch + coords.y * srcRowPitch + coords.x * srcPixPitch + dk];
+                            out = hSrc[db * srcImgPitch + coords.y * srcRowStride + coords.x * srcPixPitch + dk];
                         }
                     }
 
-                    hDst[db * dstImgPitch + di * dstRowPitch + dj * dstPixPitch + dk] = out;
+                    hDst[db * dstImgPitch + di * dstRowStride + dj * dstPixPitch + dk] = out;
                 }
             }
         }
@@ -106,16 +106,16 @@ static void CopyMakeBorder(std::vector<std::vector<T>> &hBatchDst, const std::ve
     int2 coords;
     for (size_t db = 0; db < dBatchDstData.size(); db++)
     {
-        auto &hDst        = hBatchDst[db];
-        auto &dDst        = dBatchDstData[db];
-        auto *imgDstData  = dynamic_cast<const nvcv::IImageDataPitchDevice *>(dDst->exportData());
-        int   dstRowPitch = imgDstData->plane(0).pitchBytes / sizeof(T);
-        int   dstPixPitch = dDst->format().numChannels();
+        auto &hDst         = hBatchDst[db];
+        auto &dDst         = dBatchDstData[db];
+        auto *imgDstData   = dynamic_cast<const nvcv::IImageDataStridedCuda *>(dDst->exportData());
+        int   dstRowStride = imgDstData->plane(0).rowStride / sizeof(T);
+        int   dstPixPitch  = dDst->format().numChannels();
 
         auto &hSrc       = hBatchSrc[db];
         auto &dSrc       = dBatchSrcData[db];
-        auto *imgSrcData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(dSrc->exportData());
-        int   rowPitch   = imgSrcData->plane(0).pitchBytes / sizeof(T);
+        auto *imgSrcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(dSrc->exportData());
+        int   rowStride  = imgSrcData->plane(0).rowStride / sizeof(T);
         int   pixPitch   = imgSrcData->format().numChannels();
 
         auto imgSize = dBatchSrcData[db]->size();
@@ -134,7 +134,7 @@ static void CopyMakeBorder(std::vector<std::vector<T>> &hBatchDst, const std::ve
 
                     if (coords.x >= 0 && coords.x < size.x && coords.y >= 0 && coords.y < size.y)
                     {
-                        out = hSrc[coords.y * rowPitch + coords.x * pixPitch + dk];
+                        out = hSrc[coords.y * rowStride + coords.x * pixPitch + dk];
                     }
                     else
                     {
@@ -153,11 +153,11 @@ static void CopyMakeBorder(std::vector<std::vector<T>> &hBatchDst, const std::ve
                             else if (borderType == NVCV_BORDER_REFLECT101)
                                 test::Reflect101BorderIndex(coords, size);
 
-                            out = hSrc[coords.y * rowPitch + coords.x * pixPitch + dk];
+                            out = hSrc[coords.y * rowStride + coords.x * pixPitch + dk];
                         }
                     }
 
-                    hDst[di * dstRowPitch + dj * dstPixPitch + dk] = out;
+                    hDst[di * dstRowStride + dj * dstPixPitch + dk] = out;
                 }
             }
         }
@@ -166,20 +166,20 @@ static void CopyMakeBorder(std::vector<std::vector<T>> &hBatchDst, const std::ve
 
 template<typename T>
 static void CopyMakeBorder(std::vector<T> &hDst, const std::vector<std::vector<T>> &hBatchSrc,
-                           const nvcv::TensorDataAccessPitchImagePlanar    &dDstData,
+                           const nvcv::TensorDataAccessStridedImagePlanar  &dDstData,
                            const std::vector<std::unique_ptr<nvcv::Image>> &dBatchSrcData, const std::vector<int> &top,
                            const std::vector<int> &left, const NVCVBorderType borderType, const float4 borderValue)
 {
-    int dstPixPitch = dDstData.numChannels();
-    int dstRowPitch = dDstData.rowPitchBytes() / sizeof(T);
-    int dstImgPitch = dDstData.samplePitchBytes() / sizeof(T);
+    int dstPixPitch  = dDstData.numChannels();
+    int dstRowStride = dDstData.rowStride() / sizeof(T);
+    int dstImgPitch  = dDstData.sampleStride() / sizeof(T);
 
     int2 coords;
     for (int db = 0; db < dDstData.numSamples(); db++)
     {
         auto &hSrc       = hBatchSrc[db];
-        auto *imgSrcData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(dBatchSrcData[db]->exportData());
-        int   rowPitch   = imgSrcData->plane(0).pitchBytes / sizeof(T);
+        auto *imgSrcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(dBatchSrcData[db]->exportData());
+        int   rowStride  = imgSrcData->plane(0).rowStride / sizeof(T);
         int   pixPitch   = imgSrcData->format().numChannels();
 
         auto imgSize = dBatchSrcData[db]->size();
@@ -198,7 +198,7 @@ static void CopyMakeBorder(std::vector<T> &hDst, const std::vector<std::vector<T
 
                     if (coords.x >= 0 && coords.x < size.x && coords.y >= 0 && coords.y < size.y)
                     {
-                        out = hSrc[coords.y * rowPitch + coords.x * pixPitch + dk];
+                        out = hSrc[coords.y * rowStride + coords.x * pixPitch + dk];
                     }
                     else
                     {
@@ -217,11 +217,11 @@ static void CopyMakeBorder(std::vector<T> &hDst, const std::vector<std::vector<T
                             else if (borderType == NVCV_BORDER_REFLECT101)
                                 test::Reflect101BorderIndex(coords, size);
 
-                            out = hSrc[coords.y * rowPitch + coords.x * pixPitch + dk];
+                            out = hSrc[coords.y * rowStride + coords.x * pixPitch + dk];
                         }
                     }
 
-                    hDst[db * dstImgPitch + di * dstRowPitch + dj * dstPixPitch + dk] = out;
+                    hDst[db * dstImgPitch + di * dstRowStride + dj * dstPixPitch + dk] = out;
                 }
             }
         }
@@ -260,11 +260,11 @@ void StartTest(int srcWidth, int srcHeight, int numBatches, int topPad, int bott
     std::vector<T> srcVec;
 
     nvcv::Tensor imgSrc(numBatches, {srcWidth, srcHeight}, format);
-    const auto  *srcData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgSrc.exportData());
+    const auto  *srcData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgSrc.exportData());
     ASSERT_NE(nullptr, srcData);
-    auto srcAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*srcData);
+    auto srcAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*srcData);
     ASSERT_TRUE(srcData);
-    int srcBufSize = (srcAccess->samplePitchBytes() / sizeof(T)) * srcAccess->numSamples();
+    int srcBufSize = (srcAccess->sampleStride() / sizeof(T)) * srcAccess->numSamples();
     srcVec.resize(srcBufSize);
 
     std::default_random_engine             randEng{0};
@@ -275,26 +275,26 @@ void StartTest(int srcWidth, int srcHeight, int numBatches, int topPad, int bott
         std::generate(srcVec.begin(), srcVec.end(), [&]() { return srcRand(randEng); });
 
     // Copy each input image with random data to the GPU
-    ASSERT_EQ(cudaSuccess,
-              cudaMemcpyAsync(srcData->data(), srcVec.data(), srcBufSize * sizeof(T), cudaMemcpyHostToDevice, stream));
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(srcData->basePtr(), srcVec.data(), srcBufSize * sizeof(T),
+                                           cudaMemcpyHostToDevice, stream));
 
     nvcv::Tensor imgDst(numBatches, {dstWidth, dstHeight}, format);
-    const auto  *dstData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgDst.exportData());
+    const auto  *dstData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgDst.exportData());
     ASSERT_NE(nullptr, dstData);
-    auto dstAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*dstData);
+    auto dstAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*dstData);
     ASSERT_TRUE(dstData);
-    int dstBufSize = (dstAccess->samplePitchBytes() / sizeof(T)) * dstAccess->numSamples();
-    ASSERT_EQ(cudaSuccess, cudaMemsetAsync(dstData->data(), 0, dstBufSize * sizeof(T), stream));
+    int dstBufSize = (dstAccess->sampleStride() / sizeof(T)) * dstAccess->numSamples();
+    ASSERT_EQ(cudaSuccess, cudaMemsetAsync(dstData->basePtr(), 0, dstBufSize * sizeof(T), stream));
 
     std::vector<T> testVec(dstBufSize);
     std::vector<T> goldVec(dstBufSize);
 
-    int srcPixPitch = srcAccess->numChannels();
-    int srcRowPitch = srcAccess->rowPitchBytes() / sizeof(T);
-    int srcImgPitch = srcAccess->samplePitchBytes() / sizeof(T);
+    int srcPixPitch  = srcAccess->numChannels();
+    int srcRowStride = srcAccess->rowStride() / sizeof(T);
+    int srcImgPitch  = srcAccess->sampleStride() / sizeof(T);
 
     // Generate gold result
-    CopyMakeBorder(goldVec, srcVec, *dstAccess, srcWidth, srcHeight, srcRowPitch, srcPixPitch, srcImgPitch, topPad,
+    CopyMakeBorder(goldVec, srcVec, *dstAccess, srcWidth, srcHeight, srcRowStride, srcPixPitch, srcImgPitch, topPad,
                    leftPad, borderType, borderValue);
 
     // Generate test result
@@ -305,12 +305,13 @@ void StartTest(int srcWidth, int srcHeight, int numBatches, int topPad, int bott
     // Get test data back
     ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
     ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), dstData->data(), dstBufSize * sizeof(T), cudaMemcpyDeviceToHost));
+    ASSERT_EQ(cudaSuccess,
+              cudaMemcpy(testVec.data(), dstData->basePtr(), dstBufSize * sizeof(T), cudaMemcpyDeviceToHost));
 
 #ifdef DEBUG_PRINT_IMAGE
-    for (int b = 0; b < numBatches; ++b) test::DebugPrintImage(batchSrcVec[b], srcPitchBytes / sizeof(uint8_t));
-    test::DebugPrintImage(testVec, dstData->rowPitchBytes() / sizeof(uint8_t));
-    test::DebugPrintImage(goldVec, dstData->rowPitchBytes() / sizeof(uint8_t));
+    for (int b = 0; b < numBatches; ++b) test::DebugPrintImage(batchSrcVec[b], srcStride / sizeof(uint8_t));
+    test::DebugPrintImage(testVec, dstData->rowStride() / sizeof(uint8_t));
+    test::DebugPrintImage(goldVec, dstData->rowStride() / sizeof(uint8_t));
 #endif
 #ifdef DEBUG_PRINT_DIFF
     if (goldVec != testVec)
@@ -387,10 +388,10 @@ void StartTestVarShape(int srcWidthBase, int srcHeightBase, int numBatches, int 
         //prepare input buffers
         imgSrcVec.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{srcWidth, srcHeight}, format));
 
-        auto *imgSrcData    = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrcVec.back()->exportData());
-        int   srcPitchBytes = imgSrcData->plane(0).pitchBytes;
-        int   srcRowPitch   = srcPitchBytes / sizeof(T);
-        int   srcBufSize    = srcRowPitch * imgSrcData->plane(0).height;
+        auto *imgSrcData   = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrcVec.back()->exportData());
+        int   srcStride    = imgSrcData->plane(0).rowStride;
+        int   srcRowStride = srcStride / sizeof(T);
+        int   srcBufSize   = srcRowStride * imgSrcData->plane(0).height;
 
         std::vector<T>                         srcVec(srcBufSize);
         std::uniform_int_distribution<uint8_t> srcRand{0u, 255u};
@@ -400,16 +401,16 @@ void StartTestVarShape(int srcWidthBase, int srcHeightBase, int numBatches, int 
             std::generate(srcVec.begin(), srcVec.end(), [&]() { return srcRand(randEng); });
 
         // Copy each input image with random data to the GPU
-        ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(imgSrcData->plane(0).buffer, srcVec.data(), srcBufSize * sizeof(T),
+        ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(imgSrcData->plane(0).basePtr, srcVec.data(), srcBufSize * sizeof(T),
                                                cudaMemcpyHostToDevice, stream));
         hImgSrcVec.push_back(std::move(srcVec));
 
         //prepare output Buffers
         imgDstVec.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{dstWidth, dstHeight}, format));
-        auto *imgDstData    = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgDstVec.back()->exportData());
-        int   dstPitchBytes = imgDstData->plane(0).pitchBytes;
-        int   dstRowPitch   = dstPitchBytes / sizeof(T);
-        int   dstBufSize    = dstRowPitch * imgDstData->plane(0).height;
+        auto *imgDstData   = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgDstVec.back()->exportData());
+        int   dstStride    = imgDstData->plane(0).rowStride;
+        int   dstRowStride = dstStride / sizeof(T);
+        int   dstBufSize   = dstRowStride * imgDstData->plane(0).height;
 
         std::vector<T> dstVec(dstBufSize);
         std::vector<T> goldVec(dstBufSize);
@@ -425,21 +426,21 @@ void StartTestVarShape(int srcWidthBase, int srcHeightBase, int numBatches, int 
     nvcv::Tensor inTop(1, {numBatches, 1}, nvcv::FMT_S32);
     nvcv::Tensor inLeft(1, {numBatches, 1}, nvcv::FMT_S32);
 
-    const auto *inTopData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(inTop.exportData());
-    const auto *inLeftData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(inLeft.exportData());
+    const auto *inTopData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inTop.exportData());
+    const auto *inLeftData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inLeft.exportData());
 
     ASSERT_NE(nullptr, inTopData);
     ASSERT_NE(nullptr, inLeftData);
 
-    auto inTopAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*inTopData);
+    auto inTopAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*inTopData);
     ASSERT_TRUE(inTopAccess);
 
-    auto inLeftAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*inLeftData);
+    auto inLeftAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*inLeftData);
     ASSERT_TRUE(inLeftAccess);
 
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(inTopData->data(), topVec.data(), topVec.size() * sizeof(int),
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(inTopData->basePtr(), topVec.data(), topVec.size() * sizeof(int),
                                            cudaMemcpyHostToDevice, stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(inLeftData->data(), leftVec.data(), leftVec.size() * sizeof(int),
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(inLeftData->basePtr(), leftVec.data(), leftVec.size() * sizeof(int),
                                            cudaMemcpyHostToDevice, stream));
 
     // Generate gold result
@@ -459,15 +460,15 @@ void StartTestVarShape(int srcWidthBase, int srcHeightBase, int numBatches, int 
     {
         auto &testVec   = hImgDstVec[idx];
         auto &goldVec   = batchGoldVec[idx];
-        auto  imgAccess = dynamic_cast<const nvcv::IImageDataPitchDevice *>(img.exportData());
+        auto  imgAccess = dynamic_cast<const nvcv::IImageDataStridedCuda *>(img.exportData());
 
-        ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), imgAccess->plane(0).buffer, testVec.size() * sizeof(T),
+        ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), imgAccess->plane(0).basePtr, testVec.size() * sizeof(T),
                                           cudaMemcpyDeviceToHost));
 
 #ifdef DEBUG_PRINT_IMAGE
-        for (int b = 0; b < numBatches; ++b) test::DebugPrintImage(batchSrcVec[b], srcPitchBytes / sizeof(uint8_t));
-        test::DebugPrintImage(testVec, dstData->rowPitchBytes() / sizeof(uint8_t));
-        test::DebugPrintImage(goldVec, dstData->rowPitchBytes() / sizeof(uint8_t));
+        for (int b = 0; b < numBatches; ++b) test::DebugPrintImage(batchSrcVec[b], srcStride / sizeof(uint8_t));
+        test::DebugPrintImage(testVec, dstData->rowStride() / sizeof(uint8_t));
+        test::DebugPrintImage(goldVec, dstData->rowStride() / sizeof(uint8_t));
 #endif
 #ifdef DEBUG_PRINT_DIFF
         if (goldVec != testVec)
@@ -543,10 +544,10 @@ void StartTestStack(int srcWidthBase, int srcHeightBase, int numBatches, int top
         //prepare input buffers
         imgSrcVec.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{srcWidth, srcHeight}, format));
 
-        auto *imgSrcData    = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrcVec.back()->exportData());
-        int   srcPitchBytes = imgSrcData->plane(0).pitchBytes;
-        int   srcRowPitch   = srcPitchBytes / sizeof(T);
-        int   srcBufSize    = srcRowPitch * imgSrcData->plane(0).height;
+        auto *imgSrcData   = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrcVec.back()->exportData());
+        int   srcStride    = imgSrcData->plane(0).rowStride;
+        int   srcRowStride = srcStride / sizeof(T);
+        int   srcBufSize   = srcRowStride * imgSrcData->plane(0).height;
 
         std::vector<T>                         srcVec(srcBufSize);
         std::uniform_int_distribution<uint8_t> srcRand{0u, 255u};
@@ -556,7 +557,7 @@ void StartTestStack(int srcWidthBase, int srcHeightBase, int numBatches, int top
             std::generate(srcVec.begin(), srcVec.end(), [&]() { return srcRand(randEng); });
 
         // Copy each input image with random data to the GPU
-        ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(imgSrcData->plane(0).buffer, srcVec.data(), srcBufSize * sizeof(T),
+        ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(imgSrcData->plane(0).basePtr, srcVec.data(), srcBufSize * sizeof(T),
                                                cudaMemcpyHostToDevice, stream));
         hImgSrcVec.push_back(std::move(srcVec));
     }
@@ -565,12 +566,12 @@ void StartTestStack(int srcWidthBase, int srcHeightBase, int numBatches, int top
 
     //prepare output buffer
     nvcv::Tensor imgDst(numBatches, {dstWidth, dstHeight}, format);
-    const auto  *dstData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgDst.exportData());
+    const auto  *dstData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgDst.exportData());
     ASSERT_NE(nullptr, dstData);
-    auto dstAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*dstData);
+    auto dstAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*dstData);
     ASSERT_TRUE(dstData);
-    int dstBufSize = (dstAccess->samplePitchBytes() / sizeof(T)) * dstAccess->numSamples();
-    ASSERT_EQ(cudaSuccess, cudaMemsetAsync(dstData->data(), 0, dstBufSize * sizeof(T), stream));
+    int dstBufSize = (dstAccess->sampleStride() / sizeof(T)) * dstAccess->numSamples();
+    ASSERT_EQ(cudaSuccess, cudaMemsetAsync(dstData->basePtr(), 0, dstBufSize * sizeof(T), stream));
 
     std::vector<T> testVec(dstBufSize);
     std::vector<T> goldVec(dstBufSize);
@@ -579,21 +580,21 @@ void StartTestStack(int srcWidthBase, int srcHeightBase, int numBatches, int top
     nvcv::Tensor inTop(1, {numBatches, 1}, nvcv::FMT_S32);
     nvcv::Tensor inLeft(1, {numBatches, 1}, nvcv::FMT_S32);
 
-    const auto *inTopData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(inTop.exportData());
-    const auto *inLeftData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(inLeft.exportData());
+    const auto *inTopData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inTop.exportData());
+    const auto *inLeftData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inLeft.exportData());
 
     ASSERT_NE(nullptr, inTopData);
     ASSERT_NE(nullptr, inLeftData);
 
-    auto inTopAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*inTopData);
+    auto inTopAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*inTopData);
     ASSERT_TRUE(inTopAccess);
 
-    auto inLeftAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*inLeftData);
+    auto inLeftAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*inLeftData);
     ASSERT_TRUE(inLeftAccess);
 
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(inTopData->data(), topVec.data(), topVec.size() * sizeof(int),
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(inTopData->basePtr(), topVec.data(), topVec.size() * sizeof(int),
                                            cudaMemcpyHostToDevice, stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(inLeftData->data(), leftVec.data(), leftVec.size() * sizeof(int),
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(inLeftData->basePtr(), leftVec.data(), leftVec.size() * sizeof(int),
                                            cudaMemcpyHostToDevice, stream));
 
     // Generate gold result
@@ -607,12 +608,13 @@ void StartTestStack(int srcWidthBase, int srcHeightBase, int numBatches, int top
     // Get test data back
     ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
     ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
-    ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), dstData->data(), dstBufSize * sizeof(T), cudaMemcpyDeviceToHost));
+    ASSERT_EQ(cudaSuccess,
+              cudaMemcpy(testVec.data(), dstData->basePtr(), dstBufSize * sizeof(T), cudaMemcpyDeviceToHost));
 
 #ifdef DEBUG_PRINT_IMAGE
-    for (int b = 0; b < numBatches; ++b) test::DebugPrintImage(batchSrcVec[b], srcPitchBytes / sizeof(uint8_t));
-    test::DebugPrintImage(testVec, dstData->rowPitchBytes() / sizeof(uint8_t));
-    test::DebugPrintImage(goldVec, dstData->rowPitchBytes() / sizeof(uint8_t));
+    for (int b = 0; b < numBatches; ++b) test::DebugPrintImage(batchSrcVec[b], srcStride / sizeof(uint8_t));
+    test::DebugPrintImage(testVec, dstData->rowStride() / sizeof(uint8_t));
+    test::DebugPrintImage(goldVec, dstData->rowStride() / sizeof(uint8_t));
 #endif
 #ifdef DEBUG_PRINT_DIFF
     if (goldVec != testVec)

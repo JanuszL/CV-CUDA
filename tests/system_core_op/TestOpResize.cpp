@@ -33,8 +33,8 @@ namespace nvcv = nv::cv;
 namespace test = nv::cv::test;
 namespace t    = ::testing;
 
-static void Resize(std::vector<uint8_t> &hDst, int dstRowPitch, nvcv::Size2D dstSize, const std::vector<uint8_t> &hSrc,
-                   int srcRowPitch, nvcv::Size2D srcSize, nvcv::ImageFormat fmt, NVCVInterpolationType interpolation)
+static void Resize(std::vector<uint8_t> &hDst, int dstRowStride, nvcv::Size2D dstSize, const std::vector<uint8_t> &hSrc,
+                   int srcRowStride, nvcv::Size2D srcSize, nvcv::ImageFormat fmt, NVCVInterpolationType interpolation)
 {
     double iScale = static_cast<double>(srcSize.h) / dstSize.h;
     double jScale = static_cast<double>(srcSize.w) / dstSize.w;
@@ -63,8 +63,8 @@ static void Resize(std::vector<uint8_t> &hDst, int dstRowPitch, nvcv::Size2D dst
 
                 for (int k = 0; k < elementsPerPixel; k++)
                 {
-                    dstPtr[di * dstRowPitch + dj * elementsPerPixel + k]
-                        = srcPtr[si * srcRowPitch + sj * elementsPerPixel + k];
+                    dstPtr[di * dstRowStride + dj * elementsPerPixel + k]
+                        = srcPtr[si * srcRowStride + sj * elementsPerPixel + k];
                 }
             }
             else if (interpolation == NVCV_INTERP_LINEAR)
@@ -89,12 +89,13 @@ static void Resize(std::vector<uint8_t> &hDst, int dstRowPitch, nvcv::Size2D dst
                 for (int k = 0; k < elementsPerPixel; k++)
                 {
                     double res = std::rint(
-                        srcPtr[(si + 0) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * iWeights[0] * jWeights[0]
-                        + srcPtr[(si + 1) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * iWeights[1] * jWeights[0]
-                        + srcPtr[(si + 0) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * iWeights[0] * jWeights[1]
-                        + srcPtr[(si + 1) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * iWeights[1] * jWeights[1]);
+                        srcPtr[(si + 0) * srcRowStride + (sj + 0) * elementsPerPixel + k] * iWeights[0] * jWeights[0]
+                        + srcPtr[(si + 1) * srcRowStride + (sj + 0) * elementsPerPixel + k] * iWeights[1] * jWeights[0]
+                        + srcPtr[(si + 0) * srcRowStride + (sj + 1) * elementsPerPixel + k] * iWeights[0] * jWeights[1]
+                        + srcPtr[(si + 1) * srcRowStride + (sj + 1) * elementsPerPixel + k] * iWeights[1]
+                              * jWeights[1]);
 
-                    dstPtr[di * dstRowPitch + dj * elementsPerPixel + k] = res < 0 ? 0 : (res > 255 ? 255 : res);
+                    dstPtr[di * dstRowStride + dj * elementsPerPixel + k] = res < 0 ? 0 : (res > 255 ? 255 : res);
                 }
             }
             else if (interpolation == NVCV_INTERP_CUBIC)
@@ -129,25 +130,25 @@ static void Resize(std::vector<uint8_t> &hDst, int dstRowPitch, nvcv::Size2D dst
                 for (int k = 0; k < elementsPerPixel; k++)
                 {
                     double res = std::abs(std::rint(
-                        srcPtr[(si - 1) * srcRowPitch + (sj - 1) * elementsPerPixel + k] * jWeights[0] * iWeights[0]
-                        + srcPtr[(si + 0) * srcRowPitch + (sj - 1) * elementsPerPixel + k] * jWeights[0] * iWeights[1]
-                        + srcPtr[(si + 1) * srcRowPitch + (sj - 1) * elementsPerPixel + k] * jWeights[0] * iWeights[2]
-                        + srcPtr[(si + 2) * srcRowPitch + (sj - 1) * elementsPerPixel + k] * jWeights[0] * iWeights[3]
-                        + srcPtr[(si - 1) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * jWeights[1] * iWeights[0]
-                        + srcPtr[(si + 0) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * jWeights[1] * iWeights[1]
-                        + srcPtr[(si + 1) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * jWeights[1] * iWeights[2]
-                        + srcPtr[(si + 2) * srcRowPitch + (sj + 0) * elementsPerPixel + k] * jWeights[1] * iWeights[3]
-                        + srcPtr[(si - 1) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * jWeights[2] * iWeights[0]
-                        + srcPtr[(si + 0) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * jWeights[2] * iWeights[1]
-                        + srcPtr[(si + 1) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * jWeights[2] * iWeights[2]
-                        + srcPtr[(si + 2) * srcRowPitch + (sj + 1) * elementsPerPixel + k] * jWeights[2] * iWeights[3]
-                        + srcPtr[(si - 1) * srcRowPitch + (sj + 2) * elementsPerPixel + k] * jWeights[3] * iWeights[0]
-                        + srcPtr[(si + 0) * srcRowPitch + (sj + 2) * elementsPerPixel + k] * jWeights[3] * iWeights[1]
-                        + srcPtr[(si + 1) * srcRowPitch + (sj + 2) * elementsPerPixel + k] * jWeights[3] * iWeights[2]
-                        + srcPtr[(si + 2) * srcRowPitch + (sj + 2) * elementsPerPixel + k] * jWeights[3]
+                        srcPtr[(si - 1) * srcRowStride + (sj - 1) * elementsPerPixel + k] * jWeights[0] * iWeights[0]
+                        + srcPtr[(si + 0) * srcRowStride + (sj - 1) * elementsPerPixel + k] * jWeights[0] * iWeights[1]
+                        + srcPtr[(si + 1) * srcRowStride + (sj - 1) * elementsPerPixel + k] * jWeights[0] * iWeights[2]
+                        + srcPtr[(si + 2) * srcRowStride + (sj - 1) * elementsPerPixel + k] * jWeights[0] * iWeights[3]
+                        + srcPtr[(si - 1) * srcRowStride + (sj + 0) * elementsPerPixel + k] * jWeights[1] * iWeights[0]
+                        + srcPtr[(si + 0) * srcRowStride + (sj + 0) * elementsPerPixel + k] * jWeights[1] * iWeights[1]
+                        + srcPtr[(si + 1) * srcRowStride + (sj + 0) * elementsPerPixel + k] * jWeights[1] * iWeights[2]
+                        + srcPtr[(si + 2) * srcRowStride + (sj + 0) * elementsPerPixel + k] * jWeights[1] * iWeights[3]
+                        + srcPtr[(si - 1) * srcRowStride + (sj + 1) * elementsPerPixel + k] * jWeights[2] * iWeights[0]
+                        + srcPtr[(si + 0) * srcRowStride + (sj + 1) * elementsPerPixel + k] * jWeights[2] * iWeights[1]
+                        + srcPtr[(si + 1) * srcRowStride + (sj + 1) * elementsPerPixel + k] * jWeights[2] * iWeights[2]
+                        + srcPtr[(si + 2) * srcRowStride + (sj + 1) * elementsPerPixel + k] * jWeights[2] * iWeights[3]
+                        + srcPtr[(si - 1) * srcRowStride + (sj + 2) * elementsPerPixel + k] * jWeights[3] * iWeights[0]
+                        + srcPtr[(si + 0) * srcRowStride + (sj + 2) * elementsPerPixel + k] * jWeights[3] * iWeights[1]
+                        + srcPtr[(si + 1) * srcRowStride + (sj + 2) * elementsPerPixel + k] * jWeights[3] * iWeights[2]
+                        + srcPtr[(si + 2) * srcRowStride + (sj + 2) * elementsPerPixel + k] * jWeights[3]
                               * iWeights[3]));
 
-                    dstPtr[di * dstRowPitch + dj * elementsPerPixel + k] = res < 0 ? 0 : (res > 255 ? 255 : res);
+                    dstPtr[di * dstRowStride + dj * elementsPerPixel + k] = res < 0 ? 0 : (res > 255 ? 255 : res);
                 }
             }
         }
@@ -192,15 +193,15 @@ TEST_P(OpResize, tensor_correct_output)
     // Generate input
     nvcv::Tensor imgSrc(numberOfImages, {srcWidth, srcHeight}, fmt);
 
-    const auto *srcData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgSrc.exportData());
+    const auto *srcData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgSrc.exportData());
 
     ASSERT_NE(nullptr, srcData);
 
-    auto srcAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*srcData);
+    auto srcAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*srcData);
     ASSERT_TRUE(srcAccess);
 
     std::vector<std::vector<uint8_t>> srcVec(numberOfImages);
-    int                               srcVecRowPitch = srcWidth * fmt.planePixelStrideBytes(0);
+    int                               srcVecRowStride = srcWidth * fmt.planePixelStrideBytes(0);
 
     std::default_random_engine randEng;
 
@@ -208,13 +209,13 @@ TEST_P(OpResize, tensor_correct_output)
     {
         std::uniform_int_distribution<uint8_t> rand(0, 255);
 
-        srcVec[i].resize(srcHeight * srcVecRowPitch);
+        srcVec[i].resize(srcHeight * srcVecRowStride);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return rand(randEng); });
 
         // Copy input data to the GPU
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(srcAccess->sampleData(i), srcAccess->rowPitchBytes(), srcVec[i].data(), srcVecRowPitch,
-                               srcVecRowPitch, // vec has no padding
+                  cudaMemcpy2D(srcAccess->sampleData(i), srcAccess->rowStride(), srcVec[i].data(), srcVecRowStride,
+                               srcVecRowStride, // vec has no padding
                                srcHeight, cudaMemcpyHostToDevice));
     }
 
@@ -228,29 +229,29 @@ TEST_P(OpResize, tensor_correct_output)
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
     // Check result
-    const auto *dstData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgDst.exportData());
+    const auto *dstData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgDst.exportData());
     ASSERT_NE(nullptr, dstData);
 
-    auto dstAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*dstData);
+    auto dstAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*dstData);
     ASSERT_TRUE(dstAccess);
 
-    int dstVecRowPitch = dstWidth * fmt.planePixelStrideBytes(0);
+    int dstVecRowStride = dstWidth * fmt.planePixelStrideBytes(0);
     for (int i = 0; i < numberOfImages; ++i)
     {
         SCOPED_TRACE(i);
 
-        std::vector<uint8_t> testVec(dstHeight * dstVecRowPitch);
+        std::vector<uint8_t> testVec(dstHeight * dstVecRowStride);
 
         // Copy output data to Host
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(testVec.data(), dstVecRowPitch, dstAccess->sampleData(i), dstAccess->rowPitchBytes(),
-                               dstVecRowPitch, // vec has no padding
+                  cudaMemcpy2D(testVec.data(), dstVecRowStride, dstAccess->sampleData(i), dstAccess->rowStride(),
+                               dstVecRowStride, // vec has no padding
                                dstHeight, cudaMemcpyDeviceToHost));
 
-        std::vector<uint8_t> goldVec(dstHeight * dstVecRowPitch);
+        std::vector<uint8_t> goldVec(dstHeight * dstVecRowStride);
 
         // Generate gold result
-        Resize(goldVec, dstVecRowPitch, {dstWidth, dstHeight}, srcVec[i], srcVecRowPitch, {srcWidth, srcHeight}, fmt,
+        Resize(goldVec, dstVecRowStride, {dstWidth, dstHeight}, srcVec[i], srcVecRowStride, {srcWidth, srcHeight}, fmt,
                interpolation);
 
         EXPECT_EQ(goldVec, testVec);
@@ -297,30 +298,30 @@ TEST_P(OpResize, varshape_correct_output)
     batchDst.pushBack(imgDst.begin(), imgDst.end());
 
     std::vector<std::vector<uint8_t>> srcVec(numberOfImages);
-    std::vector<int>                  srcVecRowPitch(numberOfImages);
+    std::vector<int>                  srcVecRowStride(numberOfImages);
 
     // Populate input
     for (int i = 0; i < numberOfImages; ++i)
     {
-        const auto *srcData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         assert(srcData->numPlanes() == 1);
 
         int srcWidth  = srcData->plane(0).width;
         int srcHeight = srcData->plane(0).height;
 
-        int srcRowPitch = srcWidth * fmt.planePixelStrideBytes(0);
+        int srcRowStride = srcWidth * fmt.planePixelStrideBytes(0);
 
-        srcVecRowPitch[i] = srcRowPitch;
+        srcVecRowStride[i] = srcRowStride;
 
         std::uniform_int_distribution<uint8_t> rand(0, 255);
 
-        srcVec[i].resize(srcHeight * srcRowPitch);
+        srcVec[i].resize(srcHeight * srcRowStride);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return rand(randEng); });
 
         // Copy input data to the GPU
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(srcData->plane(0).buffer, srcData->plane(0).pitchBytes, srcVec[i].data(), srcRowPitch,
-                               srcRowPitch, // vec has no padding
+                  cudaMemcpy2D(srcData->plane(0).basePtr, srcData->plane(0).rowStride, srcVec[i].data(), srcRowStride,
+                               srcRowStride, // vec has no padding
                                srcHeight, cudaMemcpyHostToDevice));
     }
 
@@ -337,31 +338,31 @@ TEST_P(OpResize, varshape_correct_output)
     {
         SCOPED_TRACE(i);
 
-        const auto *srcData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgSrc[i]->exportData());
+        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
         assert(srcData->numPlanes() == 1);
         int srcWidth  = srcData->plane(0).width;
         int srcHeight = srcData->plane(0).height;
 
-        const auto *dstData = dynamic_cast<const nvcv::IImageDataPitchDevice *>(imgDst[i]->exportData());
+        const auto *dstData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgDst[i]->exportData());
         assert(dstData->numPlanes() == 1);
 
         int dstWidth  = dstData->plane(0).width;
         int dstHeight = dstData->plane(0).height;
 
-        int dstRowPitch = dstWidth * fmt.planePixelStrideBytes(0);
+        int dstRowStride = dstWidth * fmt.planePixelStrideBytes(0);
 
-        std::vector<uint8_t> testVec(dstHeight * dstRowPitch);
+        std::vector<uint8_t> testVec(dstHeight * dstRowStride);
 
         // Copy output data to Host
         ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2D(testVec.data(), dstRowPitch, dstData->plane(0).buffer, dstData->plane(0).pitchBytes,
-                               dstRowPitch, // vec has no padding
+                  cudaMemcpy2D(testVec.data(), dstRowStride, dstData->plane(0).basePtr, dstData->plane(0).rowStride,
+                               dstRowStride, // vec has no padding
                                dstHeight, cudaMemcpyDeviceToHost));
 
-        std::vector<uint8_t> goldVec(dstHeight * dstRowPitch);
+        std::vector<uint8_t> goldVec(dstHeight * dstRowStride);
 
         // Generate gold result
-        Resize(goldVec, dstRowPitch, {dstWidth, dstHeight}, srcVec[i], srcVecRowPitch[i], {srcWidth, srcHeight}, fmt,
+        Resize(goldVec, dstRowStride, {dstWidth, dstHeight}, srcVec[i], srcVecRowStride[i], {srcWidth, srcHeight}, fmt,
                interpolation);
 
         // maximum absolute error

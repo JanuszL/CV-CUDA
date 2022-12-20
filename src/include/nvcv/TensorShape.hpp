@@ -29,8 +29,8 @@ class TensorShape
 {
 public:
     using DimType                 = int64_t;
-    using ShapeType               = Shape<DimType, NVCV_TENSOR_MAX_NDIM>;
-    constexpr static int MAX_NDIM = ShapeType::MAX_NDIM;
+    using ShapeType               = Shape<DimType, NVCV_TENSOR_MAX_RANK>;
+    constexpr static int MAX_RANK = ShapeType::MAX_RANK;
 
     TensorShape() = default;
 
@@ -38,7 +38,7 @@ public:
         : m_shape(std::move(shape))
         , m_layout(std::move(layout))
     {
-        if (m_layout != TensorLayout::NONE && m_shape.ndim() != m_layout.ndim())
+        if (m_layout != TensorLayout::NONE && m_shape.rank() != m_layout.rank())
         {
             throw Exception(Status::ERROR_INVALID_ARGUMENT, "Layout dimensions must match shape dimensions");
         }
@@ -50,7 +50,7 @@ public:
     }
 
     explicit TensorShape(TensorLayout layout)
-        : TensorShape(layout.ndim(), std::move(layout))
+        : TensorShape(layout.rank(), std::move(layout))
     {
     }
 
@@ -84,9 +84,9 @@ public:
         return m_shape[i];
     }
 
-    int ndim() const
+    int rank() const
     {
-        return m_shape.ndim();
+        return m_shape.rank();
     }
 
     int size() const
@@ -133,7 +133,7 @@ private:
 
 inline TensorShape Permute(const TensorShape &src, TensorLayout dstLayout)
 {
-    TensorShape::ShapeType dst(dstLayout.ndim());
+    TensorShape::ShapeType dst(dstLayout.rank());
     detail::CheckThrow(nvcvTensorShapePermute(src.layout(), &src[0], dstLayout, &dst[0]));
 
     return {std::move(dst), std::move(dstLayout)};

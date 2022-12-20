@@ -52,7 +52,7 @@ CustomAllocator::CustomAllocator(const NVCVCustomAllocator *customAllocators, in
         {
         case NVCV_RESOURCE_MEM_HOST:
         case NVCV_RESOURCE_MEM_HOST_PINNED:
-        case NVCV_RESOURCE_MEM_DEVICE:
+        case NVCV_RESOURCE_MEM_CUDA:
             if (custAlloc.res.mem.fnAlloc == nullptr)
             {
                 throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
@@ -121,19 +121,19 @@ CustomAllocator::CustomAllocator(const NVCVCustomAllocator *customAllocators, in
             custAllocator.res.mem.fnFree  = defFreeHostMem;
             break;
 
-        case NVCV_RESOURCE_MEM_DEVICE:
-            static auto defAllocDeviceMem = [](void *ctx, int64_t size, int32_t align)
+        case NVCV_RESOURCE_MEM_CUDA:
+            static auto defAllocCudaMem = [](void *ctx, int64_t size, int32_t align)
             {
-                return defAllocator.allocDeviceMem(size, align);
+                return defAllocator.allocCudaMem(size, align);
             };
-            static auto defFreeDeviceMem = [](void *ctx, void *ptr, int64_t size, int32_t align)
+            static auto defFreeCudaMem = [](void *ctx, void *ptr, int64_t size, int32_t align)
             {
                 (void)size;
                 (void)align;
-                return defAllocator.freeDeviceMem(ptr, size, align);
+                return defAllocator.freeCudaMem(ptr, size, align);
             };
-            custAllocator.res.mem.fnAlloc = defAllocDeviceMem;
-            custAllocator.res.mem.fnFree  = defFreeDeviceMem;
+            custAllocator.res.mem.fnAlloc = defAllocCudaMem;
+            custAllocator.res.mem.fnFree  = defFreeCudaMem;
             break;
 
         case NVCV_RESOURCE_MEM_HOST_PINNED:
@@ -189,18 +189,18 @@ void CustomAllocator::doFreeHostPinnedMem(void *ptr, int64_t size, int32_t align
     return custom.res.mem.fnFree(custom.ctx, ptr, size, align);
 }
 
-// Device Memory ------------------
+// Cuda Memory ------------------
 
-void *CustomAllocator::doAllocDeviceMem(int64_t size, int32_t align)
+void *CustomAllocator::doAllocCudaMem(int64_t size, int32_t align)
 {
-    NVCVCustomAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_DEVICE];
+    NVCVCustomAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_CUDA];
     NVCV_ASSERT(custom.res.mem.fnAlloc != nullptr);
     return custom.res.mem.fnAlloc(custom.ctx, size, align);
 }
 
-void CustomAllocator::doFreeDeviceMem(void *ptr, int64_t size, int32_t align) noexcept
+void CustomAllocator::doFreeCudaMem(void *ptr, int64_t size, int32_t align) noexcept
 {
-    NVCVCustomAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_DEVICE];
+    NVCVCustomAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_CUDA];
     NVCV_ASSERT(custom.res.mem.fnFree != nullptr);
     return custom.res.mem.fnFree(custom.ctx, ptr, size, align);
 }

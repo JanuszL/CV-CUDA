@@ -61,35 +61,35 @@ const void testConvertTo(nvcv::ImageFormat fmtIn, nvcv::ImageFormat fmtOut, int 
     nvcv::Tensor imgOut(batch, {width, height}, fmtOut);
     nvcv::Tensor imgIn(batch, {width, height}, fmtIn);
 
-    const auto *inData  = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgIn.exportData());
-    const auto *outData = dynamic_cast<const nvcv::ITensorDataPitchDevice *>(imgOut.exportData());
+    const auto *inData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgIn.exportData());
+    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgOut.exportData());
 
     ASSERT_NE(nullptr, inData);
     ASSERT_NE(nullptr, outData);
 
-    auto inAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*inData);
+    auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*inData);
     ASSERT_TRUE(inAccess);
 
-    auto outAccess = nvcv::TensorDataAccessPitchImagePlanar::Create(*outData);
+    auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*outData);
     ASSERT_TRUE(outAccess);
 
-    int inBufSizeElements  = (inAccess->samplePitchBytes() / sizeof(DT_SOURCE)) * inAccess->numSamples();
-    int outBufSizeElements = (outAccess->samplePitchBytes() / sizeof(DT_DEST)) * outAccess->numSamples();
-    int inBufSizeBytes     = inAccess->samplePitchBytes() * inAccess->numSamples();
-    int outBufSizeBytes    = outAccess->samplePitchBytes() * outAccess->numSamples();
+    int inBufSizeElements  = (inAccess->sampleStride() / sizeof(DT_SOURCE)) * inAccess->numSamples();
+    int outBufSizeElements = (outAccess->sampleStride() / sizeof(DT_DEST)) * outAccess->numSamples();
+    int inBufSizeBytes     = inAccess->sampleStride() * inAccess->numSamples();
+    int outBufSizeBytes    = outAccess->sampleStride() * outAccess->numSamples();
 
     std::vector<DT_SOURCE> srcVec(inBufSizeElements, setVal);
     std::vector<DT_DEST>   goldVec(outBufSizeElements);
     std::vector<DT_DEST>   testVec(outBufSizeElements);
 
     setGoldBuffer<DT_DEST>(goldVec, expVal, width * outAccess->numChannels(), height,
-                           (outAccess->rowPitchBytes() / sizeof(DT_DEST)),
-                           (outAccess->samplePitchBytes() / sizeof(DT_DEST)), batch);
+                           (outAccess->rowStride() / sizeof(DT_DEST)), (outAccess->sampleStride() / sizeof(DT_DEST)),
+                           batch);
 
     // Copy input data to the GPU
     EXPECT_EQ(cudaSuccess,
-              cudaMemcpyAsync(inData->data(), srcVec.data(), inBufSizeBytes, cudaMemcpyHostToDevice, stream));
-    EXPECT_EQ(cudaSuccess, cudaMemsetAsync(outData->data(), 0x0, outBufSizeBytes, stream));
+              cudaMemcpyAsync(inData->basePtr(), srcVec.data(), inBufSizeBytes, cudaMemcpyHostToDevice, stream));
+    EXPECT_EQ(cudaSuccess, cudaMemsetAsync(outData->basePtr(), 0x0, outBufSizeBytes, stream));
 
     // run operator
     nv::cvop::ConvertTo convertToOp;
@@ -97,11 +97,11 @@ const void testConvertTo(nvcv::ImageFormat fmtIn, nvcv::ImageFormat fmtOut, int 
     EXPECT_NO_THROW(convertToOp(stream, imgIn, imgOut, alpha, beta));
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
 
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), outData->data(), outBufSizeBytes, cudaMemcpyDeviceToHost));
+    EXPECT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), outData->basePtr(), outBufSizeBytes, cudaMemcpyDeviceToHost));
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
-    //dbgImage(goldVec, inData->rowPitchBytes());
-    //dbgImage(testVec, outData->rowPitchBytes());
+    //dbgImage(goldVec, inData->rowStride());
+    //dbgImage(testVec, outData->rowStride());
     EXPECT_EQ(goldVec, testVec);
 }
 

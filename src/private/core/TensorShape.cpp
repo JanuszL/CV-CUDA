@@ -35,9 +35,9 @@ void PermuteShape(const NVCVTensorLayout &srcLayout, const int64_t *srcShape, co
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to destination shape cannot be NULL");
     }
 
-    std::fill_n(dstShape, dstLayout.ndim, 1);
+    std::fill_n(dstShape, dstLayout.rank, 1);
 
-    for (int i = 0; i < srcLayout.ndim; ++i)
+    for (int i = 0; i < srcLayout.rank; ++i)
     {
         int dstIdx = FindDimIndex(dstLayout, srcLayout.data[i]);
         if (dstIdx >= 0)

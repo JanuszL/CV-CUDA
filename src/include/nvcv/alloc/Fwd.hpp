@@ -25,7 +25,7 @@ namespace nv { namespace cv {
 class IAllocator;
 class IHostMemAllocator;
 class IHostPinnedMemAllocator;
-class IDeviceMemAllocator;
+class ICudaMemAllocator;
 
 }} // namespace nv::cv
 

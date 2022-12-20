@@ -29,7 +29,7 @@
 template<typename T, int H, int W>
 struct PackedImage { // PackedImage extends std::array in two dimensions
     using value_type = T;
-    static constexpr int pitchBytes = W * sizeof(T), height = H, width = W;
+    static constexpr int rowStride = W * sizeof(T), height = H, width = W;
     std::array<T, H*W> m_data;
     T *data() { return m_data.data(); }
     const T *data() const { return m_data.data(); }
@@ -41,8 +41,8 @@ template<typename T, int N, int H, int W>
 struct PackedTensor3D { // PackedTensor3D extends std::array in three dimensions
     using value_type = T;
     static constexpr int batches = N, height = H, width = W;
-    static constexpr int pitchBytes2 = W * sizeof(T);
-    static constexpr int pitchBytes1 = H * pitchBytes2;
+    static constexpr int stride2 = W * sizeof(T);
+    static constexpr int stride1 = H * stride2;
 
     std::array<T, N*H*W> m_data;
     T *data() { return m_data.data(); }
@@ -55,9 +55,9 @@ template<typename T, int N, int H, int W, int C>
 struct PackedTensor4D { // PackedTensor4D extends std::array in four dimensions
     using value_type = T;
     static constexpr int batches = N, height = H, width = W, channels = C;
-    static constexpr int pitchBytes3 = C * sizeof(T);
-    static constexpr int pitchBytes2 = W * pitchBytes3;
-    static constexpr int pitchBytes1 = H * pitchBytes2;
+    static constexpr int stride3 = C * sizeof(T);
+    static constexpr int stride2 = W * stride3;
+    static constexpr int stride1 = H * stride2;
 
     std::array<T, N*H*W*C> m_data;
     T *data() { return m_data.data(); }

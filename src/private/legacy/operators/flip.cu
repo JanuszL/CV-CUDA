@@ -77,12 +77,12 @@ __global__ void flipHorizontalVertical(SrcWrapper src, DstWrapper dst, Size2D ds
 }
 
 template<typename T>
-void flip(const ITensorDataPitchDevice &input, const ITensorDataPitchDevice &output, const int32_t flipCode,
+void flip(const ITensorDataStridedCuda &input, const ITensorDataStridedCuda &output, const int32_t flipCode,
           cudaStream_t stream)
 {
     constexpr uint32_t BLOCK = 32;
 
-    auto outputWrapper = TensorDataAccessPitchImagePlanar::Create(output);
+    auto outputWrapper = TensorDataAccessStridedImagePlanar::Create(output);
     NVCV_ASSERT(outputWrapper);
 
     Size2D dstSize{outputWrapper->numCols(), outputWrapper->numRows()};
@@ -120,7 +120,7 @@ size_t Flip::calBufferSize(DataShape max_input_shape, DataShape max_output_shape
     return 0;
 }
 
-ErrorCode Flip::infer(const ITensorDataPitchDevice &input, const ITensorDataPitchDevice &output, const int32_t flipCode,
+ErrorCode Flip::infer(const ITensorDataStridedCuda &input, const ITensorDataStridedCuda &output, const int32_t flipCode,
                       cudaStream_t stream)
 {
     if (input.dtype() != output.dtype())
@@ -151,7 +151,7 @@ ErrorCode Flip::infer(const ITensorDataPitchDevice &input, const ITensorDataPitc
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    auto inputWrapper = TensorDataAccessPitchImagePlanar::Create(input);
+    auto inputWrapper = TensorDataAccessStridedImagePlanar::Create(input);
     NVCV_ASSERT(inputWrapper);
 
     cuda_op::DataShape inputShape = GetLegacyDataShape(inputWrapper->infoShape());
@@ -161,10 +161,10 @@ ErrorCode Flip::infer(const ITensorDataPitchDevice &input, const ITensorDataPitc
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    // using flip_t = void(const ITensorDataPitchDevice & input,
-    //                     const ITensorDataPitchDevice & output,
+    // using flip_t = void(const ITensorDataStridedCuda & input,
+    //                     const ITensorDataStridedCuda & output,
     //                     const int32_t flipCode, cudaStream_t stream);
-    typedef void (*flip_t)(const ITensorDataPitchDevice &input, const ITensorDataPitchDevice &output,
+    typedef void (*flip_t)(const ITensorDataStridedCuda &input, const ITensorDataStridedCuda &output,
                            const int32_t flipCode, cudaStream_t stream);
 
     static const flip_t funcs[6][4] = {

@@ -49,7 +49,7 @@ __global__ void center_crop_kernel_nhwc(Ptr2D src_ptr, Ptr2D dst_ptr, const int 
 }
 
 template<typename T>
-void center_crop(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData, int crop_rows,
+void center_crop(const nvcv::ITensorDataStridedCuda &inData, const nvcv::ITensorDataStridedCuda &outData, int crop_rows,
                  int crop_columns, const int batch_size, const int rows, const int columns, cudaStream_t stream)
 {
     int top_indices  = (rows - crop_rows) / 2;
@@ -77,7 +77,7 @@ size_t CenterCrop::calBufferSize(DataShape max_input_shape, DataShape max_output
     return 0;
 }
 
-ErrorCode CenterCrop::infer(const ITensorDataPitchDevice &inData, const ITensorDataPitchDevice &outData, int crop_rows,
+ErrorCode CenterCrop::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData, int crop_rows,
                             int crop_columns, cudaStream_t stream)
 {
     cuda_op::DataFormat input_format  = GetLegacyDataFormat(inData.layout());
@@ -96,7 +96,7 @@ ErrorCode CenterCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    auto inAccess = cv::TensorDataAccessPitchImagePlanar::Create(inData);
+    auto inAccess = cv::TensorDataAccessStridedImagePlanar::Create(inData);
     if (!inAccess)
     {
         return ErrorCode::INVALID_DATA_FORMAT;
@@ -111,7 +111,7 @@ ErrorCode CenterCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    auto outAccess = cv::TensorDataAccessPitchImagePlanar::Create(outData);
+    auto outAccess = cv::TensorDataAccessStridedImagePlanar::Create(outData);
     if (!outAccess)
     {
         return ErrorCode::INVALID_DATA_FORMAT;
@@ -122,7 +122,7 @@ ErrorCode CenterCrop::infer(const ITensorDataPitchDevice &inData, const ITensorD
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    typedef void (*func_t)(const nvcv::ITensorDataPitchDevice &inData, const nvcv::ITensorDataPitchDevice &outData,
+    typedef void (*func_t)(const nvcv::ITensorDataStridedCuda &inData, const nvcv::ITensorDataStridedCuda &outData,
                            int crop_rows, int crop_columns, const int batch_size, const int rows, const int columns,
                            cudaStream_t stream);
     static const func_t funcs[5][4] = {

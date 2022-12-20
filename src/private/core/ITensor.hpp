@@ -30,7 +30,7 @@ class IAllocator;
 class ITensor : public ICoreObjectHandle<ITensor, NVCVTensorHandle>
 {
 public:
-    virtual int32_t        ndim() const  = 0;
+    virtual int32_t        rank() const  = 0;
     virtual const int64_t *shape() const = 0;
 
     virtual const NVCVTensorLayout &layout() const = 0;

@@ -72,7 +72,7 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t numImages, Size2D imgSiz
 
     int64_t shapeNCHW[4] = {numImages, fmt.numChannels(), imgSize.h, imgSize.w};
 
-    int64_t shape[NVCV_TENSOR_MAX_NDIM];
+    int64_t shape[NVCV_TENSOR_MAX_RANK];
     PermuteShape(NVCV_TENSOR_NCHW, shapeNCHW, layout, shape);
 
     // Calculate the element type. It's the data type of the
@@ -88,10 +88,10 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t numImages, Size2D imgSiz
 
     DataType dtype{fmt.dataKind(), *chPacking};
 
-    return CalcRequirements(layout.ndim, shape, dtype, layout, userBaseAlign, userRowAlign);
+    return CalcRequirements(layout.rank, shape, dtype, layout, userBaseAlign, userRowAlign);
 }
 
-NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int64_t *shape, const DataType &dtype,
+NVCVTensorRequirements Tensor::CalcRequirements(int32_t rank, const int64_t *shape, const DataType &dtype,
                                                 NVCVTensorLayout layout, int32_t userBaseAlign, int32_t userRowAlign)
 {
     NVCVTensorRequirements reqs;
@@ -99,19 +99,19 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int64_t *sha
     reqs.layout = layout;
     reqs.dtype  = dtype.value();
 
-    if (layout.ndim > 0 && ndim != layout.ndim)
+    if (layout.rank > 0 && rank != layout.rank)
     {
         throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
-            << "Number of shape dimensions " << ndim << " must be equal to layout dimensions " << layout.ndim;
+            << "Number of shape dimensions " << rank << " must be equal to layout dimensions " << layout.rank;
     }
 
-    if (ndim <= 0)
+    if (rank <= 0)
     {
-        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Number of dimensions must be >= 1, not %d", ndim);
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Number of dimensions must be >= 1, not %d", rank);
     }
 
-    std::copy_n(shape, ndim, reqs.shape);
-    reqs.ndim = ndim;
+    std::copy_n(shape, rank, reqs.shape);
+    reqs.rank = rank;
 
     reqs.mem = {};
 
@@ -168,22 +168,22 @@ NVCVTensorRequirements Tensor::CalcRequirements(int32_t ndim, const int64_t *sha
         }
     }
 
-    int firstPacked = reqs.layout == NVCV_TENSOR_NHWC ? std::max(0, ndim - 2) : ndim - 1;
+    int firstPacked = reqs.layout == NVCV_TENSOR_NHWC ? std::max(0, rank - 2) : rank - 1;
 
-    reqs.pitchBytes[ndim - 1] = dtype.strideBytes();
-    for (int d = ndim - 2; d >= 0; --d)
+    reqs.strides[rank - 1] = dtype.strideBytes();
+    for (int d = rank - 2; d >= 0; --d)
     {
         if (d == firstPacked - 1)
         {
-            reqs.pitchBytes[d] = util::RoundUpPowerOfTwo(reqs.shape[d + 1] * reqs.pitchBytes[d + 1], rowAlign);
+            reqs.strides[d] = util::RoundUpPowerOfTwo(reqs.shape[d + 1] * reqs.strides[d + 1], rowAlign);
         }
         else
         {
-            reqs.pitchBytes[d] = reqs.pitchBytes[d + 1] * reqs.shape[d + 1];
+            reqs.strides[d] = reqs.strides[d + 1] * reqs.shape[d + 1];
         }
     }
 
-    AddBuffer(reqs.mem.deviceMem, reqs.pitchBytes[0] * reqs.shape[0], reqs.alignBytes);
+    AddBuffer(reqs.mem.cudaMem, reqs.strides[0] * reqs.shape[0], reqs.alignBytes);
 
     return reqs;
 }
@@ -194,19 +194,19 @@ Tensor::Tensor(NVCVTensorRequirements reqs, IAllocator &alloc)
 {
     // Assuming reqs are already validated during its creation
 
-    int64_t bufSize = CalcTotalSizeBytes(m_reqs.mem.deviceMem);
-    m_buffer        = m_alloc.allocDeviceMem(bufSize, m_reqs.alignBytes);
-    NVCV_ASSERT(m_buffer != nullptr);
+    int64_t bufSize = CalcTotalSizeBytes(m_reqs.mem.cudaMem);
+    m_memBuffer     = m_alloc.allocCudaMem(bufSize, m_reqs.alignBytes);
+    NVCV_ASSERT(m_memBuffer != nullptr);
 }
 
 Tensor::~Tensor()
 {
-    m_alloc.freeDeviceMem(m_buffer, CalcTotalSizeBytes(m_reqs.mem.deviceMem), m_reqs.alignBytes);
+    m_alloc.freeCudaMem(m_memBuffer, CalcTotalSizeBytes(m_reqs.mem.cudaMem), m_reqs.alignBytes);
 }
 
-int32_t Tensor::ndim() const
+int32_t Tensor::rank() const
 {
-    return m_reqs.ndim;
+    return m_reqs.rank;
 }
 
 const int64_t *Tensor::shape() const
@@ -231,22 +231,22 @@ IAllocator &Tensor::alloc() const
 
 void Tensor::exportData(NVCVTensorData &data) const
 {
-    data.bufferType = NVCV_TENSOR_BUFFER_PITCH_DEVICE;
+    data.bufferType = NVCV_TENSOR_BUFFER_STRIDED_CUDA;
 
     data.dtype  = m_reqs.dtype;
     data.layout = m_reqs.layout;
-    data.ndim   = m_reqs.ndim;
+    data.rank   = m_reqs.rank;
 
     memcpy(data.shape, m_reqs.shape, sizeof(data.shape));
 
-    NVCVTensorBufferPitch &buf = data.buffer.pitch;
+    NVCVTensorBufferStrided &buf = data.buffer.strided;
     {
-        static_assert(sizeof(buf.pitchBytes) == sizeof(m_reqs.pitchBytes));
+        static_assert(sizeof(buf.strides) == sizeof(m_reqs.strides));
         static_assert(
-            std::is_same_v<std::decay_t<decltype(buf.pitchBytes[0])>, std::decay_t<decltype(m_reqs.pitchBytes[0])>>);
-        memcpy(buf.pitchBytes, m_reqs.pitchBytes, sizeof(buf.pitchBytes));
+            std::is_same_v<std::decay_t<decltype(buf.strides[0])>, std::decay_t<decltype(m_reqs.strides[0])>>);
+        memcpy(buf.strides, m_reqs.strides, sizeof(buf.strides));
 
-        buf.data = m_buffer;
+        buf.basePtr = reinterpret_cast<NVCVByte *>(m_memBuffer);
     }
 }
 

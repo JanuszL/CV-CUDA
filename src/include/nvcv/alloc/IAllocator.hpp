@@ -79,7 +79,7 @@ public:
 
     IHostMemAllocator       &hostMem();
     IHostPinnedMemAllocator &hostPinnedMem();
-    IDeviceMemAllocator     &deviceMem();
+    ICudaMemAllocator       &cudaMem();
 
     void  setUserPointer(void *ptr);
     void *userPointer() const;
@@ -90,7 +90,7 @@ private:
 
     virtual IHostMemAllocator       &doGetHostMemAllocator()       = 0;
     virtual IHostPinnedMemAllocator &doGetHostPinnedMemAllocator() = 0;
-    virtual IDeviceMemAllocator     &doGetDeviceMemAllocator()     = 0;
+    virtual ICudaMemAllocator       &doGetCudaMemAllocator()       = 0;
 };
 
 inline NVCVAllocatorHandle IAllocator::handle() const noexcept
@@ -108,9 +108,9 @@ inline IHostPinnedMemAllocator &IAllocator::hostPinnedMem()
     return doGetHostPinnedMemAllocator();
 }
 
-inline IDeviceMemAllocator &IAllocator::deviceMem()
+inline ICudaMemAllocator &IAllocator::cudaMem()
 {
-    return doGetDeviceMemAllocator();
+    return doGetCudaMemAllocator();
 }
 
 inline void IAllocator::setUserPointer(void *ptr)
