@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 import numpy as np
 
@@ -23,11 +22,11 @@ import numpy as np
     "format,num_images,min_size,max_size,border,bvalue,out_shape,out_layout,out_dtype",
     [
         (
-            nvcv.Format.RGBA8,
+            cvcuda.Format.RGBA8,
             1,
             (10, 5),
             (10, 5),
-            nvcv.Border.REPLICATE,
+            cvcuda.Border.REPLICATE,
             0,
             [1, 5, 10, 4],
             "NHWC",
@@ -47,11 +46,11 @@ def test_op_padandstack(
     out_dtype,
 ):
 
-    input = nvcv.ImageBatchVarShape(num_images)
+    input = cvcuda.ImageBatchVarShape(num_images)
 
     input.pushback(
         [
-            nvcv.Image(
+            cvcuda.Image(
                 (
                     min_size[0] + (max_size[0] - min_size[0]) * i // num_images,
                     min_size[1] + (max_size[1] - min_size[1]) * i // num_images,
@@ -62,27 +61,33 @@ def test_op_padandstack(
         ]
     )
 
-    left = nvcv.Tensor([1, 1, num_images, 1], np.int32, "NHWC")
-    top = nvcv.Tensor([1, 1, num_images, 1], np.int32, "NHWC")
+    left = cvcuda.Tensor([1, 1, num_images, 1], np.int32, "NHWC")
+    top = cvcuda.Tensor([1, 1, num_images, 1], np.int32, "NHWC")
 
-    out = input.padandstack(top, left)
+    out = cvcuda.padandstack(input, top, left)
     assert out.layout == out_layout
     assert out.shape == out_shape
     assert out.dtype == out_dtype
 
-    out = nvcv.Tensor(out_shape, out_dtype, out_layout)
-    tmp = input.padandstack_into(out, top, left)
+    out = cvcuda.Tensor(out_shape, out_dtype, out_layout)
+    tmp = cvcuda.padandstack_into(out, input, top, left)
     assert tmp is out
 
-    stream = nvcv.cuda.Stream()
-    out = input.padandstack(
-        left=left, top=top, border=border, bvalue=bvalue, stream=stream
+    stream = cvcuda.Stream()
+    out = cvcuda.padandstack(
+        src=input, left=left, top=top, border=border, bvalue=bvalue, stream=stream
     )
     assert out.layout == out_layout
     assert out.shape == out_shape
     assert out.dtype == out_dtype
 
-    tmp = input.padandstack_into(
-        out=out, left=left, top=top, border=border, bvalue=bvalue, stream=stream
+    tmp = cvcuda.padandstack_into(
+        src=input,
+        dst=out,
+        left=left,
+        top=top,
+        border=border,
+        bvalue=bvalue,
+        stream=stream,
     )
     assert tmp is out

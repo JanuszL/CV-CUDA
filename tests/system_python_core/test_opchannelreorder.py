@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import numpy as np
 import util
 
@@ -24,10 +23,10 @@ RNG = np.random.default_rng(0)
 
 def test_op_channelreorder_varshape():
 
-    input = util.create_image_batch(10, nvcv.Format.RGB8, size=(123, 321), rng=RNG)
+    input = util.create_image_batch(10, cvcuda.Format.RGB8, size=(123, 321), rng=RNG)
     order = util.create_tensor((10, 3), np.int32, "NC", max_random=(2, 2, 2), rng=RNG)
 
-    out = input.channelreorder(order)
+    out = cvcuda.channelreorder(input, order)
     assert len(out) == len(input)
     assert out.capacity == input.capacity
     assert out.uniqueformat == input.uniqueformat
@@ -36,16 +35,16 @@ def test_op_channelreorder_varshape():
     order = util.create_tensor(
         (10, 4), np.int32, "NC", max_random=(3, 3, 3, 3), rng=RNG
     )
-    out = input.channelreorder(order, format=nvcv.Format.BGRA8)
+    out = cvcuda.channelreorder(input, order, format=cvcuda.Format.BGRA8)
 
     assert len(out) == len(input)
     assert out.capacity == input.capacity
-    assert out.uniqueformat == nvcv.Format.BGRA8
+    assert out.uniqueformat == cvcuda.Format.BGRA8
     assert out.maxsize == input.maxsize
 
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.Stream()
     out = util.clone_image_batch(input)
-    tmp = input.channelreorder_into(output=out, orders=order, stream=stream)
+    tmp = cvcuda.channelreorder_into(src=input, dst=out, orders=order, stream=stream)
     assert tmp is out
     assert len(out) == len(input)
     assert out.capacity == input.capacity

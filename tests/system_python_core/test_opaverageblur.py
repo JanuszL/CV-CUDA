@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 import numpy as np
 import util
@@ -27,47 +26,48 @@ RNG = np.random.default_rng(0)
     "input, kernel_size, kernel_anchor, border",
     [
         (
-            nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             [3, 3],
             [1, 1],
-            nvcv.Border.CONSTANT,
+            cvcuda.Border.CONSTANT,
         ),
         (
-            nvcv.Tensor([4, 4, 3], np.float32, "HWC"),
+            cvcuda.Tensor([4, 4, 3], np.float32, "HWC"),
             [5, 5],
             [0, 0],
-            nvcv.Border.REPLICATE,
+            cvcuda.Border.REPLICATE,
         ),
         (
-            nvcv.Tensor([3, 88, 13, 3], np.uint16, "NHWC"),
+            cvcuda.Tensor([3, 88, 13, 3], np.uint16, "NHWC"),
             [7, 7],
             [2, 2],
-            nvcv.Border.REFLECT,
+            cvcuda.Border.REFLECT,
         ),
         (
-            nvcv.Tensor([3, 4, 4], np.int32, "HWC"),
+            cvcuda.Tensor([3, 4, 4], np.int32, "HWC"),
             [9, 9],
             [-1, -1],
-            nvcv.Border.WRAP,
+            cvcuda.Border.WRAP,
         ),
         (
-            nvcv.Tensor([1, 2, 3, 4], np.int16, "NHWC"),
+            cvcuda.Tensor([1, 2, 3, 4], np.int16, "NHWC"),
             [11, 11],
             [8, 8],
-            nvcv.Border.REFLECT101,
+            cvcuda.Border.REFLECT101,
         ),
     ],
 )
 def test_op_averageblur(input, kernel_size, kernel_anchor, border):
-    out = input.averageblur(kernel_size, kernel_anchor, border)
+    out = cvcuda.averageblur(input, kernel_size, kernel_anchor, border)
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
-    stream = nvcv.cuda.Stream()
-    out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = input.averageblur_into(
-        output=out,
+    stream = cvcuda.Stream()
+    out = cvcuda.Tensor(input.shape, input.dtype, input.layout)
+    tmp = cvcuda.averageblur_into(
+        src=input,
+        dst=out,
         kernel_size=kernel_size,
         kernel_anchor=kernel_anchor,
         border=border,
@@ -84,43 +84,43 @@ def test_op_averageblur(input, kernel_size, kernel_anchor, border):
     [
         (
             10,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (123, 321),
             256,
             (3, 3),
-            nvcv.Border.CONSTANT,
+            cvcuda.Border.CONSTANT,
         ),
         (
             7,
-            nvcv.Format.RGBf32,
+            cvcuda.Format.RGBf32,
             (62, 35),
             1.0,
             (5, 5),
-            nvcv.Border.REPLICATE,
+            cvcuda.Border.REPLICATE,
         ),
         (
             1,
-            nvcv.Format.U8,
+            cvcuda.Format.U8,
             (33, 48),
             123,
             (7, 7),
-            nvcv.Border.REFLECT,
+            cvcuda.Border.REFLECT,
         ),
         (
             13,
-            nvcv.Format.S16,
+            cvcuda.Format.S16,
             (26, 52),
             1234,
             (9, 9),
-            nvcv.Border.WRAP,
+            cvcuda.Border.WRAP,
         ),
         (
             6,
-            nvcv.Format.S32,
+            cvcuda.Format.S32,
             (77, 42),
             123456,
             (11, 11),
-            nvcv.Border.REFLECT101,
+            cvcuda.Border.REFLECT101,
         ),
     ],
 )
@@ -145,7 +145,8 @@ def test_op_averageblurvarshape(
         (num_images, 2), np.int32, "NC", max_random=max_kernel_size, rng=RNG
     )
 
-    out = input.averageblur(
+    out = cvcuda.averageblur(
+        input,
         max_kernel_size,
         kernel_size,
         kernel_anchor,
@@ -156,10 +157,11 @@ def test_op_averageblurvarshape(
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == input.maxsize
 
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.Stream()
     out = util.clone_image_batch(input)
-    tmp = input.averageblur_into(
-        output=out,
+    tmp = cvcuda.averageblur_into(
+        src=input,
+        dst=out,
         max_kernel_size=max_kernel_size,
         kernel_size=kernel_size,
         kernel_anchor=kernel_anchor,

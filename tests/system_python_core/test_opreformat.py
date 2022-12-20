@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 import numpy as np
 
@@ -22,31 +21,31 @@ import numpy as np
 @t.mark.parametrize(
     "input,out_shape,out_layout",
     [
-        (nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"), [5, 4, 16, 23], "NCHW"),
-        (nvcv.Tensor([5, 16, 23, 3], np.uint8, "NHWC"), [5, 3, 16, 23], "NCHW"),
-        (nvcv.Tensor([5, 3, 16, 23], np.uint8, "NCHW"), [5, 16, 23, 3], "NHWC"),
+        (cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"), [5, 4, 16, 23], "NCHW"),
+        (cvcuda.Tensor([5, 16, 23, 3], np.uint8, "NHWC"), [5, 3, 16, 23], "NCHW"),
+        (cvcuda.Tensor([5, 3, 16, 23], np.uint8, "NCHW"), [5, 16, 23, 3], "NHWC"),
     ],
 )
 def test_op_reformat(input, out_shape, out_layout):
-    out = input.reformat(out_layout)
+    out = cvcuda.reformat(input, out_layout)
     assert out.layout == out_layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
-    out = nvcv.Tensor(out_shape, input.dtype, out_layout)
-    tmp = input.reformat_into(out)
+    out = cvcuda.Tensor(out_shape, input.dtype, out_layout)
+    tmp = cvcuda.reformat_into(out, input)
     assert tmp is out
     assert out.layout == out_layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
-    stream = nvcv.cuda.Stream()
-    out = input.reformat(layout=out_layout, stream=stream)
+    stream = cvcuda.Stream()
+    out = cvcuda.reformat(src=input, layout=out_layout, stream=stream)
     assert out.layout == out_layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
-    tmp = input.reformat_into(out=out, stream=stream)
+    tmp = cvcuda.reformat_into(src=input, dst=out, stream=stream)
     assert tmp is out
     assert out.layout == out_layout
     assert out.shape == out_shape

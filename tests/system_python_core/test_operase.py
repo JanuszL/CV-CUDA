@@ -13,37 +13,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 
 
 @t.mark.parametrize(
     "input, erasing_area_num, random, seed",
     [
-        (nvcv.Tensor([1, 460, 640, 3], nvcv.Type.U8, "NHWC"), 1, False, 0),
-        (nvcv.Tensor([5, 460, 640, 3], nvcv.Type.U8, "NHWC"), 1, True, 1),
+        (cvcuda.Tensor([1, 460, 640, 3], cvcuda.Type.U8, "NHWC"), 1, False, 0),
+        (cvcuda.Tensor([5, 460, 640, 3], cvcuda.Type.U8, "NHWC"), 1, True, 1),
     ],
 )
 def test_op_erase(input, erasing_area_num, random, seed):
 
     parameter_shape = [erasing_area_num]
-    anchor = nvcv.Tensor(parameter_shape, nvcv.Type._2S32, "N")
-    erasing = nvcv.Tensor(parameter_shape, nvcv.Type._3S32, "N")
-    imgIdx = nvcv.Tensor(parameter_shape, nvcv.Type.S32, "N")
-    values = nvcv.Tensor(parameter_shape, nvcv.Type.F32, "N")
+    anchor = cvcuda.Tensor(parameter_shape, cvcuda.Type._2S32, "N")
+    erasing = cvcuda.Tensor(parameter_shape, cvcuda.Type._3S32, "N")
+    imgIdx = cvcuda.Tensor(parameter_shape, cvcuda.Type.S32, "N")
+    values = cvcuda.Tensor(parameter_shape, cvcuda.Type.F32, "N")
 
-    out = input.erase(anchor, erasing, values, imgIdx)
+    out = cvcuda.erase(input, anchor, erasing, values, imgIdx)
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
-    out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = input.erase_into(out, anchor, erasing, values, imgIdx)
+    out = cvcuda.Tensor(input.shape, input.dtype, input.layout)
+    tmp = cvcuda.erase_into(out, input, anchor, erasing, values, imgIdx)
     assert tmp is out
 
-    stream = nvcv.cuda.Stream()
-    out = input.erase(
+    stream = cvcuda.Stream()
+    out = cvcuda.erase(
+        src=input,
         anchor=anchor,
         erasing=erasing,
         values=values,
@@ -56,8 +56,9 @@ def test_op_erase(input, erasing_area_num, random, seed):
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
-    tmp = input.erase_into(
-        out=out,
+    tmp = cvcuda.erase_into(
+        src=input,
+        dst=out,
         anchor=anchor,
         erasing=erasing,
         values=values,

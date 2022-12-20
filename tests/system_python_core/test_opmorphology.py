@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 import numpy as np
 import util
@@ -27,59 +26,60 @@ RNG = np.random.default_rng(0)
     "input, morphologyType, maskSize, anchor, iteration, border ",
     [
         (
-            nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
-            nvcv.MorphologyType.ERODE,
+            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.MorphologyType.ERODE,
             [-1, -1],
             [-1, -1],
             1,
-            nvcv.Border.CONSTANT,
+            cvcuda.Border.CONSTANT,
         ),
         (
-            nvcv.Tensor([4, 4, 3], np.float32, "HWC"),
-            nvcv.MorphologyType.DILATE,
+            cvcuda.Tensor([4, 4, 3], np.float32, "HWC"),
+            cvcuda.MorphologyType.DILATE,
             [2, 1],
             [-1, -1],
             1,
-            nvcv.Border.REPLICATE,
+            cvcuda.Border.REPLICATE,
         ),
         (
-            nvcv.Tensor([3, 88, 13, 3], np.uint16, "NHWC"),
-            nvcv.MorphologyType.ERODE,
+            cvcuda.Tensor([3, 88, 13, 3], np.uint16, "NHWC"),
+            cvcuda.MorphologyType.ERODE,
             [2, 2],
             [-1, -1],
             2,
-            nvcv.Border.REFLECT,
+            cvcuda.Border.REFLECT,
         ),
         (
-            nvcv.Tensor([3, 4, 4], np.uint16, "HWC"),
-            nvcv.MorphologyType.DILATE,
+            cvcuda.Tensor([3, 4, 4], np.uint16, "HWC"),
+            cvcuda.MorphologyType.DILATE,
             [3, 3],
             [-1, -1],
             1,
-            nvcv.Border.WRAP,
+            cvcuda.Border.WRAP,
         ),
         (
-            nvcv.Tensor([1, 2, 3, 4], np.uint8, "NHWC"),
-            nvcv.MorphologyType.ERODE,
+            cvcuda.Tensor([1, 2, 3, 4], np.uint8, "NHWC"),
+            cvcuda.MorphologyType.ERODE,
             [-1, -1],
             [1, 1],
             1,
-            nvcv.Border.REFLECT101,
+            cvcuda.Border.REFLECT101,
         ),
     ],
 )
 def test_op_morphology(input, morphologyType, maskSize, anchor, iteration, border):
-    out = input.morphology(
-        morphologyType, maskSize, anchor, iteration=iteration, border=border
+    out = cvcuda.morphology(
+        input, morphologyType, maskSize, anchor, iteration=iteration, border=border
     )
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
-    stream = nvcv.cuda.Stream()
-    out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = input.morphology_into(
-        output=out,
+    stream = cvcuda.Stream()
+    out = cvcuda.Tensor(input.shape, input.dtype, input.layout)
+    tmp = cvcuda.morphology_into(
+        src=input,
+        dst=out,
         morphologyType=morphologyType,
         maskSize=maskSize,
         anchor=anchor,
@@ -99,58 +99,58 @@ def test_op_morphology(input, morphologyType, maskSize, anchor, iteration, borde
     [
         (
             10,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (123, 321),
             256,
-            nvcv.MorphologyType.ERODE,
+            cvcuda.MorphologyType.ERODE,
             3,
             1,
             1,
-            nvcv.Border.CONSTANT,
+            cvcuda.Border.CONSTANT,
         ),
         (
             7,
-            nvcv.Format.RGBf32,
+            cvcuda.Format.RGBf32,
             (62, 35),
             1.0,
-            nvcv.MorphologyType.DILATE,
+            cvcuda.MorphologyType.DILATE,
             4,
             2,
             2,
-            nvcv.Border.REPLICATE,
+            cvcuda.Border.REPLICATE,
         ),
         (
             1,
-            nvcv.Format.F32,
+            cvcuda.Format.F32,
             (33, 48),
             1234,
-            nvcv.MorphologyType.DILATE,
+            cvcuda.MorphologyType.DILATE,
             5,
             1,
             3,
-            nvcv.Border.REFLECT,
+            cvcuda.Border.REFLECT,
         ),
         (
             3,
-            nvcv.Format.U8,
+            cvcuda.Format.U8,
             (23, 18),
             123,
-            nvcv.MorphologyType.DILATE,
+            cvcuda.MorphologyType.DILATE,
             5,
             4,
             4,
-            nvcv.Border.WRAP,
+            cvcuda.Border.WRAP,
         ),
         (
             6,
-            nvcv.Format.F32,
+            cvcuda.Format.F32,
             (77, 42),
             123456,
-            nvcv.MorphologyType.ERODE,
+            cvcuda.MorphologyType.ERODE,
             6,
             3,
             1,
-            nvcv.Border.REFLECT101,
+            cvcuda.Border.REFLECT101,
         ),
     ],
 )
@@ -178,8 +178,8 @@ def test_op_morphology_varshape(
         (num_images, 2), np.int32, "NC", max_random=max_anchor, rng=RNG
     )
 
-    out = input.morphology(
-        morphologyType, masks, anchors, iteration=iteration, border=border
+    out = cvcuda.morphology(
+        input, morphologyType, masks, anchors, iteration=iteration, border=border
     )
 
     assert len(out) == len(input)
@@ -187,11 +187,12 @@ def test_op_morphology_varshape(
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == input.maxsize
 
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.Stream()
 
     out = util.clone_image_batch(input)
-    tmp = input.morphology_into(
-        output=out,
+    tmp = cvcuda.morphology_into(
+        src=input,
+        dst=out,
         morphologyType=morphologyType,
         masks=masks,
         anchors=anchors,

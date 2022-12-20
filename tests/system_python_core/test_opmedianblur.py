@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 import numpy as np
 import util
@@ -27,33 +26,34 @@ RNG = np.random.default_rng(0)
     "input, ksize",
     [
         (
-            nvcv.Tensor([5, 9, 9, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 9, 9, 4], np.uint8, "NHWC"),
             [5, 5],
         ),
         (
-            nvcv.Tensor([9, 9, 3], np.uint8, "HWC"),
+            cvcuda.Tensor([9, 9, 3], np.uint8, "HWC"),
             [5, 5],
         ),
         (
-            nvcv.Tensor([5, 21, 21, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 21, 21, 4], np.uint8, "NHWC"),
             [15, 15],
         ),
         (
-            nvcv.Tensor([21, 21, 3], np.uint8, "HWC"),
+            cvcuda.Tensor([21, 21, 3], np.uint8, "HWC"),
             [15, 15],
         ),
     ],
 )
 def test_op_median_blur(input, ksize):
-    out = input.median_blur(ksize)
+    out = cvcuda.median_blur(input, ksize)
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
-    stream = nvcv.cuda.Stream()
-    out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = input.median_blur_into(
-        output=out,
+    stream = cvcuda.Stream()
+    out = cvcuda.Tensor(input.shape, input.dtype, input.layout)
+    tmp = cvcuda.median_blur_into(
+        src=input,
+        dst=out,
         ksize=ksize,
         stream=stream,
     )
@@ -68,14 +68,14 @@ def test_op_median_blur(input, ksize):
     [
         (
             5,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (16, 23),
             128.0,
             [11, 11],
         ),
         (
             5,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (16, 23),
             128.0,
             [25, 25],
@@ -97,19 +97,18 @@ def test_op_median_blurvarshape(nimages, format, max_size, max_pixel, max_ksize)
         transform_dist=util.dist_odd,
     )
 
-    out = input.median_blur(
-        ksize,
-    )
+    out = cvcuda.median_blur(input, ksize)
     assert len(out) == len(input)
     assert out.capacity == input.capacity
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == input.maxsize
 
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.Stream()
 
     out = util.clone_image_batch(input)
-    tmp = input.median_blur_into(
-        output=out,
+    tmp = cvcuda.median_blur_into(
+        src=input,
+        dst=out,
         ksize=ksize,
         stream=stream,
     )

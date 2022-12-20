@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
+import cvcuda
 import pytest as t
 import numpy as np
 import util
@@ -25,60 +25,61 @@ RNG = np.random.default_rng(0)
     "input,out_shape,interp,fmt",
     [
         (
-            nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             [5, 132, 15, 4],
-            nvcv.Interp.LINEAR,
-            nvcv.Format.RGB8,
+            cvcuda.Interp.LINEAR,
+            cvcuda.Format.RGB8,
         ),
         (
-            nvcv.Tensor([5, 31, 31, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 31, 31, 4], np.uint8, "NHWC"),
             [5, 55, 55, 4],
-            nvcv.Interp.LINEAR,
-            nvcv.Format.RGB8,
+            cvcuda.Interp.LINEAR,
+            cvcuda.Format.RGB8,
         ),
         (
-            nvcv.Tensor([5, 55, 55, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 55, 55, 4], np.uint8, "NHWC"),
             [5, 31, 31, 4],
-            nvcv.Interp.LINEAR,
-            nvcv.Format.RGB8,
+            cvcuda.Interp.LINEAR,
+            cvcuda.Format.RGB8,
         ),
         (
-            nvcv.Tensor([5, 16, 23, 4], np.float32, "NHWC"),
+            cvcuda.Tensor([5, 16, 23, 4], np.float32, "NHWC"),
             [5, 132, 15, 4],
-            nvcv.Interp.LINEAR,
-            nvcv.Format.RGBf32,
+            cvcuda.Interp.LINEAR,
+            cvcuda.Format.RGBf32,
         ),
         (
-            nvcv.Tensor([5, 31, 31, 4], np.float32, "NHWC"),
+            cvcuda.Tensor([5, 31, 31, 4], np.float32, "NHWC"),
             [5, 55, 55, 4],
-            nvcv.Interp.LINEAR,
-            nvcv.Format.RGBf32,
+            cvcuda.Interp.LINEAR,
+            cvcuda.Format.RGBf32,
         ),
         (
-            nvcv.Tensor([5, 55, 55, 4], np.float32, "NHWC"),
+            cvcuda.Tensor([5, 55, 55, 4], np.float32, "NHWC"),
             [5, 31, 31, 4],
-            nvcv.Interp.LINEAR,
-            nvcv.Format.RGBf32,
+            cvcuda.Interp.LINEAR,
+            cvcuda.Format.RGBf32,
         ),
     ],
 )
 def test_op_pillowresize(input, out_shape, interp, fmt):
 
-    out = input.pillowresize(out_shape, fmt)
+    out = cvcuda.pillowresize(input, out_shape, fmt, interp)
     assert out.layout == input.layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
-    out = nvcv.Tensor(out_shape, input.dtype, input.layout)
-    tmp = input.pillowresize_into(out, fmt, interp)
+    out = cvcuda.Tensor(out_shape, input.dtype, input.layout)
+    tmp = cvcuda.pillowresize_into(out, input, fmt, interp)
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
 
-    stream = nvcv.cuda.Stream()
-    tmp = input.pillowresize_into(
-        output=out,
+    stream = cvcuda.Stream()
+    tmp = cvcuda.pillowresize_into(
+        src=input,
+        dst=out,
         format=fmt,
         interp=interp,
         stream=stream,
@@ -94,24 +95,24 @@ def test_op_pillowresize(input, out_shape, interp, fmt):
     [
         (
             5,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (16, 23),
             256.0,
-            nvcv.Interp.LINEAR,
+            cvcuda.Interp.LINEAR,
         ),
         (
             4,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (14, 14),
             256.0,
-            nvcv.Interp.LINEAR,
+            cvcuda.Interp.LINEAR,
         ),
         (
             7,
-            nvcv.Format.RGBf32,
+            cvcuda.Format.RGBf32,
             (10, 15),
             256.0,
-            nvcv.Interp.LINEAR,
+            cvcuda.Interp.LINEAR,
         ),
     ],
 )
@@ -135,13 +136,14 @@ def test_op_pillowresizevarshape(
     for image in base_output:
         sizes.append([image.width, image.height])
 
-    out = input.pillowresize(sizes)
+    out = cvcuda.pillowresize(input, sizes)
     assert len(out) == len(input)
     assert out.capacity == input.capacity
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == base_output.maxsize
 
-    out = input.pillowresize(
+    out = cvcuda.pillowresize(
+        input,
         sizes,
         interp,
     )
@@ -150,11 +152,11 @@ def test_op_pillowresizevarshape(
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == base_output.maxsize
 
-    nvcv.cuda.Stream.default.sync()  # HACK WAR CVCUDA-344 bug
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.Stream()
 
-    tmp = input.pillowresize_into(
-        output=base_output,
+    tmp = cvcuda.pillowresize_into(
+        src=input,
+        dst=base_output,
         interp=interp,
         stream=stream,
     )

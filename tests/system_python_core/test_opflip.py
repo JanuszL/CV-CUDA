@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
-import nvcv_operators  # noqa: F401
+import cvcuda
 import pytest as t
 import numpy as np
 import util
@@ -27,37 +26,38 @@ RNG = np.random.default_rng(0)
     "input, flip_code",
     [
         (
-            nvcv.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
             0,
         ),
         (
-            nvcv.Tensor([4, 4, 3], np.float32, "HWC"),
+            cvcuda.Tensor([4, 4, 3], np.float32, "HWC"),
             1,
         ),
         (
-            nvcv.Tensor([3, 88, 13, 3], np.uint16, "NHWC"),
+            cvcuda.Tensor([3, 88, 13, 3], np.uint16, "NHWC"),
             -1,
         ),
         (
-            nvcv.Tensor([3, 4, 4], np.int32, "HWC"),
+            cvcuda.Tensor([3, 4, 4], np.int32, "HWC"),
             1,
         ),
         (
-            nvcv.Tensor([1, 2, 3, 4], np.uint16, "NHWC"),
+            cvcuda.Tensor([1, 2, 3, 4], np.uint16, "NHWC"),
             0,
         ),
     ],
 )
 def test_op_flip(input, flip_code):
-    out = input.flip(flip_code)
+    out = cvcuda.flip(input, flip_code)
     assert out.layout == input.layout
     assert out.shape == input.shape
     assert out.dtype == input.dtype
 
-    stream = nvcv.cuda.Stream()
-    out = nvcv.Tensor(input.shape, input.dtype, input.layout)
-    tmp = input.flip_into(
-        output=out,
+    stream = cvcuda.Stream()
+    out = cvcuda.Tensor(input.shape, input.dtype, input.layout)
+    tmp = cvcuda.flip_into(
+        src=input,
+        dst=out,
         flipCode=flip_code,
         stream=stream,
     )
@@ -72,35 +72,35 @@ def test_op_flip(input, flip_code):
     [
         (
             10,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (123, 321),
             256,
             1,
         ),
         (
             7,
-            nvcv.Format.RGBf32,
+            cvcuda.Format.RGBf32,
             (62, 35),
             1.0,
             1,
         ),
         (
             1,
-            nvcv.Format.U16,
+            cvcuda.Format.U16,
             (33, 48),
             1234,
             1,
         ),
         (
             13,
-            nvcv.Format.U16,
+            cvcuda.Format.U16,
             (26, 52),
             1234,
             1,
         ),
         (
             6,
-            nvcv.Format.S32,
+            cvcuda.Format.S32,
             (77, 42),
             123456,
             1,
@@ -117,16 +117,17 @@ def test_op_flipvarshape(num_images, img_format, img_size, max_pixel, flip_code)
         (num_images, 1), np.int32, "NC", max_random=flip_code, rng=RNG
     )
 
-    out = input.flip(flipCode)
+    out = cvcuda.flip(input, flipCode)
     assert len(out) == len(input)
     assert out.capacity == input.capacity
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == input.maxsize
 
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.Stream()
     out = util.clone_image_batch(input)
-    tmp = input.flip_into(
-        output=out,
+    tmp = cvcuda.flip_into(
+        src=input,
+        dst=out,
         flipCode=flipCode,
         stream=stream,
     )

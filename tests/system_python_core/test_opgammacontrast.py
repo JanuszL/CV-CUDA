@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nvcv
+import cvcuda
 import pytest as t
 import numpy as np
 import util
@@ -26,28 +26,28 @@ RNG = np.random.default_rng(0)
     [
         (
             5,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (16, 23),
             128.0,
             12,
         ),
         (
             5,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (10, 15),
             256.0,
             6,
         ),
         (
             5,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (8, 8),
             256.0,
             7,
         ),
         (
             4,
-            nvcv.Format.RGB8,
+            cvcuda.Format.RGB8,
             (11, 23),
             256.0,
             9,
@@ -68,19 +68,20 @@ def test_op_gamma_contrastvarshape(
 
     gamma = util.create_tensor((nimages), np.float32, "N", max_gamma, rng=RNG)
 
-    out = input.gamma_contrast(gamma)
+    out = cvcuda.gamma_contrast(input, gamma)
 
     assert len(out) == len(input)
     assert out.capacity == input.capacity
     assert out.uniqueformat == input.uniqueformat
     assert out.maxsize == input.maxsize
 
-    stream = nvcv.cuda.Stream()
+    stream = cvcuda.Stream()
 
     out = util.clone_image_batch(input)
 
-    tmp = input.gamma_contrast_into(
-        output=out,
+    tmp = cvcuda.gamma_contrast_into(
+        src=input,
+        dst=out,
         gamma=gamma,
         stream=stream,
     )
