@@ -92,9 +92,10 @@ esac
 # Configure build toolchain ===========================================
 
 # Make sure we use most recent gcc-11.x
-CC=$(find /usr/bin/gcc-11* | sort -rV | head -n 1)
-CXX=$(find /usr/bin/g++-11* | sort -rV | head -n 1)
-export CC CXX
+CC=${CC:=$(find /usr/bin/gcc-11* | sort -rV | head -n 1)}
+CXX=${CXX:=$(find /usr/bin/g++-11* | sort -rV | head -n 1)}
+
+cmake_args="${cmake_args} -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX"
 
 # Prefer to use ninja if found
 if which ninja > /dev/null; then
