@@ -17,7 +17,7 @@
 
 #include "InterpolationType.hpp"
 
-#include <operators/Types.h>
+#include <nvcv/operators/Types.h>
 
 namespace nv::cvpy {
 

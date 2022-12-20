@@ -159,29 +159,26 @@ add_library(nvcv_util
     HashMD5.cpp
     CheckError.cpp
     String.cpp
+    Version.cpp
 )
 
 target_include_directories(nvcv_util
     INTERFACE
         ..
+    PUBLIC
+        ../core/include
 )
 
 target_link_libraries(nvcv_util
     PUBLIC
         nvcv_util_sanitizer
+        nvcv_headers
         CUDA::cudart_static
     PRIVATE
         OpenSSL::Crypto
 	ZLIB::ZLIB
         nvcv_util_compat
 )
-
-if(TARGET nvcv_headers)
-    target_link_libraries(nvcv_util PUBLIC nvcv_headers)
-else()
-    get_target_property(NVCV_INCLUDE_DIRS nvcv INTERFACE_INCLUDE_DIRECTORIES )
-    target_include_directories(nvcv_util PUBLIC ${NVCV_INCLUDE_DIRS})
-endif()
 
 target_compile_definitions(nvcv_util
     PUBLIC

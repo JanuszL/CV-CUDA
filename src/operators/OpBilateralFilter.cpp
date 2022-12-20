@@ -15,57 +15,57 @@
  * limitations under the License.
  */
 
+#include "priv/OpBilateralFilter.hpp"
+
+#include "priv/SymbolVersioning.hpp"
+
+#include <nvcv/Exception.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
-#include <operators/OpBilateralFilter.hpp>
-#include <private/core/Exception.hpp>
-#include <private/core/Status.hpp>
-#include <private/core/SymbolVersioning.hpp>
-#include <private/operators/OpBilateralFilter.hpp>
 #include <util/Assert.h>
 
-namespace nvcv    = nv::cv;
-namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cvop::priv;
+namespace nvcv = nv::cv;
+namespace priv = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopBilateralFilterCreate, (NVCVOperatorHandle * handle))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopBilateralFilterCreate, (NVCVOperatorHandle * handle))
 {
     return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
+                throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                                      "Pointer to NVCVOperator handle must not be NULL");
             }
 
-            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::BilateralFilter());
+            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv::BilateralFilter());
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopBilateralFilterSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                 int diameter, float sigmaColor, float sigmaSpace, NVCVBorderType borderMode))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopBilateralFilterSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
+                    int diameter, float sigmaColor, float sigmaSpace, NVCVBorderType borderMode))
 {
     return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle input(in), output(out);
-            priv::ToDynamicRef<priv_op::BilateralFilter>(handle)(stream, input, output, diameter, sigmaColor,
-                                                                 sigmaSpace, borderMode);
+            nvcv::TensorWrapHandle input(in), output(out);
+            priv::ToDynamicRef<priv::BilateralFilter>(handle)(stream, input, output, diameter, sigmaColor, sigmaSpace,
+                                                              borderMode);
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopBilateralFilterVarShapeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
-                 NVCVTensorHandle diameter, NVCVTensorHandle sigmaColor, NVCVTensorHandle sigmaSpace,
-                 NVCVBorderType borderMode))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopBilateralFilterVarShapeSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                    NVCVTensorHandle diameter, NVCVTensorHandle sigmaColor, NVCVTensorHandle sigmaSpace,
+                    NVCVBorderType borderMode))
 {
     return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::ImageBatchVarShapeWrapHandle input(in), output(out);
-            nv::cv::TensorWrapHandle diameterData(diameter), sigmaColorData(sigmaColor), sigmaSpaceData(sigmaSpace);
-            priv::ToDynamicRef<priv_op::BilateralFilter>(handle)(stream, input, output, diameterData, sigmaColorData,
-                                                                 sigmaSpaceData, borderMode);
+            nvcv::ImageBatchVarShapeWrapHandle input(in), output(out);
+            nvcv::TensorWrapHandle diameterData(diameter), sigmaColorData(sigmaColor), sigmaSpaceData(sigmaSpace);
+            priv::ToDynamicRef<priv::BilateralFilter>(handle)(stream, input, output, diameterData, sigmaColorData,
+                                                              sigmaSpaceData, borderMode);
         });
 }

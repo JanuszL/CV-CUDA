@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#include <common/TypedTests.hpp>                // for NVCV_TYPED_TEST_SUITE_F, etc.
-#include <nvcv/cuda/detail/Metaprogramming.hpp> // the object of this test
+#include <common/TypedTests.hpp>                   // for NVCV_TYPED_TEST_SUITE_F, etc.
+#include <nvcv/optools/detail/Metaprogramming.hpp> // the object of this test
 
 namespace t      = ::testing;
 namespace test   = nv::cv::test;

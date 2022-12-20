@@ -15,40 +15,40 @@
  * limitations under the License.
  */
 
+#include "priv/OpCenterCrop.hpp"
+
+#include "priv/SymbolVersioning.hpp"
+
+#include <nvcv/Exception.hpp>
 #include <nvcv/Tensor.hpp>
-#include <operators/OpCenterCrop.hpp>
-#include <private/core/Exception.hpp>
-#include <private/core/Status.hpp>
-#include <private/core/SymbolVersioning.hpp>
-#include <private/operators/OpCenterCrop.hpp>
 #include <util/Assert.h>
 
-namespace nvcv    = nv::cv;
-namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cvop::priv;
+namespace nvcv = nv::cv;
+namespace priv = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopCenterCropCreate, (NVCVOperatorHandle * handle))
+NVCV_OP_DEFINE_API(0, 0, NVCVStatus, nvcvopCenterCropCreate, (NVCVOperatorHandle * handle))
 {
     return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
+                throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                                      "Pointer to NVCVOperator handle must not be NULL");
             }
 
-            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::CenterCrop());
+            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv::CenterCrop());
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCenterCropSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                 int32_t cropWidth, int32_t cropHeight))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopCenterCropSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
+                    int32_t cropWidth, int32_t cropHeight))
 {
     return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle input(in), output(out);
-            priv::ToDynamicRef<priv_op::CenterCrop>(handle)(stream, input, output, {cropWidth, cropHeight});
+            nvcv::TensorWrapHandle input(in), output(out);
+            priv::ToDynamicRef<priv::CenterCrop>(handle)(stream, input, output, {cropWidth, cropHeight});
         });
 }

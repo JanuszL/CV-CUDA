@@ -21,7 +21,6 @@
 #include "Assert.h"
 
 #include <driver_types.h> // for cudaError
-#include <nvcv/Status.h>
 
 #include <cstring>
 #include <iostream>
@@ -29,7 +28,7 @@
 #include <string_view>
 
 #if NVCV_EXPORTING
-#    include <private/core/Exception.hpp>
+#    include <core/priv/Exception.hpp>
 #else
 #    include <nvcv/Exception.hpp>
 #endif
@@ -93,19 +92,22 @@ void DoThrow(T error, const char *file, int line, const std::string_view &stmt, 
 {
 #if NVCV_EXPORTING
     using cv::priv::Exception;
+    using StatusType = NVCVStatus;
 #else
     using cv::Exception;
+    using StatusType = cv::Status;
 #endif
 
     // Can we expose source file data?
     if (file != nullptr)
     {
-        throw Exception(TranslateError(error), "%s:%d %s", file, line,
+        throw Exception((StatusType)TranslateError(error), "%s:%d %s", file, line,
                         FormatErrorMessage(ToString(error), stmt, errmsg).c_str());
     }
     else
     {
-        throw Exception(TranslateError(error), "%s", FormatErrorMessage(ToString(error), stmt, errmsg).c_str());
+        throw Exception((StatusType)TranslateError(error), "%s",
+                        FormatErrorMessage(ToString(error), stmt, errmsg).c_str());
     }
 }
 

@@ -22,8 +22,8 @@
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
-#include <nvcv/cuda/MathOps.hpp>
-#include <operators/OpChannelReorder.hpp>
+#include <nvcv/operators/OpChannelReorder.hpp>
+#include <nvcv/optools/MathOps.hpp>
 
 namespace nvcv = nv::cv;
 namespace test = nv::cv::test;

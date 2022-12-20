@@ -24,10 +24,10 @@
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
-#include <operators/OpConvertTo.hpp>
-#include <operators/OpNormalize.hpp>
-#include <operators/OpReformat.hpp>
-#include <operators/OpResize.hpp>
+#include <nvcv/operators/OpConvertTo.hpp>
+#include <nvcv/operators/OpNormalize.hpp>
+#include <nvcv/operators/OpReformat.hpp>
+#include <nvcv/operators/OpResize.hpp>
 
 #include <fstream>
 #include <iostream>

@@ -19,7 +19,7 @@ add_library(nvcv_samples_common SHARED
                                 TRTUtils.cpp
 			        NvDecoder.cpp)
 target_compile_options(nvcv_samples_common PRIVATE -Wno-deprecated-declarations -Wno-missing-declarations)
-target_link_libraries(nvcv_samples_common nvcv CUDA::cudart TensorRT::nvinfer CUDA::nvjpeg)
+target_link_libraries(nvcv_samples_common nvcv nvcv_operators CUDA::cudart TensorRT::nvinfer CUDA::nvjpeg)
 
 install(TARGETS nvcv_samples_common
         EXPORT nvcv_samples_common

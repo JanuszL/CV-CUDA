@@ -15,43 +15,43 @@
  * limitations under the License.
  */
 
+#include "priv/OpPadAndStack.hpp"
+
+#include "priv/SymbolVersioning.hpp"
+
+#include <nvcv/Exception.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
-#include <operators/OpPadAndStack.hpp>
-#include <private/core/Exception.hpp>
-#include <private/core/Status.hpp>
-#include <private/core/SymbolVersioning.hpp>
-#include <private/operators/OpPadAndStack.hpp>
 #include <util/Assert.h>
 
-namespace nvcv    = nv::cv;
-namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cvop::priv;
+namespace nvcv = nv::cv;
+namespace priv = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopPadAndStackCreate, (NVCVOperatorHandle * handle))
+NVCV_OP_DEFINE_API(0, 0, NVCVStatus, nvcvopPadAndStackCreate, (NVCVOperatorHandle * handle))
 {
     return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
+                throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                                      "Pointer to NVCVOperator handle must not be NULL");
             }
 
-            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::PadAndStack());
+            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv::PadAndStack());
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopPadAndStackSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVTensorHandle out,
-                 NVCVTensorHandle top, NVCVTensorHandle left, NVCVBorderType borderMode, float borderValue))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopPadAndStackSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVTensorHandle out,
+                    NVCVTensorHandle top, NVCVTensorHandle left, NVCVBorderType borderMode, float borderValue))
 {
     return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::ImageBatchVarShapeWrapHandle input(in);
-            nv::cv::TensorWrapHandle             output(out), topWrap(top), leftWrap(left);
-            priv::ToDynamicRef<priv_op::PadAndStack>(handle)(stream, input, output, topWrap, leftWrap, borderMode,
-                                                             borderValue);
+            nvcv::ImageBatchVarShapeWrapHandle input(in);
+            nvcv::TensorWrapHandle             output(out), topWrap(top), leftWrap(left);
+            priv::ToDynamicRef<priv::PadAndStack>(handle)(stream, input, output, topWrap, leftWrap, borderMode,
+                                                          borderValue);
         });
 }

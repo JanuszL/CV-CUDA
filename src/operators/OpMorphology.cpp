@@ -15,61 +15,61 @@
  * limitations under the License.
  */
 
+#include "priv/OpMorphology.hpp"
+
+#include "priv/SymbolVersioning.hpp"
+
+#include <nvcv/Exception.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
-#include <operators/OpMorphology.hpp>
-#include <private/core/Exception.hpp>
-#include <private/core/Status.hpp>
-#include <private/core/SymbolVersioning.hpp>
-#include <private/operators/OpMorphology.hpp>
 #include <util/Assert.h>
 
-namespace nvcv    = nv::cv;
-namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cvop::priv;
+namespace nvcv = nv::cv;
+namespace priv = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopMorphologyCreate,
-                (NVCVOperatorHandle * handle, const int32_t maxVarShapeBatchSize))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopMorphologyCreate,
+                   (NVCVOperatorHandle * handle, const int32_t maxVarShapeBatchSize))
 {
     return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
+                throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                                      "Pointer to NVCVOperator handle must not be NULL");
             }
 
-            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::Morphology(maxVarShapeBatchSize));
+            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv::Morphology(maxVarShapeBatchSize));
         });
 }
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopMorphologySubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                 NVCVMorphologyType morphType, int32_t maskWidth, int32_t maskHeight, int32_t anchorX, int32_t anchorY,
-                 int32_t iteration, const NVCVBorderType borderMode))
+NVCV_OP_DEFINE_API(0, 0, NVCVStatus, nvcvopMorphologySubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
+                    NVCVMorphologyType morphType, int32_t maskWidth, int32_t maskHeight, int32_t anchorX,
+                    int32_t anchorY, int32_t iteration, const NVCVBorderType borderMode))
 {
     return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle input(in), output(out);
-            nv::cv::Size2D           maskSize = {maskWidth, maskHeight};
-            int2                     anchor   = {anchorX, anchorY};
-            priv::ToDynamicRef<priv_op::Morphology>(handle)(stream, input, output, morphType, maskSize, anchor,
-                                                            iteration, borderMode);
+            nvcv::TensorWrapHandle input(in), output(out);
+            nvcv::Size2D           maskSize = {maskWidth, maskHeight};
+            int2                   anchor   = {anchorX, anchorY};
+            priv::ToDynamicRef<priv::Morphology>(handle)(stream, input, output, morphType, maskSize, anchor, iteration,
+                                                         borderMode);
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopMorphologyVarShapeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
-                 NVCVMorphologyType morphType, NVCVTensorHandle masks, NVCVTensorHandle anchors, int32_t iteration,
-                 const NVCVBorderType borderMode))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopMorphologyVarShapeSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                    NVCVMorphologyType morphType, NVCVTensorHandle masks, NVCVTensorHandle anchors, int32_t iteration,
+                    const NVCVBorderType borderMode))
 {
     return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::ImageBatchVarShapeWrapHandle input(in), output(out);
-            nv::cv::TensorWrapHandle             masksWrap(masks), anchorsWrap(anchors);
-            priv::ToDynamicRef<priv_op::Morphology>(handle)(stream, input, output, morphType, masksWrap, anchorsWrap,
-                                                            iteration, borderMode);
+            nvcv::ImageBatchVarShapeWrapHandle input(in), output(out);
+            nvcv::TensorWrapHandle             masksWrap(masks), anchorsWrap(anchors);
+            priv::ToDynamicRef<priv::Morphology>(handle)(stream, input, output, morphType, masksWrap, anchorsWrap,
+                                                         iteration, borderMode);
         });
 }

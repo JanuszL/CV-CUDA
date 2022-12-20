@@ -24,7 +24,7 @@
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <operators/OpBilateralFilter.hpp>
+#include <nvcv/operators/OpBilateralFilter.hpp>
 
 #include <iostream>
 #include <random>

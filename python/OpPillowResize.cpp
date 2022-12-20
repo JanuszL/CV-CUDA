@@ -25,7 +25,7 @@
 #include "Tensor.hpp"
 
 #include <nvcv/TensorDataAccess.hpp>
-#include <operators/OpPillowResize.hpp>
+#include <nvcv/operators/OpPillowResize.hpp>
 #include <pybind11/stl.h>
 
 namespace nv::cvpy {

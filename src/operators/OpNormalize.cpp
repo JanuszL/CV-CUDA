@@ -15,58 +15,58 @@
  * limitations under the License.
  */
 
+#include "priv/OpNormalize.hpp"
+
+#include "priv/SymbolVersioning.hpp"
+
+#include <nvcv/Exception.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
-#include <operators/OpNormalize.hpp>
-#include <private/core/Exception.hpp>
-#include <private/core/Status.hpp>
-#include <private/core/SymbolVersioning.hpp>
-#include <private/operators/OpNormalize.hpp>
 #include <util/Assert.h>
 
-namespace nvcv    = nv::cv;
-namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cvop::priv;
+namespace nvcv = nv::cv;
+namespace priv = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvopNormalizeCreate, (NVCVOperatorHandle * handle))
+NVCV_OP_DEFINE_API(0, 0, NVCVStatus, nvcvopNormalizeCreate, (NVCVOperatorHandle * handle))
 {
     return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
+                throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                                      "Pointer to NVCVOperator handle must not be NULL");
             }
 
-            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::Normalize());
+            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv::Normalize());
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopNormalizeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle base,
-                 NVCVTensorHandle scale, NVCVTensorHandle out, float global_scale, float shift, float epsilon,
-                 uint32_t flags))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopNormalizeSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle base,
+                    NVCVTensorHandle scale, NVCVTensorHandle out, float global_scale, float shift, float epsilon,
+                    uint32_t flags))
 {
     return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle inWrap(in), baseWrap(base), scaleWrap(scale), outWrap(out);
-            priv::ToDynamicRef<priv_op::Normalize>(handle)(stream, inWrap, baseWrap, scaleWrap, outWrap, global_scale,
-                                                           shift, epsilon, flags);
+            nvcv::TensorWrapHandle inWrap(in), baseWrap(base), scaleWrap(scale), outWrap(out);
+            priv::ToDynamicRef<priv::Normalize>(handle)(stream, inWrap, baseWrap, scaleWrap, outWrap, global_scale,
+                                                        shift, epsilon, flags);
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopNormalizeVarShapeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVTensorHandle base,
-                 NVCVTensorHandle scale, NVCVImageBatchHandle out, float global_scale, float shift, float epsilon,
-                 uint32_t flags))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopNormalizeVarShapeSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVTensorHandle base,
+                    NVCVTensorHandle scale, NVCVImageBatchHandle out, float global_scale, float shift, float epsilon,
+                    uint32_t flags))
 {
     return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle             baseWrap(base), scaleWrap(scale);
-            nv::cv::ImageBatchVarShapeWrapHandle inWrap(in), outWrap(out);
-            priv::ToDynamicRef<priv_op::Normalize>(handle)(stream, inWrap, baseWrap, scaleWrap, outWrap, global_scale,
-                                                           shift, epsilon, flags);
+            nvcv::TensorWrapHandle             baseWrap(base), scaleWrap(scale);
+            nvcv::ImageBatchVarShapeWrapHandle inWrap(in), outWrap(out);
+            priv::ToDynamicRef<priv::Normalize>(handle)(stream, inWrap, baseWrap, scaleWrap, outWrap, global_scale,
+                                                        shift, epsilon, flags);
         });
 }

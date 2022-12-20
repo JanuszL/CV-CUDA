@@ -15,53 +15,55 @@
  * limitations under the License.
  */
 
+#include "priv/OpRotate.hpp"
+
+#include "priv/SymbolVersioning.hpp"
+
+#include <nvcv/Exception.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
-#include <operators/OpRotate.hpp>
-#include <private/core/Exception.hpp>
-#include <private/core/Status.hpp>
-#include <private/core/SymbolVersioning.hpp>
-#include <private/operators/OpRotate.hpp>
 #include <util/Assert.h>
 
-namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cvop::priv;
+namespace nvcv = nv::cv;
+namespace priv = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopRotateCreate, (NVCVOperatorHandle * handle, const int32_t maxVarShapeBatchSize))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopRotateCreate,
+                   (NVCVOperatorHandle * handle, const int32_t maxVarShapeBatchSize))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
+                throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                                      "Pointer to NVCVOperator handle must not be NULL");
             }
 
-            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::Rotate(maxVarShapeBatchSize));
+            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv::Rotate(maxVarShapeBatchSize));
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopRotateSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                 const double angleDeg, const double2 shift, const NVCVInterpolationType interpolation))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopRotateSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
+                    const double angleDeg, const double2 shift, const NVCVInterpolationType interpolation))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle input(in), output(out);
-            priv::ToDynamicRef<priv_op::Rotate>(handle)(stream, input, output, angleDeg, shift, interpolation);
+            nvcv::TensorWrapHandle input(in), output(out);
+            priv::ToDynamicRef<priv::Rotate>(handle)(stream, input, output, angleDeg, shift, interpolation);
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopRotateVarShapeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
-                 NVCVTensorHandle angleDeg, NVCVTensorHandle shift, const NVCVInterpolationType interpolation))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopRotateVarShapeSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                    NVCVTensorHandle angleDeg, NVCVTensorHandle shift, const NVCVInterpolationType interpolation))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::ImageBatchVarShapeWrapHandle input(in), output(out);
-            nv::cv::TensorWrapHandle             angleDegWrap(angleDeg), shiftWrap(shift);
-            priv::ToDynamicRef<priv_op::Rotate>(handle)(stream, input, output, angleDegWrap, shiftWrap, interpolation);
+            nvcv::ImageBatchVarShapeWrapHandle input(in), output(out);
+            nvcv::TensorWrapHandle             angleDegWrap(angleDeg), shiftWrap(shift);
+            priv::ToDynamicRef<priv::Rotate>(handle)(stream, input, output, angleDegWrap, shiftWrap, interpolation);
         });
 }

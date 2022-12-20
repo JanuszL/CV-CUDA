@@ -23,7 +23,7 @@
 #include "Stream.hpp"
 #include "Tensor.hpp"
 
-#include <operators/OpPadAndStack.hpp>
+#include <nvcv/operators/OpPadAndStack.hpp>
 
 namespace nv::cvpy {
 

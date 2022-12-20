@@ -92,6 +92,9 @@ add_subdirectory(system_cudatools)
 # Unit tests for internal functions from nvcv core
 add_subdirectory(unit_core)
 
+# Unit tests for nvcv CUDA tools
+add_subdirectory(unit_cudatools)
+
 if(BUILD_PYTHON)
     add_subdirectory(system_python_core)
 endif()

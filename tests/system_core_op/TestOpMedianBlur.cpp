@@ -24,7 +24,7 @@
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <operators/OpMedianBlur.hpp>
+#include <nvcv/operators/OpMedianBlur.hpp>
 
 #include <cmath>
 #include <random>

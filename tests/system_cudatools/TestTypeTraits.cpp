@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include <common/TypedTests.hpp>    // for NVCV_TYPED_TEST_SUITE_F, etc.
-#include <common/ValueTests.hpp>    // for StringLiteral
-#include <nvcv/cuda/TypeTraits.hpp> // the object of this test
+#include <common/TypedTests.hpp>       // for NVCV_TYPED_TEST_SUITE_F, etc.
+#include <common/ValueTests.hpp>       // for StringLiteral
+#include <nvcv/optools/TypeTraits.hpp> // the object of this test
 
 #include <limits> // for std::numeric_limits, etc.
 

@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
+#include "ConvUtils.hpp"
 #include "Definitions.hpp"
 
-#include <common/ConvUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
@@ -25,8 +25,8 @@
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/cuda/TypeTraits.hpp>
-#include <operators/OpConv2D.hpp>
+#include <nvcv/operators/OpConv2D.hpp>
+#include <nvcv/optools/TypeTraits.hpp>
 
 #include <random>
 

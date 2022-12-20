@@ -15,45 +15,45 @@
  * limitations under the License.
  */
 
+#include "priv/OpGammaContrast.hpp"
+
+#include "priv/SymbolVersioning.hpp"
+
+#include <nvcv/Exception.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
-#include <operators/OpGammaContrast.hpp>
-#include <private/core/Exception.hpp>
-#include <private/core/Status.hpp>
-#include <private/core/SymbolVersioning.hpp>
-#include <private/operators/OpGammaContrast.hpp>
 #include <util/Assert.h>
 
-namespace nvcv    = nv::cv;
-namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cvop::priv;
+namespace priv = nv::cvop::priv;
+namespace nvcv = nv::cv;
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopGammaContrastCreate,
-                (NVCVOperatorHandle * handle, const int32_t maxVarShapeBatchSize,
-                 const int32_t maxVarShapeChannelCount))
-{
-    return priv::ProtectCall(
-        [&]
-        {
-            if (handle == nullptr)
-            {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
-            }
-
-            *handle = reinterpret_cast<NVCVOperatorHandle>(
-                new priv_op::GammaContrast(maxVarShapeBatchSize, maxVarShapeChannelCount));
-        });
-}
-
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopGammaContrastVarShapeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
-                 NVCVTensorHandle gamma))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopGammaContrastCreate,
+                   (NVCVOperatorHandle * handle, const int32_t maxVarShapeBatchSize,
+                    const int32_t maxVarShapeChannelCount))
 {
     return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::ImageBatchVarShapeWrapHandle inWrap(in), outWrap(out);
-            nv::cv::TensorWrapHandle             gammaWrap(gamma);
-            priv::ToDynamicRef<priv_op::GammaContrast>(handle)(stream, inWrap, outWrap, gammaWrap);
+            if (handle == nullptr)
+            {
+                throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                                      "Pointer to NVCVOperator handle must not be NULL");
+            }
+
+            *handle = reinterpret_cast<NVCVOperatorHandle>(
+                new priv::GammaContrast(maxVarShapeBatchSize, maxVarShapeChannelCount));
+        });
+}
+
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopGammaContrastVarShapeSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                    NVCVTensorHandle gamma))
+{
+    return nvcv::ProtectCall(
+        [&]
+        {
+            nvcv::ImageBatchVarShapeWrapHandle inWrap(in), outWrap(out);
+            nvcv::TensorWrapHandle             gammaWrap(gamma);
+            priv::ToDynamicRef<priv::GammaContrast>(handle)(stream, inWrap, outWrap, gammaWrap);
         });
 }

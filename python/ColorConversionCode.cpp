@@ -17,7 +17,7 @@
 
 #include "ColorConversionCode.hpp"
 
-#include <operators/Types.h>
+#include <nvcv/operators/Types.h>
 
 namespace nv::cvpy {
 

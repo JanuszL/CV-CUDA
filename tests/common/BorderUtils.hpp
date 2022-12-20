@@ -18,8 +18,8 @@
 #ifndef NVCV_TEST_COMMON_BORDER_UTILS_HPP
 #define NVCV_TEST_COMMON_BORDER_UTILS_HPP
 
-#include <cuda_runtime.h>    // for int2, etc.
-#include <operators/Types.h> // for NVCVBorderType, etc.
+#include <cuda_runtime.h> // for int2, etc.
+#include <nvcv/operators/Types.h>
 
 namespace nv::cv::test {
 

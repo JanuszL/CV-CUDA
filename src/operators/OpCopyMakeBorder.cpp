@@ -15,69 +15,69 @@
  * limitations under the License.
  */
 
+#include "priv/OpCopyMakeBorder.hpp"
+
+#include "priv/SymbolVersioning.hpp"
+
+#include <nvcv/Exception.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
-#include <operators/OpCopyMakeBorder.hpp>
-#include <private/core/Exception.hpp>
-#include <private/core/Status.hpp>
-#include <private/core/SymbolVersioning.hpp>
-#include <private/operators/OpCopyMakeBorder.hpp>
 #include <util/Assert.h>
 
-namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cvop::priv;
+namespace nvcv = nv::cv;
+namespace priv = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCopyMakeBorderCreate, (NVCVOperatorHandle * handle))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopCopyMakeBorderCreate, (NVCVOperatorHandle * handle))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
+                throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                                      "Pointer to NVCVOperator handle must not be NULL");
             }
 
-            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::CopyMakeBorder());
+            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv::CopyMakeBorder());
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCopyMakeBorderSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out, int32_t top,
-                 int32_t left, NVCVBorderType borderMode, const float4 borderValue))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopCopyMakeBorderSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
+                    int32_t top, int32_t left, NVCVBorderType borderMode, const float4 borderValue))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle output(out), input(in);
-            priv::ToDynamicRef<priv_op::CopyMakeBorder>(handle)(stream, input, output, top, left, borderMode,
-                                                                borderValue);
+            nvcv::TensorWrapHandle output(out), input(in);
+            priv::ToDynamicRef<priv::CopyMakeBorder>(handle)(stream, input, output, top, left, borderMode, borderValue);
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCopyMakeBorderVarShapeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
-                 NVCVTensorHandle top, NVCVTensorHandle left, NVCVBorderType borderMode, const float4 borderValue))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopCopyMakeBorderVarShapeSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                    NVCVTensorHandle top, NVCVTensorHandle left, NVCVBorderType borderMode, const float4 borderValue))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::ImageBatchWrapHandle output(out), input(in);
-            nv::cv::TensorWrapHandle     topVec(top), leftVec(left);
-            priv::ToDynamicRef<priv_op::CopyMakeBorder>(handle)(stream, input, output, topVec, leftVec, borderMode,
-                                                                borderValue);
+            nvcv::ImageBatchWrapHandle output(out), input(in);
+            nvcv::TensorWrapHandle     topVec(top), leftVec(left);
+            priv::ToDynamicRef<priv::CopyMakeBorder>(handle)(stream, input, output, topVec, leftVec, borderMode,
+                                                             borderValue);
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCopyMakeBorderVarShapeStackSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVTensorHandle out,
-                 NVCVTensorHandle top, NVCVTensorHandle left, NVCVBorderType borderMode, const float4 borderValue))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopCopyMakeBorderVarShapeStackSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVTensorHandle out,
+                    NVCVTensorHandle top, NVCVTensorHandle left, NVCVBorderType borderMode, const float4 borderValue))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::ImageBatchWrapHandle input(in);
-            nv::cv::TensorWrapHandle     output(out), topVec(top), leftVec(left);
-            priv::ToDynamicRef<priv_op::CopyMakeBorder>(handle)(stream, input, output, topVec, leftVec, borderMode,
-                                                                borderValue);
+            nvcv::ImageBatchWrapHandle input(in);
+            nvcv::TensorWrapHandle     output(out), topVec(top), leftVec(left);
+            priv::ToDynamicRef<priv::CopyMakeBorder>(handle)(stream, input, output, topVec, leftVec, borderMode,
+                                                             borderValue);
         });
 }

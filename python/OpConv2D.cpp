@@ -23,10 +23,10 @@
 #include "Stream.hpp"
 #include "String.hpp"
 #include "Tensor.hpp"
-#include "operators/Types.h"
 
-#include <nvcv/cuda/TypeTraits.hpp>
-#include <operators/OpConv2D.hpp>
+#include <nvcv/operators/OpConv2D.hpp>
+#include <nvcv/operators/Types.h>
+#include <nvcv/optools/TypeTraits.hpp>
 #include <pybind11/stl.h>
 
 namespace nv::cvpy {

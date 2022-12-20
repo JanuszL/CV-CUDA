@@ -23,7 +23,7 @@
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <operators/OpErase.hpp>
+#include <nvcv/operators/OpErase.hpp>
 
 #include <iostream>
 

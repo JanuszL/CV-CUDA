@@ -19,7 +19,7 @@ set(CMAKE_CXX_FLAGS "-Wno-deprecated-enum-enum-conversion")
 
 # tag: Build classification sample
 add_executable(nvcv_samples_classification Main.cpp)
-target_link_libraries(nvcv_samples_classification nvcv CUDA::cudart nvcv_samples_common)
+target_link_libraries(nvcv_samples_classification nvcv nvcv_operators CUDA::cudart nvcv_samples_common)
 
 target_include_directories(nvcv_samples_classification
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)

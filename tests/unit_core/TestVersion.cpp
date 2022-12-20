@@ -18,10 +18,10 @@
 #include "Definitions.hpp"
 
 #include <common/ValueTests.hpp>
-#include <private/core/Version.hpp>
+#include <util/Version.hpp>
 
 namespace t    = ::testing;
-namespace priv = nv::cv::priv;
+namespace util = nv::cv::util;
 namespace test = nv::cv::test;
 
 #define MAKE_VERSION(major, minor, patch, tweak) ((major)*1000000 + (minor)*10000 + (patch)*100 + (tweak))
@@ -100,11 +100,11 @@ NVCV_INSTANTIATE_TEST_SUITE_P(Negative_values_fail, VersionTests,
 
 TEST_P(VersionTests, code_to_version)
 {
-    std::unique_ptr<priv::Version> ver;
+    std::unique_ptr<util::Version> ver;
 
     // Code is always valid because any overflow will just make at most the major version
     // larger than expected. We can't check for that, it's still a valid version.
-    NVCV_ASSERT_STATUS(NVCV_SUCCESS, ver = std::make_unique<priv::Version>(m_paramCode));
+    ASSERT_NO_THROW(ver = std::make_unique<util::Version>(m_paramCode));
 
     if (m_goldValuesResult == NVCV_SUCCESS)
     {
@@ -124,9 +124,20 @@ TEST_P(VersionTests, code_to_version)
 
 TEST_P(VersionTests, version_to_code)
 {
-    std::unique_ptr<priv::Version> ver;
-    NVCV_ASSERT_STATUS(m_goldValuesResult,
-                       ver = std::make_unique<priv::Version>(m_paramMajor, m_paramMinor, m_paramPatch, m_paramTweak));
+    std::unique_ptr<util::Version> ver;
+    switch (m_goldValuesResult)
+    {
+    case NVCV_SUCCESS:
+        ASSERT_NO_THROW(ver = std::make_unique<util::Version>(m_paramMajor, m_paramMinor, m_paramPatch, m_paramTweak));
+        break;
+
+    case NVCV_ERROR_INVALID_ARGUMENT:
+        ASSERT_THROW(ver = std::make_unique<util::Version>(m_paramMajor, m_paramMinor, m_paramPatch, m_paramTweak),
+                     std::invalid_argument);
+        break;
+    default:
+        assert(false);
+    }
 
     if (ver)
     {
@@ -170,7 +181,7 @@ NVCV_INSTANTIATE_TEST_SUITE_P(Positive, VersionStringTests,
 
 TEST_P(VersionStringTests, test)
 {
-    priv::Version ver(m_paramMajor, m_paramMinor, m_paramPatch, m_paramTweak);
+    util::Version ver(m_paramMajor, m_paramMinor, m_paramPatch, m_paramTweak);
 
     std::ostringstream ss;
     ss << ver;
@@ -179,8 +190,8 @@ TEST_P(VersionStringTests, test)
 }
 
 class VersionComparisonTests
-    : public t::TestWithParam<std::tuple<test::Param<"lhs", priv::Version, priv::Version{0, 0, 0, 0}>, // 0
-                                         test::Param<"rhs", priv::Version, priv::Version{0, 0, 0, 0}>, // 1
+    : public t::TestWithParam<std::tuple<test::Param<"lhs", util::Version, util::Version{0, 0, 0, 0}>, // 0
+                                         test::Param<"rhs", util::Version, util::Version{0, 0, 0, 0}>, // 1
                                          test::Param<"result", int>>>                                  // 2
 {
 public:
@@ -192,15 +203,15 @@ public:
     }
 
 protected:
-    priv::Version m_paramLHS, m_paramRHS;
+    util::Version m_paramLHS, m_paramRHS;
     int           m_goldResult;
 };
 
 NVCV_INSTANTIATE_TEST_SUITE_P(Positive, VersionComparisonTests,
-                              test::ValueList<priv::Version, priv::Version, int>{
-                                  {priv::Version{1, 0, 0}, priv::Version{0, 1, 0}, 1},
-                                  {priv::Version{1, 2, 3}, priv::Version{1, 2, 3}, 0},
-                                  {priv::Version{1, 0, 0}, priv::Version{0, 0, 1}, 1},
+                              test::ValueList<util::Version, util::Version, int>{
+                                  {util::Version{1, 0, 0}, util::Version{0, 1, 0}, 1},
+                                  {util::Version{1, 2, 3}, util::Version{1, 2, 3}, 0},
+                                  {util::Version{1, 0, 0}, util::Version{0, 0, 1}, 1},
 });
 
 TEST_P(VersionComparisonTests, lower_than)

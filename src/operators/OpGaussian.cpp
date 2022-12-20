@@ -15,58 +15,58 @@
  * limitations under the License.
  */
 
+#include "priv/OpGaussian.hpp"
+
+#include "priv/SymbolVersioning.hpp"
+
+#include <nvcv/Exception.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
-#include <operators/OpGaussian.hpp>
-#include <private/core/Exception.hpp>
-#include <private/core/Status.hpp>
-#include <private/core/SymbolVersioning.hpp>
-#include <private/operators/OpGaussian.hpp>
 #include <util/Assert.h>
 
-namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cvop::priv;
+namespace nvcv = nv::cv;
+namespace priv = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopGaussianCreate,
-                (NVCVOperatorHandle * handle, int32_t maxKernelWidth, int32_t maxKernelHeight,
-                 int32_t maxVarShapeBatchSize))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopGaussianCreate,
+                   (NVCVOperatorHandle * handle, int32_t maxKernelWidth, int32_t maxKernelHeight,
+                    int32_t maxVarShapeBatchSize))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
+                throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                                      "Pointer to NVCVOperator handle must not be NULL");
             }
 
             *handle = reinterpret_cast<NVCVOperatorHandle>(
-                new priv_op::Gaussian(nv::cv::Size2D{maxKernelWidth, maxKernelHeight}, maxVarShapeBatchSize));
+                new priv::Gaussian(nvcv::Size2D{maxKernelWidth, maxKernelHeight}, maxVarShapeBatchSize));
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopGaussianSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                 int32_t kernelWidth, int32_t kernelHeight, double sigmaX, double sigmaY, NVCVBorderType borderMode))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopGaussianSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
+                    int32_t kernelWidth, int32_t kernelHeight, double sigmaX, double sigmaY, NVCVBorderType borderMode))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle output(out), input(in);
-            priv::ToDynamicRef<priv_op::Gaussian>(handle)(
-                stream, input, output, nv::cv::Size2D{kernelWidth, kernelHeight}, double2{sigmaX, sigmaY}, borderMode);
+            nvcv::TensorWrapHandle output(out), input(in);
+            priv::ToDynamicRef<priv::Gaussian>(handle)(stream, input, output, nvcv::Size2D{kernelWidth, kernelHeight},
+                                                       double2{sigmaX, sigmaY}, borderMode);
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopGaussianVarShapeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
-                 NVCVTensorHandle kernelSize, NVCVTensorHandle sigma, NVCVBorderType borderMode))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopGaussianVarShapeSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                    NVCVTensorHandle kernelSize, NVCVTensorHandle sigma, NVCVBorderType borderMode))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::ImageBatchVarShapeWrapHandle inWrap(in), outWrap(out);
-            nv::cv::TensorWrapHandle             kernelSizeWrap(kernelSize), sigmaWrap(sigma);
-            priv::ToDynamicRef<priv_op::Gaussian>(handle)(stream, inWrap, outWrap, kernelSizeWrap, sigmaWrap,
-                                                          borderMode);
+            nvcv::ImageBatchVarShapeWrapHandle inWrap(in), outWrap(out);
+            nvcv::TensorWrapHandle             kernelSizeWrap(kernelSize), sigmaWrap(sigma);
+            priv::ToDynamicRef<priv::Gaussian>(handle)(stream, inWrap, outWrap, kernelSizeWrap, sigmaWrap, borderMode);
         });
 }

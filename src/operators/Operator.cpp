@@ -15,19 +15,16 @@
  * limitations under the License.
  */
 
-#include <operators/Operator.h>
-#include <private/core/Exception.hpp>
-#include <private/core/ICoreObject.hpp>
-#include <private/core/Status.hpp>
-#include <private/core/SymbolVersioning.hpp>
-#include <private/operators/IOperator.hpp>
-#include <util/Assert.h>
+#include "priv/IOperator.hpp"
+#include "priv/SymbolVersioning.hpp"
 
-namespace nvcv    = nv::cv;
-namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cvop::priv;
+#include <nvcv/Exception.hpp>
+#include <nvcv/operators/Operator.h>
 
-NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvOperatorDestroy, (NVCVOperatorHandle handle))
+namespace nvcv = nv::cv;
+namespace priv = nv::cvop::priv;
+
+NVCV_OP_DEFINE_API(0, 0, NVCVStatus, nvcvOperatorDestroy, (NVCVOperatorHandle handle))
 {
-    return nvcv::ProtectCall([&] { delete priv::ToStaticPtr<priv_op::IOperator>(handle); });
+    return nvcv::ProtectCall([&] { delete priv::ToOperatorPtr(handle); });
 }

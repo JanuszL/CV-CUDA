@@ -23,8 +23,8 @@
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <nvcv/cuda/SaturateCast.hpp>
-#include <operators/OpConvertTo.hpp>
+#include <nvcv/operators/OpConvertTo.hpp>
+#include <nvcv/optools/SaturateCast.hpp>
 
 #include <iostream>
 #include <random>

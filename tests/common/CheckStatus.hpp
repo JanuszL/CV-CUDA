@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 
 #if NVCV_EXPORTING
-#    include <private/core/Exception.hpp>
+#    include <core/priv/Exception.hpp>
 #else
 #    include <nvcv/Exception.hpp>
 #endif

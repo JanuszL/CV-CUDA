@@ -22,7 +22,22 @@ endif()
 set(FINDNVCV_CONTENTS
 [=[
 add_library(nvcv SHARED IMPORTED)
-target_include_directories(nvcv INTERFACE "$<TARGET_PROPERTY:nvcv,INTERFACE_INCLUDE_DIRECTORIES>")
+target_include_directories(nvcv
+    INTERFACE
+    "$<TARGET_PROPERTY:nvcv,INTERFACE_INCLUDE_DIRECTORIES>"
+    "$<TARGET_PROPERTY:nvcv_format,INTERFACE_INCLUDE_DIRECTORIES>"
+    "$<TARGET_PROPERTY:nvcv_optools,INTERFACE_INCLUDE_DIRECTORIES>"
+)
+]=])
+
+set(FINDNVCV_OP_CONTENTS
+[=[
+add_library(nvcv_operators SHARED IMPORTED)
+target_include_directories(nvcv_operators
+    INTERFACE
+    "$<TARGET_PROPERTY:nvcv_operators,INTERFACE_INCLUDE_DIRECTORIES>"
+    "$<TARGET_PROPERTY:nvcv_optools,INTERFACE_INCLUDE_DIRECTORIES>"
+)
 ]=])
 
 if(CMAKE_CONFIGURATION_TYPES)
@@ -36,9 +51,13 @@ foreach(cfg ${NVCV_CONFIG_TYPES})
     set(FINDNVCV_CONTENTS
 "${FINDNVCV_CONTENTS}include(nvcv_${cfg_lower})
 ")
+    set(FINDNVCV_OP_CONTENTS
+"${FINDNVCV_OP_CONTENTS}include(nvcv_operators_${cfg_lower})
+")
 endforeach()
 
 file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cmake/Findnvcv.cmake CONTENT "${FINDNVCV_CONTENTS}")
+file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cmake/Findnvcv_operators.cmake CONTENT "${FINDNVCV_OP_CONTENTS}")
 
 list(LENGTH "${NVCV_CONFIG_TYPES}" num_configs)
 if(${num_configs} EQUAL 1)
@@ -50,6 +69,11 @@ endif()
 file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cmake/nvcv_$<LOWER_CASE:$<CONFIG>>.cmake CONTENT
 "set_target_properties(nvcv PROPERTIES IMPORTED_LOCATION${NVCV_BUILD_SUFFIX} \"$<TARGET_FILE:nvcv>\"
                                        IMPORTED_IMPLIB${NVCV_BUILD_SUFFIX} \"$<TARGET_LINKER_FILE:nvcv>\")
+")
+
+file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cmake/nvcv_operators_$<LOWER_CASE:$<CONFIG>>.cmake CONTENT
+"set_target_properties(nvcv_operators PROPERTIES IMPORTED_LOCATION${NVCV_BUILD_SUFFIX} \"$<TARGET_FILE:nvcv_operators>\"
+                                                 IMPORTED_IMPLIB${NVCV_BUILD_SUFFIX} \"$<TARGET_LINKER_FILE:nvcv_operators>\")
 ")
 
 # Python versions to build already set?

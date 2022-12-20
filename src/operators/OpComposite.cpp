@@ -15,52 +15,53 @@
  * limitations under the License.
  */
 
+#include "priv/OpComposite.hpp"
+
+#include "priv/SymbolVersioning.hpp"
+
+#include <nvcv/Exception.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
-#include <operators/OpComposite.hpp>
-#include <private/core/Exception.hpp>
-#include <private/core/Status.hpp>
-#include <private/core/SymbolVersioning.hpp>
-#include <private/operators/OpComposite.hpp>
 #include <util/Assert.h>
 
-namespace priv    = nv::cv::priv;
-namespace priv_op = nv::cvop::priv;
+namespace nvcv = nv::cv;
+namespace priv = nv::cvop::priv;
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCompositeCreate, (NVCVOperatorHandle * handle))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopCompositeCreate, (NVCVOperatorHandle * handle))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
             if (handle == nullptr)
             {
-                throw priv::Exception(NVCV_ERROR_INVALID_ARGUMENT, "Pointer to NVCVOperator handle must not be NULL");
+                throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                                      "Pointer to NVCVOperator handle must not be NULL");
             }
 
-            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv_op::Composite());
+            *handle = reinterpret_cast<NVCVOperatorHandle>(new priv::Composite());
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCompositeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle fg, NVCVTensorHandle bg,
-                 NVCVTensorHandle fgMask, NVCVTensorHandle out))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopCompositeSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle fg, NVCVTensorHandle bg,
+                    NVCVTensorHandle fgMask, NVCVTensorHandle out))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::TensorWrapHandle foreground(fg), background(bg), mask(fgMask), output(out);
-            priv::ToDynamicRef<priv_op::Composite>(handle)(stream, foreground, background, mask, output);
+            nvcv::TensorWrapHandle foreground(fg), background(bg), mask(fgMask), output(out);
+            priv::ToDynamicRef<priv::Composite>(handle)(stream, foreground, background, mask, output);
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvopCompositeVarShapeSubmit,
-                (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle fg, NVCVImageBatchHandle bg,
-                 NVCVImageBatchHandle fgMask, NVCVImageBatchHandle out))
+NVCV_OP_DEFINE_API(0, 2, NVCVStatus, nvcvopCompositeVarShapeSubmit,
+                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle fg, NVCVImageBatchHandle bg,
+                    NVCVImageBatchHandle fgMask, NVCVImageBatchHandle out))
 {
-    return priv::ProtectCall(
+    return nvcv::ProtectCall(
         [&]
         {
-            nv::cv::ImageBatchVarShapeWrapHandle foreground(fg), background(bg), mask(fgMask), output(out);
-            priv::ToDynamicRef<priv_op::Composite>(handle)(stream, foreground, background, mask, output);
+            nvcv::ImageBatchVarShapeWrapHandle foreground(fg), background(bg), mask(fgMask), output(out);
+            priv::ToDynamicRef<priv::Composite>(handle)(stream, foreground, background, mask, output);
         });
 }

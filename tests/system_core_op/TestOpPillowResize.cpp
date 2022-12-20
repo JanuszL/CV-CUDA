@@ -25,7 +25,7 @@
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
-#include <operators/OpPillowResize.hpp>
+#include <nvcv/operators/OpPillowResize.hpp>
 
 #include <cmath>
 #include <iostream>

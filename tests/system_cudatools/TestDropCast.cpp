@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#include <common/TypedTests.hpp>  // for NVCV_TYPED_TEST_SUITE, etc.
-#include <nvcv/cuda/DropCast.hpp> // the object of this test
+#include <common/TypedTests.hpp>     // for NVCV_TYPED_TEST_SUITE, etc.
+#include <nvcv/optools/DropCast.hpp> // the object of this test
 
 namespace t     = ::testing;
 namespace cuda  = nv::cv::cuda;
