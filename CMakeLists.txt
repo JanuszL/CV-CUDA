@@ -22,10 +22,18 @@ if(DEFINED CMAKE_CUDA_ARCHITECTURES)
 endif()
 
 project(cvcuda
-        LANGUAGES C CXX CUDA
+        LANGUAGES C CXX
         VERSION 0.2.0
         DESCRIPTION "CUDA-accelerated Computer Vision algorithms"
 )
+
+# Make sure the cuda host compiler agrees with what we're using,
+# unless user overwrites it (at their own risk).
+if(NOT CMAKE_CUDA_HOST_COMPILER)
+    set(CMAKE_CUDA_HOST_COMPILER "${CMAKE_CXX_COMPILER}")
+endif()
+
+enable_language(CUDA)
 
 # Used when creating special builds
 set(PROJECT_VERSION_SUFFIX "-alpha")
