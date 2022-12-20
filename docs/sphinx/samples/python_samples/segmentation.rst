@@ -219,8 +219,8 @@ Once the torch.Tensor is created, we can convert it to a CVCUDA Tensor before st
 .. literalinclude:: ../../../../samples/segmentation/python/inference.py
    :language: python
    :linenos:
-   :start-after: begin_torch_to_nvcv
-   :end-before: end_torch_to_nvcv
+   :start-after: begin_torch_to_cvcuda
+   :end-before: end_torch_to_cvcuda
    :dedent:
 
 Now we are ready for the pre-processing stages. Here we resize the images, convert to float, normalize them and reformat them in NCHW layout.

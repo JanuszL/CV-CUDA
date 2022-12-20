@@ -14,7 +14,7 @@
   # See the License for the specific language governing permissions and
   # limitations under the License.
 
-.. _prealpha:
+.. _v0.1.0-prealpha:
 
 PreAlpha
 ========

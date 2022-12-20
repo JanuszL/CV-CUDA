@@ -19,7 +19,7 @@
 Getting Started
 ===============
 
-This section guides you step-by-step towards building different types of Computer Vision and Deep Learning pipelines accelerated on the GPU using the CVCUDA APIs. Before getting started, please review the :ref:`prerequisites`. Once reviewed, head over to the :ref:`samples`' section which showcases various CVCUDA samples.
+This section guides you step-by-step towards building different types of Computer Vision and Deep Learning pipelines accelerated on the GPU using the CV-CUDA APIs. Before getting started, please review the :ref:`prerequisites`. Once reviewed, head over to the :ref:`samples`' section which showcases various CV-CUDA samples.
 
 
 .. toctree::

@@ -34,7 +34,7 @@ import sphinx_rtd_theme
 project = "CV-CUDA"
 copyright = "2022, NVIDIA."
 author = "NVIDIA"
-version = "PreAlpha"
+version = "Alpha"
 release = version
 
 

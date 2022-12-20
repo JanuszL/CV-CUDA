@@ -26,10 +26,10 @@ Sample applications to show how use some of CV-CUDA's functionalities.
 2. Install the packages
 
    ```
-   dpkg -i nvcv-lib-0.1.0-cuda11-x86_64-linux.deb
-   dpkg -i nvcv-dev-0.1.0-cuda11-x86_64-linux.deb
-   dpkg -i cvcuda-samples-0.1.0-cuda11-x86_64-linux.deb
-   dpkg -i nvcv-python-3.*-0.1.0-cuda11-x86_64-linux.deb
+   dpkg -i nvcv-lib-0.2.0-cuda11-x86_64-linux.deb
+   dpkg -i nvcv-dev-0.2.0-cuda11-x86_64-linux.deb
+   dpkg -i cvcuda-samples-0.2.0-cuda11-x86_64-linux.deb
+   dpkg -i nvcv-python-3.*-0.2.0-cuda11-x86_64-linux.deb
    ```
 3. Copy the samples folder to the target directory
 
@@ -62,7 +62,7 @@ Sample applications to show how use some of CV-CUDA's functionalities.
 
 ## License
 
-Nvidia Software Evaluation License
+CV-CUDA operates under the [Apache 2.0] (https://gitlab-master.nvidia.com/cv/cvcuda/-/blob/fix/milesp/prepare-for-github/LICENSE.md>) license.
 
 ## Attributions
 

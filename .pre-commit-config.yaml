@@ -73,7 +73,7 @@ repos:
     name: 'check copyright message'
     language: system
     types: ['file', 'text']
-    exclude_types: ['markdown', 'xml', 'json']
+    exclude_types: ['markdown', 'xml', 'json', 'csv']
     entry: ./lint/copyright_check.sh
   - id: lfs_check
     name: 'check LFS objects'
