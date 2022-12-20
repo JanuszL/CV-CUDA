@@ -1,4 +1,4 @@
-' Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+' Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 '
 ' SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
 ' SPDX-License-Identifier: Apache-2.0
@@ -12,14 +12,14 @@
 
 @startuml
 
-interface IImageData
+interface ImageData
 {
     + {abstract} format() const: ImageFormat
 
     + {abstract} cdata() const: const NVCVImageData &
 }
 
-interface IImageDataCudaArray extends IImageData
+interface ImageDataCudaArray extends ImageData
 {
     + {abstract} numPlanes() const: int32_t
     + {abstract} plane(int p) const: cudaArray_t
@@ -39,7 +39,7 @@ struct ImagePlaneStrided
     + mem: void *
 }
 
-interface IImageDataStrided extends IImageData
+interface ImageDataStrided extends ImageData
 {
     + {abstract} size() const: Size2D
 
@@ -47,11 +47,11 @@ interface IImageDataStrided extends IImageData
     + {abstract} plane(int p) const: const ImagePlaneStrided &
 }
 
-interface IImageDataStridedCuda implements IImageDataStrided
+interface ImageDataStridedCuda implements ImageDataStrided
 {
 }
 
-interface IImageDataStridedHost implements IImageDataStrided
+interface ImageDataStridedHost implements ImageDataStrided
 {
 }
 
@@ -61,7 +61,7 @@ struct ImageBufferCudaArray
     + planes: cudaArray_t[MAX_PLANES]
 }
 
-class ImageDataCudaArray implements IImageDataCudaArray
+class ImageDataCudaArray implements ImageDataCudaArray
 {
     + ImageDataCudaArray(ImageFormat fmt,
                          const ImageBufferCudaArray &buffer)
@@ -73,13 +73,13 @@ struct ImageBufferStrided
     + planes: ImagePlaneStrided[MAX_PLANES]
 }
 
-class ImageDataStridedCuda implements IImageDataStridedCuda
+class ImageDataStridedCuda implements ImageDataStridedCuda
 {
     + ImageDataStridedCuda(ImageFormat fmt,
                            const ImageBufferStrided &buffer)
 }
 
-class ImageDataStridedHost implements IImageDataStridedHost
+class ImageDataStridedHost implements ImageDataStridedHost
 {
     + ImageDataStridedHost(ImageFormat fmt,
                          const ImageBufferStrided &buffer)

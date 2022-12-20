@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -180,7 +180,7 @@ TEST_P(OpPadAndStack, correct_output)
     {
         srcImgVec.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{srcWidth, srcHeight}, nvcv::FMT_RGBA8));
 
-        auto *imgSrcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(srcImgVec.back()->exportData());
+        auto imgSrcData = srcImgVec.back()->exportData<nvcv::ImageDataStridedCuda>();
 
         srcStride      = imgSrcData->plane(0).rowStride;
         srcRowStride   = srcStride / sizeof(uint8_t);

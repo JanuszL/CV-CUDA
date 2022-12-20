@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -97,8 +97,8 @@ TEST_P(OpConv2D, varshape_correct_output)
         srcVec[i].resize(imgSrc[i]->size().h * srcRowStride);
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
 
-        auto *imgData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
-        assert(imgData != nullptr);
+        auto imgData = imgSrc[i]->exportData<nvcv::ImageDataStridedCuda>();
+        ASSERT_NE(imgData, nvcv::detail::NullOpt);
 
         // Copy input data to the GPU
         ASSERT_EQ(cudaSuccess,
@@ -136,8 +136,8 @@ TEST_P(OpConv2D, varshape_correct_output)
 
         std::generate(kernelVec[i].begin(), kernelVec[i].end(), [&]() { return udist(rng); });
 
-        auto *data = dynamic_cast<const nvcv::IImageDataStridedCuda *>(kernel[i]->exportData());
-        assert(data != nullptr);
+        auto data = kernel[i]->exportData<nvcv::ImageDataStridedCuda>();
+        ASSERT_NE(data, nvcv::detail::NullOpt);
 
         // Copy kernel data to the GPU
         ASSERT_EQ(cudaSuccess,
@@ -175,10 +175,10 @@ TEST_P(OpConv2D, varshape_correct_output)
     {
         SCOPED_TRACE(i);
 
-        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
+        const auto srcData = imgSrc[i]->exportData<nvcv::ImageDataStridedCuda>();
         ASSERT_EQ(srcData->numPlanes(), 1);
 
-        const auto *dstData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgDst[i]->exportData());
+        const auto dstData = imgDst[i]->exportData<nvcv::ImageDataStridedCuda>();
         ASSERT_EQ(dstData->numPlanes(), 1);
 
         int dstRowStride = srcVecRowStride[i];

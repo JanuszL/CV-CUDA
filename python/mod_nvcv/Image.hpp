@@ -104,8 +104,8 @@ public:
 
 private:
     explicit Image(const Size2D &size, nvcv::ImageFormat fmt);
-    explicit Image(std::vector<std::shared_ptr<ExternalBuffer>> buf, const nvcv::IImageDataStridedCuda &imgData);
-    explicit Image(std::vector<py::buffer> buf, const nvcv::IImageDataStridedHost &imgData);
+    explicit Image(std::vector<std::shared_ptr<ExternalBuffer>> buf, const nvcv::ImageDataStridedCuda &imgData);
+    explicit Image(std::vector<py::buffer> buf, const nvcv::ImageDataStridedHost &imgData);
 
     std::unique_ptr<nvcv::IImage> m_impl; // must come before m_key
     Key                           m_key;

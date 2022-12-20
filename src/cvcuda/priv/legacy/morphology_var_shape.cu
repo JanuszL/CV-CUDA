@@ -283,8 +283,8 @@ ErrorCode MorphologyVarShape::infer(const nvcv::IImageBatchVarShape &inBatch, co
         {
             const IImage            &inimg      = *init;
             const IImage            &outimg     = *outit;
-            auto                    *inimgdata  = dynamic_cast<const IImageDataStridedCuda *>(inimg.exportData());
-            auto                    *outimgdata = dynamic_cast<const IImageDataStridedCuda *>(outimg.exportData());
+            auto                     inimgdata  = inimg.exportData<ImageDataStridedCuda>();
+            auto                     outimgdata = outimg.exportData<ImageDataStridedCuda>();
             const ImagePlaneStrided &inplane    = inimgdata->plane(0);
             const ImagePlaneStrided &outplane   = outimgdata->plane(0);
             checkCudaErrors(cudaMemcpy2DAsync(outplane.basePtr, outplane.rowStride, inplane.basePtr, inplane.rowStride,

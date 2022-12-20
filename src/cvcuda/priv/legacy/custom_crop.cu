@@ -24,8 +24,8 @@
 #include "CvCudaUtils.cuh"
 
 #include <nvcv/IImage.hpp>
-#include <nvcv/IImageData.hpp>
 #include <nvcv/ITensorData.hpp>
+#include <nvcv/ImageData.hpp>
 
 #include <cstdio>
 

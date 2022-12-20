@@ -107,8 +107,8 @@ TEST(ImageBatchVarShape, wip_create)
 
     auto addToGold = [&goldImages, &goldFormats, &goldHandles](const nvcv::IImage &img)
     {
-        auto *imgdata = dynamic_cast<const nvcv::IImageDataStridedCuda *>(img.exportData());
-        EXPECT_NE(nullptr, imgdata);
+        auto imgdata = img.exportData<nvcv::ImageDataStridedCuda>();
+        EXPECT_NE(nvcv::detail::NullOpt, imgdata);
         if (imgdata)
         {
             goldImages.push_back(imgdata->cdata().buffer.strided);
@@ -231,10 +231,10 @@ TEST(ImageBatchVarShape, wip_create)
 
     // not-empty data
     {
-        const nvcv::IImageBatchData *data = batch.exportData(stream);
+        auto data = batch.exportData(stream);
         ASSERT_NE(nullptr, data);
 
-        auto *devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(data);
+        auto devdata = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(data);
         ASSERT_NE(nullptr, devdata);
 
         ASSERT_EQ(devdata->uniqueFormat(), batch.uniqueFormat());
@@ -298,8 +298,8 @@ TEST(ImageBatchVarShape, wip_sync)
 
     auto addToGold = [&goldImages, &goldFormats, &goldHandles](const nvcv::IImage &img)
     {
-        auto *imgdata = dynamic_cast<const nvcv::IImageDataStridedCuda *>(img.exportData());
-        EXPECT_NE(nullptr, imgdata);
+        auto imgdata = img.exportData<nvcv::ImageDataStridedCuda>();
+        EXPECT_NE(nvcv::detail::NullOpt, imgdata);
         if (imgdata)
         {
             goldImages.push_back(imgdata->cdata().buffer.strided);

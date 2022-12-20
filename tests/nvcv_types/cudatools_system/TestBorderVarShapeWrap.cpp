@@ -95,8 +95,8 @@ TYPED_TEST(BorderVarShapeWrapTest, correct_fill)
         srcImageList.emplace_back(
             std::make_unique<nvcv::Image>(nvcv::Size2D{width + randSize(randEng), height + randSize(randEng)}, format));
 
-        auto *srcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(srcImageList[i]->exportData());
-        ASSERT_NE(srcData, nullptr);
+        auto srcData = srcImageList[i]->exportData<nvcv::ImageDataStridedCuda>();
+        ASSERT_NE(srcData, nvcv::detail::NullOpt);
 
         int srcRowStride = srcData->plane(0).rowStride;
         int srcHeight    = srcImageList[i]->size().h;
@@ -145,10 +145,10 @@ TYPED_TEST(BorderVarShapeWrapTest, correct_fill)
     {
         SCOPED_TRACE(i);
 
-        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(srcImageList[i]->exportData());
+        const auto srcData = srcImageList[i]->exportData<nvcv::ImageDataStridedCuda>();
         ASSERT_EQ(srcData->numPlanes(), 1);
 
-        const auto *dstData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(dstImageList[i]->exportData());
+        const auto dstData = dstImageList[i]->exportData<nvcv::ImageDataStridedCuda>();
         ASSERT_EQ(dstData->numPlanes(), 1);
 
         nvcv::Size2D srcSize = srcImageList[i]->size();

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -304,14 +304,14 @@ TEST_P(OpComposite, varshape_correct_output)
         generate(backgroundVec[i].begin(), backgroundVec[i].end(), [&]() { return udist(rng); });
         generate(fgMaskVec[i].begin(), fgMaskVec[i].end(), [&]() { return udist(rng); });
 
-        auto *imgDataForeground = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgForeground[i]->exportData());
-        assert(imgDataForeground != nullptr);
+        auto imgDataForeground = imgForeground[i]->exportData<nvcv::ImageDataStridedCuda>();
+        assert(imgDataForeground);
 
-        auto *imgDataBackground = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgBackground[i]->exportData());
-        assert(imgDataBackground != nullptr);
+        auto imgDataBackground = imgBackground[i]->exportData<nvcv::ImageDataStridedCuda>();
+        assert(imgDataBackground);
 
-        auto *imgDataFgMask = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgFgMask[i]->exportData());
-        assert(imgDataFgMask != nullptr);
+        auto imgDataFgMask = imgFgMask[i]->exportData<nvcv::ImageDataStridedCuda>();
+        assert(imgDataFgMask);
 
         // Copy foreground image data to the GPU
         ASSERT_EQ(cudaSuccess, cudaMemcpy2D(imgDataForeground->plane(0).basePtr, imgDataForeground->plane(0).rowStride,
@@ -355,7 +355,7 @@ TEST_P(OpComposite, varshape_correct_output)
         int width  = sizeVec[i].w;
         int height = sizeVec[i].h;
 
-        const auto *outData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgOut[i]->exportData());
+        const auto outData = imgOut[i]->exportData<nvcv::ImageDataStridedCuda>();
         assert(outData->numPlanes() == 1);
 
         int outRowStride        = width * outFormat.numChannels();
