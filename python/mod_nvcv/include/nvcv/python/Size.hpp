@@ -22,12 +22,12 @@
 
 namespace pybind11::detail {
 
-namespace cvpy = nv::cvpy;
+namespace cvpy = nvcvpy;
 
 template<>
-struct type_caster<nv::cv::Size2D>
+struct type_caster<nvcv::Size2D>
 {
-    PYBIND11_TYPE_CASTER(nv::cv::Size2D, const_name("nvcv.Size2D"));
+    PYBIND11_TYPE_CASTER(nvcv::Size2D, const_name("nvcv.Size2D"));
 
     bool load(handle src, bool)
     {
@@ -45,7 +45,7 @@ struct type_caster<nv::cv::Size2D>
         return false;
     }
 
-    static handle cast(nv::cv::Size2D size, return_value_policy /* policy */, handle /*parent */)
+    static handle cast(nvcv::Size2D size, return_value_policy /* policy */, handle /*parent */)
     {
         return make_tuple(size.w, size.h);
     }

@@ -30,7 +30,7 @@
 #include <nvcv/python/Container.hpp>
 #include <pybind11/stl.h>
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 
 namespace {
 
@@ -48,24 +48,24 @@ T ToObj(PyObject *obj)
 
 extern "C" PyObject *ImplDataType_ToPython(NVCVDataType p)
 {
-    py::object obj = py::cast(cv::DataType(p));
+    py::object obj = py::cast(nvcv::DataType(p));
     return obj.ptr();
 }
 
 extern "C" NVCVDataType ImplDataType_FromPython(PyObject *obj)
 {
-    return ToObj<cv::DataType>(obj);
+    return ToObj<nvcv::DataType>(obj);
 }
 
 extern "C" PyObject *ImplImageFormat_ToPython(NVCVImageFormat p)
 {
-    py::object obj = py::cast(cv::ImageFormat(p));
+    py::object obj = py::cast(nvcv::ImageFormat(p));
     return obj.ptr();
 }
 
 extern "C" NVCVImageFormat ImplImageFormat_FromPython(PyObject *obj)
 {
-    return ToObj<cv::ImageFormat>(obj);
+    return ToObj<nvcv::ImageFormat>(obj);
 }
 
 extern "C" NVCVTensorHandle ImplTensor_GetHandle(PyObject *obj)
@@ -143,13 +143,14 @@ extern "C" cudaStream_t ImplStream_GetCudaHandle(PyObject *stream)
 
 extern "C" PyObject *ImplTensor_Create(int32_t ndim, const int64_t *shape, NVCVDataType dtype, NVCVTensorLayout layout)
 {
-    std::optional<cv::TensorLayout> cxxLayout;
+    std::optional<nvcv::TensorLayout> cxxLayout;
     if (layout != NVCV_TENSOR_NONE)
     {
-        cxxLayout = cv::TensorLayout(layout);
+        cxxLayout = nvcv::TensorLayout(layout);
     }
 
-    std::shared_ptr<Tensor> tensor = Tensor::Create(Shape(shape, shape + ndim), cv::DataType{dtype}, std::move(layout));
+    std::shared_ptr<Tensor> tensor
+        = Tensor::Create(Shape(shape, shape + ndim), nvcv::DataType{dtype}, std::move(layout));
 
     return py::cast(std::move(tensor)).release().ptr();
 }
@@ -168,7 +169,7 @@ extern "C" NVCVImageBatchHandle ImplImageBatchVarShape_GetHandle(PyObject *varsh
 extern "C" PyObject *ImplTensor_CreateForImageBatch(int32_t numImages, int32_t width, int32_t height,
                                                     NVCVImageFormat fmt)
 {
-    std::shared_ptr<Tensor> tensor = Tensor::CreateForImageBatch(numImages, {width, height}, cv::ImageFormat(fmt));
+    std::shared_ptr<Tensor> tensor = Tensor::CreateForImageBatch(numImages, {width, height}, nvcv::ImageFormat(fmt));
     return py::cast(std::move(tensor)).release().ptr();
 }
 
@@ -200,7 +201,7 @@ extern "C" ICacheItem **ImplCache_Fetch(const IKey *pkey)
 
     std::vector<std::shared_ptr<priv::CacheItem>> vcont = Cache::Instance().fetch(*pkey);
 
-    std::unique_ptr<cvpy::ICacheItem *[]> out(new ICacheItem *[vcont.size() + 1]);
+    std::unique_ptr<nvcvpy::ICacheItem *[]> out(new ICacheItem *[vcont.size() + 1]);
     for (size_t i = 0; i < vcont.size(); ++i)
     {
         ExternalCacheItem *extItem = dynamic_cast<ExternalCacheItem *>(vcont[i].get());
@@ -215,7 +216,7 @@ extern "C" ICacheItem **ImplCache_Fetch(const IKey *pkey)
 
 extern "C" PyObject *ImplImage_Create(int32_t width, int32_t height, NVCVImageFormat fmt)
 {
-    std::shared_ptr<Image> img = Image::Create({width, height}, cv::ImageFormat{fmt});
+    std::shared_ptr<Image> img = Image::Create({width, height}, nvcv::ImageFormat{fmt});
     return py::cast(std::move(img)).release().ptr();
 }
 
@@ -224,7 +225,7 @@ extern "C" NVCVImageHandle ImplImage_GetHandle(PyObject *img)
     return ToSharedObj<Image>(img)->impl().handle();
 }
 
-extern "C" PyObject *ImplContainer_Create(cvpy::Container *pcont)
+extern "C" PyObject *ImplContainer_Create(nvcvpy::Container *pcont)
 {
     NVCV_ASSERT(pcont != nullptr);
     auto cont = std::make_shared<ExternalContainer>(*pcont);
@@ -265,4 +266,4 @@ void ExportCAPI(py::module &m)
     m.add_object("_C_API", py::capsule(&capi, "nvcv._C_API"));
 }
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv

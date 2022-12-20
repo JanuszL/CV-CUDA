@@ -17,11 +17,11 @@
 
 #include "Object.hpp"
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 
 Object::~Object()
 {
     // nothing
 }
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv

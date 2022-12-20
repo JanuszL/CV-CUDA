@@ -22,7 +22,7 @@
 #endif
 #include <strstream>
 
-namespace nv::cv::util {
+namespace nvcv::util {
 
 void ReplaceAllInline(char *strBuffer, int bufferSize, std::string_view what, std::string_view replace) noexcept;
 
@@ -36,4 +36,4 @@ private:
     std::strstreambuf m_buf;
 };
 
-} // namespace nv::cv::util
+} // namespace nvcv::util

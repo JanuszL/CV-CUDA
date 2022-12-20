@@ -24,26 +24,21 @@
 
 #include <nvcv/python/Fwd.hpp>
 
-namespace nv::cvpy::util {
-}
-
-namespace nv::cvop {
+namespace nvcvpy::util {
 }
 
 namespace cvcudapy {
 
-using nv::cvpy::Image;
-using nv::cvpy::ImageBatchVarShape;
-using nv::cvpy::LockMode;
-using nv::cvpy::ResourceGuard;
-using nv::cvpy::Shape;
-using nv::cvpy::Stream;
-using nv::cvpy::Tensor;
+using nvcvpy::Image;
+using nvcvpy::ImageBatchVarShape;
+using nvcvpy::LockMode;
+using nvcvpy::ResourceGuard;
+using nvcvpy::Shape;
+using nvcvpy::Stream;
+using nvcvpy::Tensor;
 
-namespace util   = nv::cvpy::util;
-namespace py     = ::pybind11;
-namespace nvcv   = nv::cv;
-namespace nvcvop = nv::cvop;
+namespace util = nvcvpy::util;
+namespace py   = ::pybind11;
 
 void ExportOpReformat(py::module &m);
 void ExportOpResize(py::module &m);
@@ -78,7 +73,7 @@ template<class OP, class CTOR>
 class PyOperator;
 
 template<class OP, class... CTOR_ARGS>
-class PyOperator<OP, void(CTOR_ARGS...)> : public nv::cvpy::Container
+class PyOperator<OP, void(CTOR_ARGS...)> : public nvcvpy::Container
 {
 public:
     template<class... AA>
@@ -92,12 +87,12 @@ public:
         return *this;
     }
 
-    const nv::cvpy::IKey &key() const override
+    const nvcvpy::IKey &key() const override
     {
         return m_key;
     }
 
-    class Key : public nv::cvpy::IKey
+    class Key : public nvcvpy::IKey
     {
     public:
         Key(const CTOR_ARGS &...args)
@@ -111,13 +106,13 @@ public:
             return apply(
                 [](auto... args)
                 {
-                    using nv::cvpy::util::ComputeHash;
+                    using nvcvpy::util::ComputeHash;
                     return ComputeHash(args...);
                 },
                 m_args);
         }
 
-        bool doIsEqual(const nv::cvpy::IKey &that_) const override
+        bool doIsEqual(const nvcvpy::IKey &that_) const override
         {
             const Key &that = static_cast<const Key &>(that_);
             return m_args == that.m_args;
@@ -153,7 +148,7 @@ std::shared_ptr<PyOperator<OP, void(AA...)>> CreateOperator(AA &&...args)
     typename PyOP::Key key(args...);
 
     // Try to fetch it from cache
-    std::vector<std::shared_ptr<nv::cvpy::ICacheItem>> vcont = nv::cvpy::Cache::fetch(key);
+    std::vector<std::shared_ptr<nvcvpy::ICacheItem>> vcont = nvcvpy::Cache::fetch(key);
 
     // None found?
     if (vcont.empty())
@@ -162,7 +157,7 @@ std::shared_ptr<PyOperator<OP, void(AA...)>> CreateOperator(AA &&...args)
         auto op = std::shared_ptr<PyOP>(new PyOP(std::forward<AA>(args)...));
 
         // Adds to the resource cache
-        nv::cvpy::Cache::add(*op);
+        nvcvpy::Cache::add(*op);
         return op;
     }
     else
@@ -175,10 +170,10 @@ std::shared_ptr<PyOperator<OP, void(AA...)>> CreateOperator(AA &&...args)
 }
 } // namespace cvcudapy
 
-namespace nv::cv {
+namespace nvcv {
 inline size_t ComputeHash(const ImageFormat fmt)
 {
-    using cvpy::util::ComputeHash;
+    using nvcvpy::util::ComputeHash;
     return ComputeHash(fmt.cvalue());
 }
-} // namespace nv::cv
+} // namespace nvcv

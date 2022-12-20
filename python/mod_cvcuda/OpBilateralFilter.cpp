@@ -19,9 +19,9 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <nvcv/operators/OpBilateralFilter.hpp>
-#include <nvcv/operators/Types.h>
-#include <nvcv/optools/TypeTraits.hpp>
+#include <cvcuda/OpBilateralFilter.hpp>
+#include <cvcuda/Types.h>
+#include <nvcv/cuda/TypeTraits.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
 #include <nvcv/python/Stream.hpp>
@@ -39,7 +39,7 @@ Tensor BilateralFilterInto(Tensor &output, Tensor &input, int diameter, float si
         pstream = Stream::Current();
     }
 
-    auto bilateral_filter = CreateOperator<nvcvop::BilateralFilter>();
+    auto bilateral_filter = CreateOperator<cvcuda::BilateralFilter>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});
@@ -68,7 +68,7 @@ ImageBatchVarShape VarShapeBilateralFilterInto(ImageBatchVarShape &output, Image
         pstream = Stream::Current();
     }
 
-    auto bilateral_filter = CreateOperator<nvcvop::BilateralFilter>();
+    auto bilateral_filter = CreateOperator<cvcuda::BilateralFilter>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, diameter, sigmaColor, sigmaSpace});

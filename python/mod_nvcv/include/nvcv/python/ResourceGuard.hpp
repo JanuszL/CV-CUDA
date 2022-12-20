@@ -23,7 +23,7 @@
 #include "Resource.hpp"
 #include "Stream.hpp"
 
-namespace nv::cvpy {
+namespace nvcvpy {
 
 namespace py = pybind11;
 
@@ -107,6 +107,6 @@ private:
     py::list   m_resourcesPerLockMode;
 };
 
-} // namespace nv::cvpy
+} // namespace nvcvpy
 
 #endif // NVCV_PYTHON_RESOURCE_GUARD_HPP

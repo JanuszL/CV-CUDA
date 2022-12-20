@@ -18,7 +18,7 @@
 #include "Operators.hpp"
 
 #include <common/PyUtil.hpp>
-#include <nvcv/operators/OpNormalize.hpp>
+#include <cvcuda/OpNormalize.hpp>
 #include <nvcv/python/Image.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
@@ -32,7 +32,7 @@ namespace {
 
 enum OpFlags : uint32_t
 {
-    SCALE_IS_STDDEV = NVCV_OP_NORMALIZE_SCALE_IS_STDDEV
+    SCALE_IS_STDDEV = CVCUDA_NORMALIZE_SCALE_IS_STDDEV
 };
 
 } // namespace
@@ -51,7 +51,7 @@ Tensor NormalizeInto(Tensor &output, Tensor &input, Tensor &base, Tensor &scale,
         flags = 0;
     }
 
-    auto normalize = CreateOperator<nvcvop::Normalize>();
+    auto normalize = CreateOperator<cvcuda::Normalize>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, base, scale});
@@ -85,7 +85,7 @@ ImageBatchVarShape VarShapeNormalizeInto(ImageBatchVarShape &output, ImageBatchV
         flags = 0;
     }
 
-    auto normalize = CreateOperator<nvcvop::Normalize>();
+    auto normalize = CreateOperator<cvcuda::Normalize>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, base, scale});

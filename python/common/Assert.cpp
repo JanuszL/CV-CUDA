@@ -20,7 +20,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-namespace nv::cvpy::util {
+namespace nvcvpy::util {
 
 void DoAssert(const char *file, int line, const char *cond)
 {
@@ -35,4 +35,4 @@ void DoAssert(const char *file, int line, const char *cond)
     abort();
 }
 
-} // namespace nv::cvpy::util
+} // namespace nvcvpy::util

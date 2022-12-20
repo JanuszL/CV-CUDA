@@ -18,7 +18,7 @@
 #ifndef NVCV_UTIL_SIZE_HPP
 #define NVCV_UTIL_SIZE_HPP
 
-namespace nv::cv::util {
+namespace nvcv::util {
 
 struct Size2D
 {
@@ -35,6 +35,6 @@ inline bool operator!=(const Size2D &a, const Size2D &b)
     return !(a == b);
 }
 
-} // namespace nv::cv::util
+} // namespace nvcv::util
 
 #endif // NVCV_UTIL_SIZE_HPP

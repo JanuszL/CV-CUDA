@@ -18,12 +18,12 @@
 #include <common/NvDecoder.h>
 #include <common/TestUtils.h>
 #include <cuda_runtime_api.h>
+#include <cvcuda/OpCustomCrop.hpp>
+#include <cvcuda/OpResize.hpp>
 #include <getopt.h>
 #include <math.h>
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
-#include <nvcv/operators/OpCustomCrop.hpp>
-#include <nvcv/operators/OpResize.hpp>
 
 /**
  * @brief Crop and Resize sample app.
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
     // without padding since NvDecode utility currently doesnt support
     // Padded buffers.
 
-    nv::cv::TensorDataStridedCuda::Buffer inBuf;
+    nvcv::TensorDataStridedCuda::Buffer inBuf;
     inBuf.strides[3] = sizeof(uint8_t);
     inBuf.strides[2] = maxChannels * inBuf.strides[3];
     inBuf.strides[1] = maxImageWidth * inBuf.strides[2];
@@ -133,15 +133,15 @@ int main(int argc, char *argv[])
     // tag: Tensor Requirements
     // Calculate the requirements for the RGBI uint8_t Tensor which include
     // pitch bytes, alignment, shape  and tensor layout
-    nv::cv::Tensor::Requirements inReqs
-        = nv::cv::Tensor::CalcRequirements(batchSize, {maxImageWidth, maxImageHeight}, nv::cv::FMT_RGB8);
+    nvcv::Tensor::Requirements inReqs
+        = nvcv::Tensor::CalcRequirements(batchSize, {maxImageWidth, maxImageHeight}, nvcv::FMT_RGB8);
 
     // Create a tensor buffer to store the data pointer and pitch bytes for each plane
-    nv::cv::TensorDataStridedCuda inData(nv::cv::TensorShape{inReqs.shape, inReqs.rank, inReqs.layout},
-                                         nv::cv::DataType{inReqs.dtype}, inBuf);
+    nvcv::TensorDataStridedCuda inData(nvcv::TensorShape{inReqs.shape, inReqs.rank, inReqs.layout},
+                                       nvcv::DataType{inReqs.dtype}, inBuf);
 
     // TensorWrapData allows for interoperation of external tensor representations with CVCUDA Tensor.
-    nv::cv::TensorWrapData inTensor(inData);
+    nvcv::TensorWrapData inTensor(inData);
 
     // tag: Image Loading
     // NvJpeg is used to load the images to create a batched input device buffer.
@@ -171,9 +171,9 @@ int main(int argc, char *argv[])
 
     // tag: Allocate Tensors for Crop and Resize
     // Create a CVCUDA Tensor based on the crop window size.
-    nv::cv::Tensor cropTensor(batchSize, {cropWidth, cropHeight}, nv::cv::FMT_RGB8);
+    nvcv::Tensor cropTensor(batchSize, {cropWidth, cropHeight}, nvcv::FMT_RGB8);
     // Create a CVCUDA Tensor based on resize dimensions
-    nv::cv::Tensor resizedTensor(batchSize, {resizeWidth, resizeHeight}, nv::cv::FMT_RGB8);
+    nvcv::Tensor resizedTensor(batchSize, {resizeWidth, resizeHeight}, nvcv::FMT_RGB8);
 
 #ifdef PROFILE_SAMPLE
     cudaEvent_t start, stop;
@@ -182,8 +182,8 @@ int main(int argc, char *argv[])
     cudaEventRecord(start);
 #endif
     // tag: Initialize operators for Crop and Resize
-    nv::cvop::CustomCrop cropOp;
-    nv::cvop::Resize     resizeOp;
+    cvcuda::CustomCrop cropOp;
+    cvcuda::Resize     resizeOp;
 
     // tag: Executes the CustomCrop operation on the given cuda stream
     cropOp(stream, inTensor, cropTensor, crpRect);

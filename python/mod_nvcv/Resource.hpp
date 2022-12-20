@@ -29,7 +29,7 @@
 // fwd declaration from driver_types.h
 typedef struct CUevent_st *cudaEvent_t;
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 namespace py = pybind11;
 
 class Stream;
@@ -70,6 +70,6 @@ private:
     cudaEvent_t m_readEvent, m_writeEvent;
 };
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv
 
 #endif // NVCV_PYTHON_PRIV_RESOURCE_HPP

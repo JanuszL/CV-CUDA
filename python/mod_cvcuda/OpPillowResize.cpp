@@ -19,10 +19,10 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
+#include <cvcuda/OpPillowResize.hpp>
+#include <cvcuda/Types.h>
 #include <nvcv/TensorDataAccess.hpp>
-#include <nvcv/operators/OpPillowResize.hpp>
-#include <nvcv/operators/Types.h>
-#include <nvcv/optools/TypeTraits.hpp>
+#include <nvcv/cuda/TypeTraits.hpp>
 #include <nvcv/python/Image.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ImageFormat.hpp>
@@ -51,7 +51,7 @@ Tensor PillowResizeInto(Tensor &output, Tensor &input, nvcv::ImageFormat format,
     int          h              = std::max(in_access->numRows(), out_access->numRows());
     int          max_batch_size = in_access->numSamples();
     nvcv::Size2D size{w, h};
-    auto         pillowResize = CreateOperator<nvcvop::PillowResize>(size, max_batch_size, format);
+    auto         pillowResize = CreateOperator<cvcuda::PillowResize>(size, max_batch_size, format);
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});
@@ -87,7 +87,7 @@ ImageBatchVarShape VarShapePillowResizeInto(ImageBatchVarShape &output, ImageBat
     int          h              = std::max(maxSrcSize.h, maxDstSize.h);
     int          max_batch_size = input.capacity();
     nvcv::Size2D size{w, h};
-    auto         pillowResize = CreateOperator<nvcvop::PillowResize>(size, max_batch_size, input.uniqueFormat());
+    auto         pillowResize = CreateOperator<cvcuda::PillowResize>(size, max_batch_size, input.uniqueFormat());
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});

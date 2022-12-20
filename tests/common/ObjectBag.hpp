@@ -23,7 +23,7 @@
 #include <functional>
 #include <stack>
 
-namespace nv::cv::test {
+namespace nvcv::test {
 
 // Bag of NVCV objects, destroys them in its dtor in reverse
 // order of insertion.
@@ -41,6 +41,6 @@ private:
     std::stack<std::function<void()>> m_objs;
 };
 
-} // namespace nv::cv::test
+} // namespace nvcv::test
 
 #endif // NVVPI_TEST_UTIL_OBJECTBAG_HPP

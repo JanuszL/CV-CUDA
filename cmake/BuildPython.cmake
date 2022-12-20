@@ -18,15 +18,15 @@ include(ExternalProject)
 # Where our python module installed, it'll end up being in the same
 # directory nvcv shared library resides
 set(PYPROJ_COMMON_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}
-                       -Dnvcv_ROOT=${CMAKE_CURRENT_BINARY_DIR}/cmake)
+                       -Dnvcv_types_ROOT=${CMAKE_CURRENT_BINARY_DIR}/cmake)
 
 if(CMAKE_BUILD_TYPE)
     list(APPEND PYPROJ_COMMON_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
 endif()
 
-get_target_property(NVCV_FORMAT_SOURCE_DIR nvcv_format SOURCE_DIR)
+get_target_property(NVCV_TYPES_SOURCE_DIR nvcv_types SOURCE_DIR)
 
-# Needed so that nvcv library's build path gets added
+# Needed so that nvcv_types library's build path gets added
 # as RPATH to the plugin module. When outer project gets installed,
 # it shall overwrite the RPATH with the final installation path.
 list(APPEND PYPROJ_COMMON_ARGS
@@ -36,8 +36,8 @@ list(APPEND PYPROJ_COMMON_ARGS
     -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
     -DCMAKE_MODULE_PATH=${CMAKE_CURRENT_BINARY_DIR}/cmake
     -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+    -DNVCV_TYPES_SOURCE_DIR=${NVCV_TYPES_SOURCE_DIR}
     -DPYBIND11_SOURCE_DIR=${PYBIND11_SOURCE_DIR}
-    -DNVCV_FORMAT_SOURCE_DIR=${NVCV_FORMAT_SOURCE_DIR}
 )
 
 foreach(VER ${PYTHON_VERSIONS})
@@ -51,7 +51,7 @@ foreach(VER ${PYTHON_VERSIONS})
         TMP_DIR ${BASEDIR}/tmp
         STAMP_DIR ${BASEDIR}/stamp
         BUILD_ALWAYS true
-        DEPENDS nvcv nvcv_operators
+        DEPENDS nvcv_types cvcuda
         INSTALL_COMMAND ""
     )
 endforeach()

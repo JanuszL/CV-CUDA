@@ -22,7 +22,7 @@
 #include <cstdarg>
 #include <regex>
 
-namespace nv::cv::util {
+namespace nvcv::util {
 
 static std::string_view GetFunctionName(const std::string_view &stmt)
 {
@@ -122,4 +122,4 @@ const char *ToString(cudaError_t err, const char **perrdescr)
     return cudaGetErrorName(err);
 }
 
-} // namespace nv::cv::util
+} // namespace nvcv::util

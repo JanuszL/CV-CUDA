@@ -27,7 +27,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace nv::cv::util {
+namespace nvcv::util {
 
 class HashMD5
 {
@@ -66,7 +66,7 @@ void Update(HashMD5 &hash, const T *value)
 void Update(HashMD5 &hash, const char *value);
 
 template<std::ranges::range R>
-void Update(nv::cv::util::HashMD5 &hash, const R &r)
+void Update(nvcv::util::HashMD5 &hash, const R &r)
 {
     Update(hash, std::ranges::size(r));
     if constexpr (std::ranges::contiguous_range<
@@ -100,12 +100,12 @@ std::enable_if_t<std::is_floating_point_v<T>> Update(HashMD5 &hash, const T &val
     hash(std::hash<T>()(value));
 }
 
-} // namespace nv::cv::util
+} // namespace nvcv::util
 
 namespace std {
 
 template<typename... TT>
-void Update(nv::cv::util::HashMD5 &hash, const tuple<TT...> &t)
+void Update(nvcv::util::HashMD5 &hash, const tuple<TT...> &t)
 {
     if constexpr (has_unique_object_representations_v<tuple<TT...>>)
     {
@@ -114,28 +114,28 @@ void Update(nv::cv::util::HashMD5 &hash, const tuple<TT...> &t)
 
     auto th = forward_as_tuple(hash);
 
-    apply(nv::cv::util::Update<TT...>, tuple_cat(th, t));
+    apply(nvcv::util::Update<TT...>, tuple_cat(th, t));
 };
 
-inline void Update(nv::cv::util::HashMD5 &hash, const string &s)
+inline void Update(nvcv::util::HashMD5 &hash, const string &s)
 {
     return hash(s.data(), s.size());
 }
 
-inline void Update(nv::cv::util::HashMD5 &hash, const string_view &s)
+inline void Update(nvcv::util::HashMD5 &hash, const string_view &s)
 {
     return hash(s.data(), s.size());
 }
 
-inline void Update(nv::cv::util::HashMD5 &hash, const std::type_info &t)
+inline void Update(nvcv::util::HashMD5 &hash, const std::type_info &t)
 {
     return hash(t.hash_code());
 }
 
 template<class T>
-void Update(nv::cv::util::HashMD5 &hash, const optional<T> &o)
+void Update(nvcv::util::HashMD5 &hash, const optional<T> &o)
 {
-    using nv::cv::util::Update;
+    using nvcv::util::Update;
 
     // We can't rely on std::hash<T> for optionals because they
     // require a valid hash specialization for T. Since our

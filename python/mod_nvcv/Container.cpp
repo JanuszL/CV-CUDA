@@ -17,7 +17,7 @@
 
 #include "Container.hpp"
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 
 std::shared_ptr<Container> Container::shared_from_this()
 {
@@ -37,4 +37,4 @@ void Container::Export(py::module &m)
         nullptr, "ExternalContainer", py::module_local());
 }
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv

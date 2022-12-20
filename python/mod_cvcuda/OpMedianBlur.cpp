@@ -19,9 +19,9 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <nvcv/operators/OpMedianBlur.hpp>
-#include <nvcv/operators/Types.h>
-#include <nvcv/optools/TypeTraits.hpp>
+#include <cvcuda/OpMedianBlur.hpp>
+#include <cvcuda/Types.h>
+#include <nvcv/cuda/TypeTraits.hpp>
 #include <nvcv/python/Image.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
@@ -39,7 +39,7 @@ Tensor MedianBlurInto(Tensor &output, Tensor &input, const std::tuple<int, int> 
         pstream = Stream::Current();
     }
 
-    auto median_blur = CreateOperator<nvcvop::MedianBlur>(0);
+    auto median_blur = CreateOperator<cvcuda::MedianBlur>(0);
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});
@@ -68,7 +68,7 @@ ImageBatchVarShape VarShapeMedianBlurInto(ImageBatchVarShape &output, ImageBatch
         pstream = Stream::Current();
     }
 
-    auto median_blur = CreateOperator<nvcvop::MedianBlur>(input.capacity());
+    auto median_blur = CreateOperator<cvcuda::MedianBlur>(input.capacity());
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, ksize});

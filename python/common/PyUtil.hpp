@@ -25,7 +25,7 @@
 #include <functional>
 #include <sstream>
 
-namespace nv::cvpy::util {
+namespace nvcvpy::util {
 namespace py = pybind11;
 
 // Adds a method to an existing class
@@ -67,6 +67,6 @@ std::string GetFullyQualifiedName(py::handle h);
 py::dtype ToDType(const std::string &str);
 py::dtype ToDType(const py::buffer_info &info);
 
-} // namespace nv::cvpy::util
+} // namespace nvcvpy::util
 
 #endif // NVCV_PYTHON_PYUTIL_HPP

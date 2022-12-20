@@ -41,9 +41,9 @@ inline void CheckCudaError(cudaError_t code, const char *file, const int line)
         CheckCudaError((val), __FILE__, __LINE__); \
     }
 
-void WriteRGBITensor(nv::cv::Tensor &inTensor, cudaStream_t &stream)
+void WriteRGBITensor(nvcv::Tensor &inTensor, cudaStream_t &stream)
 {
-    const auto *srcData = dynamic_cast<const nv::cv::ITensorDataStridedCuda *>(inTensor.exportData());
+    const auto *srcData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inTensor.exportData());
     CHECK_CUDA_ERROR(cudaStreamSynchronize(stream));
 
     int bufferSize = srcData->stride(0);

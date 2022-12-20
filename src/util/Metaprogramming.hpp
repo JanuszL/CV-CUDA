@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-namespace nv::cv::util {
+namespace nvcv::util {
 
 // C++20's std::type_identity
 
@@ -28,4 +28,4 @@ struct TypeIdentityImpl
 template<class T>
 using TypeIdentity = typename TypeIdentityImpl<T>::type;
 
-} // namespace nv::cv::util
+} // namespace nvcv::util

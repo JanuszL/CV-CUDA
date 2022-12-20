@@ -19,9 +19,9 @@
 #define NVCV_TEST_COMMON_BORDER_UTILS_HPP
 
 #include <cuda_runtime.h> // for int2, etc.
-#include <nvcv/operators/Types.h>
+#include <cvcuda/Types.h>
 
-namespace nv::cv::test {
+namespace nvcv::test {
 
 void ReplicateBorderIndex(int2 &coord, int2 size);
 
@@ -33,6 +33,6 @@ void Reflect101BorderIndex(int2 &coord, int2 size);
 
 bool IsInside(int2 &inCoord, int2 inSize, NVCVBorderType borderMode);
 
-} // namespace nv::cv::test
+} // namespace nvcv::test
 
 #endif // NVCV_TEST_COMMON_BORDER_UTILS_HPP

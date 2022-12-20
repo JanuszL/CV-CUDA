@@ -26,7 +26,7 @@
 #include <common/String.hpp>
 #include <pybind11/operators.h>
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 
 // Here we define the representation of external cuda streams.
 // It defines pybind11's type casters from the python object
@@ -66,13 +66,13 @@ private:
     py::object   m_wrappedObj;
 };
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv
 
 namespace PYBIND11_NAMESPACE { namespace detail {
 
 using namespace std::literals;
-namespace util = nv::cvpy::util;
-namespace priv = nv::cvpy::priv;
+namespace util = nvcvpy::util;
+namespace priv = nvcvpy::priv;
 
 template<>
 struct type_caster<priv::ExternalStream<priv::VOIDP>>
@@ -180,7 +180,7 @@ struct type_caster<priv::ExternalStream<priv::NUMBA>>
 
 }} // namespace PYBIND11_NAMESPACE::detail
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 
 // In terms of caching, all streams are the same.
 // Any stream in the cache can be fetched and used.
@@ -376,4 +376,4 @@ void Stream::Export(py::module &m)
                           });
 }
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv

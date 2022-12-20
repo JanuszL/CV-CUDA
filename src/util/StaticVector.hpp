@@ -29,7 +29,7 @@
 #include <stdexcept>
 #include <type_traits>
 
-namespace nv::cv::util {
+namespace nvcv::util {
 
 // We want StaticVector<T> to have the same characteristics of
 // T, i.e., if T isn't copiable, so isn't StaticVector<T>. In order
@@ -555,6 +555,6 @@ public:
     using StaticVectorHelper<T, N>::StaticVectorHelper;
 };
 
-} // namespace nv::cv::util
+} // namespace nvcv::util
 
 #endif // NVCV_UTIL_STATICVECTOR_HPP

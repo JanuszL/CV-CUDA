@@ -19,9 +19,9 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <nvcv/operators/OpComposite.hpp>
-#include <nvcv/operators/Types.h>
-#include <nvcv/optools/TypeTraits.hpp>
+#include <cvcuda/OpComposite.hpp>
+#include <cvcuda/Types.h>
+#include <nvcv/cuda/TypeTraits.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
 #include <nvcv/python/Stream.hpp>
@@ -39,7 +39,7 @@ Tensor CompositeInto(Tensor &output, Tensor &foreground, Tensor &background, Ten
         pstream = Stream::Current();
     }
 
-    auto composite = CreateOperator<nvcvop::Composite>();
+    auto composite = CreateOperator<cvcuda::Composite>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {foreground, background, fgMask});
@@ -73,7 +73,7 @@ ImageBatchVarShape CompositeVarShapeInto(ImageBatchVarShape &output, ImageBatchV
         pstream = Stream::Current();
     }
 
-    auto composite = CreateOperator<nvcvop::Composite>();
+    auto composite = CreateOperator<cvcuda::Composite>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {foreground, background, fgMask});

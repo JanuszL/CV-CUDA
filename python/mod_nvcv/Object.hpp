@@ -22,7 +22,7 @@
 
 #include <memory>
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 
 // Parent of all NVCV objects that are reference-counted
 class PYBIND11_EXPORT Object : public std::enable_shared_from_this<Object>
@@ -36,6 +36,6 @@ protected:
     Object() = default;
 };
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv
 
 #endif // NVCV_PYTHON_PRIV_OBJECT_HPP

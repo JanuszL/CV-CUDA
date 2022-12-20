@@ -24,7 +24,7 @@
 #include <cassert>
 #include <type_traits>
 
-namespace nv::cv::util {
+namespace nvcv::util {
 
 template<class T, class U, class = std::enable_if_t<std::is_integral_v<T> && std::is_integral_v<U>>>
 NVCV_CUDA_HOST_DEVICE constexpr T RoundUp(T value, U multiple)
@@ -123,6 +123,6 @@ NVCV_CUDA_HOST_DEVICE constexpr auto DivUpPowerOfTwo(T num, TypeIdentity<T> den)
     return (num >> ILog2(den)) + !!(num & (den - 1));
 }
 
-} // namespace nv::cv::util
+} // namespace nvcv::util
 
 #endif // NVCV_UTIL_MATH_HPP

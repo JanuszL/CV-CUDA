@@ -19,9 +19,9 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <nvcv/operators/OpConv2D.hpp>
-#include <nvcv/operators/Types.h>
-#include <nvcv/optools/TypeTraits.hpp>
+#include <cvcuda/OpConv2D.hpp>
+#include <cvcuda/Types.h>
+#include <nvcv/cuda/TypeTraits.hpp>
 #include <nvcv/python/Image.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
@@ -41,7 +41,7 @@ ImageBatchVarShape Conv2DVarShapeInto(ImageBatchVarShape &output, ImageBatchVarS
         pstream = Stream::Current();
     }
 
-    auto conv2D = CreateOperator<nvcvop::Conv2D>();
+    auto conv2D = CreateOperator<cvcuda::Conv2D>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, kernel, kernel_anchor});

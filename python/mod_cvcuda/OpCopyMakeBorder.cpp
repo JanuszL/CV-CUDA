@@ -19,10 +19,10 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
+#include <cvcuda/OpCopyMakeBorder.hpp>
+#include <cvcuda/Types.h>
 #include <nvcv/DataType.hpp>
-#include <nvcv/operators/OpCopyMakeBorder.hpp>
-#include <nvcv/operators/Types.h>
-#include <nvcv/optools/TypeTraits.hpp>
+#include <nvcv/cuda/TypeTraits.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
 #include <nvcv/python/Stream.hpp>
@@ -52,7 +52,7 @@ Tensor CopyMakeBorderInto(Tensor &output, Tensor &input, NVCVBorderType borderMo
         nvcv::cuda::GetElement(bValue, i) = bValueDims > i ? borderValue[i] : 0.f;
     }
 
-    auto copyMakeBorder = CreateOperator<nvcvop::CopyMakeBorder>();
+    auto copyMakeBorder = CreateOperator<cvcuda::CopyMakeBorder>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});
@@ -100,7 +100,7 @@ Tensor VarShapeCopyMakeBorderStackInto(Tensor &output, ImageBatchVarShape &input
         nvcv::cuda::GetElement(bValue, i) = bValueDims > i ? borderValue[i] : 0.f;
     }
 
-    auto copyMakeBorder = CreateOperator<nvcvop::CopyMakeBorder>();
+    auto copyMakeBorder = CreateOperator<cvcuda::CopyMakeBorder>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, top, left});
@@ -148,7 +148,7 @@ ImageBatchVarShape VarShapeCopyMakeBorderInto(ImageBatchVarShape &output, ImageB
         nvcv::cuda::GetElement(bValue, i) = bValueDims > i ? borderValue[i] : 0.f;
     }
 
-    auto copyMakeBorder = CreateOperator<nvcvop::CopyMakeBorder>();
+    auto copyMakeBorder = CreateOperator<cvcuda::CopyMakeBorder>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, top, left});

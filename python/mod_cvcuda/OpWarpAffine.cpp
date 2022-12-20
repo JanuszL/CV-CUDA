@@ -19,9 +19,9 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <nvcv/operators/OpWarpAffine.hpp>
-#include <nvcv/operators/Types.h>
-#include <nvcv/optools/TypeTraits.hpp>
+#include <cvcuda/OpWarpAffine.hpp>
+#include <cvcuda/Types.h>
+#include <nvcv/cuda/TypeTraits.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
 #include <nvcv/python/Stream.hpp>
@@ -75,7 +75,7 @@ Tensor WarpAffineInto(Tensor &output, Tensor &input, const pyarray &xform, const
         }
     }
 
-    auto warpAffine = CreateOperator<nvcvop::WarpAffine>(0);
+    auto warpAffine = CreateOperator<cvcuda::WarpAffine>(0);
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});
@@ -118,7 +118,7 @@ ImageBatchVarShape WarpAffineVarShapeInto(ImageBatchVarShape &output, ImageBatch
         nvcv::cuda::GetElement(bValue, i) = bValueSize > i ? *borderValue.data(i) : 0.f;
     }
 
-    auto warpAffine = CreateOperator<nvcvop::WarpAffine>(input.capacity());
+    auto warpAffine = CreateOperator<cvcuda::WarpAffine>(input.capacity());
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, xform});

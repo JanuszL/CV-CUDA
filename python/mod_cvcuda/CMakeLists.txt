@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-find_package(nvcv_operators REQUIRED)
+find_package(cvcuda REQUIRED)
+find_package(CUDAToolkit REQUIRED)
 
 nvcv_python_add_module(
     TARGET cvcuda_module_python MODULE
@@ -53,9 +54,10 @@ nvcv_python_add_module(
 
 target_link_libraries(cvcuda_module_python
     PRIVATE
-        nvcv_util_compat
+        CUDA::cudart_static
         pynvcv
-        nvcv_operators
+        nvcv_util_compat
+        cvcuda
         nvcv_python_common
 )
 

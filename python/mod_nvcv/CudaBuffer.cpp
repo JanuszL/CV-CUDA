@@ -22,7 +22,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 
 using namespace py::literals;
 
@@ -264,7 +264,7 @@ void CudaBuffer::Export(py::module &m)
 
 namespace pybind11::detail {
 
-namespace priv = nv::cvpy::priv;
+namespace priv = nvcvpy::priv;
 
 // Python -> C++
 bool type_caster<priv::CudaBuffer>::load(handle src, bool implicit_conv)

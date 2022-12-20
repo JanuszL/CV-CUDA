@@ -21,15 +21,15 @@
 #include <nvcv/ImageFormat.hpp>
 #include <pybind11/pybind11.h>
 
-namespace nv::cv {
-size_t PYBIND11_EXPORT ComputeHash(const cv::ImageFormat &fmt);
+namespace nvcv {
+size_t PYBIND11_EXPORT ComputeHash(const nvcv::ImageFormat &fmt);
 }
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 namespace py = pybind11;
 
 void ExportImageFormat(py::module &m);
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv
 
 #endif // NVCV_PYTHON_PRIV_IMAGEFORMAT_HPP

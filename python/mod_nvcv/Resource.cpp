@@ -24,7 +24,7 @@
 
 #include <iostream>
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 
 Resource::Resource()
 {
@@ -133,4 +133,4 @@ void Resource::Export(py::module &m)
         .def("submitSignal", &Resource::submitSignal);
 }
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv

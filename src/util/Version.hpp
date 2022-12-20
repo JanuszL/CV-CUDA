@@ -27,7 +27,7 @@
 #    undef minor
 #endif
 
-namespace nv::cv::util {
+namespace nvcv::util {
 
 class Version
 {
@@ -81,6 +81,6 @@ public:
 
 std::ostream &operator<<(std::ostream &out, const Version &ver);
 
-} // namespace nv::cv::util
+} // namespace nvcv::util
 
 #endif // NVCV_UTIL_VERSION_HPP

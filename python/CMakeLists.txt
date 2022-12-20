@@ -33,6 +33,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE true)
 set(PYBIND11_PYTHON_VERSION ${PYTHON_VERSION})
 add_subdirectory(${PYBIND11_SOURCE_DIR} pybind11)
 
+find_package(nvcv_types REQUIRED)
+
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../src/util nvcv_util)
 
 set(PYTHON_MODULE_NAME python${PYTHON_VERSION})

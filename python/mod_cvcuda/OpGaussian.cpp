@@ -19,9 +19,9 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <nvcv/operators/OpGaussian.hpp>
-#include <nvcv/operators/Types.h>
-#include <nvcv/optools/TypeTraits.hpp>
+#include <cvcuda/OpGaussian.hpp>
+#include <cvcuda/Types.h>
+#include <nvcv/cuda/TypeTraits.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
 #include <nvcv/python/Stream.hpp>
@@ -43,7 +43,7 @@ Tensor GaussianInto(Tensor &output, Tensor &input, const std::tuple<int, int> &k
 
     nvcv::Size2D kernelSizeArg{std::get<0>(kernel_size), std::get<1>(kernel_size)};
 
-    auto gaussian = CreateOperator<nvcvop::Gaussian>(kernelSizeArg, 0);
+    auto gaussian = CreateOperator<cvcuda::Gaussian>(kernelSizeArg, 0);
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});
@@ -74,7 +74,7 @@ ImageBatchVarShape VarShapeGaussianInto(ImageBatchVarShape &output, ImageBatchVa
 
     nvcv::Size2D maxKernelSizeArg{std::get<0>(max_kernel_size), std::get<1>(max_kernel_size)};
 
-    auto gaussian = CreateOperator<nvcvop::Gaussian>(maxKernelSizeArg, input.capacity());
+    auto gaussian = CreateOperator<cvcuda::Gaussian>(maxKernelSizeArg, input.capacity());
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, ksize, sigma});

@@ -174,7 +174,7 @@ target_include_directories(nvcv_util
 target_link_libraries(nvcv_util
     PUBLIC
         nvcv_util_sanitizer
-        nvcv_headers
+        nvcv_types_headers
         CUDA::cudart_static
     PRIVATE
         OpenSSL::Crypto

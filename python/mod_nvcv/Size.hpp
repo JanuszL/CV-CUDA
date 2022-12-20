@@ -20,7 +20,7 @@
 
 #include <tuple>
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 
 using Size2D = std::tuple<int, int>;
 

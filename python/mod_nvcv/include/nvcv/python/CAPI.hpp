@@ -26,10 +26,10 @@
 
 namespace pybind11::detail {
 // to force inclusion of "DataType.hpp" if needed
-struct type_caster<nv::cv::DataType>;
+struct type_caster<nvcv::DataType>;
 } // namespace pybind11::detail
 
-namespace nv::cvpy {
+namespace nvcvpy {
 
 class ICacheItem;
 class IKey;
@@ -81,6 +81,6 @@ inline const CAPI &capi()
     return *capi;
 }
 
-} // namespace nv::cvpy
+} // namespace nvcvpy
 
 #endif // NVCV_PYTHON_CAPI_HPP

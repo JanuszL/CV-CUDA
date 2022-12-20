@@ -19,9 +19,9 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <nvcv/operators/OpCvtColor.hpp>
-#include <nvcv/operators/Types.h>
-#include <nvcv/optools/TypeTraits.hpp>
+#include <cvcuda/OpCvtColor.hpp>
+#include <cvcuda/Types.h>
+#include <nvcv/cuda/TypeTraits.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
 #include <nvcv/python/Stream.hpp>
@@ -292,7 +292,7 @@ Tensor CvtColorInto(Tensor &output, Tensor &input, NVCVColorConversionCode code,
         pstream = Stream::Current();
     }
 
-    auto cvtColor = CreateOperator<nvcvop::CvtColor>();
+    auto cvtColor = CreateOperator<cvcuda::CvtColor>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});
@@ -328,7 +328,7 @@ ImageBatchVarShape CvtColorVarShapeInto(ImageBatchVarShape &output, ImageBatchVa
         pstream = Stream::Current();
     }
 
-    auto cvtColor = CreateOperator<nvcvop::CvtColor>();
+    auto cvtColor = CreateOperator<cvcuda::CvtColor>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});

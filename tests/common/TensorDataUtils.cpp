@@ -19,9 +19,7 @@
 
 #include <cmath>
 
-namespace nvcv = nv::cv;
-
-namespace nv::cv::test {
+namespace nvcv::test {
 
 static void printPlane(const uint8_t *data, int width, int height, int rowStride, int bytesPC, int numC)
 {
@@ -173,4 +171,4 @@ bool TensorImageData::operator!=(const TensorImageData &that) const
     return !operator==(that);
 }
 
-} // namespace nv::cv::test
+} // namespace nvcv::test

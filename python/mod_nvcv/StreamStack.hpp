@@ -22,7 +22,7 @@
 #include <mutex>
 #include <stack>
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 
 class Stream;
 
@@ -41,6 +41,6 @@ private:
     std::mutex                        m_mtx;
 };
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv
 
 #endif // NVCV_PYTHON_PRIV_STREAMSTACK_HPP

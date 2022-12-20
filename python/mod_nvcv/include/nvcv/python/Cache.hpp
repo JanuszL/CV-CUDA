@@ -22,7 +22,7 @@
 
 #include <pybind11/pybind11.h>
 
-namespace nv::cvpy {
+namespace nvcvpy {
 
 namespace py = ::pybind11;
 
@@ -90,6 +90,6 @@ public:
     }
 };
 
-} // namespace nv::cvpy
+} // namespace nvcvpy
 
 #endif // NVCV_PYTHON_CACHE_HPP

@@ -23,7 +23,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 
 namespace py = pybind11;
 
@@ -58,11 +58,11 @@ private:
     bool       m_owns;
 };
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv
 
 namespace PYBIND11_NAMESPACE { namespace detail {
 
-namespace priv = nv::cvpy::priv;
+namespace priv = nvcvpy::priv;
 
 template<>
 struct type_caster<priv::CudaBuffer> : public type_caster_base<priv::CudaBuffer>

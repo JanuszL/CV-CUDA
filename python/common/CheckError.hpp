@@ -21,14 +21,14 @@
 #include <cuda_runtime.h>
 #include <nvcv/detail/CheckError.hpp>
 
-namespace nv::cvpy::util {
+namespace nvcvpy::util {
 
-using nv::cv::detail::CheckThrow;
+using nvcv::detail::CheckThrow;
 
 void CheckThrow(cudaError_t err);
 
 void CheckLog(cudaError_t err);
 
-} // namespace nv::cvpy::util
+} // namespace nvcvpy::util
 
 #endif // NVCV_PYTHON_CHECKERROR_HPP

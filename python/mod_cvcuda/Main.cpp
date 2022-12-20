@@ -21,7 +21,7 @@
 #include "MorphologyType.hpp"
 #include "Operators.hpp"
 
-#include <nvcv/operators/Version.h>
+#include <cvcuda/Version.h>
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
@@ -35,7 +35,7 @@ PYBIND11_MODULE(cvcuda, m)
         This is the Python API reference for the NVIDIA® CV-CUDA library.
     )pbdoc";
 
-    m.attr("__version__") = NVCV_OP_VERSION_STRING;
+    m.attr("__version__") = CVCUDA_VERSION_STRING;
 
     // Import all public names from nvcv
     auto nvcv = py::module::import("nvcv");

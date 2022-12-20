@@ -25,7 +25,7 @@
 
 #include <vector>
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 namespace py = pybind11;
 
 class Image;
@@ -42,8 +42,8 @@ public:
     std::shared_ptr<ImageBatchVarShape>       shared_from_this();
     std::shared_ptr<const ImageBatchVarShape> shared_from_this() const;
 
-    const cv::ImageBatchVarShape &impl() const;
-    cv::ImageBatchVarShape       &impl();
+    const nvcv::ImageBatchVarShape &impl() const;
+    nvcv::ImageBatchVarShape       &impl();
 
     // Let's simplify a bit and NOT export the base class ImageBatch,
     // as we currently have only one leaf class (this one).
@@ -82,11 +82,11 @@ public:
 
 private:
     explicit ImageBatchVarShape(int capacity);
-    Key                    m_key;
-    ImageList              m_list;
-    cv::ImageBatchVarShape m_impl;
+    Key                      m_key;
+    ImageList                m_list;
+    nvcv::ImageBatchVarShape m_impl;
 };
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv
 
 #endif // NVCV_PYTHON_PRIV_IMAGEBATCH_HPP

@@ -20,7 +20,7 @@
 
 #include <pybind11/pybind11.h>
 
-namespace nv::cvpy {
+namespace nvcvpy {
 
 namespace py = pybind11;
 
@@ -37,6 +37,6 @@ public:
     virtual ~Resource() = default;
 };
 
-} // namespace nv::cvpy
+} // namespace nvcvpy
 
 #endif // NVCV_PYTHON_RESOURCE_HPP

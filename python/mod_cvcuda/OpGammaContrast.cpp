@@ -19,9 +19,9 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <nvcv/operators/OpGammaContrast.hpp>
-#include <nvcv/operators/Types.h>
-#include <nvcv/optools/TypeTraits.hpp>
+#include <cvcuda/OpGammaContrast.hpp>
+#include <cvcuda/Types.h>
+#include <nvcv/cuda/TypeTraits.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
 #include <nvcv/python/Stream.hpp>
@@ -39,7 +39,7 @@ ImageBatchVarShape VarShapeGammaContrastInto(ImageBatchVarShape &output, ImageBa
         pstream = Stream::Current();
     }
 
-    auto gamma_contrast = CreateOperator<nvcvop::GammaContrast>(input.capacity(), input.uniqueFormat().numChannels());
+    auto gamma_contrast = CreateOperator<cvcuda::GammaContrast>(input.capacity(), input.uniqueFormat().numChannels());
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, gamma});

@@ -20,7 +20,7 @@
 #include <common/Assert.hpp>
 #include <common/String.hpp>
 #include <nvcv/DataType.hpp>
-#include <nvcv/optools/TypeTraits.hpp>
+#include <nvcv/cuda/TypeTraits.hpp>
 #include <pybind11/numpy.h>
 #include <pybind11/operators.h>
 
@@ -30,15 +30,15 @@
 // DataType is implicitly convertible from/to numpy types such as
 // numpy.int8, numpy.complex64, numpy.dtype, etc.
 
-namespace nv::cv {
-size_t ComputeHash(const cv::DataType &dtype)
+namespace nvcv {
+size_t ComputeHash(const nvcv::DataType &dtype)
 {
     return std::hash<uint64_t>()(static_cast<uint64_t>(dtype));
 }
 
-} // namespace nv::cv
+} // namespace nvcv
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 
 namespace {
 
@@ -53,7 +53,7 @@ struct IsComplex<std::complex<T>> : std::true_type
 };
 
 template<class T>
-bool FindDataType(const py::dtype &dt, cv::DataType *dtype)
+bool FindDataType(const py::dtype &dt, nvcv::DataType *dtype)
 {
     int       nchannels = 1;
     py::dtype dtbase    = dt;
@@ -85,24 +85,24 @@ bool FindDataType(const py::dtype &dt, cv::DataType *dtype)
 
     if (dtbase.equal(py::dtype::of<T>()))
     {
-        cv::DataKind dataKind;
+        nvcv::DataKind dataKind;
         if (IsComplex<T>::value)
         {
             nchannels = 2;
             itemsize /= 2;
-            dataKind = cv::DataKind::FLOAT;
+            dataKind = nvcv::DataKind::FLOAT;
         }
         else if (std::is_floating_point<T>::value)
         {
-            dataKind = cv::DataKind::FLOAT;
+            dataKind = nvcv::DataKind::FLOAT;
         }
         else if (std::is_signed<T>::value)
         {
-            dataKind = cv::DataKind::SIGNED;
+            dataKind = nvcv::DataKind::SIGNED;
         }
         else if (std::is_unsigned<T>::value)
         {
-            dataKind = cv::DataKind::UNSIGNED;
+            dataKind = nvcv::DataKind::UNSIGNED;
         }
         else
         {
@@ -110,23 +110,23 @@ bool FindDataType(const py::dtype &dt, cv::DataType *dtype)
         }
 
         // Infer the packing
-        cv::PackingParams pp = {};
+        nvcv::PackingParams pp = {};
 
-        pp.byteOrder = cv::ByteOrder::MSB;
+        pp.byteOrder = nvcv::ByteOrder::MSB;
 
         switch (nchannels)
         {
         case 1:
-            pp.swizzle = cv::Swizzle::S_X000;
+            pp.swizzle = nvcv::Swizzle::S_X000;
             break;
         case 2:
-            pp.swizzle = cv::Swizzle::S_XY00;
+            pp.swizzle = nvcv::Swizzle::S_XY00;
             break;
         case 3:
-            pp.swizzle = cv::Swizzle::S_XYZ0;
+            pp.swizzle = nvcv::Swizzle::S_XYZ0;
             break;
         case 4:
-            pp.swizzle = cv::Swizzle::S_XYZW;
+            pp.swizzle = nvcv::Swizzle::S_XYZW;
             break;
         default:
             NVCV_ASSERT(!"Invalid number of channels");
@@ -135,11 +135,11 @@ bool FindDataType(const py::dtype &dt, cv::DataType *dtype)
         {
             pp.bits[i] = static_cast<int>(itemsize * 8);
         }
-        cv::Packing packing = MakePacking(pp);
+        nvcv::Packing packing = MakePacking(pp);
 
         // Finally, infer the data type
         NVCV_ASSERT(dtype != nullptr);
-        *dtype = cv::DataType{dataKind, packing};
+        *dtype = nvcv::DataType{dataKind, packing};
         return true;
     }
     else
@@ -162,9 +162,9 @@ using SupportedBaseTypes = std::tuple<
 // clang-format on
 
 template<class... TT>
-std::optional<cv::DataType> SelectDataType(std::tuple<TT...>, const py::dtype &dt)
+std::optional<nvcv::DataType> SelectDataType(std::tuple<TT...>, const py::dtype &dt)
 {
-    cv::DataType dtype;
+    nvcv::DataType dtype;
 
     if ((FindDataType<TT>(dt, &dtype) || ...))
     {
@@ -176,13 +176,13 @@ std::optional<cv::DataType> SelectDataType(std::tuple<TT...>, const py::dtype &d
     }
 }
 
-std::optional<cv::DataType> ToDataType(const py::dtype &dt)
+std::optional<nvcv::DataType> ToDataType(const py::dtype &dt)
 {
     return SelectDataType(SupportedBaseTypes(), dt);
 }
 
 template<class T>
-bool FindDType(T *, const cv::DataType &dtype, py::dtype *dt)
+bool FindDType(T *, const nvcv::DataType &dtype, py::dtype *dt)
 {
     int nchannels = dtype.numChannels();
     int itemsize  = dtype.bitsPerPixel() / 8;
@@ -192,18 +192,18 @@ bool FindDType(T *, const cv::DataType &dtype, py::dtype *dt)
         return false;
     }
 
-    cv::DataKind dataKind = dtype.dataKind();
+    nvcv::DataKind dataKind = dtype.dataKind();
 
-    if ((std::is_floating_point_v<T> && dataKind == cv::DataKind::FLOAT)
-        || (std::is_integral_v<T> && std::is_signed_v<T> && dataKind == cv::DataKind::SIGNED)
-        || (std::is_integral_v<T> && std::is_unsigned_v<T> && dataKind == cv::DataKind::UNSIGNED))
+    if ((std::is_floating_point_v<T> && dataKind == nvcv::DataKind::FLOAT)
+        || (std::is_integral_v<T> && std::is_signed_v<T> && dataKind == nvcv::DataKind::SIGNED)
+        || (std::is_integral_v<T> && std::is_unsigned_v<T> && dataKind == nvcv::DataKind::UNSIGNED))
     {
         NVCV_ASSERT(dt != nullptr);
 
         *dt = py::dtype::of<T>();
 
         // data type has multiple components?
-        if (cv::cuda::NumElements<T> != nchannels)
+        if (nvcv::cuda::NumElements<T> != nchannels)
         {
             // Create a dtype with multiple components too, with shape argument
             *dt = py::dtype(util::FormatString("%d%c", nchannels, dt->char_()));
@@ -217,13 +217,13 @@ bool FindDType(T *, const cv::DataType &dtype, py::dtype *dt)
 }
 
 template<class T>
-bool FindDType(std::complex<T> *, const cv::DataType &dtype, py::dtype *dt)
+bool FindDType(std::complex<T> *, const nvcv::DataType &dtype, py::dtype *dt)
 {
-    cv::DataKind dataKind  = dtype.dataKind();
-    int          nchannels = dtype.numChannels();
-    int          itemsize  = dtype.bitsPerPixel() / 8;
+    nvcv::DataKind dataKind  = dtype.dataKind();
+    int            nchannels = dtype.numChannels();
+    int            itemsize  = dtype.bitsPerPixel() / 8;
 
-    if (dataKind == cv::DataKind::FLOAT && sizeof(std::complex<T>) == itemsize && nchannels == 2)
+    if (dataKind == nvcv::DataKind::FLOAT && sizeof(std::complex<T>) == itemsize && nchannels == 2)
     {
         NVCV_ASSERT(dt != nullptr);
         *dt = py::dtype::of<std::complex<T>>();
@@ -236,7 +236,7 @@ bool FindDType(std::complex<T> *, const cv::DataType &dtype, py::dtype *dt)
 }
 
 template<class... TT>
-py::dtype SelectDType(std::tuple<TT...>, const cv::DataType &dtype)
+py::dtype SelectDType(std::tuple<TT...>, const nvcv::DataType &dtype)
 {
     py::dtype dt;
 
@@ -245,14 +245,14 @@ py::dtype SelectDType(std::tuple<TT...>, const cv::DataType &dtype)
     return dt;
 }
 
-py::dtype ToDType(cv::DataType dtype)
+py::dtype ToDType(nvcv::DataType dtype)
 {
     return SelectDType(SupportedBaseTypes(), dtype);
 }
 
 } // namespace
 
-static std::string DataTypeToString(cv::DataType type)
+static std::string DataTypeToString(nvcv::DataType type)
 {
     const char *str = nvcvDataTypeGetName(type);
 
@@ -284,20 +284,20 @@ static std::string DataTypeToString(cv::DataType type)
 
 void ExportDataType(py::module &m)
 {
-    py::class_<cv::DataType> type(m, "Type");
+    py::class_<nvcv::DataType> type(m, "Type");
 
-#define DEF(F)     type.def_readonly_static(#F, &cv::TYPE_##F);
+#define DEF(F)     type.def_readonly_static(#F, &nvcv::TYPE_##F);
 // for formats that begin with a number, we must prepend it with underscore to make
 // it a valid python identifier
-#define DEF_NUM(F) type.def_readonly_static("_" #F, &cv::TYPE_##F);
+#define DEF_NUM(F) type.def_readonly_static("_" #F, &nvcv::TYPE_##F);
 
 #include "NVCVPythonDataTypeDefs.inc"
 
 #undef DEF
 #undef DEF_NUM
 
-    type.def_property_readonly("components", &cv::DataType::numChannels);
-    type.def(py::init<cv::DataType>());
+    type.def_property_readonly("components", &nvcv::DataType::numChannels);
+    type.def(py::init<nvcv::DataType>());
     type.def(py::init<>());
 
     type.def("__repr__", &DataTypeToString);
@@ -305,22 +305,22 @@ void ExportDataType(py::module &m)
     type.def(py::self != py::self);
     type.def(py::self < py::self);
 
-    py::implicitly_convertible<py::dtype, cv::DataType>();
+    py::implicitly_convertible<py::dtype, nvcv::DataType>();
 }
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv
 
 namespace pybind11::detail {
 
-namespace priv = nv::cvpy::priv;
+namespace priv = nvcvpy::priv;
 
-bool type_caster<nv::cv::DataType>::load(handle src, bool)
+bool type_caster<nvcv::DataType>::load(handle src, bool)
 {
-    const type_info *tinfo = get_type_info(typeid(nv::cv::DataType));
+    const type_info *tinfo = get_type_info(typeid(nvcv::DataType));
     if (Py_TYPE(src.ptr()) == tinfo->type)
     {
         value_and_holder vh = reinterpret_cast<instance *>(src.ptr())->get_value_and_holder();
-        value               = *vh.template holder<nv::cv::DataType *>();
+        value               = *vh.template holder<nvcv::DataType *>();
         return true;
     }
     else
@@ -333,7 +333,7 @@ bool type_caster<nv::cv::DataType>::load(handle src, bool)
         }
         dtype dt = dtype::from_args(reinterpret_steal<object>(ptr));
 
-        if (std::optional<nv::cv::DataType> _dt = priv::ToDataType(dt))
+        if (std::optional<nvcv::DataType> _dt = priv::ToDataType(dt))
         {
             value = *_dt;
             return true;
@@ -345,7 +345,7 @@ bool type_caster<nv::cv::DataType>::load(handle src, bool)
     }
 }
 
-handle type_caster<nv::cv::DataType>::cast(nv::cv::DataType type, return_value_policy /* policy */, handle /*parent */)
+handle type_caster<nvcv::DataType>::cast(nvcv::DataType type, return_value_policy /* policy */, handle /*parent */)
 {
     dtype dt = priv::ToDType(type);
 

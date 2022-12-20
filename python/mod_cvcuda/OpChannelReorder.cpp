@@ -19,9 +19,9 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <nvcv/operators/OpChannelReorder.hpp>
-#include <nvcv/operators/Types.h>
-#include <nvcv/optools/TypeTraits.hpp>
+#include <cvcuda/OpChannelReorder.hpp>
+#include <cvcuda/Types.h>
+#include <nvcv/cuda/TypeTraits.hpp>
 #include <nvcv/python/Image.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
@@ -41,7 +41,7 @@ ImageBatchVarShape ChannelReorderVarShapeInto(ImageBatchVarShape &output, ImageB
         pstream = Stream::Current();
     }
 
-    auto chReorder = CreateOperator<nvcvop::ChannelReorder>();
+    auto chReorder = CreateOperator<cvcuda::ChannelReorder>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, orders});

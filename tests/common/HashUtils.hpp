@@ -21,13 +21,13 @@
 #include <nvcv/TensorShape.hpp>
 #include <util/HashMD5.hpp>
 
-namespace nv::cv {
+namespace nvcv {
 
 inline void Update(util::HashMD5 &hash, const TensorShape &ts)
 {
     Update(hash, ts.shape(), ts.layout());
 }
 
-} // namespace nv::cv
+} // namespace nvcv
 
 #endif // NVCV_TESTS_COMMON_HASHUTILS_HPP

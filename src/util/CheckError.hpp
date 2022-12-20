@@ -28,7 +28,7 @@
 #include <string_view>
 
 #if NVCV_EXPORTING
-#    include <core/priv/Exception.hpp>
+#    include <nvcv_types/priv/Exception.hpp>
 #else
 #    include <nvcv/Exception.hpp>
 #endif
@@ -45,7 +45,7 @@
 //   If you need to swallow up the error, CUDA needs that. Or any other kind of
 //   processing when the error occurs
 
-namespace nv::cv::util {
+namespace nvcv::util {
 
 namespace detail {
 const char *GetCheckMessage(char *buf, int buflen);
@@ -91,11 +91,11 @@ template<class T>
 void DoThrow(T error, const char *file, int line, const std::string_view &stmt, const std::string_view &errmsg)
 {
 #if NVCV_EXPORTING
-    using cv::priv::Exception;
+    using nvcv::priv::Exception;
     using StatusType = NVCVStatus;
 #else
-    using cv::Exception;
-    using StatusType = cv::Status;
+    using nvcv::Exception;
+    using StatusType = nvcv::Status;
 #endif
 
     // Can we expose source file data?
@@ -126,43 +126,43 @@ void DoLog(T error, const char *file, int line, const std::string_view &stmt, co
 
 } // namespace detail
 
-#define NVCV_CHECK_THROW(STMT, ...)                                                                                    \
-    [&]()                                                                                                              \
-    {                                                                                                                  \
-        using ::nv::cv::util::PreprocessError;                                                                         \
-        using ::nv::cv::util::CheckSucceeded;                                                                          \
-        auto status = (STMT);                                                                                          \
-        PreprocessError(status);                                                                                       \
-        if (!CheckSucceeded(status))                                                                                   \
-        {                                                                                                              \
-            char buf[NVCV_MAX_STATUS_MESSAGE_LENGTH];                                                                  \
-            ::nv::cv::util::detail::DoThrow(status, NVCV_SOURCE_FILE_NAME, NVCV_SOURCE_FILE_LINENO,                    \
-                                            NVCV_OPTIONAL_STRINGIFY(STMT),                                             \
-                                            ::nv::cv::util::detail::GetCheckMessage(buf, sizeof(buf), ##__VA_ARGS__)); \
-        }                                                                                                              \
+#define NVCV_CHECK_THROW(STMT, ...)                                                                                \
+    [&]()                                                                                                          \
+    {                                                                                                              \
+        using ::nvcv::util::PreprocessError;                                                                       \
+        using ::nvcv::util::CheckSucceeded;                                                                        \
+        auto status = (STMT);                                                                                      \
+        PreprocessError(status);                                                                                   \
+        if (!CheckSucceeded(status))                                                                               \
+        {                                                                                                          \
+            char buf[NVCV_MAX_STATUS_MESSAGE_LENGTH];                                                              \
+            ::nvcv::util::detail::DoThrow(status, NVCV_SOURCE_FILE_NAME, NVCV_SOURCE_FILE_LINENO,                  \
+                                          NVCV_OPTIONAL_STRINGIFY(STMT),                                           \
+                                          ::nvcv::util::detail::GetCheckMessage(buf, sizeof(buf), ##__VA_ARGS__)); \
+        }                                                                                                          \
     }()
 
-#define NVCV_CHECK_LOG(STMT, ...)                                                                                    \
-    [&]()                                                                                                            \
-    {                                                                                                                \
-        using ::nv::cv::util::PreprocessError;                                                                       \
-        using ::nv::cv::util::CheckSucceeded;                                                                        \
-        auto status = (STMT);                                                                                        \
-        PreprocessError(status);                                                                                     \
-        if (!CheckSucceeded(status))                                                                                 \
-        {                                                                                                            \
-            char buf[NVCV_MAX_STATUS_MESSAGE_LENGTH];                                                                \
-            ::nv::cv::util::detail::DoLog(status, NVCV_SOURCE_FILE_NAME, NVCV_SOURCE_FILE_LINENO,                    \
-                                          NVCV_OPTIONAL_STRINGIFY(STMT),                                             \
-                                          ::nv::cv::util::detail::GetCheckMessage(buf, sizeof(buf), ##__VA_ARGS__)); \
-            return false;                                                                                            \
-        }                                                                                                            \
-        else                                                                                                         \
-        {                                                                                                            \
-            return true;                                                                                             \
-        }                                                                                                            \
+#define NVCV_CHECK_LOG(STMT, ...)                                                                                \
+    [&]()                                                                                                        \
+    {                                                                                                            \
+        using ::nvcv::util::PreprocessError;                                                                     \
+        using ::nvcv::util::CheckSucceeded;                                                                      \
+        auto status = (STMT);                                                                                    \
+        PreprocessError(status);                                                                                 \
+        if (!CheckSucceeded(status))                                                                             \
+        {                                                                                                        \
+            char buf[NVCV_MAX_STATUS_MESSAGE_LENGTH];                                                            \
+            ::nvcv::util::detail::DoLog(status, NVCV_SOURCE_FILE_NAME, NVCV_SOURCE_FILE_LINENO,                  \
+                                        NVCV_OPTIONAL_STRINGIFY(STMT),                                           \
+                                        ::nvcv::util::detail::GetCheckMessage(buf, sizeof(buf), ##__VA_ARGS__)); \
+            return false;                                                                                        \
+        }                                                                                                        \
+        else                                                                                                     \
+        {                                                                                                        \
+            return true;                                                                                         \
+        }                                                                                                        \
     }()
 
-} // namespace nv::cv::util
+} // namespace nvcv::util
 
 #endif // NVCV_UTIL_CHECK_ERROR_HPP

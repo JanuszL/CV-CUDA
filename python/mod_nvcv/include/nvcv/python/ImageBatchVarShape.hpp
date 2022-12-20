@@ -26,13 +26,13 @@
 
 #include <cassert>
 
-namespace nv::cvpy {
+namespace nvcvpy {
 
 namespace py = pybind11;
 
 class ImageBatchVarShape
     : public Resource
-    , public cv::IImageBatchVarShape
+    , public nvcv::IImageBatchVarShape
 {
 public:
     static ImageBatchVarShape Create(int capacity)
@@ -49,7 +49,7 @@ public:
     // bindings because it ends up storing a reference to the added images, to
     // keep them alive. We can't do it here, things must be consistent.
     // PROBLEM: these functions should be virtual but they aren't.
-    // We can't modify the image list through cv::IImageBatchVarShape
+    // We can't modify the image list through nvcv::IImageBatchVarShape
     // or else the this image list to keep their alive won't be updated.
     // We currently can't avoid this issue.
     void pushBack(Image img)
@@ -68,11 +68,11 @@ public:
     }
 
     // By default we use the varshape interface.
-    using cv::IImageBatchVarShape::operator[];
-    using cv::IImageBatchVarShape::begin;
-    using cv::IImageBatchVarShape::cbegin;
-    using cv::IImageBatchVarShape::cend;
-    using cv::IImageBatchVarShape::end;
+    using nvcv::IImageBatchVarShape::operator[];
+    using nvcv::IImageBatchVarShape::begin;
+    using nvcv::IImageBatchVarShape::cbegin;
+    using nvcv::IImageBatchVarShape::cend;
+    using nvcv::IImageBatchVarShape::end;
 
 private:
     friend struct py::detail::type_caster<ImageBatchVarShape>;
@@ -92,11 +92,11 @@ private:
     }
 };
 
-} // namespace nv::cvpy
+} // namespace nvcvpy
 
 namespace pybind11::detail {
 
-namespace cvpy = nv::cvpy;
+namespace cvpy = nvcvpy;
 
 template<>
 struct type_caster<cvpy::ImageBatchVarShape> : type_caster_base<cvpy::ImageBatchVarShape>

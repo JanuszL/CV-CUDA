@@ -19,9 +19,9 @@
 
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
-#include <nvcv/operators/OpRotate.hpp>
-#include <nvcv/operators/Types.h>
-#include <nvcv/optools/TypeTraits.hpp>
+#include <cvcuda/OpRotate.hpp>
+#include <cvcuda/Types.h>
+#include <nvcv/cuda/TypeTraits.hpp>
 #include <nvcv/python/ImageBatchVarShape.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
 #include <nvcv/python/Stream.hpp>
@@ -39,7 +39,7 @@ Tensor RotateInto(Tensor &output, Tensor &input, double angleDeg, const std::tup
         pstream = Stream::Current();
     }
 
-    auto rotate = CreateOperator<nvcvop::Rotate>(0);
+    auto rotate = CreateOperator<cvcuda::Rotate>(0);
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});
@@ -69,7 +69,7 @@ ImageBatchVarShape VarShapeRotateInto(ImageBatchVarShape &output, ImageBatchVarS
         pstream = Stream::Current();
     }
 
-    auto rotate = CreateOperator<nvcvop::Rotate>(input.capacity());
+    auto rotate = CreateOperator<cvcuda::Rotate>(input.capacity());
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input, angleDeg, shift});

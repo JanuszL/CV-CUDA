@@ -19,8 +19,8 @@
 
 #include <common/Assert.hpp>
 #include <common/PyUtil.hpp>
+#include <cvcuda/OpCustomCrop.hpp>
 #include <nvcv/TensorLayoutInfo.hpp>
-#include <nvcv/operators/OpCustomCrop.hpp>
 #include <nvcv/python/ResourceGuard.hpp>
 #include <nvcv/python/Stream.hpp>
 #include <nvcv/python/Tensor.hpp>
@@ -35,7 +35,7 @@ Tensor CustomCropInto(Tensor &output, Tensor &input, const NVCVRectI &rcCrop, st
         pstream = Stream::Current();
     }
 
-    auto crop = CreateOperator<nvcvop::CustomCrop>();
+    auto crop = CreateOperator<cvcuda::CustomCrop>();
 
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});

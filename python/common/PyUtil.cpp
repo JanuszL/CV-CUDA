@@ -23,7 +23,7 @@
 #include <cstdlib>
 #include <list>
 
-namespace nv::cvpy::util {
+namespace nvcvpy::util {
 
 namespace {
 // Class that holds cleanup functions that are called when python is shutting down.
@@ -132,4 +132,4 @@ py::dtype ToDType(const std::string &fmt)
     return ToDType(buf);
 }
 
-} // namespace nv::cvpy::util
+} // namespace nvcvpy::util

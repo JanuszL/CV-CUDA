@@ -18,16 +18,29 @@
 case "$1" in
     configure)
         update-alternatives --install /usr/include/nvcv nvcv-dev @CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@/nvcv @NVCV_VERSION_API_CODE@ \
-                            --slave @CVCUDA_USR_LIB_DIR@/@NVCV_LIB_LINKER_FILE_NAME@ @NVCV_LIB_LINKER_FILE_NAME@ @CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@/@NVCV_LIB_LINKER_FILE_NAME@
+                            --slave @CVCUDA_USR_LIB_DIR@/@NVCV_LIB_LINKER_FILE_NAME@ @NVCV_LIB_LINKER_FILE_NAME@ @CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@/@NVCV_LIB_LINKER_FILE_NAME@ \
+                            --slave /usr/include/cvcuda cvcuda-dev @CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@/cvcuda
 
         cmakepath=/usr/lib/@CMAKE_LIBRARY_ARCHITECTURE@/cmake/
+        nvcv_types_pkg="@NVCV_TYPES_PACKAGE_NAME@"
+        cvcuda_pkg="@CVCUDA_PACKAGE_NAME@"
+
         if [ ! -d $cmakepath ]; then
             mkdir -p $cmakepath
             touch $cmakepath/.cvcuda_created
         fi
+        if [ -z "$nvcv_types_pkg" ]; then
+            echo "nvcv_types_pkg variable must not be empty"
+            exit 1
+        fi
+        if [ -z "$cvcuda_pkg" ]; then
+            echo "cvcuda_pkg variable must not be empty"
+            exit 1
+        fi
 
-        rm -rf $cmakepath/@NVCV_PACKAGE_NAME@
-        ln -sf @CMAKE_INSTALL_PREFIX@/lib/@CMAKE_LIBRARY_ARCHITECTURE@/cmake/nvcv $cmakepath/@NVCV_PACKAGE_NAME@
-
+        rm -rf "${cmakepath:?}/$nvcv_types_pkg"
+        rm -rf "${cmakepath:?}/$cvcuda_pkg"
+        ln -sf @CMAKE_INSTALL_PREFIX@/lib/@CMAKE_LIBRARY_ARCHITECTURE@/cmake/nvcv_types "$cmakepath/$nvcv_types_pkg"
+        ln -sf @CMAKE_INSTALL_PREFIX@/lib/@CMAKE_LIBRARY_ARCHITECTURE@/cmake/cvcuda "$cmakepath/$cvcuda_pkg"
         ;;
 esac

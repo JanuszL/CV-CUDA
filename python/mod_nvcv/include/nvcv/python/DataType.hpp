@@ -24,21 +24,21 @@
 
 namespace pybind11::detail {
 
-namespace cvpy = nv::cvpy;
+namespace cvpy = nvcvpy;
 
 template<>
-struct type_caster<nv::cv::DataType>
+struct type_caster<nvcv::DataType>
 {
-    PYBIND11_TYPE_CASTER(nv::cv::DataType, const_name("nvcv.Type"));
+    PYBIND11_TYPE_CASTER(nvcv::DataType, const_name("nvcv.Type"));
 
     bool load(handle src, bool)
     {
         NVCVDataType p = cvpy::capi().DataType_FromPython(src.ptr());
-        value          = nv::cv::DataType(p);
+        value          = nvcv::DataType(p);
         return true;
     }
 
-    static handle cast(nv::cv::DataType type, return_value_policy /* policy */, handle /*parent */)
+    static handle cast(nvcv::DataType type, return_value_policy /* policy */, handle /*parent */)
     {
         return cvpy::capi().DataType_ToPython(static_cast<NVCVDataType>(type));
     }

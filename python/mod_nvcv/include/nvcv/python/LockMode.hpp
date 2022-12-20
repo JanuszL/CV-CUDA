@@ -18,7 +18,7 @@
 #ifndef NVCV_PYTHON_LOCKMODE_HPP
 #define NVCV_PYTHON_LOCKMODE_HPP
 
-namespace nv::cvpy {
+namespace nvcvpy {
 
 enum LockMode : uint8_t
 {
@@ -28,6 +28,6 @@ enum LockMode : uint8_t
     LOCK_READWRITE = LOCK_READ | LOCK_WRITE
 };
 
-} // namespace nv::cvpy
+} // namespace nvcvpy
 
 #endif // NVCV_PYTHON_PRIV_LOCKMODE_HPP

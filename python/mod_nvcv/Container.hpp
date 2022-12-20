@@ -25,7 +25,7 @@
 
 #include <memory>
 
-namespace nv::cvpy::priv {
+namespace nvcvpy::priv {
 namespace py = pybind11;
 
 class Container
@@ -45,13 +45,13 @@ protected:
 class ExternalContainer : public Container
 {
 public:
-    explicit ExternalContainer(cvpy::Container &extCont)
+    explicit ExternalContainer(nvcvpy::Container &extCont)
         : m_extCont(extCont)
     {
     }
 
 private:
-    cvpy::Container &m_extCont;
+    nvcvpy::Container &m_extCont;
 
     const IKey &key() const override
     {
@@ -59,6 +59,6 @@ private:
     }
 };
 
-} // namespace nv::cvpy::priv
+} // namespace nvcvpy::priv
 
 #endif // NVCV_PYTHON_PRIV_CONTAINER_HPP
