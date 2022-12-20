@@ -50,7 +50,7 @@ CV-CUDA offers more than 20 Computer Vision and Image Processing operators. Find
 Where Are the Release Notes?
 ------------------
 
-An awesome product requires excellent support.  CV-CUDA release notes can be found here.
+An awesome product requires excellent support.  CV-CUDA release notes can be found `here <https://github.com/CVCUDA/CV-CUDA/releases/tag/v0.2.0>`_.
 
 
 Where Can I Get Help?
