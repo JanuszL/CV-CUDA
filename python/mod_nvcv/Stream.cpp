@@ -38,7 +38,6 @@ enum ExternalStreamType
     VOIDP,
     INT,
     TORCH,
-    NUMBA,
 };
 
 template<ExternalStreamType E>
@@ -140,34 +139,6 @@ struct type_caster<priv::ExternalStream<priv::TORCH>>
             // TODO: don't know how to test if a python object
             // is convertible to a type without exceptions.
             intptr_t data = src.attr("cuda_stream").cast<intptr_t>();
-            value.setCudaStream(reinterpret_cast<cudaStream_t>(data), ::pybind11::cast<object>(std::move(src)));
-            return true;
-        }
-        catch (...)
-        {
-            return false;
-        }
-    }
-};
-
-template<>
-struct type_caster<priv::ExternalStream<priv::NUMBA>>
-{
-    PYBIND11_TYPE_CASTER(priv::ExternalStream<priv::NUMBA>, const_name("numba.cuda.Stream"));
-
-    bool load(handle src, bool)
-    {
-        std::string strType = util::GetFullyQualifiedName(src);
-
-        if (strType != "numba.cuda.cudadrv.driver.Stream")
-        {
-            return false;
-        }
-
-        try
-        {
-            // NUMBA cuda stream can be converted to ints, which is the cudaStream handle.
-            intptr_t data = src.cast<intptr_t>();
             value.setCudaStream(reinterpret_cast<cudaStream_t>(data), ::pybind11::cast<object>(std::move(src)));
             return true;
         }
@@ -337,7 +308,6 @@ void Stream::Export(py::module &m)
 
     // Order from most specific to less specific
     ExportExternalStream<TORCH>(m);
-    ExportExternalStream<NUMBA>(m);
     ExportExternalStream<VOIDP>(m);
     ExportExternalStream<INT>(m);
 
