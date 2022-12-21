@@ -155,13 +155,13 @@ CVCUDA_PUBLIC NVCVStatus cvcudaEraseCreate(NVCVOperatorHandle *handle, int32_t m
 /** @{ */
 CVCUDA_PUBLIC NVCVStatus cvcudaEraseSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
                                            NVCVTensorHandle out, NVCVTensorHandle anchor, NVCVTensorHandle erasing,
-                                           NVCVTensorHandle values, NVCVTensorHandle imgIdx, bool random,
+                                           NVCVTensorHandle values, NVCVTensorHandle imgIdx, int8_t random,
                                            uint32_t seed);
 
 CVCUDA_PUBLIC NVCVStatus cvcudaEraseVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
                                                    NVCVImageBatchHandle in, NVCVImageBatchHandle out,
                                                    NVCVTensorHandle anchor, NVCVTensorHandle erasing,
-                                                   NVCVTensorHandle values, NVCVTensorHandle imgIdx, bool random,
+                                                   NVCVTensorHandle values, NVCVTensorHandle imgIdx, int8_t random,
                                                    uint32_t seed);
 
 /** @} */

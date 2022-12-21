@@ -17,6 +17,7 @@
 add_executable(cvcuda_test_system
     FlipUtils.cpp
     ConvUtils.cpp
+    TestCAPI.c
     TestOpReformat.cpp
     TestOpResize.cpp
     TestOpCustomCrop.cpp

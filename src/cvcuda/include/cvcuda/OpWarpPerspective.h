@@ -34,7 +34,6 @@
 #include <nvcv/ImageBatch.h>
 #include <nvcv/Status.h>
 #include <nvcv/Tensor.h>
-#include <nvcv/cuda/math/LinAlg.hpp>
 
 // @brief storage for perspective transform matrix (row major)
 typedef float NVCVPerspectiveTransform[9];
