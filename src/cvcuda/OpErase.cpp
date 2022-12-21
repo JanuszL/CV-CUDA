@@ -44,7 +44,7 @@ CVCUDA_DEFINE_API(0, 2, NVCVStatus, cvcudaEraseCreate, (NVCVOperatorHandle * han
 CVCUDA_DEFINE_API(0, 2, NVCVStatus, cvcudaEraseSubmit,
                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
                    NVCVTensorHandle anchor, NVCVTensorHandle erasing, NVCVTensorHandle values, NVCVTensorHandle imgIdx,
-                   bool random, uint32_t seed))
+                   int8_t random, uint32_t seed))
 {
     return nvcv::ProtectCall(
         [&]
@@ -59,7 +59,7 @@ CVCUDA_DEFINE_API(0, 2, NVCVStatus, cvcudaEraseSubmit,
 CVCUDA_DEFINE_API(0, 2, NVCVStatus, cvcudaEraseVarShapeSubmit,
                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
                    NVCVTensorHandle anchor, NVCVTensorHandle erasing, NVCVTensorHandle values, NVCVTensorHandle imgIdx,
-                   bool random, uint32_t seed))
+                   int8_t random, uint32_t seed))
 {
     return nvcv::ProtectCall(
         [&]

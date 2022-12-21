@@ -113,9 +113,6 @@ typedef union NVCVImageBufferRec
     NVCVImageBufferCudaArray cudaarray;
 } NVCVImageBuffer;
 
-// Forward declaration
-typedef struct NVCVImageDataRec NVCVImageData;
-
 /** Stores information about image characteristics and content. */
 typedef struct NVCVImageDataRec
 {

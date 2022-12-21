@@ -31,7 +31,6 @@
 #include "detail/Export.h"
 
 #include <cuda_runtime.h>
-#include <nvcv/Size.hpp>
 #include <nvcv/Status.h>
 #include <nvcv/Tensor.h>
 

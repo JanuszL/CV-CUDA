@@ -27,8 +27,6 @@ extern "C"
 {
 #endif
 
-typedef NVCVDataType NVCVElementType;
-
 /** Stores the tensor plane contents. */
 typedef struct NVCVTensorBufferStridedRec
 {
@@ -66,7 +64,7 @@ typedef union NVCVTensorBufferRec
 /** Stores information about image batch characteristics and content. */
 typedef struct NVCVTensorDataRec
 {
-    NVCVElementType  dtype;
+    NVCVDataType     dtype;
     NVCVTensorLayout layout;
 
     int32_t rank;

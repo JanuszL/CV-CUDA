@@ -15,24 +15,24 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_UTIL_RECT_H
-#define NVCV_UTIL_RECT_H
+#ifndef NVCV_RECT_H
+#define NVCV_RECT_H
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-struct NVCVRectI
+typedef struct
 {
     int32_t x;      //!< x coordinate of the top-left corner
     int32_t y;      //!< y coordinate of the top-left corner
     int32_t width;  //!< width of the rectangle
     int32_t height; //!< height of the rectangle
-};
+} NVCVRectI;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // NVCV_UTIL_RECT_H
+#endif // NVCV_RECT_H

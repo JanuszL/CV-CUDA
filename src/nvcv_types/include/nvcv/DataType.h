@@ -34,10 +34,10 @@ extern "C"
 #endif
 
 /** Definition of a byte type. */
-struct NVCVByte
+typedef struct
 {
     uint8_t value;
-};
+} NVCVByte;
 
 /**
  * Pre-defined data types.
