@@ -2,7 +2,7 @@
 name: Bug report
 about: Create a report to help us improve CV-CUDA
 title: "[BUG]"
-labels: bug
+labels: "? - Needs Triage, bug"
 assignees: ''
 
 ---
