@@ -38,9 +38,12 @@ enable_language(CUDA)
 # Used when creating special builds
 set(PROJECT_VERSION_SUFFIX "-alpha")
 
-# Allow ccvcuda libraries with different major versions to be
-# installed in parallel
-set(CMAKE_INSTALL_PREFIX "/opt/nvidia/cvcuda${PROJECT_VERSION_MAJOR}")
+# if user didn't set install prefix,
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    # Allow cv-cuda libraries with different major versions to be
+    # installed in parallel
+    set(CMAKE_INSTALL_PREFIX "/opt/nvidia/cvcuda${PROJECT_VERSION_MAJOR}" CACHE PATH "where cvcuda will be installed" FORCE)
+endif()
 
 # Options to configure the build tree =======
 option(BUILD_TESTS "Enable testsuite" OFF)
