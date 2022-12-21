@@ -50,7 +50,7 @@ CV-CUDA offers more than 20 Computer Vision and Image Processing operators. Find
 Where Are the Release Notes?
 ------------------
 
-An awesome product requires excellent support.  CV-CUDA release notes can be found `here <https://github.com/CVCUDA/CV-CUDA/releases/tag/v0.2.0>`_.
+An awesome product requires excellent support.  CV-CUDA release notes can be found `here <https://github.com/CVCUDA/CV-CUDA/releases/tag/v0.2.0-alpha>`_.
 
 
 Where Can I Get Help?
@@ -117,13 +117,6 @@ Copyright
     C Modules <modules/c_modules>
     C++ Modules <modules/cpp_modules>
     Index <_exhale_api/cvcuda_api>
-
-.. toctree::
-    :caption: Benchmarks
-    :maxdepth: 1
-    :hidden:
-
-    Performance Benchmark <perf_benchmark>
 
 .. toctree::
     :caption: Release Notes
