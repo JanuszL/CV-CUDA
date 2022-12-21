@@ -62,7 +62,7 @@ typedef enum
 #else
 #    define NVCV_TENSOR_LAYOUT_MAKE(layout)            \
         {                                              \
-            .data = layout, .size = sizeof(layout) - 1 \
+            .data = layout, .rank = sizeof(layout) - 1 \
         }
 #endif
 
@@ -182,7 +182,7 @@ inline static int32_t nvcvTensorLayoutFindDimIndex(NVCVTensorLayout layout, char
     if (n > 0)
     {
         void *p = memchr(layout.data + idxStart, dimLabel, n);
-        if (p != nullptr)
+        if (p != NULL)
         {
             return (int32_t)((char *)p - (char *)layout.data);
         }
@@ -294,7 +294,7 @@ inline static int32_t nvcvTensorLayoutEndsWith(NVCVTensorLayout layout, NVCVTens
  */
 NVCV_CONSTEXPR inline static const char *nvcvTensorLayoutGetName(const NVCVTensorLayout *layout)
 {
-    if (layout == nullptr)
+    if (layout == NULL)
     {
         return "";
     }

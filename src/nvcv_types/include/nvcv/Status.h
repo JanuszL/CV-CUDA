@@ -68,7 +68,7 @@ typedef enum
  * nvcvGetLastStatusMessage and \ref nvcvPeekAtLastStatusMessage to the status
  * message output buffer. It includes the final '\0'.
  */
-#define NVCV_MAX_STATUS_MESSAGE_LENGTH 256
+#define NVCV_MAX_STATUS_MESSAGE_LENGTH (256)
 
 /**
  * @brief Returns a string representation of the status code.
