@@ -52,6 +52,9 @@ cd "$SDIR"
 # We use LFS
 git lfs install
 
+# Fetch all lfs object
+git lfs fetch && git lfs checkout
+
 # We use submodules
 git submodule update --init
 
