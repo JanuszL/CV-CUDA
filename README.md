@@ -61,10 +61,19 @@ pip install nvcv_python-0.2.0-cp38-cp38-linux_x86_64.whl
 
 Follow these instruction to successfully build CV-CUDA from source:
 
-1. Build CV-CUDA
+1. Set up local CV-CUDA repository
+
+   After cloning the repository (assuming it was cloned in $HOME/cvcuda),
+   it needs to be properly configured by running the `init_repo.sh` script once only.
 
    ```
    cd ~/cvcuda
+   ./init_repo.sh
+   ```
+
+1. Build CV-CUDA
+
+   ```
    ci/build.sh
    ```
 
