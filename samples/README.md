@@ -23,7 +23,8 @@ Setting up the following is only required if you want to setup and run the sampl
 
 ## Setup to compile the sample from source.
 
-1. Get your CUDA and TensorRT installations ready. If you wish to install CUDA and TensorRT on your existing system you may do so by downloading those packages from NVIDIA's website. Or if you wish to work with in a docker container, you can use the TensorRT docker from NVIDIA NGC's catalog. It comes with CUDA and TensorRT pre-installed. Make sure you have setup NGC account properly and that your local docker installation has been logged into nvcr.io domain to be able to pull from that registry. Run the following command to start the container and continue rest of the installation steps in that container. Fill in the local_mount_path and docker_mount_path to reflect any paths on your system which you want to mount inside the container as well.
+1. Get your CUDA and TensorRT installations ready. If you wish to install CUDA and TensorRT on your existing system you may do so by downloading those packages from NVIDIA's website. Or if you wish to work with in a docker container, you can use the TensorRT docker from NVIDIA NGC's catalog. It comes with CUDA and TensorRT pre-installed. Make sure you have setup NGC account properly and that your local docker installation has been logged into nvcr.io domain to be able to pull from that registry. Run the following command to start the container and continue rest of the installation steps in that container. Fill in the local_mount_path and docker_mount_path to reflect any paths on your system which you want to mount inside the container as well. This container uses Ubuntu 20.04 with Python 3.8.10
+
       ```
       docker run -it --gpus=all -v <local_mount_path>:<docker_mount_path> nvcr.io/nvidia/tensorrt:22.09-py3
       ```
@@ -34,7 +35,7 @@ Setting up the following is only required if you want to setup and run the sampl
    dpkg -i nvcv-lib-0.2.0_alpha-cuda11-x86_64-linux.deb
    dpkg -i nvcv-dev-0.2.0_alpha-cuda11-x86_64-linux.deb
    dpkg -i cvcuda-samples-0.2.0_alpha-cuda11-x86_64-linux.deb
-   dpkg -i nvcv-python3.10-0.2.0_alpha-cuda11-x86_64-linux.deb
+   dpkg -i nvcv-python3.8-0.2.0_alpha-cuda11-x86_64-linux.deb
    ```
 3. Copy the samples folder to the target directory.
 
