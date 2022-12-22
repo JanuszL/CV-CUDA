@@ -41,19 +41,20 @@ packages. Choose the installation method that meets your environment needs.
 
 #### Tar File Installation
 
-```
+```shell
 tar -xvf nvcv-lib-0.2.0-cuda11-x86_64-linux.tar.xz
+tar -xvf nvcv-dev-0.2.0-cuda11-x86_64-linux.tar.xz
 ```
 
 #### DEB File Installation
 
-```
-sudo dpkg -i nvcv-lib-0.2.0-cuda11-x86_64-linux.deb
+```shell
+sudo apt-get install -y ./nvcv-lib-0.2.0-cuda11-x86_64-linux.deb ./nvcv-dev-0.2.0-cuda11-x86_64-linux.deb
 ```
 
 #### Python WHL File Installation
 
-```
+```shell
 pip install nvcv_python-0.2.0-cp38-cp38-linux_x86_64.whl
 ```
 
@@ -63,17 +64,32 @@ Follow these instruction to successfully build CV-CUDA from source:
 
 1. Set up local CV-CUDA repository
 
-   After cloning the repository (assuming it was cloned in $HOME/cvcuda),
+   After cloning the repository (assuming it was cloned in `~/cvcuda`),
    it needs to be properly configured by running the `init_repo.sh` script once only.
 
-   ```
+   ```shell
    cd ~/cvcuda
    ./init_repo.sh
    ```
 
+1. Install needed dependencies.
+
+   On a Ubuntu 22.04, install the following packages:
+
+   ```shell
+   sudo apt-get install -y g++-11 cmake libssl-dev python3-dev
+   ```
+
+   For CUDA Toolkit, any version of the 11.x series should work.
+   CV-CUDA was tested with 11.7, thus it should be preferred.
+
+   ```shell
+   sudo apt-get install -y cuda-toolkit-11-7
+   ```
+
 1. Build CV-CUDA
 
-   ```
+   ```shell
    ci/build.sh
    ```
 
@@ -83,7 +99,7 @@ Follow these instruction to successfully build CV-CUDA from source:
 
    The script accepts some parameters to control the creation of the build tree:
 
-   ```
+   ```shell
    ci/build.sh [release|debug] [output build tree path]
    ```
 
@@ -94,7 +110,7 @@ Follow these instruction to successfully build CV-CUDA from source:
 
 1. Build Documentation
 
-   ```
+   ```shell
    ci/build_docs.sh [build folder]
    ```
 
@@ -103,7 +119,7 @@ Follow these instruction to successfully build CV-CUDA from source:
 
 1. Build Samples
 
-   ```
+   ```shell
    ./ci/build_samples.sh [build folder]
    ```
 
@@ -115,7 +131,7 @@ Follow these instruction to successfully build CV-CUDA from source:
    The tests are in `<buildtree>/bin`. You can run the script below to run all
    tests at once. Here's an example when build tree is created in `build-rel`
 
-   ```
+   ```shell
    build-rel/bin/run_tests.sh
    ```
 
@@ -143,8 +159,8 @@ Follow these instruction to successfully build CV-CUDA from source:
 
    For a fine-grained choice of what installers to generate, the full syntax is:
 
-   ```
-   cmake . -G [DEB|TXZ]
+   ```shell
+   cpack . -G [DEB|TXZ]
    ```
 
    - DEB for Debian packages
