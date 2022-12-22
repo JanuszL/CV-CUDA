@@ -13,31 +13,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-variables:
-    GIT_SUBMODULE_STRATEGY: normal
-    TAG_IMAGE: 2
-    INSIDE_CI: "true"
+.deploy_tests_common:
+    extends: .launch_rule
+    stage: deploy_test
+    when: manual
+    needs: []
+    before_script:
+      - 'ci/install_deps_$DISTRO.sh'
+    script:
+      - 'rm -rf myrepo'
+      - 'git clone . myrepo'
+      - 'cd myrepo'
+      - './init_repo.sh'
+      - 'ci/build.sh'
+      - 'ci/build_docs.sh build_docs'
+      - 'ci/build_samples.sh'
+      - 'ci/run_samples.sh'
+      - 'build-rel/bin/run_tests.sh'
+      - 'cd build-rel'
+      - 'cpack .'
 
-stages:
-  - lint
-  - build
-  - deploy
-  - test
-  - compat
-  - deploy_test
-
-.launch_rule:
-    interruptible: true
-    only:
-        - merge_request
-        - main
-        - /^rel\/.*$/
-
-include:
-    - ci/lint.yml
-    - ci/build.yml
-    - ci/build_docs.yml
-    - ci/test.yml
-    - ci/samples.yml
-    - ci/compat.yml
-    - ci/deploy_test.yml
+dt:x64:ub2204:
+    extends: .deploy_tests_common
+    variables:
+      DISTRO: ubuntu2204
+    image: nvidia/cuda:11.7.1-devel-ubuntu22.04
+    tags: [ linux-x64, test, cuda11 ]
