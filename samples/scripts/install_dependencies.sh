@@ -27,5 +27,5 @@ update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 11
 update-alternatives --set gcc /usr/bin/gcc-11
 update-alternatives --set g++ /usr/bin/g++-11
 pip3 install torch==1.13.0 torchvision==0.14.0
-git clone https://github.com/itsliupeng/torchnvjpeg.git
-cd torchnvjpeg && python3 setup.py bdist_wheel && cd dist && pip3 install torchnvjpeg-0.1.0-cp38-cp38-linux_x86_64.whl
+rm -rf ./torchnvjpeg && git clone https://github.com/itsliupeng/torchnvjpeg.git
+cd torchnvjpeg && python3 setup.py bdist_wheel && cd dist && pip3 install torchnvjpeg-*.whl
