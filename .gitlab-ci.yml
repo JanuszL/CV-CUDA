@@ -24,6 +24,7 @@ stages:
   - deploy
   - test
   - compat
+  - deploy_test
 
 .launch_rule:
     interruptible: true
@@ -39,3 +40,4 @@ include:
     - ci/test.yml
     - ci/samples.yml
     - ci/compat.yml
+    - ci/deploy_test.yml

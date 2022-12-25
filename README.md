@@ -64,86 +64,146 @@ Follow these instruction to successfully build CV-CUDA from source:
 
 1. Set up local CV-CUDA repository
 
-   After cloning the repository (assuming it was cloned in `~/cvcuda`),
-   it needs to be properly configured by running the `init_repo.sh` script once only.
+    1. Install needed dependencies for setting up the repository.
 
-   ```shell
-   cd ~/cvcuda
-   ./init_repo.sh
-   ```
+       On a Ubuntu 22.04, install the following packages:
+       - git-lfs: to retrieve binary files from remote repository
 
-1. Install needed dependencies.
+       ```shell
+       sudo apt-get install -y git git-lfs
+       ```
 
-   On a Ubuntu 22.04, install the following packages:
+    2. After cloning the repository (assuming it was cloned in `~/cvcuda`),
+       it needs to be properly configured by running the `init_repo.sh` script once only.
 
-   ```shell
-   sudo apt-get install -y g++-11 cmake libssl-dev python3-dev
-   ```
-
-   For CUDA Toolkit, any version of the 11.x series should work.
-   CV-CUDA was tested with 11.7, thus it should be preferred.
-
-   ```shell
-   sudo apt-get install -y cuda-toolkit-11-7
-   ```
+       ```shell
+       cd ~/cvcuda
+       ./init_repo.sh
+       ```
 
 1. Build CV-CUDA
 
-   ```shell
-   ci/build.sh
-   ```
+    1. Install needed dependencies for building CV-CUDA
 
-   This will compile a x86 release build of CV-CUDA inside `build-rel` directory.
-   The library is in build-rel/lib, docs in build-rel/docs and executables
-   (tests, etc...) in build-rel/bin.
+       On a Ubuntu 22.04, install the following packages:
+       - g++-11: compiler to be used
+       - cmake, ninja-build (optional): manage build rules
+       - python3-dev: for python bindings
+       - libssl-dev: needed by the testsuite (MD5 hashing utilities)
 
-   The script accepts some parameters to control the creation of the build tree:
+       ```shell
+       sudo apt-get install -y g++-11 cmake ninja-build python3-dev libssl-dev
+       ```
 
-   ```shell
-   ci/build.sh [release|debug] [output build tree path]
-   ```
+       For CUDA Toolkit, any version of the 11.x series should work.
+       CV-CUDA was tested with 11.7, thus it should be preferred.
 
-   By default it builds for release.
+       ```shell
+       sudo apt-get install -y cuda-minimal-build-11-7
+       ```
 
-   If output build tree path isn't specified, it'll be `build-rel` for release
-   builds, and build-deb for debug.
+    2. Build the project
+
+       ```shell
+       ci/build.sh
+       ```
+
+       This will compile a x86 release build of CV-CUDA inside `build-rel` directory.
+       The library is in build-rel/lib, docs in build-rel/docs and executables
+       (tests, etc...) in build-rel/bin.
+
+       The script accepts some parameters to control the creation of the build tree:
+
+       ```shell
+       ci/build.sh [release|debug] [output build tree path]
+       ```
+
+       By default it builds for release.
+
+       If output build tree path isn't specified, it'll be `build-rel` for release
+       builds, and build-deb for debug.
 
 1. Build Documentation
 
-   ```shell
-   ci/build_docs.sh [build folder]
-   ```
+    1. Install needed dependencies for building the documentation
 
-   Example:
-   `ci/build_docs.sh build
+       On a Ubuntu 22.04, install the following packages:
+       - doxygen: parse header files for reference documentation
+       - python3, python3-pip: to install some python packages needed
+       - sphinx, breathe, exhale, recommonmark, graphiviz: to render the documentation
+       - sphinx-rtd-theme: documenation theme used
+
+       ```shell
+       sudo apt-get install -y doxygen graphviz python3 python3-pip
+       sudo python3 -m pip install sphinx==4.5.0 breathe exhale recommonmark graphviz sphinx-rtd-theme
+       ```
+
+    2. Build the documentation
+       ```shell
+       ci/build_docs.sh [build folder]
+       ```
+
+       Example:
+       `ci/build_docs.sh build_docs`
 
 1. Build Samples
 
-   ```shell
-   ./ci/build_samples.sh [build folder]
-   ```
+   1. Install needed dependencies
 
-   _(For instructions on how to compile samples outside of the CV-CUDA project,
-   see the [Samples](samples/README.md) documentation)_
+       On a Ubuntu 22.04, install the following packages:
+       - python3-pip: to fetch pip packages needed
+       - torch, torchvision: python libraries needed
+       - tensorrt-dev: library needed for inference
+       - libnvjpeg-dev-11-7: for jpeg decompression
+       - wget: needed to download models
+
+       Install TensorRT from [here](https://developer.nvidia.com/tensorrt).
+
+       ```shell
+       sudo apt-get install -y wget python3 python3-pip tensorrt-dev libnvjpeg-dev-11-7
+       sudo python3 -m pip install torch==1.13.0 torchvision==0.14.0
+       ```
+
+   2. Build the samples
+
+       ```shell
+       ci/build_samples.sh [build folder]
+       ```
+
+       _(For instructions on how to compile samples outside of the CV-CUDA project,
+       see the [Samples](samples/README.md) documentation)_
+
+   3. Run Samples
+
+       The samples are installed in `<buildtree>/bin`. You can run the script below
+       to download and serialize the model and run the sample with the test data
+       provided.
+
+       ```shell
+       ci/run_samples.sh
+       ```
 
 1. Run Tests
 
-   The tests are in `<buildtree>/bin`. You can run the script below to run all
-   tests at once. Here's an example when build tree is created in `build-rel`
+   1. Install needed dependencies
 
-   ```shell
-   build-rel/bin/run_tests.sh
-   ```
+       On a Ubuntu 22.04, install the following packages:
+       - python3, python3-pip: to run python bindings tests
+       - numba, torch: dependencies needed by python bindings tests
 
-1. Run Samples
+       ```shell
+       sudo apt-get install -y python3 python3-pip
+       sudo python3 -m pip install pytest numba torch
+       ```
 
-   The samples are installed in `<buildtree>/bin`. You can run the script below
-   to download and serialize the model and run the sample with the test data
-   provided.
+   2. Run the tests
 
-   ```shell
-   ./ci/run_samples.sh
-   ```
+       The tests are in `<buildtree>/bin`. You can run the script below to run all
+       tests at once. Here's an example when build tree is created in `build-rel`
+
+       ```shell
+       build-rel/bin/run_tests.sh
+       ```
 
 1. Package installers
 

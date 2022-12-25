@@ -1,5 +1,3 @@
-#!/bin/bash -e
-
 # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -15,19 +13,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Usage: run_samples.sh
+.deploy_tests_common:
+    extends: .launch_rule
+    stage: deploy_test
+    when: manual
+    needs: []
+    before_script:
+      - 'ci/install_deps_$DISTRO.sh'
+    script:
+      - 'rm -rf myrepo'
+      - 'git clone . myrepo'
+      - 'cd myrepo'
+      - './init_repo.sh'
+      - 'ci/build.sh'
+      - 'ci/build_docs.sh build_docs'
+      - 'ci/build_samples.sh'
+      - 'ci/run_samples.sh'
+      - 'build-rel/bin/run_tests.sh'
+      - 'cd build-rel'
+      - 'cpack .'
 
-# Crop and Resize
-./build/bin/nvcv_samples_cropandresize -i ./samples/assets/ -b 2
-
-# Classification
-mkdir -p models
-# Export onnx model from torch
-if [ ! -f ./models/resnet50.onnx ]
-then
-        python3 ./samples/scripts/export_resnet.py
-fi
-# Serialize model . ONNX->TRT
-./samples/scripts/serialize_models.sh
-#batch size 2
-./build/bin/nvcv_samples_classification -e ./models/resnet50.engine -i ./samples/assets/ -l models/imagenet-classes.txt -b 2
+dt:x64:ub2204:
+    extends: .deploy_tests_common
+    variables:
+      DISTRO: ubuntu2204
+    image: nvidia/cuda:11.7.1-devel-ubuntu22.04
+    tags: [ linux-x64, test, cuda11 ]
