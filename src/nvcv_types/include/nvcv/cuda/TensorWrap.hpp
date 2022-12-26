@@ -63,7 +63,7 @@ namespace nvcv::cuda {
  * using DataType = ...;
  * using ChannelType = BaseType<DataType>;
  * using TensorWrap = TensorWrap<ChannelType, -1, -1, sizeof(DataType), sizeof(ChannelType)>;
- * void *imageData = ...;
+ * std::byte *imageData = ...;
  * int imgStride = ...;
  * int rowStride = ...;
  * TensorWrap tensorWrap(imageData, imgStride, rowStride);
@@ -99,9 +99,9 @@ public:
      * @param[in] data Pointer to the data that will be wrapped.
      * @param[in] strides0..D Each run-time pitch in bytes from first to last dimension.
      */
-    template<typename... Args>
-    explicit __host__ __device__ TensorWrap(const void *data, Args... strides)
-        : m_data(data)
+    template<typename DataType, typename... Args>
+    explicit __host__ __device__ TensorWrap(const DataType *data, Args... strides)
+        : m_data(reinterpret_cast<const std::byte *>(data))
         , m_strides{std::forward<int>(strides)...}
     {
         static_assert(std::conjunction_v<std::is_same<int, Args>...>);
@@ -117,7 +117,7 @@ public:
     {
         static_assert(kVariableStrides == 1 && kNumDimensions == 2);
 
-        m_data = reinterpret_cast<const void *>(image.plane(0).basePtr);
+        m_data = reinterpret_cast<const std::byte *>(image.plane(0).basePtr);
 
         m_strides[0] = image.plane(0).rowStride;
     }
@@ -129,7 +129,7 @@ public:
      */
     __host__ TensorWrap(const ITensorDataStridedCuda &tensor)
     {
-        m_data = reinterpret_cast<const void *>(tensor.basePtr());
+        m_data = reinterpret_cast<const std::byte *>(tensor.basePtr());
 
 #pragma unroll
         for (int i = 0; i < kVariableStrides; ++i)
@@ -225,12 +225,12 @@ protected:
             offset += coords[i] * kStride[i];
         }
 
-        return reinterpret_cast<const T *>(reinterpret_cast<const uint8_t *>(m_data) + offset);
+        return reinterpret_cast<const T *>(m_data + offset);
     }
 
 private:
-    const void *m_data                      = nullptr;
-    int         m_strides[kVariableStrides] = {};
+    const std::byte *m_data                      = nullptr;
+    int              m_strides[kVariableStrides] = {};
 };
 
 /**
@@ -259,8 +259,8 @@ public:
      * @param[in] data Pointer to the data that will be wrapped.
      * @param[in] strides0..N Each run-time pitch in bytes from first to last dimension.
      */
-    template<typename... Args>
-    explicit __host__ __device__ TensorWrap(void *data, Args... strides)
+    template<typename DataType, typename... Args>
+    explicit __host__ __device__ TensorWrap(DataType *data, Args... strides)
         : Base(data, strides...)
     {
     }
