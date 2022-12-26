@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -172,6 +172,27 @@ __device__ __forceinline__ U DeviceMaxImpl(U a, U b)
     }
 }
 
+template<typename U, typename S>
+__device__ __forceinline__ U DevicePowImpl(U x, S y)
+{
+    if constexpr ((std::is_same_v<U, float> && std::is_same_v<S, float>) || (std::is_same_v<U, float> && sizeof(S) <= 4)
+                  || (sizeof(U) <= 4 && sizeof(S) <= 4))
+    {
+        if (x >= 0.f)
+        {
+            return __powf(x, y);
+        }
+        else
+        {
+            return powf(x, y);
+        }
+    }
+    else
+    {
+        return ::pow(x, y);
+    }
+}
+
 template<typename U>
 __device__ __forceinline__ U DeviceExpImpl(U u)
 {
@@ -260,6 +281,16 @@ inline __host__ __device__ U MaxImpl(U a, U b)
     return DeviceMaxImpl(a, b);
 #else
     return std::max(a, b);
+#endif
+}
+
+template<typename U, typename S>
+inline __host__ __device__ U PowImpl(U x, S y)
+{
+#ifdef __CUDA_ARCH__
+    return DevicePowImpl(x, y);
+#else
+    return std::pow(x, y);
 #endif
 }
 
