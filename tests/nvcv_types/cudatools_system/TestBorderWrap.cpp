@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -134,6 +134,8 @@ TYPED_TEST(BorderWrapNHWTest, correct_fill)
 
     ValueType borderValue = cuda::SetAll<ValueType>(123);
 
+    int2 bSize{borderSize, borderSize};
+
     nvcv::Tensor srcTensor(batches, {width, height}, format);
     nvcv::Tensor dstTensor(batches, {width + borderSize * 2, height + borderSize * 2}, format);
 
@@ -177,7 +179,7 @@ TYPED_TEST(BorderWrapNHWTest, correct_fill)
     cudaStream_t stream;
     ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
 
-    DeviceRunFillBorder(dstWrap, srcWrap, dstSize, srcSize, stream);
+    DeviceRunFillBorder(dstWrap, srcWrap, dstSize, bSize, stream);
 
     ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
     ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
@@ -240,6 +242,8 @@ TYPED_TEST(BorderWrapNHWCTest, correct_fill)
 
     ValueType borderValue = cuda::SetAll<ValueType>(123);
 
+    int2 bSize{borderSize, borderSize};
+
     nvcv::Tensor srcTensor(batches, {width, height}, format);
     nvcv::Tensor dstTensor(batches, {width + borderSize * 2, height + borderSize * 2}, format);
 
@@ -286,7 +290,7 @@ TYPED_TEST(BorderWrapNHWCTest, correct_fill)
     cudaStream_t stream;
     ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
 
-    DeviceRunFillBorder(dstWrap, srcWrap, dstSize, srcSize, stream);
+    DeviceRunFillBorder(dstWrap, srcWrap, dstSize, bSize, stream);
 
     ASSERT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
     ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
