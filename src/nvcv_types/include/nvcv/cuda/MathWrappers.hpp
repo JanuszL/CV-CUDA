@@ -288,20 +288,20 @@ inline __host__ __device__ U abs(U u)
 #undef NVCV_CUDA_UNARY_SIMD
 
 /**
- * @brief Metafunction to clamp all elements of the input
+ * Metafunction to clamp all elements of the input.
  *
- * @details This function clamps all elements of the input \p u between \p lo and \p hi and returns the result with
+ * This function clamps all elements of the input \p u between \p lo and \p hi and returns the result with
  * the same type as the input.  It is a requirement of clamp that the input \p u has the same number of components
  * of the range values \p lo and \p hi or both are scalars (and the type of \p u has type traits).
  *
- * @tparam U Type of the source argument \p u and the return type
- * @tparam S Type of the source argument \p lo and \p hi (use a regular C type for scalar)
+ * @tparam U Type of the source argument \p u and the return type.
+ * @tparam S Type of the source argument \p lo and \p hi (use a regular C type for scalar).
  *
- * @param[in] u Input value to clamp
- * @param[in] lo Input clamp range low value
- * @param[in] hi Input clamp range high value
+ * @param[in] u Input value to clamp.
+ * @param[in] lo Input clamp range low value.
+ * @param[in] hi Input clamp range high value.
  *
- * @return The return value with all elements clamped
+ * @return The return value with all elements clamped.
  */
 template<typename U, typename S,
          class = Require<(NumComponents<U> == NumComponents<S>) || (HasTypeTraits<U> && NumComponents<S> == 0)>>
