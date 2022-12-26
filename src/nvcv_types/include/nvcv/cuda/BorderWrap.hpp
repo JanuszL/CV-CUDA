@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,15 +38,15 @@ namespace nvcv::cuda {
  */
 
 /**
- * Function to check if given coordinate is outside range defined by given size
+ * Function to check if given coordinate is outside range defined by given size.
  *
- * @tparam Active Flag to turn this function active
- * @tparam T Type of the values given to this function
+ * @tparam Active Flag to turn this function active.
+ * @tparam T Type of the values given to this function.
  *
- * @param[in] c Coordinate to check if it is outside the range [0, s)
- * @param[in] s Size that defines the inside range [0, s)
+ * @param[in] c Coordinate to check if it is outside the range [0, s).
+ * @param[in] s Size that defines the inside range [0, s).
  *
- * @return True if given coordinate is outside given size
+ * @return True if given coordinate is outside given size.
  */
 template<bool Active = true, typename T>
 constexpr inline bool __host__ __device__ IsOutside(T c, T s)
@@ -59,16 +59,16 @@ constexpr inline bool __host__ __device__ IsOutside(T c, T s)
 }
 
 /**
- * Function to get a border-aware index considering the range defined by given size
+ * Function to get a border-aware index considering the range defined by given size.
  *
- * @note This function does not work for NVCV_BORDER_CONSTANT
+ * @note This function does not work for NVCV_BORDER_CONSTANT.
  *
- * @tparam B It is a \ref NVCVBorderType indicating the border to be used
- * @tparam Active Flag to turn this function active
- * @tparam T Type of the values given to this function
+ * @tparam B It is a \ref NVCVBorderType indicating the border to be used.
+ * @tparam Active Flag to turn this function active.
+ * @tparam T Type of the values given to this function.
  *
- * @param[in] c Coordinate (input index) to put back inside valid range [0, s)
- * @param[in] s Size that defines the valid range [0, s)
+ * @param[in] c Coordinate (input index) to put back inside valid range [0, s).
+ * @param[in] s Size that defines the valid range [0, s).
  */
 template<NVCVBorderType B, bool Active = true, typename T>
 constexpr inline T __host__ __device__ GetIndexWithBorder(T c, T s)
@@ -216,7 +216,7 @@ protected:
  * @code
  * using DataType = ...;
  * using TensorWrap2D = TensorWrap<-1, -1, DataType>;
- * using BorderWrap2D = BorderWrap<Tensor, NVCV_BORDER_REFLECT, 1, 1>;
+ * using BorderWrap2D = BorderWrap<TensorWrap2D, NVCV_BORDER_REFLECT, true, true>;
  * TensorWrap2D tensorWrap(...);
  * int2 tensorShape = ...;
  * BorderWrap2D borderAwareTensor(tensorWrap, tensorShape.x, tensorShape.y);
@@ -224,9 +224,9 @@ protected:
  * // outside elements use reflect border, that is the outside index is reflected back inside the tensor
  * @endcode
  *
- * @tparam TensorWrapper It is a \ref TensorWrap class with any dimension and type
- * @tparam B It is a \ref NVCVBorderType indicating the border to be used
- * @tparam ActiveDimensions Flags to inform active (true) or inactive (false) dimensions
+ * @tparam TensorWrapper It is a \ref TensorWrap class with any dimension and type.
+ * @tparam B It is a \ref NVCVBorderType indicating the border to be used.
+ * @tparam ActiveDimensions Flags to inform active (true) or inactive (false) dimensions.
  */
 template<class TensorWrapper, NVCVBorderType B, bool... ActiveDimensions>
 class BorderWrap : public detail::BorderWrapImpl<TensorWrapper, B, ActiveDimensions...>
@@ -246,11 +246,11 @@ public:
     BorderWrap() = default;
 
     /**
-     * Constructs a BorderWrap by wrapping a \p tensorWrap
+     * Constructs a BorderWrap by wrapping a \p tensorWrap.
      *
-     * @param[in] tensorWrap A \ref TensorWrap object to be wrapped
-     * @param[in] borderValue The border value is ignored in non-constant border types
-     * @param[in] tensorShape0..D Each shape from first to last dimension of the \ref TensorWrap
+     * @param[in] tensorWrap A \ref TensorWrap object to be wrapped.
+     * @param[in] borderValue The border value is ignored in non-constant border types.
+     * @param[in] tensorShape0..D Each shape from first to last dimension of the \ref TensorWrap.
      */
     template<typename... Args>
     explicit __host__ __device__ BorderWrap(TensorWrap tensorWrap, ValueType borderValue, Args... tensorShape)
@@ -259,31 +259,31 @@ public:
     }
 
     /**
-     * Constructs a BorderWrap by wrapping a \p tensor
+     * Constructs a BorderWrap by wrapping a \p tensor.
      *
-     * @param[in] tensor A \ref ITensorDataStridedCuda object to be wrapped
-     * @param[in] borderValue The border value is ignored in non-constant border types
+     * @param[in] tensor A \ref ITensorDataStridedCuda object to be wrapped.
+     * @param[in] borderValue The border value is ignored in non-constant border types.
      */
     explicit __host__ BorderWrap(const ITensorDataStridedCuda &tensor, ValueType borderValue = {})
         : Base(tensor)
     {
     }
 
-    // Get the tensor wrapped by this border wrap
+    // Get the tensor wrapped by this border wrap.
     using Base::tensorWrap;
 
-    // Get the shape of the tensor wrapped by this border wrap
+    // Get the shape of the tensor wrapped by this border wrap.
     using Base::tensorShape;
 
-    // Get border value of this border wrap, none is stored so an empty value is returned
+    // Get border value of this border wrap, none is stored so an empty value is returned.
     using Base::borderValue;
 
     /**
-     * Subscript operator for read-only or read-and-write access (depending on value type)
+     * Subscript operator for read-only or read-and-write access (depending on value type).
      *
-     * @param[in] c N-D coordinate (from last to first dimension) to be accessed
+     * @param[in] c N-D coordinate (from last to first dimension) to be accessed.
      *
-     * @return Accessed (const) reference
+     * @return Accessed (const) reference.
      */
     template<typename DimType>
     inline __host__ __device__ ValueType &operator[](DimType c) const
@@ -312,11 +312,11 @@ public:
     }
 
     /**
-     * Get a read-only or read-and-write proxy (as pointer) at the Dth dimension
+     * Get a read-only or read-and-write proxy (as pointer) at the Dth dimension.
      *
-     * @param[in] c0..D Each coordinate from first to last dimension
+     * @param[in] c0..D Each coordinate from first to last dimension.
      *
-     * @return The (const) pointer to the beginning at the Dth dimension
+     * @return The (const) pointer to the beginning at the Dth dimension.
      */
     template<typename... Args>
     inline __host__ __device__ ValueType *ptr(Args... c) const
@@ -334,10 +334,10 @@ private:
 };
 
 /**
- * Border wrapper class specialized for \ref NVCV_BORDER_CONSTANT
+ * Border wrapper class specialized for \ref NVCV_BORDER_CONSTANT.
  *
- * @tparam TensorWrapper It is a \ref TensorWrap class with any dimension and type
- * @tparam ActiveDimensions Flags to inform active (true) or inactive (false) dimensions
+ * @tparam TensorWrapper It is a \ref TensorWrap class with any dimension and type.
+ * @tparam ActiveDimensions Flags to inform active (true) or inactive (false) dimensions.
  */
 template<class TensorWrapper, bool... ActiveDimensions>
 class BorderWrap<TensorWrapper, NVCV_BORDER_CONSTANT, ActiveDimensions...>
@@ -358,11 +358,11 @@ public:
     BorderWrap() = default;
 
     /**
-     * Constructs a BorderWrap by wrapping a \p tensorWrap
+     * Constructs a BorderWrap by wrapping a \p tensorWrap.
      *
-     * @param[in] tensorWrap A \ref TensorWrap object to be wrapped
-     * @param[in] borderValue The border value to be used when accessing outside the tensor
-     * @param[in] tensorShape0..D Each shape from first to last dimension of the \ref TensorWrap
+     * @param[in] tensorWrap A \ref TensorWrap object to be wrapped.
+     * @param[in] borderValue The border value to be used when accessing outside the tensor.
+     * @param[in] tensorShape0..D Each shape from first to last dimension of the \ref TensorWrap.
      */
     template<typename... Args>
     explicit __host__ __device__ BorderWrap(TensorWrap tensorWrap, ValueType borderValue, Args... tensorShape)
@@ -372,10 +372,10 @@ public:
     }
 
     /**
-     * Constructs a BorderWrap by wrapping a \p tensor
+     * Constructs a BorderWrap by wrapping a \p tensor.
      *
-     * @param[in] tensor A \ref ITensorDataStridedCuda object to be wrapped
-     * @param[in] borderValue The border value to be used when accessing outside the tensor
+     * @param[in] tensor A \ref ITensorDataStridedCuda object to be wrapped.
+     * @param[in] borderValue The border value to be used when accessing outside the tensor.
      */
     explicit __host__ BorderWrap(const ITensorDataStridedCuda &tensor, ValueType borderValue = {})
         : Base(tensor)
@@ -383,16 +383,16 @@ public:
     {
     }
 
-    // Get the tensor wrapped by this border wrap
+    // Get the tensor wrapped by this border wrap.
     using Base::tensorWrap;
 
-    // Get the shape of the tensor wrapped by this border wrap
+    // Get the shape of the tensor wrapped by this border wrap.
     using Base::tensorShape;
 
     /**
-     * Get the border value of this border wrap
+     * Get the border value of this border wrap.
      *
-     * @return The border value
+     * @return The border value.
      */
     inline __host__ __device__ ValueType borderValue() const
     {
@@ -400,11 +400,11 @@ public:
     }
 
     /**
-     * Subscript operator for read-only or read-and-write access (depending on value type)
+     * Subscript operator for read-only or read-and-write access (depending on value type).
      *
-     * @param[in] c N-D coordinate (from last to first dimension) to be accessed
+     * @param[in] c N-D coordinate (from last to first dimension) to be accessed.
      *
-     * @return Accessed (const) reference
+     * @return Accessed (const) reference.
      */
     template<typename DimType>
     inline __host__ __device__ ValueType &operator[](DimType c) const
@@ -442,14 +442,14 @@ public:
     }
 
     /**
-     * Get a read-only or read-and-write proxy (as pointer) at the Dth dimension
+     * Get a read-only or read-and-write proxy (as pointer) at the Dth dimension.
      *
      * @note This method may return a nullptr pointer when accessing outside the wrapped \ref TensorWrap since this
      * border wrap is for constant border and there is no pointer representation for the constant border value.
      *
-     * @param[in] c0..D Each coordinate from first to last dimension
+     * @param[in] c0..D Each coordinate from first to last dimension.
      *
-     * @return The (const) pointer to the beginning at the Dth dimension
+     * @return The (const) pointer to the beginning at the Dth dimension.
      */
     template<typename... Args>
     inline __host__ __device__ ValueType *ptr(Args... c) const

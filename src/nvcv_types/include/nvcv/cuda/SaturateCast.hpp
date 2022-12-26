@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,9 +30,9 @@
 namespace nvcv::cuda {
 
 /**
- * @brief Metafunction to saturate cast all elements to a target type
+ * Metafunction to saturate cast all elements to a target type.
  *
- * @details This function saturate casts (clamping with potential rounding) all elements to the range defined by
+ * This function saturate casts (clamping with potential rounding) all elements to the range defined by
  * the template argument type \p T.  For instance, a float4 with any values (can be below 0 and above 255) can be
  * casted to an uchar4 rounding-then-saturating each value to be in between 0 and 255 (see example below).  It is a
  * requirement of SaturateCast that both types have type traits and type \p T must be a regular C type.
@@ -47,12 +47,12 @@ namespace nvcv::cuda {
  * DataType pix = SaturateCast<BaseType<DataType>>(res); // pix are in [0, 255]
  * @endcode
  *
- * @tparam T Type that defines the target range to cast
- * @tparam U Type of the source value (with 1 to 4 elements) passed as argument
+ * @tparam T Type that defines the target range to cast.
+ * @tparam U Type of the source value (with 1 to 4 elements) passed as argument.
  *
- * @param[in] u Source value to cast all elements to range of type \p T
+ * @param[in] u Source value to cast all elements to range of type \p T.
  *
- * @return The value with all elements clamped and potentially rounded
+ * @return The value with all elements clamped and potentially rounded.
  */
 template<typename T, typename U, class = Require<HasTypeTraits<T, U> && !IsCompound<T>>>
 __host__ __device__ auto SaturateCast(U u)
