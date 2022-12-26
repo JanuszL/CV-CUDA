@@ -356,3 +356,51 @@ TYPED_TEST(MathWrappersAbsTest, correct_output_in_device)
     EXPECT_TRUE((std::is_same_v<decltype(test), decltype(gold)>));
     EXPECT_EQ(test, gold);
 }
+
+// ------------------------------ Testing clamp --------------------------------
+
+// clang-format off
+
+NVCV_TYPED_TEST_SUITE(
+    MathWrappersClampTest, ttype::Types<
+    // regular C types
+    ttype::Types<ttype::Value<uchar{1}>, ttype::Value<uchar{0}>, ttype::Value<uchar{6}>, ttype::Value<uchar{1}>>,
+    ttype::Types<ttype::Value<int{-1}>, ttype::Value<uchar{0}>, ttype::Value<uchar{7}>, ttype::Value<int{0}>>,
+    ttype::Types<ttype::Value<float{9.f}>, ttype::Value<ushort{0}>, ttype::Value<ushort{8}>, ttype::Value<float{8.f}>>,
+    ttype::Types<ttype::Value<double{-0.123f}>, ttype::Value<double{0}>, ttype::Value<double{1}>, ttype::Value<double{0}>>,
+    // CUDA compound types
+    ttype::Types<ttype::Value<char1{-1}>, ttype::Value<char1{0}>, ttype::Value<char1{1}>, ttype::Value<char1{0}>>,
+    ttype::Types<ttype::Value<uint2{2, 3}>, ttype::Value<uint2{0, 1}>, ttype::Value<uint2{1, 4}>, ttype::Value<uint2{1, 3}>>,
+    ttype::Types<ttype::Value<float3{-1.f, 2.f, -3.f}>, ttype::Value<short{0}>, ttype::Value<short{1}>,
+                 ttype::Value<float3{0.f, 1.f, 0.f}>>,
+    ttype::Types<ttype::Value<double4{4.0, 5.0, 6.0, 7.0}>, ttype::Value<int4{-4, 6, -6, 0}>,
+                 ttype::Value<int4{2, 7, 6, 8}>, ttype::Value<double4{2.0, 6.0, 6.0, 7.0}>>
+    >);
+
+// clang-format on
+
+TYPED_TEST(MathWrappersClampTest, correct_output_in_host)
+{
+    auto input = ttype::GetValue<TypeParam, 0>;
+    auto low   = ttype::GetValue<TypeParam, 1>;
+    auto high  = ttype::GetValue<TypeParam, 2>;
+    auto gold  = ttype::GetValue<TypeParam, 3>;
+
+    auto test = cuda::clamp(input, low, high);
+
+    EXPECT_TRUE((std::is_same_v<decltype(test), decltype(gold)>));
+    EXPECT_EQ(test, gold);
+}
+
+TYPED_TEST(MathWrappersClampTest, correct_output_in_device)
+{
+    auto input = ttype::GetValue<TypeParam, 0>;
+    auto low   = ttype::GetValue<TypeParam, 1>;
+    auto high  = ttype::GetValue<TypeParam, 2>;
+    auto gold  = ttype::GetValue<TypeParam, 3>;
+
+    auto test = DeviceRunClamp(input, low, high);
+
+    EXPECT_TRUE((std::is_same_v<decltype(test), decltype(gold)>));
+    EXPECT_EQ(test, gold);
+}
