@@ -44,13 +44,13 @@ __global__ void copyGammaValues(float *gammaArray, const cuda::Tensor1DWrap<floa
 
 // apply 255*((x/255)**gamma) on each pixel
 template<typename D, typename gamma_type>
-__global__ void gamma_contrast_kernel(const Ptr2dVarShapeNHWC<D> src, Ptr2dVarShapeNHWC<D> dst,
+__global__ void gamma_contrast_kernel(const cuda::ImageBatchVarShapeWrap<D> src, cuda::ImageBatchVarShapeWrap<D> dst,
                                       const cuda::Tensor1DWrap<gamma_type> gamma_)
 {
     const int dst_x     = blockIdx.x * blockDim.x + threadIdx.x;
     const int dst_y     = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx = get_batch_idx();
-    if (dst_x >= dst.at_cols(batch_idx) || dst_y >= dst.at_rows(batch_idx))
+    if (dst_x >= dst.width(batch_idx) || dst_y >= dst.height(batch_idx))
         return;
 
     gamma_type gamma = *gamma_.ptr(batch_idx);
@@ -62,13 +62,14 @@ __global__ void gamma_contrast_kernel(const Ptr2dVarShapeNHWC<D> src, Ptr2dVarSh
 
 // apply (x**gamma) on each pixel
 template<typename D, typename gamma_type>
-__global__ void gamma_contrast_float_kernel(const Ptr2dVarShapeNHWC<D> src, Ptr2dVarShapeNHWC<D> dst,
-                                            const cuda::Tensor1DWrap<gamma_type> gamma_)
+__global__ void gamma_contrast_float_kernel(const cuda::ImageBatchVarShapeWrap<D> src,
+                                            cuda::ImageBatchVarShapeWrap<D>       dst,
+                                            const cuda::Tensor1DWrap<gamma_type>  gamma_)
 {
     const int dst_x     = blockIdx.x * blockDim.x + threadIdx.x;
     const int dst_y     = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx = get_batch_idx();
-    if (dst_x >= dst.at_cols(batch_idx) || dst_y >= dst.at_rows(batch_idx))
+    if (dst_x >= dst.width(batch_idx) || dst_y >= dst.height(batch_idx))
         return;
 
     gamma_type gamma = *gamma_.ptr(batch_idx);
@@ -86,10 +87,10 @@ void gamma_contrast(const IImageBatchVarShapeDataStridedCuda &in, const IImageBa
     int max_height = in.maxSize().h;
     int batch      = in.numImages();
 
-    dim3                          block(BLOCK, BLOCK / 4, 1);
-    dim3                          grid(divUp(max_width, block.x), divUp(max_height, block.y), batch);
-    cuda_op::Ptr2dVarShapeNHWC<T> src_ptr(in);
-    cuda_op::Ptr2dVarShapeNHWC<T> dst_ptr(out);
+    dim3                            block(BLOCK, BLOCK / 4, 1);
+    dim3                            grid(divUp(max_width, block.x), divUp(max_height, block.y), batch);
+    cuda::ImageBatchVarShapeWrap<T> src_ptr(in);
+    cuda::ImageBatchVarShapeWrap<T> dst_ptr(out);
 
     using gamma_type = cuda::ConvertBaseTypeTo<float, T>;
     cuda::Tensor1DWrap<gamma_type> gamma(gammaValues);
@@ -110,10 +111,10 @@ void gamma_contrast_float(const IImageBatchVarShapeDataStridedCuda &in, const II
     int max_height = in.maxSize().h;
     int batch      = in.numImages();
 
-    dim3                          block(BLOCK, BLOCK / 4, 1);
-    dim3                          grid(divUp(max_width, block.x), divUp(max_height, block.y), batch);
-    cuda_op::Ptr2dVarShapeNHWC<T> src_ptr(in);
-    cuda_op::Ptr2dVarShapeNHWC<T> dst_ptr(out);
+    dim3                            block(BLOCK, BLOCK / 4, 1);
+    dim3                            grid(divUp(max_width, block.x), divUp(max_height, block.y), batch);
+    cuda::ImageBatchVarShapeWrap<T> src_ptr(in);
+    cuda::ImageBatchVarShapeWrap<T> dst_ptr(out);
 
     using gamma_type = cuda::ConvertBaseTypeTo<float, T>;
     cuda::Tensor1DWrap<gamma_type> gamma(gammaValues);

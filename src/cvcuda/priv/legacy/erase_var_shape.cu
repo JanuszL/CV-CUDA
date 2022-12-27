@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+/* Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: Apache-2.0
@@ -37,7 +37,7 @@ static __device__ int erase_var_shape_hash(unsigned int x)
 }
 
 template<typename D>
-__global__ void erase(Ptr2dVarShapeNHWC<D> img, nvcv::cuda::Tensor1DWrap<int2> anchorVec,
+__global__ void erase(nvcv::cuda::ImageBatchVarShapeWrapNHWC<D> img, nvcv::cuda::Tensor1DWrap<int2> anchorVec,
                       nvcv::cuda::Tensor1DWrap<int3> erasingVec, nvcv::cuda::Tensor1DWrap<float> valuesVec,
                       nvcv::cuda::Tensor1DWrap<int> imgIdxVec, int channels, int random, unsigned int seed)
 {
@@ -55,7 +55,7 @@ __global__ void erase(Ptr2dVarShapeNHWC<D> img, nvcv::cuda::Tensor1DWrap<int2> a
     {
         int x = id % erasing_w;
         int y = id / erasing_w;
-        if ((anchor_x + x) < img.at_cols(batchId) && (anchor_y + y) < img.at_rows(batchId))
+        if ((anchor_x + x) < img.width(batchId) && (anchor_y + y) < img.height(batchId))
         {
             if (random)
             {
@@ -79,7 +79,7 @@ void eraseCaller(const nvcv::IImageBatchVarShapeDataStridedCuda &imgs, const nvc
                  const nvcv::ITensorDataStridedCuda &values, int max_eh, int max_ew, int num_erasing_area, bool random,
                  unsigned int seed, cudaStream_t stream)
 {
-    Ptr2dVarShapeNHWC<D> src(imgs);
+    nvcv::cuda::ImageBatchVarShapeWrapNHWC<D> src(imgs, imgs.uniqueFormat().numChannels());
 
     nvcv::cuda::Tensor1DWrap<int2>  anchorVec(anchor);
     nvcv::cuda::Tensor1DWrap<int3>  erasingVec(erasing);
