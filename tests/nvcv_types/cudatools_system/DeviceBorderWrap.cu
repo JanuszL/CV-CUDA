@@ -17,11 +17,12 @@
 
 #include "DeviceBorderWrap.hpp" // to test in the device
 
-#include <gtest/gtest.h>            // for EXPECT_EQ, etc.
-#include <nvcv/cuda/BorderWrap.hpp> // the object of this test
-#include <nvcv/cuda/MathOps.hpp>    // for operator *, etc.
-#include <nvcv/cuda/StaticCast.hpp> // for StaticCast, etc.
-#include <nvcv/cuda/TensorWrap.hpp> // for Tensor3DWrap, etc.
+#include <gtest/gtest.h>                // for EXPECT_EQ, etc.
+#include <nvcv/cuda/BorderWrap.hpp>     // the object of this test
+#include <nvcv/cuda/FullTensorWrap.hpp> // for FullTensorWrap, etc.
+#include <nvcv/cuda/MathOps.hpp>        // for operator *, etc.
+#include <nvcv/cuda/StaticCast.hpp>     // for StaticCast, etc.
+#include <nvcv/cuda/TensorWrap.hpp>     // for Tensor3DWrap, etc.
 
 namespace cuda = nvcv::cuda;
 
@@ -99,6 +100,30 @@ NVCV_TEST_INST(T4D(uchar1), B4D(const uchar1, NVCV_BORDER_REFLECT101), int4);
 
 #undef T3D
 #undef T4D
+
+#undef B3D
+#undef B4D
+
+#define FT3D(VALUETYPE) cuda::FullTensorWrap<VALUETYPE, 3>
+#define FT4D(VALUETYPE) cuda::FullTensorWrap<VALUETYPE, 4>
+
+#define B3D(VALUETYPE, BORDERTYPE) cuda::BorderWrap<FT3D(VALUETYPE), BORDERTYPE, false, true, true>
+#define B4D(VALUETYPE, BORDERTYPE) cuda::BorderWrap<FT4D(VALUETYPE), BORDERTYPE, false, true, true, false>
+
+NVCV_TEST_INST(FT3D(uchar4), B3D(const uchar4, NVCV_BORDER_CONSTANT), int3);
+NVCV_TEST_INST(FT3D(short2), B3D(const short2, NVCV_BORDER_CONSTANT), int3);
+NVCV_TEST_INST(FT4D(float1), B4D(const float1, NVCV_BORDER_CONSTANT), int4);
+NVCV_TEST_INST(FT3D(float4), B3D(const float4, NVCV_BORDER_REPLICATE), int3);
+NVCV_TEST_INST(FT4D(short1), B4D(const short1, NVCV_BORDER_REPLICATE), int4);
+NVCV_TEST_INST(FT3D(float3), B3D(const float3, NVCV_BORDER_WRAP), int3);
+NVCV_TEST_INST(FT4D(uchar1), B4D(const uchar1, NVCV_BORDER_WRAP), int4);
+NVCV_TEST_INST(FT3D(uchar3), B3D(const uchar3, NVCV_BORDER_REFLECT), int3);
+NVCV_TEST_INST(FT4D(uchar1), B4D(const uchar1, NVCV_BORDER_REFLECT), int4);
+NVCV_TEST_INST(FT3D(short1), B3D(const short1, NVCV_BORDER_REFLECT101), int3);
+NVCV_TEST_INST(FT4D(uchar1), B4D(const uchar1, NVCV_BORDER_REFLECT101), int4);
+
+#undef FT3D
+#undef FT4D
 
 #undef B3D
 #undef B4D

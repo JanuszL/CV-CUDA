@@ -24,8 +24,9 @@
 #ifndef NVCV_CUDA_BORDER_WRAP_HPP
 #define NVCV_CUDA_BORDER_WRAP_HPP
 
-#include "TensorWrap.hpp" // for TensorWrap, etc.
-#include "TypeTraits.hpp" // for NumElements, etc.
+#include "FullTensorWrap.hpp" // for FullTensorWrap, etc.
+#include "TensorWrap.hpp"     // for TensorWrap, etc.
+#include "TypeTraits.hpp"     // for NumElements, etc.
 
 #include <cvcuda/Types.h>       // for NVCVBorderType, etc.
 #include <nvcv/ITensorData.hpp> // for ITensorDataStridedCuda, etc.
@@ -156,8 +157,24 @@ public:
         : m_tensorWrap(tensorWrap)
         , m_tensorShape{std::forward<int>(tensorShape)...}
     {
-        static_assert(std::conjunction_v<std::is_same<int, Args>...>);
-        static_assert(sizeof...(Args) == kNumActiveDimensions);
+        if constexpr (sizeof...(Args) == 0)
+        {
+            static_assert(std::is_base_of_v<TensorWrapper, FullTensorWrap<ValueType, kNumDimensions>>);
+            int j = 0;
+#pragma unroll
+            for (int i = 0; i < kNumDimensions; ++i)
+            {
+                if (kActiveDimensions[i])
+                {
+                    m_tensorShape[j++] = tensorWrap.shapes()[i];
+                }
+            }
+        }
+        else
+        {
+            static_assert(std::conjunction_v<std::is_same<int, Args>...>);
+            static_assert(sizeof...(Args) == kNumActiveDimensions);
+        }
     }
 
     explicit __host__ BorderWrapImpl(const ITensorDataStridedCuda &tensor)
@@ -248,9 +265,10 @@ public:
     /**
      * Constructs a BorderWrap by wrapping a \p tensorWrap.
      *
-     * @param[in] tensorWrap A \ref TensorWrap object to be wrapped.
+     * @param[in] tensorWrap A \ref TensorWrap or \ref FullTensorWrap object to be wrapped.
      * @param[in] borderValue The border value is ignored in non-constant border types.
      * @param[in] tensorShape0..D Each shape from first to last dimension of the \ref TensorWrap.
+     *                            This may be empty in case of wrapping a \ref FullTensorWrap.
      */
     template<typename... Args>
     explicit __host__ __device__ BorderWrap(TensorWrapper tensorWrap, ValueType borderValue, Args... tensorShape)
@@ -360,9 +378,10 @@ public:
     /**
      * Constructs a BorderWrap by wrapping a \p tensorWrap.
      *
-     * @param[in] tensorWrap A \ref TensorWrap object to be wrapped.
+     * @param[in] tensorWrap A \ref TensorWrap or \ref FullTensorWrap object to be wrapped.
      * @param[in] borderValue The border value to be used when accessing outside the tensor.
      * @param[in] tensorShape0..D Each shape from first to last dimension of the \ref TensorWrap.
+     *                            This may be empty in case of wrapping a \ref FullTensorWrap.
      */
     template<typename... Args>
     explicit __host__ __device__ BorderWrap(TensorWrapper tensorWrap, ValueType borderValue, Args... tensorShape)
