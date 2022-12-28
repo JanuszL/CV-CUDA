@@ -54,7 +54,35 @@ public:
     using Type = T;
 
     /**
-     * Get size (number of elements) of this vector.
+     * Load values from a C-array into this vector.
+     *
+     * @param[in] inVector Input C-array vector to load values from.
+     */
+    constexpr __host__ __device__ void load(const T *inVector)
+    {
+#pragma unroll
+        for (int i = 0; i < N; ++i)
+        {
+            m_data[i] = inVector[i];
+        }
+    }
+
+    /**
+     * Store values to a C-array from this vector.
+     *
+     * @param[out] outVector Output C-array vector to store values to.
+     */
+    constexpr __host__ __device__ void store(T *outVector) const
+    {
+#pragma unroll
+        for (int i = 0; i < N; ++i)
+        {
+            outVector[i] = m_data[i];
+        }
+    }
+
+    /**
+     * @brief Get size (number of elements) of this vector.
      *
      * @return Vector size.
      */
@@ -198,7 +226,45 @@ public:
     using Type = T;
 
     /**
-     * Get number of rows of this matrix.
+     * Load values from a flatten array into this matrix.
+     *
+     * @param[in] inFlattenMatrix Input flatten matrix to load values from.
+     */
+    constexpr __host__ __device__ void load(const T *inFlattenMatrix)
+    {
+        int idx = 0;
+#pragma unroll
+        for (int i = 0; i < M; ++i)
+        {
+#pragma unroll
+            for (int j = 0; j < N; ++j)
+            {
+                m_data[i][j] = inFlattenMatrix[idx++];
+            }
+        }
+    }
+
+    /**
+     * Store values to a flatten array from this matrix.
+     *
+     * @param[out] outFlattenMatrix Output flatten matrix to store values to.
+     */
+    constexpr __host__ __device__ void store(T *outFlattenMatrix) const
+    {
+        int idx = 0;
+#pragma unroll
+        for (int i = 0; i < M; ++i)
+        {
+#pragma unroll
+            for (int j = 0; j < N; ++j)
+            {
+                outFlattenMatrix[idx++] = m_data[i][j];
+            }
+        }
+    }
+
+    /**
+     * @brief Get number of rows of this matrix.
      *
      * @return Number of rows.
      */
