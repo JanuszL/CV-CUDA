@@ -69,8 +69,8 @@ __global__ void dilate(const SrcWrapper src, DstWrapper dst, cuda::Tensor1DWrap<
     if (x >= dst.width(batch_idx) || y >= dst.height(batch_idx))
         return;
 
-    int2 kernelSize = *kernelSizeArr.ptr(batch_idx);
-    int2 anchor     = *kernelAnchorArr.ptr(batch_idx);
+    int2 kernelSize = kernelSizeArr[batch_idx];
+    int2 anchor     = kernelAnchorArr[batch_idx];
 
     int3 srcCoord = {0, 0, batch_idx};
 
@@ -102,8 +102,8 @@ __global__ void erode(const SrcWrapper src, DstWrapper dst, cuda::Tensor1DWrap<i
     if (x >= dst.width(batch_idx) || y >= dst.height(batch_idx))
         return;
 
-    int2 kernelSize = *kernelSizeArr.ptr(batch_idx);
-    int2 anchor     = *kernelAnchorArr.ptr(batch_idx);
+    int2 kernelSize = kernelSizeArr[batch_idx];
+    int2 anchor     = kernelAnchorArr[batch_idx];
 
     int3 srcCoord = {0, 0, batch_idx};
 

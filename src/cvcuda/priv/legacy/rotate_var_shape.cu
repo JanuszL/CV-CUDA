@@ -42,7 +42,7 @@ __global__ void compute_warpAffine(const int numImages, const cuda::Tensor1DWrap
 
     double *aCoeffs = (double *)((char *)d_aCoeffs + (sizeof(double) * 6) * index);
 
-    double angle  = *angleDeg.ptr(index);
+    double angle  = angleDeg[index];
     double xShift = *shift.ptr(index, 0);
     double yShift = *shift.ptr(index, 1);
 

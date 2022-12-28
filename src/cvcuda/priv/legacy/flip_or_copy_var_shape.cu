@@ -40,7 +40,7 @@ __global__ void flip_kernel(const cuda::ImageBatchVarShapeWrap<T> src, cuda::Ima
     int out_height = dst.height(batch_idx), out_width = dst.width(batch_idx);
     if (x >= out_width || y >= out_height)
         return;
-    int flip_code = *flipCode.ptr(batch_idx);
+    int flip_code = flipCode[batch_idx];
 
     if (flip_code == 1) // flip_code = 1, horizontal flip
     {
