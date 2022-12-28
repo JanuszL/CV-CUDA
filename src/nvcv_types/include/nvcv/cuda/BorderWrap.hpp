@@ -117,14 +117,14 @@ constexpr inline T __host__ __device__ GetIndexWithBorder(T c, T s)
 
 namespace detail {
 
-template<class TensorWrapper, NVCVBorderType B, bool... ActiveDimensions>
+template<class TW, NVCVBorderType B, bool... ActiveDimensions>
 class BorderWrapImpl
 {
 public:
-    using TensorWrap = TensorWrapper;
-    using ValueType  = typename TensorWrap::ValueType;
+    using TensorWrapper = TW;
+    using ValueType     = typename TensorWrapper::ValueType;
 
-    static constexpr int            kNumDimensions = TensorWrap::kNumDimensions;
+    static constexpr int            kNumDimensions = TensorWrapper::kNumDimensions;
     static constexpr NVCVBorderType kBorderType    = B;
 
     static_assert(kNumDimensions == sizeof...(ActiveDimensions));
@@ -152,7 +152,7 @@ public:
     BorderWrapImpl() = default;
 
     template<typename... Args>
-    explicit __host__ __device__ BorderWrapImpl(TensorWrap tensorWrap, Args... tensorShape)
+    explicit __host__ __device__ BorderWrapImpl(TensorWrapper tensorWrap, Args... tensorShape)
         : m_tensorWrap(tensorWrap)
         , m_tensorShape{std::forward<int>(tensorShape)...}
     {
@@ -174,7 +174,7 @@ public:
         }
     }
 
-    inline const __host__ __device__ TensorWrap &tensorWrap() const
+    inline const __host__ __device__ TensorWrapper &tensorWrap() const
     {
         return m_tensorWrap;
     }
@@ -190,8 +190,8 @@ public:
     }
 
 protected:
-    const TensorWrap m_tensorWrap                        = {};
-    int              m_tensorShape[kNumActiveDimensions] = {0};
+    const TensorWrapper m_tensorWrap                        = {};
+    int                 m_tensorShape[kNumActiveDimensions] = {0};
 };
 
 } // namespace detail
@@ -224,17 +224,17 @@ protected:
  * // outside elements use reflect border, that is the outside index is reflected back inside the tensor
  * @endcode
  *
- * @tparam TensorWrapper It is a \ref TensorWrap class with any dimension and type.
+ * @tparam TW It is a \ref TensorWrap class with any dimension and type.
  * @tparam B It is a \ref NVCVBorderType indicating the border to be used.
  * @tparam ActiveDimensions Flags to inform active (true) or inactive (false) dimensions.
  */
-template<class TensorWrapper, NVCVBorderType B, bool... ActiveDimensions>
-class BorderWrap : public detail::BorderWrapImpl<TensorWrapper, B, ActiveDimensions...>
+template<class TW, NVCVBorderType B, bool... ActiveDimensions>
+class BorderWrap : public detail::BorderWrapImpl<TW, B, ActiveDimensions...>
 {
-    using Base = detail::BorderWrapImpl<TensorWrapper, B, ActiveDimensions...>;
+    using Base = detail::BorderWrapImpl<TW, B, ActiveDimensions...>;
 
 public:
-    using typename Base::TensorWrap;
+    using typename Base::TensorWrapper;
     using typename Base::ValueType;
 
     using Base::kActiveDimensions;
@@ -253,7 +253,7 @@ public:
      * @param[in] tensorShape0..D Each shape from first to last dimension of the \ref TensorWrap.
      */
     template<typename... Args>
-    explicit __host__ __device__ BorderWrap(TensorWrap tensorWrap, ValueType borderValue, Args... tensorShape)
+    explicit __host__ __device__ BorderWrap(TensorWrapper tensorWrap, ValueType borderValue, Args... tensorShape)
         : Base(tensorWrap, tensorShape...)
     {
     }
@@ -336,17 +336,17 @@ private:
 /**
  * Border wrapper class specialized for \ref NVCV_BORDER_CONSTANT.
  *
- * @tparam TensorWrapper It is a \ref TensorWrap class with any dimension and type.
+ * @tparam TW It is a \ref TensorWrap class with any dimension and type.
  * @tparam ActiveDimensions Flags to inform active (true) or inactive (false) dimensions.
  */
-template<class TensorWrapper, bool... ActiveDimensions>
-class BorderWrap<TensorWrapper, NVCV_BORDER_CONSTANT, ActiveDimensions...>
-    : public detail::BorderWrapImpl<TensorWrapper, NVCV_BORDER_CONSTANT, ActiveDimensions...>
+template<class TW, bool... ActiveDimensions>
+class BorderWrap<TW, NVCV_BORDER_CONSTANT, ActiveDimensions...>
+    : public detail::BorderWrapImpl<TW, NVCV_BORDER_CONSTANT, ActiveDimensions...>
 {
-    using Base = detail::BorderWrapImpl<TensorWrapper, NVCV_BORDER_CONSTANT, ActiveDimensions...>;
+    using Base = detail::BorderWrapImpl<TW, NVCV_BORDER_CONSTANT, ActiveDimensions...>;
 
 public:
-    using typename Base::TensorWrap;
+    using typename Base::TensorWrapper;
     using typename Base::ValueType;
 
     using Base::kActiveDimensions;
@@ -365,7 +365,7 @@ public:
      * @param[in] tensorShape0..D Each shape from first to last dimension of the \ref TensorWrap.
      */
     template<typename... Args>
-    explicit __host__ __device__ BorderWrap(TensorWrap tensorWrap, ValueType borderValue, Args... tensorShape)
+    explicit __host__ __device__ BorderWrap(TensorWrapper tensorWrap, ValueType borderValue, Args... tensorShape)
         : Base(tensorWrap, tensorShape...)
         , m_borderValue(borderValue)
     {
