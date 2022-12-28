@@ -303,7 +303,7 @@ public:
      *
      * @return Accessed (const) reference.
      */
-    template<typename DimType>
+    template<typename DimType, class = Require<std::is_same_v<int, BaseType<DimType>>>>
     inline __host__ __device__ ValueType &operator[](DimType c) const
     {
         constexpr int N = NumElements<DimType>;
@@ -313,7 +313,14 @@ public:
 
         if constexpr (N == 1)
         {
-            return *doGetPtr(Is, c.x);
+            if constexpr (NumComponents<DimType> == 0)
+            {
+                return *doGetPtr(Is, c);
+            }
+            else
+            {
+                return *doGetPtr(Is, c.x);
+            }
         }
         else if constexpr (N == 2)
         {
@@ -425,7 +432,7 @@ public:
      *
      * @return Accessed (const) reference.
      */
-    template<typename DimType>
+    template<typename DimType, class = Require<std::is_same_v<int, BaseType<DimType>>>>
     inline __host__ __device__ ValueType &operator[](DimType c) const
     {
         constexpr int N = NumElements<DimType>;
@@ -437,7 +444,14 @@ public:
 
         if constexpr (N == 1)
         {
-            p = doGetPtr(Is, c.x);
+            if constexpr (NumComponents<DimType> == 0)
+            {
+                p = doGetPtr(Is, c);
+            }
+            else
+            {
+                p = doGetPtr(Is, c.x);
+            }
         }
         else if constexpr (N == 2)
         {

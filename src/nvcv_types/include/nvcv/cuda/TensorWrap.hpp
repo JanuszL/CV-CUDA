@@ -153,49 +153,36 @@ public:
     /**
      * Subscript operator for read-only access.
      *
-     * @param[in] c 1D coordinate (x first dimension) to be accessed.
+     * @param[in] c N-D coordinate (from last to first dimension) to be accessed.
      *
      * @return Accessed const reference.
      */
-    inline const __host__ __device__ T &operator[](int1 c) const
+    template<typename DimType, class = Require<std::is_same_v<int, BaseType<DimType>>>>
+    inline const __host__ __device__ T &operator[](DimType c) const
     {
-        return *doGetPtr(c.x);
-    }
-
-    /**
-     * Subscript operator for read-only access.
-     *
-     * @param[in] c 2D coordinates (y first and x second dimension) to be accessed.
-     *
-     * @return Accessed const reference.
-     */
-    inline const __host__ __device__ T &operator[](int2 c) const
-    {
-        return *doGetPtr(c.y, c.x);
-    }
-
-    /**
-     * Subscript operator for read-only access.
-     *
-     * @param[in] c 3D coordinates (z first, y second and x third dimension) to be accessed.
-     *
-     * @return Accessed const reference.
-     */
-    inline const __host__ __device__ T &operator[](int3 c) const
-    {
-        return *doGetPtr(c.z, c.y, c.x);
-    }
-
-    /**
-     * Subscript operator for read-only access.
-     *
-     * @param[in] c 4D coordinates (w first, z second, y third, and x fourth dimension) to be accessed.
-     *
-     * @return Accessed const reference.
-     */
-    inline const __host__ __device__ T &operator[](int4 c) const
-    {
-        return *doGetPtr(c.w, c.z, c.y, c.x);
+        if constexpr (NumElements<DimType> == 1)
+        {
+            if constexpr (NumComponents<DimType> == 0)
+            {
+                return *doGetPtr(c);
+            }
+            else
+            {
+                return *doGetPtr(c.x);
+            }
+        }
+        else if constexpr (NumElements<DimType> == 2)
+        {
+            return *doGetPtr(c.y, c.x);
+        }
+        else if constexpr (NumElements<DimType> == 3)
+        {
+            return *doGetPtr(c.z, c.y, c.x);
+        }
+        else if constexpr (NumElements<DimType> == 4)
+        {
+            return *doGetPtr(c.w, c.z, c.y, c.x);
+        }
     }
 
     /**
@@ -301,49 +288,36 @@ public:
     /**
      * Subscript operator for read-and-write access.
      *
-     * @param[in] c 1D coordinate (x first dimension) to be accessed.
-     *
-     * @return Accessed reference
-     */
-    inline __host__ __device__ T &operator[](int1 c) const
-    {
-        return *doGetPtr(c.x);
-    }
-
-    /**
-     * Subscript operator for read-and-write access.
-     *
-     * @param[in] c 2D coordinates (y first and x second dimension) to be accessed.
+     * @param[in] c N-D coordinate (from last to first dimension) to be accessed.
      *
      * @return Accessed reference.
      */
-    inline __host__ __device__ T &operator[](int2 c) const
+    template<typename DimType, class = Require<std::is_same_v<int, BaseType<DimType>>>>
+    inline __host__ __device__ T &operator[](DimType c) const
     {
-        return *doGetPtr(c.y, c.x);
-    }
-
-    /**
-     * Subscript operator for read-and-write access.
-     *
-     * @param[in] c 3D coordinates (z first, y second and x third dimension) to be accessed.
-     *
-     * @return Accessed reference.
-     */
-    inline __host__ __device__ T &operator[](int3 c) const
-    {
-        return *doGetPtr(c.z, c.y, c.x);
-    }
-
-    /**
-     * Subscript operator for read-and-write access.
-     *
-     * @param[in] c 4D coordinates (w first, z second, y third, and x fourth dimension) to be accessed.
-     *
-     * @return Accessed reference.
-     */
-    inline __host__ __device__ T &operator[](int4 c) const
-    {
-        return *doGetPtr(c.w, c.z, c.y, c.x);
+        if constexpr (NumElements<DimType> == 1)
+        {
+            if constexpr (NumComponents<DimType> == 0)
+            {
+                return *doGetPtr(c);
+            }
+            else
+            {
+                return *doGetPtr(c.x);
+            }
+        }
+        else if constexpr (NumElements<DimType> == 2)
+        {
+            return *doGetPtr(c.y, c.x);
+        }
+        else if constexpr (NumElements<DimType> == 3)
+        {
+            return *doGetPtr(c.z, c.y, c.x);
+        }
+        else if constexpr (NumElements<DimType> == 4)
+        {
+            return *doGetPtr(c.w, c.z, c.y, c.x);
+        }
     }
 
     /**
