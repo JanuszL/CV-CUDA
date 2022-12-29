@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+/* Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: Apache-2.0
@@ -41,7 +41,7 @@ struct Convertor
 
     __device__ __forceinline__ DST_TYPE operator()(SRC_TYPE src) const
     {
-        return nvcv::cuda::SaturateCast<nvcv::cuda::BaseType<DST_TYPE>>(alpha * src + beta);
+        return nvcv::cuda::SaturateCast<DST_TYPE>(alpha * src + beta);
     }
 };
 

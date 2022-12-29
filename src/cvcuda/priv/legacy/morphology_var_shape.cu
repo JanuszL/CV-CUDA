@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+/* Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: Apache-2.0
@@ -78,7 +78,7 @@ __global__ void dilate(const BrdRd src, Ptr2dVarShapeNHWC<D> dst, cuda::Tensor1D
             res = cuda::max(res, src(batch_idx, y - anchor.y + i, x - anchor.x + j));
         }
     }
-    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<cuda::BaseType<D>>(res);
+    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<D>(res);
 }
 
 template<typename BT, typename D, typename BrdRd>
@@ -103,7 +103,7 @@ __global__ void erode(const BrdRd src, Ptr2dVarShapeNHWC<D> dst, cuda::Tensor1DW
             res = cuda::min(res, src(batch_idx, y - anchor.y + i, x - anchor.x + j));
         }
     }
-    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<cuda::BaseType<D>>(res);
+    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<D>(res);
 }
 
 template<typename D, template<typename> class Brd>

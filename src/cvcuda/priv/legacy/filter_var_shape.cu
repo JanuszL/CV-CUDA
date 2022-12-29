@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+/* Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: Apache-2.0
@@ -63,7 +63,7 @@ __global__ void filter2D(const BrdRd src, Ptr2dVarShapeNHWC<D> dst, Ptr2dVarShap
         }
     }
 
-    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<cuda::BaseType<D>>(res);
+    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<D>(res);
 }
 
 template<typename D, template<typename> class Brd>
@@ -251,7 +251,7 @@ __global__ void laplacianFilter2D(const BrdRd src, Ptr2dVarShapeNHWC<D> dst, cud
         }
     }
 
-    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<cuda::BaseType<D>>(res);
+    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<D>(res);
 }
 
 template<typename D, template<typename> class Brd>
@@ -460,7 +460,7 @@ __global__ void gaussianFilter2D(const BrdRd src, Ptr2dVarShapeNHWC<D> dst, cuda
         }
     }
 
-    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<cuda::BaseType<D>>(res);
+    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<D>(res);
 }
 
 template<typename D, template<typename> class Brd>
@@ -697,7 +697,7 @@ __global__ void avgBlurFilter2D(const BrdRd src, Ptr2dVarShapeNHWC<D> dst, cuda:
         }
     }
 
-    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<cuda::BaseType<D>>(res);
+    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<D>(res);
 }
 
 template<typename D, template<typename> class Brd>
