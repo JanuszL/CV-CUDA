@@ -55,8 +55,8 @@ if(UNIX)
     endforeach()
 
     add_custom_target(nvcv_dev_control_extra ALL
-        COMMAND cmake ${args} -DSOURCE=${PROJECT_SOURCE_DIR}/cpack/debian_dev_prerm.in -DDEST=cpack/dev/prerm -P ${PROJECT_SOURCE_DIR}/cpack/ConfigureFile.cmake
-        COMMAND cmake ${args} -DSOURCE=${PROJECT_SOURCE_DIR}/cpack/debian_dev_postinst.in -DDEST=cpack/dev/postinst -P ${PROJECT_SOURCE_DIR}/cpack/ConfigureFile.cmake
+        COMMAND ${CMAKE_COMMAND} ${args} -DSOURCE=${PROJECT_SOURCE_DIR}/cpack/debian_dev_prerm.in -DDEST=cpack/dev/prerm -P ${PROJECT_SOURCE_DIR}/cpack/ConfigureFile.cmake
+        COMMAND ${CMAKE_COMMAND} ${args} -DSOURCE=${PROJECT_SOURCE_DIR}/cpack/debian_dev_postinst.in -DDEST=cpack/dev/postinst -P ${PROJECT_SOURCE_DIR}/cpack/ConfigureFile.cmake
         BYPRODUCTS cpack/dev/prerm cpack/dev/postinst
         DEPENDS cpack/debian_dev_prerm.in cpack/debian_dev_postinst.in
         VERBATIM)
