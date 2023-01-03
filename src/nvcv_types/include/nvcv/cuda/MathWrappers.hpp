@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -184,6 +184,36 @@ inline __host__ __device__ U max(U a, U b)
 }
 
 #undef NVCV_CUDA_BINARY_SIMD
+
+/**
+ * Metafunction to compute the power of all elements of the input.
+ *
+ * This function computes the power of all elements of the input \p x and returns the result with the same
+ * type as the input.  It is a requirement of pow that the input \p x has the same number of components of the
+ * power \p y or \p y is a scalar (and the type of \p x has type traits).
+ *
+ * @tparam U Type of the source argument \p x and the return type.
+ * @tparam S Type of the source argument \p y power (use a regular C type for scalar).
+ *
+ * @param[in] x Input value to compute \f$ x^y \f$.
+ * @param[in] y Input power to compute \f$ x^y \f$.
+ *
+ * @return The return value with all elements as the result of the power.
+ */
+template<typename U, typename S,
+         class = Require<(NumComponents<U> == NumComponents<S>) || (HasTypeTraits<U> && NumComponents<S> == 0)>>
+inline __host__ __device__ U pow(U x, S y)
+{
+    U out{};
+
+#pragma unroll
+    for (int e = 0; e < nvcv::cuda::NumElements<U>; ++e)
+    {
+        GetElement(out, e) = detail::PowImpl(GetElement(x, e), GetElement(y, e));
+    }
+
+    return out;
+}
 
 /**
  * @brief Metafunction to compute the natural (base e) exponential of all elements of the input

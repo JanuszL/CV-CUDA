@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -223,6 +223,51 @@ TYPED_TEST(MathWrappersMaxTest, correct_output_in_device)
     auto gold   = ttype::GetValue<TypeParam, 2>;
 
     auto test = DeviceRunMax(input1, input2);
+
+    EXPECT_TRUE((std::is_same_v<decltype(test), decltype(gold)>));
+    EXPECT_EQ(test, gold);
+}
+
+// ------------------------------- Testing pow ---------------------------------
+
+// clang-format off
+
+NVCV_TYPED_TEST_SUITE(
+    MathWrappersPowTest, ttype::Types<
+    // regular C types
+    ttype::Types<ttype::Value<uchar{2}>, ttype::Value<uchar{0}>, ttype::Value<uchar{1}>>,
+    ttype::Types<ttype::Value<uchar{2}>, ttype::Value<int{4}>, ttype::Value<uchar{16}>>,
+    ttype::Types<ttype::Value<float{-2.f}>, ttype::Value<float{3.f}>, ttype::Value<float{-8.f}>>,
+    ttype::Types<ttype::Value<double{3.5}>, ttype::Value<uchar{2}>, ttype::Value<double{3.5 * 3.5}>>,
+    // CUDA compound types
+    ttype::Types<ttype::Value<char1{1}>, ttype::Value<char1{126}>, ttype::Value<char1{1}>>,
+    ttype::Types<ttype::Value<uint2{2, 3}>, ttype::Value<uint2{3, 2}>, ttype::Value<uint2{8, 9}>>,
+    ttype::Types<ttype::Value<float3{0.f, 1.f, 2.f}>, ttype::Value<int{2}>, ttype::Value<float3{0.f, 1.f, 4.f}>>,
+    ttype::Types<ttype::Value<double4{1.0, -2.0, 4.0, -6.0}>, ttype::Value<float4{2.789f, 2.f, 1.f, 0.f}>,
+                 ttype::Value<double4{1.0, 4.0, 4.0, 1.0}>>
+    >);
+
+// clang-format on
+
+TYPED_TEST(MathWrappersPowTest, correct_output_in_host)
+{
+    auto value = ttype::GetValue<TypeParam, 0>;
+    auto power = ttype::GetValue<TypeParam, 1>;
+    auto gold  = ttype::GetValue<TypeParam, 2>;
+
+    auto test = cuda::pow(value, power);
+
+    EXPECT_TRUE((std::is_same_v<decltype(test), decltype(gold)>));
+    EXPECT_EQ(test, gold);
+}
+
+TYPED_TEST(MathWrappersPowTest, correct_output_in_device)
+{
+    auto value = ttype::GetValue<TypeParam, 0>;
+    auto power = ttype::GetValue<TypeParam, 1>;
+    auto gold  = ttype::GetValue<TypeParam, 2>;
+
+    auto test = DeviceRunPow(value, power);
 
     EXPECT_TRUE((std::is_same_v<decltype(test), decltype(gold)>));
     EXPECT_EQ(test, gold);
