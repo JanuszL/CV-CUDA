@@ -300,6 +300,12 @@ inline __host__ __device__ U AbsImpl(U u)
     }
 }
 
+template<typename U, typename S>
+inline __host__ __device__ U ClampImpl(U u, S lo, S hi)
+{
+    return u <= lo ? lo : (u >= hi ? hi : u);
+}
+
 } // namespace nvcv::cuda::detail
 
 #endif // NVCV_CUDA_DETAIL_MATH_WRAPPERS_IMPL_HPP

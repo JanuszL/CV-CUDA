@@ -39,4 +39,7 @@ Type DeviceRunSqrt(Type);
 template<typename Type>
 Type DeviceRunAbs(Type);
 
+template<typename Type1, typename Type2>
+Type1 DeviceRunClamp(Type1, Type2, Type2);
+
 #endif // NVCV_TESTS_DEVICE_MATH_WRAPPERS_HPP
