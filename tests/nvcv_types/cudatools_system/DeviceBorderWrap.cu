@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,7 @@ namespace cuda = nvcv::cuda;
 // ------------------ To allow testing device-side BorderWrap ------------------
 
 template<class DstWrapper, class SrcWrapper>
-__global__ void FillBorder(DstWrapper dst, SrcWrapper src, int3 dstSize, int3 borderSize)
+__global__ void FillBorder(DstWrapper dst, SrcWrapper src, int3 dstSize, int2 borderSize)
 {
     int3 dstCoord = cuda::StaticCast<int>(blockIdx * blockDim + threadIdx);
 
@@ -43,7 +43,7 @@ __global__ void FillBorder(DstWrapper dst, SrcWrapper src, int3 dstSize, int3 bo
 }
 
 template<class DstWrapper, class SrcWrapper>
-__global__ void FillBorder(DstWrapper dst, SrcWrapper src, int4 dstSize, int4 borderSize)
+__global__ void FillBorder(DstWrapper dst, SrcWrapper src, int4 dstSize, int2 borderSize)
 {
     int3 dstCoord = cuda::StaticCast<int>(blockIdx * blockDim + threadIdx);
 
@@ -64,14 +64,12 @@ __global__ void FillBorder(DstWrapper dst, SrcWrapper src, int4 dstSize, int4 bo
 }
 
 template<class DstWrapper, class SrcWrapper, typename DimType>
-void DeviceRunFillBorder(DstWrapper &dstWrap, SrcWrapper &srcWrap, DimType dstSize, DimType srcSize,
+void DeviceRunFillBorder(DstWrapper &dstWrap, SrcWrapper &srcWrap, DimType dstSize, int2 borderSize,
                          cudaStream_t &stream)
 {
     dim3 block{32, 2, 2};
     dim3 grid{(dstSize.x + block.x - 1) / block.x, (dstSize.y + block.y - 1) / block.y,
               (dstSize.z + block.z - 1) / block.z};
-
-    DimType borderSize = (dstSize - srcSize) / 2;
 
     FillBorder<<<grid, block, 0, stream>>>(dstWrap, srcWrap, dstSize, borderSize);
 }
@@ -79,7 +77,7 @@ void DeviceRunFillBorder(DstWrapper &dstWrap, SrcWrapper &srcWrap, DimType dstSi
 // Need to instantiate each test on TestBorderWrap
 
 #define NVCV_TEST_INST(DSTWRAPPER, SRCWRAPPER, DIMTYPE) \
-    template void DeviceRunFillBorder(DSTWRAPPER &, SRCWRAPPER &, DIMTYPE, DIMTYPE, cudaStream_t &)
+    template void DeviceRunFillBorder(DSTWRAPPER &, SRCWRAPPER &, DIMTYPE, int2, cudaStream_t &)
 
 #define T3D(VALUETYPE) cuda::Tensor3DWrap<VALUETYPE>
 #define T4D(VALUETYPE) cuda::Tensor4DWrap<VALUETYPE>
@@ -101,5 +99,8 @@ NVCV_TEST_INST(T4D(uchar1), B4D(const uchar1, NVCV_BORDER_REFLECT101), int4);
 
 #undef T3D
 #undef T4D
+
+#undef B3D
+#undef B4D
 
 #undef NVCV_TEST_INST

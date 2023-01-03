@@ -17,6 +17,8 @@ project(nvcv_test_cudatools_system)
 set(CMAKE_FOLDER tests)
 
 add_executable(nvcv_test_cudatools_system
+    TestBorderVarShapeWrap.cpp
+    DeviceBorderVarShapeWrap.cu
     TestImageBatchVarShapeWrap.cpp
     DeviceImageBatchVarShapeWrap.cu
     TestBorderWrap.cpp

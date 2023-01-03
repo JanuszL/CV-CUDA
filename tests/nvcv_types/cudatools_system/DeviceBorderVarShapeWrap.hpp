@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_TESTS_DEVICE_BORDER_WRAP_HPP
-#define NVCV_TESTS_DEVICE_BORDER_WRAP_HPP
+#ifndef NVCV_TESTS_DEVICE_BORDER_VAR_SHAPE_WRAP_HPP
+#define NVCV_TESTS_DEVICE_BORDER_VAR_SHAPE_WRAP_HPP
 
 #include <cuda_runtime.h> // for cudaStream_t, etc.
 
-template<class DstWrapper, class SrcWrapper, typename DimType>
-void DeviceRunFillBorder(DstWrapper &dstWrap, SrcWrapper &srcWrap, DimType dstSize, int2 borderSize,
-                         cudaStream_t &stream);
+template<class DstWrapper, class SrcWrapper>
+void DeviceRunFillBorderVarShape(DstWrapper &dstWrap, SrcWrapper &srcWrap, int3 dstMaxSize, int2 borderSize,
+                                 cudaStream_t &stream);
 
-#endif // NVCV_TESTS_DEVICE_BORDER_WRAP_HPP
+#endif // NVCV_TESTS_DEVICE_BORDER_VAR_SHAPE_WRAP_HPP
