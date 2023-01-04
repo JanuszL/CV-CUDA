@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,46 +26,6 @@ using namespace nvcv::legacy::cuda_op;
 using namespace nvcv::legacy::helpers;
 
 namespace nvcv::legacy::cuda_op {
-
-static __device__ __forceinline__ float simple_clamp(float f, float a, float b)
-{
-    return fmaxf(a, fminf(f, b));
-}
-
-static __device__ __forceinline__ float2 simple_clamp(float2 v, float a, float b)
-{
-    return {simple_clamp(v.x, a, b), simple_clamp(v.y, a, b)};
-}
-
-static __device__ __forceinline__ float3 simple_clamp(float3 v, float a, float b)
-{
-    return {simple_clamp(v.x, a, b), simple_clamp(v.y, a, b), simple_clamp(v.z, a, b)};
-}
-
-static __device__ __forceinline__ float4 simple_clamp(float4 v, float a, float b)
-{
-    return {simple_clamp(v.x, a, b), simple_clamp(v.y, a, b), simple_clamp(v.z, a, b), simple_clamp(v.w, a, b)};
-}
-
-static __device__ __forceinline__ float simple_powf(float a, float b)
-{
-    return powf(a, b);
-}
-
-static __device__ __forceinline__ float2 simple_powf(float2 a, float2 b)
-{
-    return make_float2(powf(a.x, b.x), powf(a.y, b.y));
-}
-
-static __device__ __forceinline__ float3 simple_powf(float3 a, float3 b)
-{
-    return make_float3(powf(a.x, b.x), powf(a.y, b.y), powf(a.z, b.z));
-}
-
-static __device__ __forceinline__ float4 simple_powf(float4 a, float4 b)
-{
-    return make_float4(powf(a.x, b.x), powf(a.y, b.y), powf(a.z, b.z), powf(a.w, b.w));
-}
 
 __global__ void copyGammaValues(float *gammaArray, const cuda::Tensor1DWrap<float> gamma, const int numImages,
                                 const int channelCount)
@@ -96,7 +56,7 @@ __global__ void gamma_contrast_kernel(const Ptr2dVarShapeNHWC<D> src, Ptr2dVarSh
     gamma_type gamma = *gamma_.ptr(batch_idx);
     gamma_type tmp   = (*src.ptr(batch_idx, dst_y, dst_x) + 0.0f) / 255.0f;
 
-    D out                             = nvcv::cuda::SaturateCast<cuda::BaseType<D>>(simple_powf(tmp, gamma) * 255.0f);
+    D out                             = nvcv::cuda::SaturateCast<cuda::BaseType<D>>(cuda::pow(tmp, gamma) * 255.0f);
     *dst.ptr(batch_idx, dst_y, dst_x) = out;
 }
 
@@ -113,8 +73,9 @@ __global__ void gamma_contrast_float_kernel(const Ptr2dVarShapeNHWC<D> src, Ptr2
 
     gamma_type gamma = *gamma_.ptr(batch_idx);
 
-    D out = nvcv::cuda::SaturateCast<cuda::BaseType<D>>(simple_powf(*src.ptr(batch_idx, dst_y, dst_x), gamma));
-    *dst.ptr(batch_idx, dst_y, dst_x) = simple_clamp(out, 0.0, 1.0);
+    D out = nvcv::cuda::SaturateCast<cuda::BaseType<D>>(
+        cuda::pow(cuda::StaticCast<float>(*src.ptr(batch_idx, dst_y, dst_x)), gamma));
+    *dst.ptr(batch_idx, dst_y, dst_x) = cuda::clamp(cuda::StaticCast<float>(out), 0.f, 1.f);
 }
 
 template<typename T>
