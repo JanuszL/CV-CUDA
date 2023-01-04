@@ -87,18 +87,18 @@ NVCV_TYPED_TEST_SUITE(
     ttype::Types<schar, ttype::Value<schar{123}>, ttype::Value<schar{123}>>,
     ttype::Types<float, ttype::Value<float2{-4.56f, 7.89f}>, ttype::Value<float2{-5.f, 8.f}>>,
     ttype::Types<uint, ttype::Value<uint1{123456}>, ttype::Value<uint1{123456}>>,
-    ttype::Types<double, ttype::Value<double2{1.23, epsilon<double>}>, ttype::Value<double2{1.0, 0.0}>>
+    ttype::Types<double2, ttype::Value<double2{1.23, epsilon<double>}>, ttype::Value<double2{1.0, 0.0}>>
     >);
 
 // clang-format on
 
 TYPED_TEST(MathWrappersRoundDiffTypeTest, correct_output_in_host)
 {
-    using TargetBaseType = ttype::GetType<TypeParam, 0>;
-    auto input           = ttype::GetValue<TypeParam, 1>;
-    auto gold            = ttype::GetValue<TypeParam, 2>;
+    using TargetType = ttype::GetType<TypeParam, 0>;
+    auto input       = ttype::GetValue<TypeParam, 1>;
+    auto gold        = ttype::GetValue<TypeParam, 2>;
 
-    auto test = cuda::round<TargetBaseType>(input);
+    auto test = cuda::round<TargetType>(input);
 
     EXPECT_TRUE((std::is_same_v<decltype(test), decltype(gold)>));
     EXPECT_EQ(test, gold);
@@ -106,10 +106,12 @@ TYPED_TEST(MathWrappersRoundDiffTypeTest, correct_output_in_host)
 
 TYPED_TEST(MathWrappersRoundDiffTypeTest, correct_output_in_device)
 {
-    using TargetBaseType = ttype::GetType<TypeParam, 0>;
-    auto input           = ttype::GetValue<TypeParam, 1>;
-    auto gold            = ttype::GetValue<TypeParam, 2>;
+    using TargetType = ttype::GetType<TypeParam, 0>;
+    auto input       = ttype::GetValue<TypeParam, 1>;
+    auto gold        = ttype::GetValue<TypeParam, 2>;
+
     using SourceDataType = decltype(input);
+    using TargetBaseType = cuda::BaseType<TargetType>;
     using TargetDataType = cuda::ConvertBaseTypeTo<TargetBaseType, SourceDataType>;
 
     auto test = DeviceRunRoundDiffType<TargetDataType>(input);

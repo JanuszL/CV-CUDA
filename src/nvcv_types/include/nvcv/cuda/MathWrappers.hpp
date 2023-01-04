@@ -75,15 +75,16 @@ inline __host__ __device__ RT RoundImpl(U u)
  *
  * @return The value with all elements rounded.
  */
-template<typename T, typename U, typename RT = ConvertBaseTypeTo<T, U>,
-         class = Require<HasTypeTraits<T, U> && !IsCompound<T>>>
-inline __host__ __device__ std::enable_if_t<!std::is_same_v<T, U>, RT> round(U u)
+template<typename T, typename U,
+         class = Require<(!std::is_same_v<T, U>)&&((NumComponents<T> == NumComponents<U>)
+                                                   || (NumComponents<T> == 0 && HasTypeTraits<U>))>>
+inline __host__ __device__ auto round(U u)
 {
-    return detail::RoundImpl<T, U, RT>(u);
+    return detail::RoundImpl<BaseType<T>, U, ConvertBaseTypeTo<BaseType<T>, U>>(u);
 }
 
 template<typename U>
-inline __host__ __device__ U round(U u)
+inline __host__ __device__ auto round(U u)
 {
     return detail::RoundImpl<BaseType<U>, U, U>(u);
 }

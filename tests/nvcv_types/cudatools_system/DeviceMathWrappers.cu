@@ -35,7 +35,7 @@ __global__ void RunRound(TargetType *out, SourceType u)
     }
     else
     {
-        out[0] = cuda::round<cuda::BaseType<TargetType>>(u);
+        out[0] = cuda::round<TargetType>(u);
     }
 }
 
