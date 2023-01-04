@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -96,8 +96,8 @@ public:
     /**
      * Constructs a constant TensorWrap by wrapping a const \p data pointer argument.
      *
-     * @param[in] data Pointer to the data that will be wrapped
-     * @param[in] strides0..D Each run-time pitch in bytes from first to last dimension
+     * @param[in] data Pointer to the data that will be wrapped.
+     * @param[in] strides0..D Each run-time pitch in bytes from first to last dimension.
      */
     template<typename... Args>
     explicit __host__ __device__ TensorWrap(const void *data, Args... strides)
@@ -111,7 +111,7 @@ public:
     /**
      * Constructs a constant TensorWrap by wrapping an \p image argument.
      *
-     * @param[in] image Image reference to the image that will be wrapped
+     * @param[in] image Image reference to the image that will be wrapped.
      */
     __host__ TensorWrap(const IImageDataStridedCuda &image)
     {
@@ -125,7 +125,7 @@ public:
     /**
      * Constructs a constant TensorWrap by wrapping a \p tensor argument.
      *
-     * @param[in] tensor Tensor reference to the tensor that will be wrapped
+     * @param[in] tensor Tensor reference to the tensor that will be wrapped.
      */
     __host__ TensorWrap(const ITensorDataStridedCuda &tensor)
     {
@@ -153,9 +153,9 @@ public:
     /**
      * Subscript operator for read-only access.
      *
-     * @param[in] c 1D coordinate (x first dimension) to be accessed
+     * @param[in] c 1D coordinate (x first dimension) to be accessed.
      *
-     * @return Accessed const reference
+     * @return Accessed const reference.
      */
     inline const __host__ __device__ T &operator[](int1 c) const
     {
@@ -165,9 +165,9 @@ public:
     /**
      * Subscript operator for read-only access.
      *
-     * @param[in] c 2D coordinates (y first and x second dimension) to be accessed
+     * @param[in] c 2D coordinates (y first and x second dimension) to be accessed.
      *
-     * @return Accessed const reference
+     * @return Accessed const reference.
      */
     inline const __host__ __device__ T &operator[](int2 c) const
     {
@@ -177,9 +177,9 @@ public:
     /**
      * Subscript operator for read-only access.
      *
-     * @param[in] c 3D coordinates (z first, y second and x third dimension) to be accessed
+     * @param[in] c 3D coordinates (z first, y second and x third dimension) to be accessed.
      *
-     * @return Accessed const reference
+     * @return Accessed const reference.
      */
     inline const __host__ __device__ T &operator[](int3 c) const
     {
@@ -189,9 +189,9 @@ public:
     /**
      * Subscript operator for read-only access.
      *
-     * @param[in] c 4D coordinates (w first, z second, y third, and x fourth dimension) to be accessed
+     * @param[in] c 4D coordinates (w first, z second, y third, and x fourth dimension) to be accessed.
      *
-     * @return Accessed const reference
+     * @return Accessed const reference.
      */
     inline const __host__ __device__ T &operator[](int4 c) const
     {
@@ -201,9 +201,9 @@ public:
     /**
      * Get a read-only proxy (as pointer) at the Dth dimension.
      *
-     * @param[in] c0..D Each coordinate from first to last dimension
+     * @param[in] c0..D Each coordinate from first to last dimension.
      *
-     * @return The const pointer to the beginning of the Dth dimension
+     * @return The const pointer to the beginning of the Dth dimension.
      */
     template<typename... Args>
     inline const __host__ __device__ T *ptr(Args... c) const
@@ -269,8 +269,8 @@ public:
     /**
      * Constructs a TensorWrap by wrapping a \p data pointer argument.
      *
-     * @param[in] data Pointer to the data that will be wrapped
-     * @param[in] strides0..N Each run-time pitch in bytes from first to last dimension
+     * @param[in] data Pointer to the data that will be wrapped.
+     * @param[in] strides0..N Each run-time pitch in bytes from first to last dimension.
      */
     template<typename... Args>
     explicit __host__ __device__ TensorWrap(void *data, Args... strides)
@@ -281,7 +281,7 @@ public:
     /**
      * Constructs a TensorWrap by wrapping an \p image argument.
      *
-     * @param[in] image Image reference to the image that will be wrapped
+     * @param[in] image Image reference to the image that will be wrapped.
      */
     __host__ TensorWrap(const IImageDataStridedCuda &image)
         : Base(image)
@@ -291,7 +291,7 @@ public:
     /**
      * Constructs a TensorWrap by wrapping a \p tensor argument.
      *
-     * @param[in] tensor Tensor reference to the tensor that will be wrapped
+     * @param[in] tensor Tensor reference to the tensor that will be wrapped.
      */
     __host__ TensorWrap(const ITensorDataStridedCuda &tensor)
         : Base(tensor)
@@ -301,7 +301,7 @@ public:
     /**
      * Subscript operator for read-and-write access.
      *
-     * @param[in] c 1D coordinate (x first dimension) to be accessed
+     * @param[in] c 1D coordinate (x first dimension) to be accessed.
      *
      * @return Accessed reference
      */
@@ -313,9 +313,9 @@ public:
     /**
      * Subscript operator for read-and-write access.
      *
-     * @param[in] c 2D coordinates (y first and x second dimension) to be accessed
+     * @param[in] c 2D coordinates (y first and x second dimension) to be accessed.
      *
-     * @return Accessed reference
+     * @return Accessed reference.
      */
     inline __host__ __device__ T &operator[](int2 c) const
     {
@@ -325,9 +325,9 @@ public:
     /**
      * Subscript operator for read-and-write access.
      *
-     * @param[in] c 3D coordinates (z first, y second and x third dimension) to be accessed
+     * @param[in] c 3D coordinates (z first, y second and x third dimension) to be accessed.
      *
-     * @return Accessed reference
+     * @return Accessed reference.
      */
     inline __host__ __device__ T &operator[](int3 c) const
     {
@@ -337,9 +337,9 @@ public:
     /**
      * Subscript operator for read-and-write access.
      *
-     * @param[in] c 4D coordinates (w first, z second, y third, and x fourth dimension) to be accessed
+     * @param[in] c 4D coordinates (w first, z second, y third, and x fourth dimension) to be accessed.
      *
-     * @return Accessed reference
+     * @return Accessed reference.
      */
     inline __host__ __device__ T &operator[](int4 c) const
     {
@@ -349,9 +349,9 @@ public:
     /**
      * Get a read-and-write proxy (as pointer) at the Dth dimension.
      *
-     * @param[in] c0..D Each coordinate from first to last dimension
+     * @param[in] c0..D Each coordinate from first to last dimension.
      *
-     * @return The pointer to the beginning of the Dth dimension
+     * @return The pointer to the beginning of the Dth dimension.
      */
     template<typename... Args>
     inline __host__ __device__ T *ptr(Args... c) const
