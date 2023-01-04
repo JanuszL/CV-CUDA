@@ -832,7 +832,7 @@ struct PointFilter
 
     __device__ __forceinline__ elem_type operator()(int bidx, float y, float x) const
     {
-        return src(bidx, __float2int_rz(y), __float2int_rz(x));
+        return src(bidx, cuda::round<cuda::RoundMode::ZERO, int>(y), cuda::round<cuda::RoundMode::ZERO, int>(x));
     }
 
     BrdReader src;
@@ -859,8 +859,8 @@ struct LinearFilter
         // float y_float = y >= std::numeric_limits<int>::max() ? ((float) std::numeric_limits<int>::max() - 1):
         //     ((y <= std::numeric_limits<int>::min() + 1) ? ((float) std::numeric_limits<int>::min() + 1): y);
 
-        const int x1 = __float2int_rd(x);
-        const int y1 = __float2int_rd(y);
+        const int x1 = cuda::round<cuda::RoundMode::DOWN, int>(x);
+        const int y1 = cuda::round<cuda::RoundMode::DOWN, int>(y);
         const int x2 = x1 + 1;
         const int y2 = y1 + 1;
 
@@ -926,7 +926,10 @@ struct CubicFilter
             for (float cx = xmin; cx <= xmax; cx += 1.0f)
             {
                 const float w = bicubicCoeff(x - cx) * bicubicCoeff(y - cy);
-                sum           = sum + w * src(bidx, __float2int_rd(cy), __float2int_rd(cx));
+
+                sum += w
+                     * src(bidx, cuda::round<cuda::RoundMode::DOWN, int>(cy),
+                           cuda::round<cuda::RoundMode::DOWN, int>(cx));
                 wsum += w;
             }
         }
@@ -959,14 +962,14 @@ struct IntegerAreaFilter
         float fsx1 = x * scale_x;
         float fsx2 = fsx1 + scale_x;
 
-        int sx1 = __float2int_ru(fsx1);
-        int sx2 = __float2int_rd(fsx2);
+        int sx1 = cuda::round<cuda::RoundMode::UP, int>(fsx1);
+        int sx2 = cuda::round<cuda::RoundMode::DOWN, int>(fsx2);
 
         float fsy1 = y * scale_y;
         float fsy2 = fsy1 + scale_y;
 
-        int sy1 = __float2int_ru(fsy1);
-        int sy2 = __float2int_rd(fsy2);
+        int sy1 = cuda::round<cuda::RoundMode::UP, int>(fsy1);
+        int sy2 = cuda::round<cuda::RoundMode::DOWN, int>(fsy2);
 
         using work_type = nvcv::cuda::ConvertBaseTypeTo<float, elem_type>;
         work_type out   = nvcv::cuda::SetAll<work_type>(0.f);
@@ -1001,14 +1004,14 @@ struct AreaFilter
         float fsx1 = x * scale_x;
         float fsx2 = fsx1 + scale_x;
 
-        int sx1 = __float2int_ru(fsx1);
-        int sx2 = __float2int_rd(fsx2);
+        int sx1 = cuda::round<cuda::RoundMode::UP, int>(fsx1);
+        int sx2 = cuda::round<cuda::RoundMode::DOWN, int>(fsx2);
 
         float fsy1 = y * scale_y;
         float fsy2 = fsy1 + scale_y;
 
-        int sy1 = __float2int_ru(fsy1);
-        int sy2 = __float2int_rd(fsy2);
+        int sy1 = cuda::round<cuda::RoundMode::UP, int>(fsy1);
+        int sy2 = cuda::round<cuda::RoundMode::DOWN, int>(fsy2);
 
         float scale = 1.f / (fminf(scale_x, src.at_cols(bidx) - fsx1) * fminf(scale_y, src.at_rows(bidx) - fsy1));
 
