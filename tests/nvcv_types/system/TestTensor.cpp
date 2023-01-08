@@ -262,6 +262,9 @@ TEST(Tensor, wip_cast)
     NVCVTensorRequirements reqs;
     ASSERT_EQ(NVCV_SUCCESS, nvcvTensorCalcRequirementsForImages(5, 163, 117, NVCV_IMAGE_FORMAT_RGBA8, 0, 0, &reqs));
     ASSERT_EQ(NVCV_SUCCESS, nvcvTensorConstruct(&reqs, nullptr, &handle));
+    int ref;
+    EXPECT_EQ(NVCV_SUCCESS, nvcvTensorRefCount(handle, &ref));
+    EXPECT_EQ(ref, 1);
 
     uintptr_t max = 512;
 
@@ -290,7 +293,8 @@ TEST(Tensor, wip_cast)
     EXPECT_EQ(ptensor, nvcv::DynamicCast<nvcv::ITensor *>(handle));
     EXPECT_EQ(nullptr, nvcv::DynamicCast<nvcv::Tensor *>(handle));
 
-    nvcvTensorDestroy(handle);
+    EXPECT_EQ(NVCV_SUCCESS, nvcvTensorDecRef(handle, &ref));
+    EXPECT_EQ(ref, 0);
 }
 
 TEST(Tensor, wip_user_pointer)

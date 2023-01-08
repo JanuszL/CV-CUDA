@@ -143,19 +143,50 @@ HandleManager<Interface, Storage>::~HandleManager()
 }
 
 template<typename Interface, typename Storage>
-bool HandleManager<Interface, Storage>::destroy(HandleType handle)
+int HandleManager<Interface, Storage>::decRef(HandleType handle)
 {
-    if (this->validate(handle))
-    {
-        Resource *res = doGetResourceFromHandle(handle);
-        res->destroyObject();
+    if (!handle)
+        return 0; // "destruction" of a null handle is a no-op
 
-        doReturnResource(res);
-        return true;
+    if (Resource *res = this->getValidResource(handle))
+    {
+        int ref = res->decRef();
+        if (ref == 0)
+        {
+            res->destroyObject();
+            doReturnResource(res);
+        }
+        return ref;
     }
     else
     {
-        return false;
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "The handle is invalid.");
+    }
+}
+
+template<typename Interface, typename Storage>
+int HandleManager<Interface, Storage>::incRef(HandleType handle)
+{
+    if (Resource *res = this->getValidResource(handle))
+    {
+        return res->incRef();
+    }
+    else
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "The handle is invalid.");
+    }
+}
+
+template<typename Interface, typename Storage>
+int HandleManager<Interface, Storage>::refCount(HandleType handle)
+{
+    if (Resource *res = this->getValidResource(handle))
+    {
+        return res->refCount();
+    }
+    else
+    {
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "The handle is invalid.");
     }
 }
 
@@ -177,6 +208,19 @@ bool HandleManager<Interface, Storage>::isManagedResource(Resource *r) const
 template<typename Interface, typename Storage>
 Interface *HandleManager<Interface, Storage>::validate(HandleType handle) const
 {
+    if (auto *res = getValidResource(handle))
+    {
+        return res->obj();
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
+template<typename Interface, typename Storage>
+auto HandleManager<Interface, Storage>::getValidResource(HandleType handle) const -> Resource *
+{
     if (!handle)
     {
         return nullptr;
@@ -186,7 +230,7 @@ Interface *HandleManager<Interface, Storage>::validate(HandleType handle) const
 
     if (this->isManagedResource(res) && res->live() && res->generation == doGetHandleGeneration(handle))
     {
-        return res->obj();
+        return res;
     }
     else
     {
@@ -316,6 +360,8 @@ auto HandleManager<Interface, Storage>::doFetchFreeResource() -> Resource *
         if (auto *r = pimpl->freeResources.pop())
         {
             pimpl->usedCount++;
+            r->incRef();
+            assert(r->refCount() == 1);
             return r;
         }
         else

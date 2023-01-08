@@ -51,7 +51,7 @@ public:
 
     ~CustomAllocator()
     {
-        nvcvAllocatorDestroy(m_wrap.handle());
+        nvcvAllocatorDecRef(m_wrap.handle(), nullptr);
     }
 
 private:
