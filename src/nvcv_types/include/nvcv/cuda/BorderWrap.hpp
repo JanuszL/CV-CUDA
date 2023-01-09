@@ -312,7 +312,7 @@ public:
      *
      * @param[in] c N-D coordinate (from last to first dimension) to be accessed.
      *
-     * @return Accessed (const) reference.
+     * @return Accessed reference.
      */
     template<typename DimType, class = Require<std::is_same_v<int, BaseType<DimType>>>>
     inline __host__ __device__ ValueType &operator[](DimType c) const
@@ -437,14 +437,14 @@ public:
     }
 
     /**
-     * Subscript operator for read-only or read-and-write access (depending on value type).
+     * Subscript operator for read-only access.
      *
      * @param[in] c N-D coordinate (from last to first dimension) to be accessed.
      *
      * @return Accessed (const) reference.
      */
     template<typename DimType, class = Require<std::is_same_v<int, BaseType<DimType>>>>
-    inline __host__ __device__ ValueType &operator[](DimType c) const
+    inline const __host__ __device__ ValueType &operator[](DimType c) const
     {
         constexpr int N = NumElements<DimType>;
         static_assert(kNumDimensions >= N);
