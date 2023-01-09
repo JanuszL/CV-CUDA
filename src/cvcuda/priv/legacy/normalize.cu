@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+/* Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: Apache-2.0
@@ -51,7 +51,7 @@ __global__ void normalizeKernel(const input_type src, const base_type base, cons
 
     using input_value_type = typename input_type::ValueType;
 
-    *dst.ptr(batch_idx, src_y, src_x) = nvcv::cuda::SaturateCast<nvcv::cuda::BaseType<input_value_type>>(
+    *dst.ptr(batch_idx, src_y, src_x) = nvcv::cuda::SaturateCast<input_value_type>(
         (*src.ptr(batch_idx, src_y, src_x) - *base.ptr(base_batch_idx, base_y, base_x))
             * (*scale.ptr(scale_batch_idx, scale_y, scale_x)) * global_scale
         + global_shift);
@@ -85,7 +85,7 @@ __global__ void normalizeInvStdDevKernel(const input_type src, const base_type b
     scale_value_type x   = s * s + epsilon;
     scale_value_type mul = 1.0f / nvcv::cuda::sqrt(x);
 
-    *dst.ptr(batch_idx, src_y, src_x) = nvcv::cuda::SaturateCast<nvcv::cuda::BaseType<input_value_type>>(
+    *dst.ptr(batch_idx, src_y, src_x) = nvcv::cuda::SaturateCast<input_value_type>(
         (*src.ptr(batch_idx, src_y, src_x) - *base.ptr(base_batch_idx, base_y, base_x)) * mul * global_scale
         + global_shift);
 }

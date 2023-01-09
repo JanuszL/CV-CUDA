@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+/* Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: Apache-2.0
@@ -83,7 +83,7 @@ __global__ void resize_linear_ocv_align(const cuda_op::Ptr2dVarShapeNHWC<T> src,
     cbufx[0] = 1.f - fx;
     cbufx[1] = fx;
 
-    *dst.ptr(batch_idx, dst_y, dst_x) = cuda::SaturateCast<cuda::BaseType<T>>(
+    *dst.ptr(batch_idx, dst_y, dst_x) = cuda::SaturateCast<T>(
         (*src.ptr(batch_idx, sy, sx) * cbufx[0] * cbufy[0] + *src.ptr(batch_idx, sy + 1, sx) * cbufx[0] * cbufy[1]
          + *src.ptr(batch_idx, sy, sx + 1) * cbufx[1] * cbufy[0]
          + *src.ptr(batch_idx, sy + 1, sx + 1) * cbufx[1] * cbufy[1]));
@@ -258,22 +258,22 @@ __global__ void resize_cubic_ocv_align(const cuda_op::Ptr2dVarShapeNHWC<T> src, 
     using cuda::abs;
 
     *dst.ptr(batch_idx, y, x)
-        = cuda::SaturateCast<cuda::BaseType<T>>(abs(*src.ptr(batch_idx, sy - 1, sx - 1) * coeffsX[0] * coeffsY[0]
-                                                    + *src.ptr(batch_idx, sy, sx - 1) * coeffsX[0] * coeffsY[1]
-                                                    + *src.ptr(batch_idx, sy + 1, sx - 1) * coeffsX[0] * coeffsY[2]
-                                                    + *src.ptr(batch_idx, sy + 2, sx - 1) * coeffsX[0] * coeffsY[3]
-                                                    + *src.ptr(batch_idx, sy - 1, sx) * coeffsX[1] * coeffsY[0]
-                                                    + *src.ptr(batch_idx, sy, sx) * coeffsX[1] * coeffsY[1]
-                                                    + *src.ptr(batch_idx, sy + 1, sx) * coeffsX[1] * coeffsY[2]
-                                                    + *src.ptr(batch_idx, sy + 2, sx) * coeffsX[1] * coeffsY[3]
-                                                    + *src.ptr(batch_idx, sy - 1, sx + 1) * coeffsX[2] * coeffsY[0]
-                                                    + *src.ptr(batch_idx, sy, sx + 1) * coeffsX[2] * coeffsY[1]
-                                                    + *src.ptr(batch_idx, sy + 1, sx + 1) * coeffsX[2] * coeffsY[2]
-                                                    + *src.ptr(batch_idx, sy + 2, sx + 1) * coeffsX[2] * coeffsY[3]
-                                                    + *src.ptr(batch_idx, sy - 1, sx + 2) * coeffsX[3] * coeffsY[0]
-                                                    + *src.ptr(batch_idx, sy, sx + 2) * coeffsX[3] * coeffsY[1]
-                                                    + *src.ptr(batch_idx, sy + 1, sx + 2) * coeffsX[3] * coeffsY[2]
-                                                    + *src.ptr(batch_idx, sy + 2, sx + 2) * coeffsX[3] * coeffsY[3]));
+        = cuda::SaturateCast<T>(abs(*src.ptr(batch_idx, sy - 1, sx - 1) * coeffsX[0] * coeffsY[0]
+                                    + *src.ptr(batch_idx, sy, sx - 1) * coeffsX[0] * coeffsY[1]
+                                    + *src.ptr(batch_idx, sy + 1, sx - 1) * coeffsX[0] * coeffsY[2]
+                                    + *src.ptr(batch_idx, sy + 2, sx - 1) * coeffsX[0] * coeffsY[3]
+                                    + *src.ptr(batch_idx, sy - 1, sx) * coeffsX[1] * coeffsY[0]
+                                    + *src.ptr(batch_idx, sy, sx) * coeffsX[1] * coeffsY[1]
+                                    + *src.ptr(batch_idx, sy + 1, sx) * coeffsX[1] * coeffsY[2]
+                                    + *src.ptr(batch_idx, sy + 2, sx) * coeffsX[1] * coeffsY[3]
+                                    + *src.ptr(batch_idx, sy - 1, sx + 1) * coeffsX[2] * coeffsY[0]
+                                    + *src.ptr(batch_idx, sy, sx + 1) * coeffsX[2] * coeffsY[1]
+                                    + *src.ptr(batch_idx, sy + 1, sx + 1) * coeffsX[2] * coeffsY[2]
+                                    + *src.ptr(batch_idx, sy + 2, sx + 1) * coeffsX[2] * coeffsY[3]
+                                    + *src.ptr(batch_idx, sy - 1, sx + 2) * coeffsX[3] * coeffsY[0]
+                                    + *src.ptr(batch_idx, sy, sx + 2) * coeffsX[3] * coeffsY[1]
+                                    + *src.ptr(batch_idx, sy + 1, sx + 2) * coeffsX[3] * coeffsY[2]
+                                    + *src.ptr(batch_idx, sy + 2, sx + 2) * coeffsX[3] * coeffsY[3]));
 }
 
 template<typename T>
@@ -352,7 +352,7 @@ __global__ void resize_area_ocv_align(const cuda_op::Ptr2dVarShapeNHWC<T> src, c
                     out = out + brd_src(batch_idx, dy, dx) * scale;
                 }
             }
-            *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<cuda::BaseType<T>>(out);
+            *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<T>(out);
             return;
         }
 
@@ -403,7 +403,7 @@ __global__ void resize_area_ocv_align(const cuda_op::Ptr2dVarShapeNHWC<T> src, c
         if ((sy2 < fsy2) && (sx1 > fsx1))
             out = out + brd_src(batch_idx, sy2, (sx1 - 1)) * ((fsy2 - sy2) * (sx1 - fsx1) * scale);
 
-        *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<cuda::BaseType<T>>(out);
+        *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<T>(out);
         return;
     }
 
@@ -438,10 +438,10 @@ __global__ void resize_area_ocv_align(const cuda_op::Ptr2dVarShapeNHWC<T> src, c
     cbufx[0] = 1.f - fx;
     cbufx[1] = fx;
 
-    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<cuda::BaseType<T>>(
-        (*src.ptr(batch_idx, sy, sx) * cbufx[0] * cbufy[0] + *src.ptr(batch_idx, sy + 1, sx) * cbufx[0] * cbufy[1]
-         + *src.ptr(batch_idx, sy, sx + 1) * cbufx[1] * cbufy[0]
-         + *src.ptr(batch_idx, sy + 1, sx + 1) * cbufx[1] * cbufy[1]));
+    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<T>((*src.ptr(batch_idx, sy, sx) * cbufx[0] * cbufy[0]
+                                                       + *src.ptr(batch_idx, sy + 1, sx) * cbufx[0] * cbufy[1]
+                                                       + *src.ptr(batch_idx, sy, sx + 1) * cbufx[1] * cbufy[0]
+                                                       + *src.ptr(batch_idx, sy + 1, sx + 1) * cbufx[1] * cbufy[1]));
 }
 
 template<class Filter, typename T>

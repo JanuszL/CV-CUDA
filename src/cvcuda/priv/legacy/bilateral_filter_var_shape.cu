@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+/* Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: Apache-2.0
@@ -174,19 +174,19 @@ __global__ void BilateralFilterVarShapeKernel(const BrdRd src, Ptr2dVarShapeNHWC
     }
     if (colIdx < columns && rowIdx < rows)
     {
-        *dst.ptr(coord0.z, coord0.y, coord0.x) = nvcv::cuda::SaturateCast<cuda::BaseType<T>>(numerator0 / denominator0);
+        *dst.ptr(coord0.z, coord0.y, coord0.x) = nvcv::cuda::SaturateCast<T>(numerator0 / denominator0);
     }
     if (colIdx + 1 < columns && rowIdx < rows)
     {
-        *dst.ptr(coord1.z, coord1.y, coord1.x) = nvcv::cuda::SaturateCast<cuda::BaseType<T>>(numerator1 / denominator1);
+        *dst.ptr(coord1.z, coord1.y, coord1.x) = nvcv::cuda::SaturateCast<T>(numerator1 / denominator1);
     }
     if (colIdx < columns && rowIdx + 1 < rows)
     {
-        *dst.ptr(coord2.z, coord2.y, coord2.x) = nvcv::cuda::SaturateCast<cuda::BaseType<T>>(numerator2 / denominator2);
+        *dst.ptr(coord2.z, coord2.y, coord2.x) = nvcv::cuda::SaturateCast<T>(numerator2 / denominator2);
     }
     if (colIdx + 1 < columns && rowIdx + 1 < rows)
     {
-        *dst.ptr(coord3.z, coord3.y, coord3.x) = nvcv::cuda::SaturateCast<cuda::BaseType<T>>(numerator3 / denominator3);
+        *dst.ptr(coord3.z, coord3.y, coord3.x) = nvcv::cuda::SaturateCast<T>(numerator3 / denominator3);
     }
 }
 

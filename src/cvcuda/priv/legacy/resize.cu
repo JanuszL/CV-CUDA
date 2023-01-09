@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -193,8 +193,8 @@ __global__ void resize_bilinear(cuda::Tensor3DWrap<const T> src, cuda::Tensor3DW
             sx = cuda::max(0, cuda::min(sx, width - 2));
 
             *dst.ptr(batch_idx, dst_y, dst_x)
-                = cuda::SaturateCast<cuda::BaseType<T>>((1.0f - fx) * (aPtr[sx] * (1.0f - fy) + bPtr[sx] * fy)
-                                                        + fx * (aPtr[sx + 1] * (1.0f - fy) + bPtr[sx + 1] * fy));
+                = cuda::SaturateCast<T>((1.0f - fx) * (aPtr[sx] * (1.0f - fy) + bPtr[sx] * fy)
+                                        + fx * (aPtr[sx + 1] * (1.0f - fy) + bPtr[sx + 1] * fy));
         }
     }
 } //resize_bilinear
@@ -276,14 +276,10 @@ __global__ void resize_bilinear_quad_alignread(cuda::Tensor3DWrap<const T> src, 
         //const T * bPtr = src.ptr(batch_idx, sy+1, sx0); //start of lower row
 
         //$$$ only need to cast, not saturatecast
-        result[0] = cuda::SaturateCast<cuda::BaseType<T>>(
-            accum[0] + fy * (bPtr[sx0 - sx0] * (1.0f - fx0) + bPtr[sx0 - sx0 + 1] * fx0));
-        result[1] = cuda::SaturateCast<cuda::BaseType<T>>(
-            accum[1] + fy * (bPtr[sx1 - sx0] * (1.0f - fx1) + bPtr[sx1 - sx0 + 1] * fx1));
-        result[2] = cuda::SaturateCast<cuda::BaseType<T>>(
-            accum[2] + fy * (bPtr[sx2 - sx0] * (1.0f - fx2) + bPtr[sx2 - sx0 + 1] * fx2));
-        result[3] = cuda::SaturateCast<cuda::BaseType<T>>(
-            accum[3] + fy * (bPtr[sx3 - sx0] * (1.0f - fx3) + bPtr[sx3 - sx0 + 1] * fx3));
+        result[0] = cuda::SaturateCast<T>(accum[0] + fy * (bPtr[sx0 - sx0] * (1.0f - fx0) + bPtr[sx0 - sx0 + 1] * fx0));
+        result[1] = cuda::SaturateCast<T>(accum[1] + fy * (bPtr[sx1 - sx0] * (1.0f - fx1) + bPtr[sx1 - sx0 + 1] * fx1));
+        result[2] = cuda::SaturateCast<T>(accum[2] + fy * (bPtr[sx2 - sx0] * (1.0f - fx2) + bPtr[sx2 - sx0 + 1] * fx2));
+        result[3] = cuda::SaturateCast<T>(accum[3] + fy * (bPtr[sx3 - sx0] * (1.0f - fx3) + bPtr[sx3 - sx0 + 1] * fx3));
     }
     else //unbuffered
     {
@@ -292,21 +288,17 @@ __global__ void resize_bilinear_quad_alignread(cuda::Tensor3DWrap<const T> src, 
         const T *bPtr = src.ptr(batch_idx, sy + 1, 0); //start of lower row
 
         //$$$ only need to cast, not saturatecast
-        result[0] = cuda::SaturateCast<cuda::BaseType<T>>(
-            aPtr[sx0] * (1.0f - fx0) * (1.0f - fy) + bPtr[sx0] * (1.0f - fx0) * fy + aPtr[sx0 + 1] * fx0 * (1.0f - fy)
-            + bPtr[sx0 + 1] * fx0 * fy);
+        result[0] = cuda::SaturateCast<T>(aPtr[sx0] * (1.0f - fx0) * (1.0f - fy) + bPtr[sx0] * (1.0f - fx0) * fy
+                                          + aPtr[sx0 + 1] * fx0 * (1.0f - fy) + bPtr[sx0 + 1] * fx0 * fy);
 
-        result[1] = cuda::SaturateCast<cuda::BaseType<T>>(
-            aPtr[sx1] * (1.0f - fx1) * (1.0f - fy) + bPtr[sx1] * (1.0f - fx1) * fy + aPtr[sx1 + 1] * fx1 * (1.0f - fy)
-            + bPtr[sx1 + 1] * fx1 * fy);
+        result[1] = cuda::SaturateCast<T>(aPtr[sx1] * (1.0f - fx1) * (1.0f - fy) + bPtr[sx1] * (1.0f - fx1) * fy
+                                          + aPtr[sx1 + 1] * fx1 * (1.0f - fy) + bPtr[sx1 + 1] * fx1 * fy);
 
-        result[2] = cuda::SaturateCast<cuda::BaseType<T>>(
-            aPtr[sx2] * (1.0f - fx2) * (1.0f - fy) + bPtr[sx2] * (1.0f - fx2) * fy + aPtr[sx2 + 1] * fx2 * (1.0f - fy)
-            + bPtr[sx2 + 1] * fx2 * fy);
+        result[2] = cuda::SaturateCast<T>(aPtr[sx2] * (1.0f - fx2) * (1.0f - fy) + bPtr[sx2] * (1.0f - fx2) * fy
+                                          + aPtr[sx2 + 1] * fx2 * (1.0f - fy) + bPtr[sx2 + 1] * fx2 * fy);
 
-        result[3] = cuda::SaturateCast<cuda::BaseType<T>>(
-            aPtr[sx3] * (1.0f - fx3) * (1.0f - fy) + bPtr[sx3] * (1.0f - fx3) * fy + aPtr[sx3 + 1] * fx3 * (1.0f - fy)
-            + bPtr[sx3 + 1] * fx3 * fy);
+        result[3] = cuda::SaturateCast<T>(aPtr[sx3] * (1.0f - fx3) * (1.0f - fy) + bPtr[sx3] * (1.0f - fx3) * fy
+                                          + aPtr[sx3 + 1] * fx3 * (1.0f - fy) + bPtr[sx3 + 1] * fx3 * fy);
     }
 
     //aligned write 4 pixels
@@ -371,10 +363,10 @@ __global__ void resize_bicubic(cuda::Tensor3DWrap<const T> src, cuda::Tensor3DWr
         } //for row
 #ifndef LEGACY_BICUBIC_MATH
         //correct math
-        *dst.ptr(batch_idx, dst_y, dst_x) = cuda::SaturateCast<cuda::BaseType<T>>(accum);
+        *dst.ptr(batch_idx, dst_y, dst_x) = cuda::SaturateCast<T>(accum);
 #else
         //abs() needed to match legacy operator.
-        *dst.ptr(batch_idx, dst_y, dst_x) = cuda::SaturateCast<cuda::BaseType<T>>(cuda::abs(accum));
+        *dst.ptr(batch_idx, dst_y, dst_x) = cuda::SaturateCast<T>(cuda::abs(accum));
 #endif
     }
 } //resize_bicubic
@@ -464,9 +456,9 @@ __global__ void resize_bicubic_quad_alignread(cuda::Tensor3DWrap<const T> src, c
 
         for (int pix = 0; pix < 4; ++pix)
 #ifndef LEGACY_BICUBIC_MATH
-            result[pix] = cuda::SaturateCast<cuda::BaseType<T>>(accum[pix]);
+            result[pix] = cuda::SaturateCast<T>(accum[pix]);
 #else
-            result[pix] = cuda::SaturateCast<cuda::BaseType<T>>(cuda::abs(accum[pix]));
+            result[pix] = cuda::SaturateCast<T>(cuda::abs(accum[pix]));
 #endif
     }
     else
@@ -498,9 +490,9 @@ __global__ void resize_bicubic_quad_alignread(cuda::Tensor3DWrap<const T> src, c
                 accum += cY[row] * (cX[0] * aPtr[0] + cX[1] * aPtr[1] + cX[2] * aPtr[2] + cX[3] * aPtr[3]);
             } //for row
 #ifndef LEGACY_BICUBIC_MATH
-            result[pix] = cuda::SaturateCast<cuda::BaseType<T>>(accum);
+            result[pix] = cuda::SaturateCast<T>(accum);
 #else
-            result[pix] = cuda::SaturateCast<cuda::BaseType<T>>(cuda::abs(accum));
+            result[pix] = cuda::SaturateCast<T>(cuda::abs(accum));
 #endif
         } //for pix
     }
@@ -571,10 +563,10 @@ __global__ void resize_area_ocv_align(const Ptr2dNHWC<T> src, const IntegerAreaF
     cbufx[0] = 1.f - fx;
     cbufx[1] = fx;
 
-    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<cuda::BaseType<T>>(
-        (*src.ptr(batch_idx, sy, sx) * cbufx[0] * cbufy[0] + *src.ptr(batch_idx, sy + 1, sx) * cbufx[0] * cbufy[1]
-         + *src.ptr(batch_idx, sy, sx + 1) * cbufx[1] * cbufy[0]
-         + *src.ptr(batch_idx, sy + 1, sx + 1) * cbufx[1] * cbufy[1]));
+    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<T>((*src.ptr(batch_idx, sy, sx) * cbufx[0] * cbufy[0]
+                                                       + *src.ptr(batch_idx, sy + 1, sx) * cbufx[0] * cbufy[1]
+                                                       + *src.ptr(batch_idx, sy, sx + 1) * cbufx[1] * cbufy[0]
+                                                       + *src.ptr(batch_idx, sy + 1, sx + 1) * cbufx[1] * cbufy[1]));
 }
 
 template<typename T>

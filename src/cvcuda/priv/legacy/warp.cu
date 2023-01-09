@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,7 +41,7 @@ __global__ void warp(const Filter src, Ptr2dNHWC<T> dst, Transform transform)
     if (x < dst.cols && y < dst.rows)
     {
         const float2 coord        = Transform::calcCoord(coeff, x, y);
-        *dst.ptr(batch_idx, y, x) = nvcv::cuda::SaturateCast<nvcv::cuda::BaseType<T>>(src(batch_idx, coord.y, coord.x));
+        *dst.ptr(batch_idx, y, x) = nvcv::cuda::SaturateCast<T>(src(batch_idx, coord.y, coord.x));
     }
 }
 

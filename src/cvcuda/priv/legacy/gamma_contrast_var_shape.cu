@@ -56,7 +56,7 @@ __global__ void gamma_contrast_kernel(const Ptr2dVarShapeNHWC<D> src, Ptr2dVarSh
     gamma_type gamma = *gamma_.ptr(batch_idx);
     gamma_type tmp   = (*src.ptr(batch_idx, dst_y, dst_x) + 0.0f) / 255.0f;
 
-    D out                             = nvcv::cuda::SaturateCast<cuda::BaseType<D>>(cuda::pow(tmp, gamma) * 255.0f);
+    D out                             = nvcv::cuda::SaturateCast<D>(cuda::pow(tmp, gamma) * 255.0f);
     *dst.ptr(batch_idx, dst_y, dst_x) = out;
 }
 
@@ -73,8 +73,8 @@ __global__ void gamma_contrast_float_kernel(const Ptr2dVarShapeNHWC<D> src, Ptr2
 
     gamma_type gamma = *gamma_.ptr(batch_idx);
 
-    D out = nvcv::cuda::SaturateCast<cuda::BaseType<D>>(
-        cuda::pow(cuda::StaticCast<float>(*src.ptr(batch_idx, dst_y, dst_x)), gamma));
+    D out = nvcv::cuda::SaturateCast<D>(cuda::pow(cuda::StaticCast<float>(*src.ptr(batch_idx, dst_y, dst_x)), gamma));
+
     *dst.ptr(batch_idx, dst_y, dst_x) = cuda::clamp(cuda::StaticCast<float>(out), 0.f, 1.f);
 }
 

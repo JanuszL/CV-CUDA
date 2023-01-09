@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+/* Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: Apache-2.0
@@ -35,7 +35,6 @@ __global__ void filter2D(SrcWrapper src, DstWrapper dst, Size2D dstSize, KernelW
                          int2 kernelAnchor)
 {
     using T         = typename DstWrapper::ValueType;
-    using BT        = cuda::BaseType<T>;
     using work_type = cuda::ConvertBaseTypeTo<float, T>;
     work_type res   = cuda::SetAll<work_type>(0);
 
@@ -61,7 +60,7 @@ __global__ void filter2D(SrcWrapper src, DstWrapper dst, Size2D dstSize, KernelW
         }
     }
 
-    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<BT>(res);
+    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<T>(res);
 }
 
 template<typename T, NVCVBorderType B, class KernelWrapper>

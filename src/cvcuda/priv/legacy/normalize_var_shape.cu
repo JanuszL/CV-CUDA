@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+/* Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: Apache-2.0
@@ -43,9 +43,8 @@ __global__ void normKernel(const cuda_op::Ptr2dVarShapeNHWC<T> src, cuda_op::Ptr
     if (dst_x >= dst.at_cols(batch_idx) || dst_y >= dst.at_rows(batch_idx))
         return;
 
-    T out = *src.ptr(batch_idx, dst_y, dst_x);
-    *dst.ptr(batch_idx, dst_y, dst_x)
-        = cuda::SaturateCast<cuda::BaseType<out_T>>((out - *base) * *scale * global_scale + global_shift);
+    T out                             = *src.ptr(batch_idx, dst_y, dst_x);
+    *dst.ptr(batch_idx, dst_y, dst_x) = cuda::SaturateCast<out_T>((out - *base) * *scale * global_scale + global_shift);
 }
 
 // (float3 - float3) * float3 / (float3 - float) * float3 / (float3 - float3) * float / (float3 - float) * float
@@ -64,9 +63,8 @@ __global__ void normInvStdDevKernel(const cuda_op::Ptr2dVarShapeNHWC<T> src, cud
     scale_type x   = s * s + epsilon;
     scale_type mul = 1.0f / cuda::sqrt(x);
 
-    T out = *src.ptr(batch_idx, dst_y, dst_x);
-    *dst.ptr(batch_idx, dst_y, dst_x)
-        = cuda::SaturateCast<cuda::BaseType<out_T>>((out - *base) * mul * global_scale + global_shift);
+    T out                             = *src.ptr(batch_idx, dst_y, dst_x);
+    *dst.ptr(batch_idx, dst_y, dst_x) = cuda::SaturateCast<out_T>((out - *base) * mul * global_scale + global_shift);
 }
 
 template<typename T, typename out_T, typename base_type, typename scale_type>
