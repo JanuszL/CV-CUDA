@@ -37,18 +37,19 @@ namespace nvcv::legacy::cuda_op {
 namespace {
 
 template<typename T>
-__global__ void resize_linear_ocv_align(const cuda_op::Ptr2dVarShapeNHWC<T> src, cuda_op::Ptr2dVarShapeNHWC<T> dst)
+__global__ void resize_linear_ocv_align(const cuda::ImageBatchVarShapeWrap<const T> src,
+                                        cuda::ImageBatchVarShapeWrap<T>             dst)
 {
     int       dst_x     = blockIdx.x * blockDim.x + threadIdx.x;
     int       dst_y     = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx = get_batch_idx();
 
-    int dstWidth  = dst.at_cols(batch_idx);
-    int dstHeight = dst.at_rows(batch_idx);
+    int dstWidth  = dst.width(batch_idx);
+    int dstHeight = dst.height(batch_idx);
 
     if (dst_x >= dstWidth || dst_y >= dstHeight)
         return;
-    int height = src.at_rows(batch_idx), width = src.at_cols(batch_idx);
+    int height = src.height(batch_idx), width = src.width(batch_idx);
 
     float scale_x = static_cast<float>(width) / dstWidth;
     float scale_y = static_cast<float>(height) / dstHeight;
@@ -90,19 +91,19 @@ __global__ void resize_linear_ocv_align(const cuda_op::Ptr2dVarShapeNHWC<T> src,
 }
 
 template<typename T>
-__global__ void resize_linear_v2(const cuda_op::Ptr2dVarShapeNHWC<T> src, cuda_op::Ptr2dVarShapeNHWC<T> dst,
+__global__ void resize_linear_v2(const cuda::ImageBatchVarShapeWrap<const T> src, cuda::ImageBatchVarShapeWrap<T> dst,
                                  const float *scale_xs, const float *scale_ys)
 {
     int       dst_x     = blockIdx.x * blockDim.x + threadIdx.x;
     int       dst_y     = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx = get_batch_idx();
 
-    int dstWidth  = dst.at_cols(batch_idx);
-    int dstHeight = dst.at_rows(batch_idx);
+    int dstWidth  = dst.width(batch_idx);
+    int dstHeight = dst.height(batch_idx);
 
     if (dst_x >= dstWidth || dst_y >= dstHeight)
         return;
-    int height = src.at_rows(batch_idx), width = src.at_cols(batch_idx);
+    int height = src.height(batch_idx), width = src.width(batch_idx);
 
     float scale_x = static_cast<float>(width) / dstWidth;
     float scale_y = static_cast<float>(height) / dstHeight;
@@ -136,42 +137,43 @@ __global__ void resize_linear_v2(const cuda_op::Ptr2dVarShapeNHWC<T> src, cuda_o
 }
 
 template<typename T>
-__global__ void resize_nearest_ocv_align(const cuda_op::Ptr2dVarShapeNHWC<T> src, cuda_op::Ptr2dVarShapeNHWC<T> dst)
+__global__ void resize_nearest_ocv_align(const cuda::ImageBatchVarShapeWrap<const T> src,
+                                         cuda::ImageBatchVarShapeWrap<T>             dst)
 {
     int       dst_x     = blockIdx.x * blockDim.x + threadIdx.x;
     int       dst_y     = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx = get_batch_idx();
-    int       dstWidth  = dst.at_cols(batch_idx);
-    int       dstHeight = dst.at_rows(batch_idx);
+    int       dstWidth  = dst.width(batch_idx);
+    int       dstHeight = dst.height(batch_idx);
 
     if (dst_x >= dstWidth || dst_y >= dstHeight)
         return;
-    int height = src.at_rows(batch_idx), width = src.at_cols(batch_idx);
+    int height = src.height(batch_idx), width = src.width(batch_idx);
 
     float scale_x = static_cast<float>(width) / dstWidth;
     float scale_y = static_cast<float>(height) / dstHeight;
 
     int sx = __float2int_rd(dst_x * scale_x);
-    sx     = min(sx, src.at_cols(batch_idx) - 1);
+    sx     = min(sx, src.width(batch_idx) - 1);
 
     int sy                            = __float2int_rd(dst_y * scale_y);
-    sy                                = min(sy, src.at_rows(batch_idx) - 1);
+    sy                                = min(sy, src.height(batch_idx) - 1);
     *dst.ptr(batch_idx, dst_y, dst_x) = *src.ptr(batch_idx, sy, sx);
 }
 
 template<typename T>
-__global__ void resize_nearest_v2(const cuda_op::Ptr2dVarShapeNHWC<T> src, cuda_op::Ptr2dVarShapeNHWC<T> dst,
+__global__ void resize_nearest_v2(const cuda::ImageBatchVarShapeWrap<const T> src, cuda::ImageBatchVarShapeWrap<T> dst,
                                   const float *scale_xs, const float *scale_ys)
 {
     int       dst_x     = blockIdx.x * blockDim.x + threadIdx.x;
     int       dst_y     = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx = get_batch_idx();
-    int       dstWidth  = dst.at_cols(batch_idx);
-    int       dstHeight = dst.at_rows(batch_idx);
+    int       dstWidth  = dst.width(batch_idx);
+    int       dstHeight = dst.height(batch_idx);
 
     if (dst_x >= dstWidth || dst_y >= dstHeight)
         return;
-    int height = src.at_rows(batch_idx), width = src.at_cols(batch_idx);
+    int height = src.height(batch_idx), width = src.width(batch_idx);
 
     float scale_x = static_cast<float>(width) / dstWidth;
     float scale_y = static_cast<float>(height) / dstHeight;
@@ -186,18 +188,19 @@ __global__ void resize_nearest_v2(const cuda_op::Ptr2dVarShapeNHWC<T> src, cuda_
 }
 
 template<typename T>
-__global__ void resize_cubic_ocv_align(const cuda_op::Ptr2dVarShapeNHWC<T> src, cuda_op::Ptr2dVarShapeNHWC<T> dst)
+__global__ void resize_cubic_ocv_align(const cuda::ImageBatchVarShapeWrap<const T> src,
+                                       cuda::ImageBatchVarShapeWrap<T>             dst)
 {
     int       x         = blockIdx.x * blockDim.x + threadIdx.x;
     int       y         = blockIdx.y * blockDim.y + threadIdx.y;
     const int batch_idx = get_batch_idx();
 
-    int dstWidth  = dst.at_cols(batch_idx);
-    int dstHeight = dst.at_rows(batch_idx);
+    int dstWidth  = dst.width(batch_idx);
+    int dstHeight = dst.height(batch_idx);
 
     if (x >= dstWidth || y >= dstHeight)
         return;
-    int height = src.at_rows(batch_idx), width = src.at_cols(batch_idx);
+    int height = src.height(batch_idx), width = src.width(batch_idx);
 
     float scale_x = static_cast<float>(width) / dstWidth;
     float scale_y = static_cast<float>(height) / dstHeight;
@@ -208,7 +211,7 @@ __global__ void resize_cubic_ocv_align(const cuda_op::Ptr2dVarShapeNHWC<T> src, 
     float fy = (float)((y + 0.5) * scale_y - 0.5);
     int   sy = __float2int_rd(fy);
     fy -= sy;
-    sy = min(sy, src.at_rows(batch_idx) - 3);
+    sy = min(sy, src.height(batch_idx) - 3);
     sy = max(1, sy);
 
     const float A = -0.75f;
@@ -227,9 +230,9 @@ __global__ void resize_cubic_ocv_align(const cuda_op::Ptr2dVarShapeNHWC<T> src, 
     {
         fx = 0, sx = 1;
     }
-    if (sx >= src.at_cols(batch_idx) - 3)
+    if (sx >= src.width(batch_idx) - 3)
     {
-        fx = 0, sx = src.at_cols(batch_idx) - 3;
+        fx = 0, sx = src.width(batch_idx) - 3;
     }
 
     float coeffsX[4];
@@ -242,17 +245,17 @@ __global__ void resize_cubic_ocv_align(const cuda_op::Ptr2dVarShapeNHWC<T> src, 
     {
         sx = 1;
     }
-    if (sx > src.at_cols(batch_idx) - 3)
+    if (sx > src.width(batch_idx) - 3)
     {
-        sx = src.at_cols(batch_idx) - 3;
+        sx = src.width(batch_idx) - 3;
     }
     if (sy < 1)
     {
         sy = 1;
     }
-    if (sy > src.at_rows(batch_idx) - 3)
+    if (sy > src.height(batch_idx) - 3)
     {
-        sy = src.at_rows(batch_idx) - 3;
+        sy = src.height(batch_idx) - 3;
     }
 
     using cuda::abs;
@@ -301,20 +304,21 @@ __global__ void resize_cubic_v2(
     *dst.ptr(batch_idx, dst_y, dst_x) = filteredSrc(batch_idx, src_y, src_x);
 }
 
-template<typename T, typename BorderReader>
-__global__ void resize_area_ocv_align(const cuda_op::Ptr2dVarShapeNHWC<T> src, const BorderReader brd_src,
-                                      cuda_op::Ptr2dVarShapeNHWC<T> dst)
+template<typename T>
+__global__ void resize_area_ocv_align(const cuda::ImageBatchVarShapeWrap<const T>                   src,
+                                      const cuda::BorderVarShapeWrap<const T, NVCV_BORDER_CONSTANT> brd_src,
+                                      cuda::ImageBatchVarShapeWrap<T>                               dst)
 {
     const int x         = blockDim.x * blockIdx.x + threadIdx.x;
     const int y         = blockDim.y * blockIdx.y + threadIdx.y;
     const int batch_idx = get_batch_idx();
 
-    int dstWidth  = dst.at_cols(batch_idx);
-    int dstHeight = dst.at_rows(batch_idx);
+    int dstWidth  = dst.width(batch_idx);
+    int dstHeight = dst.height(batch_idx);
 
     if (x >= dstWidth || y >= dstHeight)
         return;
-    int height = src.at_rows(batch_idx), width = src.at_cols(batch_idx);
+    int height = src.height(batch_idx), width = src.width(batch_idx);
 
     float scale_x = static_cast<float>(width) / dstWidth;
     float scale_y = static_cast<float>(height) / dstHeight;
@@ -345,11 +349,17 @@ __global__ void resize_area_ocv_align(const cuda_op::Ptr2dVarShapeNHWC<T> src, c
             using work_type = cuda::ConvertBaseTypeTo<float, T>;
             work_type out   = {0};
 
+            int3 srcCoord = {0, 0, batch_idx};
+
             for (int dy = sy1; dy < sy2; ++dy)
             {
+                srcCoord.y = dy;
+
                 for (int dx = sx1; dx < sx2; ++dx)
                 {
-                    out = out + brd_src(batch_idx, dy, dx) * scale;
+                    srcCoord.x = dx;
+
+                    out = out + brd_src[srcCoord] * scale;
                 }
             }
             *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<T>(out);
@@ -369,39 +379,84 @@ __global__ void resize_area_ocv_align(const cuda_op::Ptr2dVarShapeNHWC<T> src, c
         int sy2 = __float2int_rd(fsy2);
 
         float scale
-            = 1.f / (fminf(scale_x, src.at_cols(batch_idx) - fsx1) * fminf(scale_y, src.at_rows(batch_idx) - fsy1));
+            = 1.f / (fminf(scale_x, src.width(batch_idx) - fsx1) * fminf(scale_y, src.height(batch_idx) - fsy1));
 
         using work_type = cuda::ConvertBaseTypeTo<float, T>;
         work_type out   = {0};
 
+        int3 srcCoord = {0, 0, batch_idx};
+
         for (int dy = sy1; dy < sy2; ++dy)
         {
-            for (int dx = sx1; dx < sx2; ++dx) out = out + brd_src(batch_idx, dy, dx) * scale;
+            srcCoord.y = dy;
+
+            for (int dx = sx1; dx < sx2; ++dx)
+            {
+                srcCoord.x = dx;
+
+                out = out + brd_src[srcCoord] * scale;
+            }
 
             if (sx1 > fsx1)
-                out = out + brd_src(batch_idx, dy, (sx1 - 1)) * ((sx1 - fsx1) * scale);
+            {
+                srcCoord.x = sx1 - 1;
+                out        = out + brd_src[srcCoord] * ((sx1 - fsx1) * scale);
+            }
 
             if (sx2 < fsx2)
-                out = out + brd_src(batch_idx, dy, sx2) * ((fsx2 - sx2) * scale);
+            {
+                srcCoord.x = sx2;
+                out        = out + brd_src[srcCoord] * ((fsx2 - sx2) * scale);
+            }
         }
 
         if (sy1 > fsy1)
-            for (int dx = sx1; dx < sx2; ++dx) out = out + brd_src(batch_idx, (sy1 - 1), dx) * ((sy1 - fsy1) * scale);
+        {
+            srcCoord.y = sy1 - 1;
+            for (int dx = sx1; dx < sx2; ++dx)
+            {
+                srcCoord.x = dx;
+                out        = out + brd_src[srcCoord] * ((sy1 - fsy1) * scale);
+            }
+        }
 
         if (sy2 < fsy2)
-            for (int dx = sx1; dx < sx2; ++dx) out = out + brd_src(batch_idx, sy2, dx) * ((fsy2 - sy2) * scale);
+        {
+            srcCoord.y = sy2;
+            for (int dx = sx1; dx < sx2; ++dx)
+            {
+                srcCoord.x = dx;
+                out        = out + brd_src[srcCoord] * ((fsy2 - sy2) * scale);
+            }
+        }
 
         if ((sy1 > fsy1) && (sx1 > fsx1))
-            out = out + brd_src(batch_idx, (sy1 - 1), (sx1 - 1)) * ((sy1 - fsy1) * (sx1 - fsx1) * scale);
+        {
+            srcCoord.y = (sy1 - 1);
+            srcCoord.x = (sx1 - 1);
+            out        = out + brd_src[srcCoord] * ((sy1 - fsy1) * (sx1 - fsx1) * scale);
+        }
 
         if ((sy1 > fsy1) && (sx2 < fsx2))
-            out = out + brd_src(batch_idx, (sy1 - 1), sx2) * ((sy1 - fsy1) * (fsx2 - sx2) * scale);
+        {
+            srcCoord.y = (sy1 - 1);
+            srcCoord.x = sx2;
+            out        = out + brd_src[srcCoord] * ((sy1 - fsy1) * (fsx2 - sx2) * scale);
+        }
 
         if ((sy2 < fsy2) && (sx2 < fsx2))
-            out = out + brd_src(batch_idx, sy2, sx2) * ((fsy2 - sy2) * (fsx2 - sx2) * scale);
+        {
+            srcCoord.y = sy2;
+            srcCoord.x = sx2;
+            out        = out + brd_src[srcCoord] * ((fsy2 - sy2) * (fsx2 - sx2) * scale);
+        }
 
         if ((sy2 < fsy2) && (sx1 > fsx1))
-            out = out + brd_src(batch_idx, sy2, (sx1 - 1)) * ((fsy2 - sy2) * (sx1 - fsx1) * scale);
+        {
+            srcCoord.y = sy2;
+            srcCoord.x = sx1 - 1;
+            out        = out + brd_src[srcCoord] * ((fsy2 - sy2) * (sx1 - fsx1) * scale);
+        }
 
         *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<T>(out);
         return;
@@ -425,13 +480,13 @@ __global__ void resize_area_ocv_align(const cuda_op::Ptr2dVarShapeNHWC<T> src, c
         fx = 0, sx = 0;
     }
 
-    if (sx >= src.at_cols(batch_idx) - 1)
+    if (sx >= src.width(batch_idx) - 1)
     {
-        fx = 0, sx = src.at_cols(batch_idx) - 2;
+        fx = 0, sx = src.width(batch_idx) - 2;
     }
-    if (sy >= src.at_rows(batch_idx) - 1)
+    if (sy >= src.height(batch_idx) - 1)
     {
-        sy = src.at_rows(batch_idx) - 2;
+        sy = src.height(batch_idx) - 2;
     }
 
     float cbufx[2];
@@ -467,8 +522,8 @@ void resize(const IImageBatchVarShapeDataStridedCuda &in, const IImageBatchVarSh
     NVCV_ASSERT(in.numImages() == out.numImages());
 
     dim3 gridSize(divUp(outMaxSize.w, blockSize.x), divUp(outMaxSize.h, blockSize.y), in.numImages());
-    cuda_op::Ptr2dVarShapeNHWC<T> src_ptr(in);
-    cuda_op::Ptr2dVarShapeNHWC<T> dst_ptr(out);
+    cuda::ImageBatchVarShapeWrap<const T> src_ptr(in);
+    cuda::ImageBatchVarShapeWrap<T>       dst_ptr(out);
 
     if (interpolation == NVCV_INTERP_LINEAR)
     {
@@ -494,19 +549,21 @@ void resize(const IImageBatchVarShapeDataStridedCuda &in, const IImageBatchVarSh
         resize_cubic_ocv_align<T><<<gridSize, blockSize, 0, stream>>>(src_ptr, dst_ptr);
         checkKernelErrors();
 #else
+        cuda_op::Ptr2dVarShapeNHWC<T>                                                  srcPtr2d(in);
+        cuda_op::Ptr2dVarShapeNHWC<T>                                                  dstPtr2d(out);
         cuda_op::BrdReplicate<T>                                                       brd(0, 0);
-        cuda_op::BorderReader<cuda_op::Ptr2dVarShapeNHWC<T>, cuda_op::BrdReplicate<T>> brdSrc(src_ptr, brd);
+        cuda_op::BorderReader<cuda_op::Ptr2dVarShapeNHWC<T>, cuda_op::BrdReplicate<T>> brdSrc(srcPtr2d, brd);
         cuda_op::CubicFilter<cuda_op::BorderReader<cuda_op::Ptr2dVarShapeNHWC<T>, cuda_op::BrdReplicate<T>>>
             filteredSrc(brdSrc);
 
-        resize_cubic_v2<T><<<gridSize, blockSize, 0, stream>>>(filteredSrc, dst_ptr);
+        resize_cubic_v2<T><<<gridSize, blockSize, 0, stream>>>(filteredSrc, dstPtr2d);
         checkKernelErrors();
 #endif
     }
     else if (interpolation == NVCV_INTERP_AREA)
     {
-        cuda_op::BrdConstant<T>                                                       brd(0, 0);
-        cuda_op::BorderReader<cuda_op::Ptr2dVarShapeNHWC<T>, cuda_op::BrdConstant<T>> brdSrc(src_ptr, brd);
+        cuda::BorderVarShapeWrap<const T, NVCV_BORDER_CONSTANT> brdSrc(in);
+
         resize_area_ocv_align<T><<<gridSize, blockSize, 0, stream>>>(src_ptr, brdSrc, dst_ptr);
         checkKernelErrors();
     }
