@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,6 +45,18 @@ target_link_libraries(nvcv_test_types_system
         nvcv_test_common_system
         nvcv_types
 )
+
+get_target_property(NVCV_SOURCE_DIR nvcv_types SOURCE_DIR)
+
+file(GLOB_RECURSE CAPI_HEADERS RELATIVE "${NVCV_SOURCE_DIR}/include" CONFIGURE_DEPENDS "${NVCV_SOURCE_DIR}/include/*.h")
+
+unset(ALL_HEADERS)
+foreach(hdr ${CAPI_HEADERS})
+    set(ALL_HEADERS "${ALL_HEADERS}#include <${hdr}>\n")
+endforeach()
+
+configure_file(CAPI.h.in CAPI.h)
+target_include_directories(nvcv_test_types_system PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
 nvcv_add_test(nvcv_test_types_system)
 
