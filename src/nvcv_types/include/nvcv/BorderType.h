@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,20 +15,26 @@
  * limitations under the License.
  */
 
-#include "BorderType.hpp"
+#ifndef NVCV_BORDER_TYPE_H
+#define NVCV_BORDER_TYPE_H
 
-#include <nvcv/BorderType.h>
-
-namespace cvcudapy {
-
-void ExportBorderType(py::module &m)
+#ifdef __cplusplus
+extern "C"
 {
-    py::enum_<NVCVBorderType>(m, "Border")
-        .value("CONSTANT", NVCV_BORDER_CONSTANT)
-        .value("REPLICATE", NVCV_BORDER_REPLICATE)
-        .value("REFLECT", NVCV_BORDER_REFLECT)
-        .value("WRAP", NVCV_BORDER_WRAP)
-        .value("REFLECT101", NVCV_BORDER_REFLECT101);
-}
+#endif
 
-} // namespace cvcudapy
+// @brief Flag to choose the border mode to be used
+typedef enum
+{
+    NVCV_BORDER_CONSTANT   = 0,
+    NVCV_BORDER_REPLICATE  = 1,
+    NVCV_BORDER_REFLECT    = 2,
+    NVCV_BORDER_WRAP       = 3,
+    NVCV_BORDER_REFLECT101 = 4,
+} NVCVBorderType;
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // NVCV_BORDER_TYPE_H

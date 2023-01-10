@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,7 @@
 
 #include <cuda_runtime.h>
 #include <cvcuda/Types.h>
+#include <nvcv/BorderType.h>
 #include <nvcv/IImageBatch.hpp>
 #include <nvcv/IImageBatchData.hpp>
 #include <nvcv/ITensorData.hpp>
