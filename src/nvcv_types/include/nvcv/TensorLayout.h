@@ -76,13 +76,16 @@ NVCV_CONSTEXPR static const NVCVTensorLayout NVCV_TENSOR_NONE = NVCV_TENSOR_LAYO
 // clang-format off
 NVCV_CONSTEXPR static const NVCVTensorLayout NVCV_TENSOR_IMPLICIT[7] =
 {
-    NVCV_TENSOR_NONE,
-    NVCV_TENSOR_W,
-    NVCV_TENSOR_HW,
-    NVCV_TENSOR_NHW,
-    NVCV_TENSOR_NCHW,
-    NVCV_TENSOR_NCDHW,
-    NVCV_TENSOR_NCFDHW
+    // Can't use the NVCV_TENSOR_* identifiers directly,
+    // clang complains they are not compile-time constants.
+    // We must resort to the make macros instead.
+    NVCV_TENSOR_LAYOUT_MAKE(""), // none
+    NVCV_TENSOR_LAYOUT_MAKE("W"),
+    NVCV_TENSOR_LAYOUT_MAKE("HW"),
+    NVCV_TENSOR_LAYOUT_MAKE("NHW"),
+    NVCV_TENSOR_LAYOUT_MAKE("NCHW"),
+    NVCV_TENSOR_LAYOUT_MAKE("NCDHW"),
+    NVCV_TENSOR_LAYOUT_MAKE("NCFDHW"),
 };
 // clang-format on
 

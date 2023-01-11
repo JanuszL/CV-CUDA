@@ -27,7 +27,7 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get update \
         git git-lfs \
         g++-11 \
         # Compilers to which public headers must be compatible
-        g++-9 \
+        g++-9 clang-14 clang-11 \
         cmake ninja-build \
         ccache \
         libgtest-dev libgmock-dev \

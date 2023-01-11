@@ -311,13 +311,13 @@ bool operator==(NullOptT, const Optional<T> &b)
 }
 
 template<class T>
-bool operator==(const Optional<T> &a, nullptr_t)
+bool operator==(const Optional<T> &a, std::nullptr_t)
 {
     return !a;
 }
 
 template<class T>
-bool operator==(nullptr_t, const Optional<T> &b)
+bool operator==(std::nullptr_t, const Optional<T> &b)
 {
     return !b;
 }
@@ -341,13 +341,13 @@ bool operator!=(const Optional<T> &a, const Optional<T> &b)
 }
 
 template<class T>
-bool operator!=(const Optional<T> &a, nullptr_t)
+bool operator!=(const Optional<T> &a, std::nullptr_t)
 {
     return !(a == nullptr);
 }
 
 template<class T>
-bool operator!=(nullptr_t, const Optional<T> &b)
+bool operator!=(std::nullptr_t, const Optional<T> &b)
 {
     return !(nullptr == b);
 }

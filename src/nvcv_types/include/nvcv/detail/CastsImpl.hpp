@@ -62,7 +62,7 @@ private:
 template<class IFACE, class H>
 void SetObjectAssociation(NVCVStatus (*setUserPointer)(H, void *), IFACE *obj, H handle)
 {
-    static_assert(std::is_same<typename IFACE::HandleType, H>::value);
+    static_assert(std::is_same<typename IFACE::HandleType, H>::value, "handle type must match interface's");
 
     assert(((uintptr_t)handle & 1) == 0);
     detail::CheckThrow((*setUserPointer)((H)(((uintptr_t)handle) | 1), obj));
@@ -71,7 +71,7 @@ void SetObjectAssociation(NVCVStatus (*setUserPointer)(H, void *), IFACE *obj, H
 template<class IFACE, class H>
 IFACE *CastImpl(NVCVStatus (*getUserPointer)(H, void **), NVCVStatus (*setUserPointer)(H, void *), H handle)
 {
-    static_assert(std::is_same<typename IFACE::HandleType, H>::value);
+    static_assert(std::is_same<typename IFACE::HandleType, H>::value, "handle type must matchinterface's");
     assert(getUserPointer != nullptr);
     assert(setUserPointer != nullptr);
 

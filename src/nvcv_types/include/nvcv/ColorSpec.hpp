@@ -127,8 +127,8 @@ public:
     {
     }
 
-    constexpr ColorSpec ConstCreate(ColorSpace cspace, YCbCrEncoding encoding, ColorTransferFunction xferFunc,
-                                    ColorRange range, ChromaLocation locHoriz, ChromaLocation locVert);
+    constexpr static ColorSpec ConstCreate(ColorSpace cspace, YCbCrEncoding encoding, ColorTransferFunction xferFunc,
+                                           ColorRange range, ChromaLocation locHoriz, ChromaLocation locVert);
 
     ColorSpec(ColorSpace cspace, YCbCrEncoding encoding, ColorTransferFunction xferFunc, ColorRange range,
               ChromaLocation locHoriz, ChromaLocation locVert);
