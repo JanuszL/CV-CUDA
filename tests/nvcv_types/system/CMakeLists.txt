@@ -55,6 +55,7 @@ get_target_property(NVCV_SOURCE_DIR nvcv_types SOURCE_DIR)
 file(GLOB_RECURSE CAPI_HEADERS RELATIVE "${NVCV_SOURCE_DIR}/include" CONFIGURE_DEPENDS "${NVCV_SOURCE_DIR}/include/*.h")
 add_header_compat_test(TARGET nvcv_test_capi_header_compat
                        SOURCE TestAPI.c
+                       STANDARD c11
                        DEPENDS nvcv_types
                        HEADERS ${CAPI_HEADERS})
 
@@ -65,6 +66,7 @@ list(FILTER CXXAPI_HEADERS EXCLUDE REGEX "nvcv/cuda/")
 
 add_header_compat_test(TARGET nvcv_test_cxxapi_header_compat
                        SOURCE TestAPI.cpp
+                       STANDARD c++11
                        DEPENDS nvcv_types
                        HEADERS ${CXXAPI_HEADERS})
 

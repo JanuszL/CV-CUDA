@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -221,7 +221,7 @@ private:
 template<class... AA>
 CustomAllocator<AA...> CreateCustomAllocator(AA &&...allocators)
 {
-    return CustomAllocator(std::forward<AA>(allocators)...);
+    return CustomAllocator<AA...>(std::forward<AA>(allocators)...);
 }
 
 } // namespace nvcv

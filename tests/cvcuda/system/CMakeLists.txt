@@ -60,6 +60,7 @@ get_target_property(CVCUDA_SOURCE_DIR cvcuda SOURCE_DIR)
 file(GLOB_RECURSE CAPI_HEADERS RELATIVE "${CVCUDA_SOURCE_DIR}/include" CONFIGURE_DEPENDS "${CVCUDA_SOURCE_DIR}/include/*.h")
 add_header_compat_test(TARGET cvcuda_test_capi_header_compat
                        SOURCE TestAPI.c
+                       STANDARD c11
                        DEPENDS cvcuda
                        HEADERS ${CAPI_HEADERS})
 
@@ -68,5 +69,6 @@ file(GLOB_RECURSE CXXAPI_HEADERS RELATIVE "${CVCUDA_SOURCE_DIR}/include" CONFIGU
 
 add_header_compat_test(TARGET cvcuda_test_cxxapi_header_compat
                        SOURCE TestAPI.cpp
+                       STANDARD c++11
                        DEPENDS cvcuda
                        HEADERS ${CXXAPI_HEADERS})

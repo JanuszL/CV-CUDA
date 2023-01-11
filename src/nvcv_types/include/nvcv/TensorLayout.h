@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -200,19 +200,9 @@ inline static int32_t nvcvTensorLayoutFindDimIndex(NVCVTensorLayout layout, char
  */
 NVCV_CONSTEXPR inline static char nvcvTensorLayoutGetLabel(NVCVTensorLayout layout, int idx)
 {
-    if (idx < 0)
-    {
-        idx = layout.rank + idx;
-    }
-
-    if (0 <= idx && idx < layout.rank)
-    {
-        return layout.data[idx];
-    }
-    else
-    {
-        return '\0';
-    }
+    // Must be all a single statement for C++11 compatibility
+    return idx < 0 ? (0 <= layout.rank + idx && layout.rank + idx < layout.rank ? layout.data[layout.rank + idx] : '\0')
+                   : (0 <= idx && idx < layout.rank ? layout.data[idx] : '\0');
 }
 
 /** Returns the number of dimensions of the tensor layout
@@ -294,14 +284,7 @@ inline static int32_t nvcvTensorLayoutEndsWith(NVCVTensorLayout layout, NVCVTens
  */
 NVCV_CONSTEXPR inline static const char *nvcvTensorLayoutGetName(const NVCVTensorLayout *layout)
 {
-    if (layout == NULL)
-    {
-        return "";
-    }
-    else
-    {
-        return layout->data;
-    }
+    return layout == NULL ? "" : layout->data;
 }
 
 #ifdef __cplusplus

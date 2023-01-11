@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,9 +28,7 @@
 #include <cassert>
 #include <stdexcept>
 
-namespace nvcv {
-
-namespace detail {
+namespace nvcv { namespace detail {
 
 // Refers to an external handle. It doesn't own it.
 // Must be moved to some "detail" namespace at some point,
@@ -158,20 +156,6 @@ struct DynamicCast
         }
     }
 };
-} // namespace detail
-
-template<class T>
-decltype(auto) StaticCast(HandleTypeOf<T> h)
-{
-    return detail::StaticCast<T>::cast(h);
-}
-
-template<class T>
-decltype(auto) DynamicCast(HandleTypeOf<T> h)
-{
-    return detail::DynamicCast<T>::cast(h);
-}
-
-} // namespace nvcv
+}} // namespace nvcv::detail
 
 #endif // NVCV_CASTSIMPL_HPP

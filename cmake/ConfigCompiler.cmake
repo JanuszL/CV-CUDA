@@ -101,7 +101,7 @@ if(BUILD_TESTS)
 endif()
 
 function(add_header_compat_test)
-    cmake_parse_arguments(ARG "" "TARGET;SOURCE;DEPENDS" "HEADERS" ${ARGN})
+    cmake_parse_arguments(ARG "" "TARGET;SOURCE;DEPENDS;STANDARD" "HEADERS" ${ARGN})
 
     if(NOT ARG_TARGET)
         message(FATAL_ERROR "TARGET must be specified")
@@ -113,6 +113,10 @@ function(add_header_compat_test)
 
     if(NOT ARG_DEPENDS)
         message(FATAL_ERROR "DEPENDS must be specified")
+    endif()
+
+    if(NOT ARG_STANDARD)
+        message(FATAL_ERROR "STANDARD must be specified")
     endif()
 
     unset(ALL_HEADERS)
@@ -162,6 +166,7 @@ function(add_header_compat_test)
                         ${lang_flag}
                         -o ${bindir}/${ARG_SOURCE}.so
                         ${extra_flags}
+                        -std=${ARG_STANDARD}
                         -Wall -Wextra
                         -fPIC -shared
                         "-I$<JOIN:${inc_paths},;-I>"
