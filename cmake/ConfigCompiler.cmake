@@ -76,7 +76,7 @@ if(BUILD_TESTS)
         set(candidate_compilers ${PUBLIC_API_COMPILERS})
     else()
         # If not, by default, we'll try these.
-        set(candidate_compilers gcc-11)
+        set(candidate_compilers gcc-11 gcc-9)
     endif()
 
     unset(valid_compilers)

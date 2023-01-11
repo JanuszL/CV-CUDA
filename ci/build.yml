@@ -22,7 +22,7 @@
     before_script:
         - 'rm -rf cvcuda-installer'
     script:
-        - ./ci/build.sh $BUILD_TYPE build "$EXTRA_ARGS" -DWARNINGS_AS_ERRORS=1 -DPUBLIC_API_COMPILERS='gcc-11'
+        - ./ci/build.sh $BUILD_TYPE build "$EXTRA_ARGS" -DWARNINGS_AS_ERRORS=1 -DPUBLIC_API_COMPILERS='gcc-11;gcc-9'
         - 'pushd build && cpack && popd'
         - 'mkdir cvcuda-installer && mv -v build/*.{deb,tar.*} build/VERSION cvcuda-installer'
 
