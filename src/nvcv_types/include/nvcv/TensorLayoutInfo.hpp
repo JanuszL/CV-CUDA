@@ -26,7 +26,7 @@ namespace nvcv {
 class TensorLayoutInfo
 {
 public:
-    static bool IsCompatible(const TensorLayout &layout)
+    static bool IsCompatible(const TensorLayout &)
     {
         return true;
     }

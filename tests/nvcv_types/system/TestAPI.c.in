@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "CAPI.h"
+@ALL_HEADERS@
 
 #pragma GCC diagnostic ignored "-Wunused-function"
 #pragma GCC diagnostic ignored "-Wunused-variable"

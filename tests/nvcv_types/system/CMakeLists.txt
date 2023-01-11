@@ -36,7 +36,6 @@ add_executable(nvcv_test_types_system
     TestTensorDataAccess.cpp
     TestExceptions.cpp
     TestConfig.cpp
-    TestCAPI.c
 )
 
 target_link_libraries(nvcv_test_types_system
@@ -46,19 +45,28 @@ target_link_libraries(nvcv_test_types_system
         nvcv_types
 )
 
+nvcv_add_test(nvcv_test_types_system)
+
+# header compatibility tests ---------------------------------------------
+
 get_target_property(NVCV_SOURCE_DIR nvcv_types SOURCE_DIR)
 
+# Gather C headers
 file(GLOB_RECURSE CAPI_HEADERS RELATIVE "${NVCV_SOURCE_DIR}/include" CONFIGURE_DEPENDS "${NVCV_SOURCE_DIR}/include/*.h")
+add_header_compat_test(TARGET nvcv_test_capi_header_compat
+                       SOURCE TestAPI.c
+                       DEPENDS nvcv_types
+                       HEADERS ${CAPI_HEADERS})
 
-unset(ALL_HEADERS)
-foreach(hdr ${CAPI_HEADERS})
-    set(ALL_HEADERS "${ALL_HEADERS}#include <${hdr}>\n")
-endforeach()
+# Gather C++ headers
+file(GLOB_RECURSE CXXAPI_HEADERS RELATIVE "${NVCV_SOURCE_DIR}/include" CONFIGURE_DEPENDS "${NVCV_SOURCE_DIR}/include/*.hpp")
+# remove optools files, they are c++17
+list(FILTER CXXAPI_HEADERS EXCLUDE REGEX "nvcv/cuda/")
 
-configure_file(CAPI.h.in CAPI.h)
-target_include_directories(nvcv_test_types_system PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
-
-nvcv_add_test(nvcv_test_types_system)
+add_header_compat_test(TARGET nvcv_test_cxxapi_header_compat
+                       SOURCE TestAPI.cpp
+                       DEPENDS nvcv_types
+                       HEADERS ${CXXAPI_HEADERS})
 
 # system core version commit ----------------------------------
 

@@ -192,7 +192,7 @@ class TensorShapeInfo
     , public detail::TensorShapeInfoImpl
 {
 public:
-    static bool IsCompatible(const TensorShape &tshape)
+    static bool IsCompatible(const TensorShape &)
     {
         return true;
     }
