@@ -62,19 +62,19 @@ __global__ void BilateralFilterVarShapeKernel(const SrcWrapper src, DstWrapper d
     const int columns   = dst.width(batch_idx);
 
     // Preprocessing moved here because tensors are GPU resident
-    float sigmaColor = *inSigmaColor.ptr(batch_idx);
+    float sigmaColor = inSigmaColor[batch_idx];
     if (sigmaColor <= 0)
     {
         sigmaColor = 1;
     }
-    float sigmaSpace = *inSigmaSpace.ptr(batch_idx);
+    float sigmaSpace = inSigmaSpace[batch_idx];
     if (sigmaSpace <= 0)
     {
         sigmaSpace = 1;
     }
 
     int radius;
-    int diameter = *inDiameter.ptr(batch_idx);
+    int diameter = inDiameter[batch_idx];
     if (diameter <= 0)
     {
         radius = std::roundf(sigmaSpace * 1.5f);

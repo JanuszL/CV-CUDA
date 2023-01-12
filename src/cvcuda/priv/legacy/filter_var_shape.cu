@@ -45,7 +45,7 @@ __global__ void filter2D(const SrcWrapper src, DstWrapper dst, cuda::ImageBatchV
     if (x >= dst.width(batch_idx) || y >= dst.height(batch_idx))
         return;
 
-    int2 anchor = *kernelAnchor.ptr(batch_idx);
+    int2 anchor = kernelAnchor[batch_idx];
 
     int2 kernelSize{kernel.width(batch_idx), kernel.height(batch_idx)};
 
@@ -233,12 +233,12 @@ __global__ void laplacianFilter2D(const SrcWrapper src, DstWrapper dst, cuda::Te
     constexpr int2 kernelSize = int2{3, 3};
     constexpr int2 anchor     = int2{1, 1};
 
-    const int ksizeVal = *ksize.ptr(batch_idx);
+    const int ksizeVal = ksize[batch_idx];
 
     NVCV_CUDA_ASSERT(ksizeVal == 1 || ksizeVal == 3, "E Wrong ksize = %d, expected: 1 or 3", ksizeVal);
     cuda::math::Vector<float, 9> kernel = ksizeVal == 1 ? kLaplacianKernel1 : kLaplacianKernel3;
 
-    kernel *= *scale.ptr(batch_idx);
+    kernel *= scale[batch_idx];
 
     int  kidx = 0;
     int3 srcCoord{0, 0, batch_idx};
@@ -388,14 +388,14 @@ __global__ void CalculateGaussianKernel(cuda::Tensor3DWrap<float> kernel, int da
 {
     int3 coord = cuda::StaticCast<int>(blockIdx * blockDim + threadIdx);
 
-    int2 kernelSize = *kernelSizeArr.ptr(coord.z);
+    int2 kernelSize = kernelSizeArr[coord.z];
 
     if (coord.x >= kernelSize.x || coord.y >= kernelSize.y)
     {
         return;
     }
 
-    double2 sigma = *sigmaArr.ptr(coord.z);
+    double2 sigma = sigmaArr[coord.z];
 
     if (sigma.y <= 0)
         sigma.y = sigma.x;
@@ -450,7 +450,7 @@ __global__ void gaussianFilter2D(const SrcWrapper src, DstWrapper dst, cuda::Ten
     if (x >= dst.width(batch_idx) || y >= dst.height(batch_idx))
         return;
 
-    int2 kernelSize = *kernelSizeArr.ptr(batch_idx);
+    int2 kernelSize = kernelSizeArr[batch_idx];
 
     int2 anchor{kernelSize.x / 2, kernelSize.y / 2};
 
@@ -646,7 +646,7 @@ __global__ void compute_average_blur_kernel(cuda::Tensor3DWrap<float> kernel, cu
 {
     int3 coord = cuda::StaticCast<int>(blockIdx * blockDim + threadIdx);
 
-    int2 kernelSize = *kernelSizeArr.ptr(coord.z);
+    int2 kernelSize = kernelSizeArr[coord.z];
 
     if (coord.x >= kernelSize.x || coord.y >= kernelSize.y)
     {
@@ -654,7 +654,7 @@ __global__ void compute_average_blur_kernel(cuda::Tensor3DWrap<float> kernel, cu
     }
 
     bool kernelAnchorUpdated = false;
-    int2 kernelAnchor        = *kernelAnchorArr.ptr(coord.z);
+    int2 kernelAnchor        = kernelAnchorArr[coord.z];
 
     if (kernelAnchor.x < 0)
     {
@@ -670,7 +670,7 @@ __global__ void compute_average_blur_kernel(cuda::Tensor3DWrap<float> kernel, cu
 
     if (kernelAnchorUpdated)
     {
-        *kernelAnchorArr.ptr(coord.z) = kernelAnchor;
+        kernelAnchorArr[coord.z] = kernelAnchor;
     }
 
     kernel[coord] = 1.f / (kernelSize.x * kernelSize.y);
@@ -690,9 +690,9 @@ __global__ void avgBlurFilter2D(const SrcWrapper src, DstWrapper dst, cuda::Tens
     if (x >= dst.width(batch_idx) || y >= dst.height(batch_idx))
         return;
 
-    int2 kernelSize = *kernelSizeArr.ptr(batch_idx);
+    int2 kernelSize = kernelSizeArr[batch_idx];
 
-    int2 anchor = *kernelAnchorArr.ptr(batch_idx);
+    int2 anchor = kernelAnchorArr[batch_idx];
 
     int3 srcCoord{0, 0, batch_idx};
 

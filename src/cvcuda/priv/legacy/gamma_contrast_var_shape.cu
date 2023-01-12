@@ -38,7 +38,7 @@ __global__ void copyGammaValues(float *gammaArray, const cuda::Tensor1DWrap<floa
 
     for (int i = 0; i < channelCount; i++)
     {
-        gammaArray[index * channelCount + i] = *gamma.ptr(index);
+        gammaArray[index * channelCount + i] = gamma[index];
     }
 }
 
@@ -53,7 +53,7 @@ __global__ void gamma_contrast_kernel(const cuda::ImageBatchVarShapeWrap<D> src,
     if (dst_x >= dst.width(batch_idx) || dst_y >= dst.height(batch_idx))
         return;
 
-    gamma_type gamma = *gamma_.ptr(batch_idx);
+    gamma_type gamma = gamma_[batch_idx];
     gamma_type tmp   = (*src.ptr(batch_idx, dst_y, dst_x) + 0.0f) / 255.0f;
 
     D out                             = nvcv::cuda::SaturateCast<D>(cuda::pow(tmp, gamma) * 255.0f);
@@ -72,7 +72,7 @@ __global__ void gamma_contrast_float_kernel(const cuda::ImageBatchVarShapeWrap<D
     if (dst_x >= dst.width(batch_idx) || dst_y >= dst.height(batch_idx))
         return;
 
-    gamma_type gamma = *gamma_.ptr(batch_idx);
+    gamma_type gamma = gamma_[batch_idx];
 
     D out = nvcv::cuda::SaturateCast<D>(cuda::pow(cuda::StaticCast<float>(*src.ptr(batch_idx, dst_y, dst_x)), gamma));
 
