@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -227,6 +227,8 @@ void ImageBatchVarShape::exportData(CUstream stream, NVCVImageBatchData &data) c
 
     if (m_dirtyStartingFromIndex < m_numImages)
     {
+        NVCV_CHECK_THROW(cudaStreamWaitEvent(stream, m_evPostFence));
+
         NVCV_CHECK_THROW(cudaMemcpyAsync(
             m_devImagesBuffer + m_dirtyStartingFromIndex, m_hostImagesBuffer + m_dirtyStartingFromIndex,
             (m_numImages - m_dirtyStartingFromIndex) * sizeof(*m_devImagesBuffer), cudaMemcpyHostToDevice, stream));
