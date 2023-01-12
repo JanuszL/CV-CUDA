@@ -34,6 +34,7 @@ add_library(cvcuda_priv STATIC
     OpMedianBlur.cpp
     OpMorphology.cpp
     OpBilateralFilter.cpp
+    OpJointBilateralFilter.cpp
     OpCvtColor.cpp
     OpWarpAffine.cpp
     OpWarpPerspective.cpp

@@ -34,6 +34,8 @@ add_library(cvcuda_legacy STATIC
     median_blur.cu
     bilateral_filter.cu
     bilateral_filter_var_shape.cu
+    joint_bilateral_filter.cu
+    joint_bilateral_filter_var_shape.cu
     median_blur_var_shape.cu
     morphology.cu
     cvt_color.cu

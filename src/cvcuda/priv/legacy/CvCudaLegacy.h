@@ -2085,6 +2085,60 @@ public:
                     const ITensorDataStridedCuda &sigmaSpaceData, NVCVBorderType borderMode, cudaStream_t stream);
 };
 
+class JointBilateralFilter : public CudaBaseOp
+{
+public:
+    JointBilateralFilter() = delete;
+
+    JointBilateralFilter(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * @brief apply joint bilateral filter on pairs of images.
+     * @param inData Tensor representing batch of images
+     * @param inColorData Tensor representing batch of images for color distance
+     * @param outData Tensor representing batch of output images
+     * @param diameter pixel neighborhood diameter that is used during filtering
+     * @param sigmaColor filter sigma in the color space
+     * @param sigmaSpace filter sigma in the coordinate space
+     * @param borderMode pixel extrapolation method, e.g. nvcv::BORDER_CONSTANT
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &inColorData,
+                    const ITensorDataStridedCuda &outData, int diameter, float sigmaColor, float sigmaSpace,
+                    NVCVBorderType borderMode, cudaStream_t stream);
+};
+
+class JointBilateralFilterVarShape : public CudaBaseOp
+{
+public:
+    JointBilateralFilterVarShape() = delete;
+
+    JointBilateralFilterVarShape(DataShape max_input_shape, DataShape max_output_shape)
+        : CudaBaseOp(max_input_shape, max_output_shape)
+    {
+    }
+
+    /**
+     * @brief apply joint bilateral filter on pairs of images.
+     * @param inData VarShape representing batch of images
+     * @param inColorData VarShape representing batch of images for color distance
+     * @param outData VarShape representing batch of output images
+     * @param diameterData Tensor of each pixel neighborhood that is used during filtering
+     * @param sigmaColorData Tensor filter sigmas in the color space
+     * @param sigmaSpaceData Tensor filter sigmas in the coordinate space
+     * @param borderMode pixel extrapolation method, e.g. nvcv::BORDER_CONSTANT
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const IImageBatchVarShapeDataStridedCuda &inData,
+                    const IImageBatchVarShapeDataStridedCuda &inColorData,
+                    const IImageBatchVarShapeDataStridedCuda &outData, const ITensorDataStridedCuda &diameterData,
+                    const ITensorDataStridedCuda &sigmaColorData, const ITensorDataStridedCuda &sigmaSpaceData,
+                    NVCVBorderType borderMode, cudaStream_t stream);
+};
+
 class CvtColor : public CudaBaseOp
 {
 public:
