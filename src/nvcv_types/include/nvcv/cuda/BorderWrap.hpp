@@ -78,6 +78,8 @@ constexpr inline T __host__ __device__ GetIndexWithBorder(T c, T s)
 
     if constexpr (Active)
     {
+        assert(s > 0);
+
         if constexpr (B == NVCV_BORDER_REPLICATE)
         {
             c = (c < 0) ? 0 : (c >= s ? s - 1 : c);
@@ -102,13 +104,22 @@ constexpr inline T __host__ __device__ GetIndexWithBorder(T c, T s)
         }
         else if constexpr (B == NVCV_BORDER_REFLECT101)
         {
-            c = c % (2 * s - 2);
-            if (c < 0)
+            if (s == 1)
             {
-                c += 2 * s - 2;
+                c = 0;
             }
-            c = s - 1 - abs(s - 1 - c);
+            else
+            {
+                c = c % (2 * s - 2);
+                if (c < 0)
+                {
+                    c += 2 * s - 2;
+                }
+                c = s - 1 - abs(s - 1 - c);
+            }
         }
+
+        assert(c >= 0 && c < s);
     }
 
     return c;
