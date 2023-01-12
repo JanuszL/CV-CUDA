@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -222,19 +222,19 @@ cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShapeDataStridedCuda
 
 cuda_op::DataFormat GetLegacyDataFormat(const TensorLayout &layout)
 {
-    if (layout == TensorLayout::NCHW)
+    if (layout == TENSOR_NCHW)
     {
         return legacy::cuda_op::DataFormat::kNCHW;
     }
-    else if (layout == TensorLayout::CHW)
+    else if (layout == TENSOR_CHW)
     {
         return legacy::cuda_op::DataFormat::kCHW;
     }
-    else if (layout == TensorLayout::NHWC)
+    else if (layout == TENSOR_NHWC)
     {
         return legacy::cuda_op::DataFormat::kNHWC;
     }
-    else if (layout == TensorLayout::HWC)
+    else if (layout == TENSOR_HWC)
     {
         return legacy::cuda_op::DataFormat::kHWC;
     }

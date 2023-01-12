@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,11 +38,11 @@ using uchar = unsigned char;
 template<typename T>
 inline T &ValueAt(std::vector<uint8_t> &vec, long4 pitches, int b, int y, int x, int c, nvcv::TensorLayout layout)
 {
-    if (layout == nvcv::TensorLayout::NHWC || layout == nvcv::TensorLayout::HWC)
+    if (layout == nvcv::TENSOR_NHWC || layout == nvcv::TENSOR_HWC)
     {
         return *reinterpret_cast<T *>(&vec[b * pitches.x + y * pitches.y + x * pitches.z + c * pitches.w]);
     }
-    else if (layout == nvcv::TensorLayout::NCHW || layout == nvcv::TensorLayout::CHW)
+    else if (layout == nvcv::TENSOR_NCHW || layout == nvcv::TENSOR_CHW)
     {
         return *reinterpret_cast<T *>(&vec[b * pitches.x + c * pitches.y + y * pitches.z + x * pitches.w]);
     }

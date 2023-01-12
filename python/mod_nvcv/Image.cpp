@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -101,7 +101,7 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer
         switch (info.ndim)
         {
         case 1:
-            layout = nvcv::TensorLayout::NCHW;
+            layout = nvcv::TENSOR_NCHW;
 
             shape[0] = 1;
             shape[1] = 1;
@@ -115,7 +115,7 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer
             break;
 
         case 2:
-            layout = nvcv::TensorLayout::NCHW;
+            layout = nvcv::TENSOR_NCHW;
 
             shape[0] = 1;
             shape[1] = 1;
@@ -141,11 +141,11 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer
                 // Use it to disambiguate
                 if (fmt.planeNumChannels(p) == shape[3])
                 {
-                    layout = nvcv::TensorLayout::NHWC;
+                    layout = nvcv::TENSOR_NHWC;
                 }
                 else
                 {
-                    layout = nvcv::TensorLayout::NCHW;
+                    layout = nvcv::TENSOR_NCHW;
                 }
             }
             else
@@ -153,11 +153,11 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer
                 // Or else,
                 if (shape[3] <= 4) // (C<=4)
                 {
-                    layout = nvcv::TensorLayout::NHWC;
+                    layout = nvcv::TENSOR_NHWC;
                 }
                 else
                 {
-                    layout = nvcv::TensorLayout::NCHW;
+                    layout = nvcv::TENSOR_NCHW;
                 }
             }
 
