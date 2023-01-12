@@ -296,27 +296,11 @@ ErrorCode WarpPerspective::infer(const ITensorDataStridedCuda &inData, const ITe
     {
         cuda::math::Matrix<float, 3, 3> tempMatrixForInverse;
 
-        tempMatrixForInverse[0][0] = (float)(transMatrix[0]);
-        tempMatrixForInverse[0][1] = (float)(transMatrix[1]);
-        tempMatrixForInverse[0][2] = (float)(transMatrix[2]);
-        tempMatrixForInverse[1][0] = (float)(transMatrix[3]);
-        tempMatrixForInverse[1][1] = (float)(transMatrix[4]);
-        tempMatrixForInverse[1][2] = (float)(transMatrix[5]);
-        tempMatrixForInverse[2][0] = (float)(transMatrix[6]);
-        tempMatrixForInverse[2][1] = (float)(transMatrix[7]);
-        tempMatrixForInverse[2][2] = (float)(transMatrix[8]);
+        tempMatrixForInverse.load(transMatrix);
 
         math::inv_inplace(tempMatrixForInverse);
 
-        transform.xform[0] = tempMatrixForInverse[0][0];
-        transform.xform[1] = tempMatrixForInverse[0][1];
-        transform.xform[2] = tempMatrixForInverse[0][2];
-        transform.xform[3] = tempMatrixForInverse[1][0];
-        transform.xform[4] = tempMatrixForInverse[1][1];
-        transform.xform[5] = tempMatrixForInverse[1][2];
-        transform.xform[6] = tempMatrixForInverse[2][0];
-        transform.xform[7] = tempMatrixForInverse[2][1];
-        transform.xform[8] = tempMatrixForInverse[2][2];
+        tempMatrixForInverse.store(transform.xform);
     }
 
     func(*inAccess, *outAccess, transform, interpolation, borderMode, borderValue, stream);

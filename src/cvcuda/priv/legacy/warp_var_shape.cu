@@ -44,27 +44,12 @@ __global__ void inverseMatWarpPerspective(const int numImages, const cuda::Tenso
     }
 
     cuda::math::Matrix<float, 3, 3> transMatrix;
-    transMatrix[0][0] = (float)(*in.ptr(index, 0));
-    transMatrix[0][1] = (float)(*in.ptr(index, 1));
-    transMatrix[0][2] = (float)(*in.ptr(index, 2));
-    transMatrix[1][0] = (float)(*in.ptr(index, 3));
-    transMatrix[1][1] = (float)(*in.ptr(index, 4));
-    transMatrix[1][2] = (float)(*in.ptr(index, 5));
-    transMatrix[2][0] = (float)(*in.ptr(index, 6));
-    transMatrix[2][1] = (float)(*in.ptr(index, 7));
-    transMatrix[2][2] = (float)(*in.ptr(index, 8));
+
+    transMatrix.load(in.ptr(index));
 
     cuda::math::inv_inplace(transMatrix);
 
-    *out.ptr(index, 0) = transMatrix[0][0];
-    *out.ptr(index, 1) = transMatrix[0][1];
-    *out.ptr(index, 2) = transMatrix[0][2];
-    *out.ptr(index, 3) = transMatrix[1][0];
-    *out.ptr(index, 4) = transMatrix[1][1];
-    *out.ptr(index, 5) = transMatrix[1][2];
-    *out.ptr(index, 6) = transMatrix[2][0];
-    *out.ptr(index, 7) = transMatrix[2][1];
-    *out.ptr(index, 8) = transMatrix[2][2];
+    transMatrix.store(out.ptr(index));
 }
 
 __global__ void inverseMatWarpAffine(const int numImages, const cuda::Tensor2DWrap<float> in,
