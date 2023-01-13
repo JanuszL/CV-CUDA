@@ -15,20 +15,4 @@
  * limitations under the License.
  */
 
-#include "BorderType.hpp"
-
-#include <nvcv/BorderType.h>
-
-namespace cvcudapy {
-
-void ExportBorderType(py::module &m)
-{
-    py::enum_<NVCVBorderType>(m, "Border")
-        .value("CONSTANT", NVCV_BORDER_CONSTANT)
-        .value("REPLICATE", NVCV_BORDER_REPLICATE)
-        .value("REFLECT", NVCV_BORDER_REFLECT)
-        .value("WRAP", NVCV_BORDER_WRAP)
-        .value("REFLECT101", NVCV_BORDER_REFLECT101);
-}
-
-} // namespace cvcudapy
+@ALL_HEADERS@

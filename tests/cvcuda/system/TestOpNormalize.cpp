@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -305,7 +305,7 @@ TEST_P(OpNormalize, varshape_correct_output)
     nvcv::Tensor imgBase(
         {
             {1, 1, 1, baseFormat.numChannels()},
-            nvcv::TensorLayout::NHWC
+            nvcv::TENSOR_NHWC
     },
         baseFormat.planeDataType(0));
     std::vector<float> baseVec(baseFormat.numChannels());
@@ -328,7 +328,7 @@ TEST_P(OpNormalize, varshape_correct_output)
     nvcv::Tensor imgScale(
         {
             {1, 1, 1, scaleFormat.numChannels()},
-            nvcv::TensorLayout::NHWC
+            nvcv::TENSOR_NHWC
     },
         scaleFormat.planeDataType(0));
     std::vector<float> scaleVec(scaleFormat.numChannels());

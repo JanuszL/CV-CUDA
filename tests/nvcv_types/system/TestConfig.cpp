@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,7 +44,7 @@ std::unique_ptr<T> CreateObj()
     }
     else if constexpr (std::is_same_v<nvcv::ITensor, T>)
     {
-        return std::make_unique<nvcv::Tensor>(nvcv::TensorShape({32, 12, 4}, nvcv::TensorLayout::NONE), nvcv::TYPE_U8);
+        return std::make_unique<nvcv::Tensor>(nvcv::TensorShape({32, 12, 4}, nvcv::TENSOR_NONE), nvcv::TYPE_U8);
     }
     else
     {

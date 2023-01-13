@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,7 +59,7 @@ std::shared_ptr<Tensor> Tensor::Create(Shape shape, nvcv::DataType dtype, std::o
 {
     if (!layout)
     {
-        layout = nvcv::TensorLayout::NONE;
+        layout = nvcv::TENSOR_NONE;
     }
 
     nvcv::Tensor::Requirements reqs
@@ -246,7 +246,7 @@ Shape Tensor::shape() const
 std::optional<nvcv::TensorLayout> Tensor::layout() const
 {
     const nvcv::TensorLayout &layout = m_impl->layout();
-    if (layout != nvcv::TensorLayout::NONE)
+    if (layout != nvcv::TENSOR_NONE)
     {
         return layout;
     }
@@ -410,7 +410,7 @@ void Tensor::Export(py::module &m)
 
     py::class_<nvcv::TensorLayout>(m, "TensorLayout")
         .def(py::init<const char *>())
-#define NVCV_DETAIL_DEF_TLAYOUT(LAYOUT) .def_readonly_static(#LAYOUT, &nvcv::TensorLayout::LAYOUT)
+#define NVCV_DETAIL_DEF_TLAYOUT(LAYOUT) .def_readonly_static(#LAYOUT, &nvcv::TENSOR_##LAYOUT)
 #include <nvcv/TensorLayoutDef.inc>
 #undef NVCV_DETAIL_DEF_TLAYOUT
         .def(py::self == py::self)

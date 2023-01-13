@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,8 +44,8 @@ class TensorTests
 NVCV_INSTANTIATE_TEST_SUITE_P(_, TensorTests,
     test::ValueList<int, int, int, nvcv::ImageFormat, nvcv::TensorShape, nvcv::DataType>
     {
-        {53, 32, 16, nvcv::FMT_RGBA8p, nvcv::TensorShape{{53, 4, 16, 32},nvcv::TensorLayout::NCHW} , nvcv::TYPE_U8},
-        {14, 64, 18, nvcv::FMT_RGB8, nvcv::TensorShape{{14, 18, 64, 3},nvcv::TensorLayout::NHWC}, nvcv::TYPE_U8}
+        {53, 32, 16, nvcv::FMT_RGBA8p, nvcv::TensorShape{{53, 4, 16, 32},nvcv::TENSOR_NCHW} , nvcv::TYPE_U8},
+        {14, 64, 18, nvcv::FMT_RGB8, nvcv::TensorShape{{14, 18, 64, 3},nvcv::TENSOR_NHWC}, nvcv::TYPE_U8}
     }
 );
 
@@ -268,7 +268,7 @@ TEST(TensorWrapData, wip_create)
     auto access = nvcv::TensorDataAccessStridedImagePlanar::Create(*tdata);
     ASSERT_TRUE(access);
 
-    EXPECT_EQ(nvcv::TensorLayout::NCHW, tdata->layout());
+    EXPECT_EQ(nvcv::TENSOR_NCHW, tdata->layout());
     EXPECT_EQ(5, access->numSamples());
     EXPECT_EQ(173, access->numCols());
     EXPECT_EQ(79, access->numRows());
@@ -332,12 +332,12 @@ class TensorWrapImageTests
 NVCV_INSTANTIATE_TEST_SUITE_P(_, TensorWrapImageTests,
     test::ValueList<nvcv::Size2D, nvcv::ImageFormat, nvcv::TensorShape, nvcv::DataType>
     {
-        {{61,23}, nvcv::FMT_RGBA8p, nvcv::TensorShape{{1,4,23,61},nvcv::TensorLayout::NCHW}, nvcv::TYPE_U8},
-        {{61,23}, nvcv::FMT_RGBA8, nvcv::TensorShape{{1,23,61,4},nvcv::TensorLayout::NHWC}, nvcv::TYPE_U8},
-        {{61,23}, nvcv::FMT_RGB8, nvcv::TensorShape{{1,23,61,3},nvcv::TensorLayout::NHWC}, nvcv::TYPE_U8},
-        {{61,23}, nvcv::FMT_RGB8p, nvcv::TensorShape{{1,3,23,61},nvcv::TensorLayout::NCHW}, nvcv::TYPE_U8},
-        {{61,23}, nvcv::FMT_F32, nvcv::TensorShape{{1,1,23,61},nvcv::TensorLayout::NCHW}, nvcv::TYPE_F32},
-        {{61,23}, nvcv::FMT_2F32, nvcv::TensorShape{{1,23,61,2},nvcv::TensorLayout::NHWC}, nvcv::TYPE_F32},
+        {{61,23}, nvcv::FMT_RGBA8p, nvcv::TensorShape{{1,4,23,61},nvcv::TENSOR_NCHW}, nvcv::TYPE_U8},
+        {{61,23}, nvcv::FMT_RGBA8, nvcv::TensorShape{{1,23,61,4},nvcv::TENSOR_NHWC}, nvcv::TYPE_U8},
+        {{61,23}, nvcv::FMT_RGB8, nvcv::TensorShape{{1,23,61,3},nvcv::TENSOR_NHWC}, nvcv::TYPE_U8},
+        {{61,23}, nvcv::FMT_RGB8p, nvcv::TensorShape{{1,3,23,61},nvcv::TENSOR_NCHW}, nvcv::TYPE_U8},
+        {{61,23}, nvcv::FMT_F32, nvcv::TensorShape{{1,1,23,61},nvcv::TENSOR_NCHW}, nvcv::TYPE_F32},
+        {{61,23}, nvcv::FMT_2F32, nvcv::TensorShape{{1,23,61,2},nvcv::TENSOR_NHWC}, nvcv::TYPE_F32},
     }
 );
 
