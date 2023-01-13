@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_UTIL_HASHMD5_HPP
-#define NVCV_UTIL_HASHMD5_HPP
+#ifndef NVCV_TEST_COMMON_HASHMD5_HPP
+#define NVCV_TEST_COMMON_HASHMD5_HPP
 
 #include <cstdint>
 #include <memory>
@@ -27,7 +27,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace nvcv::util {
+namespace nvcv::test {
 
 class HashMD5
 {
@@ -66,7 +66,7 @@ void Update(HashMD5 &hash, const T *value)
 void Update(HashMD5 &hash, const char *value);
 
 template<std::ranges::range R>
-void Update(nvcv::util::HashMD5 &hash, const R &r)
+void Update(nvcv::test::HashMD5 &hash, const R &r)
 {
     Update(hash, std::ranges::size(r));
     if constexpr (std::ranges::contiguous_range<
@@ -100,12 +100,12 @@ std::enable_if_t<std::is_floating_point_v<T>> Update(HashMD5 &hash, const T &val
     hash(std::hash<T>()(value));
 }
 
-} // namespace nvcv::util
+} // namespace nvcv::test
 
 namespace std {
 
 template<typename... TT>
-void Update(nvcv::util::HashMD5 &hash, const tuple<TT...> &t)
+void Update(nvcv::test::HashMD5 &hash, const tuple<TT...> &t)
 {
     if constexpr (has_unique_object_representations_v<tuple<TT...>>)
     {
@@ -114,28 +114,28 @@ void Update(nvcv::util::HashMD5 &hash, const tuple<TT...> &t)
 
     auto th = forward_as_tuple(hash);
 
-    apply(nvcv::util::Update<TT...>, tuple_cat(th, t));
+    apply(nvcv::test::Update<TT...>, tuple_cat(th, t));
 };
 
-inline void Update(nvcv::util::HashMD5 &hash, const string &s)
+inline void Update(nvcv::test::HashMD5 &hash, const string &s)
 {
     return hash(s.data(), s.size());
 }
 
-inline void Update(nvcv::util::HashMD5 &hash, const string_view &s)
+inline void Update(nvcv::test::HashMD5 &hash, const string_view &s)
 {
     return hash(s.data(), s.size());
 }
 
-inline void Update(nvcv::util::HashMD5 &hash, const std::type_info &t)
+inline void Update(nvcv::test::HashMD5 &hash, const std::type_info &t)
 {
     return hash(t.hash_code());
 }
 
 template<class T>
-void Update(nvcv::util::HashMD5 &hash, const optional<T> &o)
+void Update(nvcv::test::HashMD5 &hash, const optional<T> &o)
 {
-    using nvcv::util::Update;
+    using nvcv::test::Update;
 
     // We can't rely on std::hash<T> for optionals because they
     // require a valid hash specialization for T. Since our
@@ -152,4 +152,4 @@ void Update(nvcv::util::HashMD5 &hash, const optional<T> &o)
 
 } // namespace std
 
-#endif // NVCV_UTIL_HASHMD5_HPP
+#endif // NVCV_TEST_COMMON_HASHMD5_HPP
