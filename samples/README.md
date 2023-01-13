@@ -32,10 +32,10 @@ Setting up the following is only required if you want to setup and run the sampl
 2. Install the CV-CUDA packages.
 
    ```
-   dpkg -i nvcv-lib-0.2.0_alpha-cuda11-x86_64-linux.deb
-   dpkg -i nvcv-dev-0.2.0_alpha-cuda11-x86_64-linux.deb
-   dpkg -i cvcuda-samples-0.2.0_alpha-cuda11-x86_64-linux.deb
-   dpkg -i nvcv-python3.8-0.2.0_alpha-cuda11-x86_64-linux.deb
+   dpkg -i nvcv-lib-0.2.1_alpha-cuda11-x86_64-linux.deb
+   dpkg -i nvcv-dev-0.2.1_alpha-cuda11-x86_64-linux.deb
+   dpkg -i cvcuda-samples-0.2.1_alpha-cuda11-x86_64-linux.deb
+   dpkg -i nvcv-python3.8-0.2.1_alpha-cuda11-x86_64-linux.deb
    ```
 3. Copy the samples folder to the target directory.
 
