@@ -71,6 +71,7 @@ NVCV_TYPED_TEST_SUITE(
                  NVCV_TEST_ROW(NVCV_BORDER_REFLECT, -3, 3, 9, {2, 1, 0, 0, 1, 2, 2, 1, 0}),
                  NVCV_TEST_ROW(NVCV_BORDER_REFLECT, +10000000, 5, 10, {0, 1, 2, 3, 4, 4, 3, 2, 1, 0}),
                  NVCV_TEST_ROW(NVCV_BORDER_REFLECT, -10000000, 5, 10, {0, 1, 2, 3, 4, 4, 3, 2, 1, 0}),
+                 NVCV_TEST_ROW(NVCV_BORDER_REFLECT101, -1, 1, 2, {0, 0}),
                  NVCV_TEST_ROW(NVCV_BORDER_REFLECT101, -3, 3, 9, {1, 2, 1, 0, 1, 2, 1, 0, 1}),
                  NVCV_TEST_ROW(NVCV_BORDER_REFLECT101, +10000000, 5, 9, {0, 1, 2, 3, 4, 3, 2, 1, 0}),
                  NVCV_TEST_ROW(NVCV_BORDER_REFLECT101, -10000000, 5, 9, {0, 1, 2, 3, 4, 3, 2, 1, 0})>);
