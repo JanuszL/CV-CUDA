@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -56,7 +56,7 @@ Tensor PillowResizeInto(Tensor &output, Tensor &input, nvcv::ImageFormat format,
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});
     guard.add(LockMode::LOCK_WRITE, {output});
-    guard.add(LockMode::LOCK_NONE, {*pillowResize});
+    guard.add(LockMode::LOCK_WRITE, {*pillowResize});
 
     pillowResize->submit(pstream->cudaHandle(), input, output, interp);
 
@@ -92,7 +92,7 @@ ImageBatchVarShape VarShapePillowResizeInto(ImageBatchVarShape &output, ImageBat
     ResourceGuard guard(*pstream);
     guard.add(LockMode::LOCK_READ, {input});
     guard.add(LockMode::LOCK_WRITE, {output});
-    guard.add(LockMode::LOCK_NONE, {*pillowResize});
+    guard.add(LockMode::LOCK_WRITE, {*pillowResize});
 
     pillowResize->submit(pstream->cudaHandle(), input, output, interpolation);
 
