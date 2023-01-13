@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,12 +15,8 @@
 
 import nvcv
 import pytest as t
-import numba
 import numpy as np
-from numba import cuda
 import torch
-
-assert numba.cuda.is_available()
 
 
 @t.mark.parametrize(
@@ -91,7 +87,6 @@ def test_tensor_creation_shape_works(shape, dtype, layout):
     [
         ([3, 5, 7, 1], np.uint8),
         ([3, 5, 7, 1], np.int8),
-        ([3, 5, 7, 1], np.uint16),
         ([3, 5, 7, 1], np.int16),
         ([3, 5, 7, 1], np.float32),
         ([3, 5, 7, 1], np.float64),
@@ -102,8 +97,10 @@ def test_tensor_creation_shape_works(shape, dtype, layout):
         ([3], np.int8),
     ],
 )
-def test_wrap_numba_buffer(shape, dtype):
-    tensor = nvcv.as_tensor(cuda.device_array(shape, dtype))
+def test_wrap_torch_buffer(shape, dtype):
+    tensor = nvcv.as_tensor(
+        torch.as_tensor(np.ndarray(shape, dtype=dtype), device="cuda")
+    )
     assert tensor.shape == shape
     assert tensor.dtype == dtype
     assert tensor.layout is None
@@ -121,8 +118,11 @@ def test_wrap_numba_buffer(shape, dtype):
         ([5], np.uint8, "W"),
     ],
 )
-def test_wrap_numba_buffer_with_layout(shape, dtype, layout):
-    tensor = nvcv.as_tensor(cuda.device_array(shape, dtype), layout)
+def test_wrap_torch_buffer_with_layout(shape, dtype, layout):
+    tensor = nvcv.as_tensor(
+        torch.as_tensor(np.ndarray(shape, dtype=dtype), device="cuda"), layout
+    )
+    assert tensor.shape == shape
     assert tensor.shape == shape
     assert tensor.dtype == dtype
     assert tensor.layout == layout
@@ -163,16 +163,16 @@ def test_tensor_wrap_image_works(size, fmt, gold_layout, gold_shape, gold_dtype)
         ([1, 23, 65, 3], np.uint8),
         ([5, 23, 65, 3], np.int8),
         ([65, 3], np.int16),
-        ([243, 65, 3], np.uint16),
-        ([1, 1], np.uint16),
+        ([243, 65, 3], np.int16),
+        ([1, 1], np.int16),
         ([10], np.uint8),
     ],
 )
 def test_tensor_export_cuda_buffer(shape, dtype):
+    rng = np.random.default_rng()
+    hostGold = rng.integers(0, 128, shape, dtype)
 
-    hostGold = np.random.randint(0, 127, shape, dtype)
-
-    devGold = cuda.to_device(hostGold)
+    devGold = torch.as_tensor(hostGold, device="cuda")
 
     tensor = nvcv.as_tensor(devGold)
 
@@ -180,7 +180,7 @@ def test_tensor_export_cuda_buffer(shape, dtype):
     assert devMem.dtype == dtype
     assert devMem.shape == shape
 
-    assert (hostGold == cuda.as_cuda_array(devMem).copy_to_host()).all()
+    assert (hostGold == torch.as_tensor(devMem).detach().cpu().numpy()).all()
 
 
 def test_tensor_hold_reference_of_wrapped_buffer():

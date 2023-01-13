@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +16,8 @@
 import pytest as t
 import nvcv
 import numpy as np
-import math
-from numba import cuda
+import torch
+import util
 
 
 def test_image_creation_works():
@@ -64,7 +64,7 @@ def test_wrap_host_buffer_infer_imgformat(shape, dt, format):
     assert img.height == 5
     assert img.format == format
 
-    img = nvcv.as_image(cuda.device_array(shape, dt))
+    img = nvcv.as_image(util.to_cuda_buffer(np.ndarray(shape, dt)))
     assert img.width == 7
     assert img.height == 5
     assert img.format == format
@@ -85,7 +85,7 @@ def test_wrap_host_buffer_explicit_format(shape, dt, format):
     assert img.height == 5
     assert img.format == format
 
-    img = nvcv.as_image(cuda.device_array(shape, dt), format)
+    img = nvcv.as_image(util.to_cuda_buffer(np.ndarray(shape, dt)), format)
     assert img.width == 7
     assert img.height == 5
     assert img.format == format
@@ -108,7 +108,9 @@ def test_wrap_host_buffer_infer_imgformat_multiple_planes(buffers, format):
     assert img.height == 6
     assert img.format == format
 
-    img = nvcv.as_image([cuda.device_array(buf[0], buf[1]) for buf in buffers])
+    img = nvcv.as_image(
+        [torch.as_tensor(buf[0], buf[1], device="cuda").cuda() for buf in buffers]
+    )
     assert img.width == 8
     assert img.height == 6
     assert img.format == format
@@ -122,7 +124,10 @@ def test_wrap_host_buffer_explicit_format2(buffers, format):
     assert img.height == 6
     assert img.format == format
 
-    img = nvcv.as_image([cuda.device_array(buf[0], buf[1]) for buf in buffers], format)
+    img = nvcv.as_image(
+        [torch.as_tensor(buf[0], buf[1], device="cuda").cuda() for buf in buffers],
+        format,
+    )
     assert img.width == 8
     assert img.height == 6
     assert img.format == format
@@ -151,7 +156,7 @@ def test_wrap_host_buffer_infer_format_geometry(
     assert img.format.planes == planes
     assert img.format.channels == channels
 
-    img = nvcv.as_image(cuda.device_array(shape, dt))
+    img = nvcv.as_image(util.to_cuda_buffer(np.ndarray(shape, dt)))
     assert img.width == width
     assert img.height == height
     assert img.format.planes == planes
@@ -164,7 +169,8 @@ def test_wrap_host_buffer_arg_keywords():
     assert img.format == nvcv.Format.F32
 
     img = nvcv.as_image(
-        buffer=cuda.device_array([5, 7], np.float32), format=nvcv.Format.F32
+        buffer=util.to_cuda_buffer(np.ndarray([5, 7], np.float32)),
+        format=nvcv.Format.F32,
     )
     assert img.size == (7, 5)
     assert img.format == nvcv.Format.F32
@@ -175,7 +181,7 @@ def test_wrap_host_buffer_infer_format_arg_keywords():
     assert img.size == (7, 5)
     assert img.format == nvcv.Format.F32
 
-    img = nvcv.as_image(buffer=cuda.device_array([5, 7], np.float32))
+    img = nvcv.as_image(buffer=util.to_cuda_buffer(np.ndarray([5, 7], np.float32)))
     assert img.size == (7, 5)
     assert img.format == nvcv.Format.F32
 
@@ -301,13 +307,6 @@ def test_image_wrap_invalid_cuda_buffer():
         nvcv.as_image(obj)
 
 
-@cuda.jit
-def set_value(buffer):
-    z, y, x = cuda.grid(3)
-    if z < buffer.shape[0] and y < buffer.shape[1] and x < buffer.shape[2]:
-        buffer[z, y, x] = (z * buffer.shape[1] + y) * buffer.shape[2] + x
-
-
 @t.mark.parametrize(
     "size,format,layout,out_dtype, out_shape, simple_layout",
     [
@@ -373,17 +372,13 @@ def test_image_export_cuda_buffer(
     if type(cuda_buffer) is not list:
         cuda_buffer = [cuda_buffer]
 
-    # Write values in it on CUDA side
-    block = (32, 4, 4)
-    for buf in cuda_buffer:
-        grid = (
-            math.ceil(buf.shape[0] / block[0]),
-            math.ceil(buf.shape[1] / block[1]),
-            math.ceil(buf.shape[2] / block[2]),
-        )
-        set_value[grid, block](buf)
+    rng = np.random.default_rng(0)
 
-    cuda.synchronize()
+    gold_buffer = list()
+    # Write values in it on CUDA side
+    for buf in cuda_buffer:
+        gold_buffer.append((rng.random(size=buf.shape) * 255).astype(buf.dtype))
+        torch.as_tensor(buf, device="cuda").copy_(torch.as_tensor(gold_buffer[-1]))
 
     # Get values back on cpu
     host_buffer = img.cpu(simple_layout)
@@ -395,13 +390,9 @@ def test_image_export_cuda_buffer(
 
     # compare to see if they are correct
     for b in range(0, len(host_buffer)):
-        buf = host_buffer[b]
-        for z in range(0, buf.shape[0]):
-            for y in range(0, buf.shape[1]):
-                for x in range(0, buf.shape[2]):
-                    assert buf[z, y, x] == out_dtype[b](
-                        (z * buf.shape[1] + y) * buf.shape[2] + x
-                    )
+        np.testing.assert_array_equal(
+            host_buffer[b], gold_buffer[b], "buffer #" + str(b) + " mismatch"
+        )
 
 
 def test_image_zeros():

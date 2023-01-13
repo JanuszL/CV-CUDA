@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +22,7 @@ IMAGE_URL_BASE='gitlab-master.nvidia.com:5005/cv/cvcuda'
 # image versions must be upgraded whenever a breaking
 # change is done, such as removing some package, or updating
 # packaged versions that introduces incompatibilities.
-TAG_IMAGE=2
+TAG_IMAGE=3
 
 VER_CUDA=11.7.0
 VER_UBUNTU=22.04

@@ -1,6 +1,6 @@
 #!/bin/bash -eE
 
-# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -68,4 +68,4 @@ python3 -m pip install /opt/tensorrt/python/tensorrt-*cp310*.whl
 apt-get install -y --no-install-recommends libnvjpeg-dev-$cuda_version libcudnn8
 
 # 5. Build Tests
-python3.10 -m pip install pytest numba torch
+python3.10 -m pip install pytest torch

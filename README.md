@@ -189,11 +189,11 @@ Follow these instruction to successfully build CV-CUDA from source:
 
        On a Ubuntu 22.04, install the following packages:
        - python3, python3-pip: to run python bindings tests
-       - numba, torch: dependencies needed by python bindings tests
+       - torch: dependencies needed by python bindings tests
 
        ```shell
        sudo apt-get install -y python3 python3-pip
-       sudo python3 -m pip install pytest numba torch
+       sudo python3 -m pip install pytest torch
        ```
 
    2. Run the tests
