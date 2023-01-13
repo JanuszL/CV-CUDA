@@ -18,14 +18,14 @@
 #ifndef NVCV_TEST_COMMON_HASHMD5_HPP
 #define NVCV_TEST_COMMON_HASHMD5_HPP
 
+#include <util/Ranges.hpp>
+
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <ranges>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
-#include <vector>
 
 namespace nvcv::test {
 
@@ -52,7 +52,8 @@ private:
 };
 
 template<class T>
-std::enable_if_t<std::has_unique_object_representations_v<T>> Update(HashMD5 &hash, const T &value)
+std::enable_if_t<std::has_unique_object_representations_v<T> && !util::ranges::IsRange<T>> Update(HashMD5 &hash,
+                                                                                                  const T &value)
 {
     hash(value);
 }
@@ -65,15 +66,16 @@ void Update(HashMD5 &hash, const T *value)
 
 void Update(HashMD5 &hash, const char *value);
 
-template<std::ranges::range R>
+template<class R, std::enable_if_t<util::ranges::IsRange<R>, int> = 0>
 void Update(nvcv::test::HashMD5 &hash, const R &r)
 {
-    Update(hash, std::ranges::size(r));
-    if constexpr (std::ranges::contiguous_range<
-                      R> && std::has_unique_object_representations_v<std::ranges::range_value_t<R>>)
+    Update(hash, util::ranges::Size(r));
+    // With C++20 we should use std::ranges::contiguous_range instead
+    if constexpr (util::ranges::IsRandomAccessRange<
+                      R> && std::has_unique_object_representations_v<util::ranges::RangeValue<R>>)
     {
         // It's faster to do this if range is contiguous and elements have unique object representation
-        hash(std::ranges::data(r), std::ranges::size(r) * sizeof(std::ranges::range_value_t<R>));
+        hash(util::ranges::Data(r), util::ranges::Size(r) * sizeof(util::ranges::RangeValue<R>));
     }
     else
     {
