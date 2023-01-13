@@ -332,3 +332,46 @@ TYPED_TEST(BorderWrapNHWCTest, correct_fill)
 
     EXPECT_EQ(test, gold);
 }
+
+TEST(BorderWrapNonConstValueTypeTest, it_can_be_read)
+{
+    using TensorWrap = cuda::TensorWrap<int, -1>;
+    using BorderWrap = cuda::BorderWrap<TensorWrap, NVCV_BORDER_CONSTANT, true>;
+
+    EXPECT_TRUE((std::is_same_v<typename BorderWrap::TensorWrapper, TensorWrap>));
+
+    EXPECT_EQ(BorderWrap::kNumDimensions, 1);
+    EXPECT_EQ(BorderWrap::kNumActiveDimensions, 1);
+
+    std::array<int, 10> input;
+    std::iota(input.begin(), input.end(), 0);
+
+    TensorWrap tensorWrap(input.data(), (int)sizeof(int));
+    BorderWrap borderWrap(tensorWrap, -1, 10);
+
+    for (int i = -1; i < 10; ++i)
+    {
+        EXPECT_EQ(borderWrap[int1{i}], i);
+    }
+}
+
+TEST(BorderWrapNonConstValueTypeTest, it_can_be_written)
+{
+    using TensorWrap = cuda::TensorWrap<int, -1>;
+    using BorderWrap = cuda::BorderWrap<TensorWrap, NVCV_BORDER_REPLICATE, true>;
+
+    EXPECT_TRUE((std::is_same_v<typename BorderWrap::TensorWrapper, TensorWrap>));
+
+    EXPECT_EQ(BorderWrap::kNumDimensions, 1);
+    EXPECT_EQ(BorderWrap::kNumActiveDimensions, 1);
+
+    std::array<int, 10> input;
+    std::iota(input.begin(), input.end(), 0);
+
+    TensorWrap tensorWrap(input.data(), (int)sizeof(int));
+    BorderWrap borderWrap(tensorWrap, 0, 10);
+
+    borderWrap[-1] = -1;
+
+    EXPECT_EQ(borderWrap[0], -1);
+}
