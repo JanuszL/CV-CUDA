@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -403,8 +403,7 @@ void SetTensorFromVector(const ITensorData *tensorData, std::vector<DT> &data, i
         for (int i = 0; i < tDataAc->numSamples(); ++i)
         {
             if (cudaSuccess
-                != cudaMemcpy(tDataAc->sampleData(i), (char8_t *)data.data(), tDataAc->sampleStride(),
-                              cudaMemcpyHostToDevice))
+                != cudaMemcpy(tDataAc->sampleData(i), data.data(), tDataAc->sampleStride(), cudaMemcpyHostToDevice))
             {
                 throw std::runtime_error("CudaMemcpy failed");
             }
@@ -413,8 +412,7 @@ void SetTensorFromVector(const ITensorData *tensorData, std::vector<DT> &data, i
     else
     {
         if (cudaSuccess
-            != cudaMemcpy(tDataAc->sampleData(sample), (char8_t *)data.data(), tDataAc->sampleStride(),
-                          cudaMemcpyHostToDevice))
+            != cudaMemcpy(tDataAc->sampleData(sample), data.data(), tDataAc->sampleStride(), cudaMemcpyHostToDevice))
         {
             throw std::runtime_error("CudaMemcpy failed");
         }
