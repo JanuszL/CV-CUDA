@@ -49,6 +49,12 @@ else()
     message(STATUS "    ENABLE_SANITIZER         : off")
 endif()
 
+if(ENABLE_TEGRA)
+    message(STATUS "    ENABLE_TEGRA             : ON")
+else()
+    message(STATUS "    ENABLE_TEGRA             : off")
+endif()
+
 message(STATUS "    Compilers used in public API header compatibility tests:")
 if(PUBLIC_API_COMPILERS)
     foreach(comp ${PUBLIC_API_COMPILERS})
