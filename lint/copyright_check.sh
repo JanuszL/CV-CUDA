@@ -151,7 +151,7 @@ function check_copyright_year()
     # Only start year?
     if [ -z "$end_year" ]; then
         if [[ $beg_year != "$cur_year" ]]; then
-            error "$file" "Invalid year '$beg_year' in copyright message. Must be '$cur_year'." && false
+            error "$file" "Invalid year '$beg_year' in copyright message. Must be '$beg_year-$cur_year'." && false
         fi
     # Range doesn't include current year?
     elif [[ $beg_year -ge $cur_year || $end_year -lt $cur_year ]]; then
