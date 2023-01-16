@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "CudaBuffer.hpp"
+#include "ExternalBuffer.hpp"
 
 #include <common/Assert.hpp>
 #include <common/PyUtil.hpp>
@@ -77,14 +77,21 @@ static py::buffer_info CopyBuffer(const py::buffer_info &src, bool writable)
     }
 }
 
-CudaBuffer::CudaBuffer()
-    : CudaBuffer(py::buffer_info{})
+ExternalBuffer::ExternalBuffer()
+    : ExternalBuffer(DEV_CUDA, py::buffer_info{})
 {
+    m_devType = std::nullopt;
 }
 
-CudaBuffer::CudaBuffer(const py::buffer_info &info, bool copy, py::object wrappedObj)
+ExternalBuffer::ExternalBuffer(DeviceType devType, const py::buffer_info &info, bool copy, py::object wrappedObj)
     : m_wrappedObj(wrappedObj)
+    , m_devType(devType)
 {
+    if (m_devType != DEV_CUDA)
+    {
+        throw std::runtime_error("Only CUDA memory buffers can be wrapped");
+    }
+
     if (info.ptr != nullptr)
     {
         CheckValidCUDABuffer(info.ptr);
@@ -126,26 +133,34 @@ CudaBuffer::CudaBuffer(const py::buffer_info &info, bool copy, py::object wrappe
     }
 }
 
-CudaBuffer::~CudaBuffer()
+ExternalBuffer::~ExternalBuffer()
 {
     if(m_owns)
     {
         void *ptr = this->data();
-        cudaFree(ptr);
+
+        NVCV_ASSERT(m_devType);
+        switch(*m_devType)
+        {
+        case DEV_CUDA:
+            cudaFree(ptr);
+        default:
+            NVCV_ASSERT(!"Device buffer type not supported");
+        }
     }
 }
 
-py::object CudaBuffer::shape() const
+py::object ExternalBuffer::shape() const
 {
     return m_cudaArrayInterface["shape"];
 }
 
-py::object CudaBuffer::dtype() const
+py::object ExternalBuffer::dtype() const
 {
     return util::ToDType(this->request());
 }
 
-void *CudaBuffer::data() const
+void *ExternalBuffer::data() const
 {
     if (m_cudaArrayInterface)
     {
@@ -158,7 +173,7 @@ void *CudaBuffer::data() const
     }
 }
 
-bool CudaBuffer::load(PyObject *o)
+bool ExternalBuffer::load(PyObject *o)
 {
     if (!o)
     {
@@ -198,6 +213,7 @@ bool CudaBuffer::load(PyObject *o)
         {
             m_wrappedObj = tmp; // hold the reference to the wrapped object
             m_cudaArrayInterface = std::move(iface);
+            m_devType = DEV_CUDA;
             return true;
         }
         else
@@ -211,12 +227,12 @@ bool CudaBuffer::load(PyObject *o)
     }
 }
 
-py::dict CudaBuffer::cuda_interface() const
+py::dict ExternalBuffer::cuda_interface() const
 {
     return m_cudaArrayInterface;
 }
 
-py::buffer_info CudaBuffer::request(bool writable) const
+py::buffer_info ExternalBuffer::request(bool writable) const
 {
     void *ptr = this->data();
 
@@ -252,12 +268,17 @@ py::buffer_info CudaBuffer::request(bool writable) const
     return py::buffer_info(ptr, itemsize, typestr, vshape.size(), vshape, vstrides, !writable);
 }
 
-void CudaBuffer::Export(py::module &m)
+auto ExternalBuffer::devType() const -> std::optional<DeviceType>
 {
-    py::class_<CudaBuffer, std::shared_ptr<CudaBuffer>>(m, "Buffer")
-        .def_property_readonly("__cuda_array_interface__", &CudaBuffer::cuda_interface)
-        .def_property_readonly("shape", &CudaBuffer::shape)
-        .def_property_readonly("dtype", &CudaBuffer::dtype);
+    return m_devType;
+}
+
+void ExternalBuffer::Export(py::module &m)
+{
+    py::class_<ExternalBuffer, std::shared_ptr<ExternalBuffer>>(m, "ExternalBuffer")
+        .def_property_readonly("__cuda_array_interface__", &ExternalBuffer::cuda_interface)
+        .def_property_readonly("shape", &ExternalBuffer::shape)
+        .def_property_readonly("dtype", &ExternalBuffer::dtype);
 }
 
 } // namespace nv::vpi::python
@@ -267,26 +288,26 @@ namespace pybind11::detail {
 namespace priv = nvcvpy::priv;
 
 // Python -> C++
-bool type_caster<priv::CudaBuffer>::load(handle src, bool implicit_conv)
+bool type_caster<priv::ExternalBuffer>::load(handle src, bool implicit_conv)
 {
     PyTypeObject *srctype = Py_TYPE(src.ptr());
-    const type_info *cuda_buffer_type = get_type_info(typeid(priv::CudaBuffer));
+    const type_info *cuda_buffer_type = get_type_info(typeid(priv::ExternalBuffer));
 
-    // src's type is CudaBuffer?
+    // src's type is ExternalBuffer?
     if(srctype == cuda_buffer_type->type)
     {
         // We know it's managed by a shared pointer (holder), let's use it
         value_and_holder vh = reinterpret_cast<instance *>(src.ptr())->get_value_and_holder();
-        value = vh.template holder<std::shared_ptr<priv::CudaBuffer>>();
+        value = vh.template holder<std::shared_ptr<priv::ExternalBuffer>>();
         NVCV_ASSERT(value != nullptr);
         src.inc_ref();
         return true;
     }
     // If not, it could be an object that implements that __cuda_array_interface, let's try to
-    // create a CudaBuffer out of it.
+    // create a ExternalBuffer out of it.
     else
     {
-        value.reset(new priv::CudaBuffer);
+        value.reset(new priv::ExternalBuffer);
         return value->load(src.ptr());
     }
 }

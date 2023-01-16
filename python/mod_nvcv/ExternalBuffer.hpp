@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_PYTHON_PRIV_CUDA_BUFFER_HPP
-#define NVCV_PYTHON_PRIV_CUDA_BUFFER_HPP
+#ifndef NVCV_PYTHON_PRIV_EXTERNAL_BUFFER_HPP
+#define NVCV_PYTHON_PRIV_EXTERNAL_BUFFER_HPP
 
 #include <cuda_runtime.h>
 #include <pybind11/numpy.h>
@@ -27,18 +27,26 @@ namespace nvcvpy::priv {
 
 namespace py = pybind11;
 
-class CudaBuffer final : public std::enable_shared_from_this<CudaBuffer>
+class ExternalBuffer final : public std::enable_shared_from_this<ExternalBuffer>
 {
 public:
+    enum DeviceType
+    {
+        DEV_CUDA,
+        DEV_CPU
+    };
+
     static void Export(py::module &m);
 
-    CudaBuffer(CudaBuffer &&that) = delete;
+    ExternalBuffer(ExternalBuffer &&that) = delete;
 
-    explicit CudaBuffer(const py::buffer_info &data, bool copy = false, py::object wrappedObj = {});
+    explicit ExternalBuffer(DeviceType type, const py::buffer_info &data, bool copy = false,
+                            py::object wrappedObj = {});
 
-    ~CudaBuffer();
+    ~ExternalBuffer();
 
-    py::dict cuda_interface() const;
+    py::dict                  cuda_interface() const;
+    std::optional<DeviceType> devType() const;
 
     py::buffer_info request(bool writable = false) const;
 
@@ -50,12 +58,13 @@ public:
     bool load(PyObject *o);
 
 private:
-    friend py::detail::type_caster<CudaBuffer>;
-    CudaBuffer();
+    friend py::detail::type_caster<ExternalBuffer>;
+    ExternalBuffer();
 
-    py::object m_wrappedObj;
-    py::dict   m_cudaArrayInterface;
-    bool       m_owns;
+    py::object                m_wrappedObj;
+    std::optional<DeviceType> m_devType;
+    py::dict                  m_cudaArrayInterface;
+    bool                      m_owns;
 };
 
 } // namespace nvcvpy::priv
@@ -65,13 +74,13 @@ namespace PYBIND11_NAMESPACE { namespace detail {
 namespace priv = nvcvpy::priv;
 
 template<>
-struct type_caster<priv::CudaBuffer> : public type_caster_base<priv::CudaBuffer>
+struct type_caster<priv::ExternalBuffer> : public type_caster_base<priv::ExternalBuffer>
 {
-    using type = priv::CudaBuffer;
+    using type = priv::ExternalBuffer;
     using Base = type_caster_base<type>;
 
 public:
-    PYBIND11_TYPE_CASTER(std::shared_ptr<type>, const_name("nvcv.cuda.Buffer"));
+    PYBIND11_TYPE_CASTER(std::shared_ptr<type>, const_name("nvcv.ExternalBuffer"));
 
     operator type *()
     {
@@ -88,4 +97,4 @@ public:
 
 }} // namespace PYBIND11_NAMESPACE::detail
 
-#endif // NVCV_PYTHON_PRIV_CUDA_BUFFER_HPP
+#endif // NVCV_PYTHON_PRIV_EXTERNAL_BUFFER_HPP

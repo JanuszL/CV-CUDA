@@ -56,7 +56,7 @@ nvcv_python_add_module(
         Tensor.cpp
         Image.cpp
         ImageBatch.cpp
-        CudaBuffer.cpp
+        ExternalBuffer.cpp
         Rect.cpp
         Object.cpp
         CAPI.cpp

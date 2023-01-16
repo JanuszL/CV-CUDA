@@ -41,11 +41,11 @@ bool Image::Key::doIsEqual(const IKey &ithat) const
     // Wrapper key's all compare equal, are they can't be used
     // and whenever we query the cache for wrappers, we really
     // want to get them all (as long as they aren't being used).
-    if (m_wrapper && that.m_wrapper)
+    if (m_isWrapper && that.m_isWrapper)
     {
         return true;
     }
-    else if (m_wrapper || that.m_wrapper) // xor
+    else if (m_isWrapper || that.m_isWrapper) // xor
     {
         return false;
     }
@@ -57,7 +57,7 @@ bool Image::Key::doIsEqual(const IKey &ithat) const
 
 size_t Image::Key::doGetHash() const
 {
-    if (m_wrapper)
+    if (m_isWrapper)
     {
         return 0; // all wrappers are equal wrt. the cache
     }
@@ -454,18 +454,21 @@ Image::Image(const Size2D &size, nvcv::ImageFormat fmt)
 {
 }
 
-Image::Image(std::vector<std::shared_ptr<CudaBuffer>> bufs, const nvcv::IImageDataStridedCuda &imgData)
+Image::Image(std::vector<std::shared_ptr<ExternalBuffer>> bufs, const nvcv::IImageDataStridedCuda &imgData)
     : m_key{} // it's a wrap!
 {
+    m_wrapData.emplace();
+
     if (bufs.size() == 1)
     {
-        m_wrapped = py::cast(bufs[0]);
+        m_wrapData->obj = py::cast(bufs[0]);
     }
     else
     {
         NVCV_ASSERT(bufs.size() >= 2);
-        m_wrapped = py::cast(std::move(bufs));
+        m_wrapData->obj = py::cast(std::move(bufs));
     }
+    m_wrapData->devType = ExternalBuffer::DEV_CUDA;
 
     m_impl = std::make_unique<nvcv::ImageWrapData>(imgData);
 }
@@ -549,12 +552,13 @@ std::shared_ptr<Image> Image::Zeros(const Size2D &size, nvcv::ImageFormat fmt)
     return img;
 }
 
-std::shared_ptr<Image> Image::WrapCuda(CudaBuffer &buffer, nvcv::ImageFormat fmt)
+std::shared_ptr<Image> Image::WrapExternalBuffer(ExternalBuffer &buffer, nvcv::ImageFormat fmt)
 {
-    return WrapCudaVector(std::vector{buffer.shared_from_this()}, fmt);
+    return WrapExternalBufferVector(std::vector{buffer.shared_from_this()}, fmt);
 }
 
-std::shared_ptr<Image> Image::WrapCudaVector(std::vector<std::shared_ptr<CudaBuffer>> buffers, nvcv::ImageFormat fmt)
+std::shared_ptr<Image> Image::WrapExternalBufferVector(std::vector<std::shared_ptr<ExternalBuffer>> buffers,
+                                                       nvcv::ImageFormat                            fmt)
 {
     std::vector<py::buffer_info> bufinfos;
     for (size_t i = 0; i < buffers.size(); ++i)
@@ -846,13 +850,13 @@ std::vector<py::object> ToPython(const nvcv::IImageData &imgData, std::optional<
         {
             if (owner)
             {
-                out.emplace_back(py::cast(std::make_shared<CudaBuffer>(info, false),
+                out.emplace_back(py::cast(std::make_shared<ExternalBuffer>(ExternalBuffer::DEV_CUDA, info, false),
                                           py::return_value_policy::reference_internal, owner));
             }
             else
             {
-                out.emplace_back(
-                    py::cast(std::make_shared<CudaBuffer>(info, true), py::return_value_policy::take_ownership));
+                out.emplace_back(py::cast(std::make_shared<ExternalBuffer>(ExternalBuffer::DEV_CUDA, info, true),
+                                          py::return_value_policy::take_ownership));
             }
         }
         else if (dynamic_cast<const nvcv::IImageDataStridedHost *>(pitchData))
@@ -875,37 +879,42 @@ py::object Image::cuda(std::optional<nvcv::TensorLayout> layout) const
 {
     // Do we need to redefine the cuda object?
     // (not defined yet, or requested layout is different)
-    if (!m_cacheCudaObject || layout != m_cacheCudaObjectLayout)
+    if (!m_cacheExternalObject || layout != m_cacheExternalObjectLayout)
     {
         // No layout requested and we're wrapping external data?
-        if (!layout && m_wrapped)
+        if (!layout && m_wrapData)
         {
+            if (m_wrapData->devType != ExternalBuffer::DEV_CUDA)
+            {
+                throw std::runtime_error("Image data can't be exported, it's not cuda-accessible");
+            }
+
             // That's what we'll return, as m_impl is wrapping it.
-            m_cacheCudaObject = m_wrapped;
+            m_cacheExternalObject = m_wrapData->obj;
         }
         else
         {
-            const nvcv::IImageData *imgData = m_impl->exportData();
+            const auto *imgData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(m_impl->exportData());
             if (!imgData)
             {
-                throw std::runtime_error("Image data can't be exported");
+                throw std::runtime_error("Image data can't be exported, it's not cuda-accessible");
             }
 
             std::vector<py::object> out = ToPython(*imgData, layout, py::cast(*this));
 
-            m_cacheCudaObjectLayout = layout;
+            m_cacheExternalObjectLayout = layout;
             if (out.size() == 1)
             {
-                m_cacheCudaObject = std::move(out[0]);
+                m_cacheExternalObject = std::move(out[0]);
             }
             else
             {
-                m_cacheCudaObject = py::cast(out);
+                m_cacheExternalObject = py::cast(out);
             }
         }
     }
 
-    return m_cacheCudaObject;
+    return m_cacheExternalObject;
 }
 
 py::object Image::cpu(std::optional<nvcv::TensorLayout> layout) const
@@ -919,7 +928,7 @@ py::object Image::cpu(std::optional<nvcv::TensorLayout> layout) const
     auto *devStrided = dynamic_cast<const nvcv::IImageDataStridedCuda *>(devData);
     if (!devStrided)
     {
-        throw std::runtime_error("Only images with pitch-linear formats can be exported");
+        throw std::runtime_error("Only images with pitch-linear formats can be exported to CPU");
     }
 
     std::vector<std::pair<py::buffer_info, nvcv::TensorLayout>> vDevBufInfo = ToPyBufferInfo(*devStrided, layout);
@@ -1001,8 +1010,9 @@ void Image::Export(py::module &m)
         .def_property_readonly("format", &Image::format);
 
     // Make sure buffer lifetime is tied to image's (keep_alive)
-    m.def("as_image", &Image::WrapCuda, "buffer"_a, "format"_a = nvcv::FMT_NONE, py::keep_alive<0, 1>());
-    m.def("as_image", &Image::WrapCudaVector, "buffer"_a, "format"_a = nvcv::FMT_NONE, py::keep_alive<0, 1>());
+    m.def("as_image", &Image::WrapExternalBuffer, "buffer"_a, "format"_a = nvcv::FMT_NONE, py::keep_alive<0, 1>());
+    m.def("as_image", &Image::WrapExternalBufferVector, "buffer"_a, "format"_a = nvcv::FMT_NONE,
+          py::keep_alive<0, 1>());
 }
 
 } // namespace nvcvpy::priv

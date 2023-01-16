@@ -17,8 +17,8 @@
 
 #include "Tensor.hpp"
 
-#include "CudaBuffer.hpp"
 #include "DataType.hpp"
+#include "ExternalBuffer.hpp"
 #include "Image.hpp"
 #include "ImageFormat.hpp"
 
@@ -163,7 +163,7 @@ NVCVTensorData FillNVCVTensorDataCUDA(const py::buffer_info &info, std::optional
 
 } // namespace
 
-std::shared_ptr<Tensor> Tensor::Wrap(CudaBuffer &buffer, std::optional<nvcv::TensorLayout> layout)
+std::shared_ptr<Tensor> Tensor::Wrap(ExternalBuffer &buffer, std::optional<nvcv::TensorLayout> layout)
 {
     py::buffer_info info = buffer.request(true);
 
@@ -350,12 +350,13 @@ static py::object ToPython(const nvcv::ITensorData &imgData, py::object owner)
     {
         if (owner)
         {
-            return py::cast(std::make_shared<CudaBuffer>(info, false), py::return_value_policy::reference_internal,
-                            owner);
+            return py::cast(std::make_shared<ExternalBuffer>(ExternalBuffer::DEV_CUDA, info, false),
+                            py::return_value_policy::reference_internal, owner);
         }
         else
         {
-            return py::cast(std::make_shared<CudaBuffer>(info, true), py::return_value_policy::take_ownership);
+            return py::cast(std::make_shared<ExternalBuffer>(ExternalBuffer::DEV_CUDA, info, true),
+                            py::return_value_policy::take_ownership);
         }
     }
     else
@@ -366,8 +367,8 @@ static py::object ToPython(const nvcv::ITensorData &imgData, py::object owner)
 
 py::object Tensor::cuda() const
 {
-    // Do we need to redefine the cuda object?
-    if (!m_cacheCudaObject)
+    // Do we need to redefine the external object?
+    if (!m_cacheExternalObject)
     {
         const nvcv::ITensorData *tensorData = m_impl->exportData();
         if (!tensorData)
@@ -375,10 +376,10 @@ py::object Tensor::cuda() const
             throw std::runtime_error("Tensor data can't be exported");
         }
 
-        m_cacheCudaObject = ToPython(*tensorData, py::cast(*this));
+        m_cacheExternalObject = ToPython(*tensorData, py::cast(*this));
     }
 
-    return m_cacheCudaObject;
+    return m_cacheExternalObject;
 }
 
 std::ostream &operator<<(std::ostream &out, const Tensor &tensor)
