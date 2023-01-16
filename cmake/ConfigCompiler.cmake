@@ -155,7 +155,7 @@ function(add_header_compat_test)
             file(MAKE_DIRECTORY ${bindir})
 
             add_custom_command(OUTPUT ${bindir}/${ARG_SOURCE}.d
-                COMMAND ${COMPILER_EXEC_${COMP_STR}} ${CMAKE_CURRENT_BINARY_DIR}/a_${ARG_SOURCE} -M -MF ${bindir}/${ARG_SOURCE}.d
+                COMMAND ${COMPILER_EXEC_${COMP_STR}} ${CMAKE_CURRENT_BINARY_DIR}/a_${ARG_SOURCE} -M -MT ${bindir}/${ARG_SOURCE}.so -MF ${bindir}/${ARG_SOURCE}.d
                         "-I$<JOIN:${inc_paths},;-I>"
                 DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/a_${ARG_SOURCE}
                 COMMAND_EXPAND_LISTS
