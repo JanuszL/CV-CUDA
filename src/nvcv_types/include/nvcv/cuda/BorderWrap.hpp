@@ -156,7 +156,10 @@ public:
             int j = 0;
             for (int i = 0; i < kNumDimensions; ++i)
             {
-                from[i] = kActiveDimensions[i] ? j++ : -1;
+                if (kActiveDimensions[i])
+                {
+                    from[i] = j++;
+                }
             }
         }
     };
