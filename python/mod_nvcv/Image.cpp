@@ -26,6 +26,7 @@
 #include <common/CheckError.hpp>
 #include <common/PyUtil.hpp>
 #include <common/String.hpp>
+#include <dlpack/dlpack.h>
 #include <nvcv/TensorLayout.hpp>
 #include <nvcv/TensorShapeInfo.hpp>
 #include <pybind11/numpy.h>
@@ -81,24 +82,26 @@ struct BufferImageInfo
     void          *data;
 };
 
-std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer_info> &buffers,
-                                                    const nvcv::ImageFormat            &fmt)
+std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<DLPackTensor> &tensorList,
+                                                    const nvcv::ImageFormat         &fmt)
 {
     std::vector<BufferImageInfo> bufferInfoList;
 
     int curChannel = 0;
 
     // For each buffer,
-    for (size_t p = 0; p < buffers.size(); ++p)
+    for (size_t p = 0; p < tensorList.size(); ++p)
     {
-        const py::buffer_info &info = buffers[p];
+        const DLTensor &tensor = *tensorList[p];
+
+        int elemStrideBytes = (tensor.dtype.bits * tensor.dtype.lanes + 7) / 8;
 
         // Extract 4d shape and layout regardless of rank
         ssize_t            shape[4];
         ssize_t            strides[4];
         nvcv::TensorLayout layout;
 
-        switch (info.ndim)
+        switch (tensor.ndim)
         {
         case 1:
             layout = nvcv::TENSOR_NCHW;
@@ -106,12 +109,12 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer
             shape[0] = 1;
             shape[1] = 1;
             shape[2] = 1;
-            shape[3] = info.shape[0];
+            shape[3] = tensor.shape[0];
 
-            strides[0] = info.strides[0];
-            strides[1] = info.strides[0];
-            strides[2] = info.strides[0];
-            strides[3] = info.strides[0];
+            strides[0] = tensor.strides[0] * elemStrideBytes;
+            strides[1] = strides[0];
+            strides[2] = strides[0];
+            strides[3] = strides[0];
             break;
 
         case 2:
@@ -119,21 +122,21 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer
 
             shape[0] = 1;
             shape[1] = 1;
-            shape[2] = info.shape[0];
-            shape[3] = info.shape[1];
+            shape[2] = tensor.shape[0];
+            shape[3] = tensor.shape[1];
 
-            strides[0] = info.shape[0] * info.strides[0];
+            strides[0] = tensor.shape[0] * tensor.strides[0] * elemStrideBytes;
             strides[1] = strides[0];
-            strides[2] = info.strides[0];
-            strides[3] = info.strides[1];
+            strides[2] = tensor.strides[0] * elemStrideBytes;
+            strides[3] = tensor.strides[1] * elemStrideBytes;
             break;
 
         case 3:
         case 4:
-            shape[0] = info.ndim == 3 ? 1 : info.shape[info.ndim - 4];
-            shape[1] = info.shape[info.ndim - 3];
-            shape[2] = info.shape[info.ndim - 2];
-            shape[3] = info.shape[info.ndim - 1];
+            shape[0] = tensor.ndim == 3 ? 1 : tensor.shape[tensor.ndim - 4];
+            shape[1] = tensor.shape[tensor.ndim - 3];
+            shape[2] = tensor.shape[tensor.ndim - 2];
+            shape[3] = tensor.shape[tensor.ndim - 1];
 
             // User has specified a format?
             if (fmt != nvcv::FMT_NONE)
@@ -161,23 +164,23 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer
                 }
             }
 
-            strides[1] = info.strides[info.ndim - 3];
-            strides[2] = info.strides[info.ndim - 2];
-            strides[3] = info.strides[info.ndim - 1];
+            strides[1] = tensor.strides[tensor.ndim - 3] * elemStrideBytes;
+            strides[2] = tensor.strides[tensor.ndim - 2] * elemStrideBytes;
+            strides[3] = tensor.strides[tensor.ndim - 1] * elemStrideBytes;
 
-            if (info.ndim == 3)
+            if (tensor.ndim == 3)
             {
                 strides[0] = shape[1] * strides[1];
             }
             else
             {
-                strides[0] = info.strides[info.ndim - 4];
+                strides[0] = tensor.strides[tensor.ndim - 4];
             }
             break;
 
         default:
             throw std::invalid_argument(
-                util::FormatString("Number of buffer dimensions must be between 1 and 4, not %ld", info.ndim));
+                util::FormatString("Number of buffer dimensions must be between 1 and 4, not %d", tensor.ndim));
         }
 
         // Validate strides -----------------------
@@ -194,14 +197,14 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer
 
         const auto *infoLayout = &infoShape->infoLayout();
 
-        if (strides[3] != info.itemsize)
+        if (strides[3] != elemStrideBytes)
         {
             throw std::invalid_argument(util::FormatString(
-                "Fastest changing dimension must be packed, i.e., have stride equal to %ld byte(s), not %ld",
-                info.itemsize, strides[2]));
+                "Fastest changing dimension must be packed, i.e., have stride equal to %d byte(s), not %ld",
+                elemStrideBytes, strides[2]));
         }
 
-        ssize_t packedRowStride = info.itemsize * infoShape->numCols();
+        ssize_t packedRowStride = elemStrideBytes * infoShape->numCols();
         ssize_t rowStride       = strides[infoLayout->idxHeight()];
         if (!infoLayout->isChannelLast() && rowStride != packedRowStride)
         {
@@ -218,8 +221,8 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<py::buffer
         bufInfo.size             = infoShape->size();
         bufInfo.planeStride      = strides[infoLayout->idxSample()];
         bufInfo.rowStride        = strides[infoLayout->idxHeight()];
-        bufInfo.data             = info.ptr;
-        bufInfo.dtype            = py::cast<nvcv::DataType>(util::ToDType(info));
+        bufInfo.data             = tensor.data;
+        bufInfo.dtype            = ToNVCVDataType(tensor.dtype);
 
         curChannel += bufInfo.numPlanes * bufInfo.numChannels;
         if (curChannel > 4)
@@ -345,8 +348,7 @@ nvcv::ImageFormat InferImageFormat(const std::vector<nvcv::DataType> &planePixTy
     }
 }
 
-void FillNVCVImageBufferStrided(NVCVImageData &imgData, const std::vector<py::buffer_info> &infos,
-                                nvcv::ImageFormat fmt)
+void FillNVCVImageBufferStrided(NVCVImageData &imgData, const std::vector<DLPackTensor> &infos, nvcv::ImageFormat fmt)
 {
     // If user passes an image format, we must check if the given buffers are consistent with it.
     // Otherwise, we need to infer the image format from the given buffers.
@@ -430,7 +432,7 @@ void FillNVCVImageBufferStrided(NVCVImageData &imgData, const std::vector<py::bu
     }
 }
 
-nvcv::ImageDataStridedCuda CreateNVCVImageDataDevice(const std::vector<py::buffer_info> &infos, nvcv::ImageFormat fmt)
+nvcv::ImageDataStridedCuda CreateNVCVImageDataCuda(const std::vector<DLPackTensor> &infos, nvcv::ImageFormat fmt)
 {
     NVCVImageData imgData;
     FillNVCVImageBufferStrided(imgData, infos, fmt);
@@ -438,7 +440,7 @@ nvcv::ImageDataStridedCuda CreateNVCVImageDataDevice(const std::vector<py::buffe
     return nvcv::ImageDataStridedCuda(nvcv::ImageFormat{imgData.format}, imgData.buffer.strided);
 }
 
-nvcv::ImageDataStridedHost CreateNVCVImageDataHost(const std::vector<py::buffer_info> &infos, nvcv::ImageFormat fmt)
+nvcv::ImageDataStridedHost CreateNVCVImageDataHost(const std::vector<DLPackTensor> &infos, nvcv::ImageFormat fmt)
 {
     NVCVImageData imgData;
     FillNVCVImageBufferStrided(imgData, infos, fmt);
@@ -459,16 +461,26 @@ Image::Image(std::vector<std::shared_ptr<ExternalBuffer>> bufs, const nvcv::IIma
 {
     m_wrapData.emplace();
 
+    NVCV_ASSERT(bufs.size() >= 1);
+    m_wrapData->devType = bufs[0]->dlTensor().device.device_type;
+
     if (bufs.size() == 1)
     {
         m_wrapData->obj = py::cast(bufs[0]);
     }
     else
     {
-        NVCV_ASSERT(bufs.size() >= 2);
+        for (size_t i = 1; i < bufs.size(); ++i)
+        {
+            if (bufs[i]->dlTensor().device.device_type != bufs[0]->dlTensor().device.device_type
+                || bufs[i]->dlTensor().device.device_id != bufs[0]->dlTensor().device.device_id)
+            {
+                throw std::runtime_error("All buffers must belong to the same device, but some don't.");
+            }
+        }
+
         m_wrapData->obj = py::cast(std::move(bufs));
     }
-    m_wrapData->devType = ExternalBuffer::DEV_CUDA;
 
     m_impl = std::make_unique<nvcv::ImageWrapData>(imgData);
 }
@@ -560,13 +572,13 @@ std::shared_ptr<Image> Image::WrapExternalBuffer(ExternalBuffer &buffer, nvcv::I
 std::shared_ptr<Image> Image::WrapExternalBufferVector(std::vector<std::shared_ptr<ExternalBuffer>> buffers,
                                                        nvcv::ImageFormat                            fmt)
 {
-    std::vector<py::buffer_info> bufinfos;
+    std::vector<DLPackTensor> bufinfos;
     for (size_t i = 0; i < buffers.size(); ++i)
     {
-        bufinfos.emplace_back(buffers[i]->request());
+        bufinfos.emplace_back(buffers[i]->dlTensor());
     }
 
-    nvcv::ImageDataStridedCuda imgData = CreateNVCVImageDataDevice(std::move(bufinfos), fmt);
+    nvcv::ImageDataStridedCuda imgData = CreateNVCVImageDataCuda(std::move(bufinfos), fmt);
 
     // This is the key of an image wrapper.
     // All image wrappers have the same key.
@@ -590,13 +602,14 @@ std::shared_ptr<Image> Image::CreateHost(py::buffer buffer, nvcv::ImageFormat fm
 
 std::shared_ptr<Image> Image::CreateHostVector(std::vector<py::buffer> buffers, nvcv::ImageFormat fmt)
 {
-    std::vector<py::buffer_info> bufinfos;
+    std::vector<DLPackTensor> dlTensorList;
+
     for (size_t i = 0; i < buffers.size(); ++i)
     {
-        bufinfos.emplace_back(buffers[i].request());
+        dlTensorList.emplace_back(buffers[i].request(), DLDevice{kDLCPU, 0});
     }
 
-    nvcv::ImageDataStridedHost imgData = CreateNVCVImageDataHost(std::move(bufinfos), fmt);
+    nvcv::ImageDataStridedHost imgData = CreateNVCVImageDataHost(std::move(dlTensorList), fmt);
 
     // We take this opportunity to remove all wrappers from cache.
     // They aren't reusable anyway.
@@ -850,12 +863,23 @@ std::vector<py::object> ToPython(const nvcv::IImageData &imgData, std::optional<
         {
             if (owner)
             {
-                out.emplace_back(py::cast(std::make_shared<ExternalBuffer>(ExternalBuffer::DEV_CUDA, info, false),
+                // TODO: set correct device_type and device_it
+                out.emplace_back(py::cast(ExternalBuffer::Create(
+                                              DLPackTensor{
+                                                  info,
+                                                  {kDLCUDA, 0}
+                },
+                                              false),
                                           py::return_value_policy::reference_internal, owner));
             }
             else
             {
-                out.emplace_back(py::cast(std::make_shared<ExternalBuffer>(ExternalBuffer::DEV_CUDA, info, true),
+                out.emplace_back(py::cast(ExternalBuffer::Create(
+                                              DLPackTensor{
+                                                  info,
+                                                  {kDLCUDA, 0}
+                },
+                                              true),
                                           py::return_value_policy::take_ownership));
             }
         }
@@ -884,7 +908,7 @@ py::object Image::cuda(std::optional<nvcv::TensorLayout> layout) const
         // No layout requested and we're wrapping external data?
         if (!layout && m_wrapData)
         {
-            if (m_wrapData->devType != ExternalBuffer::DEV_CUDA)
+            if (!IsCudaAccessible(m_wrapData->devType))
             {
                 throw std::runtime_error("Image data can't be exported, it's not cuda-accessible");
             }

@@ -60,6 +60,7 @@ nvcv_python_add_module(
         Rect.cpp
         Object.cpp
         CAPI.cpp
+        DLPackUtils.cpp
 )
 
 target_include_directories(nvcv_module_python

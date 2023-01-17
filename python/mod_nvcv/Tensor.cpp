@@ -89,13 +89,13 @@ std::shared_ptr<Tensor> Tensor::CreateFromReqs(const nvcv::Tensor::Requirements 
 
 namespace {
 
-NVCVTensorData FillNVCVTensorData(const py::buffer_info &info, std::optional<nvcv::TensorLayout> layout,
+NVCVTensorData FillNVCVTensorData(const DLTensor &tensor, std::optional<nvcv::TensorLayout> layout,
                                   NVCVTensorBufferType bufType)
 {
     NVCVTensorData tensorData = {};
 
     // dtype ------------
-    tensorData.dtype = py::cast<nvcv::DataType>(util::ToDType(info));
+    tensorData.dtype = py::cast<nvcv::DataType>(ToDType(ToNVCVDataType(tensor.dtype)));
 
     // layout ------------
     if (layout)
@@ -105,7 +105,7 @@ NVCVTensorData FillNVCVTensorData(const py::buffer_info &info, std::optional<nvc
 
     // rank ------------
     {
-        int rank = info.ndim == 0 ? 1 : info.ndim;
+        int rank = tensor.ndim == 0 ? 1 : tensor.ndim;
         if (rank < 1 || rank > NVCV_TENSOR_MAX_RANK)
         {
             throw std::invalid_argument(util::FormatString("Number of dimensions must be between 1 and %d, not %d",
@@ -115,59 +115,45 @@ NVCVTensorData FillNVCVTensorData(const py::buffer_info &info, std::optional<nvc
     }
 
     // shape ------------
-    if (info.ndim == 0)
+    std::copy_n(tensor.shape, tensor.ndim, tensorData.shape);
+
+    // buffer type ------------
+    if (IsCudaAccessible(tensor.device.device_type))
     {
-        // according to https://docs.python.org/3/c-api/buffer.html,
-        // when rank is zero, buf points to a scalar, so its shape is [1]
-        // info.shape and info.strides are NULL.
-        tensorData.shape[0] = 1;
+        tensorData.bufferType = NVCV_TENSOR_BUFFER_STRIDED_CUDA;
     }
     else
     {
-        for (int d = 0; d < info.ndim; ++d)
-        {
-            tensorData.shape[d] = info.shape[d];
-        }
+        throw std::runtime_error("Only CUDA-accessible tensors are supported for now");
     }
-
-    // buffer type ------------
-    tensorData.bufferType = bufType;
-    NVCV_ASSERT(bufType == NVCV_TENSOR_BUFFER_STRIDED_CUDA && "Only pitch-linear device buffer supported for now");
 
     NVCVTensorBufferStrided &dataStrided = tensorData.buffer.strided;
 
-    // pitch ------------
-    if (info.ndim == 0)
+    // stride ------------
+    int elemStrideBytes = (tensor.dtype.bits * tensor.dtype.lanes + 7) / 8;
+    for (int d = 0; d < tensor.ndim; ++d)
     {
-        // tensor only holds one scalar, to strides is itemsize
-        dataStrided.strides[0] = info.itemsize;
-    }
-    else
-    {
-        for (int d = 0; d < info.ndim; ++d)
-        {
-            dataStrided.strides[d] = info.strides[d];
-        }
+        dataStrided.strides[d] = tensor.strides[d] * elemStrideBytes;
     }
 
     // Memory buffer ------------
-    dataStrided.basePtr = reinterpret_cast<NVCVByte *>(info.ptr);
+    dataStrided.basePtr = reinterpret_cast<NVCVByte *>(tensor.data) + tensor.byte_offset;
 
     return tensorData;
 }
 
-NVCVTensorData FillNVCVTensorDataCUDA(const py::buffer_info &info, std::optional<nvcv::TensorLayout> layout)
+NVCVTensorData FillNVCVTensorDataCUDA(const DLTensor &tensor, std::optional<nvcv::TensorLayout> layout)
 {
-    return FillNVCVTensorData(info, std::move(layout), NVCV_TENSOR_BUFFER_STRIDED_CUDA);
+    return FillNVCVTensorData(tensor, std::move(layout), NVCV_TENSOR_BUFFER_STRIDED_CUDA);
 }
 
 } // namespace
 
 std::shared_ptr<Tensor> Tensor::Wrap(ExternalBuffer &buffer, std::optional<nvcv::TensorLayout> layout)
 {
-    py::buffer_info info = buffer.request(true);
+    const DLTensor &dlTensor = buffer.dlTensor();
 
-    nvcv::TensorDataStridedCuda data{FillNVCVTensorDataCUDA(info, std::move(layout))};
+    nvcv::TensorDataStridedCuda data{FillNVCVTensorDataCUDA(dlTensor, std::move(layout))};
 
     // This is the key of a tensor wrapper.
     // All tensor wrappers have the same key.
@@ -317,24 +303,6 @@ auto Tensor::key() const -> const Key &
     return m_key;
 }
 
-static py::buffer_info ToPyBufferInfo(const nvcv::ITensorDataStrided &tensorData)
-{
-    std::vector<ssize_t> shape(tensorData.shape().shape().begin(), tensorData.shape().shape().end());
-    std::vector<ssize_t> strides(tensorData.cdata().buffer.strided.strides,
-                                 tensorData.cdata().buffer.strided.strides + tensorData.rank());
-
-    py::dtype dt = py::cast<py::dtype>(py::cast(tensorData.dtype()));
-
-    // There's no direct way to construct a py::buffer_info from data together with a py::dtype.
-    // To do that, we first construct a py::array (it accepts py::dtype), and use ".request()"
-    // to retrieve the corresponding py::buffer_info.
-    // To avoid spurious data copies in py::array ctor, we create this dummy owner.
-    py::tuple tmpOwner = py::make_tuple();
-    py::array tmp(dt, shape, strides, tensorData.basePtr(), tmpOwner);
-
-    return tmp.request();
-}
-
 static py::object ToPython(const nvcv::ITensorData &imgData, py::object owner)
 {
     py::object out;
@@ -345,23 +313,15 @@ static py::object ToPython(const nvcv::ITensorData &imgData, py::object owner)
         throw std::runtime_error("Only tensors with pitch-linear data can be exported");
     }
 
-    py::buffer_info info = ToPyBufferInfo(*stridedData);
-    if (dynamic_cast<const nvcv::ITensorDataStridedCuda *>(stridedData))
+    DLPackTensor dlTensor(*stridedData);
+    if (owner)
     {
-        if (owner)
-        {
-            return py::cast(std::make_shared<ExternalBuffer>(ExternalBuffer::DEV_CUDA, info, false),
-                            py::return_value_policy::reference_internal, owner);
-        }
-        else
-        {
-            return py::cast(std::make_shared<ExternalBuffer>(ExternalBuffer::DEV_CUDA, info, true),
-                            py::return_value_policy::take_ownership);
-        }
+        return py::cast(ExternalBuffer::Create(std::move(dlTensor), false), py::return_value_policy::reference_internal,
+                        owner);
     }
     else
     {
-        throw std::runtime_error("Buffer type not supported");
+        return py::cast(ExternalBuffer::Create(std::move(dlTensor), true), py::return_value_policy::take_ownership);
     }
 }
 

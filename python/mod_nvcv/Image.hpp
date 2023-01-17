@@ -115,8 +115,8 @@ private:
 
     struct WrapData
     {
-        ExternalBuffer::DeviceType devType;
-        py::object                 obj;
+        DLDeviceType devType;
+        py::object   obj;
     };
 
     // If wrapping external data, it's not nullopt.

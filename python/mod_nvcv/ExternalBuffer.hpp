@@ -18,6 +18,8 @@
 #ifndef NVCV_PYTHON_PRIV_EXTERNAL_BUFFER_HPP
 #define NVCV_PYTHON_PRIV_EXTERNAL_BUFFER_HPP
 
+#include "DLPackUtils.hpp"
+
 #include <cuda_runtime.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
@@ -30,25 +32,18 @@ namespace py = pybind11;
 class ExternalBuffer final : public std::enable_shared_from_this<ExternalBuffer>
 {
 public:
-    enum DeviceType
-    {
-        DEV_CUDA,
-        DEV_CPU
-    };
-
     static void Export(py::module &m);
 
     ExternalBuffer(ExternalBuffer &&that) = delete;
 
-    explicit ExternalBuffer(DeviceType type, const py::buffer_info &data, bool copy = false,
-                            py::object wrappedObj = {});
+    static std::shared_ptr<ExternalBuffer> Create(DLPackTensor &&dlTensor, bool copy = false,
+                                                  py::object wrappedObj = {});
 
-    ~ExternalBuffer();
+    // Returns the __cuda_array_interface__ if the buffer is cuda-accessible,
+    // or std::nullopt if it's not.
+    std::optional<py::dict> cudaArrayInterface() const;
 
-    py::dict                  cuda_interface() const;
-    std::optional<DeviceType> devType() const;
-
-    py::buffer_info request(bool writable = false) const;
+    const DLTensor &dlTensor() const;
 
     py::object shape() const;
     py::object dtype() const;
@@ -58,13 +53,14 @@ public:
     bool load(PyObject *o);
 
 private:
-    friend py::detail::type_caster<ExternalBuffer>;
-    ExternalBuffer();
+    explicit ExternalBuffer(DLPackTensor &&dlTensor, bool copy, py::object wrappedObj);
 
-    py::object                m_wrappedObj;
-    std::optional<DeviceType> m_devType;
-    py::dict                  m_cudaArrayInterface;
-    bool                      m_owns;
+    friend py::detail::type_caster<ExternalBuffer>;
+    ExternalBuffer() = default;
+
+    DLPackTensor                    m_dlTensor;
+    mutable std::optional<py::dict> m_cacheCudaArrayInterface;
+    py::object                      m_wrappedObj;
 };
 
 } // namespace nvcvpy::priv
