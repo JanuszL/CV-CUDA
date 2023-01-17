@@ -94,6 +94,7 @@ def test_tensor_creation_shape_works(shape, dtype, layout):
         ([3, 5, 7, 3], np.uint8),
         ([3, 5, 7, 4], np.uint8),
         ([3, 5, 7], np.csingle),
+        ([3, 5, 7], np.cdouble),
         ([3], np.int8),
     ],
 )

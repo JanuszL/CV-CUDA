@@ -240,7 +240,7 @@ nvcv::DataType MakePackedType(nvcv::DataType dtype, int numChannels)
     {
         return dtype;
     }
-    else if (dtype.numChannels() == 1)
+    else
     {
         NVCV_ASSERT(2 <= numChannels && numChannels <= 4);
 
@@ -266,11 +266,6 @@ nvcv::DataType MakePackedType(nvcv::DataType dtype, int numChannels)
 
         nvcv::Packing newPacking = MakePacking(pp);
         return nvcv::DataType{dtype.dataKind(), newPacking};
-    }
-    else
-    {
-        // in case of complex numbers, the number of channels == 1 but pix has 2 channels.
-        return dtype;
     }
 }
 
