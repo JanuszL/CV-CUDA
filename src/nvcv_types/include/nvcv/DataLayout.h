@@ -242,8 +242,10 @@ typedef enum
     /** Three 64-bit channels in three 64-bit words. */
     NVCV_PACKING_X64_Y64_Z64 = NVCV_DETAIL_BPP_NCH(192, 3),
 
-    /** One 128-bit channel. */
+    /** One 256-bit channel. */
     NVCV_PACKING_X256 = NVCV_DETAIL_BPP_NCH(256, 1),
+    /** Two 128-bit channels in two 128-bit words. */
+    NVCV_PACKING_X128_Y128 = NVCV_DETAIL_BPP_NCH(256, 2),
     /** Four 64-bit channels in four 64-bit words. */
     NVCV_PACKING_X64_Y64_Z64_W64 = NVCV_DETAIL_BPP_NCH(256, 4),
 

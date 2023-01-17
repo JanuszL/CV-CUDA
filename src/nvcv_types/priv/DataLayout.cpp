@@ -301,6 +301,7 @@ const std::map<NVCVPacking, PackingData> g_packingToData = {
     DEF_FIX_PACK3(64, 64, 64),
 
     DEF_PACK1(256),
+    DEF_FIX_PACK2(128, 128),
     DEF_FIX_PACK4(64, 64, 64, 64),
 
 // clang-format-14.0.6 segfaults on the lines below. We have to

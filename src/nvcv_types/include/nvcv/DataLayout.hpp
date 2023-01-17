@@ -159,8 +159,10 @@ enum class Packing : int32_t
     /** Three 64-bit channels in three 64-bit words. */
     X64_Y64_Z64 = NVCV_PACKING_X64_Y64_Z64,
 
-    /** One 128-bit channel. */
+    /** One 256-bit channel. */
     X256 = NVCV_PACKING_X256,
+    /** Two 128-bit channels in two 128-bit words. */
+    X128_Y128 = NVCV_PACKING_X128_Y128,
     /** Four 64-bit channels in four 64-bit words. */
     X64_Y64_Z64_W64 = NVCV_PACKING_X64_Y64_Z64_W64,
 };
