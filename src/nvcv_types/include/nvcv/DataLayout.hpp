@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -169,7 +169,8 @@ enum class DataKind : int8_t
 {
     UNSIGNED = NVCV_DATA_KIND_UNSIGNED,
     SIGNED   = NVCV_DATA_KIND_SIGNED,
-    FLOAT    = NVCV_DATA_KIND_FLOAT
+    FLOAT    = NVCV_DATA_KIND_FLOAT,
+    COMPLEX  = NVCV_DATA_KIND_COMPLEX
 };
 
 enum class MemLayout : int8_t

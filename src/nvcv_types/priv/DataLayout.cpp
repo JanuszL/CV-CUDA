@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -847,6 +847,7 @@ const char *GetName(NVCVDataKind dataKind)
         ENUM_CASE(NVCV_DATA_KIND_UNSIGNED);
         ENUM_CASE(NVCV_DATA_KIND_SIGNED);
         ENUM_CASE(NVCV_DATA_KIND_FLOAT);
+        ENUM_CASE(NVCV_DATA_KIND_COMPLEX);
 #undef ENUM_CASE
     }
     priv::CoreTLS &tls = priv::GetCoreTLS();

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -257,7 +257,8 @@ typedef enum
 {
     NVCV_DATA_KIND_UNSIGNED, /**< Channels are unsigned integer values. */
     NVCV_DATA_KIND_SIGNED,   /**< Channels are signed integer values. */
-    NVCV_DATA_KIND_FLOAT     /**< Channels are floating point values. */
+    NVCV_DATA_KIND_FLOAT,    /**< Channels are floating point values. */
+    NVCV_DATA_KIND_COMPLEX   /**< Channels are complex values. */
 } NVCVDataKind;
 
 /** Defines how the 2D plane pixels are laid out in memory.
