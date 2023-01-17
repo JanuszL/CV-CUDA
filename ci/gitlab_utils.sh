@@ -1,6 +1,6 @@
 #!/bin/bash -eE
 
-# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -100,5 +100,5 @@ function upload_gitlab_package_file()
     local file=$3
     shift 3
 
-    curl --fail --header "$(get_gitlab_auth_header)" --upload-file "$file" "$(get_gitlab_url)/packages/generic/$name/$version/$file?select=package_file" | jq
+    curl --fail --header "$(get_gitlab_auth_header)" --upload-file "$file" "$(get_gitlab_url)/packages/generic/$name/$version/$(basename $file)?select=package_file" | jq
 }
