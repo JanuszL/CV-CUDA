@@ -148,7 +148,11 @@ INSTANTIATE_TEST_SUITE_P(ExplicitTypes, ImageDataTypeTests,
                                    std::make_tuple(NVCV_IMAGE_FORMAT_U16, NVCV_DATA_TYPE_U16),
                                    std::make_tuple(NVCV_IMAGE_FORMAT_S16, NVCV_DATA_TYPE_S16),
                                    std::make_tuple(NVCV_IMAGE_FORMAT_F32, NVCV_DATA_TYPE_F32),
-                                   std::make_tuple(NVCV_IMAGE_FORMAT_2F32, NVCV_DATA_TYPE_2F32)));
+                                   std::make_tuple(NVCV_IMAGE_FORMAT_2F32, NVCV_DATA_TYPE_2F32),
+                                   std::make_tuple(NVCV_IMAGE_FORMAT_C64, NVCV_DATA_TYPE_C64),
+                                   std::make_tuple(NVCV_IMAGE_FORMAT_2C64, NVCV_DATA_TYPE_2C64),
+                                   std::make_tuple(NVCV_IMAGE_FORMAT_C128, NVCV_DATA_TYPE_C128),
+                                   std::make_tuple(NVCV_IMAGE_FORMAT_2C128, NVCV_DATA_TYPE_2C128)));
 
 TEST_P(ImageDataTypeTests, pixel_type_matches_corresponding_image_type)
 {
