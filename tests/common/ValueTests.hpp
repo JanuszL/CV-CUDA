@@ -49,14 +49,15 @@ class Param
     static_assert(sizeof...(DEFAULT) <= 1);
 
 public:
-    template<class U = void *>
-    requires(sizeof(U) * 0 + sizeof...(DEFAULT) == 1) constexpr Param()
+    template<class U = void *, std::enable_if_t<sizeof(U) * 0 + sizeof...(DEFAULT) == 1, int> = 0>
+    constexpr Param()
         : m_value(DEFAULT...)
     {
     }
 
-    template<class U = void *>
-    requires(std::is_default_constructible_v<T> && sizeof(U) * 0 + sizeof...(DEFAULT) == 0) constexpr Param()
+    template<class U = void *,
+             std::enable_if_t<std::is_default_constructible_v<T> && sizeof(U) * 0 + sizeof...(DEFAULT) == 0, int> = 0>
+    constexpr Param()
         : m_value(T{})
     {
     }
