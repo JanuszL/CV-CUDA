@@ -36,8 +36,7 @@ public:
 
     ExternalBuffer(ExternalBuffer &&that) = delete;
 
-    static std::shared_ptr<ExternalBuffer> Create(DLPackTensor &&dlTensor, bool copy = false,
-                                                  py::object wrappedObj = {});
+    static std::shared_ptr<ExternalBuffer> Create(DLPackTensor &&dlTensor, py::object wrappedObj = {});
 
     // Returns the __cuda_array_interface__ if the buffer is cuda-accessible,
     // or std::nullopt if it's not.
@@ -53,7 +52,7 @@ public:
     bool load(PyObject *o);
 
 private:
-    explicit ExternalBuffer(DLPackTensor &&dlTensor, bool copy, py::object wrappedObj);
+    explicit ExternalBuffer(DLPackTensor &&dlTensor, py::object wrappedObj);
 
     friend py::detail::type_caster<ExternalBuffer>;
     ExternalBuffer() = default;

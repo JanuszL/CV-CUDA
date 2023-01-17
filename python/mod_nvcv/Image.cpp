@@ -861,27 +861,12 @@ std::vector<py::object> ToPython(const nvcv::IImageData &imgData, std::optional<
     {
         if (dynamic_cast<const nvcv::IImageDataStridedCuda *>(pitchData))
         {
-            if (owner)
-            {
-                // TODO: set correct device_type and device_it
-                out.emplace_back(py::cast(ExternalBuffer::Create(
-                                              DLPackTensor{
-                                                  info,
-                                                  {kDLCUDA, 0}
-                },
-                                              false),
-                                          py::return_value_policy::reference_internal, owner));
-            }
-            else
-            {
-                out.emplace_back(py::cast(ExternalBuffer::Create(
-                                              DLPackTensor{
-                                                  info,
-                                                  {kDLCUDA, 0}
-                },
-                                              true),
-                                          py::return_value_policy::take_ownership));
-            }
+            // TODO: set correct device_type and device_it
+            out.emplace_back(py::cast(ExternalBuffer::Create(DLPackTensor{
+                                          info,
+                                          {kDLCUDA, 0}
+            }),
+                                      py::return_value_policy::reference_internal, owner));
         }
         else if (dynamic_cast<const nvcv::IImageDataStridedHost *>(pitchData))
         {

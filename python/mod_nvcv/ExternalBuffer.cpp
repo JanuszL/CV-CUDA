@@ -46,159 +46,6 @@ static void CheckValidCUDABuffer(const void *ptr)
     }
 }
 
-static DLPackTensor CopyBuffer(const DLTensor &src)
-{
-    struct StrideIndex
-    {
-        int64_t stride;
-        int     idx;
-    };
-
-    std::vector<StrideIndex> stridesIndex(src.ndim);
-
-    if (src.strides == nullptr)
-    {
-        // packed, row-major.
-        stridesIndex.back().stride = 1;
-        stridesIndex.back().idx    = src.ndim - 1;
-        for (int i = src.ndim - 1; i > 0; --i)
-        {
-            stridesIndex[i - 1].stride = stridesIndex[i].stride * src.shape[i];
-            stridesIndex[i - 1].idx    = i - 1;
-        }
-    }
-    else
-    {
-        for (int i = 0; i < src.ndim; ++i)
-        {
-            if (src.strides[i] <= 0)
-            {
-                throw std::runtime_error("Dimension stride must be > 0");
-            }
-
-            stridesIndex[i].stride = src.strides[i];
-            stridesIndex[i].idx    = i;
-        }
-
-        std::sort(stridesIndex.begin(), stridesIndex.end(),
-                  [](const StrideIndex &a, const StrideIndex &b) { return a.stride >= b.stride; });
-    }
-
-    int elemStrideBytes = (src.dtype.lanes * src.dtype.bits + 7) / 8;
-
-    int numCols        = src.shape[stridesIndex.back().idx];
-    int numRows        = std::reduce(src.shape, src.shape + src.ndim, 1, std::multiplies<>()) / numCols;
-    int rowStrideBytes = numCols * elemStrideBytes;
-
-    void       *newData;
-    size_t      newPitch;
-    cudaError_t err = cudaMallocPitch(&newData, &newPitch, rowStrideBytes, numRows);
-    if (err != cudaSuccess)
-    {
-        std::ostringstream ss;
-        ss << "Error allocating " << rowStrideBytes * numRows << " bytes of cuda memory: " << cudaGetErrorName(err)
-           << " - " << cudaGetErrorString(err);
-        throw std::runtime_error(ss.str());
-    }
-
-    DLPackTensor dlTensor;
-    {
-        DLManagedTensor dlManagedTensor = {};
-        dlManagedTensor.deleter         = [](DLManagedTensor *self)
-        {
-            cudaFree(self->dl_tensor.data);
-            delete[] self->dl_tensor.strides;
-            delete[] self->dl_tensor.shape;
-        };
-
-        dlTensor = DLPackTensor{std::move(dlManagedTensor)};
-    }
-
-    dlTensor->data               = newData;
-    dlTensor->device.device_type = kDLCUDA;
-    // TODO: set the correct device id
-    dlTensor->device.device_id = 0;
-
-    dlTensor->ndim = src.ndim;
-
-    // for now dlTensor will be permuted so that its strides are in
-    // decreasing order.
-
-    std::vector<int64_t> shape(src.ndim);
-    for (int i = 0; i < src.ndim; ++i)
-    {
-        shape[i] = src.shape[stridesIndex[i].idx];
-    }
-
-    std::vector<int64_t> dstStrides(src.ndim);
-    dstStrides[src.ndim - 1] = elemStrideBytes;
-    if (src.ndim >= 2)
-    {
-        dstStrides[src.ndim - 2] = newPitch / elemStrideBytes;
-        for (int i = src.ndim - 2; i > 0; --i)
-        {
-            dstStrides[i - 1] = dstStrides[i] * shape[i];
-        }
-    }
-
-    int numRowsCopy = src.ndim > 1 ? dlTensor->shape[src.ndim - 2] : 1;
-
-    int idxFirstPackedRows = std::max<int>(0, src.ndim - 2);
-    for (int i = src.ndim - 3; i >= 0; --i)
-    {
-        if (dlTensor->strides[i] == dlTensor->strides[i + 1] * dlTensor->shape[i + 1])
-        {
-            numRowsCopy *= dlTensor->shape[i];
-            idxFirstPackedRows = i;
-        }
-    }
-
-    std::function<void(int, const std::byte *, std::byte *)> copy;
-    copy = [&copy, &numRowsCopy, &idxFirstPackedRows, &dlTensor, &dstStrides, &rowStrideBytes, &elemStrideBytes,
-            &stridesIndex](int idx, const std::byte *srcData, std::byte *dstData)
-    {
-        if (idx == idxFirstPackedRows)
-        {
-            cudaError_t err = cudaMemcpy2D(dstData, dstStrides[idx] * elemStrideBytes, srcData,
-                                           stridesIndex[idx].stride * elemStrideBytes, rowStrideBytes, numRowsCopy,
-                                           cudaMemcpyDeviceToDevice);
-            if (err != cudaSuccess)
-            {
-                std::ostringstream ss;
-                ss << "Error copying cuda buffer: " << cudaGetErrorName(err) << " - " << cudaGetErrorString(err);
-                throw std::runtime_error(ss.str());
-            }
-        }
-        else
-        {
-            for (int i = 0; i < idx; ++i)
-            {
-                copy(idx + 1, srcData, dstData);
-                srcData += stridesIndex[idx].stride * elemStrideBytes;
-                dstData += dstStrides[idx] * elemStrideBytes;
-            }
-        }
-    };
-
-    copy(0, static_cast<const std::byte *>(src.data), static_cast<std::byte *>(newData));
-
-    // now permute the tensor to the original order
-
-    dlTensor->byte_offset = 0;
-    dlTensor->dtype       = src.dtype;
-
-    dlTensor->shape = new int64_t[src.ndim];
-    std::copy_n(dlTensor->shape, dlTensor->ndim, src.shape);
-
-    dlTensor->strides = new int64_t[src.ndim];
-    for (int i = 0; i < src.ndim; ++i)
-    {
-        dlTensor->strides[stridesIndex[i].idx] = dstStrides[i];
-    }
-
-    return dlTensor;
-}
-
 static std::string ToFormatString(const DLDataType &dtype)
 {
     // TODO: these must be a more efficient way to retrieve the
@@ -207,13 +54,13 @@ static std::string ToFormatString(const DLDataType &dtype)
     return tmp.request().format;
 }
 
-std::shared_ptr<ExternalBuffer> ExternalBuffer::Create(DLPackTensor &&dlPackTensor, bool copy, py::object wrappedObj)
+std::shared_ptr<ExternalBuffer> ExternalBuffer::Create(DLPackTensor &&dlPackTensor, py::object wrappedObj)
 {
-    std::shared_ptr<ExternalBuffer> buf(new ExternalBuffer(std::move(dlPackTensor), copy, std::move(wrappedObj)));
+    std::shared_ptr<ExternalBuffer> buf(new ExternalBuffer(std::move(dlPackTensor), std::move(wrappedObj)));
     return buf;
 }
 
-ExternalBuffer::ExternalBuffer(DLPackTensor &&dlTensor, bool copy, py::object wrappedObj)
+ExternalBuffer::ExternalBuffer(DLPackTensor &&dlTensor, py::object wrappedObj)
     : m_wrappedObj(wrappedObj)
 {
     if (!IsCudaAccessible(dlTensor->device.device_type))
@@ -226,14 +73,7 @@ ExternalBuffer::ExternalBuffer(DLPackTensor &&dlTensor, bool copy, py::object wr
         CheckValidCUDABuffer(dlTensor->data);
     }
 
-    if (copy && dlTensor->data != nullptr)
-    {
-        m_dlTensor = CopyBuffer(*dlTensor);
-    }
-    else
-    {
-        m_dlTensor = std::move(dlTensor);
-    }
+    m_dlTensor = std::move(dlTensor);
 }
 
 py::object ExternalBuffer::shape() const
