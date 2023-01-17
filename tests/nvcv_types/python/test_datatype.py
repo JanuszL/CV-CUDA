@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,7 +38,7 @@ import numpy as np
         (nvcv.Type._4S32, np.dtype("4i")),
     ],
 )
-def test_pixtype_dtype(type, dt):
+def test_datatype_dtype(type, dt):
     assert type == dt
 
     t = nvcv.Type(dt)
@@ -47,6 +47,6 @@ def test_pixtype_dtype(type, dt):
 
 
 @t.mark.parametrize("dt", [np.dtype([("f1", np.uint64), ("f2", np.int32)]), "invalid"])
-def test_pixtype_dtype_conv_error(dt):
+def test_datatype_dtype_conv_error(dt):
     with t.raises(TypeError):
         nvcv.Type(dt)
