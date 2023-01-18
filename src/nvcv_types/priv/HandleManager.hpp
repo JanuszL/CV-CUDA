@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -116,8 +116,18 @@ public:
     std::pair<HandleType, T *> create(Args &&...args)
     {
         Resource *res = doFetchFreeResource();
-        T        *obj = res->template constructObject<T>(std::forward<Args>(args)...);
-        return std::make_pair(doGetHandleFromResource(res), obj);
+        try
+        {
+            T *obj = res->template constructObject<T>(std::forward<Args>(args)...);
+            return std::make_pair(doGetHandleFromResource(res), obj); // noexcept
+        }
+        catch (...)
+        {
+            // If object ctor threw an exception, we must return
+            // the resource we would have used for it.
+            doReturnResource(res);
+            throw;
+        }
     }
 
     // true if handle is destroyed, false if handle is invalid (or already removed)
@@ -138,9 +148,9 @@ private:
     void       doGrow();
     Resource  *doFetchFreeResource();
     void       doReturnResource(Resource *r);
-    uint8_t    doGetHandleGeneration(HandleType handle) const;
-    HandleType doGetHandleFromResource(Resource *r) const;
-    Resource  *doGetResourceFromHandle(HandleType handle) const;
+    uint8_t    doGetHandleGeneration(HandleType handle) const noexcept;
+    HandleType doGetHandleFromResource(Resource *r) const noexcept;
+    Resource  *doGetResourceFromHandle(HandleType handle) const noexcept;
     bool       isManagedResource(Resource *r) const;
 };
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -333,13 +333,13 @@ void HandleManager<Interface, Storage>::doReturnResource(Resource *r)
 }
 
 template<typename Interface, typename Storage>
-uint8_t HandleManager<Interface, Storage>::doGetHandleGeneration(HandleType handle) const
+uint8_t HandleManager<Interface, Storage>::doGetHandleGeneration(HandleType handle) const noexcept
 {
     return ((uintptr_t)handle & (kResourceAlignment - 1)) >> 1;
 }
 
 template<typename Interface, typename Storage>
-auto HandleManager<Interface, Storage>::doGetHandleFromResource(Resource *r) const -> HandleType
+auto HandleManager<Interface, Storage>::doGetHandleFromResource(Resource *r) const noexcept -> HandleType
 {
     if (r)
     {
@@ -353,7 +353,7 @@ auto HandleManager<Interface, Storage>::doGetHandleFromResource(Resource *r) con
 }
 
 template<typename Interface, typename Storage>
-auto HandleManager<Interface, Storage>::doGetResourceFromHandle(HandleType handle) const -> Resource *
+auto HandleManager<Interface, Storage>::doGetResourceFromHandle(HandleType handle) const noexcept -> Resource *
 {
     if (handle)
     {
