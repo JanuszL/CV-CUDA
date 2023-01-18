@@ -45,7 +45,7 @@ public:
 
     ~JointBilateralFilter();
 
-    void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor, &inColor, nvcv::ITensor &out, int diameter,
+    void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &inColor, nvcv::ITensor &out, int diameter,
                     float sigmaColor, float sigmaSpace, NVCVBorderType borderMode);
 
     void operator()(cudaStream_t stream, nvcv::IImageBatch &in, nvcv::IImageBatch &inColor, nvcv::IImageBatch &out,

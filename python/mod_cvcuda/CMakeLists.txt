@@ -40,6 +40,7 @@ nvcv_python_add_module(
         OpAverageBlur.cpp
         OpConv2D.cpp
         OpBilateralFilter.cpp
+        OpJointBilateralFilter.cpp
         OpCenterCrop.cpp
         OpWarpAffine.cpp
         OpWarpPerspective.cpp
