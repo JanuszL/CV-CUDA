@@ -17,7 +17,7 @@ import pytest as t
 import nvcv
 import numpy as np
 import torch
-import util
+import nvcv_util as util
 
 
 def test_image_creation_works():
