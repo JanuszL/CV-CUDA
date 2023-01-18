@@ -27,11 +27,29 @@
 
 #include <list>
 #include <random>
+#include <vector>
 
 #include <nvcv/Fwd.hpp>
 
 namespace t    = ::testing;
 namespace test = nvcv::test;
+
+namespace std {
+template<class T>
+std::ostream &operator<<(std::ostream &out, const std::vector<T> &v)
+{
+    out << '{';
+    for (size_t i = 0; i < v.size(); ++i)
+    {
+        if (i > 0)
+        {
+            out << ',';
+        }
+        out << v[i];
+    }
+    return out << '}';
+}
+} // namespace std
 
 class TensorTests
     : public t::TestWithParam<std::tuple<test::Param<"numImages", int>, test::Param<"width", int>,
@@ -370,5 +388,67 @@ TEST_P(TensorWrapImageTests, wip_create)
         EXPECT_EQ(imgData->plane(p).basePtr, reinterpret_cast<NVCVByte *>(tensorAccess->planeData(p)));
         EXPECT_EQ(imgData->plane(p).rowStride, tensorAccess->rowStride());
         EXPECT_EQ(img.format().planePixelStrideBytes(p), tensorAccess->colStride());
+    }
+}
+
+class TensorWrapParamTests
+    : public t::TestWithParam<
+          std::tuple<test::Param<"shape", nvcv::TensorShape>, test::Param<"strides", std::vector<int>>,
+                     test::Param<"dtype", nvcv::DataType>, test::Param<"goldStatus", NVCVStatus>>>
+{
+};
+
+// clang-format off
+NVCV_INSTANTIATE_TEST_SUITE_P(Positive, TensorWrapParamTests,
+                              test::ValueList<nvcv::TensorShape, std::vector<int>, nvcv::DataType>
+{
+  {{      {2},  "C"},     {4}, nvcv::TYPE_F32},
+  {{      {1},  "W"},     {1}, nvcv::TYPE_U8},
+  {{  {10, 5}, "HW"},  {5, 1}, nvcv::TYPE_U8},
+  {{{10, 5,3}, "HWC"}, {5*3*4, 3*4,4}, nvcv::TYPE_F32},
+} * NVCV_SUCCESS);
+
+NVCV_INSTANTIATE_TEST_SUITE_P(Negative, TensorWrapParamTests,
+                              test::ValueList<nvcv::TensorShape, std::vector<int>, nvcv::DataType>
+{
+  {{       {2},  "C"},     {3}, nvcv::TYPE_F32},
+  {{       {2},  "C"},     {5}, nvcv::TYPE_F32},
+  {{   {10, 5}, "HW"},  {1, 10}, nvcv::TYPE_U8}, // WH order
+  {{ {10, 5,3}, "HWC"}, {4,10*4,10*4*5}, nvcv::TYPE_F32}, // CWH order
+} * NVCV_ERROR_INVALID_ARGUMENT);
+
+// clang-format on
+
+TEST_P(TensorWrapParamTests, wip_create)
+{
+    const nvcv::TensorShape PARAM_TSHAPE  = std::get<0>(GetParam());
+    const std::vector<int>  PARAM_STRIDES = std::get<1>(GetParam());
+    const nvcv::DataType    PARAM_DTYPE   = std::get<2>(GetParam());
+    const NVCVStatus        GOLD_STATUS   = std::get<3>(GetParam());
+
+    NVCVTensorBufferStrided buf = {};
+    for (size_t i = 0; i < PARAM_STRIDES.size(); ++i)
+    {
+        buf.strides[i] = PARAM_STRIDES[i];
+    }
+    // we're not accessing the memory in any way, let's set it to something not null
+    buf.basePtr = (NVCVByte *)0xDEADBEEF;
+
+    std::unique_ptr<nvcv::TensorWrapData> tensor;
+    NVCV_ASSERT_STATUS(GOLD_STATUS, tensor = std::make_unique<nvcv::TensorWrapData>(
+                                        nvcv::TensorDataStridedCuda(PARAM_TSHAPE, PARAM_DTYPE, buf)));
+
+    if (GOLD_STATUS == NVCV_SUCCESS)
+    {
+        auto *data = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(tensor->exportData());
+        ASSERT_NE(nullptr, data);
+
+        EXPECT_EQ(buf.basePtr, (NVCVByte *)data->basePtr());
+        EXPECT_EQ(PARAM_TSHAPE.size(), data->rank());
+        EXPECT_EQ(PARAM_TSHAPE, data->shape());
+        for (int i = 0; i < data->rank(); ++i)
+        {
+            EXPECT_EQ(PARAM_STRIDES[i], data->stride(i)) << "stride #" << i;
+        }
     }
 }
