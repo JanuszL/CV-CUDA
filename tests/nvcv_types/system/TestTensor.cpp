@@ -402,10 +402,13 @@ class TensorWrapParamTests
 NVCV_INSTANTIATE_TEST_SUITE_P(Positive, TensorWrapParamTests,
                               test::ValueList<nvcv::TensorShape, std::vector<int>, nvcv::DataType>
 {
-  {{      {2},  "C"},     {4}, nvcv::TYPE_F32},
-  {{      {1},  "W"},     {1}, nvcv::TYPE_U8},
-  {{  {10, 5}, "HW"},  {5, 1}, nvcv::TYPE_U8},
-  {{{10, 5,3}, "HWC"}, {5*3*4, 3*4,4}, nvcv::TYPE_F32},
+  {{       {2},  "C"},     {4}, nvcv::TYPE_F32},
+  {{       {1},  "W"},     {1}, nvcv::TYPE_U8},
+  {{   {10, 5}, "HW"},  {5, 1}, nvcv::TYPE_U8},
+  {{ {1,10, 5}, "NHW"}, {1,5, 1}, nvcv::TYPE_U8},
+  {{ {3,1, 5}, "NHW"}, {5*4,1,4}, nvcv::TYPE_F32},
+  {{ {3,1, 1}, "NHW"}, {5*4,1,1}, nvcv::TYPE_F32},
+  { {{10, 5,3}, "HWC"}, {5*3*4, 3*4,4}, nvcv::TYPE_F32},
 } * NVCV_SUCCESS);
 
 NVCV_INSTANTIATE_TEST_SUITE_P(Negative, TensorWrapParamTests,
@@ -415,6 +418,8 @@ NVCV_INSTANTIATE_TEST_SUITE_P(Negative, TensorWrapParamTests,
   {{       {2},  "C"},     {5}, nvcv::TYPE_F32},
   {{   {10, 5}, "HW"},  {1, 10}, nvcv::TYPE_U8}, // WH order
   {{ {10, 5,3}, "HWC"}, {4,10*4,10*4*5}, nvcv::TYPE_F32}, // CWH order
+  {{ {1,10, 5}, "NHW"}, {1,5*4-1,4}, nvcv::TYPE_F32},
+  {{ {3,1, 5}, "NHW"}, {5*4-1,1,4}, nvcv::TYPE_F32},
 } * NVCV_ERROR_INVALID_ARGUMENT);
 
 // clang-format on
