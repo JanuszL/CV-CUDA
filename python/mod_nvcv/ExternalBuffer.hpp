@@ -38,10 +38,6 @@ public:
 
     static py::object Create(DLPackTensor &&dlTensor, py::object wrappedObj);
 
-    // Returns the __cuda_array_interface__ if the buffer is cuda-accessible,
-    // or std::nullopt if it's not.
-    std::optional<py::dict> cudaArrayInterface() const;
-
     const DLTensor &dlTensor() const;
 
     py::object shape() const;
@@ -60,6 +56,16 @@ private:
     DLPackTensor                    m_dlTensor;
     mutable std::optional<py::dict> m_cacheCudaArrayInterface;
     py::object                      m_wrappedObj;
+
+    // Returns the __cuda_array_interface__ if the buffer is cuda-accessible,
+    // or std::nullopt if it's not.
+    std::optional<py::dict> cudaArrayInterface() const;
+
+    // __dlpack__ implementation
+    py::capsule dlpack(py::object stream) const;
+
+    // __dlpack_device__ implementation
+    py::tuple dlpackDevice() const;
 };
 
 } // namespace nvcvpy::priv

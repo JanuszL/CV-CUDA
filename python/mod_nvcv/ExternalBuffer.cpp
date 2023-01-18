@@ -202,15 +202,37 @@ bool ExternalBuffer::load(PyObject *o)
             m_dlTensor                = std::move(dlTensor);
             return true;
         }
+    }
+    else if (hasattr(tmp, "__dlpack__"))
+    {
+        // Quickly check if we support the device
+        if (hasattr(tmp, "__dlpack_device__"))
+        {
+            py::tuple dlpackDevice = tmp.attr("__dlpack_device__")().cast<py::tuple>();
+            auto      devType      = static_cast<DLDeviceType>(dlpackDevice[0].cast<int>());
+            if (!IsCudaAccessible(devType))
+            {
+                throw std::runtime_error("Only CUDA-accessible memory buffers can be wrapped");
+            }
+        }
+
+        py::capsule cap = tmp.attr("__dlpack__")(1).cast<py::capsule>();
+
+        if (auto *tensor = static_cast<DLManagedTensor *>(cap.get_pointer()))
+        {
+            m_dlTensor = DLPackTensor{std::move(*tensor)};
+            // signal that producer don't have to call tensor's deleter, we
+            // (consumer will do it instead.
+            cap.set_name("used_dltensor");
+        }
         else
         {
-            return false;
+            m_dlTensor = {};
         }
+        return true;
     }
-    else
-    {
-        return false;
-    }
+
+    return false;
 }
 
 std::optional<py::dict> ExternalBuffer::cudaArrayInterface() const
@@ -260,6 +282,61 @@ std::optional<py::dict> ExternalBuffer::cudaArrayInterface() const
     return *m_cacheCudaArrayInterface;
 }
 
+py::capsule ExternalBuffer::dlpack(py::object stream) const
+{
+    struct ManagerCtx
+    {
+        DLManagedTensor tensor;
+        std::shared_ptr<const ExternalBuffer> extBuffer;
+    };
+
+    auto ctx = std::make_unique<ManagerCtx>();
+
+    // Set up tensor deleter to delete the ManagerCtx
+    ctx->tensor.manager_ctx = ctx.get();
+    ctx->tensor.deleter = [](DLManagedTensor *tensor)
+    {
+        auto *ctx = static_cast<ManagerCtx *>(tensor->manager_ctx);
+        delete ctx;
+    };
+
+    // Copy tensor data
+    ctx->tensor.dl_tensor = *m_dlTensor;
+
+    // Manager context holds a reference to this External Buffer so that
+    // GC doesn't delete this buffer while the dlpack tensor still refers to it.
+    ctx->extBuffer = this->shared_from_this();
+
+    // Creates the python capsule with the DLManagedTensor instance we're returning.
+    py::capsule cap(&ctx->tensor, "dltensor", [](PyObject *ptr)
+                    {
+                        if(PyCapsule_IsValid(ptr, "dltensor"))
+                        {
+                            // If consumer didn't delete the tensor,
+                            if(auto *dlTensor = static_cast<DLManagedTensor *>(PyCapsule_GetPointer(ptr, "dltensor")))
+                            {
+                                // Delete the tensor.
+                                if(dlTensor->deleter != nullptr)
+                                {
+                                    dlTensor->deleter(dlTensor);
+                                }
+                            }
+                        }
+                    });
+
+    // Now that the capsule is created and the manager ctx was transfered to it,
+    // we can release the unique_ptr.
+    ctx.release();
+
+    return cap;
+}
+
+py::tuple ExternalBuffer::dlpackDevice() const
+{
+    return py::make_tuple(py::int_(static_cast<int>(m_dlTensor->device.device_type)),
+                          py::int_(static_cast<int>(m_dlTensor->device.device_id)));
+}
+
 const DLTensor &ExternalBuffer::dlTensor() const
 {
     return *m_dlTensor;
@@ -269,7 +346,9 @@ void ExternalBuffer::Export(py::module &m)
 {
     py::class_<ExternalBuffer, std::shared_ptr<ExternalBuffer>>(m, "ExternalBuffer", py::dynamic_attr())
         .def_property_readonly("shape", &ExternalBuffer::shape)
-        .def_property_readonly("dtype", &ExternalBuffer::dtype);
+        .def_property_readonly("dtype", &ExternalBuffer::dtype)
+        .def("__dlpack__", &ExternalBuffer::dlpack, "stream"_a=1)
+        .def("__dlpack_device__", &ExternalBuffer::dlpackDevice);
 }
 
 } // namespace nv::vpi::python
