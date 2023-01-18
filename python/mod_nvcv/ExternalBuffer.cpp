@@ -54,14 +54,22 @@ static std::string ToFormatString(const DLDataType &dtype)
     return tmp.request().format;
 }
 
-std::shared_ptr<ExternalBuffer> ExternalBuffer::Create(DLPackTensor &&dlPackTensor, py::object wrappedObj)
+py::object ExternalBuffer::Create(DLPackTensor &&dlPackTensor, py::object wrappedObj)
 {
-    std::shared_ptr<ExternalBuffer> buf(new ExternalBuffer(std::move(dlPackTensor), std::move(wrappedObj)));
-    return buf;
+    std::shared_ptr<ExternalBuffer> buf(new ExternalBuffer(std::move(dlPackTensor)));
+
+    py::object o = py::cast(buf, py::return_value_policy::reference_internal, wrappedObj);
+
+    // If we expose cuda array interface,
+    if (auto iface = buf->cudaArrayInterface())
+    {
+        o.attr("__cuda_array_interface__") = *iface;
+    }
+
+    return o;
 }
 
-ExternalBuffer::ExternalBuffer(DLPackTensor &&dlTensor, py::object wrappedObj)
-    : m_wrappedObj(wrappedObj)
+ExternalBuffer::ExternalBuffer(DLPackTensor &&dlTensor)
 {
     if (!IsCudaAccessible(dlTensor->device.device_type))
     {
@@ -189,7 +197,7 @@ bool ExternalBuffer::load(PyObject *o)
 
         if (dlTensor->ndim >= 1)
         {
-            m_wrappedObj              = tmp; // hold the reference to the wrapped object
+            m_wrappedObj              = tmp;
             m_cacheCudaArrayInterface = std::move(iface);
             m_dlTensor                = std::move(dlTensor);
             return true;
@@ -261,20 +269,7 @@ void ExternalBuffer::Export(py::module &m)
 {
     py::class_<ExternalBuffer, std::shared_ptr<ExternalBuffer>>(m, "ExternalBuffer", py::dynamic_attr())
         .def_property_readonly("shape", &ExternalBuffer::shape)
-        .def_property_readonly("dtype", &ExternalBuffer::dtype)
-        .def("__getattr__", [](std::shared_ptr<ExternalBuffer> buf, std::string name) -> py::object
-             {
-                if(name == "__cuda_array_interface__")
-                {
-                    // If we expose cuda array interface,
-                    if(auto iface = buf->cudaArrayInterface())
-                    {
-                        // return it
-                        return *iface;
-                    }
-                }
-                throw std::runtime_error("Object "+py::str(py::cast(buf)).cast<std::string>() +" doesn't have attribute "+name);
-             });
+        .def_property_readonly("dtype", &ExternalBuffer::dtype);
 }
 
 } // namespace nv::vpi::python

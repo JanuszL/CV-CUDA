@@ -314,7 +314,7 @@ static py::object ToPython(const nvcv::ITensorData &imgData, py::object owner)
     }
 
     DLPackTensor dlTensor(*stridedData);
-    return py::cast(ExternalBuffer::Create(std::move(dlTensor)), py::return_value_policy::reference_internal, owner);
+    return ExternalBuffer::Create(std::move(dlTensor), owner);
 }
 
 py::object Tensor::cuda() const
