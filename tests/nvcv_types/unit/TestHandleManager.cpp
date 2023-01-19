@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,6 +24,8 @@
 
 namespace priv = nvcv::priv;
 
+constexpr int FORCE_FAILURE = 0xDEADBEEF;
+
 namespace {
 class alignas(priv::kResourceAlignment) IObject
 {
@@ -37,6 +39,10 @@ public:
     explicit Object(int val)
         : m_value(val)
     {
+        if (val == FORCE_FAILURE)
+        {
+            throw std::runtime_error("Forced failure");
+        }
     }
 
     virtual int value() const override
@@ -135,4 +141,28 @@ TEST(HandleManager, wip_validate_invalid)
     ASSERT_EQ(nullptr, mgr.validate((void *)0x666));
 
     ASSERT_TRUE(mgr.destroy(h));
+}
+
+TEST(HandleManager, wip_handle_count_overflow)
+{
+    priv::HandleManager<IObject, Object> mgr("Object");
+    mgr.setFixedSize(1);
+
+    void *h = nullptr;
+    ASSERT_NO_THROW(h = mgr.create<Object>(0).first);
+    NVCV_ASSERT_STATUS(NVCV_ERROR_OUT_OF_MEMORY, mgr.create<Object>(1));
+
+    mgr.destroy(h);
+}
+
+TEST(HandleManager, wip_no_handle_leak_if_object_creation_throws)
+{
+    priv::HandleManager<IObject, Object> mgr("Object");
+    mgr.setFixedSize(1);
+
+    ASSERT_THROW(mgr.create<Object>(FORCE_FAILURE), std::runtime_error);
+
+    void *h = nullptr;
+    ASSERT_NO_THROW(h = mgr.create<Object>(1).first);
+    mgr.destroy(h);
 }
