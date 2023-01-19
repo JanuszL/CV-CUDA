@@ -18,7 +18,7 @@ efficient pre- and post-processing pipelines. CV-CUDA originated as a
 collaborative effort between [NVIDIA][NVIDIA Develop] and [ByteDance][ByteDance].
 
 Refer to our [Developer Guide](DEVELOPER_GUIDE.md) for more information on the
-operators avaliable as of release v0.2.1-alpha.
+operators available as of release v0.2.1-alpha.
 
 ## Getting Started
 
@@ -29,7 +29,10 @@ To get a local copy up and running follow these steps.
 - Linux distro:
   - Ubuntu x86_64 >= 18.04
   - WSL2 with Ubuntu >= 20.04 (tested with 20.04)
-- CUDA Driver >= 11.7 (Not tested on 12.0)
+- NVIDIA driver
+    - Linux: Driver version 520.56.06 or higher
+- CUDA Toolkit
+    - Version 11.7 or above. (12.0 is not yet tested.)
 - GCC >= 11.0
 - Python >= 3.7
 - cmake >= 3.22
@@ -60,13 +63,13 @@ pip install nvcv_python-0.2.1-cp38-cp38-linux_x86_64.whl
 
 ### Build from Source
 
-Follow these instruction to successfully build CV-CUDA from source:
+Follow these instruction to build CV-CUDA from source:
 
-1. Set up local CV-CUDA repository
+1. Set up your local CV-CUDA repository
 
-    1. Install needed dependencies for setting up the repository.
+    1. Install prerequisites needed to setup up the repository.
 
-       On a Ubuntu 22.04, install the following packages:
+       On Ubuntu 22.04, install the following packages:
        - git-lfs: to retrieve binary files from remote repository
 
        ```shell
@@ -74,7 +77,7 @@ Follow these instruction to successfully build CV-CUDA from source:
        ```
 
     2. After cloning the repository (assuming it was cloned in `~/cvcuda`),
-       it needs to be properly configured by running the `init_repo.sh` script once only.
+       it needs to be properly configured by running the `init_repo.sh` script only once.
 
        ```shell
        cd ~/cvcuda
@@ -83,9 +86,9 @@ Follow these instruction to successfully build CV-CUDA from source:
 
 1. Build CV-CUDA
 
-    1. Install needed dependencies for building CV-CUDA
+    1. Install the dependencies required for building CV-CUDA
 
-       On a Ubuntu 22.04, install the following packages:
+       On Ubuntu 22.04, install the following packages:
        - g++-11: compiler to be used
        - cmake, ninja-build (optional): manage build rules
        - python3-dev: for python bindings
@@ -110,7 +113,7 @@ Follow these instruction to successfully build CV-CUDA from source:
 
        This will compile a x86 release build of CV-CUDA inside `build-rel` directory.
        The library is in build-rel/lib, docs in build-rel/docs and executables
-       (tests, etc...) in build-rel/bin.
+       (tests, etc...) are in build-rel/bin.
 
        The script accepts some parameters to control the creation of the build tree:
 
@@ -121,13 +124,13 @@ Follow these instruction to successfully build CV-CUDA from source:
        By default it builds for release.
 
        If output build tree path isn't specified, it'll be `build-rel` for release
-       builds, and build-deb for debug.
+       builds, and `build-deb` for debug.
 
 1. Build Documentation
 
-    1. Install needed dependencies for building the documentation
+    1. Install the dependencies required for building the documentation
 
-       On a Ubuntu 22.04, install the following packages:
+       On Ubuntu 22.04, install the following packages:
        - doxygen: parse header files for reference documentation
        - python3, python3-pip: to install some python packages needed
        - sphinx, breathe, exhale, recommonmark, graphiviz: to render the documentation
@@ -146,48 +149,15 @@ Follow these instruction to successfully build CV-CUDA from source:
        Example:
        `ci/build_docs.sh build_docs`
 
-1. Build Samples
+1. Build and run Samples
 
-   1. Install needed dependencies
-
-       On a Ubuntu 22.04, install the following packages:
-       - python3-pip: to fetch pip packages needed
-       - torch, torchvision: python libraries needed
-       - tensorrt-dev: library needed for inference
-       - libnvjpeg-dev-11-7: for jpeg decompression
-       - wget: needed to download models
-
-       Install TensorRT from [here](https://developer.nvidia.com/tensorrt).
-
-       ```shell
-       sudo apt-get install -y wget python3 python3-pip tensorrt-dev libnvjpeg-dev-11-7
-       sudo python3 -m pip install torch==1.13.0 torchvision==0.14.0
-       ```
-
-   2. Build the samples
-
-       ```shell
-       ci/build_samples.sh [build folder]
-       ```
-
-       _(For instructions on how to compile samples outside of the CV-CUDA project,
-       see the [Samples](samples/README.md) documentation)_
-
-   3. Run Samples
-
-       The samples are installed in `<buildtree>/bin`. You can run the script below
-       to download and serialize the model and run the sample with the test data
-       provided.
-
-       ```shell
-       ci/run_samples.sh
-       ```
+   1. For instructions on how to build samples from source and run them, see the [Samples](samples/README.md) documentation.
 
 1. Run Tests
 
-   1. Install needed dependencies
+   1. Install the dependencies required for running the tests
 
-       On a Ubuntu 22.04, install the following packages:
+       On Ubuntu 22.04, install the following packages:
        - python3, python3-pip: to run python bindings tests
        - torch: dependencies needed by python bindings tests
 
@@ -207,7 +177,7 @@ Follow these instruction to successfully build CV-CUDA from source:
 
 1. Package installers
 
-   From a succesfully built project, installers can be generated using cpack:
+   Installers can be generated using the following cpack command once you have successfully built the project
 
    ```shell
    cd build-rel

@@ -9,7 +9,8 @@ These are some sample applications showcasing various CV-CUDA APIs. Sample appli
 - Recommended linux distros:
     - Ubuntu >= 20.04 (tested with 20.04 and 22.04)
     - WSL2 with Ubuntu >= 20.04 (tested with 20.04)
-- CUDA driver >= 11.7
+- NVIDIA driver
+    - Linux: Driver version 520.56.06 or higher
 - TensorRT == 8.5.2.2
 - NVIDIA Video Processing Framework (https://github.com/NVIDIA/VideoProcessingFramework)
     - Follow the instructions from Github (https://github.com/NVIDIA/VideoProcessingFramework/wiki/Building-from-source) to build it from source on Linux. VPF's dependencies include ffmpeg and NVIDIA's Video Codec SDK.
