@@ -90,8 +90,8 @@ static void CPUJointBilateralFilter(uint8_t *pIn, uint8_t *pInColor, uint8_t *pO
     {
         for (int k = 0; k < columns; k++)
         {
-            float numerator   = 0.0f;
-            float denominator = 0.0f;
+            float numerator   = 0;
+            float denominator = 0;
             float centerColor = static_cast<float>(pInColor[j * rowStride + k]);
             for (int y = j - radius; y <= j + radius; y++)
             {
@@ -115,6 +115,7 @@ static void CPUJointBilateralFilter(uint8_t *pIn, uint8_t *pInColor, uint8_t *pO
                     }
                 }
             }
+            denominator             = (denominator != 0) ? denominator : 1.0f;
             pOut[j * rowStride + k] = saturate_cast(numerator / denominator);
         }
     }

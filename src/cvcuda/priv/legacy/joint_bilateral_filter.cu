@@ -86,12 +86,12 @@ __global__ void JointBilateralFilterKernel(SrcWrapper src, SrcWrapper srcColor, 
     {
         for (int r = rowIdx - radius; r < rowIdx + radius + 2; r++)
         {
-            int t0 = std::abs(c - colIdx), t1 = cuda::abs(r - rowIdx);
-            int t2 = std::abs(c - (colIdx + 1)), t3 = cuda::abs(r - (rowIdx + 1));
-            int squared_dis0 = t0 * t0 + t1 * t1;
-            int squared_dis1 = t2 * t2 + t1 * t1;
-            int squared_dis2 = t0 * t0 + t3 * t3;
-            int squared_dis3 = t2 * t2 + t3 * t3;
+            const int t0 = c - colIdx, t1 = r - rowIdx;
+            const int t2 = c - (colIdx + 1), t3 = r - (rowIdx + 1);
+            int       squared_dis0 = t0 * t0 + t1 * t1;
+            int       squared_dis1 = t2 * t2 + t1 * t1;
+            int       squared_dis2 = t0 * t0 + t3 * t3;
+            int       squared_dis3 = t2 * t2 + t3 * t3;
 
             if (!(squared_dis0 <= squared_radius || squared_dis1 <= squared_radius || squared_dis2 <= squared_radius
                   || squared_dis3 <= squared_radius))
@@ -144,6 +144,10 @@ __global__ void JointBilateralFilterKernel(SrcWrapper src, SrcWrapper srcColor, 
             }
         }
     }
+    denominator0 = (denominator0 != 0) ? denominator0 : 1.0f;
+    denominator1 = (denominator1 != 0) ? denominator1 : 1.0f;
+    denominator2 = (denominator2 != 0) ? denominator2 : 1.0f;
+    denominator3 = (denominator3 != 0) ? denominator3 : 1.0f;
     if (colIdx < columns && rowIdx < rows)
     {
         dst[coord0] = nvcv::cuda::SaturateCast<T>(numerator0 / denominator0);
