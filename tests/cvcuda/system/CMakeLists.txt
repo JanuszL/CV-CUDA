@@ -36,6 +36,7 @@ add_executable(cvcuda_test_system
     TestOpCvtColor.cpp
     TestOpWarpAffine.cpp
     TestOpBilateralFilter.cpp
+    TestOpJointBilateralFilter.cpp
     TestOpWarpPerspective.cpp
     TestOpComposite.cpp
     TestOpChannelReorder.cpp

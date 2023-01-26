@@ -34,6 +34,7 @@ add_library(cvcuda SHARED
     OpConv2D.cpp
     OpMedianBlur.cpp
     OpBilateralFilter.cpp
+    OpJointBilateralFilter.cpp
     OpMorphology.cpp
     OpCvtColor.cpp
     OpWarpAffine.cpp

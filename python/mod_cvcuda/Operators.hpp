@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,6 +55,7 @@ void ExportOpLaplacian(py::module &m);
 void ExportOpAverageBlur(py::module &m);
 void ExportOpConv2D(py::module &m);
 void ExportOpBilateralFilter(py::module &m);
+void ExportOpJointBilateralFilter(py::module &m);
 void ExportOpCenterCrop(py::module &m);
 void ExportOpWarpAffine(py::module &m);
 void ExportOpWarpPerspective(py::module &m);
