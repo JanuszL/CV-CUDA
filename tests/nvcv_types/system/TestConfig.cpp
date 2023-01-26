@@ -78,7 +78,19 @@ void SetMaxCount(int32_t maxCount)
 }
 
 using AllCoreTypes = ttest::Types<nvcv::IImage, nvcv::IImageBatch, nvcv::ITensor, nvcv::IAllocator>;
-NVCV_TYPED_TEST_SUITE(ConfigTests, AllCoreTypes);
+
+template<class T>
+class ConfigTests : public ::testing::Test
+{
+public:
+    ~ConfigTests()
+    {
+        // Make sure we set the handle manager back to dynamic allocation.
+        EXPECT_NO_THROW(SetMaxCount<T>(-1));
+    }
+};
+
+NVCV_TYPED_TEST_SUITE_F(ConfigTests, AllCoreTypes);
 
 TYPED_TEST(ConfigTests, set_max_obj_count_works)
 {
