@@ -92,8 +92,12 @@ cuda_op::DataType GetLegacyDataType(int32_t bpc, nvcv::DataKind kind)
 
     case nvcv::DataKind::UNSIGNED:
         return GetLegacyCvUnsignedType(bpc);
+
+    case nvcv::DataKind::COMPLEX:
+        break;
     }
-    throw Exception(Status::ERROR_INVALID_ARGUMENT, "Only planar formats supported ");
+    throw Exception(Status::ERROR_INVALID_ARGUMENT,
+                    "Only floating-point, signed integer and unsigned integer data kinds are supported ");
 }
 
 cuda_op::DataType GetLegacyDataType(DataType dtype)

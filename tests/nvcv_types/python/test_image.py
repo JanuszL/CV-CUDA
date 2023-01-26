@@ -53,7 +53,9 @@ buffmt_common = [
     ([5, 7, 4], np.uint8, nvcv.Format.RGBA8),
     ([1, 5, 7], np.uint8, nvcv.Format.U8),
     ([1, 5, 7, 4], np.uint8, nvcv.Format.RGBA8),
-    ([5, 7], np.csingle, nvcv.Format._2F32),
+    ([5, 7], np.csingle, nvcv.Format.C64),
+    ([5, 7], np.cdouble, nvcv.Format.C128),
+    ([5, 7], np.dtype("2f"), nvcv.Format._2F32),
 ]
 
 

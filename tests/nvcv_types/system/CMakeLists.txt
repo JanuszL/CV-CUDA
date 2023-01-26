@@ -24,7 +24,7 @@ add_executable(nvcv_test_types_system
     TestColorSpec.cpp
     TestDataLayout.cpp
     TestImageFormat.cpp
-    TestPixelType.cpp
+    TestDataType.cpp
     TestAllocator.cpp
     TestRequirements.cpp
     TestImage.cpp
