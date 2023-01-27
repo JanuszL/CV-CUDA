@@ -174,11 +174,6 @@ std::optional<nvcv::DataType> SelectDataType(std::tuple<TT...>, const py::dtype 
     }
 }
 
-std::optional<nvcv::DataType> ToDataType(const py::dtype &dt)
-{
-    return SelectDataType(SupportedBaseTypes(), dt);
-}
-
 template<class T>
 bool FindDType(T *, const nvcv::DataType &dtype, py::dtype *dt)
 {
@@ -225,12 +220,18 @@ py::dtype SelectDType(std::tuple<TT...>, const nvcv::DataType &dtype)
     return dt;
 }
 
+} // namespace
+  //
+
+std::optional<nvcv::DataType> ToNVCVDataType(const py::dtype &dt)
+{
+    return SelectDataType(SupportedBaseTypes(), dt);
+}
+
 py::dtype ToDType(nvcv::DataType dtype)
 {
     return SelectDType(SupportedBaseTypes(), dtype);
 }
-
-} // namespace
 
 static std::string DataTypeToString(nvcv::DataType type)
 {
@@ -313,7 +314,7 @@ bool type_caster<nvcv::DataType>::load(handle src, bool)
         }
         dtype dt = dtype::from_args(reinterpret_steal<object>(ptr));
 
-        if (std::optional<nvcv::DataType> _dt = priv::ToDataType(dt))
+        if (std::optional<nvcv::DataType> _dt = priv::ToNVCVDataType(dt))
         {
             value = *_dt;
             return true;

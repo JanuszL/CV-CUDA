@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,7 +31,7 @@ namespace py = pybind11;
 
 using Shape = std::vector<int64_t>;
 
-class CudaBuffer;
+class ExternalBuffer;
 class Image;
 
 Shape CreateShape(const nvcv::TensorShape &tshape);
@@ -46,7 +46,7 @@ public:
 
     static std::shared_ptr<Tensor> CreateFromReqs(const nvcv::Tensor::Requirements &reqs);
 
-    static std::shared_ptr<Tensor> Wrap(CudaBuffer &buffer, std::optional<nvcv::TensorLayout> layout);
+    static std::shared_ptr<Tensor> Wrap(ExternalBuffer &buffer, std::optional<nvcv::TensorLayout> layout);
     static std::shared_ptr<Tensor> WrapImage(Image &img);
 
     std::shared_ptr<Tensor>       shared_from_this();
@@ -93,8 +93,8 @@ private:
     std::unique_ptr<nvcv::ITensor> m_impl;
     Key                            m_key;
 
-    mutable py::object                        m_cacheCudaObject;
-    mutable std::optional<nvcv::TensorLayout> m_cacheCudaObjectLayout;
+    mutable py::object                        m_cacheExternalObject;
+    mutable std::optional<nvcv::TensorLayout> m_cacheExternalObjectLayout;
 
     py::object m_wrappedObject; // null if not wrapping
 };

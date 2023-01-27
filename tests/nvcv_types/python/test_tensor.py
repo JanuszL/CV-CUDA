@@ -82,26 +82,67 @@ def test_tensor_creation_shape_works(shape, dtype, layout):
     assert tensor.ndim == len(shape)
 
 
-@t.mark.parametrize(
-    "shape,dtype",
-    [
-        ([3, 5, 7, 1], np.uint8),
-        ([3, 5, 7, 1], np.int8),
-        ([3, 5, 7, 1], np.int16),
-        ([3, 5, 7, 1], np.float32),
-        ([3, 5, 7, 1], np.float64),
-        ([3, 5, 7, 2], np.float32),
-        ([3, 5, 7, 3], np.uint8),
-        ([3, 5, 7, 4], np.uint8),
-        ([3, 5, 7], np.csingle),
-        ([3, 5, 7], np.cdouble),
-        ([3], np.int8),
-    ],
-)
+params_wrap_torch = [
+    ([3, 5, 7, 1], np.uint8),
+    ([3, 5, 7, 1], np.int8),
+    ([3, 5, 7, 1], np.int16),
+    ([3, 5, 7, 1], np.float32),
+    ([3, 5, 7, 1], np.float64),
+    ([3, 5, 7, 2], np.float32),
+    ([3, 5, 7, 3], np.uint8),
+    ([3, 5, 7, 4], np.uint8),
+    ([3, 5, 7], np.csingle),
+    ([3, 5, 7], np.cdouble),
+    ([3], np.int8),
+]
+
+
+@t.mark.parametrize("shape,dtype", params_wrap_torch)
 def test_wrap_torch_buffer(shape, dtype):
     tensor = nvcv.as_tensor(
         torch.as_tensor(np.ndarray(shape, dtype=dtype), device="cuda")
     )
+    assert tensor.shape == shape
+    assert tensor.dtype == dtype
+    assert tensor.layout is None
+    assert tensor.ndim == len(shape)
+
+
+@t.mark.parametrize("shape,dtype", params_wrap_torch)
+def test_wrap_torch_buffer_dlpack(shape, dtype):
+    ttensor = torch.as_tensor(np.ndarray(shape, dtype=dtype), device="cuda")
+
+    # Since nvcv.as_tensor can understand both dlpack and cuda_array_interface,
+    # and we don't know a priori which interfaces it'll use (torch provides both),
+    # let's create one object with only the dlpack interface.
+    class DLPackObject:
+        pass
+
+    o = DLPackObject()
+    o.__dlpack__ = ttensor.__dlpack__
+    o.__dlpack_device__ = ttensor.__dlpack_device__
+
+    tensor = nvcv.as_tensor(o)
+    assert tensor.shape == shape
+    assert tensor.dtype == dtype
+    assert tensor.layout is None
+    assert tensor.ndim == len(shape)
+
+
+@t.mark.parametrize("shape,dtype", params_wrap_torch)
+def test_wrap_torch_buffer_cuda_array_interface(shape, dtype):
+    ttensor = torch.as_tensor(np.ndarray(shape, dtype=dtype), device="cuda")
+
+    # Since nvcv.as_tensor can understand both dlpack and cuda_array_interface,
+    # and we don't know a priori which interfaces it'll use (torch provides both),
+    # let's create one object with only the cuda_array_interface.
+    class CudaArrayInterfaceObject:
+        pass
+
+    o = CudaArrayInterfaceObject()
+    o.__cuda_array_interface__ = ttensor.__cuda_array_interface__
+
+    tensor = nvcv.as_tensor(o)
     assert tensor.shape == shape
     assert tensor.dtype == dtype
     assert tensor.layout is None
@@ -158,16 +199,19 @@ def test_tensor_wrap_image_works(size, fmt, gold_layout, gold_shape, gold_dtype)
     assert tensor.dtype == gold_dtype
 
 
+export_cuda_buffer_params = [
+    ([1, 23, 65, 3], np.uint8),
+    ([5, 23, 65, 3], np.int8),
+    ([65, 3], np.int16),
+    ([243, 65, 3], np.int16),
+    ([1, 1], np.int16),
+    ([10], np.uint8),
+]
+
+
 @t.mark.parametrize(
     "shape,dtype",
-    [
-        ([1, 23, 65, 3], np.uint8),
-        ([5, 23, 65, 3], np.int8),
-        ([65, 3], np.int16),
-        ([243, 65, 3], np.int16),
-        ([1, 1], np.int16),
-        ([10], np.uint8),
-    ],
+    export_cuda_buffer_params,
 )
 def test_tensor_export_cuda_buffer(shape, dtype):
     rng = np.random.default_rng()
@@ -182,6 +226,25 @@ def test_tensor_export_cuda_buffer(shape, dtype):
     assert devMem.shape == shape
 
     assert (hostGold == torch.as_tensor(devMem).detach().cpu().numpy()).all()
+
+
+@t.mark.parametrize(
+    "shape,dtype",
+    export_cuda_buffer_params,
+)
+def test_tensor_export_cuda_buffer_dlpack(shape, dtype):
+    rng = np.random.default_rng()
+    hostGold = rng.integers(0, 128, shape, dtype)
+
+    devGold = torch.as_tensor(hostGold, device="cuda")
+
+    tensor = nvcv.as_tensor(devGold)
+
+    devMem = tensor.cuda()
+    assert devMem.dtype == dtype
+    assert devMem.shape == shape
+
+    assert (hostGold == torch.from_dlpack(devMem).detach().cpu().numpy()).all()
 
 
 def test_tensor_hold_reference_of_wrapped_buffer():
