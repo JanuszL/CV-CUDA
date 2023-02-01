@@ -1,9 +1,9 @@
-/* Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+/* Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * SPDX-FileCopyrightText: NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: Apache-2.0
  *
- * Copyright (C) 2021-2022, Bytedance Inc. All rights reserved.
+ * Copyright (C) 2021-2023, Bytedance Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ namespace cuda    = nvcv::cuda;
 namespace cuda_op = nvcv::legacy::cuda_op;
 
 template<bool srcIsNCHW, typename Ptr2DSrc, typename Ptr2DDst>
-__global__ void transformFormat(const Ptr2DSrc src, Ptr2DDst dst, int3 inout_size)
+__global__ void transformFormatN(const Ptr2DSrc src, Ptr2DDst dst, int3 inout_size)
 {
     const int src_x     = blockIdx.x * blockDim.x + threadIdx.x;
     const int src_y     = blockIdx.y * blockDim.y + threadIdx.y;
@@ -54,6 +54,28 @@ __global__ void transformFormat(const Ptr2DSrc src, Ptr2DDst dst, int3 inout_siz
     }
 }
 
+template<bool srcIsNCHW, typename Ptr2DSrc, typename Ptr2DDst>
+__global__ void transformFormat(const Ptr2DSrc src, Ptr2DDst dst, int3 inout_size)
+{
+    const int src_x = blockIdx.x * blockDim.x + threadIdx.x;
+    const int src_y = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (src_x >= inout_size.x || src_y >= inout_size.y)
+        return;
+
+    for (int c = 0; c < inout_size.z; c++)
+    {
+        if constexpr (srcIsNCHW)
+        {
+            *dst.ptr(src_y, src_x, c) = *src.ptr(c, src_y, src_x);
+        }
+        else
+        {
+            *dst.ptr(c, src_y, src_x) = *src.ptr(src_y, src_x, c);
+        }
+    }
+}
+
 template<typename data_type> // uchar float
 void transform(const nvcv::ITensorDataStridedCuda &inData, const nvcv::ITensorDataStridedCuda &outData,
                cuda_op::DataFormat input_format, cuda_op::DataFormat output_format, cudaStream_t stream)
@@ -69,18 +91,33 @@ void transform(const nvcv::ITensorDataStridedCuda &inData, const nvcv::ITensorDa
     dim3 block(32, 8);
     dim3 grid(cuda_op::divUp(inout_size.x, block.x), cuda_op::divUp(inout_size.y, block.y), inAccess->numSamples());
 
-    cuda::Tensor4DWrap<data_type> src_ptr(inData);
-    cuda::Tensor4DWrap<data_type> dst_ptr(outData);
+    if (input_format == cuda_op::kNHWC || input_format == cuda_op::kNCHW)
+    {
+        cuda::Tensor4DWrap<data_type> src_ptr(inData);
+        cuda::Tensor4DWrap<data_type> dst_ptr(outData);
 
-    if ((input_format == cuda_op::kNHWC || input_format == cuda_op::kHWC)
-        && (output_format == cuda_op::kNCHW || output_format == cuda_op::kCHW))
-    {
-        transformFormat<false><<<grid, block, 0, stream>>>(src_ptr, dst_ptr, inout_size);
+        if ((input_format == cuda_op::kNHWC) && (output_format == cuda_op::kNCHW))
+        {
+            transformFormatN<false><<<grid, block, 0, stream>>>(src_ptr, dst_ptr, inout_size);
+        }
+        else if ((input_format == cuda_op::kNCHW) && (output_format == cuda_op::kNHWC))
+        {
+            transformFormatN<true><<<grid, block, 0, stream>>>(src_ptr, dst_ptr, inout_size);
+        }
     }
-    else if ((input_format == cuda_op::kNCHW || input_format == cuda_op::kCHW)
-             && (output_format == cuda_op::kNHWC || output_format == cuda_op::kHWC))
+    else if (input_format == cuda_op::kHWC || input_format == cuda_op::kCHW)
     {
-        transformFormat<true><<<grid, block, 0, stream>>>(src_ptr, dst_ptr, inout_size);
+        cuda::Tensor3DWrap<data_type> src_ptr(inData);
+        cuda::Tensor3DWrap<data_type> dst_ptr(outData);
+
+        if ((input_format == cuda_op::kHWC) && (output_format == cuda_op::kCHW))
+        {
+            transformFormat<false><<<grid, block, 0, stream>>>(src_ptr, dst_ptr, inout_size);
+        }
+        else if ((input_format == cuda_op::kCHW) && (output_format == cuda_op::kHWC))
+        {
+            transformFormat<true><<<grid, block, 0, stream>>>(src_ptr, dst_ptr, inout_size);
+        }
     }
 
     checkKernelErrors();
@@ -140,10 +177,11 @@ ErrorCode Reformat::infer(const nvcv::ITensorDataStridedCuda &inData, const nvcv
         return SUCCESS;
     }
 
-    if (((input_format == cuda_op::kNHWC || input_format == cuda_op::kHWC)
-         && !(output_format == cuda_op::kNCHW || output_format == cuda_op::kCHW))
-        || ((input_format == cuda_op::kNCHW || input_format == cuda_op::kCHW)
-            && !(output_format == cuda_op::kNHWC || output_format == cuda_op::kHWC)))
+    // Only allow CHW <-> HWC or NCHW <-> NHWC reformats
+    if ((input_format == cuda_op::kNHWC) && !(output_format == cuda_op::kNCHW)
+        || (input_format == cuda_op::kNCHW) && !(output_format == cuda_op::kNHWC)
+        || (input_format == cuda_op::kHWC) && !(output_format == cuda_op::kCHW)
+        || (input_format == cuda_op::kCHW) && !(output_format == cuda_op::kHWC))
     {
         LOG_ERROR("Invalid combination of input format " << input_format << " and output format " << output_format);
         return ErrorCode::INVALID_DATA_FORMAT;
