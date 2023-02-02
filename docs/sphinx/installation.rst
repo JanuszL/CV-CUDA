@@ -1,5 +1,5 @@
 ..
-  # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+  # SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
   # SPDX-License-Identifier: Apache-2.0
   #
   # Licensed under the Apache License, Version 2.0 (the "License");
@@ -94,6 +94,4 @@ If CV-CUDA is properly installed and running on your Linux system, all tests wil
 
 * Running the samples on Linux. ::
 
-    cd /opt/nvidia/cvcuda0/samples
-    ./scripts/install_dependencies.sh
-    ./scripts/run_samples.sh
+    Follow the instructions written in the README.md file of the samples directory.
