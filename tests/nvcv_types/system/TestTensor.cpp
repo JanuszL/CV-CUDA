@@ -51,7 +51,7 @@ std::ostream &operator<<(std::ostream &out, const std::vector<T> &v)
 }
 } // namespace std
 
-class TensorTests
+class TensorImageTests
     : public t::TestWithParam<std::tuple<test::Param<"numImages", int>, test::Param<"width", int>,
                                          test::Param<"height", int>, test::Param<"format", nvcv::ImageFormat>,
                                          test::Param<"shape", nvcv::TensorShape>, test::Param<"dtype", nvcv::DataType>>>
@@ -59,7 +59,7 @@ class TensorTests
 };
 
 // clang-format off
-NVCV_INSTANTIATE_TEST_SUITE_P(_, TensorTests,
+NVCV_INSTANTIATE_TEST_SUITE_P(_, TensorImageTests,
     test::ValueList<int, int, int, nvcv::ImageFormat, nvcv::TensorShape, nvcv::DataType>
     {
         {53, 32, 16, nvcv::FMT_RGBA8p, nvcv::TensorShape{{53, 4, 16, 32},nvcv::TENSOR_NCHW} , nvcv::TYPE_U8},
@@ -69,7 +69,7 @@ NVCV_INSTANTIATE_TEST_SUITE_P(_, TensorTests,
 
 // clang-format on
 
-TEST_P(TensorTests, wip_create)
+TEST_P(TensorImageTests, wip_create)
 {
     const int               PARAM_NUM_IMAGES = std::get<0>(GetParam());
     const int               PARAM_WIDTH      = std::get<1>(GetParam());
@@ -143,6 +143,49 @@ TEST_P(TensorTests, wip_create)
                     << "Image #" << i << ", plane #" << p;
             }
         }
+    }
+}
+
+class TensorTests
+    : public t::TestWithParam<std::tuple<test::Param<"shape", nvcv::TensorShape>, test::Param<"dtype", nvcv::DataType>,
+                                         test::Param<"strides", std::vector<int64_t>>>>
+{
+};
+
+// clang-format off
+NVCV_INSTANTIATE_TEST_SUITE_P(_, TensorTests,
+    test::ValueList<nvcv::TensorShape, nvcv::DataType, std::vector<int64_t>>
+    {
+        {nvcv::TensorShape{{53, 4, 16, 17},nvcv::TENSOR_NCHW}, nvcv::TYPE_U8, {4*16*32,16*32,32,1}},
+        {nvcv::TensorShape{{53, 17, 16, 3},nvcv::TENSOR_NHWC}, nvcv::TYPE_U8, {17*64,64,3,1}},
+        {nvcv::TensorShape{{4, 16, 17},nvcv::TENSOR_CHW}, nvcv::TYPE_U8, {16*32,32,1}},
+        {nvcv::TensorShape{{17, 16, 3},nvcv::TENSOR_HWC}, nvcv::TYPE_U8, {64,3,1}},
+    }
+);
+
+// clang-format on
+
+TEST_P(TensorTests, wip_create)
+{
+    const nvcv::TensorShape    PARAM_SHAPE = std::get<0>(GetParam());
+    const nvcv::DataType       PARAM_DTYPE = std::get<1>(GetParam());
+    const std::vector<int64_t> GOLD_SHAPE  = std::get<2>(GetParam());
+
+    nvcv::Tensor tensor(PARAM_SHAPE, PARAM_DTYPE);
+
+    EXPECT_EQ(PARAM_DTYPE, tensor.dtype());
+    EXPECT_EQ(PARAM_SHAPE, tensor.shape());
+    ASSERT_NE(nullptr, tensor.handle());
+
+    {
+        const nvcv::ITensorData *data = tensor.exportData();
+        ASSERT_NE(nullptr, data);
+
+        auto *devdata = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(data);
+        ASSERT_NE(nullptr, devdata);
+
+        const int64_t *strides = devdata->cdata().buffer.strided.strides;
+        EXPECT_THAT(std::vector<int64_t>(strides, strides + data->rank()), t::ElementsAreArray(GOLD_SHAPE));
     }
 }
 
