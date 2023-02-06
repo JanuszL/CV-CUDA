@@ -363,6 +363,7 @@ protected:
  *
  *  Template arguments:
  *  - T data type of each element in \ref TensorWrap
+ *  - N (optional) number of dimensions
  *
  *  @sa NVCV_CPP_CUDATOOLS_TENSORWRAP
  *
@@ -381,6 +382,12 @@ using Tensor3DWrap = TensorWrap<T, -1, -1, sizeof(T)>;
 
 template<typename T>
 using Tensor4DWrap = TensorWrap<T, -1, -1, -1, sizeof(T)>;
+
+template<typename T, int N>
+using TensorNDWrap = std::conditional_t<
+    N == 1, Tensor1DWrap<T>,
+    std::conditional_t<N == 2, Tensor2DWrap<T>,
+                       std::conditional_t<N == 3, Tensor3DWrap<T>, std::conditional_t<N == 4, Tensor4DWrap<T>, void>>>>;
 
 /**@}*/
 

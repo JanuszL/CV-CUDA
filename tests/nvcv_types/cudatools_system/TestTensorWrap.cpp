@@ -1125,3 +1125,27 @@ TYPED_TEST(Tensor4DWrapTensorTest, it_works_in_device)
 
     EXPECT_EQ(test, gold);
 }
+
+// --------------------------- Testing TensorNDWrap ----------------------------
+
+// clang-format off
+NVCV_TYPED_TEST_SUITE(
+    TensorNDWrapTest, ttype::Types<
+    ttype::Types<ttype::Value<Array<int, 11>{}>>,
+    ttype::Types<ttype::Value<PackedImage<int, 2, 13>{}>>,
+    ttype::Types<ttype::Value<PackedTensor3D<int, 2, 3, 7>{}>>,
+    ttype::Types<ttype::Value<PackedTensor4D<int, 3, 2, 4, 5>{}>>
+>);
+
+// clang-format on
+
+TYPED_TEST(TensorNDWrapTest, correct_dimensionality)
+{
+    auto input = ttype::GetValue<TypeParam, 0>;
+
+    using InputType = decltype(input);
+
+    using TW = cuda::TensorNDWrap<const typename InputType::value_type, InputType::kNumDim>;
+
+    EXPECT_EQ(TW::kNumDimensions, InputType::kNumDim);
+}
