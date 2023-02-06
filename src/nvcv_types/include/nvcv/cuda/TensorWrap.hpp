@@ -129,14 +129,25 @@ public:
      */
     __host__ TensorWrap(const ITensorDataStridedCuda &tensor)
     {
+        constexpr int kStride[] = {std::forward<int>(Strides)...};
+
+        NVCV_ASSERT(tensor.rank() >= kNumDimensions);
+
         m_data = reinterpret_cast<const std::byte *>(tensor.basePtr());
 
 #pragma unroll
-        for (int i = 0; i < kVariableStrides; ++i)
+        for (int i = 0; i < kNumDimensions; ++i)
         {
-            assert(tensor.stride(i) <= TypeTraits<int>::max);
+            if (kStride[i] != -1)
+            {
+                NVCV_ASSERT(tensor.stride(i) == kStride[i]);
+            }
+            else if (i < kVariableStrides)
+            {
+                NVCV_ASSERT(tensor.stride(i) <= TypeTraits<int>::max);
 
-            m_strides[i] = tensor.stride(i);
+                m_strides[i] = tensor.stride(i);
+            }
         }
     }
 

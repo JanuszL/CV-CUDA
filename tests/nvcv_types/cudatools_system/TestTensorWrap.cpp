@@ -117,6 +117,31 @@ TYPED_TEST(Tensor1DWrapCopyTest, can_change_content)
     EXPECT_EQ(test, gold);
 }
 
+// The death tests below are to be run in debug mode only
+
+#ifndef NDEBUG
+
+TEST(Tensor1DWrapWrongCompileStrideDeathTest, it_dies)
+{
+    using DataType = uint8_t;
+    nvcv::DataType dt{NVCV_DATA_TYPE_U8};
+
+    nvcv::TensorDataStridedCuda::Buffer buf;
+    buf.strides[0] = 2;
+    buf.basePtr    = reinterpret_cast<NVCVByte *>(123);
+
+    nvcv::TensorWrapData tensor{
+        nvcv::TensorDataStridedCuda{nvcv::TensorShape{{1}, "J"}, dt, buf}
+    };
+
+    const auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(tensor.exportData());
+    ASSERT_NE(dev, nullptr);
+
+    EXPECT_DEATH({ cuda::Tensor1DWrap<DataType> wrap(*dev); }, "");
+}
+
+#endif
+
 // clang-format off
 NVCV_TYPED_TEST_SUITE(
     Tensor1DWrapTensorTest, ttype::Types<
