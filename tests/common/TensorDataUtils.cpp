@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -169,6 +169,24 @@ bool TensorImageData::operator==(const TensorImageData &that) const
 bool TensorImageData::operator!=(const TensorImageData &that) const
 {
     return !operator==(that);
+}
+
+nvcv::Tensor CreateTensor(int numImages, int imgWidth, int imgHeight, const nvcv::ImageFormat &imgFormat)
+{
+    if (numImages == 1)
+    {
+        int numChannels = imgFormat.numPlanes() == 1 ? imgFormat.planeNumChannels(0) : imgFormat.numPlanes();
+
+        return nvcv::Tensor(
+            {
+                {imgHeight, imgWidth, numChannels},
+                "HWC"
+        },
+            imgFormat.planeDataType(0).channelType(0));
+    }
+
+    assert(numImages > 1);
+    return nvcv::Tensor(numImages, {imgWidth, imgHeight}, imgFormat);
 }
 
 } // namespace nvcv::test

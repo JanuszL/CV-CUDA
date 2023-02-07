@@ -177,6 +177,17 @@ private:
 };
 
 /**
+ * Create either HWC or NHWC Tensor with given parameters.
+ *
+ * @param[in] numImages Number of images, if 1 creates a HWC tensor, else creates a NHWC tensor.
+ * @param[in] imgWidth Image width inside the tensor.
+ * @param[in] imgHeight Image height inside the tensor.
+ * @param[in] imgFormat Image format inside the tensor.
+ *
+ */
+nvcv::Tensor CreateTensor(int numImages, int imgWidth, int imgHeight, const nvcv::ImageFormat &imgFormat);
+
+/**
  * Writes over the Tensor data with type DT and value of @data.
  * Function does not do data type or underflow checking if
  * the passed in type does not match the type the tensor
