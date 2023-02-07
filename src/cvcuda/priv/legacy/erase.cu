@@ -36,8 +36,8 @@ static __device__ int erase_hash(unsigned int x)
     return x;
 }
 
-template<typename D>
-__global__ void erase(nvcv::cuda::Tensor4DWrap<D> img, int imgH, int imgW, nvcv::cuda::Tensor1DWrap<int2> anchorVec,
+template<class Wrapper, typename T = typename Wrapper::ValueType>
+__global__ void erase(Wrapper img, int imgH, int imgW, nvcv::cuda::Tensor1DWrap<int2> anchorVec,
                       nvcv::cuda::Tensor1DWrap<int3> erasingVec, nvcv::cuda::Tensor1DWrap<float> valuesVec,
                       nvcv::cuda::Tensor1DWrap<int> imgIdxVec, int channels, int random, unsigned int seed)
 {
@@ -60,23 +60,23 @@ __global__ void erase(nvcv::cuda::Tensor4DWrap<D> img, int imgH, int imgW, nvcv:
                                        + 0x26AD0C9 * blockDim.x * blockDim.y * blockDim.z * (blockIdx.x + 1)
                                              * (blockIdx.y + 1) * (blockIdx.z + 1);
                 *img.ptr(batchId, anchor.y + y, anchor.x + x, c)
-                    = nvcv::cuda::SaturateCast<D>(erase_hash(hashValue) % 256);
+                    = nvcv::cuda::SaturateCast<T>(erase_hash(hashValue) % 256);
             }
             else
             {
-                *img.ptr(batchId, anchor.y + y, anchor.x + x, c) = nvcv::cuda::SaturateCast<D>(value);
+                *img.ptr(batchId, anchor.y + y, anchor.x + x, c) = nvcv::cuda::SaturateCast<T>(value);
             }
         }
     }
 }
 
-template<typename D>
+template<typename T>
 void eraseCaller(const nvcv::ITensorDataStridedCuda &imgs, const nvcv::ITensorDataStridedCuda &anchor,
                  const nvcv::ITensorDataStridedCuda &erasing, const nvcv::ITensorDataStridedCuda &imgIdx,
                  const nvcv::ITensorDataStridedCuda &values, int max_eh, int max_ew, int num_erasing_area, bool random,
                  unsigned int seed, int rows, int cols, int channels, cudaStream_t stream)
 {
-    nvcv::cuda::Tensor4DWrap<D> src(imgs);
+    auto wrap = nvcv::cuda::CreateTensorWrapNHWC<T>(imgs);
 
     nvcv::cuda::Tensor1DWrap<int2>  anchorVec(anchor);
     nvcv::cuda::Tensor1DWrap<int3>  erasingVec(erasing);
@@ -87,8 +87,8 @@ void eraseCaller(const nvcv::ITensorDataStridedCuda &imgs, const nvcv::ITensorDa
     int  gridSize  = divUp(max_eh * max_ew, 1024);
     dim3 block(blockSize);
     dim3 grid(gridSize, channels, num_erasing_area);
-    erase<D><<<grid, block, 0, stream>>>(src, rows, cols, anchorVec, erasingVec, valuesVec, imgIdxVec, channels, random,
-                                         seed);
+    erase<<<grid, block, 0, stream>>>(wrap, rows, cols, anchorVec, erasingVec, valuesVec, imgIdxVec, channels, random,
+                                      seed);
 }
 
 struct MaxWH

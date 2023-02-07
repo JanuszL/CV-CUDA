@@ -17,6 +17,7 @@
 
 #include "Definitions.hpp"
 
+#include <common/TensorDataUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <cvcuda/OpJointBilateralFilter.hpp>
 #include <nvcv/Image.hpp>
@@ -48,6 +49,10 @@ static bool CompareImages(uint8_t *pTest, uint8_t *pGold, size_t columns, size_t
             float  diff   = std::abs(static_cast<float>(pTest[offset]) - static_cast<float>(pGold[offset]));
             if (diff > delta)
             {
+                std::cout << " o = " << offset << " j = " << j << " k = " << k << " rowS = " << rowStride << std::endl;
+                std::cout << " test = " << static_cast<float>(pTest[offset])
+                          << " gold = " << static_cast<float>(pGold[offset]) << std::endl;
+
                 return false;
             }
         }
@@ -189,9 +194,9 @@ TEST_P(OpJointBilateralFilter, JointBilateralFilter_packed)
     float sigmaSpace     = GetParamValue<4>();
     int   numberOfImages = GetParamValue<5>();
 
-    nvcv::Tensor imgOut(numberOfImages, {width, height}, nvcv::FMT_U8);
-    nvcv::Tensor imgIn(numberOfImages, {width, height}, nvcv::FMT_U8);
-    nvcv::Tensor imgInColor(numberOfImages, {width, height}, nvcv::FMT_U8);
+    nvcv::Tensor imgOut     = test::CreateTensor(numberOfImages, width, height, nvcv::FMT_U8);
+    nvcv::Tensor imgIn      = test::CreateTensor(numberOfImages, width, height, nvcv::FMT_U8);
+    nvcv::Tensor imgInColor = test::CreateTensor(numberOfImages, width, height, nvcv::FMT_U8);
 
     const auto *inData      = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgIn.exportData());
     const auto *inColorData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgInColor.exportData());
@@ -210,11 +215,13 @@ TEST_P(OpJointBilateralFilter, JointBilateralFilter_packed)
     auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*outData);
     ASSERT_TRUE(outAccess);
 
-    int inBufSize
-        = inAccess->sampleStride() * inAccess->numSamples(); //img stride can be more than the image 64, 128, etc
-    int inColorBufSize = inColorAccess->sampleStride()
-                       * inColorAccess->numSamples(); //img stride can be more than the image 64, 128, etc
-    int outBufSize = outAccess->sampleStride() * outAccess->numSamples();
+    int inSampleStride      = inAccess->numRows() * inAccess->rowStride();
+    int inColorSampleStride = inColorAccess->numRows() * inColorAccess->rowStride();
+    int outSampleStride     = outAccess->numRows() * outAccess->rowStride();
+
+    int inBufSize      = inSampleStride * inAccess->numSamples();
+    int inColorBufSize = inColorSampleStride * inColorAccess->numSamples();
+    int outBufSize     = outSampleStride * outAccess->numSamples();
 
     std::vector<uint8_t> vIn(inBufSize);
     std::vector<uint8_t> vInColor(inColorBufSize);
@@ -230,8 +237,8 @@ TEST_P(OpJointBilateralFilter, JointBilateralFilter_packed)
     EXPECT_EQ(cudaSuccess,
               cudaMemcpy(inColorData->basePtr(), inColorGold.data(), inColorBufSize, cudaMemcpyHostToDevice));
     CPUJointBilateralFilterTensor(inGold, inColorGold, outGold, inAccess->numCols(), inAccess->numRows(),
-                                  inAccess->numSamples(), inAccess->rowStride(), inAccess->sampleStride(), d,
-                                  sigmaColor, sigmaSpace);
+                                  inAccess->numSamples(), inAccess->rowStride(), inSampleStride, d, sigmaColor,
+                                  sigmaSpace);
 
     // run operator
     cvcuda::JointBilateralFilter jointBilateralFilterOp;
@@ -246,7 +253,7 @@ TEST_P(OpJointBilateralFilter, JointBilateralFilter_packed)
     EXPECT_EQ(cudaSuccess, cudaMemcpy(outTest.data(), outData->basePtr(), outBufSize, cudaMemcpyDeviceToHost));
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
     ASSERT_TRUE(CompareTensors(outTest, outGold, inAccess->numCols(), inAccess->numRows(), inAccess->numSamples(),
-                               inAccess->rowStride(), inAccess->sampleStride(), 0.9f));
+                               inAccess->rowStride(), inSampleStride, 0.9f));
 }
 
 TEST_P(OpJointBilateralFilter, JointBilateralFilter_VarShape)

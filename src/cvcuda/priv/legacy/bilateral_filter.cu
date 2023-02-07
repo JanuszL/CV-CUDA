@@ -168,8 +168,8 @@ void BilateralFilterCaller(const ITensorDataStridedCuda &inData, const ITensorDa
     dim3 block(8, 8);
     dim3 grid(divUp(columns, block.x * 2), divUp(rows, block.y * 2), batch);
 
-    cuda::BorderWrapNHW<const T, B> src(inData, cuda::SetAll<T>(borderValue));
-    cuda::Tensor3DWrap<T>           dst(outData);
+    auto src = cuda::CreateBorderWrapNHW<const T, B>(inData, cuda::SetAll<T>(borderValue));
+    auto dst = cuda::CreateTensorWrapNHW<T>(outData);
 
 #ifdef CUDA_DEBUG_LOG
     checkCudaErrors(cudaStreamSynchronize(stream));

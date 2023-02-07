@@ -17,6 +17,7 @@
 
 #include "Definitions.hpp"
 
+#include <common/TensorDataUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <cvcuda/OpNormalize.hpp>
 #include <nvcv/Image.hpp>
@@ -130,7 +131,7 @@ TEST_P(OpNormalize, tensor_correct_output)
     std::default_random_engine rng;
 
     // Create input tensor
-    nvcv::Tensor imgSrc(numImages, {width, height}, fmt);
+    nvcv::Tensor imgSrc  = test::CreateTensor(numImages, width, height, fmt);
     const auto  *srcData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgSrc.exportData());
     ASSERT_NE(nullptr, srcData);
     auto srcAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*srcData);

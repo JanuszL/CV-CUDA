@@ -44,25 +44,25 @@ namespace nvcv::legacy::cuda_op {
 //  7:  64-bit alignment
 //  3:  32-bit alignment (word)
 //  0:  disable buffering
-template<typename T, size_t M>
-inline __device__ T *_cacheAlignedBufferedRead(cuda::Tensor3DWrap<const T> srcImage, int2 srcSize, uint *pReadBuffer,
-                                               uint nReadBufferWordsMax, int nBatch, int nYPos, int nXPosMin,
-                                               int nXPosMax)
+template<size_t M, class SrcWrapper, typename ValueType = typename SrcWrapper::ValueType>
+inline const __device__ ValueType *_cacheAlignedBufferedRead(SrcWrapper srcImage, int2 srcSize, uint *pReadBuffer,
+                                                             uint nReadBufferWordsMax, int nBatch, int nYPos,
+                                                             int nXPosMin, int nXPosMax)
 {
-    const T *lineStartPtr = srcImage.ptr(nBatch, nYPos); //do not access prior to this address
-    const T *pixSrcPtr    = &lineStartPtr[nXPosMin];
+    const ValueType *lineStartPtr = srcImage.ptr(nBatch, nYPos); //do not access prior to this address
+    const ValueType *pixSrcPtr    = &lineStartPtr[nXPosMin];
     if (M == 0)
-        return (T *)pixSrcPtr; //return GMEM pointer instead
+        return pixSrcPtr; //return GMEM pointer instead
     else
     {
-        uint     *memSrcPtr       = (uint *)(((size_t)pixSrcPtr) & (~M)); //(M+1) byte alignment
-        const T  *pixBeyondPtr    = &lineStartPtr[nXPosMax + 1];
-        const int functionalWidth = ((size_t)pixBeyondPtr + M) & (~M) - ((size_t)lineStartPtr);
-        const int nWordsToRead    = (((size_t)pixBeyondPtr + M) & (~M) - (size_t)memSrcPtr) / 4;
+        uint            *memSrcPtr       = (uint *)(((size_t)pixSrcPtr) & (~M)); //(M+1) byte alignment
+        const ValueType *pixBeyondPtr    = &lineStartPtr[nXPosMax + 1];
+        const int        functionalWidth = ((size_t)pixBeyondPtr + M) & (~M) - ((size_t)lineStartPtr);
+        const int        nWordsToRead    = (((size_t)pixBeyondPtr + M) & (~M) - (size_t)memSrcPtr) / 4;
 
-        if (((size_t)memSrcPtr < (size_t)lineStartPtr) || (srcSize.x * sizeof(T) < functionalWidth)
+        if (((size_t)memSrcPtr < (size_t)lineStartPtr) || (srcSize.x * sizeof(ValueType) < functionalWidth)
             || (nWordsToRead > nReadBufferWordsMax))
-            return (T *)pixSrcPtr; //return GMEM pointer instead if running off the image
+            return pixSrcPtr; //return GMEM pointer instead if running off the image
         else
         {                                             //copy out source data, aligned based upon M (31, 15, 7, 3)
             const int skew = ((size_t)pixSrcPtr) & M; //byte offset for nXPosMin
@@ -76,7 +76,7 @@ inline __device__ T *_cacheAlignedBufferedRead(cuda::Tensor3DWrap<const T> srcIm
             //32-bit align, 4 bytes at a time
             for (; i < nWordsToRead; ++i) pReadBuffer[i] = memSrcPtr[i];
 
-            return (T *)(((size_t)pReadBuffer) + skew); //buffered pixel data
+            return (const ValueType *)(((size_t)pReadBuffer) + skew); //buffered pixel data
         }
     }
 } //_cacheAlignedBufferedRead
@@ -95,9 +95,9 @@ inline void __device__ _alignedCudaMemcpyQuad(T *pDst, T *pSrc)
 
 //******************** NN = Nearest Neighbor
 
-template<typename T>
-__global__ void resize_NN(cuda::Tensor3DWrap<const T> src, cuda::Tensor3DWrap<T> dst, int2 srcSize, int2 dstSize,
-                          const float scale_x, const float scale_y)
+template<class SrcWrapper, class DstWrapper>
+__global__ void resize_NN(SrcWrapper src, DstWrapper dst, int2 srcSize, int2 dstSize, const float scale_x,
+                          const float scale_y)
 {
     const int dst_x      = blockIdx.x * blockDim.x + threadIdx.x;
     const int dst_y      = blockIdx.y * blockDim.y + threadIdx.y;
@@ -112,9 +112,9 @@ __global__ void resize_NN(cuda::Tensor3DWrap<const T> src, cuda::Tensor3DWrap<T>
     }
 } //resize_NN
 
-template<typename T>
-__global__ void resize_NN_quad_alignread(cuda::Tensor3DWrap<const T> src, cuda::Tensor3DWrap<T> dst, int2 srcSize,
-                                         int2 dstSize, const float scale_x, const float scale_y)
+template<class SrcWrapper, class DstWrapper, typename T = typename DstWrapper::ValueType>
+__global__ void resize_NN_quad_alignread(SrcWrapper src, DstWrapper dst, int2 srcSize, int2 dstSize,
+                                         const float scale_x, const float scale_y)
 {
     const float MAX_BUFFERED_X_SCALE = 4.0f; //probably more efficient all the way up to 4.0
 
@@ -139,8 +139,8 @@ __global__ void resize_NN_quad_alignread(cuda::Tensor3DWrap<const T> src, cuda::
         uint readBuffer[MAX_BUFFER_WORDS];
 
         //2 - copy out source data, 32-bit aligned aligned
-        T *aPtr = _cacheAlignedBufferedRead<T, CACHE_MEMORY_ALIGNMENT>(src, srcSize, &readBuffer[0], MAX_BUFFER_WORDS,
-                                                                       batch_idx, sy, sx0, sx3);
+        const T *aPtr = _cacheAlignedBufferedRead<CACHE_MEMORY_ALIGNMENT>(src, srcSize, &readBuffer[0],
+                                                                          MAX_BUFFER_WORDS, batch_idx, sy, sx0, sx3);
 
         //3 - NN sampling
         T gather[4] = {aPtr[0], aPtr[sx1 - sx0], aPtr[sx2 - sx0], aPtr[sx3 - sx0]};
@@ -161,9 +161,9 @@ __global__ void resize_NN_quad_alignread(cuda::Tensor3DWrap<const T> src, cuda::
 
 //******************** Bilinear
 
-template<typename T>
-__global__ void resize_bilinear(cuda::Tensor3DWrap<const T> src, cuda::Tensor3DWrap<T> dst, int2 srcSize, int2 dstSize,
-                                const float scale_x, const float scale_y)
+template<class SrcWrapper, class DstWrapper, typename T = typename DstWrapper::ValueType>
+__global__ void resize_bilinear(SrcWrapper src, DstWrapper dst, int2 srcSize, int2 dstSize, const float scale_x,
+                                const float scale_y)
 {
     const int dst_x     = blockIdx.x * blockDim.x + threadIdx.x;
     const int dst_y     = blockIdx.y * blockDim.y + threadIdx.y;
@@ -199,9 +199,9 @@ __global__ void resize_bilinear(cuda::Tensor3DWrap<const T> src, cuda::Tensor3DW
     }
 } //resize_bilinear
 
-template<typename T>
-__global__ void resize_bilinear_quad_alignread(cuda::Tensor3DWrap<const T> src, cuda::Tensor3DWrap<T> dst, int2 srcSize,
-                                               int2 dstSize, const float scale_x, const float scale_y)
+template<class SrcWrapper, class DstWrapper, typename T = typename DstWrapper::ValueType>
+__global__ void resize_bilinear_quad_alignread(SrcWrapper src, DstWrapper dst, int2 srcSize, int2 dstSize,
+                                               const float scale_x, const float scale_y)
 {
     const float MAX_BUFFERED_X_SCALE = 4.0f; //probably more efficient all the way up to 4.0
 
@@ -261,8 +261,8 @@ __global__ void resize_bilinear_quad_alignread(cuda::Tensor3DWrap<const T> src, 
         work_type accum[4];
 
         //2 - aligned load a-row and add partial product
-        T *aPtr = _cacheAlignedBufferedRead<T, CACHE_MEMORY_ALIGNMENT>(src, srcSize, readBuffer, MAX_BUFFER_WORDS,
-                                                                       batch_idx, sy, sx0, sx3 + 1);
+        const T *aPtr = _cacheAlignedBufferedRead<CACHE_MEMORY_ALIGNMENT>(src, srcSize, readBuffer, MAX_BUFFER_WORDS,
+                                                                          batch_idx, sy, sx0, sx3 + 1);
         //const T * aPtr = src.ptr(batch_idx, sy,   sx0); //start of upper row
 
         accum[0] = (1.0f - fy) * (aPtr[sx0 - sx0] * (1.0f - fx0) + aPtr[sx0 - sx0 + 1] * fx0);
@@ -271,8 +271,8 @@ __global__ void resize_bilinear_quad_alignread(cuda::Tensor3DWrap<const T> src, 
         accum[3] = (1.0f - fy) * (aPtr[sx3 - sx0] * (1.0f - fx3) + aPtr[sx3 - sx0 + 1] * fx3);
 
         //3 - aligned load b-row and add remaining partial product
-        T *bPtr = _cacheAlignedBufferedRead<T, CACHE_MEMORY_ALIGNMENT>(src, srcSize, readBuffer, MAX_BUFFER_WORDS,
-                                                                       batch_idx, sy + 1, sx0, sx3 + 1);
+        const T *bPtr = _cacheAlignedBufferedRead<CACHE_MEMORY_ALIGNMENT>(src, srcSize, readBuffer, MAX_BUFFER_WORDS,
+                                                                          batch_idx, sy + 1, sx0, sx3 + 1);
         //const T * bPtr = src.ptr(batch_idx, sy+1, sx0); //start of lower row
 
         //$$$ only need to cast, not saturatecast
@@ -307,9 +307,9 @@ __global__ void resize_bilinear_quad_alignread(cuda::Tensor3DWrap<const T> src, 
 
 //******************** Bicubic
 
-template<typename T>
-__global__ void resize_bicubic(cuda::Tensor3DWrap<const T> src, cuda::Tensor3DWrap<T> dst, int2 srcSize, int2 dstSize,
-                               const float scale_x, const float scale_y)
+template<class SrcWrapper, class DstWrapper, typename T = typename DstWrapper::ValueType>
+__global__ void resize_bicubic(SrcWrapper src, DstWrapper dst, int2 srcSize, int2 dstSize, const float scale_x,
+                               const float scale_y)
 { //optimized for aligned read
     const int dst_x     = blockIdx.x * blockDim.x + threadIdx.x;
     const int dst_y     = blockIdx.y * blockDim.y + threadIdx.y;
@@ -355,8 +355,8 @@ __global__ void resize_bicubic(cuda::Tensor3DWrap<const T> src, cuda::Tensor3DWr
         {
             //1 - load each sub row from sx-1 to sx+3 inclusive, aligned
             //const T * aPtr = src.ptr(batch_idx, sy + row - 1, sx-1);
-            T *aPtr = _cacheAlignedBufferedRead<T, CACHE_MEMORY_ALIGNMENT>(src, srcSize, readBuffer, MAX_BUFFER_WORDS,
-                                                                           batch_idx, sy + row - 1, sx - 1, sx + 2);
+            const T *aPtr = _cacheAlignedBufferedRead<CACHE_MEMORY_ALIGNMENT>(
+                src, srcSize, readBuffer, MAX_BUFFER_WORDS, batch_idx, sy + row - 1, sx - 1, sx + 2);
 
             //2 - do a pixel's partial on this row
             accum += cY[row] * (cX[0] * aPtr[0] + cX[1] * aPtr[1] + cX[2] * aPtr[2] + cX[3] * aPtr[3]);
@@ -371,9 +371,9 @@ __global__ void resize_bicubic(cuda::Tensor3DWrap<const T> src, cuda::Tensor3DWr
     }
 } //resize_bicubic
 
-template<typename T>
-__global__ void resize_bicubic_quad_alignread(cuda::Tensor3DWrap<const T> src, cuda::Tensor3DWrap<T> dst, int2 srcSize,
-                                              int2 dstSize, const float scale_x, const float scale_y)
+template<class SrcWrapper, class DstWrapper, typename T = typename DstWrapper::ValueType>
+__global__ void resize_bicubic_quad_alignread(SrcWrapper src, DstWrapper dst, int2 srcSize, int2 dstSize,
+                                              const float scale_x, const float scale_y)
 {                                            //optimized for aligned read and write, plus buffering
     const float MAX_BUFFERED_X_SCALE = 4.0f; //probably more efficient all the way up to 4.0
 
@@ -440,7 +440,7 @@ __global__ void resize_bicubic_quad_alignread(cuda::Tensor3DWrap<const T> src, c
         for (int row = 0; row < 4; ++row)
         {
             //1 - load each row from sx[0]-1 to sx[3]+3 inclusive, aligned
-            T *aPtr = _cacheAlignedBufferedRead<T, CACHE_MEMORY_ALIGNMENT>(
+            const T *aPtr = _cacheAlignedBufferedRead<CACHE_MEMORY_ALIGNMENT>(
                 src, srcSize, readBuffer, MAX_BUFFER_WORDS, batch_idx, sy + row - 1, sx[0] - 1, sx[3] + 2);
 
 //2 - do each pixel's partial on this row
@@ -483,7 +483,7 @@ __global__ void resize_bicubic_quad_alignread(cuda::Tensor3DWrap<const T> src, c
             {
                 //1 - load each sub row from sx[pix]-1 to sx[pix]+2 inclusive, aligned
                 //const T * aPtr = src.ptr(batch_idx, sy + row - 1, sx-1);
-                const T *aPtr = _cacheAlignedBufferedRead<T, CACHE_MEMORY_ALIGNMENT>(
+                const T *aPtr = _cacheAlignedBufferedRead<CACHE_MEMORY_ALIGNMENT>(
                     src, srcSize, readBuffer, MAX_BUFFER_WORDS, batch_idx, sy + row - 1, sx - 1, sx + 2);
 
                 //2 - do a pixel's partial on this row
@@ -592,8 +592,8 @@ void resize(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &
     int2 srcSize{in_width, in_height};
     int2 dstSize{out_width, out_height};
 
-    cuda::Tensor3DWrap<const T> src(inData);
-    cuda::Tensor3DWrap<T>       dst(outData);
+    auto src = cuda::CreateTensorWrapNHW<const T>(inData);
+    auto dst = cuda::CreateTensorWrapNHW<T>(outData);
 
     const int THREADS_PER_BLOCK = 128; //256?  64?
     const int BLOCK_WIDTH       = 16;  //as in 32x4 or 32x8.  16x8 and 16x16 are also viable
@@ -617,36 +617,36 @@ void resize(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &
 
         if (can_quad)
         { //thread does 4 pixels horizontally for aligned read and write
-            resize_NN_quad_alignread<T>
-                <<<quadGridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x, scale_y);
+            resize_NN_quad_alignread<<<quadGridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x,
+                                                                             scale_y);
         }
         else
         { //generic single pixel per thread case
-            resize_NN<T><<<gridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x, scale_y);
+            resize_NN<<<gridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x, scale_y);
         }
         break;
 
     case NVCV_INTERP_LINEAR:
         if (can_quad)
         { //thread does 4 pixels horizontally for aligned read and write
-            resize_bilinear_quad_alignread<T>
-                <<<quadGridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x, scale_y);
+            resize_bilinear_quad_alignread<<<quadGridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x,
+                                                                                   scale_y);
         }
         else
         { //generic single pixel per thread case
-            resize_bilinear<T><<<gridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x, scale_y);
+            resize_bilinear<<<gridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x, scale_y);
         }
         break;
 
     case NVCV_INTERP_CUBIC:
         if (can_quad)
         { //thread does 4 pixels horizontally for aligned read and write
-            resize_bicubic_quad_alignread<T>
-                <<<quadGridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x, scale_y);
+            resize_bicubic_quad_alignread<<<quadGridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x,
+                                                                                  scale_y);
         }
         else
         { //generic single pixel per thread case
-            resize_bicubic<T><<<gridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x, scale_y);
+            resize_bicubic<<<gridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x, scale_y);
         }
         break;
 
