@@ -28,8 +28,10 @@
 #include "TensorWrap.hpp"     // for TensorWrap, etc.
 #include "TypeTraits.hpp"     // for NumElements, etc.
 
-#include <nvcv/BorderType.h>    // for NVCVBorderType, etc.
-#include <nvcv/ITensorData.hpp> // for ITensorDataStridedCuda, etc.
+#include <nvcv/BorderType.h>         // for NVCVBorderType, etc.
+#include <nvcv/ITensorData.hpp>      // for ITensorDataStridedCuda, etc.
+#include <nvcv/TensorDataAccess.hpp> // for TensorDataAccessStridedImagePlanar, etc.
+#include <util/Assert.h>             // for NVCV_ASSERT, etc.
 
 namespace nvcv::cuda {
 
@@ -191,12 +193,16 @@ public:
     explicit __host__ BorderWrapImpl(const ITensorDataStridedCuda &tensor)
         : m_tensorWrap(tensor)
     {
+        NVCV_ASSERT(tensor.rank() >= kNumDimensions);
+
         int j = 0;
 #pragma unroll
         for (int i = 0; i < kNumDimensions; ++i)
         {
             if (kActiveDimensions[i])
             {
+                NVCV_ASSERT(tensor.shape(i) <= TypeTraits<int>::max);
+
                 m_tensorShape[j++] = tensor.shape(i);
             }
         }
@@ -518,37 +524,35 @@ private:
 /**@}*/
 
 /**
- *  Specializes \ref BorderWrap template classes for different tensor layouts.
+ * Factory function to create a border wrap given a tensor data.
  *
- *  The specializations consider the H (height) and W (width) dimensions as active dimensions and others as
- *  inactive dimensions.  Active dimensions participate in border handling.  Inactive dimensions are not checked,
- *  thus segmentation fault might happen if accessing outside its boundaries.
+ * The output \ref BorderWrap wraps an NHW 3D tensor allowing to access data per batch (N), per row (H) and per
+ * column (W) of the input tensor border aware in rows (or height H) and columns (or width W).  The input tensor
+ * data must have either NHWC or HWC layout, where the channel C is inside the given template type \p T,
+ * e.g. T=uchar4 for RGBA8.  The active dimensions are H (second) and W (third).
  *
- *  The supported layouts include the following dimension labels:
- *  - N: number of samples in a batch
- *  - H, W: height and width
- *  - C: number of channels
+ * @sa NVCV_CPP_CUDATOOLS_BORDERWRAP
  *
- *  Template arguments:
- *  - T data type of each element in \ref TensorWrap
- *  - B border extension to be used in active dimensions, one of \ref NVCVBorderType
+ * @tparam T Type of the values to be accessed in the border wrap.
+ * @tparam B Border extension to be used when accessing H and W, one of \ref NVCVBorderType
  *
- *  @sa NVCV_CPP_CUDATOOLS_BORDERWRAP
+ * @param[in] tensor Reference to the tensor that will be wrapped.
  *
- *  @defgroup NVCV_CPP_CUDATOOLS_BORDERWRAPS BorderWrap shortcuts
- *  @{
+ * @return Border wrap useful to access tensor data border aware in H and W in CUDA kernels.
  */
+template<typename T, NVCVBorderType B, class = Require<HasTypeTraits<T>>>
+__host__ auto CreateBorderWrapNHW(const ITensorDataStridedCuda &tensor, const T &borderValue)
+{
+    auto tensorAccess = TensorDataAccessStridedImagePlanar::Create(tensor);
+    NVCV_ASSERT(tensorAccess);
+    NVCV_ASSERT(tensorAccess->numRows() <= TypeTraits<int>::max);
+    NVCV_ASSERT(tensorAccess->numCols() <= TypeTraits<int>::max);
 
-template<typename T, NVCVBorderType B>
-using BorderWrapHW = BorderWrap<Tensor2DWrap<T>, B, true, true>;
+    auto tensorWrap = CreateTensorWrapNHW<T>(tensor);
 
-template<typename T, NVCVBorderType B>
-using BorderWrapNHW = BorderWrap<Tensor3DWrap<T>, B, false, true, true>;
-
-template<typename T, NVCVBorderType B>
-using BorderWrapNHWC = BorderWrap<Tensor4DWrap<T>, B, false, true, true, false>;
-
-/**@}*/
+    return BorderWrap<Tensor3DWrap<T>, B, false, true, true>(
+        tensorWrap, borderValue, static_cast<int>(tensorAccess->numRows()), static_cast<int>(tensorAccess->numCols()));
+}
 
 } // namespace nvcv::cuda
 

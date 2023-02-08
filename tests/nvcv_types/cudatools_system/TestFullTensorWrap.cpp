@@ -1290,10 +1290,10 @@ TYPED_TEST(BorderWrapFullTensorWrap3DTest, correct_fill)
 
 NVCV_TYPED_TEST_SUITE(BorderWrapFullTensorWrap4DTest,
                       ttype::Types<NVCV_TEST_ROW(33, 22, 3, 3, F32, float1, NVCV_BORDER_CONSTANT),
-                                   NVCV_TEST_ROW(23, 13, 11, 33, _2S16, short1, NVCV_BORDER_REPLICATE),
-                                   NVCV_TEST_ROW(77, 15, 8, 16, RGB8, uchar1, NVCV_BORDER_WRAP),
+                                   NVCV_TEST_ROW(23, 13, 11, 33, _2S16, short2, NVCV_BORDER_REPLICATE),
+                                   NVCV_TEST_ROW(77, 15, 8, 16, RGB8, uchar3, NVCV_BORDER_WRAP),
                                    NVCV_TEST_ROW(144, 33, 8, 99, U8, uchar1, NVCV_BORDER_REFLECT),
-                                   NVCV_TEST_ROW(199, 99, 6, 200, RGBA8, uchar1, NVCV_BORDER_REFLECT101)>);
+                                   NVCV_TEST_ROW(199, 99, 6, 200, RGBA8, uchar4, NVCV_BORDER_REFLECT101)>);
 
 #undef NVCV_TEST_ROW
 
@@ -1309,8 +1309,10 @@ TYPED_TEST(BorderWrapFullTensorWrap4DTest, correct_fill)
     using ValueType            = ttype::GetType<TypeParam, 5>;
     constexpr auto kBorderType = ttype::GetValue<TypeParam, 6>;
     using DimType              = int4;
+    using ChannelType          = cuda::BaseType<ValueType>;
 
-    ValueType borderValue = cuda::SetAll<ValueType>(123);
+    ChannelType chBorderValue = 123;
+    ValueType   borderValue   = cuda::SetAll<ValueType>(chBorderValue);
 
     int2 bSize{borderSize, borderSize};
 
@@ -1393,12 +1395,12 @@ TYPED_TEST(BorderWrapFullTensorWrap4DTest, correct_fill)
 
                 for (int w = 0; w < dstSize.w; ++w)
                 {
-                    *reinterpret_cast<ValueType *>(&gold[z * dstDev->stride(0) + y * dstDev->stride(1)
-                                                         + x * dstDev->stride(2) + w * dstDev->stride(3)])
-                        = isInside ? *reinterpret_cast<ValueType *>(
+                    *reinterpret_cast<ChannelType *>(&gold[z * dstDev->stride(0) + y * dstDev->stride(1)
+                                                           + x * dstDev->stride(2) + w * dstDev->stride(3)])
+                        = isInside ? *reinterpret_cast<ChannelType *>(
                               &srcVec[z * srcDev->stride(0) + srcCoord.y * srcDev->stride(1)
                                       + srcCoord.x * srcDev->stride(2) + w * srcDev->stride(3)])
-                                   : borderValue;
+                                   : chBorderValue;
                 }
             }
         }
