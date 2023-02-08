@@ -26,8 +26,10 @@
 
 #include "TypeTraits.hpp" // for HasTypeTraits, etc.
 
-#include <nvcv/IImageData.hpp>  // for IImageDataStridedCuda, etc.
-#include <nvcv/ITensorData.hpp> // for ITensorDataStridedCuda, etc.
+#include <nvcv/IImageData.hpp>       // for IImageDataStridedCuda, etc.
+#include <nvcv/ITensorData.hpp>      // for ITensorDataStridedCuda, etc.
+#include <nvcv/TensorDataAccess.hpp> // for TensorDataAccessStridedImagePlanar, etc.
+#include <util/Assert.h>             // for NVCV_ASSERT, etc.
 
 #include <utility>
 
@@ -390,6 +392,61 @@ using TensorNDWrap = std::conditional_t<
                        std::conditional_t<N == 3, Tensor3DWrap<T>, std::conditional_t<N == 4, Tensor4DWrap<T>, void>>>>;
 
 /**@}*/
+
+/**
+ * Factory function to create a NHW tensor wrap given a tensor data.
+ *
+ * The output \ref TensorWrap is an NHW 3D tensor allowing to access data per batch (N), per row (H) and per column
+ * (W) of the input tensor.  The input tensor data must have either NHWC or HWC layout, where the channel C is
+ * inside \p T, e.g. T=uchar3 for RGB8.
+ *
+ * @sa NVCV_CPP_CUDATOOLS_TENSORWRAP
+ *
+ * @tparam T Type of the values to be accessed in the tensor wrap.
+ *
+ * @param[in] tensor Reference to the tensor that will be wrapped.
+ *
+ * @return Tensor wrap useful to access tensor data in CUDA kernels.
+ */
+template<typename T, class = Require<HasTypeTraits<T>>>
+__host__ auto CreateTensorWrapNHW(const ITensorDataStridedCuda &tensor)
+{
+    auto tensorAccess = TensorDataAccessStridedImagePlanar::Create(tensor);
+    NVCV_ASSERT(tensorAccess);
+    NVCV_ASSERT(tensorAccess->sampleStride() <= TypeTraits<int>::max);
+    NVCV_ASSERT(tensorAccess->rowStride() <= TypeTraits<int>::max);
+
+    return Tensor3DWrap<T>(tensor.basePtr(), static_cast<int>(tensorAccess->sampleStride()),
+                           static_cast<int>(tensorAccess->rowStride()));
+}
+
+/**
+ * Factory function to create a NHWC tensor wrap given a tensor data.
+ *
+ * The output \ref TensorWrap is an NHWC 4D tensor allowing to access data per batch (N), per row (H), per column
+ * (W) and per channel (C) of the input tensor.  The input tensor data must have either NHWC or HWC layout, where
+ * the channel C is inside \p T, e.g. T=uchar3 for RGB8.
+ *
+ * @sa NVCV_CPP_CUDATOOLS_TENSORWRAP
+ *
+ * @tparam T Type of the values to be accessed in the tensor wrap.
+ *
+ * @param[in] tensor Reference to the tensor that will be wrapped.
+ *
+ * @return Tensor wrap useful to access tensor data in CUDA kernels.
+ */
+template<typename T, class = Require<HasTypeTraits<T>>>
+__host__ auto CreateTensorWrapNHWC(const ITensorDataStridedCuda &tensor)
+{
+    auto tensorAccess = TensorDataAccessStridedImagePlanar::Create(tensor);
+    NVCV_ASSERT(tensorAccess);
+    NVCV_ASSERT(tensorAccess->sampleStride() <= TypeTraits<int>::max);
+    NVCV_ASSERT(tensorAccess->rowStride() <= TypeTraits<int>::max);
+    NVCV_ASSERT(tensorAccess->colStride() <= TypeTraits<int>::max);
+
+    return Tensor4DWrap<T>(tensor.basePtr(), static_cast<int>(tensorAccess->sampleStride()),
+                           static_cast<int>(tensorAccess->rowStride()), static_cast<int>(tensorAccess->colStride()));
+}
 
 } // namespace nvcv::cuda
 

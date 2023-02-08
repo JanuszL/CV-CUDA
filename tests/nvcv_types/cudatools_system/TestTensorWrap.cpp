@@ -17,13 +17,18 @@
 
 #include "DeviceTensorWrap.hpp" // to test in device
 
-#include <common/TypedTests.hpp> // for NVCV_TYPED_TEST_SUITE, etc.
-#include <nvcv/Image.hpp>
-#include <nvcv/Tensor.hpp>       // for Tensor, etc.
-#include <nvcv/cuda/MathOps.hpp> // for operator == to allow EXPECT_EQ
+#include <common/HashUtils.hpp>      // for NVCV_INSTANTIATE_TEST_SUITE_P, etc.
+#include <common/TypedTests.hpp>     // for NVCV_TYPED_TEST_SUITE, etc.
+#include <common/ValueTests.hpp>     // for StringLiteral
+#include <nvcv/Image.hpp>            // for Image, etc.
+#include <nvcv/Tensor.hpp>           // for Tensor, etc.
+#include <nvcv/TensorDataAccess.hpp> // for TensorDataAccessStridedImagePlanar, etc.
+#include <nvcv/cuda/MathOps.hpp>     // for operator == to allow EXPECT_EQ
 
 #include <limits>
 
+namespace t     = ::testing;
+namespace test  = nvcv::test;
 namespace cuda  = nvcv::cuda;
 namespace ttype = nvcv::test::type;
 
@@ -1148,4 +1153,77 @@ TYPED_TEST(TensorNDWrapTest, correct_dimensionality)
     using TW = cuda::TensorNDWrap<const typename InputType::value_type, InputType::kNumDim>;
 
     EXPECT_EQ(TW::kNumDimensions, InputType::kNumDim);
+}
+
+// ----------------------- Testing CreateTensorWrapNHWx ------------------------
+
+class CreateTensorWrapNHWxTests
+    : public t::TestWithParam<std::tuple<test::Param<"shape", nvcv::TensorShape>, test::Param<"dtype", nvcv::DataType>>>
+{
+};
+
+// clang-format off
+NVCV_INSTANTIATE_TEST_SUITE_P(_, CreateTensorWrapNHWxTests,
+    test::ValueList<nvcv::TensorShape, nvcv::DataType>
+    {
+        {nvcv::TensorShape{{7, 3, 3}, nvcv::TENSOR_HWC}, nvcv::TYPE_U8},
+        {nvcv::TensorShape{{5, 3, 2, 4}, nvcv::TENSOR_NHWC}, nvcv::TYPE_U8}
+    }
+);
+
+// clang-format on
+
+TEST_P(CreateTensorWrapNHWxTests, correct_properties_in_nhw)
+{
+    auto tensorShape    = std::get<0>(GetParam());
+    auto tensorDataType = std::get<1>(GetParam());
+
+    nvcv::Tensor tensor(tensorShape, tensorDataType);
+
+    const auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(tensor.exportData());
+    ASSERT_NE(dev, nullptr);
+
+    auto wrap = cuda::CreateTensorWrapNHW<const unsigned char>(*dev);
+
+    using TW = decltype(wrap);
+
+    EXPECT_EQ(TW::kNumDimensions, 3);
+    EXPECT_EQ(TW::kVariableStrides, 2);
+    EXPECT_EQ(TW::kConstantStrides, 1);
+
+    EXPECT_EQ(wrap.ptr(), reinterpret_cast<unsigned char *>(dev->basePtr()));
+
+    auto tensorAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*dev);
+    NVCV_ASSERT(tensorAccess);
+
+    EXPECT_EQ(wrap.strides()[0], tensorAccess->sampleStride());
+    EXPECT_EQ(wrap.strides()[1], tensorAccess->rowStride());
+}
+
+TEST_P(CreateTensorWrapNHWxTests, correct_properties_in_nhwc)
+{
+    auto tensorShape    = std::get<0>(GetParam());
+    auto tensorDataType = std::get<1>(GetParam());
+
+    nvcv::Tensor tensor(tensorShape, tensorDataType);
+
+    const auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(tensor.exportData());
+    ASSERT_NE(dev, nullptr);
+
+    auto wrap = cuda::CreateTensorWrapNHWC<const unsigned char>(*dev);
+
+    using TW = decltype(wrap);
+
+    EXPECT_EQ(TW::kNumDimensions, 4);
+    EXPECT_EQ(TW::kVariableStrides, 3);
+    EXPECT_EQ(TW::kConstantStrides, 1);
+
+    EXPECT_EQ(wrap.ptr(), reinterpret_cast<unsigned char *>(dev->basePtr()));
+
+    auto tensorAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*dev);
+    NVCV_ASSERT(tensorAccess);
+
+    EXPECT_EQ(wrap.strides()[0], tensorAccess->sampleStride());
+    EXPECT_EQ(wrap.strides()[1], tensorAccess->rowStride());
+    EXPECT_EQ(wrap.strides()[2], tensorAccess->colStride());
 }
