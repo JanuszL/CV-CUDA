@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -88,8 +88,11 @@ private:
         return key;
     }
 
-    bool         m_owns;
-    cudaStream_t m_handle;
+    void destroy();
+
+    bool         m_owns   = false;
+    cudaStream_t m_handle = nullptr, m_auxStream = nullptr;
+    cudaEvent_t  m_event = nullptr;
     py::object   m_wrappedObj;
 };
 
