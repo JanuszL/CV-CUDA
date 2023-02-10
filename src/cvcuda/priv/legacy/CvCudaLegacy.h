@@ -47,6 +47,9 @@ enum DataFormat
     kHWC  = 3,
 };
 
+template<DataFormat D>
+constexpr int FormatDimensions = (D == kNCHW || D == kNHWC) ? 4 : 3;
+
 enum DataType
 {
     kCV_8U  = 0,

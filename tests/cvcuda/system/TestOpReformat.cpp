@@ -17,6 +17,7 @@
 
 #include "Definitions.hpp"
 
+#include <common/TensorDataUtils.hpp>
 #include <common/TypedTests.hpp>
 #include <cvcuda/OpReformat.hpp>
 #include <nvcv/Image.hpp>
@@ -99,8 +100,8 @@ TYPED_TEST(OpReformat, correct_output)
 
     using ValueType = ttype::GetType<TypeParam, 5>;
 
-    nvcv::Tensor inTensor(batches, {width, height}, inFormat);
-    nvcv::Tensor outTensor(batches, {width, height}, outFormat);
+    nvcv::Tensor inTensor  = test::CreateTensor(batches, width, height, inFormat);
+    nvcv::Tensor outTensor = test::CreateTensor(batches, width, height, outFormat);
 
     const auto *inData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inTensor.exportData());
     const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(outTensor.exportData());
@@ -108,19 +109,36 @@ TYPED_TEST(OpReformat, correct_output)
     ASSERT_NE(inData, nullptr);
     ASSERT_NE(outData, nullptr);
 
-    long4 inStrides{inData->stride(0), inData->stride(1), inData->stride(2), inData->stride(3)};
-    long4 outStrides{outData->stride(0), outData->stride(1), outData->stride(2), outData->stride(3)};
-
     auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*inData);
     ASSERT_TRUE(inAccess);
+
+    auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*outData);
+    ASSERT_TRUE(outAccess);
+
+    long4 inStrides;
+    long4 outStrides;
+
+    if (inData->rank() == 3)
+    {
+        long inSampleStride  = inAccess->numRows() * inAccess->rowStride();
+        long outSampleStride = outAccess->numRows() * outAccess->rowStride();
+
+        inStrides  = long4{inSampleStride, inAccess->rowStride(), inAccess->colStride(), inAccess->chStride()};
+        outStrides = long4{outSampleStride, outAccess->rowStride(), outAccess->colStride(), outAccess->chStride()};
+    }
+    else if (inData->rank() == 4)
+    {
+        inStrides  = long4{inData->stride(0), inData->stride(1), inData->stride(2), inData->stride(3)};
+        outStrides = long4{outData->stride(0), outData->stride(1), outData->stride(2), outData->stride(3)};
+    }
 
     int numBatches  = inAccess->numSamples();
     int numRows     = inAccess->numRows();
     int numCols     = inAccess->numCols();
     int numChannels = inAccess->numChannels();
 
-    long inBufSize  = inStrides.x * inData->shape(0);
-    long outBufSize = outStrides.x * outData->shape(0);
+    long inBufSize  = inStrides.x * inAccess->numSamples();
+    long outBufSize = outStrides.x * outAccess->numSamples();
 
     std::vector<uint8_t> inVec(inBufSize);
 

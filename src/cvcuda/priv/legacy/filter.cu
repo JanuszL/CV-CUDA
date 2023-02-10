@@ -72,8 +72,8 @@ void Filter2DCaller(const ITensorDataStridedCuda &inData, const ITensorDataStrid
 
     Size2D dstSize{outAccess->numCols(), outAccess->numRows()};
 
-    cuda::BorderWrapNHW<const T, B> src(inData, cuda::SetAll<T>(borderValue));
-    cuda::Tensor3DWrap<T>           dst(outData);
+    auto src = cuda::CreateBorderWrapNHW<const T, B>(inData, cuda::SetAll<T>(borderValue));
+    auto dst = cuda::CreateTensorWrapNHW<T>(outData);
 
     dim3 block(16, 16);
     dim3 grid(divUp(dstSize.w, block.x), divUp(dstSize.h, block.y), outAccess->numSamples());

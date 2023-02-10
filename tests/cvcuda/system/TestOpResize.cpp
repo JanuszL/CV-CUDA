@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@
 
 #include "Definitions.hpp"
 
+#include <common/TensorDataUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <cvcuda/OpResize.hpp>
 #include <nvcv/Image.hpp>
@@ -190,7 +191,7 @@ TEST_P(OpResize, tensor_correct_output)
     const nvcv::ImageFormat fmt = nvcv::FMT_RGBA8;
 
     // Generate input
-    nvcv::Tensor imgSrc(numberOfImages, {srcWidth, srcHeight}, fmt);
+    nvcv::Tensor imgSrc = test::CreateTensor(numberOfImages, srcWidth, srcHeight, fmt);
 
     const auto *srcData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgSrc.exportData());
 
@@ -219,7 +220,7 @@ TEST_P(OpResize, tensor_correct_output)
     }
 
     // Generate test result
-    nvcv::Tensor imgDst(numberOfImages, {dstWidth, dstHeight}, nvcv::FMT_RGBA8);
+    nvcv::Tensor imgDst = test::CreateTensor(numberOfImages, dstWidth, dstHeight, fmt);
 
     cvcuda::Resize resizeOp;
     EXPECT_NO_THROW(resizeOp(stream, imgSrc, imgDst, interpolation));
