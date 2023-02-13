@@ -73,11 +73,20 @@ inline Tensor::~Tensor()
 
 // TensorWrapData implementation -------------------------------------
 
-inline TensorWrapData::TensorWrapData(const ITensorData &data, std::function<TensorDataCleanupFunc> cleanup)
-    : m_cleanup(std::move(cleanup))
+inline TensorWrapData::TensorWrapData(const TensorData &data, TensorDataCleanupCallback &&cleanup)
 {
-    detail::CheckThrow(nvcvTensorWrapDataConstruct(&data.cdata(), m_cleanup ? &doCleanup : nullptr, this, &m_handle));
-    detail::SetObjectAssociation(nvcvTensorSetUserPointer, this, m_handle);
+    detail::CheckThrow(
+        nvcvTensorWrapDataConstruct(&data.cdata(), cleanup.targetFunc(), cleanup.targetHandle(), &m_handle));
+    cleanup.release(); // already owned by the handle
+    try
+    {
+        detail::SetObjectAssociation(nvcvTensorSetUserPointer, this, m_handle);
+    }
+    catch (...)
+    {
+        nvcvTensorDestroy(m_handle);
+        throw;
+    }
 }
 
 inline TensorWrapData::~TensorWrapData()
@@ -88,21 +97,6 @@ inline TensorWrapData::~TensorWrapData()
 inline NVCVTensorHandle TensorWrapData::doGetHandle() const
 {
     return m_handle;
-}
-
-inline void TensorWrapData::doCleanup(void *ctx, const NVCVTensorData *data)
-{
-    assert(data != nullptr);
-
-    auto *this_ = reinterpret_cast<TensorWrapData *>(ctx);
-    assert(this_ != nullptr);
-
-    // exportData refers to 'data'
-    const ITensorData *batchData = this_->exportData();
-    assert(batchData != nullptr);
-
-    assert(this_->m_cleanup != nullptr);
-    this_->m_cleanup(*batchData);
 }
 
 // TensorWrapImage implementation -------------------------------------

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -58,7 +58,7 @@ void Conv2D::operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in
                               "Kernel must be cuda-accessible, varshape pitch-linear image batch");
     }
 
-    auto *kernelAnchorData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(kernelAnchor.exportData());
+    auto kernelAnchorData = kernelAnchor.exportData<nvcv::TensorDataStridedCuda>();
     if (kernelAnchorData == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,

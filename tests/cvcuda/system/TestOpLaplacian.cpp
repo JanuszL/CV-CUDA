@@ -74,8 +74,8 @@ TEST_P(OpLaplacian, correct_output)
     nvcv::Tensor inTensor  = test::CreateTensor(batches, width, height, format);
     nvcv::Tensor outTensor = test::CreateTensor(batches, width, height, format);
 
-    const auto *inData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inTensor.exportData());
-    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(outTensor.exportData());
+    auto inData  = inTensor.exportData<nvcv::TensorDataStridedCuda>();
+    auto outData = outTensor.exportData<nvcv::TensorDataStridedCuda>();
 
     ASSERT_NE(inData, nullptr);
     ASSERT_NE(outData, nullptr);
@@ -210,7 +210,7 @@ TEST_P(OpLaplacian, varshape_correct_output)
     // Create kernel aperture size tensor
     nvcv::Tensor ksizeTensor({{batches}, "N"}, nvcv::TYPE_S32);
     {
-        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(ksizeTensor.exportData());
+        auto dev = ksizeTensor.exportData<nvcv::TensorDataStridedCuda>();
         ASSERT_NE(dev, nullptr);
 
         std::vector<int> vec(batches, ksize);
@@ -222,7 +222,7 @@ TEST_P(OpLaplacian, varshape_correct_output)
     // Create scale tensor
     nvcv::Tensor scaleTensor({{batches}, "N"}, nvcv::TYPE_F32);
     {
-        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(scaleTensor.exportData());
+        auto dev = scaleTensor.exportData<nvcv::TensorDataStridedCuda>();
         ASSERT_NE(dev, nullptr);
 
         std::vector<float> vec(batches, scale);

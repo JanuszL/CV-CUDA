@@ -49,7 +49,7 @@ void GammaContrast::operator()(cudaStream_t stream, const nvcv::IImageBatchVarSh
                               "Output must be device-acessible, varshape pitch-linear image batch");
     }
 
-    auto *gammaData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(gamma.exportData());
+    auto gammaData = gamma.exportData<nvcv::TensorDataStridedCuda>();
     if (gammaData == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,

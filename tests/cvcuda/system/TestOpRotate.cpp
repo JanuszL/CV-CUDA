@@ -224,7 +224,7 @@ TEST_P(OpRotate, tensor_correct_output)
     // Generate input
     nvcv::Tensor imgSrc(numberOfImages, {srcWidth, srcHeight}, fmt);
 
-    const auto *srcData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgSrc.exportData());
+    auto srcData = imgSrc.exportData<nvcv::TensorDataStridedCuda>();
 
     ASSERT_NE(nullptr, srcData);
 
@@ -264,7 +264,7 @@ TEST_P(OpRotate, tensor_correct_output)
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
     // Check result
-    const auto *dstData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgDst.exportData());
+    auto dstData = imgDst.exportData<nvcv::TensorDataStridedCuda>();
     ASSERT_NE(nullptr, dstData);
 
     auto dstAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*dstData);
@@ -341,12 +341,12 @@ TEST_P(OpRotate, varshape_correct_output)
     std::uniform_int_distribution<int> rndAngle(0, 360);
 
     nvcv::Tensor angleDegTensor(nvcv::TensorShape({numberOfImages}, "N"), nvcv::TYPE_F64);
-    const auto  *angleDegTensorData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(angleDegTensor.exportData());
-    ASSERT_NE(nullptr, angleDegTensorData);
+    auto         angleDegTensorData = angleDegTensor.exportData<nvcv::TensorDataStridedCuda>();
+    ASSERT_NE(nvcv::detail::NullOpt, angleDegTensorData);
 
     nvcv::Tensor shiftTensor(nvcv::TensorShape({numberOfImages, 2}, nvcv::TENSOR_NW), nvcv::TYPE_F64);
-    const auto  *shiftTensorData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(shiftTensor.exportData());
-    ASSERT_NE(nullptr, shiftTensorData);
+    auto         shiftTensorData = shiftTensor.exportData<nvcv::TensorDataStridedCuda>();
+    ASSERT_NE(nvcv::detail::NullOpt, shiftTensorData);
 
     auto shiftTensorDataAccess = nvcv::TensorDataAccessStrided::Create(*shiftTensorData);
     ASSERT_TRUE(shiftTensorDataAccess);

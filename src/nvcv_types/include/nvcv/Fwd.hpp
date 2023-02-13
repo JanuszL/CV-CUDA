@@ -45,9 +45,9 @@ class IImageBatchVarShapeDataStrided;
 class IImageBatchVarShapeDataStridedCuda;
 
 class ITensor;
-class ITensorData;
-class ITensorDataStrided;
-class ITensorDataStridedCuda;
+class TensorData;
+class TensorDataStrided;
+class TensorDataStridedCuda;
 
 } // namespace nvcv
 

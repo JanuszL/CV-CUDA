@@ -44,20 +44,20 @@ void PadAndStack::operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in,
                               "Input must be cuda-accessible, pitch-linear tensor");
     }
 
-    auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(out.exportData());
+    auto outData = out.exportData<nvcv::TensorDataStridedCuda>();
     if (outData == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
                               "Output must be cuda-accessible, pitch-linear tensor");
     }
 
-    auto *topData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(top.exportData());
+    auto topData = top.exportData<nvcv::TensorDataStridedCuda>();
     if (outData == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT, "Top must be cuda-accessible, pitch-linear tensor");
     }
 
-    auto *leftData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(left.exportData());
+    auto leftData = left.exportData<nvcv::TensorDataStridedCuda>();
     if (outData == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,

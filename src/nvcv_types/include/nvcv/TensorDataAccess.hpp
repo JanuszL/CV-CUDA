@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@
 #ifndef NVCV_TENSORDATAACESSOR_HPP
 #define NVCV_TENSORDATAACESSOR_HPP
 
-#include "ITensorData.hpp"
+#include "TensorData.hpp"
 #include "TensorShapeInfo.hpp"
 #include "detail/BaseFromMember.hpp"
 
@@ -33,7 +33,7 @@ namespace detail {
 class TensorDataAccessStridedImpl
 {
 public:
-    TensorDataAccessStridedImpl(const ITensorDataStrided &tdata, const TensorShapeInfoImpl &infoShape)
+    TensorDataAccessStridedImpl(const TensorDataStrided &tdata, const TensorShapeInfoImpl &infoShape)
         : m_tdata(tdata)
         , m_infoShape(infoShape)
     {
@@ -99,7 +99,7 @@ public:
     }
 
 protected:
-    const ITensorDataStrided &m_tdata;
+    TensorDataStrided m_tdata;
 
     TensorDataAccessStridedImpl(const TensorDataAccessStridedImpl &that) = delete;
 
@@ -110,13 +110,13 @@ protected:
     }
 
 private:
-    const TensorShapeInfoImpl &m_infoShape;
+    TensorShapeInfoImpl m_infoShape;
 };
 
 class TensorDataAccessStridedImageImpl : public TensorDataAccessStridedImpl
 {
 public:
-    TensorDataAccessStridedImageImpl(const ITensorDataStrided &tdata, const TensorShapeInfoImageImpl &infoShape)
+    TensorDataAccessStridedImageImpl(const TensorDataStrided &tdata, const TensorShapeInfoImageImpl &infoShape)
         : TensorDataAccessStridedImpl(tdata, infoShape)
     {
     }
@@ -238,7 +238,7 @@ protected:
 class TensorDataAccessStridedImagePlanarImpl : public TensorDataAccessStridedImageImpl
 {
 public:
-    TensorDataAccessStridedImagePlanarImpl(const ITensorDataStrided &tdata, const TensorShapeInfoImagePlanar &infoShape)
+    TensorDataAccessStridedImagePlanarImpl(const TensorDataStrided &tdata, const TensorShapeInfoImagePlanar &infoShape)
         : TensorDataAccessStridedImageImpl(tdata, infoShape)
     {
     }
@@ -296,16 +296,16 @@ class TensorDataAccessStrided
     , public detail::TensorDataAccessStridedImpl
 {
 public:
-    static bool IsCompatible(const ITensorData &data)
+    static bool IsCompatible(const TensorData &data)
     {
-        return dynamic_cast<const ITensorDataStrided *>(&data) != nullptr;
+        return data.IsCompatible<TensorDataStrided>();
     }
 
-    static detail::Optional<TensorDataAccessStrided> Create(const ITensorData &data)
+    static detail::Optional<TensorDataAccessStrided> Create(const TensorData &data)
     {
-        if (auto *dataStrided = dynamic_cast<const ITensorDataStrided *>(&data))
+        if (auto dataStrided = data.cast<TensorDataStrided>())
         {
-            return TensorDataAccessStrided(*dataStrided);
+            return TensorDataAccessStrided(std::move(dataStrided.value()));
         }
         else
         {
@@ -322,7 +322,7 @@ public:
 private:
     using MemberShapeInfo = detail::BaseFromMember<TensorShapeInfo>;
 
-    TensorDataAccessStrided(const ITensorDataStrided &data)
+    TensorDataAccessStrided(const TensorDataStrided &data)
         : MemberShapeInfo{*TensorShapeInfo::Create(data.shape())}
         , detail::TensorDataAccessStridedImpl(data, MemberShapeInfo::member)
     {
@@ -341,16 +341,16 @@ public:
     {
     }
 
-    static bool IsCompatible(const ITensorData &data)
+    static bool IsCompatible(const TensorData &data)
     {
         return TensorDataAccessStrided::IsCompatible(data) && TensorShapeInfoImage::IsCompatible(data.shape());
     }
 
-    static detail::Optional<TensorDataAccessStridedImage> Create(const ITensorData &data)
+    static detail::Optional<TensorDataAccessStridedImage> Create(const TensorData &data)
     {
         if (IsCompatible(data))
         {
-            return TensorDataAccessStridedImage(dynamic_cast<const ITensorDataStrided &>(data));
+            return TensorDataAccessStridedImage(data.cast<TensorDataStrided>().value());
         }
         else
         {
@@ -362,7 +362,7 @@ private:
     using MemberShapeInfo = detail::BaseFromMember<TensorShapeInfoImage>;
 
 protected:
-    TensorDataAccessStridedImage(const ITensorDataStrided &data)
+    TensorDataAccessStridedImage(const TensorDataStrided &data)
         : MemberShapeInfo{*TensorShapeInfoImage::Create(data.shape())}
         , detail::TensorDataAccessStridedImageImpl(data, MemberShapeInfo::member)
     {
@@ -381,17 +381,17 @@ public:
     {
     }
 
-    static bool IsCompatible(const ITensorData &data)
+    static bool IsCompatible(const TensorData &data)
     {
         return TensorDataAccessStridedImage::IsCompatible(data)
             && TensorShapeInfoImagePlanar::IsCompatible(data.shape());
     }
 
-    static detail::Optional<TensorDataAccessStridedImagePlanar> Create(const ITensorData &data)
+    static detail::Optional<TensorDataAccessStridedImagePlanar> Create(const TensorData &data)
     {
         if (IsCompatible(data))
         {
-            return TensorDataAccessStridedImagePlanar(dynamic_cast<const ITensorDataStrided &>(data));
+            return TensorDataAccessStridedImagePlanar(data.cast<TensorDataStrided>().value());
         }
         else
         {
@@ -403,7 +403,7 @@ private:
     using MemberShapeInfo = detail::BaseFromMember<TensorShapeInfoImagePlanar>;
 
 protected:
-    TensorDataAccessStridedImagePlanar(const ITensorDataStrided &data)
+    TensorDataAccessStridedImagePlanar(const TensorDataStrided &data)
         : MemberShapeInfo{*TensorShapeInfoImagePlanar::Create(data.shape())}
         , detail::TensorDataAccessStridedImagePlanarImpl(data, MemberShapeInfo::member)
     {

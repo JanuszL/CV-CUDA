@@ -121,8 +121,8 @@ TEST_P(OpCvtColor, correct_output)
     nvcv::Tensor srcTensor = test::CreateTensor(batches, width, height, srcFormat);
     nvcv::Tensor dstTensor = test::CreateTensor(batches, width, height, dstFormat);
 
-    const auto *srcData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(srcTensor.exportData());
-    const auto *dstData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(dstTensor.exportData());
+    auto srcData = srcTensor.exportData<nvcv::TensorDataStridedCuda>();
+    auto dstData = dstTensor.exportData<nvcv::TensorDataStridedCuda>();
 
     ASSERT_NE(srcData, nullptr);
     ASSERT_NE(dstData, nullptr);

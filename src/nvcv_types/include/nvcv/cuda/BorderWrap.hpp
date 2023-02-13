@@ -29,7 +29,7 @@
 #include "TypeTraits.hpp"     // for NumElements, etc.
 
 #include <nvcv/BorderType.h>         // for NVCVBorderType, etc.
-#include <nvcv/ITensorData.hpp>      // for ITensorDataStridedCuda, etc.
+#include <nvcv/TensorData.hpp>       // for TensorDataStridedCuda, etc.
 #include <nvcv/TensorDataAccess.hpp> // for TensorDataAccessStridedImagePlanar, etc.
 #include <util/Assert.h>             // for NVCV_ASSERT, etc.
 
@@ -190,7 +190,7 @@ public:
         }
     }
 
-    explicit __host__ BorderWrapImpl(const ITensorDataStridedCuda &tensor)
+    explicit __host__ BorderWrapImpl(const TensorDataStridedCuda &tensor)
         : m_tensorWrap(tensor)
     {
         NVCV_ASSERT(tensor.rank() >= kNumDimensions);
@@ -296,10 +296,10 @@ public:
     /**
      * Constructs a BorderWrap by wrapping a \p tensor.
      *
-     * @param[in] tensor A \ref ITensorDataStridedCuda object to be wrapped.
+     * @param[in] tensor A \ref TensorDataStridedCuda object to be wrapped.
      * @param[in] borderValue The border value is ignored in non-constant border types.
      */
-    explicit __host__ BorderWrap(const ITensorDataStridedCuda &tensor, ValueType borderValue = {})
+    explicit __host__ BorderWrap(const TensorDataStridedCuda &tensor, ValueType borderValue = {})
         : Base(tensor)
     {
     }
@@ -417,10 +417,10 @@ public:
     /**
      * Constructs a BorderWrap by wrapping a \p tensor.
      *
-     * @param[in] tensor A \ref ITensorDataStridedCuda object to be wrapped.
+     * @param[in] tensor A \ref TensorDataStridedCuda object to be wrapped.
      * @param[in] borderValue The border value to be used when accessing outside the tensor.
      */
-    explicit __host__ BorderWrap(const ITensorDataStridedCuda &tensor, ValueType borderValue = {})
+    explicit __host__ BorderWrap(const TensorDataStridedCuda &tensor, ValueType borderValue = {})
         : Base(tensor)
         , m_borderValue(borderValue)
     {
@@ -541,7 +541,7 @@ private:
  * @return Border wrap useful to access tensor data border aware in H and W in CUDA kernels.
  */
 template<typename T, NVCVBorderType B, class = Require<HasTypeTraits<T>>>
-__host__ auto CreateBorderWrapNHW(const ITensorDataStridedCuda &tensor, const T &borderValue)
+__host__ auto CreateBorderWrapNHW(const TensorDataStridedCuda &tensor, const T &borderValue)
 {
     auto tensorAccess = TensorDataAccessStridedImagePlanar::Create(tensor);
     NVCV_ASSERT(tensorAccess);

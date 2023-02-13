@@ -182,7 +182,7 @@ Tensor::Tensor(const nvcv::Tensor::Requirements &reqs)
 {
 }
 
-Tensor::Tensor(const nvcv::ITensorData &data, py::object wrappedObject)
+Tensor::Tensor(const nvcv::TensorData &data, py::object wrappedObject)
     : m_impl{std::make_unique<nvcv::TensorWrapData>(data)}
     , m_key{}
     , m_wrappedObject(wrappedObject)
@@ -295,11 +295,11 @@ auto Tensor::key() const -> const Key &
     return m_key;
 }
 
-static py::object ToPython(const nvcv::ITensorData &imgData, py::object owner)
+static py::object ToPython(const nvcv::TensorData &tensorData, py::object owner)
 {
     py::object out;
 
-    auto *stridedData = dynamic_cast<const nvcv::ITensorDataStrided *>(&imgData);
+    auto stridedData = tensorData.cast<nvcv::TensorDataStrided>();
     if (!stridedData)
     {
         throw std::runtime_error("Only tensors with pitch-linear data can be exported");
@@ -311,15 +311,11 @@ static py::object ToPython(const nvcv::ITensorData &imgData, py::object owner)
 
 py::object Tensor::cuda() const
 {
-    const nvcv::ITensorData *tensorData = m_impl->exportData();
-    if (!tensorData)
-    {
-        throw std::runtime_error("Tensor data can't be exported");
-    }
+    nvcv::TensorData tensorData = m_impl->exportData();
 
     // Note: we can't cache the returned ExternalBuffer because it is holding
     // a reference to us. Doing so would lead to mem leaks.
-    return ToPython(*tensorData, py::cast(this->shared_from_this()));
+    return ToPython(tensorData, py::cast(this->shared_from_this()));
 }
 
 std::ostream &operator<<(std::ostream &out, const Tensor &tensor)

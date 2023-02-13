@@ -62,7 +62,7 @@ __global__ void flip_kernel(const cuda::ImageBatchVarShapeWrap<T> src, cuda::Ima
 
 template<typename T>
 void flip(const IImageBatchVarShapeDataStridedCuda &input, const IImageBatchVarShapeDataStridedCuda &output,
-          const ITensorDataStridedCuda &flipCode, cudaStream_t stream)
+          const TensorDataStridedCuda &flipCode, cudaStream_t stream)
 {
     constexpr uint32_t BLOCK = 32;
 
@@ -93,7 +93,7 @@ size_t FlipOrCopyVarShape::calBufferSize(int maxBatchSize)
 
 ErrorCode FlipOrCopyVarShape::infer(const IImageBatchVarShapeDataStridedCuda &input,
                                     const IImageBatchVarShapeDataStridedCuda &output,
-                                    const ITensorDataStridedCuda &flipCode, cudaStream_t stream)
+                                    const TensorDataStridedCuda &flipCode, cudaStream_t stream)
 {
     DataFormat inputFormat  = helpers::GetLegacyDataFormat(input);
     DataFormat outputFormat = helpers::GetLegacyDataFormat(output);
@@ -133,10 +133,10 @@ ErrorCode FlipOrCopyVarShape::infer(const IImageBatchVarShapeDataStridedCuda &in
 
     // using flip_t = void(const IImageBatchVarShapeDataStridedCuda & input,
     //                     const IImageBatchVarShapeDataStridedCuda & output,
-    //                     const ITensorDataStridedCuda & flipCode,
+    //                     const TensorDataStridedCuda & flipCode,
     //                     cudaStream_t stream);
     typedef void (*flip_t)(const IImageBatchVarShapeDataStridedCuda &input,
-                           const IImageBatchVarShapeDataStridedCuda &output, const ITensorDataStridedCuda &flipCode,
+                           const IImageBatchVarShapeDataStridedCuda &output, const TensorDataStridedCuda &flipCode,
                            cudaStream_t stream);
 
     static const flip_t funcs[6][4] = {

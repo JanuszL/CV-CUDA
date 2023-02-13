@@ -149,8 +149,8 @@ TEST_P(OpCenterCrop, CenterCrop_packed)
     nvcv::Tensor imgOut = test::CreateTensor(numberOfImages, inWidth, inHeight, nvcv::FMT_RGBA8);
     nvcv::Tensor imgIn  = test::CreateTensor(numberOfImages, inWidth, inHeight, nvcv::FMT_RGBA8);
 
-    const auto *inData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgIn.exportData());
-    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgOut.exportData());
+    auto inData  = imgIn.exportData<nvcv::TensorDataStridedCuda>();
+    auto outData = imgOut.exportData<nvcv::TensorDataStridedCuda>();
 
     ASSERT_NE(nullptr, inData);
     ASSERT_NE(nullptr, outData);

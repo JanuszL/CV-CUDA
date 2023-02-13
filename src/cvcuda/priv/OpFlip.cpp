@@ -36,14 +36,14 @@ Flip::Flip(int32_t maxBatchSize)
 
 void Flip::operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out, int32_t flipCode) const
 {
-    auto *input = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(in.exportData());
+    auto input = in.exportData<nvcv::TensorDataStridedCuda>();
     if (input == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
                               "Input must be cuda-accessible, pitch-linear tensor");
     }
 
-    auto *output = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(out.exportData());
+    auto output = out.exportData<nvcv::TensorDataStridedCuda>();
     if (output == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
@@ -72,7 +72,7 @@ void Flip::operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, 
                               " image batch");
     }
 
-    auto *flip_code = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(flipCode.exportData());
+    auto flip_code = flipCode.exportData<nvcv::TensorDataStridedCuda>();
     if (flip_code == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,

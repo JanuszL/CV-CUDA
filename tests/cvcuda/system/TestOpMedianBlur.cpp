@@ -209,9 +209,9 @@ TEST_P(OpMedianBlur, tensor_correct_output)
     // Generate input
     nvcv::Tensor imgSrc(numberOfImages, {srcWidth, srcHeight}, fmt);
 
-    auto srcData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgSrc.exportData());
+    auto srcData = imgSrc.exportData<nvcv::TensorDataStridedCuda>();
 
-    ASSERT_NE(nullptr, srcData);
+    ASSERT_NE(nvcv::detail::NullOpt, srcData);
 
     auto srcAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*srcData);
     ASSERT_TRUE(srcAccess);
@@ -259,7 +259,7 @@ TEST_P(OpMedianBlur, tensor_correct_output)
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
     // Check result
-    const auto *dstData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgDst.exportData());
+    auto dstData = imgDst.exportData<nvcv::TensorDataStridedCuda>();
     ASSERT_NE(nullptr, dstData);
 
     auto dstAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*dstData);
@@ -310,7 +310,7 @@ TEST_P(OpMedianBlur, varshape_correct_output)
 
     // Create tensor to store kernel size
     nvcv::Tensor ksizeTensor(nvcv::TensorShape({numberOfImages, 2}, nvcv::TENSOR_NW), nvcv::TYPE_S32);
-    const auto  *ksizeTensorData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(ksizeTensor.exportData());
+    auto         ksizeTensorData = ksizeTensor.exportData<nvcv::TensorDataStridedCuda>();
     ASSERT_NE(nullptr, ksizeTensorData);
 
     auto ksizeTensorDataAccess = nvcv::TensorDataAccessStrided::Create(*ksizeTensorData);

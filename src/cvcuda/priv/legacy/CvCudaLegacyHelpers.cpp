@@ -248,12 +248,12 @@ cuda_op::DataFormat GetLegacyDataFormat(const TensorLayout &layout)
     }
 }
 
-cuda_op::DataFormat GetLegacyDataFormat(const ITensorDataStridedCuda &container)
+cuda_op::DataFormat GetLegacyDataFormat(const TensorDataStridedCuda &container)
 {
     return GetLegacyDataFormat(container.layout());
 }
 
-Size2D GetMaxImageSize(const ITensorDataStridedCuda &tensor)
+Size2D GetMaxImageSize(const TensorDataStridedCuda &tensor)
 {
     //tensor must be NHWC or HWC
     if (auto access = TensorDataAccessStridedImagePlanar::Create(tensor))

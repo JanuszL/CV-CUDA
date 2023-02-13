@@ -207,7 +207,7 @@ WarpAffineVarShape::~WarpAffineVarShape()
 
 ErrorCode WarpAffineVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData,
                                     const IImageBatchVarShapeDataStridedCuda &outData,
-                                    const ITensorDataStridedCuda &transMatrix, const int32_t flags,
+                                    const TensorDataStridedCuda &transMatrix, const int32_t flags,
                                     const NVCVBorderType borderMode, const float4 borderValue, cudaStream_t stream)
 {
     if (m_maxBatchSize <= 0)
@@ -334,7 +334,7 @@ WarpPerspectiveVarShape::~WarpPerspectiveVarShape()
 
 ErrorCode WarpPerspectiveVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData,
                                          const IImageBatchVarShapeDataStridedCuda &outData,
-                                         const ITensorDataStridedCuda &transMatrix, const int32_t flags,
+                                         const TensorDataStridedCuda &transMatrix, const int32_t flags,
                                          const NVCVBorderType borderMode, const float4 borderValue, cudaStream_t stream)
 {
     if (m_maxBatchSize <= 0)

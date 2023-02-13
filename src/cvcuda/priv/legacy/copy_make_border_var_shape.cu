@@ -116,7 +116,7 @@ struct copyMakeBorderDispatcher
 
 template<typename T, int cn, typename OutType> // uchar3 float3 uchar float
 void copyMakeBorder(const IImageBatchVarShapeDataStridedCuda &inData, const OutType &outData,
-                    const ITensorDataStridedCuda &top, const ITensorDataStridedCuda &left,
+                    const TensorDataStridedCuda &top, const TensorDataStridedCuda &left,
                     const NVCVBorderType borderType, const float4 value, cudaStream_t stream)
 {
     typedef cuda::MakeType<T, cn> src_type;
@@ -130,7 +130,7 @@ void copyMakeBorder(const IImageBatchVarShapeDataStridedCuda &inData, const OutT
     auto outSize = GetMaxImageSize(outData);
 
     using out_type =
-        typename std::conditional<std::is_same<OutType, ITensorDataStridedCuda>::value, cuda::Tensor3DWrap<src_type>,
+        typename std::conditional<std::is_same<OutType, TensorDataStridedCuda>::value, cuda::Tensor3DWrap<src_type>,
                                   cuda::ImageBatchVarShapeWrap<src_type>>::type;
 
     out_type dstWrap(outData);
@@ -151,7 +151,7 @@ void copyMakeBorder(const IImageBatchVarShapeDataStridedCuda &inData, const OutT
 
 template<class OutType>
 ErrorCode CopyMakeBorderVarShape::inferWarp(const IImageBatchVarShapeDataStridedCuda &data_in, const OutType &data_out,
-                                            const ITensorDataStridedCuda &top, const ITensorDataStridedCuda &left,
+                                            const TensorDataStridedCuda &top, const TensorDataStridedCuda &left,
                                             const NVCVBorderType borderType, const float4 value, cudaStream_t stream)
 {
     DataFormat input_format  = GetLegacyDataFormat(data_in);
@@ -220,7 +220,7 @@ ErrorCode CopyMakeBorderVarShape::inferWarp(const IImageBatchVarShapeDataStrided
     }
 
     typedef void (*func_t)(const IImageBatchVarShapeDataStridedCuda &d_in, const OutType &d_out,
-                           const ITensorDataStridedCuda &top, const ITensorDataStridedCuda &left,
+                           const TensorDataStridedCuda &top, const TensorDataStridedCuda &left,
                            const NVCVBorderType borderType, const float4 value, cudaStream_t stream);
 
     // clang-format off
@@ -244,15 +244,15 @@ ErrorCode CopyMakeBorderVarShape::inferWarp(const IImageBatchVarShapeDataStrided
 
 ErrorCode CopyMakeBorderVarShape::infer(const IImageBatchVarShapeDataStridedCuda &data_in,
                                         const IImageBatchVarShapeDataStridedCuda &data_out,
-                                        const ITensorDataStridedCuda &top, const ITensorDataStridedCuda &left,
+                                        const TensorDataStridedCuda &top, const TensorDataStridedCuda &left,
                                         const NVCVBorderType borderType, const float4 value, cudaStream_t stream)
 {
     return inferWarp(data_in, data_out, top, left, borderType, value, stream);
 }
 
 ErrorCode CopyMakeBorderVarShape::infer(const IImageBatchVarShapeDataStridedCuda &data_in,
-                                        const ITensorDataStridedCuda &data_out, const ITensorDataStridedCuda &top,
-                                        const ITensorDataStridedCuda &left, const NVCVBorderType borderType,
+                                        const TensorDataStridedCuda &data_out, const TensorDataStridedCuda &top,
+                                        const TensorDataStridedCuda &left, const NVCVBorderType borderType,
                                         const float4 value, cudaStream_t stream)
 {
     return inferWarp(data_in, data_out, top, left, borderType, value, stream);

@@ -105,8 +105,8 @@ TYPED_TEST(OpReformat, correct_output)
     nvcv::Tensor inTensor  = test::CreateTensor(batches, width, height, inFormat);
     nvcv::Tensor outTensor = test::CreateTensor(batches, width, height, outFormat);
 
-    const auto *inData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inTensor.exportData());
-    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(outTensor.exportData());
+    auto inData  = inTensor.exportData<nvcv::TensorDataStridedCuda>();
+    auto outData = outTensor.exportData<nvcv::TensorDataStridedCuda>();
 
     ASSERT_NE(inData, nullptr);
     ASSERT_NE(outData, nullptr);

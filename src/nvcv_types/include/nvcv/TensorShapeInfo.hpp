@@ -91,10 +91,8 @@ public:
     }
 
 protected:
-    const TensorShape &m_shape;
-    int                m_cacheNumSamples;
-
-    TensorShapeInfoImpl(const TensorShapeInfoImpl &that) = delete;
+    const TensorShape m_shape;
+    int               m_cacheNumSamples;
 
     TensorShapeInfoImpl(const TensorShapeInfoImpl &that, const TensorLayoutInfo &infoLayout)
         : m_shape(that.m_shape)
@@ -104,7 +102,7 @@ protected:
     }
 
 private:
-    const TensorLayoutInfo &m_infoLayout;
+    TensorLayoutInfo m_infoLayout;
 };
 
 class TensorShapeInfoImageImpl : public TensorShapeInfoImpl

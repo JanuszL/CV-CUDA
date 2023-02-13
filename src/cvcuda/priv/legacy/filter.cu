@@ -64,7 +64,7 @@ __global__ void filter2D(SrcWrapper src, DstWrapper dst, Size2D dstSize, KernelW
 }
 
 template<typename T, NVCVBorderType B, class KernelWrapper>
-void Filter2DCaller(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData, KernelWrapper kernel,
+void Filter2DCaller(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData, KernelWrapper kernel,
                     Size2D kernelSize, int2 kernelAnchor, float borderValue, cudaStream_t stream)
 {
     auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
@@ -88,7 +88,7 @@ void Filter2DCaller(const ITensorDataStridedCuda &inData, const ITensorDataStrid
 }
 
 template<typename T, class KernelWrapper>
-void Filter2D(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData, KernelWrapper kernel,
+void Filter2D(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData, KernelWrapper kernel,
               Size2D kernelSize, int2 kernelAnchor, NVCVBorderType borderMode, float borderValue, cudaStream_t stream)
 {
     switch (borderMode)
@@ -135,7 +135,7 @@ size_t Laplacian::calBufferSize(DataShape max_input_shape, DataShape max_output_
     return 0;
 }
 
-ErrorCode Laplacian::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData, int ksize,
+ErrorCode Laplacian::infer(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData, int ksize,
                            float scale, NVCVBorderType borderMode, cudaStream_t stream)
 {
     if (!(ksize == 1 || ksize == 3))
@@ -192,7 +192,7 @@ ErrorCode Laplacian::infer(const ITensorDataStridedCuda &inData, const ITensorDa
     normalizeAnchor(kernelAnchor, kLaplacianKernelSize);
     float borderValue = .0f;
 
-    typedef void (*filter2D_t)(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
+    typedef void (*filter2D_t)(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData,
                                cuda::math::Vector<float, 9> kernel, Size2D kernelSize, int2 kernelAnchor,
                                NVCVBorderType borderMode, float borderValue, cudaStream_t stream);
 
@@ -278,8 +278,8 @@ size_t Gaussian::calBufferSize(DataShape max_input_shape, DataShape max_output_s
     return maxKernelSize.w * maxKernelSize.h * sizeof(float);
 }
 
-ErrorCode Gaussian::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
-                          Size2D kernelSize, double2 sigma, NVCVBorderType borderMode, cudaStream_t stream)
+ErrorCode Gaussian::infer(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData, Size2D kernelSize,
+                          double2 sigma, NVCVBorderType borderMode, cudaStream_t stream)
 {
     if (inData.dtype() != outData.dtype())
     {
@@ -362,9 +362,9 @@ ErrorCode Gaussian::infer(const ITensorDataStridedCuda &inData, const ITensorDat
     normalizeAnchor(kernelAnchor, kernelSize);
     float borderValue = .0f;
 
-    typedef void (*filter2D_t)(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
-                               float *kernel, Size2D kernelSize, int2 kernelAnchor, NVCVBorderType borderMode,
-                               float borderValue, cudaStream_t stream);
+    typedef void (*filter2D_t)(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData, float *kernel,
+                               Size2D kernelSize, int2 kernelAnchor, NVCVBorderType borderMode, float borderValue,
+                               cudaStream_t stream);
 
     static const filter2D_t funcs[6][4] = {
         { Filter2D<uchar>, 0,  Filter2D<uchar3>,  Filter2D<uchar4>},
@@ -411,7 +411,7 @@ size_t AverageBlur::calBufferSize(DataShape max_input_shape, DataShape max_outpu
     return maxKernelSize.w * maxKernelSize.h * sizeof(float);
 }
 
-ErrorCode AverageBlur::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
+ErrorCode AverageBlur::infer(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData,
                              Size2D kernelSize, int2 kernelAnchor, NVCVBorderType borderMode, cudaStream_t stream)
 {
     if (inData.dtype() != outData.dtype())
@@ -481,9 +481,9 @@ ErrorCode AverageBlur::infer(const ITensorDataStridedCuda &inData, const ITensor
     normalizeAnchor(kernelAnchor, kernelSize);
     float borderValue = .0f;
 
-    typedef void (*filter2D_t)(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
-                               float *kernel, Size2D kernelSize, int2 kernelAnchor, NVCVBorderType borderMode,
-                               float borderValue, cudaStream_t stream);
+    typedef void (*filter2D_t)(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData, float *kernel,
+                               Size2D kernelSize, int2 kernelAnchor, NVCVBorderType borderMode, float borderValue,
+                               cudaStream_t stream);
 
     static const filter2D_t funcs[6][4] = {
         { Filter2D<uchar>, 0,  Filter2D<uchar3>,  Filter2D<uchar4>},

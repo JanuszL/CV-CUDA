@@ -45,15 +45,19 @@ public:
     DataType     dtype() const;
     TensorLayout layout() const;
 
-    const ITensorData *exportData() const;
+    TensorData exportData() const;
+
+    template<typename DerivedTensorData>
+    detail::Optional<DerivedTensorData> exportData() const
+    {
+        return exportData().cast<DerivedTensorData>();
+    }
 
     void  setUserPointer(void *ptr);
     void *userPointer() const;
 
 private:
     virtual NVCVTensorHandle doGetHandle() const = 0;
-
-    mutable detail::Optional<TensorDataStridedCuda> m_cacheData;
 };
 
 } // namespace nvcv

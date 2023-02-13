@@ -833,7 +833,7 @@ void StartTest(int srcWidth, int srcHeight, int dstWidth, int dstHeight, NVCVInt
     // Generate input
     nvcv::Tensor imgSrc(numberOfImages, {srcWidth, srcHeight}, fmt);
 
-    const auto *srcData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgSrc.exportData());
+    auto srcData = imgSrc.exportData<nvcv::TensorDataStridedCuda>();
 
     ASSERT_NE(nullptr, srcData);
 
@@ -874,7 +874,7 @@ void StartTest(int srcWidth, int srcHeight, int dstWidth, int dstHeight, NVCVInt
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
     // Check result
-    const auto *dstData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgDst.exportData());
+    auto dstData = imgDst.exportData<nvcv::TensorDataStridedCuda>();
     ASSERT_NE(nullptr, dstData);
 
     auto dstAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*dstData);

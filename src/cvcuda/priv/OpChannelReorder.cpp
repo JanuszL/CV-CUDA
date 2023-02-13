@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,9 +50,8 @@ void ChannelReorder::operator()(cudaStream_t stream, const nvcv::IImageBatchVarS
                               "Output must be cuda-accessible, varshape pitch-linear image batch");
     }
 
-    const nvcv::ITensorDataStridedCuda *ordersData
-        = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(orders.exportData());
-    if (ordersData == nullptr)
+    auto ordersData = orders.exportData<nvcv::TensorDataStridedCuda>();
+    if (!ordersData)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
                               "Input channel order tensor must be cuda-accessible, pitch-linear tensor");

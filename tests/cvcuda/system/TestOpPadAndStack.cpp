@@ -136,8 +136,8 @@ TEST_P(OpPadAndStack, correct_output)
     nvcv::Tensor inTop(1, {numBatches, 1}, nvcv::FMT_S32);
     nvcv::Tensor inLeft(1, {numBatches, 1}, nvcv::FMT_S32);
 
-    const auto *inTopData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inTop.exportData());
-    const auto *inLeftData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inLeft.exportData());
+    auto inTopData  = inTop.exportData<nvcv::TensorDataStridedCuda>();
+    auto inLeftData = inLeft.exportData<nvcv::TensorDataStridedCuda>();
 
     ASSERT_NE(nullptr, inTopData);
     ASSERT_NE(nullptr, inLeftData);
@@ -205,7 +205,7 @@ TEST_P(OpPadAndStack, correct_output)
 
     nvcv::Tensor imgDst(numBatches, {dstWidth, dstHeight}, nvcv::FMT_RGBA8);
 
-    const auto *dstData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgDst.exportData());
+    auto dstData = imgDst.exportData<nvcv::TensorDataStridedCuda>();
 
     ASSERT_NE(nullptr, dstData);
 

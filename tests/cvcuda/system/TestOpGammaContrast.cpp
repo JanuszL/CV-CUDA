@@ -177,7 +177,7 @@ TEST_P(OpGammaContrast, varshape_correct_output)
     int          nElements = gammaVec.size();
     nvcv::Tensor gammaTensor({{nElements}, "N"}, nvcv::TYPE_F32);
     {
-        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(gammaTensor.exportData());
+        auto dev = gammaTensor.exportData<nvcv::TensorDataStridedCuda>();
         ASSERT_NE(dev, nullptr);
 
         ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(dev->basePtr(), gammaVec.data(), gammaVec.size() * sizeof(float),

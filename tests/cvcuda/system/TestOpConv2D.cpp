@@ -153,7 +153,7 @@ TEST_P(OpConv2D, varshape_correct_output)
     nvcv::Tensor kernelAnchorTensor({{numImages}, "N"}, nvcv::TYPE_2S32);
 
     {
-        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(kernelAnchorTensor.exportData());
+        auto dev = kernelAnchorTensor.exportData<nvcv::TensorDataStridedCuda>();
         ASSERT_NE(dev, nullptr);
 
         std::vector<int2> vec(numImages, kernelAnchor);

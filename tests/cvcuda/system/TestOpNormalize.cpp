@@ -132,7 +132,7 @@ TEST_P(OpNormalize, tensor_correct_output)
 
     // Create input tensor
     nvcv::Tensor imgSrc  = test::CreateTensor(numImages, width, height, fmt);
-    const auto  *srcData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgSrc.exportData());
+    auto         srcData = imgSrc.exportData<nvcv::TensorDataStridedCuda>();
     ASSERT_NE(nullptr, srcData);
     auto srcAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*srcData);
     ASSERT_TRUE(srcAccess);
@@ -155,7 +155,7 @@ TEST_P(OpNormalize, tensor_correct_output)
 
     // Create base tensor
     nvcv::Tensor imgBase(baseNumImages, {baseWidth, baseHeight}, baseFormat);
-    const auto  *baseData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgBase.exportData());
+    auto         baseData = imgBase.exportData<nvcv::TensorDataStridedCuda>();
     ASSERT_NE(nullptr, baseData);
     auto baseAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*baseData);
     ASSERT_TRUE(baseAccess);
@@ -178,7 +178,7 @@ TEST_P(OpNormalize, tensor_correct_output)
 
     // Create scale tensor
     nvcv::Tensor imgScale(scaleNumImages, {scaleWidth, scaleHeight}, scaleFormat);
-    const auto  *scaleData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgScale.exportData());
+    auto         scaleData = imgScale.exportData<nvcv::TensorDataStridedCuda>();
     ASSERT_NE(nullptr, scaleData);
     auto scaleAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*scaleData);
     ASSERT_TRUE(scaleAccess);
@@ -212,7 +212,7 @@ TEST_P(OpNormalize, tensor_correct_output)
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
     // Check result
-    const auto *dstData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgDst.exportData());
+    auto dstData = imgDst.exportData<nvcv::TensorDataStridedCuda>();
     ASSERT_NE(nullptr, dstData);
 
     auto dstAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*dstData);
@@ -311,7 +311,7 @@ TEST_P(OpNormalize, varshape_correct_output)
         baseFormat.planeDataType(0));
     std::vector<float> baseVec(baseFormat.numChannels());
     {
-        const auto *baseData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgBase.exportData());
+        auto baseData = imgBase.exportData<nvcv::TensorDataStridedCuda>();
         ASSERT_NE(nullptr, baseData);
         auto baseAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*baseData);
         ASSERT_TRUE(baseAccess);
@@ -334,7 +334,7 @@ TEST_P(OpNormalize, varshape_correct_output)
         scaleFormat.planeDataType(0));
     std::vector<float> scaleVec(scaleFormat.numChannels());
     {
-        const auto *scaleData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgScale.exportData());
+        auto scaleData = imgScale.exportData<nvcv::TensorDataStridedCuda>();
         ASSERT_NE(nullptr, scaleData);
         auto scaleAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*scaleData);
         ASSERT_TRUE(scaleAccess);

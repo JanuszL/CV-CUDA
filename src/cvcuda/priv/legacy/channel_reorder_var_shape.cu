@@ -61,7 +61,7 @@ __global__ void channel_reorder_kernel(const cuda::ImageBatchVarShapeWrapNHWC<co
 
 template<typename T>
 void reorder(const IImageBatchVarShapeDataStridedCuda &inData, const IImageBatchVarShapeDataStridedCuda &outData,
-             const ITensorDataStridedCuda &orderData, int numChannels, cudaStream_t stream)
+             const TensorDataStridedCuda &orderData, int numChannels, cudaStream_t stream)
 {
     int batch_size = inData.numImages();
 
@@ -84,7 +84,7 @@ void reorder(const IImageBatchVarShapeDataStridedCuda &inData, const IImageBatch
 
 ErrorCode ChannelReorderVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData,
                                         const IImageBatchVarShapeDataStridedCuda &outData,
-                                        const ITensorDataStridedCuda &orderData, cudaStream_t stream)
+                                        const TensorDataStridedCuda &orderData, cudaStream_t stream)
 {
     if (inData.numImages() != outData.numImages())
     {
@@ -192,7 +192,7 @@ ErrorCode ChannelReorderVarShape::infer(const IImageBatchVarShapeDataStridedCuda
     }
 
     typedef void (*func_t)(const IImageBatchVarShapeDataStridedCuda &inData,
-                           const IImageBatchVarShapeDataStridedCuda &outData, const ITensorDataStridedCuda &orderData,
+                           const IImageBatchVarShapeDataStridedCuda &outData, const TensorDataStridedCuda &orderData,
                            int numChannels, cudaStream_t stream);
 
     static const func_t funcs[6] = {reorder<uchar>, 0, reorder<ushort>, reorder<short>, reorder<int>, reorder<float>};

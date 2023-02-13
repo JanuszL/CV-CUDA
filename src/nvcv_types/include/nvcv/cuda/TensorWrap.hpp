@@ -26,8 +26,8 @@
 
 #include "TypeTraits.hpp" // for HasTypeTraits, etc.
 
-#include <nvcv/ITensorData.hpp>      // for ITensorDataStridedCuda, etc.
 #include <nvcv/ImageData.hpp>        // for ImageDataStridedCuda, etc.
+#include <nvcv/TensorData.hpp>       // for TensorDataStridedCuda, etc.
 #include <nvcv/TensorDataAccess.hpp> // for TensorDataAccessStridedImagePlanar, etc.
 #include <util/Assert.h>             // for NVCV_ASSERT, etc.
 
@@ -129,7 +129,7 @@ public:
      *
      * @param[in] tensor Tensor reference to the tensor that will be wrapped.
      */
-    __host__ TensorWrap(const ITensorDataStridedCuda &tensor)
+    __host__ TensorWrap(const TensorDataStridedCuda &tensor)
     {
         constexpr int kStride[] = {std::forward<int>(Strides)...};
 
@@ -293,7 +293,7 @@ public:
      *
      * @param[in] tensor Tensor reference to the tensor that will be wrapped.
      */
-    __host__ TensorWrap(const ITensorDataStridedCuda &tensor)
+    __host__ TensorWrap(const TensorDataStridedCuda &tensor)
         : Base(tensor)
     {
     }
@@ -409,7 +409,7 @@ using TensorNDWrap = std::conditional_t<
  * @return Tensor wrap useful to access tensor data in CUDA kernels.
  */
 template<typename T, class = Require<HasTypeTraits<T>>>
-__host__ auto CreateTensorWrapNHW(const ITensorDataStridedCuda &tensor)
+__host__ auto CreateTensorWrapNHW(const TensorDataStridedCuda &tensor)
 {
     auto tensorAccess = TensorDataAccessStridedImagePlanar::Create(tensor);
     NVCV_ASSERT(tensorAccess);
@@ -436,7 +436,7 @@ __host__ auto CreateTensorWrapNHW(const ITensorDataStridedCuda &tensor)
  * @return Tensor wrap useful to access tensor data in CUDA kernels.
  */
 template<typename T, class = Require<HasTypeTraits<T>>>
-__host__ auto CreateTensorWrapNHWC(const ITensorDataStridedCuda &tensor)
+__host__ auto CreateTensorWrapNHWC(const TensorDataStridedCuda &tensor)
 {
     auto tensorAccess = TensorDataAccessStridedImagePlanar::Create(tensor);
     NVCV_ASSERT(tensorAccess);

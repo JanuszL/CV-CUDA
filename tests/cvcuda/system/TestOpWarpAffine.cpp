@@ -352,7 +352,7 @@ TEST_P(OpWarpAffine, tensor_correct_output)
     // Generate input
     nvcv::Tensor imgSrc(numberOfImages, {srcWidth, srcHeight}, fmt);
 
-    const auto *srcData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgSrc.exportData());
+    auto srcData = imgSrc.exportData<nvcv::TensorDataStridedCuda>();
 
     ASSERT_NE(nullptr, srcData);
 
@@ -388,7 +388,7 @@ TEST_P(OpWarpAffine, tensor_correct_output)
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
     // Check result
-    const auto *dstData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgDst.exportData());
+    auto dstData = imgDst.exportData<nvcv::TensorDataStridedCuda>();
     ASSERT_NE(nullptr, dstData);
 
     auto dstAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*dstData);
@@ -485,9 +485,7 @@ TEST_P(OpWarpAffine, varshape_correct_output)
     const int flags = interpolation | (inverseMap ? NVCV_WARP_INVERSE_MAP : 0);
 
     nvcv::Tensor transMatrixTensor(nvcv::TensorShape({numberOfImages, 6}, nvcv::TENSOR_NW), nvcv::TYPE_F32);
-    const auto  *transMatrixTensorData
-        = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(transMatrixTensor.exportData());
-    ASSERT_NE(nullptr, transMatrixTensorData);
+    auto         transMatrixTensorData = transMatrixTensor.exportData<nvcv::TensorDataStridedCuda>();
 
     auto transMatrixTensorDataAccess = nvcv::TensorDataAccessStrided::Create(*transMatrixTensorData);
     ASSERT_TRUE(transMatrixTensorDataAccess);

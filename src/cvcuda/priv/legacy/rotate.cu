@@ -208,7 +208,7 @@ size_t Rotate::calBufferSize(DataShape max_input_shape, DataShape max_output_sha
     return 6 * sizeof(double);
 }
 
-ErrorCode Rotate::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
+ErrorCode Rotate::infer(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData,
                         const double angleDeg, const double2 shift, const NVCVInterpolationType interpolation,
                         cudaStream_t stream)
 {

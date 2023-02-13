@@ -230,9 +230,9 @@ void JointBilateralFilterVarShapeCaller(const IImageBatchVarShapeDataStridedCuda
 ErrorCode JointBilateralFilterVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData,
                                               const IImageBatchVarShapeDataStridedCuda &inColorData,
                                               const IImageBatchVarShapeDataStridedCuda &outData,
-                                              const ITensorDataStridedCuda             &diameterData,
-                                              const ITensorDataStridedCuda             &sigmaColorData,
-                                              const ITensorDataStridedCuda &sigmaSpaceData, NVCVBorderType borderMode,
+                                              const TensorDataStridedCuda              &diameterData,
+                                              const TensorDataStridedCuda              &sigmaColorData,
+                                              const TensorDataStridedCuda &sigmaSpaceData, NVCVBorderType borderMode,
                                               cudaStream_t stream)
 {
     cuda_op::DataFormat input_format      = GetLegacyDataFormat(inData);
