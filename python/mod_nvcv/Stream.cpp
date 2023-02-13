@@ -186,7 +186,17 @@ std::shared_ptr<Stream> Stream::Create()
 Stream::Stream()
     : m_owns(true)
 {
-    util::CheckThrow(cudaStreamCreate(&m_handle));
+    try
+    {
+        util::CheckThrow(cudaStreamCreateWithFlags(&m_handle, cudaStreamNonBlocking));
+        util::CheckThrow(cudaStreamCreateWithFlags(&m_auxStream, cudaStreamNonBlocking));
+        util::CheckThrow(cudaEventCreateWithFlags(&m_event, cudaEventDisableTiming));
+    }
+    catch (...)
+    {
+        destroy();
+        throw;
+    }
 }
 
 Stream::Stream(IExternalStream &extStream)
@@ -199,14 +209,41 @@ Stream::Stream(IExternalStream &extStream)
     {
         throw std::runtime_error("Invalid cuda stream");
     }
+    try
+    {
+        util::CheckThrow(cudaStreamCreateWithFlags(&m_auxStream, cudaStreamNonBlocking));
+        util::CheckThrow(cudaEventCreateWithFlags(&m_event, cudaEventDisableTiming));
+    }
+    catch (...)
+    {
+        destroy();
+        throw;
+    }
 }
 
 Stream::~Stream()
 {
+    destroy();
+}
+
+void Stream::destroy()
+{
+    if (m_event)
+    {
+        util::CheckThrow(cudaEventDestroy(m_event));
+    }
+    if (m_auxStream)
+    {
+        util::CheckThrow(cudaStreamSynchronize(m_auxStream));
+        util::CheckThrow(cudaStreamDestroy(m_auxStream));
+    }
     if (m_owns)
     {
-        util::CheckLog(cudaStreamSynchronize(m_handle));
-        util::CheckLog(cudaStreamDestroy(m_handle));
+        if (m_handle)
+        {
+            util::CheckLog(cudaStreamSynchronize(m_handle));
+            util::CheckLog(cudaStreamDestroy(m_handle));
+        }
     }
 }
 
@@ -235,6 +272,7 @@ void Stream::sync()
     py::gil_scoped_release release;
 
     util::CheckThrow(cudaStreamSynchronize(m_handle));
+    util::CheckThrow(cudaStreamSynchronize(m_auxStream));
 }
 
 Stream &Stream::Current()
@@ -276,7 +314,29 @@ void Stream::holdResources(LockResources usedResources)
             delete pclosure;
         };
 
-        util::CheckThrow(cudaStreamAddCallback(m_handle, fn, closure.get(), 0));
+        // If we naively execute the callback in the main stream (m_handle), the GPU will wait until the callback
+        // is executed (on host). For correctness, GPU doesn't need to wait - it's the CPU that needs
+        // to wait for the work already scheduled to complete.
+        //
+        // Naive timeline:
+        //
+        // stream        GPU_kernel1 | Callback | GPU_kernel2
+        // GPU activity  xxxxxxxxxxx              xxxxxxxxxxx
+        // CPU activity                xxxxxxxx
+        //
+        // Optimized timeline
+        //
+        //
+        //                event -----v
+        // stream        GPU_kernel1 | GPU_kernel2
+        // aux_stream     waitEvent >| Callback
+        //
+        // GPU activity  xxxxxxxxxxx   xxxxxxxxxxx
+        // CPU activity                xxxxxxxx
+
+        util::CheckThrow(cudaEventRecord(m_event, m_handle));
+        util::CheckThrow(cudaStreamWaitEvent(m_auxStream, m_event));
+        util::CheckThrow(cudaStreamAddCallback(m_auxStream, fn, closure.get(), 0));
 
         closure.release();
     }
