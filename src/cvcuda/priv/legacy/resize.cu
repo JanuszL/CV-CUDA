@@ -190,6 +190,7 @@ __global__ void resize_bilinear(SrcWrapper src, DstWrapper dst, int2 srcSize, in
             int   sx = __float2int_rd(fx);
             fx -= sx;
             fx *= ((sx >= 0) && (sx < width - 1));
+            // printf("\nPeter sx %d %f", sx, fx );
             sx = cuda::max(0, cuda::min(sx, width - 2));
 
             *dst.ptr(batch_idx, dst_y, dst_x)
@@ -350,7 +351,7 @@ __global__ void resize_bicubic(SrcWrapper src, DstWrapper dst, int2 srcSize, int
         cX[1] = ((A + 2.0f) * fx - (A + 3.0f)) * fx * fx + 1.0f;
         cX[2] = ((A + 2.0f) * (1.0f - fx) - (A + 3.0f)) * (1.0f - fx) * (1.0f - fx) + 1.0f;
         cX[3] = 1.0f - cX[0] - cX[1] - cX[2];
-
+#pragma unroll
         for (int row = 0; row < 4; ++row)
         {
             //1 - load each sub row from sx-1 to sx+3 inclusive, aligned
@@ -416,6 +417,7 @@ __global__ void resize_bicubic_quad_alignread(SrcWrapper src, DstWrapper dst, in
         float     cX[4][4];
 
         //initialize data for each pixel position
+#pragma unroll
         for (int pix = 0; pix < 4; ++pix)
         {
             accum[pix] = cuda::SetAll<work_type>(0);
@@ -437,9 +439,10 @@ __global__ void resize_bicubic_quad_alignread(SrcWrapper src, DstWrapper dst, in
         const int rowOffset = sx[0] - 1;
 
         //contribute each row into 4 pixels
+#pragma unroll
         for (int row = 0; row < 4; ++row)
         {
-            //1 - load each row from sx[0]-1 to sx[3]+3 inclusive, aligned
+            //1 - load each row from sx[0]-1 to sx[3]+2 inclusive, aligned
             const T *aPtr = _cacheAlignedBufferedRead<CACHE_MEMORY_ALIGNMENT>(
                 src, srcSize, readBuffer, MAX_BUFFER_WORDS, batch_idx, sy + row - 1, sx[0] - 1, sx[3] + 2);
 
@@ -449,8 +452,8 @@ __global__ void resize_bicubic_quad_alignread(SrcWrapper src, DstWrapper dst, in
             {
                 accum[pix]
                     += cY[row]
-                     * (cX[row][0] * aPtr[sx[pix] + rowOffset - 1] + cX[row][1] * aPtr[sx[pix] + rowOffset + 0]
-                        + cX[row][2] * aPtr[sx[pix] + rowOffset + 1] + cX[row][3] * aPtr[sx[pix] + rowOffset + 2]);
+                     * (cX[row][0] * aPtr[sx[pix] - rowOffset - 1] + cX[row][1] * aPtr[sx[pix] - rowOffset + 0]
+                        + cX[row][2] * aPtr[sx[pix] - rowOffset + 1] + cX[row][3] * aPtr[sx[pix] - rowOffset + 2]);
             }
         }
 
@@ -463,6 +466,7 @@ __global__ void resize_bicubic_quad_alignread(SrcWrapper src, DstWrapper dst, in
     }
     else
     { //partially buffered read 4 pixels at a time across each bicubic: 16 coalesced reads instead of 64
+#pragma unroll
         for (int pix = 0; pix < 4; ++pix)
         {
             work_type accum = cuda::SetAll<work_type>(0);
@@ -595,8 +599,8 @@ void resize(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &
     auto src = cuda::CreateTensorWrapNHW<const T>(inData);
     auto dst = cuda::CreateTensorWrapNHW<T>(outData);
 
-    const int THREADS_PER_BLOCK = 128; //256?  64?
-    const int BLOCK_WIDTH       = 16;  //as in 32x4 or 32x8.  16x8 and 16x16 are also viable
+    const int THREADS_PER_BLOCK = 256; //256?  64?
+    const int BLOCK_WIDTH       = 8;   //as in 32x4 or 32x8.  16x8 and 16x16 are also viable
 
     const dim3 blockSize(BLOCK_WIDTH, THREADS_PER_BLOCK / BLOCK_WIDTH, 1);
     const dim3 gridSize(divUp(out_width, blockSize.x), divUp(out_height, blockSize.y), batch_size);
@@ -607,6 +611,7 @@ void resize(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &
 
     //bool can_quad = ((((size_t)dst_ptr) % sizeof(T)) == 0) && ((out_width % 4) == 0);  //is the output buffer quad-pixel aligned?
     bool can_quad = ((out_width % 4) == 0); //is the output buffer quad-pixel aligned?
+    //bool can_quad = false; //override
 
     //Note: resize is fundamentally a gather memory operation, with a little bit of compute
     //      our goals are to (a) maximize throughput, and (b) minimize occupancy for the same performance
@@ -641,11 +646,13 @@ void resize(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &
     case NVCV_INTERP_CUBIC:
         if (can_quad)
         { //thread does 4 pixels horizontally for aligned read and write
+            //printf("\nPETER QUQD");
             resize_bicubic_quad_alignread<<<quadGridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x,
                                                                                   scale_y);
         }
         else
         { //generic single pixel per thread case
+            // printf("\nPETER non QUQD");
             resize_bicubic<<<gridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x, scale_y);
         }
         break;
