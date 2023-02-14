@@ -44,6 +44,13 @@ template<ExternalStreamType E>
 class ExternalStream : public IExternalStream
 {
 public:
+    ExternalStream() = default;
+
+    explicit ExternalStream(cudaStream_t cudaStream)
+        : m_cudaStream(cudaStream)
+    {
+    }
+
     void setCudaStream(cudaStream_t cudaStream, py::object obj)
     {
         m_cudaStream = cudaStream;
@@ -360,9 +367,10 @@ void Stream::Export(py::module &m)
     stream.def_property_readonly_static("current", [](py::object) { return Current().shared_from_this(); })
         .def(py::init(&Stream::Create));
 
-    // Create the global stream object. It'll be destroyed when
-    // python module is deinitialized.
-    auto globalStream = Stream::Create();
+    // Create the global stream object by wrapping cuda stream 0.
+    // It'll be destroyed when python module is deinitialized.
+    static priv::ExternalStream<priv::VOIDP> cudaDefaultStream((cudaStream_t)0);
+    auto                                     globalStream = std::make_shared<Stream>(cudaDefaultStream);
     StreamStack::Instance().push(*globalStream);
     stream.attr("default") = globalStream;
 
