@@ -46,9 +46,9 @@ RNG = np.random.default_rng(0)
             cvcuda.Tensor(9, [66, 99], cvcuda.Format.RGB8),
         ),
         (
-            cvcuda.Tensor([1, 61, 62, 3], np.uint8, "NHWC"),
+            cvcuda.Tensor((1, 61, 62, 3), np.uint8, "NHWC"),
             cvcuda.ColorConversion.YUV2RGB,
-            cvcuda.Tensor([1, 61, 62, 3], np.uint8, "NHWC"),
+            cvcuda.Tensor((1, 61, 62, 3), np.uint8, "NHWC"),
         ),
     ],
 )

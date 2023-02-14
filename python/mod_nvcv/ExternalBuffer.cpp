@@ -84,12 +84,15 @@ ExternalBuffer::ExternalBuffer(DLPackTensor &&dlTensor)
     m_dlTensor = std::move(dlTensor);
 }
 
-py::object ExternalBuffer::shape() const
+Shape ExternalBuffer::shape() const
 {
-    std::vector<ssize_t> shape(m_dlTensor->ndim);
-    std::copy_n(m_dlTensor->shape, m_dlTensor->ndim, shape.begin());
+    Shape shape(m_dlTensor->ndim);
+    for (size_t i = 0; i < shape.size(); ++i)
+    {
+        shape[i] = m_dlTensor->shape[i];
+    }
 
-    return py::cast(std::move(shape));
+    return shape;
 }
 
 py::object ExternalBuffer::dtype() const
@@ -258,12 +261,12 @@ std::optional<py::dict> ExternalBuffer::cudaArrayInterface() const
         }
         else
         {
-            std::vector<ssize_t> vStrides(m_dlTensor->ndim);
+            py::tuple vStrides(m_dlTensor->ndim);
             for (size_t i = 0; i < vStrides.size(); ++i)
             {
                 vStrides[i] = m_dlTensor->strides[i] * elemStrideBytes;
             }
-            strides = py::cast(vStrides);
+            strides = vStrides;
         }
 
         std::string format = ToFormatString(m_dlTensor->dtype);

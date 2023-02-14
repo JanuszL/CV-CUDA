@@ -43,11 +43,6 @@ static size_t ComputeHash(const nvcv::TensorShape &shape)
 
 namespace nvcvpy::priv {
 
-Shape CreateShape(const nvcv::TensorShape &tshape)
-{
-    return Shape{tshape.shape().begin(), tshape.shape().end()};
-}
-
 std::shared_ptr<Tensor> Tensor::CreateForImageBatch(int numImages, const Size2D &size, nvcv::ImageFormat fmt)
 {
     nvcv::Tensor::Requirements reqs
@@ -62,8 +57,7 @@ std::shared_ptr<Tensor> Tensor::Create(Shape shape, nvcv::DataType dtype, std::o
         layout = nvcv::TENSOR_NONE;
     }
 
-    nvcv::Tensor::Requirements reqs
-        = nvcv::Tensor::CalcRequirements(nvcv::TensorShape(shape.data(), shape.size(), *layout), dtype);
+    nvcv::Tensor::Requirements reqs = nvcv::Tensor::CalcRequirements(CreateNVCVTensorShape(shape, *layout), dtype);
     return CreateFromReqs(reqs);
 }
 
@@ -224,9 +218,7 @@ const nvcv::ITensor &Tensor::impl() const
 
 Shape Tensor::shape() const
 {
-    nvcv::Shape ishape = m_impl->shape().shape();
-
-    return Shape(ishape.begin(), ishape.end());
+    return CreateShape(m_impl->shape());
 }
 
 std::optional<nvcv::TensorLayout> Tensor::layout() const

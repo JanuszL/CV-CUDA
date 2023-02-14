@@ -312,27 +312,27 @@ def test_image_wrap_invalid_cuda_buffer():
 @t.mark.parametrize(
     "size,format,layout,out_dtype, out_shape, simple_layout",
     [
-        ((257, 231), nvcv.Format.U8, None, np.uint8, [231, 257], "HWC"),
-        ((257, 231), nvcv.Format.U8, "HWC", np.uint8, [231, 257, 1], "HWC"),
-        ((257, 231), nvcv.Format.U8, "CHW", np.uint8, [1, 231, 257], "CHW"),
+        ((257, 231), nvcv.Format.U8, None, np.uint8, (231, 257), "HWC"),
+        ((257, 231), nvcv.Format.U8, "HWC", np.uint8, (231, 257, 1), "HWC"),
+        ((257, 231), nvcv.Format.U8, "CHW", np.uint8, (1, 231, 257), "CHW"),
         (
             (257, 231),
             nvcv.Format.U8,
             "xyCrodHlimaWab",
             np.uint8,
-            [1, 1, 1, 1, 1, 1, 231, 1, 1, 1, 1, 257, 1, 1],
+            (1, 1, 1, 1, 1, 1, 231, 1, 1, 1, 1, 257, 1, 1),
             "CHW",
         ),
-        ((257, 231), nvcv.Format.RGBAf32, None, np.float32, [231, 257, 4], "HWC"),
-        ((257, 231), nvcv.Format.RGBA8, "HWC", np.uint8, [231, 257, 4], "HWC"),
-        ((257, 231), nvcv.Format.RGBA8p, None, np.uint8, [4, 231, 257], "CHW"),
-        ((257, 231), nvcv.Format.RGBAf32p, "CHW", np.float32, [4, 231, 257], "CHW"),
+        ((257, 231), nvcv.Format.RGBAf32, None, np.float32, (231, 257, 4), "HWC"),
+        ((257, 231), nvcv.Format.RGBA8, "HWC", np.uint8, (231, 257, 4), "HWC"),
+        ((257, 231), nvcv.Format.RGBA8p, None, np.uint8, (4, 231, 257), "CHW"),
+        ((257, 231), nvcv.Format.RGBAf32p, "CHW", np.float32, (4, 231, 257), "CHW"),
         (
             (258, 232),
             nvcv.Format.NV12,
             None,
             [np.uint8, np.uint8],
-            [[232, 258, 1], [232 // 2, 258 // 2, 2]],
+            [(232, 258, 1), (232 // 2, 258 // 2, 2)],
             "HWC",
         ),
         (
@@ -340,12 +340,12 @@ def test_image_wrap_invalid_cuda_buffer():
             nvcv.Format.NV12,
             "HWC",
             [np.uint8, np.uint8],
-            [[232, 258, 1], [232 // 2, 258 // 2, 2]],
+            [(232, 258, 1), (232 // 2, 258 // 2, 2)],
             "HWC",
         ),
         # For YUYV and friends things get a bit funky
-        ((258, 232), nvcv.Format.YUYV, None, np.uint8, [232, 258, 2], "HWC"),
-        ((258, 232), nvcv.Format.YUYV, "HWC", np.uint8, [232, 258, 2], "HWC"),
+        ((258, 232), nvcv.Format.YUYV, None, np.uint8, (232, 258, 2), "HWC"),
+        ((258, 232), nvcv.Format.YUYV, "HWC", np.uint8, (232, 258, 2), "HWC"),
     ],
 )
 def test_image_export_cuda_buffer(
@@ -399,4 +399,4 @@ def test_image_export_cuda_buffer(
 
 def test_image_zeros():
     img = nvcv.Image.zeros((67, 34), nvcv.Format.F32)
-    assert (img.cpu() == np.zeros([34, 67], np.float32)).all()
+    assert (img.cpu() == np.zeros((34, 67), np.float32)).all()

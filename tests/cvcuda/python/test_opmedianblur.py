@@ -26,19 +26,19 @@ RNG = np.random.default_rng(0)
     "input, ksize",
     [
         (
-            cvcuda.Tensor([5, 9, 9, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor((5, 9, 9, 4), np.uint8, "NHWC"),
             [5, 5],
         ),
         (
-            cvcuda.Tensor([9, 9, 3], np.uint8, "HWC"),
+            cvcuda.Tensor((9, 9, 3), np.uint8, "HWC"),
             [5, 5],
         ),
         (
-            cvcuda.Tensor([5, 21, 21, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor((5, 21, 21, 4), np.uint8, "NHWC"),
             [15, 15],
         ),
         (
-            cvcuda.Tensor([21, 21, 3], np.uint8, "HWC"),
+            cvcuda.Tensor((21, 21, 3), np.uint8, "HWC"),
             [15, 15],
         ),
     ],

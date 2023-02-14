@@ -66,8 +66,7 @@ Tensor PillowResizeInto(Tensor &output, Tensor &input, nvcv::ImageFormat format,
 Tensor PillowResize(Tensor &input, const Shape &out_shape, nvcv::ImageFormat format, NVCVInterpolationType interp,
                     std::optional<Stream> pstream)
 {
-    Tensor output
-        = Tensor::Create(nvcv::TensorShape(out_shape.data(), out_shape.size(), input.layout()), input.dtype());
+    Tensor output = Tensor::Create(out_shape, input.dtype(), input.layout());
 
     return PillowResizeInto(output, input, format, interp, pstream);
 }

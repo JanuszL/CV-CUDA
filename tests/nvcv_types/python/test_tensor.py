@@ -27,7 +27,7 @@ import torch
             (32, 16),
             nvcv.Format.RGBA8,
             nvcv.TensorLayout.NHWC,
-            [5, 16, 32, 4],
+            (5, 16, 32, 4),
             np.uint8,
         ),
         (
@@ -35,7 +35,7 @@ import torch
             (38, 7),
             nvcv.Format.RGB8p,
             nvcv.TensorLayout.NCHW,
-            [2, 3, 7, 38],
+            (2, 3, 7, 38),
             np.uint8,
         ),
     ],
@@ -59,13 +59,13 @@ def test_tensor_creation_imagebatch_works(
 @t.mark.parametrize(
     "shape, dtype,layout",
     [
-        ([5, 16, 32, 4], np.float32, nvcv.TensorLayout.NHWC),
-        ([7, 3, 33, 11], np.complex64, nvcv.TensorLayout.NCHW),
-        ([3, 11], np.int16, None),
-        ([16, 32, 4], np.float32, nvcv.TensorLayout.HWC),
-        ([32, 4], np.float32, nvcv.TensorLayout.WC),
-        ([4, 32], np.float32, nvcv.TensorLayout.CW),
-        ([32], np.float32, nvcv.TensorLayout.W),
+        ((5, 16, 32, 4), np.float32, nvcv.TensorLayout.NHWC),
+        ((7, 3, 33, 11), np.complex64, nvcv.TensorLayout.NCHW),
+        ((3, 11), np.int16, None),
+        ((16, 32, 4), np.float32, nvcv.TensorLayout.HWC),
+        ((32, 4), np.float32, nvcv.TensorLayout.WC),
+        ((4, 32), np.float32, nvcv.TensorLayout.CW),
+        ((32,), np.float32, nvcv.TensorLayout.W),
     ],
 )
 def test_tensor_creation_shape_works(shape, dtype, layout):
@@ -83,17 +83,17 @@ def test_tensor_creation_shape_works(shape, dtype, layout):
 
 
 params_wrap_torch = [
-    ([3, 5, 7, 1], np.uint8),
-    ([3, 5, 7, 1], np.int8),
-    ([3, 5, 7, 1], np.int16),
-    ([3, 5, 7, 1], np.float32),
-    ([3, 5, 7, 1], np.float64),
-    ([3, 5, 7, 2], np.float32),
-    ([3, 5, 7, 3], np.uint8),
-    ([3, 5, 7, 4], np.uint8),
-    ([3, 5, 7], np.csingle),
-    ([3, 5, 7], np.cdouble),
-    ([3], np.int8),
+    ((3, 5, 7, 1), np.uint8),
+    ((3, 5, 7, 1), np.int8),
+    ((3, 5, 7, 1), np.int16),
+    ((3, 5, 7, 1), np.float32),
+    ((3, 5, 7, 1), np.float64),
+    ((3, 5, 7, 2), np.float32),
+    ((3, 5, 7, 3), np.uint8),
+    ((3, 5, 7, 4), np.uint8),
+    ((3, 5, 7), np.csingle),
+    ((3, 5, 7), np.cdouble),
+    ((3,), np.int8),
 ]
 
 
@@ -152,12 +152,12 @@ def test_wrap_torch_buffer_cuda_array_interface(shape, dtype):
 @t.mark.parametrize(
     "shape,dtype,layout",
     [
-        ([3, 5, 7, 1], np.uint8, "NHWC"),
-        ([3, 5, 7], np.uint8, "HWC"),
-        ([3, 5, 7, 2], np.int16, "NHWC"),
-        ([3, 5, 7, 2, 4, 2, 5], np.int16, "abcdefg"),
-        ([3, 5], np.uint8, "HW"),
-        ([5], np.uint8, "W"),
+        ((3, 5, 7, 1), np.uint8, "NHWC"),
+        ((3, 5, 7), np.uint8, "HWC"),
+        ((3, 5, 7, 2), np.int16, "NHWC"),
+        ((3, 5, 7, 2, 4, 2, 5), np.int16, "abcdefg"),
+        ((3, 5), np.uint8, "HW"),
+        ((5,), np.uint8, "W"),
     ],
 )
 def test_wrap_torch_buffer_with_layout(shape, dtype, layout):
@@ -178,14 +178,14 @@ def test_wrap_torch_buffer_with_layout(shape, dtype, layout):
             (32, 16),
             nvcv.Format.RGBA8,
             nvcv.TensorLayout.NHWC,
-            [1, 16, 32, 4],
+            (1, 16, 32, 4),
             np.uint8,
         ),
         (
             (38, 7),
             nvcv.Format.RGB8p,
             nvcv.TensorLayout.NCHW,
-            [1, 3, 7, 38],
+            (1, 3, 7, 38),
             np.uint8,
         ),
     ],
@@ -200,12 +200,12 @@ def test_tensor_wrap_image_works(size, fmt, gold_layout, gold_shape, gold_dtype)
 
 
 export_cuda_buffer_params = [
-    ([1, 23, 65, 3], np.uint8),
-    ([5, 23, 65, 3], np.int8),
-    ([65, 3], np.int16),
-    ([243, 65, 3], np.int16),
-    ([1, 1], np.int16),
-    ([10], np.uint8),
+    ((1, 23, 65, 3), np.uint8),
+    ((5, 23, 65, 3), np.int8),
+    ((65, 3), np.int16),
+    ((243, 65, 3), np.int16),
+    ((1, 1), np.int16),
+    ((10,), np.uint8),
 ]
 
 
