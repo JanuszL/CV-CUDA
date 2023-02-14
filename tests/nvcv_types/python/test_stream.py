@@ -108,3 +108,7 @@ def test_wrap_stream_external(stream_type):
     stream = nvcv.cuda.as_stream(extstream.stream())
 
     assert extstream.cuda_stream() == stream.handle
+
+
+def test_stream_default_is_zero():
+    assert nvcv.cuda.Stream.default.handle == 0
