@@ -161,12 +161,24 @@ nvcv::Tensor CreateTensor(int numImages, int imgWidth, int imgHeight, const nvcv
     {
         int numChannels = imgFormat.numPlanes() == 1 ? imgFormat.planeNumChannels(0) : imgFormat.numPlanes();
 
-        return nvcv::Tensor(
-            {
-                {imgHeight, imgWidth, numChannels},
-                "HWC"
-        },
-            imgFormat.planeDataType(0).channelType(0));
+        if (imgFormat.numPlanes() > 1)
+        {
+            return nvcv::Tensor(
+                {
+                    {numChannels, imgHeight, imgWidth},
+                    "CHW"
+            },
+                imgFormat.planeDataType(0).channelType(0));
+        }
+        else
+        {
+            return nvcv::Tensor(
+                {
+                    {imgHeight, imgWidth, numChannels},
+                    "HWC"
+            },
+                imgFormat.planeDataType(0).channelType(0));
+        }
     }
 
     assert(numImages > 1);

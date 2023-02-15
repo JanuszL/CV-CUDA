@@ -79,6 +79,8 @@ NVCV_TYPED_TEST_SUITE(
     OpReformat, ttype::Types<NVCV_TEST_ROW(176, 113, 1, NVCV_IMAGE_FORMAT_RGB8, NVCV_IMAGE_FORMAT_RGB8, uchar),
                              NVCV_TEST_ROW(23, 43, 23, NVCV_IMAGE_FORMAT_RGB8p, NVCV_IMAGE_FORMAT_RGB8p, uchar),
                              NVCV_TEST_ROW(7, 4, 7, NVCV_IMAGE_FORMAT_RGBf32, NVCV_IMAGE_FORMAT_RGBf32, float),
+                             NVCV_TEST_ROW(3, 2, 1, NVCV_IMAGE_FORMAT_RGB8p, NVCV_IMAGE_FORMAT_RGB8, uchar),
+                             NVCV_TEST_ROW(2, 3, 1, NVCV_IMAGE_FORMAT_RGB8, NVCV_IMAGE_FORMAT_RGB8p, uchar),
                              NVCV_TEST_ROW(56, 49, 2, NVCV_IMAGE_FORMAT_RGBA8p, NVCV_IMAGE_FORMAT_RGBA8, uchar),
                              NVCV_TEST_ROW(56, 49, 3, NVCV_IMAGE_FORMAT_RGB8, NVCV_IMAGE_FORMAT_RGB8p, uchar),
                              NVCV_TEST_ROW(31, 30, 3, NVCV_IMAGE_FORMAT_RGBAf32, NVCV_IMAGE_FORMAT_RGBAf32p, float),
@@ -115,16 +117,26 @@ TYPED_TEST(OpReformat, correct_output)
     auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*outData);
     ASSERT_TRUE(outAccess);
 
+    ASSERT_EQ(inAccess->numChannels(), outAccess->numChannels());
+
     long4 inStrides;
     long4 outStrides;
 
     if (inData->rank() == 3)
     {
-        long inSampleStride  = inAccess->numRows() * inAccess->rowStride();
-        long outSampleStride = outAccess->numRows() * outAccess->rowStride();
+        long inNumPlanes  = inData->layout() == nvcv::TENSOR_CHW ? inAccess->numChannels() : 1;
+        long outNumPlanes = outData->layout() == nvcv::TENSOR_CHW ? outAccess->numChannels() : 1;
 
-        inStrides  = long4{inSampleStride, inAccess->rowStride(), inAccess->colStride(), inAccess->chStride()};
-        outStrides = long4{outSampleStride, outAccess->rowStride(), outAccess->colStride(), outAccess->chStride()};
+        inStrides.x  = inAccess->numRows() * inAccess->rowStride() * inNumPlanes;
+        outStrides.x = outAccess->numRows() * outAccess->rowStride() * outNumPlanes;
+
+        inStrides.y = inData->stride(0);
+        inStrides.z = inData->stride(1);
+        inStrides.w = inData->stride(2);
+
+        outStrides.y = outData->stride(0);
+        outStrides.z = outData->stride(1);
+        outStrides.w = outData->stride(2);
     }
     else if (inData->rank() == 4)
     {
