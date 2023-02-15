@@ -26,37 +26,37 @@ RNG = np.random.default_rng(0)
     "input, angle_deg, shift, interpolation",
     [
         (
-            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor((5, 16, 23, 4), np.uint8, "NHWC"),
             30,
             [3, 4],
             cvcuda.Interp.NEAREST,
         ),
         (
-            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor((5, 16, 23, 4), np.uint8, "NHWC"),
             60,
             [3, 4],
             cvcuda.Interp.LINEAR,
         ),
         (
-            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor((5, 16, 23, 4), np.uint8, "NHWC"),
             90,
             [3, 4],
             cvcuda.Interp.CUBIC,
         ),
         (
-            cvcuda.Tensor([7, 12, 3], np.uint8, "HWC"),
+            cvcuda.Tensor((7, 12, 3), np.uint8, "HWC"),
             30,
             [2, 3],
             cvcuda.Interp.NEAREST,
         ),
         (
-            cvcuda.Tensor([7, 12, 3], np.uint8, "HWC"),
+            cvcuda.Tensor((7, 12, 3), np.uint8, "HWC"),
             60,
             [2, 3],
             cvcuda.Interp.LINEAR,
         ),
         (
-            cvcuda.Tensor([7, 12, 3], np.uint8, "HWC"),
+            cvcuda.Tensor((7, 12, 3), np.uint8, "HWC"),
             90,
             [2, 3],
             cvcuda.Interp.CUBIC,

@@ -23,16 +23,16 @@ import cvcuda_util as util
     "input,out_shape,interp",
     [
         (
-            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
-            [5, 132, 15, 4],
+            cvcuda.Tensor((5, 16, 23, 4), np.uint8, "NHWC"),
+            (5, 132, 15, 4),
             cvcuda.Interp.LINEAR,
         ),
         (
-            cvcuda.Tensor([16, 23, 4], np.uint8, "HWC"),
-            [132, 15, 4],
+            cvcuda.Tensor((16, 23, 4), np.uint8, "HWC"),
+            (132, 15, 4),
             cvcuda.Interp.CUBIC,
         ),
-        (cvcuda.Tensor([16, 23, 1], np.uint8, "HWC"), [132, 15, 1], None),
+        (cvcuda.Tensor((16, 23, 1), np.uint8, "HWC"), (132, 15, 1), None),
     ],
 )
 def test_op_resize(input, out_shape, interp):

@@ -21,6 +21,7 @@
 #include "DLPackUtils.hpp"
 
 #include <cuda_runtime.h>
+#include <nvcv/python/Shape.hpp>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -40,7 +41,7 @@ public:
 
     const DLTensor &dlTensor() const;
 
-    py::object shape() const;
+    Shape      shape() const;
     py::object dtype() const;
 
     void *data() const;

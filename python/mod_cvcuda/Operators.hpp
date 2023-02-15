@@ -19,7 +19,9 @@
 #include <nvcv/python/Cache.hpp>
 #include <nvcv/python/Container.hpp>
 #include <nvcv/python/ImageFormat.hpp>
+#include <nvcv/python/Shape.hpp>
 #include <nvcv/python/Size.hpp>
+#include <nvcv/python/Tensor.hpp>
 #include <pybind11/pybind11.h>
 
 #include <nvcv/python/Fwd.hpp>
@@ -29,6 +31,8 @@ namespace nvcvpy::util {
 
 namespace cvcudapy {
 
+using nvcvpy::CreateNVCVTensorShape;
+using nvcvpy::CreateShape;
 using nvcvpy::Image;
 using nvcvpy::ImageBatchVarShape;
 using nvcvpy::LockMode;

@@ -26,23 +26,23 @@ RNG = np.random.default_rng(0)
     "input, flip_code",
     [
         (
-            cvcuda.Tensor([5, 16, 23, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor((5, 16, 23, 4), np.uint8, "NHWC"),
             0,
         ),
         (
-            cvcuda.Tensor([4, 4, 3], np.float32, "HWC"),
+            cvcuda.Tensor((4, 4, 3), np.float32, "HWC"),
             1,
         ),
         (
-            cvcuda.Tensor([3, 88, 13, 3], np.uint16, "NHWC"),
+            cvcuda.Tensor((3, 88, 13, 3), np.uint16, "NHWC"),
             -1,
         ),
         (
-            cvcuda.Tensor([3, 4, 4], np.int32, "HWC"),
+            cvcuda.Tensor((3, 4, 4), np.int32, "HWC"),
             1,
         ),
         (
-            cvcuda.Tensor([1, 2, 3, 4], np.uint16, "NHWC"),
+            cvcuda.Tensor((1, 2, 3, 4), np.uint16, "NHWC"),
             0,
         ),
     ],

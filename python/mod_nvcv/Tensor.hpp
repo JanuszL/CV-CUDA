@@ -21,20 +21,17 @@
 #include "Container.hpp"
 #include "Size.hpp"
 
+#include <nvcv/Shape.hpp>
 #include <nvcv/Tensor.hpp>
+#include <nvcv/python/Shape.hpp>
 #include <pybind11/numpy.h>
-
-#include <vector>
+#include <pybind11/pytypes.h>
 
 namespace nvcvpy::priv {
 namespace py = pybind11;
 
-using Shape = std::vector<int64_t>;
-
 class ExternalBuffer;
 class Image;
-
-Shape CreateShape(const nvcv::TensorShape &tshape);
 
 class Tensor : public Container
 {

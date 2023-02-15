@@ -25,28 +25,28 @@ RNG = np.random.default_rng(0)
     "input, diameter, sigma_color, sigma_space, border",
     [
         (
-            cvcuda.Tensor([5, 9, 9, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor((5, 9, 9, 4), np.uint8, "NHWC"),
             9,
             1,
             1,
             cvcuda.Border.CONSTANT,
         ),
         (
-            cvcuda.Tensor([9, 9, 3], np.uint8, "HWC"),
+            cvcuda.Tensor((9, 9, 3), np.uint8, "HWC"),
             7,
             3,
             10,
             cvcuda.Border.WRAP,
         ),
         (
-            cvcuda.Tensor([5, 21, 21, 4], np.uint8, "NHWC"),
+            cvcuda.Tensor((5, 21, 21, 4), np.uint8, "NHWC"),
             6,
             15,
             9,
             cvcuda.Border.REPLICATE,
         ),
         (
-            cvcuda.Tensor([21, 21, 3], np.uint8, "HWC"),
+            cvcuda.Tensor((21, 21, 3), np.uint8, "HWC"),
             12,
             2,
             5,
