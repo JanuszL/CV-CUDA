@@ -45,7 +45,7 @@ namespace nvcv::legacy::cuda_op {
 //  3:  32-bit alignment (word)
 //  0:  disable buffering
 template<size_t M, class SrcWrapper, typename ValueType = typename SrcWrapper::ValueType>
-inline const __device__ ValueType *_cacheAlignedBufferedRead(SrcWrapper srcImage, int2 srcSize, uint *pReadBuffer,
+inline const __device__ ValueType *_cacheAlignedBufferedRead(SrcWrapper srcImage, int width, uint *pReadBuffer,
                                                              uint nReadBufferWordsMax, int nBatch, int nYPos,
                                                              int nXPosMin, int nXPosMax)
 {
@@ -60,7 +60,7 @@ inline const __device__ ValueType *_cacheAlignedBufferedRead(SrcWrapper srcImage
         const int        functionalWidth = ((size_t)pixBeyondPtr + M) & (~M) - ((size_t)lineStartPtr);
         const int        nWordsToRead    = (((size_t)pixBeyondPtr + M) & (~M) - (size_t)memSrcPtr) / 4;
 
-        if (((size_t)memSrcPtr < (size_t)lineStartPtr) || (srcSize.x * sizeof(ValueType) < functionalWidth)
+        if (((size_t)memSrcPtr < (size_t)lineStartPtr) || (width * sizeof(ValueType) < functionalWidth)
             || (nWordsToRead > nReadBufferWordsMax))
             return pixSrcPtr; //return GMEM pointer instead if running off the image
         else
@@ -139,7 +139,7 @@ __global__ void resize_NN_quad_alignread(SrcWrapper src, DstWrapper dst, int2 sr
         uint readBuffer[MAX_BUFFER_WORDS];
 
         //2 - copy out source data, 32-bit aligned aligned
-        const T *aPtr = _cacheAlignedBufferedRead<CACHE_MEMORY_ALIGNMENT>(src, srcSize, &readBuffer[0],
+        const T *aPtr = _cacheAlignedBufferedRead<CACHE_MEMORY_ALIGNMENT>(src, srcSize.x, &readBuffer[0],
                                                                           MAX_BUFFER_WORDS, batch_idx, sy, sx0, sx3);
 
         //3 - NN sampling
@@ -152,7 +152,7 @@ __global__ void resize_NN_quad_alignread(SrcWrapper src, DstWrapper dst, int2 sr
     {
         //sample all 4 points
 
-        const T *aPtr      = src.ptr(batch_idx, sy, 0);
+        const T *aPtr      = src.ptr(batch_idx, sy, sx0);
         T        gather[4] = {aPtr[0], aPtr[sx1 - sx0], aPtr[sx2 - sx0], aPtr[sx3 - sx0]};
 
         _alignedCudaMemcpyQuad<T>(dst.ptr(batch_idx, dst_y, dst_x), gather);
@@ -190,7 +190,6 @@ __global__ void resize_bilinear(SrcWrapper src, DstWrapper dst, int2 srcSize, in
             int   sx = __float2int_rd(fx);
             fx -= sx;
             fx *= ((sx >= 0) && (sx < width - 1));
-            // printf("\nPeter sx %d %f", sx, fx );
             sx = cuda::max(0, cuda::min(sx, width - 2));
 
             *dst.ptr(batch_idx, dst_y, dst_x)
@@ -262,7 +261,7 @@ __global__ void resize_bilinear_quad_alignread(SrcWrapper src, DstWrapper dst, i
         work_type accum[4];
 
         //2 - aligned load a-row and add partial product
-        const T *aPtr = _cacheAlignedBufferedRead<CACHE_MEMORY_ALIGNMENT>(src, srcSize, readBuffer, MAX_BUFFER_WORDS,
+        const T *aPtr = _cacheAlignedBufferedRead<CACHE_MEMORY_ALIGNMENT>(src, srcSize.x, readBuffer, MAX_BUFFER_WORDS,
                                                                           batch_idx, sy, sx0, sx3 + 1);
         //const T * aPtr = src.ptr(batch_idx, sy,   sx0); //start of upper row
 
@@ -272,7 +271,7 @@ __global__ void resize_bilinear_quad_alignread(SrcWrapper src, DstWrapper dst, i
         accum[3] = (1.0f - fy) * (aPtr[sx3 - sx0] * (1.0f - fx3) + aPtr[sx3 - sx0 + 1] * fx3);
 
         //3 - aligned load b-row and add remaining partial product
-        const T *bPtr = _cacheAlignedBufferedRead<CACHE_MEMORY_ALIGNMENT>(src, srcSize, readBuffer, MAX_BUFFER_WORDS,
+        const T *bPtr = _cacheAlignedBufferedRead<CACHE_MEMORY_ALIGNMENT>(src, srcSize.x, readBuffer, MAX_BUFFER_WORDS,
                                                                           batch_idx, sy + 1, sx0, sx3 + 1);
         //const T * bPtr = src.ptr(batch_idx, sy+1, sx0); //start of lower row
 
@@ -357,7 +356,7 @@ __global__ void resize_bicubic(SrcWrapper src, DstWrapper dst, int2 srcSize, int
             //1 - load each sub row from sx-1 to sx+3 inclusive, aligned
             //const T * aPtr = src.ptr(batch_idx, sy + row - 1, sx-1);
             const T *aPtr = _cacheAlignedBufferedRead<CACHE_MEMORY_ALIGNMENT>(
-                src, srcSize, readBuffer, MAX_BUFFER_WORDS, batch_idx, sy + row - 1, sx - 1, sx + 2);
+                src, srcSize.x, readBuffer, MAX_BUFFER_WORDS, batch_idx, sy + row - 1, sx - 1, sx + 2);
 
             //2 - do a pixel's partial on this row
             accum += cY[row] * (cX[0] * aPtr[0] + cX[1] * aPtr[1] + cX[2] * aPtr[2] + cX[3] * aPtr[3]);
@@ -410,7 +409,6 @@ __global__ void resize_bicubic_quad_alignread(SrcWrapper src, DstWrapper dst, in
     //1 - optimized case if scale_x < some finite limit
     if (scale_x <= MAX_BUFFERED_X_SCALE) //local buffering
     {                                    //buffered read
-
         work_type accum[4];
         float     fx[4];
         int       sx[4];
@@ -444,11 +442,11 @@ __global__ void resize_bicubic_quad_alignread(SrcWrapper src, DstWrapper dst, in
         {
             //1 - load each row from sx[0]-1 to sx[3]+2 inclusive, aligned
             const T *aPtr = _cacheAlignedBufferedRead<CACHE_MEMORY_ALIGNMENT>(
-                src, srcSize, readBuffer, MAX_BUFFER_WORDS, batch_idx, sy + row - 1, sx[0] - 1, sx[3] + 2);
+                src, srcSize.x, readBuffer, MAX_BUFFER_WORDS, batch_idx, sy + row - 1, sx[0] - 1, sx[3] + 2);
 
 //2 - do each pixel's partial on this row
 #pragma unroll
-            for (int pix = 0; pix > 4; ++pix)
+            for (int pix = 0; pix < 4; ++pix)
             {
                 accum[pix]
                     += cY[row]
@@ -488,7 +486,7 @@ __global__ void resize_bicubic_quad_alignread(SrcWrapper src, DstWrapper dst, in
                 //1 - load each sub row from sx[pix]-1 to sx[pix]+2 inclusive, aligned
                 //const T * aPtr = src.ptr(batch_idx, sy + row - 1, sx-1);
                 const T *aPtr = _cacheAlignedBufferedRead<CACHE_MEMORY_ALIGNMENT>(
-                    src, srcSize, readBuffer, MAX_BUFFER_WORDS, batch_idx, sy + row - 1, sx - 1, sx + 2);
+                    src, srcSize.x, readBuffer, MAX_BUFFER_WORDS, batch_idx, sy + row - 1, sx - 1, sx + 2);
 
                 //2 - do a pixel's partial on this row
                 accum += cY[row] * (cX[0] * aPtr[0] + cX[1] * aPtr[1] + cX[2] * aPtr[2] + cX[3] * aPtr[3]);
@@ -646,13 +644,11 @@ void resize(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &
     case NVCV_INTERP_CUBIC:
         if (can_quad)
         { //thread does 4 pixels horizontally for aligned read and write
-            //printf("\nPETER QUQD");
             resize_bicubic_quad_alignread<<<quadGridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x,
                                                                                   scale_y);
         }
         else
         { //generic single pixel per thread case
-            // printf("\nPETER non QUQD");
             resize_bicubic<<<gridSize, blockSize, 0, stream>>>(src, dst, srcSize, dstSize, scale_x, scale_y);
         }
         break;

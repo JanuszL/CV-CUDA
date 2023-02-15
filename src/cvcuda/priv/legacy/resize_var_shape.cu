@@ -178,8 +178,9 @@ __global__ void resize_NN_quad_combo(cuda::ImageBatchVarShapeWrap<const T> src, 
         {
             //sample all 4 points
 
-            const T *aPtr      = src.ptr(batch_idx, sy, 0);
-            T        gather[4] = {aPtr[0], aPtr[sx1 - sx0], aPtr[sx2 - sx0], aPtr[sx3 - sx0]};
+            const T *aPtr = src.ptr(batch_idx, sy, sx0);
+
+            T gather[4] = {aPtr[0], aPtr[sx1 - sx0], aPtr[sx2 - sx0], aPtr[sx3 - sx0]};
 
             _alignedCudaMemcpyQuadVS<T>(dst.ptr(batch_idx, dst_y, dst_x), gather);
         }
@@ -571,7 +572,7 @@ __global__ void resize_bicubic_quad_combo(cuda::ImageBatchVarShapeWrap<const T> 
 
 //2 - do each pixel's partial on this row
 #pragma unroll
-                for (int pix = 0; pix > 4; ++pix)
+                for (int pix = 0; pix < 4; ++pix)
                 {
                     accum[pix]
                         += cY[row]
