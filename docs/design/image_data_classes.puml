@@ -12,17 +12,22 @@
 
 @startuml
 
-interface ImageData
+class ImageData
 {
-    + {abstract} format() const: ImageFormat
+    + format() const: ImageFormat
 
-    + {abstract} cdata() const: const NVCVImageData &
+    + cdata() const &: const NVCVImageData &
+    + cdata() &&: NVCVImageData
+
+    + cast<Derived> const: detail::Optional<Derived>
 }
 
-interface ImageDataCudaArray extends ImageData
+class ImageDataCudaArray extends ImageData
 {
-    + {abstract} numPlanes() const: int32_t
-    + {abstract} plane(int p) const: cudaArray_t
+    + numPlanes() const: int32_t
+    + plane(int p) const: cudaArray_t
+
+    + {static} IsCompatibleKind(NVCVImageBufferType kind) : bool
 }
 
 struct Size2D
@@ -39,20 +44,14 @@ struct ImagePlaneStrided
     + mem: void *
 }
 
-interface ImageDataStrided extends ImageData
+class ImageDataStrided extends ImageData
 {
-    + {abstract} size() const: Size2D
+    + size() const: Size2D
 
-    + {abstract} numPlanes() const: int32_t
-    + {abstract} plane(int p) const: const ImagePlaneStrided &
-}
+    + numPlanes() const: int32_t
+    + plane(int p) const: const ImagePlaneStrided &
 
-interface ImageDataStridedCuda implements ImageDataStrided
-{
-}
-
-interface ImageDataStridedHost implements ImageDataStrided
-{
+    + {static} IsCompatibleKind(NVCVImageBufferType kind) : bool
 }
 
 struct ImageBufferCudaArray
@@ -61,10 +60,12 @@ struct ImageBufferCudaArray
     + planes: cudaArray_t[MAX_PLANES]
 }
 
-class ImageDataCudaArray implements ImageDataCudaArray
+class ImageDataCudaArray extends ImageDadta
 {
     + ImageDataCudaArray(ImageFormat fmt,
                          const ImageBufferCudaArray &buffer)
+
+    + {static} IsCompatibleKind(NVCVImageBufferType kind) : bool
 }
 
 struct ImageBufferStrided
@@ -73,22 +74,26 @@ struct ImageBufferStrided
     + planes: ImagePlaneStrided[MAX_PLANES]
 }
 
-class ImageDataStridedCuda implements ImageDataStridedCuda
+class ImageDataStridedCuda extends ImageDataStrided
 {
     + ImageDataStridedCuda(ImageFormat fmt,
                            const ImageBufferStrided &buffer)
+
+    + {static} IsCompatibleKind(NVCVImageBufferType kind) : bool
 }
 
-class ImageDataStridedHost implements ImageDataStridedHost
+class ImageDataStridedHost extends ImageDataStrided
 {
     + ImageDataStridedHost(ImageFormat fmt,
-                         const ImageBufferStrided &buffer)
+                           const ImageBufferStrided &buffer)
+
+    + {static} IsCompatibleKind(NVCVImageBufferType kind) : bool
 }
 
-ImageBufferStrided -up-o ImageDataStridedHost: contains <
-ImageBufferStrided -up-o ImageDataStridedCuda: contains <
+ImageBufferStrided -up-o ImageDataStridedHost
+ImageBufferStrided -up-o ImageDataStridedCuda
 ImagePlaneStrided -right-o ImageBufferStrided: contains <
 
-ImageBufferCudaArray -up-o ImageDataCudaArray: contains <
+ImageBufferCudaArray -up-o ImageDataCudaArray
 
 @enduml

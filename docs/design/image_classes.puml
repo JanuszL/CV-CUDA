@@ -25,7 +25,9 @@ interface IImage
 
     + {abstract} alloc() const: IAllocator &
 
-    + {abstract} exportData() const: const ImageData *
+    + {abstract} exportData() const: ImageData
+
+    + exportData<DerivedData>() const: Optional<DerivedData>
 }
 
 IAllocator -right-o IImage: refers to <
@@ -45,7 +47,7 @@ class ImageWrapHandle implements IImage
 class ImageWrapData implements IImage
 {
     + ImageWrapData(const ImageData &data,
-                    std::function<void(const ImageData &)> cleanup)
+                    ImageDataCleanupCallback &&cleanup = {})
 }
 
 @enduml
