@@ -373,12 +373,12 @@ TEST(Image, wip_image_managed_memory)
 
     nvcv::Image img({512, 256}, nvcv::FMT_RGBA8, &managedAlloc);
 
-    EXPECT_EQ(nvcv::Size2D{512,256}, img.size());
+    EXPECT_EQ(nvcv::Size2D(512,256), img.size());
     EXPECT_EQ(nvcv::FMT_RGBA8, img.format());
 
     {
         nvcv::LockImageData lkData = img.lock(nvcv::READ);
-        if(auto *data = dynamic_cast<const nvcv::ImageDataCudaMem *>(lkData->data()))
+        if(auto data = lkData->data<nvcv::ImageDataCudaMem>())
         {
             nvcv::GpuMat ocvGPU{data->size.h, data->size.w,
                               data->plane(0).buffer,
@@ -386,7 +386,7 @@ TEST(Image, wip_image_managed_memory)
             // ...
 
         }
-        else if(auto *data = dynamic_cast<const nvcv::ImageDataCudaArray *>(lkData->data()))
+        else if(auto data = lkData->data<nvcv::ImageDataCudaArray>())
         {
             cudaArray_t carray = data->plane(0);
             // ...
