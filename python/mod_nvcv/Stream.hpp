@@ -88,11 +88,8 @@ private:
         return key;
     }
 
-    void destroy();
-
-    bool         m_owns   = false;
-    cudaStream_t m_handle = nullptr, m_auxStream = nullptr;
-    cudaEvent_t  m_event = nullptr;
+    bool         m_owns;
+    cudaStream_t m_handle;
     py::object   m_wrappedObj;
 };
 
