@@ -235,15 +235,6 @@ Stream::~Stream()
 
 void Stream::destroy()
 {
-    if (m_event)
-    {
-        util::CheckThrow(cudaEventDestroy(m_event));
-    }
-    if (m_auxStream)
-    {
-        util::CheckThrow(cudaStreamSynchronize(m_auxStream));
-        util::CheckThrow(cudaStreamDestroy(m_auxStream));
-    }
     if (m_owns)
     {
         if (m_handle)
@@ -251,6 +242,15 @@ void Stream::destroy()
             util::CheckLog(cudaStreamSynchronize(m_handle));
             util::CheckLog(cudaStreamDestroy(m_handle));
         }
+    }
+    if (m_auxStream)
+    {
+        util::CheckThrow(cudaStreamSynchronize(m_auxStream));
+        util::CheckThrow(cudaStreamDestroy(m_auxStream));
+    }
+    if (m_event)
+    {
+        util::CheckThrow(cudaEventDestroy(m_event));
     }
 }
 
@@ -279,7 +279,6 @@ void Stream::sync()
     py::gil_scoped_release release;
 
     util::CheckThrow(cudaStreamSynchronize(m_handle));
-    util::CheckThrow(cudaStreamSynchronize(m_auxStream));
 }
 
 Stream &Stream::Current()
