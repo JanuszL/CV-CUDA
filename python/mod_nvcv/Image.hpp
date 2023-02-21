@@ -110,9 +110,6 @@ private:
     std::unique_ptr<nvcv::IImage> m_impl; // must come before m_key
     Key                           m_key;
 
-    mutable py::object                        m_cacheExternalObject;
-    mutable std::optional<nvcv::TensorLayout> m_cacheExternalObjectLayout;
-
     struct WrapData
     {
         DLDeviceType devType;

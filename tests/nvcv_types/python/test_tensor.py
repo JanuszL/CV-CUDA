@@ -225,7 +225,7 @@ def test_tensor_export_cuda_buffer(shape, dtype):
     assert devMem.dtype == dtype
     assert devMem.shape == shape
 
-    assert (hostGold == torch.as_tensor(devMem).detach().cpu().numpy()).all()
+    assert (hostGold == torch.as_tensor(devMem).cpu().numpy()).all()
 
 
 @t.mark.parametrize(
@@ -244,7 +244,7 @@ def test_tensor_export_cuda_buffer_dlpack(shape, dtype):
     assert devMem.dtype == dtype
     assert devMem.shape == shape
 
-    assert (hostGold == torch.from_dlpack(devMem).detach().cpu().numpy()).all()
+    assert (hostGold == torch.from_dlpack(devMem).cpu().numpy()).all()
 
 
 def test_tensor_hold_reference_of_wrapped_buffer():
@@ -260,3 +260,29 @@ def test_tensor_hold_reference_of_wrapped_buffer():
     # since "cvtensor" must have held the reference to the first "ttensor",
     # the second "ttensor" must be a different buffer
     assert ptr0 != ttensor.data_ptr()
+
+
+def test_tensor_is_kept_alive_by_cuda_array_interface():
+    nvcv.clear_cache()
+
+    tensor1 = nvcv.Tensor((480, 640, 3), np.uint8)
+
+    iface1 = tensor1.cuda()
+
+    data_buffer1 = iface1.__cuda_array_interface__["data"][0]
+
+    del tensor1
+
+    tensor2 = nvcv.Tensor((480, 640, 3), np.uint8)
+    assert tensor2.cuda().__cuda_array_interface__["data"][0] != data_buffer1
+
+    del tensor2
+    # remove tensor2 from cache, but not tensor1, as it's being
+    # held by iface
+    nvcv.clear_cache()
+
+    # now tensor1 is free for reuse
+    del iface1
+
+    tensor3 = nvcv.Tensor((480, 640, 3), np.uint8)
+    assert tensor3.cuda().__cuda_array_interface__["data"][0] == data_buffer1

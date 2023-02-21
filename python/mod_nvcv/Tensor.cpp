@@ -311,19 +311,15 @@ static py::object ToPython(const nvcv::ITensorData &imgData, py::object owner)
 
 py::object Tensor::cuda() const
 {
-    // Do we need to redefine the external object?
-    if (!m_cacheExternalObject)
+    const nvcv::ITensorData *tensorData = m_impl->exportData();
+    if (!tensorData)
     {
-        const nvcv::ITensorData *tensorData = m_impl->exportData();
-        if (!tensorData)
-        {
-            throw std::runtime_error("Tensor data can't be exported");
-        }
-
-        m_cacheExternalObject = ToPython(*tensorData, py::cast(*this));
+        throw std::runtime_error("Tensor data can't be exported");
     }
 
-    return m_cacheExternalObject;
+    // Note: we can't cache the returned ExternalBuffer because it is holding
+    // a reference to us. Doing so would lead to mem leaks.
+    return ToPython(*tensorData, py::cast(this->shared_from_this()));
 }
 
 std::ostream &operator<<(std::ostream &out, const Tensor &tensor)
