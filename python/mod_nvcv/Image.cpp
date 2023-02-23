@@ -887,44 +887,36 @@ std::vector<py::object> ToPython(const nvcv::IImageData &imgData, std::optional<
 
 py::object Image::cuda(std::optional<nvcv::TensorLayout> layout) const
 {
-    // Do we need to redefine the cuda object?
-    // (not defined yet, or requested layout is different)
-    if (!m_cacheExternalObject || layout != m_cacheExternalObjectLayout)
+    // No layout requested and we're wrapping external data?
+    if (!layout && m_wrapData)
     {
-        // No layout requested and we're wrapping external data?
-        if (!layout && m_wrapData)
+        if (!IsCudaAccessible(m_wrapData->devType))
         {
-            if (!IsCudaAccessible(m_wrapData->devType))
-            {
-                throw std::runtime_error("Image data can't be exported, it's not cuda-accessible");
-            }
+            throw std::runtime_error("Image data can't be exported, it's not cuda-accessible");
+        }
 
-            // That's what we'll return, as m_impl is wrapping it.
-            m_cacheExternalObject = m_wrapData->obj;
+        // That's what we'll return, as m_impl is wrapping it.
+        return m_wrapData->obj;
+    }
+    else
+    {
+        const auto *imgData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(m_impl->exportData());
+        if (!imgData)
+        {
+            throw std::runtime_error("Image data can't be exported, it's not cuda-accessible");
+        }
+
+        std::vector<py::object> out = ToPython(*imgData, layout, py::cast(*this));
+
+        if (out.size() == 1)
+        {
+            return std::move(out[0]);
         }
         else
         {
-            const auto *imgData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(m_impl->exportData());
-            if (!imgData)
-            {
-                throw std::runtime_error("Image data can't be exported, it's not cuda-accessible");
-            }
-
-            std::vector<py::object> out = ToPython(*imgData, layout, py::cast(*this));
-
-            m_cacheExternalObjectLayout = layout;
-            if (out.size() == 1)
-            {
-                m_cacheExternalObject = std::move(out[0]);
-            }
-            else
-            {
-                m_cacheExternalObject = py::cast(out);
-            }
+            return py::cast(out);
         }
     }
-
-    return m_cacheExternalObject;
 }
 
 py::object Image::cpu(std::optional<nvcv::TensorLayout> layout) const

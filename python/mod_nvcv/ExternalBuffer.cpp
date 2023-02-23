@@ -58,7 +58,11 @@ py::object ExternalBuffer::Create(DLPackTensor &&dlPackTensor, py::object wrappe
 {
     std::shared_ptr<ExternalBuffer> buf(new ExternalBuffer(std::move(dlPackTensor)));
 
-    py::object o = py::cast(buf, py::return_value_policy::reference_internal, wrappedObj);
+    // We must make the returned object keep wrappedObj alive.
+    // Using py::return_value_policy::reference_internal in py::cast doesn't work
+    // because buf is a shared_ptr.
+    py::object o = py::cast(buf);
+    py::detail::keep_alive_impl(o, wrappedObj);
 
     // If we expose cuda array interface,
     if (auto iface = buf->cudaArrayInterface())

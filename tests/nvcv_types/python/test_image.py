@@ -362,12 +362,12 @@ def test_image_export_cuda_buffer(
         assert mem.dtype == out_dtype
         assert mem.shape == out_shape
 
-    # Make sure buffer cache works
-    assert img.cuda(layout) is mem
+    # external buffer must not be reused
+    assert img.cuda(layout) is not mem
     if layout is not None:
         newmem = img.cuda()
         assert newmem is not mem
-        assert newmem is img.cuda()
+        assert newmem is not img.cuda()
         assert newmem is not img.cuda(layout)
 
     cuda_buffer = img.cuda(simple_layout)
@@ -400,3 +400,29 @@ def test_image_export_cuda_buffer(
 def test_image_zeros():
     img = nvcv.Image.zeros((67, 34), nvcv.Format.F32)
     assert (img.cpu() == np.zeros((34, 67), np.float32)).all()
+
+
+def test_image_is_kept_alive_by_cuda_array_interface():
+    nvcv.clear_cache()
+
+    img1 = nvcv.Image((640, 480), nvcv.Format.U8)
+
+    iface1 = img1.cuda()
+
+    data_buffer1 = iface1.__cuda_array_interface__["data"][0]
+
+    del img1
+
+    img2 = nvcv.Image((640, 480), nvcv.Format.U8)
+    assert img2.cuda().__cuda_array_interface__["data"][0] != data_buffer1
+
+    del img2
+    # remove img2 from cache, but not img1, as it's being
+    # held by iface
+    nvcv.clear_cache()
+
+    # now img1 is free for reuse
+    del iface1
+
+    img3 = nvcv.Image((640, 480), nvcv.Format.U8)
+    assert img3.cuda().__cuda_array_interface__["data"][0] == data_buffer1
