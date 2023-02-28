@@ -84,7 +84,7 @@ inline TensorWrapData::TensorWrapData(const TensorData &data, TensorDataCleanupC
     }
     catch (...)
     {
-        nvcvTensorDestroy(m_handle);
+        nvcvTensorDecRef(m_handle, nullptr);
         throw;
     }
 }
