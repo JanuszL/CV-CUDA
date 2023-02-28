@@ -898,7 +898,7 @@ py::object Image::cuda(std::optional<nvcv::TensorLayout> layout) const
     }
     else
     {
-        const auto *imgData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(m_impl->exportData());
+        auto imgData = m_impl->exportData<nvcv::ImageDataStridedCuda>();
         if (!imgData)
         {
             throw std::runtime_error("Image data can't be exported, it's not cuda-accessible");

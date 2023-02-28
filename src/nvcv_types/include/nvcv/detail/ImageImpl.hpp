@@ -67,7 +67,7 @@ inline ImageWrapData::ImageWrapData(const ImageData &data, ImageDataCleanupCallb
     }
     catch (...)
     {
-        nvcvImageDestroy(m_handle);
+        nvcvImageDecRef(m_handle, nullptr);
         throw;
     }
 }
