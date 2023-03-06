@@ -101,7 +101,7 @@ struct UniqueHandleOps
 
 } // namespace detail
 
-/** A handle wrapper that behaves like a unique_ptr
+/** A handle wrapper that behaves like a unique_ptr.
  *
  * @tparam HandleType   The type of the managed handle
  * @tparam HandleOps    The set of handle operations - can be customized e.g. to add extra tracking
@@ -116,8 +116,7 @@ public:
         reset();
     }
 
-    /**
-     * @brief Constructs a UniqueHandle that from a bare handle.
+    /** Constructs a UniqueHandle that from a bare handle.
      *
      * Constructs a UniqueHandle that manages the handles passed in the argument.
      * The ownership of the object is transferred to UniqueHandle and the handle must
@@ -160,13 +159,13 @@ public:
         std::swap(m_handle, other.m_handle);
     }
 
-    /** Replaces the managed handle and destroys the previously owned resource, if the handle was not null
+    /** Replaces the managed handle and destroys the previously owned resource, if the handle was not null.
      *
      * @param handle    The handle to be managed.
      *                  The handle is passed by an r-value reference and is set to null to
      *                  emphasize the transfer of ownership.
      *
-     * @remarks Passing a non-empty handle that's already by this UniqueHandle is forbidden and will
+     * @remarks Passing a non-empty handle that's already owned by this UniqueHandle is forbidden and will
      *          result in double destruction of the handle.
      */
     void reset(HandleType &&handle = HandleOps::Null())
@@ -227,7 +226,7 @@ private:
     HandleType m_handle = HandleOps::Null();
 };
 
-/** A handle wrapper that behaves similarly shared_ptr
+/** A handle wrapper that behaves similarly shared_ptr.
  *
  * Copying a SharedHandle increments the reference count.
  * Destroying a SharedHandle decrements the reference count.
@@ -247,7 +246,7 @@ public:
 
     SharedHandle() = default;
 
-    /** Manages the handle in a new SharedHandle wrapper
+    /** Manages the handle in a new SharedHandle wrapper.
      *
      * @param handle    The handle to be managed.
      *                  The handle is passed by an r-value reference and is set to null to
@@ -267,7 +266,7 @@ public:
         other.m_handle = HandleOps::Null();
     }
 
-    /** Creates a new shared reference to the handle managed by `other`
+    /** Creates a new shared reference to the handle managed by `other`.
      */
     SharedHandle(const SharedHandle &other)
     {
@@ -285,14 +284,15 @@ public:
         return *this;
     }
 
-    /** Copies the handle managed by `other` to `this` and incremenets the reference count.
-     *  Decrements the reference count on the previously owned handle.
+    /**
+     * @brief Copies the handle managed by `other` to `this` and incremenets the reference count.
+     *        Decrements the reference count on the previously owned handle.
      *
      * This function performs the following actions (in that order):
-     * 0. If the currently managed handle and `other` are equal, the function is a no-op.
-     * 1. Increments the reference count on `other`(if not null)
-     * 2. Replaces the managed handle by that from `other`.
-     * 3. Decrements the reference count on the old handle (if not null)
+     * 1. If the currently managed handle and `other` are equal, the function is a no-op.
+     * 2. Increments the reference count on `other`(if not null)
+     * 3. Replaces the managed handle by that from `other`.
+     * 4. Decrements the reference count on the old handle (if not null).
      */
     SharedHandle &operator=(const SharedHandle &other)
     {
@@ -305,7 +305,7 @@ public:
         return *this;
     }
 
-    /** Swaps the handles managed by `this` and `other`
+    /** Swaps the handles managed by `this` and `other`.
      */
     void swap(SharedHandle &other) noexcept
     {
@@ -346,7 +346,7 @@ public:
         return h;
     }
 
-    /** Returns the currently managed handle
+    /** Returns the currently managed handle.
      */
     constexpr HandleType get() const noexcept
     {
@@ -412,7 +412,7 @@ private:
 
 /** Generates reference-counting handle operations (incRef, decRef, refCount).
  *
- * @param ObjectKind The anme of the object, as used in C API (e.g. Image, Tensor)
+ * @param ObjectKind The name of the object, as used in C API (e.g. Image, Tensor)
  *
  * @remarks This macro must be used in nvcv namespace
  */
@@ -423,7 +423,7 @@ private:
 
 /** Generates a destroy function wrapper for a handle whose C destroy function returns a status code.
  *
- * @param ObjectKind The anme of the object, as used in C API (e.g. Image, Tensor)
+ * @param ObjectKind The name of the object, as used in C API (e.g. Image, Tensor)
  *
  * @remarks This macro must be used in nvcv namespace
  */
@@ -436,7 +436,7 @@ private:
 
 /** Generates a destroy function wrapper for a handle whose C destroy function doesn't return a value.
  *
- * @param ObjectKind The anme of the object, as used in C API (e.g. Image, Tensor)
+ * @param ObjectKind The name of the object, as used in C API (e.g. Image, Tensor)
  *
  * @remarks This macro must be used in nvcv namespace
  */
