@@ -387,7 +387,7 @@ private:
     template<>                                                                    \
     inline int HandleDecRef<NVCV##ObjectKind##Handle>(NVCV##ObjectKind##Handle h) \
     {                                                                             \
-        int ref;                                                                  \
+        int ref = -1;                                                             \
         nvcv::detail::CheckThrow(nvcv##ObjectKind##DecRef(h, &ref));              \
         return ref;                                                               \
     }
@@ -396,7 +396,7 @@ private:
     template<>                                                                    \
     inline int HandleIncRef<NVCV##ObjectKind##Handle>(NVCV##ObjectKind##Handle h) \
     {                                                                             \
-        int ref;                                                                  \
+        int ref = -1;                                                             \
         nvcv::detail::CheckThrow(nvcv##ObjectKind##IncRef(h, &ref));              \
         return ref;                                                               \
     }
@@ -405,7 +405,7 @@ private:
     template<>                                                                      \
     inline int HandleRefCount<NVCV##ObjectKind##Handle>(NVCV##ObjectKind##Handle h) \
     {                                                                               \
-        int ref;                                                                    \
+        int ref = -1;                                                               \
         nvcv::detail::CheckThrow(nvcv##ObjectKind##RefCount(h, &ref));              \
         return ref;                                                                 \
     }
