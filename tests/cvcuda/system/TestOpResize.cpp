@@ -173,6 +173,8 @@ NVCV_TEST_SUITE_P(OpResize, test::ValueList<int, int, int, int, NVCVInterpolatio
     {        420,      420,      420,       420,   NVCV_INTERP_CUBIC,           2},
     {        420,      420,      420,       420,   NVCV_INTERP_CUBIC,           1},
     {        420,      420,       40,        42,   NVCV_INTERP_CUBIC,           1},
+    {       1920,     1080,      640,       320,   NVCV_INTERP_CUBIC,           1},
+    {       1920,     1080,      640,       320,   NVCV_INTERP_CUBIC,           2},
 });
 
 // clang-format on
