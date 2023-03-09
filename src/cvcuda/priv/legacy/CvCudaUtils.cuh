@@ -20,8 +20,8 @@
 
 #include <nvcv/Exception.hpp>
 #include <nvcv/IImageBatchData.hpp>
-#include <nvcv/IImageData.hpp>  // for IImageDataStridedCuda, etc.
 #include <nvcv/ITensorData.hpp> // for ITensorDataStridedCuda, etc.
+#include <nvcv/ImageData.hpp>   // for ImageDataStridedCuda, etc.
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/cuda/BorderVarShapeWrap.hpp>     // for BorderVarShapeWrap, etc.
 #include <nvcv/cuda/BorderWrap.hpp>             // for BorderWrap, etc.
@@ -141,7 +141,7 @@ struct Ptr2dNCHW
         chStride = rowStride * rows_;
     }
 
-    __host__ __forceinline__ Ptr2dNCHW(const IImageDataStridedCuda &inData)
+    __host__ __forceinline__ Ptr2dNCHW(const ImageDataStridedCuda &inData)
         : batches(1)
         , rows(inData.size().h)
         , cols(inData.size().w)
@@ -275,7 +275,7 @@ struct Ptr2dNHWC
     {
     }
 
-    __host__ __forceinline__ Ptr2dNHWC(const IImageDataStridedCuda &inData)
+    __host__ __forceinline__ Ptr2dNHWC(const ImageDataStridedCuda &inData)
         : batches(1)
         , rows(inData.size().h)
         , cols(inData.size().w)

@@ -26,8 +26,8 @@
 
 #include "TypeTraits.hpp" // for HasTypeTraits, etc.
 
-#include <nvcv/IImageData.hpp>       // for IImageDataStridedCuda, etc.
 #include <nvcv/ITensorData.hpp>      // for ITensorDataStridedCuda, etc.
+#include <nvcv/ImageData.hpp>        // for ImageDataStridedCuda, etc.
 #include <nvcv/TensorDataAccess.hpp> // for TensorDataAccessStridedImagePlanar, etc.
 #include <util/Assert.h>             // for NVCV_ASSERT, etc.
 
@@ -115,7 +115,7 @@ public:
      *
      * @param[in] image Image reference to the image that will be wrapped.
      */
-    __host__ TensorWrap(const IImageDataStridedCuda &image)
+    __host__ TensorWrap(const ImageDataStridedCuda &image)
     {
         static_assert(kVariableStrides == 1 && kNumDimensions == 2);
 
@@ -283,7 +283,7 @@ public:
      *
      * @param[in] image Image reference to the image that will be wrapped.
      */
-    __host__ TensorWrap(const IImageDataStridedCuda &image)
+    __host__ TensorWrap(const ImageDataStridedCuda &image)
         : Base(image)
     {
     }

@@ -1,6 +1,6 @@
 
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,11 +30,11 @@
 namespace nvcv {
 
 class IImage;
-class IImageData;
-class IImageDataCudaArray;
-class IImageDataStrided;
-class IImageDataStridedCuda;
-class IImageDataStridedHost;
+class ImageData;
+class ImageDataCudaArray;
+class ImageDataStrided;
+class ImageDataStridedCuda;
+class ImageDataStridedHost;
 
 class IImageBatch;
 class IImageBatchData;

@@ -24,7 +24,7 @@
 #include "CvCudaUtils.cuh"
 
 #include <nvcv/IImage.hpp>
-#include <nvcv/IImageData.hpp>
+#include <nvcv/ImageData.hpp>
 #include <nvcv/cuda/TypeTraits.hpp>
 
 #include <cassert>

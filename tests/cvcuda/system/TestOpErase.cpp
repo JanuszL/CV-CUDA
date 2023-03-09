@@ -155,7 +155,7 @@ TEST(OpErase, OpErase_Varshape)
 
     for (int i = 0; i < 1; ++i)
     {
-        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
+        const auto srcData = imgSrc[i]->exportData<nvcv::ImageDataStridedCuda>();
         assert(srcData->numPlanes() == 1);
 
         int srcWidth  = srcData->plane(0).width;
@@ -223,7 +223,7 @@ TEST(OpErase, OpErase_Varshape)
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
 
-    const auto *dstData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[0]->exportData());
+    const auto dstData = imgSrc[0]->exportData<nvcv::ImageDataStridedCuda>();
     assert(dstData->numPlanes() == 1);
 
     int dstWidth  = dstData->plane(0).width;

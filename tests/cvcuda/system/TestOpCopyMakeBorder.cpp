@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,10 +22,10 @@
 #include <cvcuda/OpCopyMakeBorder.hpp>
 #include <nvcv/DataLayout.hpp>
 #include <nvcv/DataType.hpp>
-#include <nvcv/IImageData.hpp>
 #include <nvcv/ITensorData.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
+#include <nvcv/ImageData.hpp>
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
@@ -107,13 +107,13 @@ static void CopyMakeBorder(std::vector<std::vector<T>> &hBatchDst, const std::ve
     {
         auto &hDst         = hBatchDst[db];
         auto &dDst         = dBatchDstData[db];
-        auto *imgDstData   = dynamic_cast<const nvcv::IImageDataStridedCuda *>(dDst->exportData());
+        auto  imgDstData   = dDst->exportData<nvcv::ImageDataStridedCuda>();
         int   dstRowStride = imgDstData->plane(0).rowStride / sizeof(T);
         int   dstPixPitch  = dDst->format().numChannels();
 
         auto &hSrc       = hBatchSrc[db];
         auto &dSrc       = dBatchSrcData[db];
-        auto *imgSrcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(dSrc->exportData());
+        auto  imgSrcData = dSrc->exportData<nvcv::ImageDataStridedCuda>();
         int   rowStride  = imgSrcData->plane(0).rowStride / sizeof(T);
         int   pixPitch   = imgSrcData->format().numChannels();
 
@@ -177,7 +177,7 @@ static void CopyMakeBorder(std::vector<T> &hDst, const std::vector<std::vector<T
     for (int db = 0; db < dDstData.numSamples(); db++)
     {
         auto &hSrc       = hBatchSrc[db];
-        auto *imgSrcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(dBatchSrcData[db]->exportData());
+        auto  imgSrcData = dBatchSrcData[db]->exportData<nvcv::ImageDataStridedCuda>();
         int   rowStride  = imgSrcData->plane(0).rowStride / sizeof(T);
         int   pixPitch   = imgSrcData->format().numChannels();
 
@@ -387,10 +387,10 @@ void StartTestVarShape(int srcWidthBase, int srcHeightBase, int numBatches, int 
         //prepare input buffers
         imgSrcVec.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{srcWidth, srcHeight}, format));
 
-        auto *imgSrcData   = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrcVec.back()->exportData());
-        int   srcStride    = imgSrcData->plane(0).rowStride;
-        int   srcRowStride = srcStride / sizeof(T);
-        int   srcBufSize   = srcRowStride * imgSrcData->plane(0).height;
+        auto imgSrcData   = imgSrcVec.back()->exportData<nvcv::ImageDataStridedCuda>();
+        int  srcStride    = imgSrcData->plane(0).rowStride;
+        int  srcRowStride = srcStride / sizeof(T);
+        int  srcBufSize   = srcRowStride * imgSrcData->plane(0).height;
 
         std::vector<T>                         srcVec(srcBufSize);
         std::uniform_int_distribution<uint8_t> srcRand{0u, 255u};
@@ -406,10 +406,10 @@ void StartTestVarShape(int srcWidthBase, int srcHeightBase, int numBatches, int 
 
         //prepare output Buffers
         imgDstVec.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{dstWidth, dstHeight}, format));
-        auto *imgDstData   = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgDstVec.back()->exportData());
-        int   dstStride    = imgDstData->plane(0).rowStride;
-        int   dstRowStride = dstStride / sizeof(T);
-        int   dstBufSize   = dstRowStride * imgDstData->plane(0).height;
+        auto imgDstData   = imgDstVec.back()->exportData<nvcv::ImageDataStridedCuda>();
+        int  dstStride    = imgDstData->plane(0).rowStride;
+        int  dstRowStride = dstStride / sizeof(T);
+        int  dstBufSize   = dstRowStride * imgDstData->plane(0).height;
 
         std::vector<T> dstVec(dstBufSize);
         std::vector<T> goldVec(dstBufSize);
@@ -459,7 +459,7 @@ void StartTestVarShape(int srcWidthBase, int srcHeightBase, int numBatches, int 
     {
         auto &testVec   = hImgDstVec[idx];
         auto &goldVec   = batchGoldVec[idx];
-        auto  imgAccess = dynamic_cast<const nvcv::IImageDataStridedCuda *>(img.exportData());
+        auto  imgAccess = img.exportData<nvcv::ImageDataStridedCuda>();
 
         ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), imgAccess->plane(0).basePtr, testVec.size() * sizeof(T),
                                           cudaMemcpyDeviceToHost));
@@ -543,10 +543,10 @@ void StartTestStack(int srcWidthBase, int srcHeightBase, int numBatches, int top
         //prepare input buffers
         imgSrcVec.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{srcWidth, srcHeight}, format));
 
-        auto *imgSrcData   = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrcVec.back()->exportData());
-        int   srcStride    = imgSrcData->plane(0).rowStride;
-        int   srcRowStride = srcStride / sizeof(T);
-        int   srcBufSize   = srcRowStride * imgSrcData->plane(0).height;
+        auto imgSrcData   = imgSrcVec.back()->exportData<nvcv::ImageDataStridedCuda>();
+        int  srcStride    = imgSrcData->plane(0).rowStride;
+        int  srcRowStride = srcStride / sizeof(T);
+        int  srcBufSize   = srcRowStride * imgSrcData->plane(0).height;
 
         std::vector<T>                         srcVec(srcBufSize);
         std::uniform_int_distribution<uint8_t> srcRand{0u, 255u};

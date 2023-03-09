@@ -304,10 +304,10 @@ TEST_P(OpJointBilateralFilter, JointBilateralFilter_VarShape)
         std::generate(srcColorVec[i].begin(), srcColorVec[i].end(), [&]() { return udist(rng); });
         std::generate(goldVec[i].begin(), goldVec[i].end(), [&]() { return 0; });
         std::generate(dstVec[i].begin(), dstVec[i].end(), [&]() { return 0; });
-        auto *imgData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
-        ASSERT_NE(imgData, nullptr);
-        auto *imgColorData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrcColor[i]->exportData());
-        ASSERT_NE(imgColorData, nullptr);
+        auto imgData = imgSrc[i]->exportData<nvcv::ImageDataStridedCuda>();
+        ASSERT_NE(imgData, nvcv::detail::NullOpt);
+        auto imgColorData = imgSrcColor[i]->exportData<nvcv::ImageDataStridedCuda>();
+        ASSERT_NE(imgColorData, nvcv::detail::NullOpt);
 
         // Copy input data to the GPU
         ASSERT_EQ(cudaSuccess,
@@ -378,8 +378,8 @@ TEST_P(OpJointBilateralFilter, JointBilateralFilter_VarShape)
     // Retrieve data from GPU
     for (int i = 0; i < numberOfImages; i++)
     {
-        auto *imgData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgDst[i]->exportData());
-        ASSERT_NE(imgData, nullptr);
+        auto imgData = imgDst[i]->exportData<nvcv::ImageDataStridedCuda>();
+        ASSERT_NE(imgData, nvcv::detail::NullOpt);
 
         // Copy input data to the GPU
         ASSERT_EQ(cudaSuccess, cudaMemcpy2DAsync(dstVec[i].data(), srcVecRowStride[i], imgData->plane(0).basePtr,

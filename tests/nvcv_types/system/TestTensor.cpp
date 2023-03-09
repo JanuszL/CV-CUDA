@@ -422,8 +422,10 @@ TEST_P(TensorWrapImageTests, wip_create)
     EXPECT_EQ(GOLD_SHAPE, tensor.shape());
     EXPECT_EQ(GOLD_DTYPE, tensor.dtype());
 
-    auto *imgData    = dynamic_cast<const nvcv::IImageDataStridedCuda *>(img.exportData());
+    auto  imgData    = img.exportData<nvcv::ImageDataStridedCuda>();
     auto *tensorData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(tensor.exportData());
+
+    EXPECT_TRUE(imgData);
 
     auto tensorAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*tensorData);
     EXPECT_TRUE(tensorAccess);

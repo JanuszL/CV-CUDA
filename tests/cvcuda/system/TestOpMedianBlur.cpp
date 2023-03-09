@@ -209,7 +209,7 @@ TEST_P(OpMedianBlur, tensor_correct_output)
     // Generate input
     nvcv::Tensor imgSrc(numberOfImages, {srcWidth, srcHeight}, fmt);
 
-    const auto *srcData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgSrc.exportData());
+    auto srcData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgSrc.exportData());
 
     ASSERT_NE(nullptr, srcData);
 
@@ -369,8 +369,8 @@ TEST_P(OpMedianBlur, varshape_correct_output)
     // Populate input
     for (int i = 0; i < numberOfImages; ++i)
     {
-        const auto *srcData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrc[i]->exportData());
-        ASSERT_NE(nullptr, srcData);
+        const auto srcData = imgSrc[i]->exportData<nvcv::ImageDataStridedCuda>();
+        ASSERT_NE(nvcv::detail::NullOpt, srcData);
 
         assert(srcData->numPlanes() == 1);
 
@@ -393,9 +393,8 @@ TEST_P(OpMedianBlur, varshape_correct_output)
                                             srcHeight, cudaMemcpyHostToDevice));
 
         // Fill the border with BORDER_REPLICATE
-        const auto *srcBrdReplicateData
-            = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrcBrdReplicate[i]->exportData());
-        ASSERT_NE(nullptr, srcBrdReplicateData);
+        auto srcBrdReplicateData = imgSrcBrdReplicate[i]->exportData<nvcv::ImageDataStridedCuda>();
+        ASSERT_NE(nvcv::detail::NullOpt, srcBrdReplicateData);
 
         assert(srcBrdReplicateData->numPlanes() == 1);
 
@@ -427,13 +426,12 @@ TEST_P(OpMedianBlur, varshape_correct_output)
     {
         SCOPED_TRACE(i);
 
-        const auto *srcBrdReplicateData
-            = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgSrcBrdReplicate[i]->exportData());
+        auto srcBrdReplicateData = imgSrcBrdReplicate[i]->exportData<nvcv::ImageDataStridedCuda>();
         assert(srcBrdReplicateData->numPlanes() == 1);
         int srcBrdReplicateWidth  = srcBrdReplicateData->plane(0).width;
         int srcBrdReplicateHeight = srcBrdReplicateData->plane(0).height;
 
-        const auto *dstData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(imgDst[i]->exportData());
+        const auto dstData = imgDst[i]->exportData<nvcv::ImageDataStridedCuda>();
         assert(dstData->numPlanes() == 1);
 
         int dstWidth  = dstData->plane(0).width;

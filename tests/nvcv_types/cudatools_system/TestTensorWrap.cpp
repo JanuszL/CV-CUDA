@@ -372,8 +372,8 @@ TYPED_TEST(Tensor2DWrapImageWrapTest, correct_with_image_wrap)
         nvcv::ImageDataStridedCuda{nvcv::ImageFormat{imgFormat}, buf}
     };
 
-    auto *dev = dynamic_cast<const nvcv::IImageDataStridedCuda *>(img.exportData());
-    ASSERT_NE(dev, nullptr);
+    auto dev = img.exportData<nvcv::ImageDataStridedCuda>();
+    ASSERT_NE(dev, nvcv::detail::NullOpt);
 
     cuda::Tensor2DWrap<ValueType> wrap(*dev);
 
@@ -413,8 +413,8 @@ TYPED_TEST(Tensor2DWrapImageTest, correct_with_image)
 
     nvcv::Image img({213, 211}, nvcv::ImageFormat{imgFormat});
 
-    const auto *dev = dynamic_cast<const nvcv::IImageDataStridedCuda *>(img.exportData());
-    ASSERT_NE(dev, nullptr);
+    const auto dev = img.exportData<nvcv::ImageDataStridedCuda>();
+    ASSERT_NE(dev, nvcv::detail::NullOpt);
 
     cuda::Tensor2DWrap<ValueType> wrap(*dev);
 
@@ -441,8 +441,8 @@ TYPED_TEST(Tensor2DWrapImageTest, it_works_in_device)
     int width  = img.size().w;
     int height = img.size().h;
 
-    const auto *dev = dynamic_cast<const nvcv::IImageDataStridedCuda *>(img.exportData());
-    ASSERT_NE(dev, nullptr);
+    const auto dev = img.exportData<nvcv::ImageDataStridedCuda>();
+    ASSERT_NE(dev, nvcv::detail::NullOpt);
 
     cuda::Tensor2DWrap<ValueType> wrap(*dev);
 

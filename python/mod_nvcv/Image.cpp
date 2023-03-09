@@ -456,7 +456,7 @@ Image::Image(const Size2D &size, nvcv::ImageFormat fmt)
 {
 }
 
-Image::Image(std::vector<std::shared_ptr<ExternalBuffer>> bufs, const nvcv::IImageDataStridedCuda &imgData)
+Image::Image(std::vector<std::shared_ptr<ExternalBuffer>> bufs, const nvcv::ImageDataStridedCuda &imgData)
     : m_key{} // it's a wrap!
 {
     m_wrapData.emplace();
@@ -485,7 +485,7 @@ Image::Image(std::vector<std::shared_ptr<ExternalBuffer>> bufs, const nvcv::IIma
     m_impl = std::make_unique<nvcv::ImageWrapData>(imgData);
 }
 
-Image::Image(std::vector<py::buffer> bufs, const nvcv::IImageDataStridedHost &hostData)
+Image::Image(std::vector<py::buffer> bufs, const nvcv::ImageDataStridedHost &hostData)
 {
     // Input buffer is host data.
     // We'll create a regular image and copy the host data into it.
@@ -493,15 +493,14 @@ Image::Image(std::vector<py::buffer> bufs, const nvcv::IImageDataStridedHost &ho
     // Create the image with same size and format as host data
     m_impl = std::make_unique<nvcv::Image>(hostData.size(), hostData.format());
 
-    auto *devData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(m_impl->exportData());
-    NVCV_ASSERT(devData != nullptr);
-    NVCV_ASSERT(hostData.format() == devData->format());
-    NVCV_ASSERT(hostData.numPlanes() == devData->numPlanes());
+    auto devData = *m_impl->exportData<nvcv::ImageDataStridedCuda>();
+    NVCV_ASSERT(hostData.format() == devData.format());
+    NVCV_ASSERT(hostData.numPlanes() == devData.numPlanes());
 
     // Now copy each plane from host to device
-    for (int p = 0; p < devData->numPlanes(); ++p)
+    for (int p = 0; p < devData.numPlanes(); ++p)
     {
-        const nvcv::ImagePlaneStrided &devPlane  = devData->plane(p);
+        const nvcv::ImagePlaneStrided &devPlane  = devData.plane(p);
         const nvcv::ImagePlaneStrided &hostPlane = hostData.plane(p);
 
         NVCV_ASSERT(devPlane.width == hostPlane.width);
@@ -550,15 +549,14 @@ std::shared_ptr<Image> Image::Zeros(const Size2D &size, nvcv::ImageFormat fmt)
 {
     auto img = Image::Create(size, fmt);
 
-    auto *data = dynamic_cast<const nvcv::IImageDataStridedCuda *>(img->impl().exportData());
-    NVCV_ASSERT(data);
+    auto data = *img->impl().exportData<nvcv::ImageDataStridedCuda>();
 
-    for (int p = 0; p < data->numPlanes(); ++p)
+    for (int p = 0; p < data.numPlanes(); ++p)
     {
-        const nvcv::ImagePlaneStrided &plane = data->plane(p);
+        const nvcv::ImagePlaneStrided &plane = data.plane(p);
 
         util::CheckThrow(cudaMemset2D(plane.basePtr, plane.rowStride, 0,
-                                      plane.width * data->format().planePixelStrideBytes(p), plane.height));
+                                      plane.width * data.format().planePixelStrideBytes(p), plane.height));
     }
 
     return img;
@@ -649,7 +647,7 @@ std::ostream &operator<<(std::ostream &out, const Image &img)
 
 namespace {
 
-std::vector<std::pair<py::buffer_info, nvcv::TensorLayout>> ToPyBufferInfo(const nvcv::IImageDataStrided    &imgData,
+std::vector<std::pair<py::buffer_info, nvcv::TensorLayout>> ToPyBufferInfo(const nvcv::ImageDataStrided     &imgData,
                                                                            std::optional<nvcv::TensorLayout> userLayout)
 {
     if (imgData.numPlanes() < 1)
@@ -846,12 +844,12 @@ std::vector<std::pair<py::buffer_info, nvcv::TensorLayout>> ToPyBufferInfo(const
     return out;
 }
 
-std::vector<py::object> ToPython(const nvcv::IImageData &imgData, std::optional<nvcv::TensorLayout> userLayout,
+std::vector<py::object> ToPython(const nvcv::ImageData &imgData, std::optional<nvcv::TensorLayout> userLayout,
                                  py::object owner)
 {
     std::vector<py::object> out;
 
-    auto *pitchData = dynamic_cast<const nvcv::IImageDataStrided *>(&imgData);
+    auto pitchData = imgData.cast<nvcv::ImageDataStrided>();
     if (!pitchData)
     {
         throw std::runtime_error("Only images with pitch-linear formats can be exported");
@@ -859,7 +857,7 @@ std::vector<py::object> ToPython(const nvcv::IImageData &imgData, std::optional<
 
     for (const auto &[info, layout] : ToPyBufferInfo(*pitchData, userLayout))
     {
-        if (dynamic_cast<const nvcv::IImageDataStridedCuda *>(pitchData))
+        if (pitchData->cast<nvcv::ImageDataStridedCuda>())
         {
             // TODO: set correct device_type and device_id
             out.emplace_back(ExternalBuffer::Create(
@@ -869,7 +867,7 @@ std::vector<py::object> ToPython(const nvcv::IImageData &imgData, std::optional<
             },
                 owner));
         }
-        else if (dynamic_cast<const nvcv::IImageDataStridedHost *>(pitchData))
+        else if (pitchData->cast<nvcv::ImageDataStridedHost>())
         {
             // With no owner, python/pybind11 will make a copy of the data
             out.emplace_back(py::array(info, owner));
@@ -900,7 +898,7 @@ py::object Image::cuda(std::optional<nvcv::TensorLayout> layout) const
     }
     else
     {
-        const auto *imgData = dynamic_cast<const nvcv::IImageDataStridedCuda *>(m_impl->exportData());
+        auto imgData = m_impl->exportData<nvcv::ImageDataStridedCuda>();
         if (!imgData)
         {
             throw std::runtime_error("Image data can't be exported, it's not cuda-accessible");
@@ -921,13 +919,7 @@ py::object Image::cuda(std::optional<nvcv::TensorLayout> layout) const
 
 py::object Image::cpu(std::optional<nvcv::TensorLayout> layout) const
 {
-    const nvcv::IImageData *devData = m_impl->exportData();
-    if (!devData)
-    {
-        throw std::runtime_error("Image data can't be exported");
-    }
-
-    auto *devStrided = dynamic_cast<const nvcv::IImageDataStridedCuda *>(devData);
+    auto devStrided = m_impl->exportData<nvcv::ImageDataStridedCuda>();
     if (!devStrided)
     {
         throw std::runtime_error("Only images with pitch-linear formats can be exported to CPU");
