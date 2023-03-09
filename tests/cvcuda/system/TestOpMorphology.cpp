@@ -429,8 +429,8 @@ TEST_P(OpMorphology, morph_random)
     nvcv::Tensor inTensor  = test::CreateTensor(batches, width, height, format);
     nvcv::Tensor outTensor = test::CreateTensor(batches, width, height, format);
 
-    const auto *inData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inTensor.exportData());
-    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(outTensor.exportData());
+    auto inData  = inTensor.exportData<nvcv::TensorDataStridedCuda>();
+    auto outData = outTensor.exportData<nvcv::TensorDataStridedCuda>();
 
     ASSERT_NE(inData, nullptr);
     ASSERT_NE(outData, nullptr);
@@ -569,7 +569,7 @@ TEST_P(OpMorphologyVarShape, varshape_correct_output)
     // Create kernel mask size tensor
     nvcv::Tensor maskTensor({{batches}, "N"}, nvcv::TYPE_2S32);
     {
-        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(maskTensor.exportData());
+        auto dev = maskTensor.exportData<nvcv::TensorDataStridedCuda>();
         ASSERT_NE(dev, nullptr);
 
         std::vector<int2> vec(batches, int2{maskSizeX, maskSizeY});
@@ -581,7 +581,7 @@ TEST_P(OpMorphologyVarShape, varshape_correct_output)
     // Create Anchor tensor
     nvcv::Tensor anchorTensor({{batches}, "N"}, nvcv::TYPE_2S32);
     {
-        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(anchorTensor.exportData());
+        auto dev = anchorTensor.exportData<nvcv::TensorDataStridedCuda>();
         ASSERT_NE(dev, nullptr);
 
         std::vector<int2> vec(batches, int2{anchorX, anchorY});
@@ -706,7 +706,7 @@ TEST_P(OpMorphologyVarShape, varshape_noop)
     // Create kernel mask size tensor
     nvcv::Tensor maskTensor({{batches}, "N"}, nvcv::TYPE_2S32);
     {
-        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(maskTensor.exportData());
+        auto dev = maskTensor.exportData<nvcv::TensorDataStridedCuda>();
         ASSERT_NE(dev, nullptr);
 
         std::vector<int2> vec(batches, int2{maskSizeX, maskSizeY});
@@ -718,7 +718,7 @@ TEST_P(OpMorphologyVarShape, varshape_noop)
     // Create Anchor tensor
     nvcv::Tensor anchorTensor({{batches}, "N"}, nvcv::TYPE_2S32);
     {
-        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(anchorTensor.exportData());
+        auto dev = anchorTensor.exportData<nvcv::TensorDataStridedCuda>();
         ASSERT_NE(dev, nullptr);
 
         std::vector<int2> vec(batches, int2{anchorX, anchorY});

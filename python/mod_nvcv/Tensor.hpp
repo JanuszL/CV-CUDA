@@ -83,7 +83,7 @@ public:
 
 private:
     Tensor(const nvcv::Tensor::Requirements &reqs);
-    Tensor(const nvcv::ITensorData &data, py::object wrappedObject);
+    Tensor(const nvcv::TensorData &data, py::object wrappedObject);
     Tensor(Image &img);
 
     // m_impl must come before m_key

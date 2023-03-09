@@ -183,8 +183,8 @@ TEST_P(OpBilateralFilter, BilateralFilter_packed)
     nvcv::Tensor imgOut = test::CreateTensor(numberOfImages, width, height, nvcv::FMT_U8);
     nvcv::Tensor imgIn  = test::CreateTensor(numberOfImages, width, height, nvcv::FMT_U8);
 
-    const auto *inData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgIn.exportData());
-    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgOut.exportData());
+    auto inData  = imgIn.exportData<nvcv::TensorDataStridedCuda>();
+    auto outData = imgOut.exportData<nvcv::TensorDataStridedCuda>();
 
     ASSERT_NE(nullptr, inData);
     ASSERT_NE(nullptr, outData);
@@ -292,7 +292,7 @@ TEST_P(OpBilateralFilter, BilateralFilter_VarShape)
     std::vector<int> vDiameter(numberOfImages, diameter);
     nvcv::Tensor     diameterTensor({{numberOfImages}, "N"}, nvcv::TYPE_S32);
     {
-        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(diameterTensor.exportData());
+        auto dev = diameterTensor.exportData<nvcv::TensorDataStridedCuda>();
         ASSERT_NE(dev, nullptr);
 
         ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(dev->basePtr(), vDiameter.data(), vDiameter.size() * sizeof(int),
@@ -303,7 +303,7 @@ TEST_P(OpBilateralFilter, BilateralFilter_VarShape)
     std::vector<float> vSigmaColor(numberOfImages, sigmaColor);
     nvcv::Tensor       sigmaColorTensor({{numberOfImages}, "N"}, nvcv::TYPE_F32);
     {
-        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(sigmaColorTensor.exportData());
+        auto dev = sigmaColorTensor.exportData<nvcv::TensorDataStridedCuda>();
         ASSERT_NE(dev, nullptr);
 
         ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(dev->basePtr(), vSigmaColor.data(), vSigmaColor.size() * sizeof(float),
@@ -314,7 +314,7 @@ TEST_P(OpBilateralFilter, BilateralFilter_VarShape)
     std::vector<float> vSigmaSpace(numberOfImages, sigmaSpace);
     nvcv::Tensor       sigmaSpaceTensor({{numberOfImages}, "N"}, nvcv::TYPE_F32);
     {
-        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(sigmaSpaceTensor.exportData());
+        auto dev = sigmaSpaceTensor.exportData<nvcv::TensorDataStridedCuda>();
         ASSERT_NE(dev, nullptr);
 
         ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(dev->basePtr(), vSigmaSpace.data(), vSigmaSpace.size() * sizeof(float),

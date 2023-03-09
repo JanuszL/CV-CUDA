@@ -127,9 +127,9 @@ TEST_P(OpComposite, tensor_correct_output)
     nvcv::Tensor fgMaskImg(numberOfImages, {inWidth, inHeight}, nvcv::FMT_U8);
     nvcv::Tensor outImg(numberOfImages, {outWidth, outHeight}, outFormat);
 
-    const auto *foregroundData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(foregroundImg.exportData());
-    const auto *backgroundData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(backgroundImg.exportData());
-    const auto *fgMaskData     = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(fgMaskImg.exportData());
+    auto foregroundData = foregroundImg.exportData<nvcv::TensorDataStridedCuda>();
+    auto backgroundData = backgroundImg.exportData<nvcv::TensorDataStridedCuda>();
+    auto fgMaskData     = fgMaskImg.exportData<nvcv::TensorDataStridedCuda>();
 
     ASSERT_NE(nullptr, foregroundData);
     ASSERT_NE(nullptr, backgroundData);
@@ -194,7 +194,7 @@ TEST_P(OpComposite, tensor_correct_output)
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
     // check cdata
-    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(outImg.exportData());
+    auto outData = outImg.exportData<nvcv::TensorDataStridedCuda>();
     ASSERT_NE(nullptr, outData);
 
     auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*outData);

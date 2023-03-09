@@ -77,8 +77,8 @@ TEST_P(OpGaussian, correct_output)
     nvcv::Tensor inTensor  = test::CreateTensor(batches, width, height, format);
     nvcv::Tensor outTensor = test::CreateTensor(batches, width, height, format);
 
-    const auto *inData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inTensor.exportData());
-    const auto *outData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(outTensor.exportData());
+    auto inData  = inTensor.exportData<nvcv::TensorDataStridedCuda>();
+    auto outData = outTensor.exportData<nvcv::TensorDataStridedCuda>();
 
     ASSERT_NE(inData, nullptr);
     ASSERT_NE(outData, nullptr);
@@ -227,7 +227,7 @@ TEST_P(OpGaussian, varshape_correct_output)
     // Create kernel size tensor
     nvcv::Tensor kernelSizeTensor({{batches}, "N"}, nvcv::TYPE_2S32);
     {
-        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(kernelSizeTensor.exportData());
+        auto dev = kernelSizeTensor.exportData<nvcv::TensorDataStridedCuda>();
         ASSERT_NE(dev, nullptr);
 
         std::vector<int2> vec(batches, int2{ksizeX, ksizeY});
@@ -239,7 +239,7 @@ TEST_P(OpGaussian, varshape_correct_output)
     // Create sigma tensor
     nvcv::Tensor sigmaTensor({{batches}, "N"}, nvcv::TYPE_2F64);
     {
-        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(sigmaTensor.exportData());
+        auto dev = sigmaTensor.exportData<nvcv::TensorDataStridedCuda>();
         ASSERT_NE(dev, nullptr);
 
         std::vector<double2> vec(batches, sigma);

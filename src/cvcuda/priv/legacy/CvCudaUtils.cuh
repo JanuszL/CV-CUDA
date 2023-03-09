@@ -20,8 +20,8 @@
 
 #include <nvcv/Exception.hpp>
 #include <nvcv/IImageBatchData.hpp>
-#include <nvcv/ITensorData.hpp> // for ITensorDataStridedCuda, etc.
-#include <nvcv/ImageData.hpp>   // for ImageDataStridedCuda, etc.
+#include <nvcv/ImageData.hpp>  // for ImageDataStridedCuda, etc.
+#include <nvcv/TensorData.hpp> // for TensorDataStridedCuda, etc.
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/cuda/BorderVarShapeWrap.hpp>     // for BorderVarShapeWrap, etc.
 #include <nvcv/cuda/BorderWrap.hpp>             // for BorderWrap, etc.

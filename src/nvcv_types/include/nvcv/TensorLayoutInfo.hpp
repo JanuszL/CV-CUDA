@@ -79,10 +79,10 @@ protected:
     }
 
 private:
-    const TensorLayout &m_layout;
-    bool                m_cacheIsBatch;
-    bool                m_cacheIsImage;
-    int                 m_cacheIdxSample;
+    TensorLayout m_layout;
+    bool         m_cacheIsBatch;
+    bool         m_cacheIsImage;
+    int          m_cacheIdxSample;
 };
 
 class TensorLayoutInfoImage : public TensorLayoutInfo

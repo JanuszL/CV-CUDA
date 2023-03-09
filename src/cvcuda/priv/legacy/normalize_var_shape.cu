@@ -182,8 +182,8 @@ void normInvStdDev(const IImageBatchVarShapeDataStridedCuda &in, const TensorDat
 } // namespace
 
 ErrorCode NormalizeVarShape::infer(const nvcv::IImageBatchVarShapeDataStridedCuda &inData,
-                                   const nvcv::ITensorDataStridedCuda             &baseData,
-                                   const nvcv::ITensorDataStridedCuda             &scaleData,
+                                   const nvcv::TensorDataStridedCuda              &baseData,
+                                   const nvcv::TensorDataStridedCuda              &scaleData,
                                    const nvcv::IImageBatchVarShapeDataStridedCuda &outData, const float global_scale,
                                    const float shift, const float epsilon, const uint32_t flags, cudaStream_t stream)
 {

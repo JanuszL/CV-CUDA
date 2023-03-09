@@ -140,7 +140,7 @@ GammaContrastVarShape::~GammaContrastVarShape()
 
 ErrorCode GammaContrastVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData,
                                        const IImageBatchVarShapeDataStridedCuda &outData,
-                                       const ITensorDataStridedCuda &gammas, cudaStream_t stream)
+                                       const TensorDataStridedCuda &gammas, cudaStream_t stream)
 {
     if (m_maxBatchSize <= 0 || inData.numImages() > m_maxBatchSize)
     {

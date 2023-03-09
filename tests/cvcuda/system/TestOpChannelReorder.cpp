@@ -74,8 +74,8 @@ TEST(TestOpChannelReorder, smoke_test_works)
         nvcv::TYPE_S32);
     // clang-format on
 
-    auto             &inOrderData = dynamic_cast<const nvcv::ITensorDataStrided &>(*inOrders.exportData());
-    std::vector<int4> inOrderValues(inOrderData.stride(0) / sizeof(int4));
+    auto              inOrderData = inOrders.exportData<nvcv::TensorDataStrided>();
+    std::vector<int4> inOrderValues(inOrderData->stride(0) / sizeof(int4));
 
     // N==0
     inOrderValues[0] = {2, -1, 1, 3};

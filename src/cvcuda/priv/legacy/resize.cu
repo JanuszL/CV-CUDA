@@ -572,7 +572,7 @@ __global__ void resize_area_ocv_align(const Ptr2dNHWC<T> src, const IntegerAreaF
 }
 
 template<typename T>
-void resize(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
+void resize(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData,
             NVCVInterpolationType interpolation, cudaStream_t stream)
 
 {
@@ -683,7 +683,7 @@ size_t Resize::calBufferSize(DataShape max_input_shape, DataShape max_output_sha
     return 0;
 } //Resize::calBufferSize
 
-ErrorCode Resize::infer(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
+ErrorCode Resize::infer(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData,
                         const NVCVInterpolationType interpolation, cudaStream_t stream)
 {
     DataFormat input_format  = GetLegacyDataFormat(inData.layout());
@@ -723,7 +723,7 @@ ErrorCode Resize::infer(const ITensorDataStridedCuda &inData, const ITensorDataS
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    typedef void (*func_t)(const ITensorDataStridedCuda &inData, const ITensorDataStridedCuda &outData,
+    typedef void (*func_t)(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData,
                            const NVCVInterpolationType interpolation, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {

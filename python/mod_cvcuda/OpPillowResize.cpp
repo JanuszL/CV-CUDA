@@ -41,8 +41,8 @@ Tensor PillowResizeInto(Tensor &output, Tensor &input, nvcv::ImageFormat format,
     {
         pstream = Stream::Current();
     }
-    auto in_access  = nvcv::TensorDataAccessStridedImagePlanar::Create(*input.exportData());
-    auto out_access = nvcv::TensorDataAccessStridedImagePlanar::Create(*output.exportData());
+    auto in_access  = nvcv::TensorDataAccessStridedImagePlanar::Create(input.exportData());
+    auto out_access = nvcv::TensorDataAccessStridedImagePlanar::Create(output.exportData());
     if (!in_access || !out_access)
     {
         throw std::runtime_error("Incompatible input/output tensor layout");

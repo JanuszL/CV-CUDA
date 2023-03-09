@@ -71,9 +71,9 @@ __global__ void erase(nvcv::cuda::ImageBatchVarShapeWrapNHWC<D> img, nvcv::cuda:
 }
 
 template<typename D>
-void eraseCaller(const nvcv::IImageBatchVarShapeDataStridedCuda &imgs, const nvcv::ITensorDataStridedCuda &anchor,
-                 const nvcv::ITensorDataStridedCuda &erasing, const nvcv::ITensorDataStridedCuda &imgIdx,
-                 const nvcv::ITensorDataStridedCuda &values, int max_eh, int max_ew, int num_erasing_area, bool random,
+void eraseCaller(const nvcv::IImageBatchVarShapeDataStridedCuda &imgs, const nvcv::TensorDataStridedCuda &anchor,
+                 const nvcv::TensorDataStridedCuda &erasing, const nvcv::TensorDataStridedCuda &imgIdx,
+                 const nvcv::TensorDataStridedCuda &values, int max_eh, int max_ew, int num_erasing_area, bool random,
                  unsigned int seed, cudaStream_t stream)
 {
     nvcv::cuda::ImageBatchVarShapeWrapNHWC<D> src(imgs, imgs.uniqueFormat().numChannels());
@@ -149,8 +149,8 @@ EraseVarShape::~EraseVarShape()
 }
 
 ErrorCode EraseVarShape::infer(const nvcv::IImageBatchVarShape &inbatch, const nvcv::IImageBatchVarShape &outbatch,
-                               const ITensorDataStridedCuda &anchor, const ITensorDataStridedCuda &erasing,
-                               const ITensorDataStridedCuda &values, const ITensorDataStridedCuda &imgIdx, bool random,
+                               const TensorDataStridedCuda &anchor, const TensorDataStridedCuda &erasing,
+                               const TensorDataStridedCuda &values, const TensorDataStridedCuda &imgIdx, bool random,
                                unsigned int seed, bool inplace, cudaStream_t stream)
 {
     auto *inData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(inbatch.exportData(stream));
@@ -289,9 +289,9 @@ ErrorCode EraseVarShape::infer(const nvcv::IImageBatchVarShape &inbatch, const n
         return SUCCESS;
     }
 
-    typedef void (*erase_t)(const IImageBatchVarShapeDataStridedCuda &imgs, const ITensorDataStridedCuda &anchor,
-                            const ITensorDataStridedCuda &erasing, const ITensorDataStridedCuda &imgIdx,
-                            const ITensorDataStridedCuda &values, int max_eh, int max_ew, int num_erasing_area,
+    typedef void (*erase_t)(const IImageBatchVarShapeDataStridedCuda &imgs, const TensorDataStridedCuda &anchor,
+                            const TensorDataStridedCuda &erasing, const TensorDataStridedCuda &imgIdx,
+                            const TensorDataStridedCuda &values, int max_eh, int max_ew, int num_erasing_area,
                             bool random, unsigned int seed, cudaStream_t stream);
 
     static const erase_t funcs[6] = {eraseCaller<uchar>, eraseCaller<char>, eraseCaller<ushort>,

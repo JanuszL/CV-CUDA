@@ -22,12 +22,12 @@
 #include <cvcuda/OpCopyMakeBorder.hpp>
 #include <nvcv/DataLayout.hpp>
 #include <nvcv/DataType.hpp>
-#include <nvcv/ITensorData.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/ImageData.hpp>
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/Tensor.hpp>
+#include <nvcv/TensorData.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
@@ -259,7 +259,7 @@ void StartTest(int srcWidth, int srcHeight, int numBatches, int topPad, int bott
     std::vector<T> srcVec;
 
     nvcv::Tensor imgSrc(numBatches, {srcWidth, srcHeight}, format);
-    const auto  *srcData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgSrc.exportData());
+    auto         srcData = imgSrc.exportData<nvcv::TensorDataStridedCuda>();
     ASSERT_NE(nullptr, srcData);
     auto srcAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*srcData);
     ASSERT_TRUE(srcData);
@@ -278,7 +278,7 @@ void StartTest(int srcWidth, int srcHeight, int numBatches, int topPad, int bott
                                            cudaMemcpyHostToDevice, stream));
 
     nvcv::Tensor imgDst(numBatches, {dstWidth, dstHeight}, format);
-    const auto  *dstData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgDst.exportData());
+    auto         dstData = imgDst.exportData<nvcv::TensorDataStridedCuda>();
     ASSERT_NE(nullptr, dstData);
     auto dstAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*dstData);
     ASSERT_TRUE(dstData);
@@ -425,8 +425,8 @@ void StartTestVarShape(int srcWidthBase, int srcHeightBase, int numBatches, int 
     nvcv::Tensor inTop(1, {numBatches, 1}, nvcv::FMT_S32);
     nvcv::Tensor inLeft(1, {numBatches, 1}, nvcv::FMT_S32);
 
-    const auto *inTopData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inTop.exportData());
-    const auto *inLeftData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inLeft.exportData());
+    auto inTopData  = inTop.exportData<nvcv::TensorDataStridedCuda>();
+    auto inLeftData = inLeft.exportData<nvcv::TensorDataStridedCuda>();
 
     ASSERT_NE(nullptr, inTopData);
     ASSERT_NE(nullptr, inLeftData);
@@ -565,7 +565,7 @@ void StartTestStack(int srcWidthBase, int srcHeightBase, int numBatches, int top
 
     //prepare output buffer
     nvcv::Tensor imgDst(numBatches, {dstWidth, dstHeight}, format);
-    const auto  *dstData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(imgDst.exportData());
+    auto         dstData = imgDst.exportData<nvcv::TensorDataStridedCuda>();
     ASSERT_NE(nullptr, dstData);
     auto dstAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*dstData);
     ASSERT_TRUE(dstData);
@@ -579,8 +579,8 @@ void StartTestStack(int srcWidthBase, int srcHeightBase, int numBatches, int top
     nvcv::Tensor inTop(1, {numBatches, 1}, nvcv::FMT_S32);
     nvcv::Tensor inLeft(1, {numBatches, 1}, nvcv::FMT_S32);
 
-    const auto *inTopData  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inTop.exportData());
-    const auto *inLeftData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inLeft.exportData());
+    auto inTopData  = inTop.exportData<nvcv::TensorDataStridedCuda>();
+    auto inLeftData = inLeft.exportData<nvcv::TensorDataStridedCuda>();
 
     ASSERT_NE(nullptr, inTopData);
     ASSERT_NE(nullptr, inLeftData);

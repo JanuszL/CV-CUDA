@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,7 +49,7 @@ void GammaContrast::operator()(cudaStream_t stream, const nvcv::IImageBatchVarSh
                               "Output must be device-acessible, varshape pitch-linear image batch");
     }
 
-    auto *gammaData = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(gamma.exportData());
+    auto gammaData = gamma.exportData<nvcv::TensorDataStridedCuda>();
     if (gammaData == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,

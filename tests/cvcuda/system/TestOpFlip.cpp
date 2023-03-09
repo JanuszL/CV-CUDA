@@ -65,8 +65,8 @@ TEST_P(OpFlip, correct_output)
     nvcv::Tensor inTensor  = test::CreateTensor(batches, width, height, format);
     nvcv::Tensor outTensor = test::CreateTensor(batches, width, height, format);
 
-    const auto *input  = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(inTensor.exportData());
-    const auto *output = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(outTensor.exportData());
+    auto input  = inTensor.exportData<nvcv::TensorDataStridedCuda>();
+    auto output = outTensor.exportData<nvcv::TensorDataStridedCuda>();
 
     ASSERT_NE(input, nullptr);
     ASSERT_NE(output, nullptr);
@@ -171,7 +171,7 @@ TEST_P(OpFlip, varshape_correct_output)
     // Create flip code tensor
     nvcv::Tensor flip_code({{batches}, "N"}, nvcv::TYPE_S32);
     {
-        auto *dev = dynamic_cast<const nvcv::ITensorDataStridedCuda *>(flip_code.exportData());
+        auto dev = flip_code.exportData<nvcv::TensorDataStridedCuda>();
         ASSERT_NE(dev, nullptr);
 
         std::vector<int> vec(batches, flipCode);

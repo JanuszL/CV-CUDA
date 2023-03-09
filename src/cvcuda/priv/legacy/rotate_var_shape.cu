@@ -213,7 +213,7 @@ RotateVarShape::~RotateVarShape()
 
 ErrorCode RotateVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData,
                                 const IImageBatchVarShapeDataStridedCuda &outData,
-                                const ITensorDataStridedCuda &angleDeg, const ITensorDataStridedCuda &shift,
+                                const TensorDataStridedCuda &angleDeg, const TensorDataStridedCuda &shift,
                                 const NVCVInterpolationType interpolation, cudaStream_t stream)
 {
     if (m_maxBatchSize <= 0)
