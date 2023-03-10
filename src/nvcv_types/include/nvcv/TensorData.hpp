@@ -18,9 +18,9 @@
 #ifndef NVCV_TENSORDATA_HPP
 #define NVCV_TENSORDATA_HPP
 
+#include "Optional.hpp"
 #include "TensorData.h"
 #include "TensorShape.hpp"
-#include "detail/Optional.hpp"
 
 #include <nvcv/DataType.hpp>
 

@@ -17,7 +17,7 @@
 
 #include "Definitions.hpp"
 
-#include <nvcv/detail/Optional.hpp>
+#include <nvcv/Optional.hpp>
 
 TEST(Optional, default_no_value)
 {

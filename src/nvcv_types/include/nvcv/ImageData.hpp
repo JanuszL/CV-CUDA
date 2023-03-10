@@ -20,8 +20,8 @@
 
 #include "ImageData.h"
 #include "ImageFormat.hpp"
+#include "Optional.hpp"
 #include "Size.hpp"
-#include "detail/Optional.hpp"
 
 namespace nvcv {
 

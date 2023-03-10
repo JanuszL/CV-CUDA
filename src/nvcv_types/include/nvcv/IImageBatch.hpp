@@ -21,7 +21,7 @@
 #include "Image.hpp"
 #include "ImageBatch.h"
 #include "ImageBatchData.hpp"
-#include "detail/Optional.hpp"
+#include "Optional.hpp"
 
 #include <iterator>
 

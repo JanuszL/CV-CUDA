@@ -18,8 +18,8 @@
 #ifndef NVCV_TENSOR_LAYOUT_INFO_HPP
 #define NVCV_TENSOR_LAYOUT_INFO_HPP
 
+#include "Optional.hpp"
 #include "TensorLayout.hpp"
-#include "detail/Optional.hpp"
 
 namespace nvcv {
 

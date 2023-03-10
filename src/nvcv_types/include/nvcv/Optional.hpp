@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_DETAIL_OPTIONAL_HPP
-#define NVCV_DETAIL_OPTIONAL_HPP
+#ifndef NVCV_OPTIONAL_HPP
+#define NVCV_OPTIONAL_HPP
 
 // C++>=17 ?
 #if __cplusplus >= 201703L
 #    include <new> // for std::launder
 #endif
 
-#include "InPlace.hpp"
+#include "detail/InPlace.hpp"
 
 #include <cassert>
 #include <cstddef> // for std::nullptr_t
@@ -367,4 +367,4 @@ bool operator!=(const T &a, const Optional<T> &b)
 
 } // namespace nvcv
 
-#endif // NVCV_DETAIL_OPTIONAL_HPP
+#endif // NVCV_OPTIONAL_HPP
