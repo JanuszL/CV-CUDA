@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,13 +17,11 @@
 
 #include "Definitions.hpp"
 
-#include <nvcv/detail/Optional.hpp>
-
-namespace d = nvcv::detail;
+#include <nvcv/Optional.hpp>
 
 TEST(Optional, default_no_value)
 {
-    d::Optional<int> opt;
+    nvcv::Optional<int> opt;
 
     EXPECT_FALSE(opt.hasValue());
     EXPECT_FALSE(opt && true);
@@ -33,7 +31,7 @@ TEST(Optional, default_no_value)
 
 TEST(Optional, ctor_with_value)
 {
-    d::Optional<int> opt(5);
+    nvcv::Optional<int> opt(5);
 
     EXPECT_TRUE(opt.hasValue());
     EXPECT_TRUE(opt && true);
@@ -43,8 +41,8 @@ TEST(Optional, ctor_with_value)
 
 TEST(Optional, equality)
 {
-    d::Optional<int> optA(5);
-    d::Optional<int> optB(5);
+    nvcv::Optional<int> optA(5);
+    nvcv::Optional<int> optB(5);
     EXPECT_TRUE(optA == optB);
     EXPECT_FALSE(optA != optB);
 
@@ -57,14 +55,14 @@ TEST(Optional, equality)
     EXPECT_FALSE(optA == nullptr);
     EXPECT_TRUE(optA != nullptr);
 
-    EXPECT_FALSE(optA == d::NullOpt);
-    EXPECT_TRUE(optA != d::NullOpt);
+    EXPECT_FALSE(optA == nvcv::NullOpt);
+    EXPECT_TRUE(optA != nvcv::NullOpt);
 
     EXPECT_FALSE(nullptr == optA);
     EXPECT_TRUE(nullptr != optA);
 
-    EXPECT_FALSE(d::NullOpt == optA);
-    EXPECT_TRUE(d::NullOpt != optA);
+    EXPECT_FALSE(nvcv::NullOpt == optA);
+    EXPECT_TRUE(nvcv::NullOpt != optA);
 }
 
 // TODO need way more tests.

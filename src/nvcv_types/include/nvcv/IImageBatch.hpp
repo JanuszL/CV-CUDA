@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,7 @@
 #include "Image.hpp"
 #include "ImageBatch.h"
 #include "ImageBatchData.hpp"
-#include "detail/Optional.hpp"
+#include "Optional.hpp"
 
 #include <iterator>
 
@@ -50,7 +50,7 @@ private:
     virtual NVCVImageBatchHandle doGetHandle() const = 0;
 
     // Only one leaf, we can use an optional for now.
-    mutable detail::Optional<ImageBatchVarShapeDataStridedCuda> m_cacheData;
+    mutable Optional<ImageBatchVarShapeDataStridedCuda> m_cacheData;
 };
 
 class IImageBatchVarShape : public IImageBatch

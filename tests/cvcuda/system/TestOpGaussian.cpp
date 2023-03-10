@@ -204,7 +204,7 @@ TEST_P(OpGaussian, varshape_correct_output)
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
 
         auto imgData = imgSrc[i]->exportData<nvcv::ImageDataStridedCuda>();
-        ASSERT_NE(imgData, nvcv::detail::NullOpt);
+        ASSERT_NE(imgData, nvcv::NullOpt);
 
         // Copy input data to the GPU
         ASSERT_EQ(cudaSuccess,

@@ -108,7 +108,7 @@ TEST(ImageBatchVarShape, wip_create)
     auto addToGold = [&goldImages, &goldFormats, &goldHandles](const nvcv::IImage &img)
     {
         auto imgdata = img.exportData<nvcv::ImageDataStridedCuda>();
-        EXPECT_NE(nvcv::detail::NullOpt, imgdata);
+        EXPECT_NE(nvcv::NullOpt, imgdata);
         if (imgdata)
         {
             goldImages.push_back(imgdata->cdata().buffer.strided);
@@ -299,7 +299,7 @@ TEST(ImageBatchVarShape, wip_sync)
     auto addToGold = [&goldImages, &goldFormats, &goldHandles](const nvcv::IImage &img)
     {
         auto imgdata = img.exportData<nvcv::ImageDataStridedCuda>();
-        EXPECT_NE(nvcv::detail::NullOpt, imgdata);
+        EXPECT_NE(nvcv::NullOpt, imgdata);
         if (imgdata)
         {
             goldImages.push_back(imgdata->cdata().buffer.strided);

@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-#ifndef NVCV_DETAIL_OPTIONAL_HPP
-#define NVCV_DETAIL_OPTIONAL_HPP
+#ifndef NVCV_OPTIONAL_HPP
+#define NVCV_OPTIONAL_HPP
 
 // C++>=17 ?
 #if __cplusplus >= 201703L
 #    include <new> // for std::launder
 #endif
 
-#include "InPlace.hpp"
+#include "detail/InPlace.hpp"
 
 #include <cassert>
 #include <cstddef> // for std::nullptr_t
@@ -31,7 +31,7 @@
 #include <type_traits>
 #include <utility> // for std::move, std::forward
 
-namespace nvcv { namespace detail {
+namespace nvcv {
 
 struct NullOptT
 {
@@ -74,11 +74,12 @@ public:
         }
     }
 
-    template<class U, typename std::enable_if<std::is_constructible<T, U &&>::value
-                                                  && !std::is_same<typename std::decay<U>::type, InPlaceT>::value
-                                                  && !std::is_same<typename std::decay<U>::type, Optional<U>>::value,
-                                              int>::type
-                      = 0>
+    template<class U,
+             typename std::enable_if<std::is_constructible<T, U &&>::value
+                                         && !std::is_same<typename std::decay<U>::type, detail::InPlaceT>::value
+                                         && !std::is_same<typename std::decay<U>::type, Optional<U>>::value,
+                                     int>::type
+             = 0>
     Optional(U &&that)
         : m_hasValue(true)
     {
@@ -86,7 +87,7 @@ public:
     }
 
     template<class... AA, typename std::enable_if<std::is_constructible<T, AA...>::value, int>::type = 0>
-    Optional(InPlaceT, AA &&...args)
+    Optional(detail::InPlaceT, AA &&...args)
         : m_hasValue(true)
     {
         new (&m_storage) T(std::forward<AA>(args)...);
@@ -364,6 +365,6 @@ bool operator!=(const T &a, const Optional<T> &b)
     return !(a == b);
 }
 
-}} // namespace nvcv::detail
+} // namespace nvcv
 
-#endif // NVCV_DETAIL_OPTIONAL_HPP
+#endif // NVCV_OPTIONAL_HPP

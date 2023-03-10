@@ -18,9 +18,9 @@
 #ifndef NVCV_TENSORDATA_HPP
 #define NVCV_TENSORDATA_HPP
 
+#include "Optional.hpp"
 #include "TensorData.h"
 #include "TensorShape.hpp"
-#include "detail/Optional.hpp"
 
 #include <nvcv/DataType.hpp>
 
@@ -67,7 +67,7 @@ public:
     }
 
     template<typename DerivedTensorData>
-    detail::Optional<DerivedTensorData> cast() const;
+    Optional<DerivedTensorData> cast() const;
 
     template<typename Derived>
     bool IsCompatible() const;
@@ -78,8 +78,8 @@ protected:
     NVCVTensorData &data() &;
 
 private:
-    NVCVTensorData                        m_data{};
-    mutable detail::Optional<TensorShape> m_cacheShape;
+    NVCVTensorData                m_data{};
+    mutable Optional<TensorShape> m_cacheShape;
 };
 
 class TensorDataStrided : public TensorData

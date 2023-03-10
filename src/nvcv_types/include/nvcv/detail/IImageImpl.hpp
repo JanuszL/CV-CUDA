@@ -69,7 +69,7 @@ inline ImageData IImage::exportData() const
 }
 
 template<typename DATA>
-inline detail::Optional<DATA> IImage::exportData() const
+inline Optional<DATA> IImage::exportData() const
 {
     return exportData().cast<DATA>();
 }

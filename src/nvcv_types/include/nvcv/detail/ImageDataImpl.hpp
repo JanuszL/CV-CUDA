@@ -48,7 +48,7 @@ inline ImageFormat ImageData::format() const
 }
 
 template<typename Derived>
-inline detail::Optional<Derived> ImageData::cast() const
+inline Optional<Derived> ImageData::cast() const
 {
     static_assert(std::is_base_of<ImageData, Derived>::value, "Cannot cast ImageData to an unrelated type");
 
@@ -61,7 +61,7 @@ inline detail::Optional<Derived> ImageData::cast() const
     }
     else
     {
-        return detail::NullOpt;
+        return NullOpt;
     }
 }
 

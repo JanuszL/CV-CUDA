@@ -38,7 +38,7 @@ TEST(Image, wip_create)
 
     auto data    = img.exportData();
     auto devdata = data.cast<nvcv::ImageDataStridedCuda>();
-    ASSERT_NE(nvcv::detail::NullOpt, devdata);
+    ASSERT_NE(nvcv::NullOpt, devdata);
 
     ASSERT_EQ(1, devdata->numPlanes());
     EXPECT_EQ(img.format(), devdata->format());
@@ -171,11 +171,11 @@ TEST(Image, wip_create_managed)
                     nvcv::MemAlignment{}.rowAddr(1).baseAddr(32)); // packed rows
     EXPECT_EQ(32, setBufAlign);
 
-    nvcv::detail::Optional<nvcv::ImageData> data = img.exportData();
-    ASSERT_NE(nvcv::detail::NullOpt, data);
+    nvcv::Optional<nvcv::ImageData> data = img.exportData();
+    ASSERT_NE(nvcv::NullOpt, data);
 
     auto devdata = data->cast<nvcv::ImageDataStridedCuda>();
-    ASSERT_NE(nvcv::detail::NullOpt, devdata);
+    ASSERT_NE(nvcv::NullOpt, devdata);
 
     ASSERT_EQ(1, devdata->numPlanes());
     EXPECT_LE(163 * 4, devdata->plane(0).rowStride);
@@ -216,11 +216,11 @@ TEST(ImageWrapData, wip_create)
     ASSERT_EQ(NVCV_SUCCESS, nvcvImageGetType(img.handle(), &type));
     EXPECT_EQ(NVCV_TYPE_IMAGE_WRAPDATA, type);
 
-    nvcv::detail::Optional<nvcv::ImageData> data = img.exportData();
-    ASSERT_NE(nvcv::detail::NullOpt, data);
+    nvcv::Optional<nvcv::ImageData> data = img.exportData();
+    ASSERT_NE(nvcv::NullOpt, data);
 
     auto devdata = data->cast<nvcv::ImageDataStridedCuda>();
-    ASSERT_NE(nvcv::detail::NullOpt, devdata);
+    ASSERT_NE(nvcv::NullOpt, devdata);
 
     ASSERT_EQ(1, devdata->numPlanes());
     EXPECT_EQ(img.format(), devdata->format());
@@ -329,7 +329,7 @@ TEST(ImageWrapData, wip_mem_reqs)
 
     auto data = img.exportData<nvcv::ImageDataStridedCuda>();
 
-    ASSERT_NE(nvcv::detail::NullOpt, data);
+    ASSERT_NE(nvcv::NullOpt, data);
     ASSERT_EQ(2, data->numPlanes());
     EXPECT_EQ(512, data->plane(0).width);
     EXPECT_EQ(256, data->plane(0).height);

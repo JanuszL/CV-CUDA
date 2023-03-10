@@ -20,8 +20,8 @@
 
 #include "ImageData.h"
 #include "ImageFormat.hpp"
+#include "Optional.hpp"
 #include "Size.hpp"
-#include "detail/Optional.hpp"
 
 namespace nvcv {
 
@@ -38,7 +38,7 @@ public:
     const NVCVImageData &cdata() const;
 
     template<typename Derived>
-    detail::Optional<Derived> cast() const;
+    Optional<Derived> cast() const;
 
 private:
     NVCVImageData m_data{};

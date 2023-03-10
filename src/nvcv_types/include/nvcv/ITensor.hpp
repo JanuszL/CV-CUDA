@@ -19,11 +19,11 @@
 #define NVCV_ITENSOR_HPP
 
 #include "Casts.hpp"
+#include "Optional.hpp"
 #include "Tensor.h"
 #include "TensorData.hpp"
 #include "TensorLayout.hpp"
 #include "TensorShape.hpp"
-#include "detail/Optional.hpp"
 
 #include <nvcv/DataType.hpp>
 
@@ -48,7 +48,7 @@ public:
     TensorData exportData() const;
 
     template<typename DerivedTensorData>
-    detail::Optional<DerivedTensorData> exportData() const
+    Optional<DerivedTensorData> exportData() const
     {
         return exportData().cast<DerivedTensorData>();
     }

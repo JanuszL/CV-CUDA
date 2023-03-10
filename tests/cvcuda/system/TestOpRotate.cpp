@@ -342,11 +342,11 @@ TEST_P(OpRotate, varshape_correct_output)
 
     nvcv::Tensor angleDegTensor(nvcv::TensorShape({numberOfImages}, "N"), nvcv::TYPE_F64);
     auto         angleDegTensorData = angleDegTensor.exportData<nvcv::TensorDataStridedCuda>();
-    ASSERT_NE(nvcv::detail::NullOpt, angleDegTensorData);
+    ASSERT_NE(nvcv::NullOpt, angleDegTensorData);
 
     nvcv::Tensor shiftTensor(nvcv::TensorShape({numberOfImages, 2}, nvcv::TENSOR_NW), nvcv::TYPE_F64);
     auto         shiftTensorData = shiftTensor.exportData<nvcv::TensorDataStridedCuda>();
-    ASSERT_NE(nvcv::detail::NullOpt, shiftTensorData);
+    ASSERT_NE(nvcv::NullOpt, shiftTensorData);
 
     auto shiftTensorDataAccess = nvcv::TensorDataAccessStrided::Create(*shiftTensorData);
     ASSERT_TRUE(shiftTensorDataAccess);

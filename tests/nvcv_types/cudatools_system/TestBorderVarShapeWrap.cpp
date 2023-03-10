@@ -96,7 +96,7 @@ TYPED_TEST(BorderVarShapeWrapTest, correct_fill)
             std::make_unique<nvcv::Image>(nvcv::Size2D{width + randSize(randEng), height + randSize(randEng)}, format));
 
         auto srcData = srcImageList[i]->exportData<nvcv::ImageDataStridedCuda>();
-        ASSERT_NE(srcData, nvcv::detail::NullOpt);
+        ASSERT_NE(srcData, nvcv::NullOpt);
 
         int srcRowStride = srcData->plane(0).rowStride;
         int srcHeight    = srcImageList[i]->size().h;

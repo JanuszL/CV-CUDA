@@ -277,15 +277,15 @@ public:
         return data.IsCompatible<TensorDataStrided>();
     }
 
-    static detail::Optional<TensorDataAccessStrided> Create(const TensorData &data)
+    static Optional<TensorDataAccessStrided> Create(const TensorData &data)
     {
-        if (detail::Optional<TensorDataStrided> dataStrided = data.cast<TensorDataStrided>())
+        if (Optional<TensorDataStrided> dataStrided = data.cast<TensorDataStrided>())
         {
             return TensorDataAccessStrided(dataStrided.value());
         }
         else
         {
-            return detail::NullOpt;
+            return NullOpt;
         }
     }
 
@@ -306,7 +306,7 @@ public:
         return TensorDataAccessStrided::IsCompatible(data) && TensorShapeInfoImage::IsCompatible(data.shape());
     }
 
-    static detail::Optional<TensorDataAccessStridedImage> Create(const TensorData &data)
+    static Optional<TensorDataAccessStridedImage> Create(const TensorData &data)
     {
         if (IsCompatible(data))
         {
@@ -314,7 +314,7 @@ public:
         }
         else
         {
-            return detail::NullOpt;
+            return NullOpt;
         }
     }
 
@@ -337,7 +337,7 @@ public:
             && TensorShapeInfoImagePlanar::IsCompatible(data.shape());
     }
 
-    static detail::Optional<TensorDataAccessStridedImagePlanar> Create(const TensorData &data)
+    static Optional<TensorDataAccessStridedImagePlanar> Create(const TensorData &data)
     {
         if (IsCompatible(data))
         {
@@ -345,7 +345,7 @@ public:
         }
         else
         {
-            return detail::NullOpt;
+            return NullOpt;
         }
     }
 

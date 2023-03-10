@@ -98,7 +98,7 @@ TEST_P(OpConv2D, varshape_correct_output)
         std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return udist(rng); });
 
         auto imgData = imgSrc[i]->exportData<nvcv::ImageDataStridedCuda>();
-        ASSERT_NE(imgData, nvcv::detail::NullOpt);
+        ASSERT_NE(imgData, nvcv::NullOpt);
 
         // Copy input data to the GPU
         ASSERT_EQ(cudaSuccess,
@@ -137,7 +137,7 @@ TEST_P(OpConv2D, varshape_correct_output)
         std::generate(kernelVec[i].begin(), kernelVec[i].end(), [&]() { return udist(rng); });
 
         auto data = kernel[i]->exportData<nvcv::ImageDataStridedCuda>();
-        ASSERT_NE(data, nvcv::detail::NullOpt);
+        ASSERT_NE(data, nvcv::NullOpt);
 
         // Copy kernel data to the GPU
         ASSERT_EQ(cudaSuccess,

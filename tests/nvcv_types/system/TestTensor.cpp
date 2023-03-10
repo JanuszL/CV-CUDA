@@ -92,7 +92,7 @@ TEST_P(TensorImageTests, wip_create)
         ASSERT_EQ(tensor.dtype(), data.dtype());
 
         auto devdata = data.cast<nvcv::TensorDataStridedCuda>();
-        ASSERT_NE(nvcv::detail::NullOpt, devdata);
+        ASSERT_NE(nvcv::NullOpt, devdata);
 
         EXPECT_EQ(GOLD_RANK, devdata->rank());
         ASSERT_EQ(GOLD_SHAPE, devdata->shape());
@@ -179,7 +179,7 @@ TEST_P(TensorTests, wip_create)
         auto data = tensor.exportData();
 
         auto devdata = data.cast<nvcv::TensorDataStridedCuda>();
-        ASSERT_NE(nvcv::detail::NullOpt, devdata);
+        ASSERT_NE(nvcv::NullOpt, devdata);
 
         const int64_t *strides = devdata->cdata().buffer.strided.strides;
         EXPECT_THAT(std::vector<int64_t>(strides, strides + data.rank()), t::ElementsAreArray(GOLD_SHAPE));
@@ -220,7 +220,7 @@ TEST(TensorTests, wip_create_allocator)
     EXPECT_EQ(32, setBufAlign);
 
     auto devdata = tensor.exportData<nvcv::TensorDataStridedCuda>();
-    ASSERT_NE(nvcv::detail::NullOpt, devdata);
+    ASSERT_NE(nvcv::NullOpt, devdata);
 
     EXPECT_EQ(1, devdata->stride(3));
     EXPECT_EQ(4 * 1, devdata->stride(2));
@@ -352,7 +352,7 @@ TEST(TensorWrapData, wip_create)
     EXPECT_EQ(GOLD_DTYPE, tensor.dtype());
 
     auto devdata = tensor.exportData<nvcv::TensorDataStridedCuda>();
-    ASSERT_NE(nvcv::detail::NullOpt, devdata);
+    ASSERT_NE(nvcv::NullOpt, devdata);
 
     auto accessRef = nvcv::TensorDataAccessStridedImagePlanar::Create(*devdata);
     ASSERT_TRUE(access);
