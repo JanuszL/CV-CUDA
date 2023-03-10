@@ -91,7 +91,7 @@ bool TensorData::IsCompatible() const
 }
 
 template<typename Derived>
-inline detail::Optional<Derived> TensorData::cast() const
+inline Optional<Derived> TensorData::cast() const
 {
     static_assert(std::is_base_of<TensorData, Derived>::value, "Cannot cast TensorData to an unrelated type");
 
@@ -103,7 +103,7 @@ inline detail::Optional<Derived> TensorData::cast() const
     }
     else
     {
-        return detail::NullOpt;
+        return NullOpt;
     }
 }
 

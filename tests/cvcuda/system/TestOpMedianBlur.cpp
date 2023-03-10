@@ -211,7 +211,7 @@ TEST_P(OpMedianBlur, tensor_correct_output)
 
     auto srcData = imgSrc.exportData<nvcv::TensorDataStridedCuda>();
 
-    ASSERT_NE(nvcv::detail::NullOpt, srcData);
+    ASSERT_NE(nvcv::NullOpt, srcData);
 
     auto srcAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*srcData);
     ASSERT_TRUE(srcAccess);
@@ -370,7 +370,7 @@ TEST_P(OpMedianBlur, varshape_correct_output)
     for (int i = 0; i < numberOfImages; ++i)
     {
         const auto srcData = imgSrc[i]->exportData<nvcv::ImageDataStridedCuda>();
-        ASSERT_NE(nvcv::detail::NullOpt, srcData);
+        ASSERT_NE(nvcv::NullOpt, srcData);
 
         assert(srcData->numPlanes() == 1);
 
@@ -394,7 +394,7 @@ TEST_P(OpMedianBlur, varshape_correct_output)
 
         // Fill the border with BORDER_REPLICATE
         auto srcBrdReplicateData = imgSrcBrdReplicate[i]->exportData<nvcv::ImageDataStridedCuda>();
-        ASSERT_NE(nvcv::detail::NullOpt, srcBrdReplicateData);
+        ASSERT_NE(nvcv::NullOpt, srcBrdReplicateData);
 
         assert(srcBrdReplicateData->numPlanes() == 1);
 

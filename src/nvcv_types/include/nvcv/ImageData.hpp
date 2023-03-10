@@ -38,7 +38,7 @@ public:
     const NVCVImageData &cdata() const;
 
     template<typename Derived>
-    detail::Optional<Derived> cast() const;
+    Optional<Derived> cast() const;
 
 private:
     NVCVImageData m_data{};

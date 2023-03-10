@@ -110,7 +110,7 @@ public:
         return true;
     }
 
-    static detail::Optional<TensorShapeInfo> Create(const TensorShape &tshape)
+    static Optional<TensorShapeInfo> Create(const TensorShape &tshape)
     {
         return TensorShapeInfo(tshape);
     }
@@ -121,7 +121,7 @@ private:
     {
     }
 
-    detail::Optional<TensorLayoutInfo> m_infoLayout;
+    Optional<TensorLayoutInfo> m_infoLayout;
 };
 
 class TensorShapeInfoImage : public detail::TensorShapeInfoImpl<TensorLayoutInfoImage>
@@ -134,7 +134,7 @@ public:
         return TensorShapeInfo::IsCompatible(tshape) && TensorLayoutInfo::IsCompatible(tshape.layout());
     }
 
-    static detail::Optional<TensorShapeInfoImage> Create(const TensorShape &tshape)
+    static Optional<TensorShapeInfoImage> Create(const TensorShape &tshape)
     {
         if (IsCompatible(tshape))
         {
@@ -142,7 +142,7 @@ public:
         }
         else
         {
-            return detail::NullOpt;
+            return NullOpt;
         }
     }
 
@@ -242,7 +242,7 @@ public:
         return false;
     }
 
-    static detail::Optional<TensorShapeInfoImagePlanar> Create(const TensorShape &tshape)
+    static Optional<TensorShapeInfoImagePlanar> Create(const TensorShape &tshape)
     {
         if (IsCompatible(tshape))
         {
@@ -250,7 +250,7 @@ public:
         }
         else
         {
-            return detail::NullOpt;
+            return NullOpt;
         }
     }
 

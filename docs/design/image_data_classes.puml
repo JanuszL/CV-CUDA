@@ -19,7 +19,7 @@ class ImageData
     + cdata() const &: const NVCVImageData &
     + cdata() &&: NVCVImageData
 
-    + cast<Derived> const: detail::Optional<Derived>
+    + cast<Derived> const: Optional<Derived>
 }
 
 class ImageDataCudaArray extends ImageData

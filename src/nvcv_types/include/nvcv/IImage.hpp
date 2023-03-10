@@ -46,7 +46,7 @@ public:
     ImageData exportData() const;
 
     template<typename DATA>
-    detail::Optional<DATA> exportData() const;
+    Optional<DATA> exportData() const;
 
     void  setUserPointer(void *ptr);
     void *userPointer() const;

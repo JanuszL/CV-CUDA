@@ -48,7 +48,7 @@ public:
     TensorData exportData() const;
 
     template<typename DerivedTensorData>
-    detail::Optional<DerivedTensorData> exportData() const
+    Optional<DerivedTensorData> exportData() const
     {
         return exportData().cast<DerivedTensorData>();
     }
