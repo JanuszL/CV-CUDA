@@ -179,7 +179,7 @@ cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShape &imgBatch)
     }
 }
 
-cuda_op::DataFormat GetLegacyDataFormat(const IImageBatchVarShapeDataStridedCuda &imgBatch)
+cuda_op::DataFormat GetLegacyDataFormat(const ImageBatchVarShapeDataStridedCuda &imgBatch)
 {
     ImageFormat fmt = imgBatch.uniqueFormat();
     if (!fmt)
@@ -266,7 +266,7 @@ Size2D GetMaxImageSize(const TensorDataStridedCuda &tensor)
     }
 }
 
-Size2D GetMaxImageSize(const IImageBatchVarShapeDataStridedCuda &imageBatch)
+Size2D GetMaxImageSize(const ImageBatchVarShapeDataStridedCuda &imageBatch)
 {
     return imageBatch.maxSize();
 }

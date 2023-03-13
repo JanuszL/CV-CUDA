@@ -56,7 +56,7 @@ void Flip::operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::
 void Flip::operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, const nvcv::IImageBatchVarShape &out,
                       const nvcv::ITensor &flipCode) const
 {
-    auto *input = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(in.exportData(stream));
+    auto input = in.exportData<nvcv::ImageBatchVarShapeDataStridedCuda>(stream);
     if (input == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
@@ -64,7 +64,7 @@ void Flip::operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, 
                               "image batch");
     }
 
-    auto *output = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(out.exportData(stream));
+    auto output = out.exportData<nvcv::ImageBatchVarShapeDataStridedCuda>(stream);
     if (output == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,

@@ -28,7 +28,7 @@
 #include "ImageBatchVarShapeWrap.hpp" // for ImageBatchVarShapeWrap, etc.
 #include "TypeTraits.hpp"             // for NumElements, etc.
 
-#include <nvcv/IImageBatchData.hpp> // for IImageBatchVarShapeDataStridedCuda, etc.
+#include <nvcv/ImageBatchData.hpp> // for ImageBatchVarShapeDataStridedCuda, etc.
 
 namespace nvcv::cuda {
 
@@ -51,7 +51,7 @@ public:
     {
     }
 
-    explicit __host__ BorderVarShapeWrapImpl(const IImageBatchVarShapeDataStridedCuda &images)
+    explicit __host__ BorderVarShapeWrapImpl(const ImageBatchVarShapeDataStridedCuda &images)
         : m_imageBatchWrap(images)
     {
     }
@@ -132,10 +132,10 @@ public:
     /**
      * Constructs a BorderVarShapeWrap by wrapping \p images.
      *
-     * @param[in] images A \p IImageBatchVarShapeDataStridedCuda with image batch information.
+     * @param[in] images A \p ImageBatchVarShapeDataStridedCuda with image batch information.
      * @param[in] borderValue The border value is ignored in non-constant border types.
      */
-    explicit __host__ BorderVarShapeWrap(const IImageBatchVarShapeDataStridedCuda &images, ValueType borderValue = {})
+    explicit __host__ BorderVarShapeWrap(const ImageBatchVarShapeDataStridedCuda &images, ValueType borderValue = {})
         : Base(images)
     {
     }
@@ -239,10 +239,10 @@ public:
     /**
      * Constructs a BorderVarShapeWrap by wrapping \p images.
      *
-     * @param[in] images An \p IImageBatchVarShapeDataStridedCuda with image batch information.
+     * @param[in] images An \p ImageBatchVarShapeDataStridedCuda with image batch information.
      * @param[in] borderValue The border value to be used when accessing outside the tensor.
      */
-    explicit __host__ BorderVarShapeWrap(const IImageBatchVarShapeDataStridedCuda &images, ValueType borderValue = {})
+    explicit __host__ BorderVarShapeWrap(const ImageBatchVarShapeDataStridedCuda &images, ValueType borderValue = {})
         : Base(images)
         , m_borderValue(borderValue)
     {

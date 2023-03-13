@@ -73,30 +73,28 @@ void Composite::operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape 
                            const nvcv::IImageBatchVarShape &background, const nvcv::IImageBatchVarShape &fgMask,
                            const nvcv::IImageBatchVarShape &output) const
 {
-    auto *foregroundData
-        = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(foreground.exportData(stream));
+    auto foregroundData = foreground.exportData<nvcv::ImageBatchVarShapeDataStridedCuda>(stream);
     if (foregroundData == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
                               "Input foreground must be cuda-accessible, varshape image batch");
     }
 
-    auto *backgroundData
-        = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(background.exportData(stream));
+    auto backgroundData = background.exportData<nvcv::ImageBatchVarShapeDataStridedCuda>(stream);
     if (backgroundData == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
                               "Input background must be cuda-accessible, varshape image batch");
     }
 
-    auto *fgMaskData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(fgMask.exportData(stream));
+    auto fgMaskData = fgMask.exportData<nvcv::ImageBatchVarShapeDataStridedCuda>(stream);
     if (fgMaskData == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
                               "Input fgMask must be cuda-accessible, varshape image batch");
     }
 
-    auto *outData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(output.exportData(stream));
+    auto outData = output.exportData<nvcv::ImageBatchVarShapeDataStridedCuda>(stream);
     if (outData == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,

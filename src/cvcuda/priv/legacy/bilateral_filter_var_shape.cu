@@ -193,8 +193,8 @@ __global__ void BilateralFilterVarShapeKernel(const SrcWrapper src, DstWrapper d
 }
 
 template<typename T, NVCVBorderType B>
-void BilateralFilterVarShapeCaller(const IImageBatchVarShapeDataStridedCuda &inData,
-                                   const IImageBatchVarShapeDataStridedCuda &outData, int batch,
+void BilateralFilterVarShapeCaller(const ImageBatchVarShapeDataStridedCuda &inData,
+                                   const ImageBatchVarShapeDataStridedCuda &outData, int batch,
                                    const cuda::Tensor1DWrap<int>   &inDiameter,
                                    const cuda::Tensor1DWrap<float> &inSigmaColor,
                                    const cuda::Tensor1DWrap<float> &inSigmaSpace, cudaStream_t stream)
@@ -219,10 +219,10 @@ void BilateralFilterVarShapeCaller(const IImageBatchVarShapeDataStridedCuda &inD
 #endif
 }
 
-ErrorCode BilateralFilterVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData,
-                                         const IImageBatchVarShapeDataStridedCuda &outData,
-                                         const TensorDataStridedCuda              &diameterData,
-                                         const TensorDataStridedCuda              &sigmaColorData,
+ErrorCode BilateralFilterVarShape::infer(const ImageBatchVarShapeDataStridedCuda &inData,
+                                         const ImageBatchVarShapeDataStridedCuda &outData,
+                                         const TensorDataStridedCuda             &diameterData,
+                                         const TensorDataStridedCuda             &sigmaColorData,
                                          const TensorDataStridedCuda &sigmaSpaceData, NVCVBorderType borderMode,
                                          cudaStream_t stream)
 {
@@ -313,7 +313,7 @@ ErrorCode BilateralFilterVarShape::infer(const IImageBatchVarShapeDataStridedCud
     cuda::Tensor1DWrap<float> inSigmaSpace(sigmaSpaceData);
 
     typedef void (*bilateral_filter_var_shape_t)(
-        const IImageBatchVarShapeDataStridedCuda &inData, const IImageBatchVarShapeDataStridedCuda &outData, int batch,
+        const ImageBatchVarShapeDataStridedCuda &inData, const ImageBatchVarShapeDataStridedCuda &outData, int batch,
         const cuda::Tensor1DWrap<int> &inDiameter, const cuda::Tensor1DWrap<float> &inSigmaColor,
         const cuda::Tensor1DWrap<float> &inSigmaSpace, cudaStream_t stream);
 
