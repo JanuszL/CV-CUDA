@@ -18,13 +18,13 @@
     stage: build
     image: 'gitlab-master.nvidia.com:5005/cv/cvcuda/build-linux:$TAG_IMAGE'
     artifacts:
-        paths: [ 'cvcuda-installer/' ]
+        paths: [ 'cvcuda-installer$INSTALL_DIR_SUFFIX/' ]
     before_script:
-        - 'rm -rf cvcuda-installer'
+        - 'rm -rf cvcuda-installer$INSTALL_DIR_SUFFIX'
     script:
         - ./ci/build.sh $BUILD_TYPE build "$EXTRA_ARGS" -DWARNINGS_AS_ERRORS=1 -DPUBLIC_API_COMPILERS='gcc-11;gcc-9;gcc-8;clang-14;clang-11'
         - 'pushd build && cpack && popd'
-        - 'mkdir cvcuda-installer && mv -v build/*.{deb,tar.*} build/VERSION cvcuda-installer'
+        - 'mkdir cvcuda-installer$INSTALL_DIR_SUFFIX && mv -v build/*.{deb,tar.*} build/VERSION cvcuda-installer$INSTALL_DIR_SUFFIX'
 
 b:x64:deb:
     variables:
@@ -36,6 +36,27 @@ b:x64:rel:
     variables:
         BUILD_TYPE: release
         EXTRA_ARGS: -DPYTHON_VERSIONS='3.7;3.8;3.9;3.10'
+    extends: .build_common
+    tags: [ linux-x64, build, cuda11 ]
+
+b:x64:gcc9:deb:
+    variables:
+        BUILD_TYPE: debug
+        CC: gcc-9
+        CXX: g++-9
+        EXTRA_ARGS: -DBUILD_TESTS=0
+        INSTALL_DIR_SUFFIX: _gcc9
+
+    extends: .build_common
+    tags: [ linux-x64, build, cuda11 ]
+
+b:x64:gcc9:rel:
+    variables:
+        BUILD_TYPE: release
+        CC: gcc-9
+        CXX: g++-9
+        EXTRA_ARGS: -DBUILD_TESTS=0 -DPYTHON_VERSIONS='3.7;3.8;3.9;3.10'
+        INSTALL_DIR_SUFFIX: _gcc9
     extends: .build_common
     tags: [ linux-x64, build, cuda11 ]
 
