@@ -20,6 +20,7 @@
 
 #include "Exception.hpp"
 #include "HandleManager.hpp"
+#include "HandleTraits.hpp"
 #include "IContext.hpp"
 #include "Version.hpp"
 
@@ -222,12 +223,6 @@ int CoreObjectRefCount(HandleType handle)
 
     return mgr.refCount(handle);
 }
-
-template<class, class = void>
-constexpr bool HasObjManager = false;
-
-template<class T>
-constexpr bool HasObjManager<T, std::void_t<decltype(sizeof(CoreObjManager<T>))>> = true;
 
 template<class HandleType>
 inline ICoreObject *ToCoreObjectPtr(HandleType h)
