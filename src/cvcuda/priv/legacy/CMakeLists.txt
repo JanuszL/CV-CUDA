@@ -60,6 +60,7 @@ add_library(cvcuda_legacy STATIC
     gamma_contrast_var_shape.cu
     pillow_resize.cu
     pillow_resize_var_shape.cu
+    threshold.cu
 )
 
 target_link_libraries(cvcuda_legacy
