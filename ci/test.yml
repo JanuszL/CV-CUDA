@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,11 +21,11 @@
         GIT_STRATEGY: none
     script:
       - 'pwd'
-      - 'ls -1 cvcuda-installer/*.deb'
+      - 'ls -1 cvcuda-installer*/*.deb'
       - 'version=$(cat cvcuda-installer/VERSION)'
       - "apt-get update"
-      - "packages=\"./cvcuda-installer/nvcv-lib-${version}.deb ./cvcuda-installer/cvcuda-tests-${version}.deb\""
-      - "[[ $NVCV_FORCE_PYTHON = 1 ]] && packages=\"$packages ./cvcuda-installer/nvcv-python*-${version}.deb\""
+      - "packages=\"./cvcuda-installer$LIB_INSTALL_DIR_PREFIX/nvcv-lib-${version}.deb ./cvcuda-installer/cvcuda-tests-${version}.deb\""
+      - "[[ $NVCV_FORCE_PYTHON = 1 ]] && packages=\"$packages ./cvcuda-installer$LIB_INSTALL_DIR_PREFIX/nvcv-python*-${version}.deb\""
       - "apt-get install -y --no-install-recommends $packages"
       - '/opt/nvidia/cvcuda*/bin/run_tests.sh'
 
@@ -47,6 +47,15 @@ t:x64:rel:
     variables:
         NVCV_FORCE_PYTHON: 1
     needs: [ 'b:x64:rel' ]
+    tags: [ linux-x64, test, cuda11 ]
+
+t:x64:gcc9:rel:
+    extends:
+      - .test_x64
+    variables:
+        NVCV_FORCE_PYTHON: 1
+        LIB_INSTALL_DIR_PREFIX: _gcc9
+    needs: [ 'b:x64:rel', 'b:x64:gcc9:rel' ]
     tags: [ linux-x64, test, cuda11 ]
 
 t:x64:sanit:

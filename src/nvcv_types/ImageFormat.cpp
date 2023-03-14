@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -514,7 +514,7 @@ NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvImageFormatHasSameDataLayout,
 }
 
 NVCV_DEFINE_API(0, 0, NVCVStatus, nvcvMakeImageFormatFromFourCC,
-                (NVCVImageFormat * outFormat, int32_t fourcc, NVCVColorSpec colorSpec, NVCVMemLayout memLayout))
+                (NVCVImageFormat * outFormat, uint32_t fourcc, NVCVColorSpec colorSpec, NVCVMemLayout memLayout))
 {
     return priv::ProtectCall(
         [&]

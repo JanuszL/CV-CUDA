@@ -52,6 +52,7 @@ target_link_libraries(cvcuda
         nvcv_types
     PRIVATE
         nvcv_util
+        nvcv_util_symver
         cvcuda_priv
 )
 
