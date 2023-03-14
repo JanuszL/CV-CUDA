@@ -44,7 +44,10 @@ endif()
 include(CheckIPOSupported)
 check_ipo_supported(RESULT LTO_SUPPORTED)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"
+   # Enable if gcc>=10. With 9.4 in some contexts we hit ICE with LTO:
+   # internal compiler error: in add_symbol_to_partition_1, at lto/lto-partition.c:153
+   AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 10.0)
     set(LTO_ENABLED ON)
 else()
     set(LTO_ENABLED OFF)
