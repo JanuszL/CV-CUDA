@@ -168,6 +168,10 @@ CVCUDA_PUBLIC NVCVStatus cvcudaThresholdCreate(NVCVOperatorHandle *handle, uint3
 CVCUDA_PUBLIC NVCVStatus cvcudaThresholdSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
                                                NVCVTensorHandle out, NVCVTensorHandle thresh, NVCVTensorHandle maxval);
 
+CVCUDA_PUBLIC NVCVStatus cvcudaThresholdVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
+                                                       NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                                                       NVCVTensorHandle thresh, NVCVTensorHandle maxval);
+
 /** @} */
 
 #ifdef __cplusplus

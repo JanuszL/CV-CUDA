@@ -31,7 +31,8 @@ Threshold::Threshold(uint32_t type, int maxBatchSize)
 {
     legacy::DataShape maxIn, maxOut;
     // maxIn/maxOut not used by op.
-    m_legacyOp = std::make_unique<legacy::Threshold>(maxIn, maxOut, type, maxBatchSize);
+    m_legacyOp         = std::make_unique<legacy::Threshold>(maxIn, maxOut, type, maxBatchSize);
+    m_legacyOpVarShape = std::make_unique<legacy::ThresholdVarShape>(maxIn, maxOut, type, maxBatchSize);
 }
 
 void Threshold::operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out,
@@ -66,6 +67,38 @@ void Threshold::operator()(cudaStream_t stream, const nvcv::ITensor &in, const n
     }
 
     NVCV_CHECK_THROW(m_legacyOp->infer(*inData, *outData, *threshData, *maxvalData, stream));
+}
+
+void Threshold::operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in,
+                           const nvcv::IImageBatchVarShape &out, nvcv::ITensor &thresh, nvcv::ITensor &maxval) const
+{
+    auto inData = in.exportData<nvcv::ImageBatchVarShapeDataStridedCuda>(stream);
+    if (inData == nullptr)
+    {
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT, "Input must be varshape image batch");
+    }
+
+    auto outData = out.exportData<nvcv::ImageBatchVarShapeDataStridedCuda>(stream);
+    if (outData == nullptr)
+    {
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT, "Output must be varshape image batch");
+    }
+
+    auto threshData = thresh.exportData<nvcv::TensorDataStridedCuda>();
+    if (threshData == nullptr)
+    {
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "thresh must be cuda-accessible, pitch-linear tensor");
+    }
+
+    auto maxvalData = maxval.exportData<nvcv::TensorDataStridedCuda>();
+    if (maxvalData == nullptr)
+    {
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "maxval must be cuda-accessible, pitch-linear tensor");
+    }
+
+    NVCV_CHECK_THROW(m_legacyOpVarShape->infer(*inData, *outData, *threshData, *maxvalData, stream));
 }
 
 } // namespace cvcuda::priv
