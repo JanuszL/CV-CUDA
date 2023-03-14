@@ -71,7 +71,7 @@ __global__ void erase(nvcv::cuda::ImageBatchVarShapeWrapNHWC<D> img, nvcv::cuda:
 }
 
 template<typename D>
-void eraseCaller(const nvcv::IImageBatchVarShapeDataStridedCuda &imgs, const nvcv::TensorDataStridedCuda &anchor,
+void eraseCaller(const nvcv::ImageBatchVarShapeDataStridedCuda &imgs, const nvcv::TensorDataStridedCuda &anchor,
                  const nvcv::TensorDataStridedCuda &erasing, const nvcv::TensorDataStridedCuda &imgIdx,
                  const nvcv::TensorDataStridedCuda &values, int max_eh, int max_ew, int num_erasing_area, bool random,
                  unsigned int seed, cudaStream_t stream)
@@ -153,12 +153,12 @@ ErrorCode EraseVarShape::infer(const nvcv::IImageBatchVarShape &inbatch, const n
                                const TensorDataStridedCuda &values, const TensorDataStridedCuda &imgIdx, bool random,
                                unsigned int seed, bool inplace, cudaStream_t stream)
 {
-    auto *inData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(inbatch.exportData(stream));
+    auto inData = inbatch.exportData<nvcv::ImageBatchVarShapeDataStridedCuda>(stream);
     if (inData == nullptr)
     {
         LOG_ERROR("Input must be varshape image batch");
     }
-    auto *outData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(outbatch.exportData(stream));
+    auto outData = outbatch.exportData<nvcv::ImageBatchVarShapeDataStridedCuda>(stream);
     if (outData == nullptr)
     {
         LOG_ERROR("Output must be varshape image batch");
@@ -289,7 +289,7 @@ ErrorCode EraseVarShape::infer(const nvcv::IImageBatchVarShape &inbatch, const n
         return SUCCESS;
     }
 
-    typedef void (*erase_t)(const IImageBatchVarShapeDataStridedCuda &imgs, const TensorDataStridedCuda &anchor,
+    typedef void (*erase_t)(const ImageBatchVarShapeDataStridedCuda &imgs, const TensorDataStridedCuda &anchor,
                             const TensorDataStridedCuda &erasing, const TensorDataStridedCuda &imgIdx,
                             const TensorDataStridedCuda &values, int max_eh, int max_ew, int num_erasing_area,
                             bool random, unsigned int seed, cudaStream_t stream);

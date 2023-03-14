@@ -19,7 +19,7 @@
 #define CV_CUDA_UTILS_CUH
 
 #include <nvcv/Exception.hpp>
-#include <nvcv/IImageBatchData.hpp>
+#include <nvcv/ImageBatchData.hpp>
 #include <nvcv/ImageData.hpp>  // for ImageDataStridedCuda, etc.
 #include <nvcv/TensorData.hpp> // for TensorDataStridedCuda, etc.
 #include <nvcv/TensorDataAccess.hpp>
@@ -387,7 +387,7 @@ struct Ptr2dVarShapeNHWC
     {
     }
 
-    __host__ __forceinline__ Ptr2dVarShapeNHWC(const nvcv::IImageBatchVarShapeDataStridedCuda &data, int nch_ = -1)
+    __host__ __forceinline__ Ptr2dVarShapeNHWC(const nvcv::ImageBatchVarShapeDataStridedCuda &data, int nch_ = -1)
         : batches(data.numImages())
         , imgList(data.imageList())
         , nch(

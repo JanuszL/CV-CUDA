@@ -61,7 +61,7 @@ __global__ void flip_kernel(const cuda::ImageBatchVarShapeWrap<T> src, cuda::Ima
 }
 
 template<typename T>
-void flip(const IImageBatchVarShapeDataStridedCuda &input, const IImageBatchVarShapeDataStridedCuda &output,
+void flip(const ImageBatchVarShapeDataStridedCuda &input, const ImageBatchVarShapeDataStridedCuda &output,
           const TensorDataStridedCuda &flipCode, cudaStream_t stream)
 {
     constexpr uint32_t BLOCK = 32;
@@ -91,8 +91,8 @@ size_t FlipOrCopyVarShape::calBufferSize(int maxBatchSize)
     return (sizeof(void *) * 2 + sizeof(int) * 3) * maxBatchSize;
 }
 
-ErrorCode FlipOrCopyVarShape::infer(const IImageBatchVarShapeDataStridedCuda &input,
-                                    const IImageBatchVarShapeDataStridedCuda &output,
+ErrorCode FlipOrCopyVarShape::infer(const ImageBatchVarShapeDataStridedCuda &input,
+                                    const ImageBatchVarShapeDataStridedCuda &output,
                                     const TensorDataStridedCuda &flipCode, cudaStream_t stream)
 {
     DataFormat inputFormat  = helpers::GetLegacyDataFormat(input);
@@ -131,12 +131,12 @@ ErrorCode FlipOrCopyVarShape::infer(const IImageBatchVarShapeDataStridedCuda &in
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    // using flip_t = void(const IImageBatchVarShapeDataStridedCuda & input,
-    //                     const IImageBatchVarShapeDataStridedCuda & output,
+    // using flip_t = void(const ImageBatchVarShapeDataStridedCuda & input,
+    //                     const ImageBatchVarShapeDataStridedCuda & output,
     //                     const TensorDataStridedCuda & flipCode,
     //                     cudaStream_t stream);
-    typedef void (*flip_t)(const IImageBatchVarShapeDataStridedCuda &input,
-                           const IImageBatchVarShapeDataStridedCuda &output, const TensorDataStridedCuda &flipCode,
+    typedef void (*flip_t)(const ImageBatchVarShapeDataStridedCuda &input,
+                           const ImageBatchVarShapeDataStridedCuda &output, const TensorDataStridedCuda &flipCode,
                            cudaStream_t stream);
 
     static const flip_t funcs[6][4] = {

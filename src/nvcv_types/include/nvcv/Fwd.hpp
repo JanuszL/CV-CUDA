@@ -37,12 +37,12 @@ class ImageDataStridedCuda;
 class ImageDataStridedHost;
 
 class IImageBatch;
-class IImageBatchData;
+class ImageBatchData;
 
 class IImageBatchVarShape;
-class IImageBatchVarShapeData;
-class IImageBatchVarShapeDataStrided;
-class IImageBatchVarShapeDataStridedCuda;
+class ImageBatchVarShapeData;
+class ImageBatchVarShapeDataStrided;
+class ImageBatchVarShapeDataStridedCuda;
 
 class ITensor;
 class TensorData;

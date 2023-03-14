@@ -156,8 +156,8 @@ void warp_caller(const Ptr2dVarShapeNHWC<T> src, cuda::ImageBatchVarShapeWrap<T>
 }
 
 template<typename T>
-void warpAffine(const nvcv::IImageBatchVarShapeDataStridedCuda &inData,
-                const nvcv::IImageBatchVarShapeDataStridedCuda &outData, const cuda::Tensor2DWrap<float> transform,
+void warpAffine(const nvcv::ImageBatchVarShapeDataStridedCuda &inData,
+                const nvcv::ImageBatchVarShapeDataStridedCuda &outData, const cuda::Tensor2DWrap<float> transform,
                 const int interpolation, const int borderMode, const float4 borderValue, cudaStream_t stream)
 {
     cuda_op::Ptr2dVarShapeNHWC<T>   src_ptr(inData);
@@ -170,8 +170,8 @@ void warpAffine(const nvcv::IImageBatchVarShapeDataStridedCuda &inData,
 }
 
 template<typename T>
-void warpPerspective(const nvcv::IImageBatchVarShapeDataStridedCuda &inData,
-                     const nvcv::IImageBatchVarShapeDataStridedCuda &outData, const cuda::Tensor2DWrap<float> transform,
+void warpPerspective(const nvcv::ImageBatchVarShapeDataStridedCuda &inData,
+                     const nvcv::ImageBatchVarShapeDataStridedCuda &outData, const cuda::Tensor2DWrap<float> transform,
                      const int interpolation, const int borderMode, const float4 borderValue, cudaStream_t stream)
 {
     Ptr2dVarShapeNHWC<T>            src_ptr(inData);
@@ -205,8 +205,8 @@ WarpAffineVarShape::~WarpAffineVarShape()
     m_transformationMatrix = nullptr;
 }
 
-ErrorCode WarpAffineVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData,
-                                    const IImageBatchVarShapeDataStridedCuda &outData,
+ErrorCode WarpAffineVarShape::infer(const ImageBatchVarShapeDataStridedCuda &inData,
+                                    const ImageBatchVarShapeDataStridedCuda &outData,
                                     const TensorDataStridedCuda &transMatrix, const int32_t flags,
                                     const NVCVBorderType borderMode, const float4 borderValue, cudaStream_t stream)
 {
@@ -291,8 +291,8 @@ ErrorCode WarpAffineVarShape::infer(const IImageBatchVarShapeDataStridedCuda &in
                                          cudaMemcpyDeviceToDevice, stream));
     }
 
-    typedef void (*func_t)(const nvcv::IImageBatchVarShapeDataStridedCuda &inData,
-                           const nvcv::IImageBatchVarShapeDataStridedCuda &outData,
+    typedef void (*func_t)(const nvcv::ImageBatchVarShapeDataStridedCuda &inData,
+                           const nvcv::ImageBatchVarShapeDataStridedCuda &outData,
                            const cuda::Tensor2DWrap<float> transform, const int interpolation, const int borderMode,
                            const float4 borderValue, cudaStream_t stream);
 
@@ -332,8 +332,8 @@ WarpPerspectiveVarShape::~WarpPerspectiveVarShape()
     m_transformationMatrix = nullptr;
 }
 
-ErrorCode WarpPerspectiveVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData,
-                                         const IImageBatchVarShapeDataStridedCuda &outData,
+ErrorCode WarpPerspectiveVarShape::infer(const ImageBatchVarShapeDataStridedCuda &inData,
+                                         const ImageBatchVarShapeDataStridedCuda &outData,
                                          const TensorDataStridedCuda &transMatrix, const int32_t flags,
                                          const NVCVBorderType borderMode, const float4 borderValue, cudaStream_t stream)
 {
@@ -418,8 +418,8 @@ ErrorCode WarpPerspectiveVarShape::infer(const IImageBatchVarShapeDataStridedCud
                                          cudaMemcpyDeviceToDevice, stream));
     }
 
-    typedef void (*func_t)(const nvcv::IImageBatchVarShapeDataStridedCuda &inData,
-                           const nvcv::IImageBatchVarShapeDataStridedCuda &outData,
+    typedef void (*func_t)(const nvcv::ImageBatchVarShapeDataStridedCuda &inData,
+                           const nvcv::ImageBatchVarShapeDataStridedCuda &outData,
                            const cuda::Tensor2DWrap<float> transform, const int interpolation, const int borderMode,
                            const float4 borderValue, cudaStream_t stream);
 

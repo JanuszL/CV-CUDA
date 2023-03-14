@@ -147,7 +147,7 @@ __global__ void rotate_cubic(CubicFilter<BorderReader<Ptr2dVarShapeNHWC<T>, BrdR
 }
 
 template<typename T> // uchar3 float3 uchar1 float3
-void rotate(const IImageBatchVarShapeDataStridedCuda &in, const IImageBatchVarShapeDataStridedCuda &out,
+void rotate(const ImageBatchVarShapeDataStridedCuda &in, const ImageBatchVarShapeDataStridedCuda &out,
             double *d_aCoeffs, const NVCVInterpolationType interpolation, cudaStream_t stream)
 {
     dim3 blockSize(BLOCK, BLOCK / 4, 1);
@@ -211,10 +211,10 @@ RotateVarShape::~RotateVarShape()
     d_aCoeffs = nullptr;
 }
 
-ErrorCode RotateVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData,
-                                const IImageBatchVarShapeDataStridedCuda &outData,
-                                const TensorDataStridedCuda &angleDeg, const TensorDataStridedCuda &shift,
-                                const NVCVInterpolationType interpolation, cudaStream_t stream)
+ErrorCode RotateVarShape::infer(const ImageBatchVarShapeDataStridedCuda &inData,
+                                const ImageBatchVarShapeDataStridedCuda &outData, const TensorDataStridedCuda &angleDeg,
+                                const TensorDataStridedCuda &shift, const NVCVInterpolationType interpolation,
+                                cudaStream_t stream)
 {
     if (m_maxBatchSize <= 0)
     {
@@ -280,7 +280,7 @@ ErrorCode RotateVarShape::infer(const IImageBatchVarShapeDataStridedCuda &inData
     compute_warpAffine<<<1, inData.numImages(), 0, stream>>>(inData.numImages(), angleDecPtr, shiftPtr, d_aCoeffs);
     checkKernelErrors();
 
-    typedef void (*func_t)(const IImageBatchVarShapeDataStridedCuda &in, const IImageBatchVarShapeDataStridedCuda &out,
+    typedef void (*func_t)(const ImageBatchVarShapeDataStridedCuda &in, const ImageBatchVarShapeDataStridedCuda &out,
                            double *d_aCoeffs, const NVCVInterpolationType interpolation, cudaStream_t stream);
 
     static const func_t funcs[6][4] = {

@@ -59,7 +59,7 @@ void CopyMakeBorder::operator()(cudaStream_t stream, const nvcv::IImageBatch &in
                                 const nvcv::ITensor &top, const nvcv::ITensor &left, const NVCVBorderType borderMode,
                                 const float4 borderValue) const
 {
-    auto *inData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(in.exportData(stream));
+    auto inData = in.exportData<nvcv::ImageBatchVarShapeDataStridedCuda>(stream);
     if (inData == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT, "Input must be varshape image batch");
@@ -93,13 +93,13 @@ void CopyMakeBorder::operator()(cudaStream_t stream, const nvcv::IImageBatch &in
                                 const nvcv::ITensor &top, const nvcv::ITensor &left, const NVCVBorderType borderMode,
                                 const float4 borderValue) const
 {
-    auto *inData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(in.exportData(stream));
+    auto inData = in.exportData<nvcv::ImageBatchVarShapeDataStridedCuda>(stream);
     if (inData == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT, "Input must be varshape image batch");
     }
 
-    auto *outData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(out.exportData(stream));
+    auto outData = out.exportData<nvcv::ImageBatchVarShapeDataStridedCuda>(stream);
     if (outData == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT, "Output must be varshape image batch");

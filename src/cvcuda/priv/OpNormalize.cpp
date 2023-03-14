@@ -75,7 +75,7 @@ void Normalize::operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape 
                            const nvcv::ITensor &scale, nvcv::IImageBatchVarShape &out, const float global_scale,
                            const float shift, const float epsilon, const uint32_t flags) const
 {
-    auto *inData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(in.exportData(stream));
+    auto inData = in.exportData<nvcv::ImageBatchVarShapeDataStridedCuda>(stream);
     if (inData == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
@@ -96,7 +96,7 @@ void Normalize::operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape 
                               "Input scale must be cuda-accessible, pitch-linear tensor");
     }
 
-    auto *outData = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(out.exportData(stream));
+    auto outData = out.exportData<nvcv::ImageBatchVarShapeDataStridedCuda>(stream);
     if (outData == nullptr)
     {
         throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,

@@ -123,12 +123,10 @@ TYPED_TEST(BorderVarShapeWrapTest, correct_fill)
 
     dstImageBatch.pushBack(dstImageList.begin(), dstImageList.end());
 
-    auto *srcImageBatchData
-        = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(srcImageBatch.exportData(stream));
+    auto srcImageBatchData = srcImageBatch.exportData<nvcv::ImageBatchVarShapeDataStridedCuda>(stream);
     ASSERT_NE(srcImageBatchData, nullptr);
 
-    auto *dstImageBatchData
-        = dynamic_cast<const nvcv::IImageBatchVarShapeDataStridedCuda *>(dstImageBatch.exportData(stream));
+    auto dstImageBatchData = dstImageBatch.exportData<nvcv::ImageBatchVarShapeDataStridedCuda>(stream);
     ASSERT_NE(dstImageBatchData, nullptr);
 
     int3 dstMaxSize{dstImageBatchData->maxSize().w, dstImageBatchData->maxSize().h, dstImageBatchData->numImages()};
