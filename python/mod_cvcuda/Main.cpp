@@ -66,13 +66,13 @@ PYBIND11_MODULE(cvcuda, m)
 
     using namespace cvcudapy;
 
-    // // Operators' auxiliary entities
+    // Operators' auxiliary entities
     ExportInterpolationType(m);
     ExportBorderType(m);
     ExportMorphologyType(m);
     ExportColorConversionCode(m);
 
-    // Operators
+    // CV-CUDA Operators
     ExportOpReformat(m);
     ExportOpResize(m);
     ExportOpCustomCrop(m);
