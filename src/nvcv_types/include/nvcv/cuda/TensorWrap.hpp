@@ -394,7 +394,7 @@ using TensorNDWrap = std::conditional_t<
 /**@}*/
 
 /**
- * Factory function to create a NHW tensor wrap given a tensor data.
+ * Factory function to create an NHW tensor wrap given a tensor data.
  *
  * The output \ref TensorWrap is an NHW 3D tensor allowing to access data per batch (N), per row (H) and per column
  * (W) of the input tensor.  The input tensor data must have either NHWC or HWC layout, where the channel C is
@@ -421,11 +421,11 @@ __host__ auto CreateTensorWrapNHW(const TensorDataStridedCuda &tensor)
 }
 
 /**
- * Factory function to create a NHWC tensor wrap given a tensor data.
+ * Factory function to create an NHWC tensor wrap given a tensor data.
  *
  * The output \ref TensorWrap is an NHWC 4D tensor allowing to access data per batch (N), per row (H), per column
  * (W) and per channel (C) of the input tensor.  The input tensor data must have either NHWC or HWC layout, where
- * the channel C is inside \p T, e.g. T=uchar3 for RGB8.
+ * the channel C is of type \p T, e.g. T=uchar for each channel of either RGB8 or RGBA8.
  *
  * @sa NVCV_CPP_CUDATOOLS_TENSORWRAP
  *
