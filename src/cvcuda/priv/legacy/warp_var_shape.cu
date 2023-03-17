@@ -72,7 +72,7 @@ __global__ void inverseMatWarpAffine(const int numImages, const cuda::Tensor2DWr
     // M is stored in row-major format M[0,0], M[0,1], M[0,2], M[1,0], M[1,1], M[1,2]
     float den          = M[0][0] * M[1][1] - M[0][1] * M[1][0];
     den                = std::abs(den) > 1e-5 ? 1. / den : .0;
-    *out.ptr(index, 0) = (float)M[1][2] * den;
+    *out.ptr(index, 0) = (float)M[1][1] * den;
     *out.ptr(index, 1) = (float)-M[0][1] * den;
     *out.ptr(index, 2) = (float)(M[0][1] * M[1][2] - M[1][1] * M[0][2]) * den;
     *out.ptr(index, 3) = (float)-M[1][0] * den;
@@ -272,7 +272,7 @@ ErrorCode WarpAffineVarShape::infer(const ImageBatchVarShapeDataStridedCuda &inD
                 || borderMode == NVCV_BORDER_WRAP);
 
     // Check if inverse op is needed
-    bool performInverse = flags & NVCV_WARP_INVERSE_MAP;
+    bool performInverse = !(flags & NVCV_WARP_INVERSE_MAP);
 
     // Wrap the matrix in 2D wrappers with proper pitch
     cuda::Tensor2DWrap<float> transMatrixInput(transMatrix);

@@ -119,7 +119,7 @@ static void invertMat(const float *M, float *h_aCoeffs)
     // M is stored in row-major format M[0,0], M[0,1], M[0,2], M[1,0], M[1,1], M[1,2]
     float den    = M[0] * M[4] - M[1] * M[3];
     den          = std::abs(den) > 1e-5 ? 1. / den : .0;
-    h_aCoeffs[0] = (float)M[5] * den;
+    h_aCoeffs[0] = (float)M[4] * den;
     h_aCoeffs[1] = (float)-M[1] * den;
     h_aCoeffs[2] = (float)(M[1] * M[5] - M[4] * M[2]) * den;
     h_aCoeffs[3] = (float)-M[3] * den;
@@ -199,13 +199,14 @@ ErrorCode WarpAffine::infer(const TensorDataStridedCuda &inData, const TensorDat
 
     WarpAffineTransform transform;
 
-    // initialize affine transform
-    for (int i = 0; i < 9; i++)
-    {
-        transform.xform[i] = i < 6 ? (float)(xform[i]) : 0.0f;
-    }
-
     if (flags & NVCV_WARP_INVERSE_MAP)
+    {
+        for (int i = 0; i < 9; i++)
+        {
+            transform.xform[i] = i < 6 ? (float)(xform[i]) : 0.0f;
+        }
+    }
+    else
     {
         invertMat(xform, transform.xform);
     }
