@@ -44,6 +44,7 @@ add_library(cvcuda SHARED
     OpFlip.cpp
     OpGammaContrast.cpp
     OpPillowResize.cpp
+    OpThreshold.cpp
 )
 
 target_link_libraries(cvcuda

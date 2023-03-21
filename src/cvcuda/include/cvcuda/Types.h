@@ -328,6 +328,19 @@ typedef enum
 
 } NVCVColorConversionCode;
 
+typedef enum
+{
+    NVCV_THRESH_BINARY     = 0x01,
+    NVCV_THRESH_BINARY_INV = 0x02,
+    NVCV_THRESH_TRUNC      = 0x04,
+    NVCV_THRESH_TOZERO     = 0x08,
+    NVCV_THRESH_TOZERO_INV = 0x10,
+    NVCV_THRESH_MASK       = 0x1F,
+    NVCV_THRESH_OTSU       = 0x20,
+    NVCV_THRESH_TRIANGLE   = 0x40,
+
+} NVCVThresholdType;
+
 #ifdef __cplusplus
 }
 #endif
