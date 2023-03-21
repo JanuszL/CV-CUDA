@@ -196,6 +196,14 @@ Follow these instruction to build CV-CUDA from source:
    - DEB for Debian packages
    - TXZ for \*.tar.xz tarballs.
 
+## Tools
+
+1. CV-CUDA make operator tool
+
+   This tool will create an noop operator; python bindings, and tests.
+
+   This tool is located in 'tools/mkop'. To run it, navigate to the directory and execute the command './mkop.sh OperatorName', where 'OperatorName' is the desired name of the operator.
+
 ## Contributing
 
 CV-CUDA is an open source project. As part of the Open Source Community, we are
