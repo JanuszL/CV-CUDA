@@ -34,6 +34,7 @@ CV-CUDA includes:
 | Flip | Flips a 2D image around its axis |
 | GammaContrast | Adjusts image contrast |
 | Gaussian | Applies a gaussian blur filter to the image |
+| JointBilateralFilter | Reduces image noise while preserving strong edges <br> based on a guidance image |
 | Laplacian | Applies a Laplace transform to an image |
 | MedianBlur | Reduces an image’s salt-and-pepper noise |
 | Morphology | Performs morphological erode and dilate transformations |
@@ -53,7 +54,13 @@ found [here](https://github.com/CVCUDA/CV-CUDA/releases)
 
 ## Where Can I Get Help?
 
-File requests for enhancements and bug reports [here](https://github.com/CVCUDA/CV-CUDA/issues/new/choose).
+File requests for enhancements and bug reports
+[here](https://github.com/CVCUDA/CV-CUDA/issues/new/choose).
+
+We are providing limited, direct, support to select enterprises using CV-CUDA.
+To apply for direct enterprise developer engagement from NVIDIA , please fill
+out the early access developer application
+[here](http://developer.nvidia.com/cv-cuda/early-access).
 
 ## What Other Computer Vision Products Does NVIDIA Offer?
 
@@ -152,12 +159,12 @@ and conditions of sale for the product.
 
 <b>Trademarks</b>
 
-NVIDIA, the NVIDIA logo, NVIDIA CVCUDA, and NVIDIA TensorRT are trademarks
+NVIDIA, the NVIDIA logo, NVIDIA CV-CUDA, and NVIDIA TensorRT are trademarks
 and/or registered trademarks of NVIDIA Corporation in the U.S. and other
 countries. Other company and product names may be trademarks of the respective
 companies with which they are associated.
 
 <b>Copyright</b>
 
-© 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+© 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 </font>
