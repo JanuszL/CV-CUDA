@@ -504,72 +504,20 @@ __global__ void resize_bicubic_quad_alignread(SrcWrapper src, DstWrapper dst, in
     _alignedCudaMemcpyQuad<T>(dst.ptr(batch_idx, dst_y, dst_x), result);
 } //resize_bicubic_quad_alignread
 
-template<typename T, typename IntegerAreaFilter, typename AreaFilter>
-__global__ void resize_area_ocv_align(const Ptr2dNHWC<T> src, const IntegerAreaFilter integer_filter,
-                                      const AreaFilter area_filter, Ptr2dNHWC<T> dst, const float scale_x,
-                                      const float scale_y)
+template<class SrcWrapper, class DstWrapper>
+__global__ void resize_area_ocv_align(SrcWrapper src, DstWrapper dst, int2 dstSize)
 {
     const int x          = blockDim.x * blockIdx.x + threadIdx.x;
     const int y          = blockDim.y * blockIdx.y + threadIdx.y;
     const int batch_idx  = get_batch_idx();
-    int       out_height = dst.rows, out_width = dst.cols;
+    int       out_height = dstSize.y, out_width = dstSize.x;
 
     if (x >= out_width || y >= out_height)
         return;
 
-    double inv_scale_x  = 1. / scale_x;
-    double inv_scale_y  = 1. / scale_y;
-    int    iscale_x     = cuda::SaturateCast<int>(scale_x);
-    int    iscale_y     = cuda::SaturateCast<int>(scale_y);
-    bool   is_area_fast = cuda::abs(scale_x - iscale_x) < DBL_EPSILON && cuda::abs(scale_y - iscale_y) < DBL_EPSILON;
+    const int3 coord{x, y, batch_idx};
 
-    if (scale_x >= 1.0f && scale_y >= 1.0f) // zoom out
-    {
-        if (is_area_fast) // integer multiples
-        {
-            *dst.ptr(batch_idx, y, x) = integer_filter(batch_idx, y, x);
-            return;
-        }
-
-        *dst.ptr(batch_idx, y, x) = area_filter(batch_idx, y, x);
-        return;
-    }
-
-    // zoom in, it is emulated using some variant of bilinear interpolation
-    int   sy = cuda::round<cuda::RoundMode::DOWN, int>(y * scale_y);
-    float fy = (float)((y + 1) - (sy + 1) * inv_scale_y);
-    fy       = fy <= 0 ? 0.f : fy - cuda::round<cuda::RoundMode::DOWN, int>(fy);
-
-    float cbufy[2];
-    cbufy[0] = 1.f - fy;
-    cbufy[1] = fy;
-
-    int   sx = cuda::round<cuda::RoundMode::DOWN, int>(x * scale_x);
-    float fx = (float)((x + 1) - (sx + 1) * inv_scale_x);
-    fx       = fx < 0 ? 0.f : fx - cuda::round<cuda::RoundMode::DOWN, int>(fx);
-
-    if (sx < 0)
-    {
-        fx = 0, sx = 0;
-    }
-
-    if (sx >= src.cols - 1)
-    {
-        fx = 0, sx = src.cols - 2;
-    }
-    if (sy >= src.rows - 1)
-    {
-        sy = src.rows - 2;
-    }
-
-    float cbufx[2];
-    cbufx[0] = 1.f - fx;
-    cbufx[1] = fx;
-
-    *dst.ptr(batch_idx, y, x) = cuda::SaturateCast<T>((*src.ptr(batch_idx, sy, sx) * cbufx[0] * cbufy[0]
-                                                       + *src.ptr(batch_idx, sy + 1, sx) * cbufx[0] * cbufy[1]
-                                                       + *src.ptr(batch_idx, sy, sx + 1) * cbufx[1] * cbufy[0]
-                                                       + *src.ptr(batch_idx, sy + 1, sx + 1) * cbufx[1] * cbufy[1]));
+    dst[coord] = src[cuda::StaticCast<float>(coord)];
 }
 
 template<typename T>
@@ -656,14 +604,11 @@ void resize(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &ou
 
     case NVCV_INTERP_AREA:
     {
-        Ptr2dNHWC<T>                                                  src_ptr(*inAccess);
-        Ptr2dNHWC<T>                                                  dst_ptr(*outAccess);
-        BrdConstant<T>                                                brd(src_ptr.rows, src_ptr.cols);
-        BorderReader<Ptr2dNHWC<T>, BrdConstant<T>>                    brdSrc(src_ptr, brd);
-        IntegerAreaFilter<BorderReader<Ptr2dNHWC<T>, BrdConstant<T>>> integer_filter(brdSrc, scale_x, scale_y);
-        AreaFilter<BorderReader<Ptr2dNHWC<T>, BrdConstant<T>>>        area_filter(brdSrc, scale_x, scale_y);
-        resize_area_ocv_align<T>
-            <<<gridSize, blockSize, 0, stream>>>(src_ptr, integer_filter, area_filter, dst_ptr, scale_x, scale_y);
+        auto src = cuda::CreateInterpolationWrapNHW<const T, NVCV_BORDER_CONSTANT, NVCV_INTERP_AREA>(inData, T{},
+                                                                                                     scale_x, scale_y);
+        auto dst = cuda::CreateTensorWrapNHW<T>(outData);
+
+        resize_area_ocv_align<<<gridSize, blockSize, 0, stream>>>(src, dst, dstSize);
     }
     break;
 

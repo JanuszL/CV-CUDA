@@ -27,15 +27,14 @@
 #include <nvcv/alloc/CustomAllocator.hpp>
 #include <nvcv/alloc/CustomResourceAllocator.hpp>
 #include <nvcv/cuda/TypeTraits.hpp>
-#include <nvcv/cuda/math/LinAlg.hpp> // the object of this test
+#include <nvcv/cuda/math/LinAlg.hpp>
 
 #include <cmath>
 #include <map>
 #include <random>
 
-namespace nvcvcuda = nvcv::cuda;
-namespace test     = nvcv::test;
-using namespace nvcv::cuda;
+namespace cuda = nvcv::cuda;
+namespace test = nvcv::test;
 
 // #define DBG_WARP_PERSPECTIVE 1
 
@@ -68,7 +67,7 @@ static uint8_t getPixelForPerspectiveTransform(const uint8_t *srcPtr, const int 
     if (borderMode == NVCV_BORDER_CONSTANT)
     {
         return (x >= 0 && x < width && y >= 0 && y < height) ? srcPtr[y * srcRowStride + x * elementsPerPixel + k]
-                                                             : static_cast<uint8_t>(GetElement(borderVal, k));
+                                                             : static_cast<uint8_t>(cuda::GetElement(borderVal, k));
     }
     else if (borderMode == NVCV_BORDER_REPLICATE)
     {
@@ -134,7 +133,7 @@ static void WarpPerspectiveGold(std::vector<uint8_t> &hDst, const int dstRowStri
 
     if (flags & NVCV_WARP_INVERSE_MAP)
     {
-        nvcv::cuda::math::Matrix<float, 3, 3> tempMatrixForInverse;
+        cuda::math::Matrix<float, 3, 3> tempMatrixForInverse;
 
         tempMatrixForInverse[0][0] = (float)(transMatrix[0]);
         tempMatrixForInverse[0][1] = (float)(transMatrix[1]);
@@ -146,7 +145,7 @@ static void WarpPerspectiveGold(std::vector<uint8_t> &hDst, const int dstRowStri
         tempMatrixForInverse[2][1] = (float)(transMatrix[7]);
         tempMatrixForInverse[2][2] = (float)(transMatrix[8]);
 
-        math::inv_inplace(tempMatrixForInverse);
+        cuda::math::inv_inplace(tempMatrixForInverse);
 
         finalTransformMatrix[0] = tempMatrixForInverse[0][0];
         finalTransformMatrix[1] = tempMatrixForInverse[0][1];
@@ -214,8 +213,8 @@ static void WarpPerspectiveGold(std::vector<uint8_t> &hDst, const int dstRowStri
             }
             else if (interpolation == NVCV_INTERP_NEAREST)
             {
-                const int x1 = std::trunc(src_x);
-                const int y1 = std::trunc(src_y);
+                const int x1 = std::floor(src_x + .5f);
+                const int y1 = std::floor(src_y + .5f);
                 for (int k = 0; k < elementsPerPixel; k++)
                 {
                     uint8_t src_reg = getPixelForPerspectiveTransform(

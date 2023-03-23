@@ -75,20 +75,22 @@ __global__ void rotate_linear(const Ptr2dVarShapeNHWC<T> src, Ptr2dVarShapeNHWC<
         using work_type = nvcv::cuda::ConvertBaseTypeTo<float, T>;
         work_type out   = nvcv::cuda::SetAll<work_type>(0);
 
-        const int x1      = nvcv::cuda::round<nvcv::cuda::RoundMode::ZERO, int>(src_x);
-        const int y1      = nvcv::cuda::round<nvcv::cuda::RoundMode::ZERO, int>(src_y);
+        const int x1      = nvcv::cuda::round<nvcv::cuda::RoundMode::DOWN, int>(src_x);
+        const int y1      = nvcv::cuda::round<nvcv::cuda::RoundMode::DOWN, int>(src_y);
         const int x2      = x1 + 1;
         const int y2      = y1 + 1;
+        const int x1_read = max(x1, 0);
+        const int y1_read = max(y1, 0);
         const int x2_read = min(x2, width - 1);
         const int y2_read = min(y2, height - 1);
 
-        T src_reg = *src.ptr(batch_idx, y1, x1);
+        T src_reg = *src.ptr(batch_idx, y1_read, x1_read);
         out       = out + src_reg * ((x2 - src_x) * (y2 - src_y));
 
-        src_reg = *src.ptr(batch_idx, y1, x2_read);
+        src_reg = *src.ptr(batch_idx, y1_read, x2_read);
         out     = out + src_reg * ((src_x - x1) * (y2 - src_y));
 
-        src_reg = *src.ptr(batch_idx, y2_read, x1);
+        src_reg = *src.ptr(batch_idx, y2_read, x1_read);
         out     = out + src_reg * ((x2 - src_x) * (src_y - y1));
 
         src_reg = *src.ptr(batch_idx, y2_read, x2_read);
@@ -116,8 +118,8 @@ __global__ void rotate_nearest(const Ptr2dVarShapeNHWC<T> src, Ptr2dVarShapeNHWC
 
     if (src_x > -0.5 && src_x < width && src_y > -0.5 && src_y < height)
     {
-        const int x1 = min(nvcv::cuda::round<nvcv::cuda::RoundMode::ZERO, int>(src_x + 0.5), width - 1);
-        const int y1 = min(nvcv::cuda::round<nvcv::cuda::RoundMode::ZERO, int>(src_y + 0.5), height - 1);
+        const int x1 = min(nvcv::cuda::round<nvcv::cuda::RoundMode::DOWN, int>(src_x + .5f), width - 1);
+        const int y1 = min(nvcv::cuda::round<nvcv::cuda::RoundMode::DOWN, int>(src_y + .5f), height - 1);
 
         *dst.ptr(batch_idx, dst_y, dst_x) = *src.ptr(batch_idx, y1, x1);
     }

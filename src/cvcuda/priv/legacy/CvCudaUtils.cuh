@@ -27,6 +27,7 @@
 #include <nvcv/cuda/BorderWrap.hpp>             // for BorderWrap, etc.
 #include <nvcv/cuda/DropCast.hpp>               // for DropCast, etc.
 #include <nvcv/cuda/ImageBatchVarShapeWrap.hpp> // for ImageBatchVarShapeWrap, etc.
+#include <nvcv/cuda/InterpolationWrap.hpp>      // for InterpolationWrap, etc.
 #include <nvcv/cuda/MathOps.hpp>                // for math operators
 #include <nvcv/cuda/MathWrappers.hpp>           // for sqrt, etc.
 #include <nvcv/cuda/SaturateCast.hpp>           // for SaturateCast, etc.
@@ -832,7 +833,8 @@ struct PointFilter
 
     __device__ __forceinline__ elem_type operator()(int bidx, float y, float x) const
     {
-        return src(bidx, cuda::round<cuda::RoundMode::ZERO, int>(y), cuda::round<cuda::RoundMode::ZERO, int>(x));
+        return src(bidx, cuda::round<cuda::RoundMode::DOWN, int>(y + .5f),
+                   cuda::round<cuda::RoundMode::DOWN, int>(x + .5f));
     }
 
     BrdReader src;

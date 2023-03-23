@@ -177,8 +177,8 @@ static void WarpAffineGold(std::vector<uint8_t> &hDst, int dstStride, nvcv::Size
             }
             else if (interpolation == NVCV_INTERP_NEAREST)
             {
-                const int x1 = std::trunc(src_x);
-                const int y1 = std::trunc(src_y);
+                const int x1 = std::floor(src_x + .5f);
+                const int y1 = std::floor(src_y + .5f);
                 for (int k = 0; k < elementsPerPixel; k++)
                 {
                     T src_reg = getPixel<T>(srcPtr, y1, x1, k, srcWidth, srcHeight, srcStride, elementsPerPixel,
