@@ -15,6 +15,7 @@
 
 import cvcuda
 import pytest as t
+from random import randint
 
 
 @t.mark.parametrize(
@@ -86,3 +87,108 @@ def test_op_threshold(input, thtype):
         stream=stream,
     )
     assert tmp is out
+
+
+@t.mark.parametrize(
+    "num_images, format, min_size, max_size, thtype",
+    [
+        (
+            1,
+            cvcuda.Format.RGB8,
+            (460, 640),
+            (480, 720),
+            cvcuda.ThresholdType.BINARY,
+        ),
+        (
+            5,
+            cvcuda.Format.RGB8,
+            (640, 460),
+            (720, 480),
+            cvcuda.ThresholdType.BINARY_INV,
+        ),
+        (
+            4,
+            cvcuda.Format.RGB8,
+            (1920, 1080),
+            (1920, 1080),
+            cvcuda.ThresholdType.TRUNC,
+        ),
+        (
+            2,
+            cvcuda.Format.RGB8,
+            (1000, 1000),
+            (1000, 1000),
+            cvcuda.ThresholdType.TOZERO,
+        ),
+        (
+            3,
+            cvcuda.Format.RGB8,
+            (100, 100),
+            (100, 100),
+            cvcuda.ThresholdType.TOZERO_INV,
+        ),
+        (
+            5,
+            cvcuda.Format.U8,
+            (460, 640),
+            (460, 640),
+            cvcuda.ThresholdType.OTSU | cvcuda.ThresholdType.BINARY,
+        ),
+        (
+            1,
+            cvcuda.Format.U8,
+            (1000, 1000),
+            (1000, 1000),
+            cvcuda.ThresholdType.TRIANGLE | cvcuda.ThresholdType.BINARY_INV,
+        ),
+    ],
+)
+def test_op_threshold_varshape(num_images, format, min_size, max_size, thtype):
+
+    parameter_shape = (num_images,)
+    thresh = cvcuda.Tensor(parameter_shape, cvcuda.Type.F64, "N")
+    maxval = cvcuda.Tensor(parameter_shape, cvcuda.Type.F64, "N")
+
+    input = cvcuda.ImageBatchVarShape(num_images)
+    output = cvcuda.ImageBatchVarShape(num_images)
+    for i in range(num_images):
+        w = randint(min_size[0], max_size[0])
+        h = randint(min_size[1], max_size[1])
+        img_in = cvcuda.Image([w, h], format)
+        input.pushback(img_in)
+        img_out = cvcuda.Image([w, h], format)
+        output.pushback(img_out)
+
+    tmp = cvcuda.threshold(input, thresh, maxval, thtype)
+    assert tmp.uniqueformat is not None
+    assert tmp.uniqueformat == output.uniqueformat
+    for res, ref in zip(tmp, output):
+        assert res.size == ref.size
+        assert res.format == ref.format
+
+    tmp = cvcuda.threshold_into(output, input, thresh, maxval, thtype)
+    assert tmp is output
+
+    stream = cvcuda.Stream()
+    tmp = cvcuda.threshold(
+        src=input,
+        thresh=thresh,
+        maxval=maxval,
+        type=thtype,
+        stream=stream,
+    )
+    assert tmp.uniqueformat is not None
+    assert tmp.uniqueformat == output.uniqueformat
+    for res, ref in zip(tmp, output):
+        assert res.size == ref.size
+        assert res.format == ref.format
+
+    tmp = cvcuda.threshold_into(
+        src=input,
+        dst=output,
+        thresh=thresh,
+        maxval=maxval,
+        type=thtype,
+        stream=stream,
+    )
+    assert tmp is output

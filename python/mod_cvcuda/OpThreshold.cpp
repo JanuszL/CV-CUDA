@@ -37,15 +37,6 @@ Tensor ThresholdInto(Tensor &output, Tensor &input, Tensor &thresh, Tensor &maxv
         pstream = Stream::Current();
     }
 
-    if (thresh.layout().rank() != 1 || thresh.layout()[0] != 'N')
-    {
-        throw std::runtime_error("Layout of thresh must be 'N'.");
-    }
-    if (maxval.layout().rank() != 1 || maxval.layout()[0] != 'N')
-    {
-        throw std::runtime_error("Layout of maxval must be 'N'.");
-    }
-
     nvcv::TensorShape shape     = input.shape();
     auto              threshold = CreateOperator<cvcuda::Threshold>(type, (int)shape[0]);
 
@@ -66,6 +57,46 @@ Tensor Threshold(Tensor &input, Tensor &thresh, Tensor &maxval, uint32_t type, s
     return ThresholdInto(output, input, thresh, maxval, type, pstream);
 }
 
+ImageBatchVarShape ThresholdVarShapeInto(ImageBatchVarShape &output, ImageBatchVarShape &input, Tensor &thresh,
+                                         Tensor &maxval, uint32_t type, std::optional<Stream> pstream)
+{
+    if (!pstream)
+    {
+        pstream = Stream::Current();
+    }
+
+    auto threshold = CreateOperator<cvcuda::Threshold>(type, input.numImages());
+
+    ResourceGuard guard(*pstream);
+    guard.add(LockMode::LOCK_READ, {input, thresh, maxval});
+    guard.add(LockMode::LOCK_WRITE, {output});
+    guard.add(LockMode::LOCK_WRITE, {*threshold});
+
+    threshold->submit(pstream->cudaHandle(), input, output, thresh, maxval);
+
+    return output;
+}
+
+ImageBatchVarShape ThresholdVarShape(ImageBatchVarShape &input, Tensor &thresh, Tensor &maxval, uint32_t type,
+                                     std::optional<Stream> pstream)
+{
+    ImageBatchVarShape output = ImageBatchVarShape::Create(input.numImages());
+
+    auto format = input.uniqueFormat();
+    if (!format)
+    {
+        throw std::runtime_error("All images in input must have the same format.");
+    }
+
+    for (auto img = input.begin(); img != input.end(); ++img)
+    {
+        auto newimg = Image::Create(img->size(), format);
+        output.pushBack(newimg);
+    }
+
+    return ThresholdVarShapeInto(output, input, thresh, maxval, type, pstream);
+}
+
 } // namespace
 
 void ExportOpThreshold(py::module &m)
@@ -74,6 +105,10 @@ void ExportOpThreshold(py::module &m)
 
     m.def("threshold", &Threshold, "src"_a, "thresh"_a, "maxval"_a, "type"_a, py::kw_only(), "stream"_a = nullptr);
     m.def("threshold_into", &ThresholdInto, "dst"_a, "src"_a, "thresh"_a, "maxval"_a, "type"_a, py::kw_only(),
+          "stream"_a = nullptr);
+    m.def("threshold", &ThresholdVarShape, "src"_a, "thresh"_a, "maxval"_a, "type"_a, py::kw_only(),
+          "stream"_a = nullptr);
+    m.def("threshold_into", &ThresholdVarShapeInto, "dst"_a, "src"_a, "thresh"_a, "maxval"_a, "type"_a, py::kw_only(),
           "stream"_a = nullptr);
 }
 
