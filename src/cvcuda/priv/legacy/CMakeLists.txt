@@ -61,6 +61,8 @@ add_library(cvcuda_legacy STATIC
     pillow_resize.cu
     pillow_resize_var_shape.cu
     threshold.cu
+    adaptive_threshold.cu
+    adaptive_threshold_var_shape.cu
 )
 
 target_link_libraries(cvcuda_legacy

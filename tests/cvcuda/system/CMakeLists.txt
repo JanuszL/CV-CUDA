@@ -44,6 +44,7 @@ add_executable(cvcuda_test_system
     TestOpGammaContrast.cpp
     TestOpPillowResize.cpp
     TestOpThreshold.cpp
+    TestOpAdaptiveThreshold.cpp
 )
 
 target_link_libraries(cvcuda_test_system

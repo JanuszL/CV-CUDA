@@ -341,6 +341,12 @@ typedef enum
 
 } NVCVThresholdType;
 
+typedef enum
+{
+    NVCV_ADAPTIVE_THRESH_MEAN_C     = 0,
+    NVCV_ADAPTIVE_THRESH_GAUSSIAN_C = 1
+} NVCVAdaptiveThresholdType;
+
 #ifdef __cplusplus
 }
 #endif

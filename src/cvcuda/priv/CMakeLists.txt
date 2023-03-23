@@ -44,6 +44,7 @@ add_library(cvcuda_priv STATIC
     OpGammaContrast.cpp
     OpPillowResize.cpp
     OpThreshold.cpp
+    OpAdaptiveThreshold.cpp
 )
 
 target_link_libraries(cvcuda_priv
