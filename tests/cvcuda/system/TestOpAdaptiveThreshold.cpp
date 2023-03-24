@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include "ConvUtils.hpp"
 #include "Definitions.hpp"
 
 #include <common/BorderUtils.hpp>
@@ -68,102 +69,38 @@ static void printVecDiff(const std::vector<uint8_t> &testVec, const std::vector<
 #endif
 }
 
-static std::vector<float> computeMeanKernel(int blockSize)
+static void AdaptiveThreshold(std::vector<uint8_t> &hDst, const std::vector<uint8_t> &hSrc, long3 strides, int3 shape,
+                              nvcv::ImageFormat fmt, const std::vector<float> &kernel, const nvcv::Size2D &kernelSize,
+                              double maxValue, NVCVThresholdType thresholdType, double c)
 {
-    int                kernelSize = blockSize * blockSize;
-    std::vector<float> kernel(kernelSize, 1.0 / kernelSize);
-    return kernel;
-}
+    int2   kernelAnchor{-1, -1};
+    float4 borderValue{0.f, 0.f, 0.f, 0.f};
+    test::Convolve(hDst, strides, hSrc, strides, shape, fmt, kernel, kernelSize, kernelAnchor, NVCV_BORDER_REPLICATE,
+                   borderValue);
 
-static std::vector<float> computeGaussianKernel(int blockSize)
-{
-    int                kernelSize = blockSize * blockSize;
-    std::vector<float> kernel(kernelSize);
-
-    int2 half{blockSize / 2, blockSize / 2};
-
-    double2 sigma;
-    sigma.x = 0.3 * ((blockSize - 1) * 0.5 - 1) + 0.8;
-    sigma.y = sigma.x;
-
-    float sx  = 2.f * sigma.x * sigma.x;
-    float sy  = 2.f * sigma.y * sigma.y;
-    float s   = 2.f * sigma.x * sigma.y * M_PI;
-    float sum = 0.f;
-    for (int y = -half.y; y <= half.y; ++y)
-    {
-        for (int x = -half.x; x <= half.x; ++x)
-        {
-            float kv = std::exp(-((x * x) / sx + (y * y) / sy)) / s;
-
-            kernel[(y + half.y) * blockSize + (x + half.x)] = kv;
-
-            sum += kv;
-        }
-    }
-    for (int i = 0; i < kernelSize; ++i)
-    {
-        kernel[i] /= sum;
-    }
-    return kernel;
-}
-
-template<typename T>
-inline const T &ValueAt(const std::vector<uint8_t> &vec, int2 size, int y, int x)
-{
-    return *reinterpret_cast<const T *>(&vec[y * size.x + x]);
-}
-
-template<typename T>
-inline T &ValueAt(std::vector<uint8_t> &vec, int2 size, int y, int x)
-{
-    return *reinterpret_cast<T *>(&vec[y * size.x + x]);
-}
-
-static void cpuAdaptiveThreshold(std::vector<uint8_t> &hDst, const std::vector<uint8_t> &hSrc, int2 size,
-                                 const std::vector<float> &kernel, int blockSize, double maxValue,
-                                 NVCVThresholdType thresholdType, double c)
-{
     uchar iMaxValue = cuda::SaturateCast<uchar>(maxValue);
     int   idelta    = thresholdType == NVCV_THRESH_BINARY ? (int)std::ceil(c) : (int)std::floor(c);
 
-    int r = blockSize / 2;
-    for (int y = 0; y < size.y; ++y)
+    for (int b = 0; b < shape.z; ++b)
     {
-        for (int x = 0; x < size.x; ++x)
+        for (int y = 0; y < shape.y; ++y)
         {
-            float res = 0.f;
-
-            int2 coord;
-
-            for (int ky = 0; ky < blockSize; ++ky)
+            for (int x = 0; x < shape.x; ++x)
             {
-                coord.y = y + ky - r;
-
-                for (int kx = 0; kx < blockSize; ++kx)
+                uchar srcV = test::detail::ValueAt<uchar>(hSrc, strides, b, y, x);
+                uchar res  = test::detail::ValueAt<uchar>(hDst, strides, b, y, x);
+                uchar t;
+                if (thresholdType == NVCV_THRESH_BINARY)
                 {
-                    coord.x = x + kx - r;
-
-                    test::ReplicateBorderIndex(coord, size);
-
-                    uchar srcValue = ValueAt<uchar>(hSrc, size, coord.y, coord.x);
-
-                    res += srcValue * kernel[ky * blockSize + kx];
+                    t = srcV + idelta > cuda::SaturateCast<uchar>(res) ? iMaxValue : 0;
                 }
-            }
+                else
+                {
+                    t = srcV + idelta > cuda::SaturateCast<uchar>(res) ? 0 : iMaxValue;
+                }
 
-            uchar srcV = ValueAt<uchar>(hSrc, size, y, x);
-            uchar t;
-            if (thresholdType == NVCV_THRESH_BINARY)
-            {
-                t = srcV + idelta > cuda::SaturateCast<uchar>(res) ? iMaxValue : 0;
+                test::detail::ValueAt<uchar>(hDst, strides, b, y, x) = t;
             }
-            else
-            {
-                t = srcV + idelta > cuda::SaturateCast<uchar>(res) ? 0 : iMaxValue;
-            }
-
-            ValueAt<uchar>(hDst, size, y, x) = t;
         }
     }
 }
@@ -235,13 +172,17 @@ TEST_P(OpAdaptiveThreshold, correct_output)
 
     // generate gold result
     std::vector<float> kernel;
+    nvcv::Size2D       kernelSize(blockSize, blockSize);
     if (adaptiveThresholdType == NVCV_ADAPTIVE_THRESH_MEAN_C)
     {
-        kernel = computeMeanKernel(blockSize);
+        kernel = test::ComputeMeanKernel(kernelSize);
     }
     else
     {
-        kernel = computeGaussianKernel(blockSize);
+        double2 sigma;
+        sigma.x = 0.3 * ((blockSize - 1) * 0.5 - 1) + 0.8;
+        sigma.y = sigma.x;
+        kernel  = test::ComputeGaussianKernel(kernelSize, sigma);
     }
 #ifdef DBG
     std::cout << "kernel, len: " << kernel.size() << std::endl;
@@ -263,8 +204,10 @@ TEST_P(OpAdaptiveThreshold, correct_output)
                                             rowStride, height, cudaMemcpyDeviceToHost));
 
         std::vector<uint8_t> goldVec(vecSize);
-        int2                 size{width, height};
-        cpuAdaptiveThreshold(goldVec, srcVec[i], size, kernel, blockSize, maxValue, thresholdType, c);
+
+        long3 strides{height * rowStride, rowStride, fmt.planePixelStrideBytes(0)};
+        int3  shape{width, height, 1};
+        AdaptiveThreshold(goldVec, srcVec[i], strides, shape, fmt, kernel, kernelSize, maxValue, thresholdType, c);
 
         printVecDiff(testVec, goldVec);
         EXPECT_EQ(testVec, goldVec);
@@ -377,13 +320,17 @@ TEST_P(OpAdaptiveThreshold, varshape_correct_output)
 
     // Check test data against gold
     std::vector<float> kernel;
+    nvcv::Size2D       kernelSize(blockSize, blockSize);
     if (adaptiveThresholdType == NVCV_ADAPTIVE_THRESH_MEAN_C)
     {
-        kernel = computeMeanKernel(blockSize);
+        kernel = test::ComputeMeanKernel(kernelSize);
     }
     else
     {
-        kernel = computeGaussianKernel(blockSize);
+        double2 sigma;
+        sigma.x = 0.3 * ((blockSize - 1) * 0.5 - 1) + 0.8;
+        sigma.y = sigma.x;
+        kernel  = test::ComputeGaussianKernel(kernelSize, sigma);
     }
 #ifdef DBG
     std::cout << "kernel, len: " << kernel.size() << std::endl;
@@ -403,21 +350,20 @@ TEST_P(OpAdaptiveThreshold, varshape_correct_output)
         const auto dstData = imgDst[i]->exportData<nvcv::ImageDataStridedCuda>();
         ASSERT_EQ(dstData->numPlanes(), 1);
 
-        int dstRowStride = srcVecRowStride[i];
+        int  dstRowStride = srcVecRowStride[i];
+        int3 shape{srcData->plane(0).width, srcData->plane(0).height, 1};
 
-        int2 size{srcData->plane(0).width, srcData->plane(0).height};
-
-        std::vector<uint8_t> testVec(size.y * dstRowStride);
+        std::vector<uint8_t> testVec(shape.y * dstRowStride);
 
         // Copy output data to Host
-        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(testVec.data(), dstRowStride, dstData->plane(0).basePtr,
-                                            dstData->plane(0).rowStride, dstRowStride, size.y, cudaMemcpyDeviceToHost));
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2D(testVec.data(), dstRowStride, dstData->plane(0).basePtr, dstData->plane(0).rowStride,
+                               dstRowStride, shape.y, cudaMemcpyDeviceToHost));
 
         // Generate gold result
-
-        std::vector<uint8_t> goldVec(size.y * dstRowStride);
-
-        cpuAdaptiveThreshold(goldVec, srcVec[i], size, kernel, blockSize, maxValue, thresholdType, c);
+        std::vector<uint8_t> goldVec(shape.y * dstRowStride);
+        long3                strides{shape.y * dstRowStride, dstRowStride, fmt.planePixelStrideBytes(0)};
+        AdaptiveThreshold(goldVec, srcVec[i], strides, shape, fmt, kernel, kernelSize, maxValue, thresholdType, c);
 
         printVecDiff(testVec, goldVec);
         EXPECT_EQ(testVec, goldVec);

@@ -14,6 +14,7 @@
 # limitations under the License.
 
 add_library(cvcuda_legacy STATIC
+    filter_utils.cu
     custom_crop.cu
     reformat.cu
     resize.cu

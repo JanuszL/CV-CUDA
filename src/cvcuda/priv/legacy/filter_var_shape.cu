@@ -25,6 +25,7 @@
 #include "CvCudaLegacyHelpers.hpp"
 
 #include "CvCudaUtils.cuh"
+#include "filter_utils.cuh"
 
 using namespace nvcv::legacy::cuda_op;
 using namespace nvcv::legacy::helpers;
@@ -382,59 +383,6 @@ ErrorCode LaplacianVarShape::infer(const ImageBatchVarShapeDataStridedCuda &inDa
 
 // GaussianVarShape ------------------------------------------------------------
 
-__global__ void CalculateGaussianKernel(cuda::Tensor3DWrap<float> kernel, int dataKernelSize, Size2D maxKernelSize,
-                                        cuda::Tensor1DWrap<int2> kernelSizeArr, cuda::Tensor1DWrap<double2> sigmaArr)
-{
-    int3 coord = cuda::StaticCast<int>(blockIdx * blockDim + threadIdx);
-
-    int2 kernelSize = kernelSizeArr[coord.z];
-
-    if (coord.x >= kernelSize.x || coord.y >= kernelSize.y)
-    {
-        return;
-    }
-
-    double2 sigma = sigmaArr[coord.z];
-
-    if (sigma.y <= 0)
-        sigma.y = sigma.x;
-
-    // automatic detection of kernel size from sigma
-    if (kernelSize.x <= 0 && sigma.x > 0)
-        kernelSize.x = cuda::round<int>(sigma.x * dataKernelSize * 2 + 1) | 1;
-    if (kernelSize.y <= 0 && sigma.y > 0)
-        kernelSize.y = cuda::round<int>(sigma.y * dataKernelSize * 2 + 1) | 1;
-
-    NVCV_CUDA_ASSERT(kernelSize.x > 0 && (kernelSize.x % 2 == 1) && kernelSize.x <= maxKernelSize.w,
-                     "E Wrong kernelSize.x = %d, expected > 0, odd and <= %d\n", kernelSize.x, maxKernelSize.w);
-    NVCV_CUDA_ASSERT(kernelSize.y > 0 && (kernelSize.y % 2 == 1) && kernelSize.y <= maxKernelSize.h,
-                     "E Wrong kernelSize.y = %d, expected > 0, odd and <= %d\n", kernelSize.y, maxKernelSize.h);
-
-    int2 half{kernelSize.x / 2, kernelSize.y / 2};
-
-    sigma.x = cuda::max(sigma.x, 0.0);
-    sigma.y = cuda::max(sigma.y, 0.0);
-
-    float sx = 2.f * sigma.x * sigma.x;
-    float sy = 2.f * sigma.y * sigma.y;
-    float s  = 2.f * sigma.x * sigma.y * M_PI;
-
-    float sum = 0.f;
-
-    for (int y = -half.y; y <= half.y; ++y)
-    {
-        for (int x = -half.x; x <= half.x; ++x)
-        {
-            sum += cuda::exp(-((x * x) / sx + (y * y) / sy)) / s;
-        }
-    }
-
-    int x = coord.x - half.x;
-    int y = coord.y - half.y;
-
-    kernel[coord] = cuda::exp(-((x * x) / sx + (y * y) / sy)) / (s * sum);
-}
-
 template<class SrcWrapper, class DstWrapper>
 __global__ void gaussianFilter2D(const SrcWrapper src, DstWrapper dst, cuda::Tensor3DWrap<float> kernel,
                                  cuda::Tensor1DWrap<int2> kernelSizeArr)
@@ -609,8 +557,8 @@ ErrorCode GaussianVarShape::infer(const ImageBatchVarShapeDataStridedCuda &inDat
 
     cuda::Tensor3DWrap<float> kernelTensor(m_kernel, kernelPitch1, kernelPitch2);
 
-    CalculateGaussianKernel<<<grid, block, 0, stream>>>(kernelTensor, dataKernelSize, m_maxKernelSize, kernelSizeTensor,
-                                                        sigmaTensor);
+    computeGaussianKernelVarShape<<<grid, block, 0, stream>>>(kernelTensor, dataKernelSize, m_maxKernelSize,
+                                                              kernelSizeTensor, sigmaTensor);
 
     checkKernelErrors();
 
@@ -638,41 +586,6 @@ ErrorCode GaussianVarShape::infer(const ImageBatchVarShapeDataStridedCuda &inDat
 }
 
 // AverageBlurVarShape ---------------------------------------------------------
-
-__global__ void compute_average_blur_kernel(cuda::Tensor3DWrap<float> kernel, cuda::Tensor1DWrap<int2> kernelSizeArr,
-                                            cuda::Tensor1DWrap<int2> kernelAnchorArr)
-{
-    int3 coord = cuda::StaticCast<int>(blockIdx * blockDim + threadIdx);
-
-    int2 kernelSize = kernelSizeArr[coord.z];
-
-    if (coord.x >= kernelSize.x || coord.y >= kernelSize.y)
-    {
-        return;
-    }
-
-    bool kernelAnchorUpdated = false;
-    int2 kernelAnchor        = kernelAnchorArr[coord.z];
-
-    if (kernelAnchor.x < 0)
-    {
-        kernelAnchor.x      = kernelSize.x / 2;
-        kernelAnchorUpdated = true;
-    }
-
-    if (kernelAnchor.y < 0)
-    {
-        kernelAnchor.y      = kernelSize.y / 2;
-        kernelAnchorUpdated = true;
-    }
-
-    if (kernelAnchorUpdated)
-    {
-        kernelAnchorArr[coord.z] = kernelAnchor;
-    }
-
-    kernel[coord] = 1.f / (kernelSize.x * kernelSize.y);
-}
 
 template<class SrcWrapper, class DstWrapper>
 __global__ void avgBlurFilter2D(const SrcWrapper src, DstWrapper dst, cuda::Tensor3DWrap<float> kernel,
@@ -851,7 +764,7 @@ ErrorCode AverageBlurVarShape::infer(const ImageBatchVarShapeDataStridedCuda &in
 
     cuda::Tensor3DWrap<float> kernelTensor(m_kernel, kernelPitch1, kernelPitch2);
 
-    compute_average_blur_kernel<<<grid, block, 0, stream>>>(kernelTensor, kernelSizeTensor, kernelAnchorTensor);
+    computeMeanKernelVarShape<<<grid, block, 0, stream>>>(kernelTensor, kernelSizeTensor, kernelAnchorTensor);
 
     checkKernelErrors();
 

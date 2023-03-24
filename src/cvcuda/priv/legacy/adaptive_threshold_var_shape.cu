@@ -22,61 +22,13 @@
 #include "CvCudaLegacyHelpers.hpp"
 
 #include "CvCudaUtils.cuh"
+#include "filter_utils.cuh"
 
 using namespace nvcv;
 using namespace nvcv::legacy::cuda_op;
 using namespace nvcv::legacy::helpers;
 
 namespace nvcv::legacy::cuda_op {
-
-__global__ void calculate_median_kernel(cuda::Tensor3DWrap<float> kernel, cuda::Tensor1DWrap<int> blockSizeArr)
-{
-    int3 coord = cuda::StaticCast<int>(blockIdx * blockDim + threadIdx);
-
-    int blockSize = blockSizeArr[coord.z];
-
-    if (coord.x >= blockSize || coord.y >= blockSize)
-    {
-        return;
-    }
-
-    kernel[coord] = 1.f / (blockSize * blockSize);
-}
-
-__global__ void calculate_gaussian_kernel(cuda::Tensor3DWrap<float> kernel, cuda::Tensor1DWrap<int> blockSizeArr)
-{
-    int3 coord = cuda::StaticCast<int>(blockIdx * blockDim + threadIdx);
-
-    int blockSize = blockSizeArr[coord.z];
-
-    if (coord.x >= blockSize || coord.y >= blockSize)
-    {
-        return;
-    }
-
-    double sigma = 0.3 * ((blockSize - 1) * 0.5 - 1) + 0.8;
-
-    int r = blockSize / 2;
-
-    float sx = 2.f * sigma * sigma;
-    float sy = 2.f * sigma * sigma;
-    float s  = 2.f * sigma * sigma * M_PI;
-
-    float sum = 0.f;
-
-    for (int y = -r; y <= r; ++y)
-    {
-        for (int x = -r; x <= r; ++x)
-        {
-            sum += cuda::exp(-((x * x) / sx + (y * y) / sy)) / s;
-        }
-    }
-
-    int x = coord.x - r;
-    int y = coord.y - r;
-
-    kernel[coord] = cuda::exp(-((x * x) / sx + (y * y) / sy)) / (s * sum);
-}
 
 #define BLOCK_DIM_X 16
 #define BLOCK_DIM_Y 16
@@ -100,23 +52,7 @@ struct MyLessEqual
     }
 };
 
-struct MyCeil
-{
-    __device__ __forceinline__ float operator()(const float &v) const
-    {
-        return std::ceil(v);
-    }
-};
-
-struct MyFloor
-{
-    __device__ __forceinline__ float operator()(const float &v) const
-    {
-        return std::floor(v);
-    }
-};
-
-template<typename CMP, typename ROUNDFN, typename SrcWrapper, typename DstWrapper>
+template<typename CMP, cuda::RoundMode RM, typename SrcWrapper, typename DstWrapper>
 __global__ void adaptive_threshold(const SrcWrapper src, DstWrapper dst, cuda::Tensor1DWrap<double> maxValueArr,
                                    cuda::Tensor1DWrap<int> blockSizeArr, cuda::Tensor1DWrap<double> cArr,
                                    cuda::Tensor3DWrap<float> kernel)
@@ -172,9 +108,8 @@ __global__ void adaptive_threshold(const SrcWrapper src, DstWrapper dst, cuda::T
     if (out_x >= out_width || out_y >= out_height)
         return;
     CMP         cmp;
-    ROUNDFN     roundFn;
     const uchar maxv  = cuda::SaturateCast<uchar>(maxValueArr[batch_idx]);
-    const int   delta = roundFn(cArr[batch_idx]);
+    const int   delta = cuda::round<RM>(cArr[batch_idx]);
 #pragma unroll
     for (int k = 0; k < X_STEPS; ++k)
     {
@@ -221,12 +156,12 @@ void adaptive_threshold_caller(const ImageBatchVarShapeDataStridedCuda &in,
 
     if (thresholdType == NVCV_THRESH_BINARY)
     {
-        adaptive_threshold<CMP, MyCeil>
+        adaptive_threshold<CMP, cuda::RoundMode::UP>
             <<<grid, block, s_mem_size, stream>>>(src, dst, maxValueArr, blockSizeArr, cArr, kernel);
     }
     else
     {
-        adaptive_threshold<CMP, MyFloor>
+        adaptive_threshold<CMP, cuda::RoundMode::DOWN>
             <<<grid, block, s_mem_size, stream>>>(src, dst, maxValueArr, blockSizeArr, cArr, kernel);
     }
 
@@ -243,13 +178,21 @@ AdaptiveThresholdVarShape::AdaptiveThresholdVarShape(DataShape maxInputShape, Da
     , m_maxBlockSize(maxBlockSize)
     , m_maxBatchSize(maxVarShapeBatchSize)
 {
-    size_t bufferSize = sizeof(float) * maxVarShapeBatchSize * maxBlockSize * maxBlockSize;
-    NVCV_CHECK_LOG(cudaMalloc(&gpu_workspace, bufferSize));
+    if (maxBlockSize <= 0)
+    {
+        LOG_ERROR("Invalid num of max block size " << maxBlockSize);
+        throw std::runtime_error("Parameter error!");
+    }
+    if (maxVarShapeBatchSize > 0)
+    {
+        size_t bufferSize = sizeof(float) * maxVarShapeBatchSize * maxBlockSize * maxBlockSize;
+        NVCV_CHECK_LOG(cudaMalloc(&m_kernel, bufferSize));
+    }
 }
 
 AdaptiveThresholdVarShape::~AdaptiveThresholdVarShape()
 {
-    NVCV_CHECK_LOG(cudaFree(gpu_workspace));
+    NVCV_CHECK_LOG(cudaFree(m_kernel));
 }
 
 size_t AdaptiveThresholdVarShape::calBufferSize(DataShape maxInputShape, DataShape maxOutputShape, int maxBlockSize,
@@ -335,7 +278,7 @@ ErrorCode AdaptiveThresholdVarShape::infer(const ImageBatchVarShapeDataStridedCu
     int kernelPitch2 = static_cast<int>(m_maxBlockSize * sizeof(float));
     int kernelPitch1 = m_maxBlockSize * kernelPitch2;
 
-    float                    *kernelPtr = (float *)gpu_workspace;
+    float                    *kernelPtr = (float *)m_kernel;
     cuda::Tensor3DWrap<float> kernelTensor(kernelPtr, kernelPitch1, kernelPitch2);
 
     dim3 block(32, 4);
@@ -343,11 +286,11 @@ ErrorCode AdaptiveThresholdVarShape::infer(const ImageBatchVarShapeDataStridedCu
 
     if (adaptiveMethod == NVCV_ADAPTIVE_THRESH_MEAN_C)
     {
-        calculate_median_kernel<<<grid, block, 0, stream>>>(kernelTensor, blockSizeArr);
+        computeMeanKernelVarShape<<<grid, block, 0, stream>>>(kernelTensor, blockSizeArr);
     }
     else
     {
-        calculate_gaussian_kernel<<<grid, block, 0, stream>>>(kernelTensor, blockSizeArr);
+        computeGaussianKernelVarShape<<<grid, block, 0, stream>>>(kernelTensor, blockSizeArr);
     }
     checkKernelErrors();
 

@@ -24,6 +24,7 @@
 #include "CvCudaLegacyHelpers.hpp"
 
 #include "CvCudaUtils.cuh"
+#include "filter_utils.cuh"
 
 using namespace nvcv::legacy::cuda_op;
 using namespace nvcv::legacy::helpers;
@@ -229,37 +230,6 @@ ErrorCode Laplacian::infer(const TensorDataStridedCuda &inData, const TensorData
 
 // Gaussian --------------------------------------------------------------------
 
-__global__ void CalculateGaussianKernel(float *kernel, Size2D kernelSize, double2 sigma)
-{
-    int2 coord = cuda::StaticCast<int>(cuda::DropCast<2>(blockIdx * blockDim + threadIdx));
-
-    if (coord.x >= kernelSize.w || coord.y >= kernelSize.h)
-    {
-        return;
-    }
-
-    int2 half{kernelSize.w / 2, kernelSize.h / 2};
-
-    float sx = 2.f * sigma.x * sigma.x;
-    float sy = 2.f * sigma.y * sigma.y;
-    float s  = 2.f * sigma.x * sigma.y * M_PI;
-
-    float sum = 0.f;
-
-    for (int y = -half.y; y <= half.y; ++y)
-    {
-        for (int x = -half.x; x <= half.x; ++x)
-        {
-            sum += cuda::exp(-((x * x) / sx + (y * y) / sy)) / s;
-        }
-    }
-
-    int x = coord.x - half.x;
-    int y = coord.y - half.y;
-
-    kernel[coord.y * kernelSize.w + coord.x] = cuda::exp(-((x * x) / sx + (y * y) / sy)) / (s * sum);
-}
-
 Gaussian::Gaussian(DataShape max_input_shape, DataShape max_output_shape, Size2D maxKernelSize)
     : CudaBaseOp(max_input_shape, max_output_shape)
     , m_maxKernelSize(maxKernelSize)
@@ -348,7 +318,7 @@ ErrorCode Gaussian::infer(const TensorDataStridedCuda &inData, const TensorDataS
         dim3 block(32, 4);
         dim3 grid(divUp(kernelSize.w, block.x), divUp(kernelSize.h, block.y));
 
-        CalculateGaussianKernel<<<grid, block, 0, stream>>>(m_kernel, kernelSize, sigma);
+        computeGaussianKernel<<<grid, block, 0, stream>>>(m_kernel, kernelSize, sigma);
 
         checkKernelErrors();
 
@@ -382,16 +352,6 @@ ErrorCode Gaussian::infer(const TensorDataStridedCuda &inData, const TensorDataS
 }
 
 // Average Blur ----------------------------------------------------------------
-
-__global__ void compute_average_blur_kernel(float *kernel_ptr, int k_size)
-{
-    float kernelVal = 1.0 / k_size;
-    int   tid       = threadIdx.x;
-    if (tid < k_size)
-    {
-        kernel_ptr[tid] = kernelVal;
-    }
-}
 
 AverageBlur::AverageBlur(DataShape max_input_shape, DataShape max_output_shape, Size2D maxKernelSize)
     : CudaBaseOp(max_input_shape, max_output_shape)
@@ -498,7 +458,7 @@ ErrorCode AverageBlur::infer(const TensorDataStridedCuda &inData, const TensorDa
     {
         int k_size = kernelSize.h * kernelSize.w;
 
-        compute_average_blur_kernel<<<1, k_size, 0, stream>>>(m_kernel, k_size);
+        computeMeanKernel<<<1, k_size, 0, stream>>>(m_kernel, k_size);
 
         checkKernelErrors();
 

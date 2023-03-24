@@ -2577,7 +2577,7 @@ public:
 private:
     int   m_blockSize      = -1;
     int   m_adaptiveMethod = -1;
-    void *gpu_workspace    = nullptr;
+    void *m_kernel         = nullptr;
 };
 
 class AdaptiveThresholdVarShape : public CudaBaseOp
@@ -2620,7 +2620,7 @@ public:
 private:
     const int m_maxBatchSize;
     const int m_maxBlockSize;
-    void     *gpu_workspace = nullptr;
+    void     *m_kernel = nullptr;
 };
 
 } // namespace nvcv::legacy::cuda_op
