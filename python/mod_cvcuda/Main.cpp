@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include "AdaptiveThresholdType.hpp"
 #include "BorderType.hpp"
 #include "ColorConversionCode.hpp"
 #include "InterpolationType.hpp"
@@ -77,6 +78,8 @@ PYBIND11_MODULE(cvcuda, m)
     ExportRemapMapValueType(m);
     ExportBndBox(m);
     ExportBoxBlur(m);
+    ExportThresholdType(m);
+    ExportAdaptiveThresholdType(m);
 
     // CV-CUDA Operators
     ExportOpBoxBlur(m);
@@ -110,5 +113,5 @@ PYBIND11_MODULE(cvcuda, m)
     ExportOpGammaContrast(m);
     ExportOpPillowResize(m);
     ExportOpThreshold(m);
-    ExportThresholdType(m);
+    ExportOpAdaptiveThreshold(m);
 }

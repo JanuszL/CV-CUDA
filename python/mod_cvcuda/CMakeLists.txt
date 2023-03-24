@@ -31,6 +31,8 @@ nvcv_python_add_module(
         BorderType.cpp
         ColorConversionCode.cpp
         MorphologyType.cpp
+        ThresholdType.cpp
+        AdaptiveThresholdType.cpp
         OpReformat.cpp
         OpResize.cpp
         OpCustomCrop.cpp
@@ -58,7 +60,7 @@ nvcv_python_add_module(
         OpGammaContrast.cpp
         OpPillowResize.cpp
         OpThreshold.cpp
-        ThresholdType.cpp
+        OpAdaptiveThreshold.cpp
 )
 
 target_link_libraries(cvcuda_module_python
