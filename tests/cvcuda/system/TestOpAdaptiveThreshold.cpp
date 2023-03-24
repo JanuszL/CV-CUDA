@@ -50,25 +50,6 @@ NVCV_TEST_SUITE_P(OpAdaptiveThreshold, test::ValueList<int, int, int, double, NV
 
 // clang-format on
 
-// #define DBG 1
-
-static void printVecDiff(const std::vector<uint8_t> &testVec, const std::vector<uint8_t> &goldVec)
-{
-#ifdef DBG
-    int vecSize = testVec.size();
-    std::cout << "vector size: " << vecSize << ", diff: " << std::endl;
-    for (int i = 0; i < vecSize; ++i)
-    {
-        if (testVec[i] != goldVec[i])
-        {
-            std::cout << "diff i: " << i << ", testVec[i]: " << static_cast<int>(testVec[i])
-                      << ", goldVec[i]: " << static_cast<int>(goldVec[i]) << "," << std::endl;
-        }
-    }
-    std::cout << std::endl;
-#endif
-}
-
 static void AdaptiveThreshold(std::vector<uint8_t> &hDst, const std::vector<uint8_t> &hSrc, long3 strides, int3 shape,
                               nvcv::ImageFormat fmt, const std::vector<float> &kernel, const nvcv::Size2D &kernelSize,
                               double maxValue, NVCVThresholdType thresholdType, double c)
@@ -184,15 +165,6 @@ TEST_P(OpAdaptiveThreshold, correct_output)
         sigma.y = sigma.x;
         kernel  = test::ComputeGaussianKernel(kernelSize, sigma);
     }
-#ifdef DBG
-    std::cout << "kernel, len: " << kernel.size() << std::endl;
-    for (size_t i = 0; i < kernel.size(); ++i)
-    {
-        std::cout << kernel[i] << ",";
-    }
-    std::cout << std::endl;
-#endif
-
     for (int i = 0; i < batch; i++)
     {
         SCOPED_TRACE(i);
@@ -209,7 +181,6 @@ TEST_P(OpAdaptiveThreshold, correct_output)
         int3  shape{width, height, 1};
         AdaptiveThreshold(goldVec, srcVec[i], strides, shape, fmt, kernel, kernelSize, maxValue, thresholdType, c);
 
-        printVecDiff(testVec, goldVec);
         EXPECT_EQ(testVec, goldVec);
     }
 }
@@ -332,14 +303,6 @@ TEST_P(OpAdaptiveThreshold, varshape_correct_output)
         sigma.y = sigma.x;
         kernel  = test::ComputeGaussianKernel(kernelSize, sigma);
     }
-#ifdef DBG
-    std::cout << "kernel, len: " << kernel.size() << std::endl;
-    for (size_t i = 0; i < kernel.size(); ++i)
-    {
-        std::cout << kernel[i] << ",";
-    }
-    std::cout << std::endl;
-#endif
     for (int i = 0; i < batch; ++i)
     {
         SCOPED_TRACE(i);
@@ -365,7 +328,6 @@ TEST_P(OpAdaptiveThreshold, varshape_correct_output)
         long3                strides{shape.y * dstRowStride, dstRowStride, fmt.planePixelStrideBytes(0)};
         AdaptiveThreshold(goldVec, srcVec[i], strides, shape, fmt, kernel, kernelSize, maxValue, thresholdType, c);
 
-        printVecDiff(testVec, goldVec);
         EXPECT_EQ(testVec, goldVec);
     }
 }
