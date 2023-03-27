@@ -70,6 +70,7 @@ void ExportOpCvtColor(py::module &m);
 void ExportOpComposite(py::module &m);
 void ExportOpGammaContrast(py::module &m);
 void ExportOpPillowResize(py::module &m);
+void ExportOpThreshold(py::module &m);
 
 // Helper class that serves as python-side operator class.
 // OP: native operator class

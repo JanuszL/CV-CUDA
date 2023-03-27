@@ -51,6 +51,8 @@ nvcv_python_add_module(
         OpComposite.cpp
         OpGammaContrast.cpp
         OpPillowResize.cpp
+        OpThreshold.cpp
+        ThresholdType.cpp
 )
 
 target_link_libraries(cvcuda_module_python
