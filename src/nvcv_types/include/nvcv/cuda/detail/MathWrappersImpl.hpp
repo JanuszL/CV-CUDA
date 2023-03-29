@@ -404,11 +404,24 @@ inline __host__ __device__ T RoundImpl(U u)
 #ifdef __CUDA_ARCH__
     return DeviceRoundImpl<T, U, RM>(u);
 #else
-    int prev_rm = std::fegetround();
-    std::fesetround(RM);
-    T out = static_cast<T>(std::nearbyint(u));
-    std::fesetround(prev_rm);
-    return out;
+    // In host we use C++ to do round depending on round mode by selecting at compile time the correct function:
+    // round is to nearest; floor is downward; ceil is upward; and trunc is towards zero.
+    if constexpr (RM == FE_TONEAREST)
+    {
+        return std::round(u);
+    }
+    else if constexpr (RM == FE_DOWNWARD)
+    {
+        return std::floor(u);
+    }
+    else if constexpr (RM == FE_UPWARD)
+    {
+        return std::ceil(u);
+    }
+    else if constexpr (RM == FE_TOWARDZERO)
+    {
+        return std::trunc(u);
+    }
 #endif
 }
 

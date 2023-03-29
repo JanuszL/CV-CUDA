@@ -24,6 +24,7 @@
 #ifndef NVCV_CUDA_MATH_WRAPPERS_HPP
 #define NVCV_CUDA_MATH_WRAPPERS_HPP
 
+#include "StaticCast.hpp"              // for StaticCast, etc.
 #include "TypeTraits.hpp"              // for Require, etc.
 #include "detail/MathWrappersImpl.hpp" // for MathWrappersImpl, etc.
 
@@ -51,15 +52,22 @@ namespace detail {
 template<typename T, typename U, typename RT, RoundMode RM>
 inline __host__ __device__ RT RoundImpl(U u)
 {
-    RT out{};
+    if constexpr (std::is_integral_v<BaseType<U>>)
+    {
+        return StaticCast<T>(u);
+    }
+    else
+    {
+        RT out{};
 
 #pragma unroll
-    for (int e = 0; e < nvcv::cuda::NumElements<RT>; ++e)
-    {
-        GetElement(out, e) = RoundImpl<T, BaseType<U>, static_cast<int>(RM)>(GetElement(u, e));
-    }
+        for (int e = 0; e < nvcv::cuda::NumElements<RT>; ++e)
+        {
+            GetElement(out, e) = RoundImpl<T, BaseType<U>, static_cast<int>(RM)>(GetElement(u, e));
+        }
 
-    return out;
+        return out;
+    }
 }
 
 } // namespace detail
