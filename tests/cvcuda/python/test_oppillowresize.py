@@ -17,6 +17,9 @@ import cvcuda
 import pytest as t
 import numpy as np
 import cvcuda_util as util
+import threading
+import torch
+
 
 RNG = np.random.default_rng(0)
 
@@ -165,3 +168,30 @@ def test_op_pillowresizevarshape(
     assert base_output.capacity == input.capacity
     assert base_output.uniqueformat == input.uniqueformat
     assert base_output.maxsize == base_output.maxsize
+
+
+def test_op_pillowresize_gpuload():
+    stream = cvcuda.Stream()
+    src_shape = (5, 1080, 1920, 4)
+    dst_sizes = [(src_shape[1] // 10, src_shape[2] // 10) for _ in range(src_shape[0])]
+    src = util.create_image_batch(
+        src_shape[0], cvcuda.Format.RGBA8, max_size=src_shape[1:3], rng=RNG
+    )
+    host_data = np.ones(src_shape, np.float32)
+    torch_dst = torch.tensor(0.0, device="cuda")
+
+    thread = threading.Thread(
+        target=lambda: torch.square(
+            torch.as_tensor(host_data, device="cuda").abs().max(), out=torch_dst
+        )
+    )
+    thread.start()
+
+    with stream:
+        dst = cvcuda.pillowresize(src, dst_sizes)
+        assert len(dst) == len(src)
+        assert dst.uniqueformat == dst.uniqueformat
+        assert dst.maxsize == dst_sizes[0]
+
+    thread.join()
+    assert torch_dst.cpu() == 1
