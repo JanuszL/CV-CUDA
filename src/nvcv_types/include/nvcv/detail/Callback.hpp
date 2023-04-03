@@ -28,6 +28,17 @@
 namespace nvcv {
 
 namespace detail {
+
+std::false_type IsStdFunctionF(...);
+
+template<typename T>
+std::true_type IsStdFunctionF(const std::function<T> *);
+
+template<typename X>
+struct IsStdFunction : decltype(IsStdFunctionF(std::declval<X *>()))
+{
+};
+
 struct NoTranslation
 {
     template<typename Callable, typename... Args>

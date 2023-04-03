@@ -19,6 +19,8 @@
 
 #include <nvcv/Optional.hpp>
 
+#include <vector>
+
 TEST(Optional, default_no_value)
 {
     nvcv::Optional<int> opt;
@@ -37,6 +39,42 @@ TEST(Optional, ctor_with_value)
     EXPECT_TRUE(opt && true);
 
     EXPECT_EQ(5, *opt);
+}
+
+TEST(Optional, assignment)
+{
+    std::vector<int>                 test_value  = {1, 2, 3, 4, 42, 666, 31337};
+    std::vector<int>                 test_value2 = {10, 9, 8, 7};
+    nvcv::Optional<std::vector<int>> opt(test_value);
+
+    ASSERT_TRUE(opt.hasValue());
+    ASSERT_EQ(*opt, test_value);
+
+    nvcv::Optional<std::vector<int>> o1, o2;
+    o1 = opt;
+    EXPECT_TRUE(o1.hasValue());
+    EXPECT_EQ(o1.value(), test_value);
+    EXPECT_TRUE(opt.hasValue());
+    EXPECT_EQ(opt.value(), test_value);
+
+    o2 = std::move(opt);
+    EXPECT_TRUE(o1.hasValue());
+    EXPECT_EQ(o1.value(), test_value);
+    EXPECT_TRUE(opt.hasValue()) << "A moved-out optional still has a value.";
+    EXPECT_TRUE(opt.value().empty()) << "The value wasn't moved out properly";
+
+    opt = nvcv::NullOpt;
+    EXPECT_FALSE(opt.hasValue());
+
+    opt = test_value2;
+    EXPECT_TRUE(opt.hasValue());
+    EXPECT_EQ(opt.value(), test_value2);
+
+    nvcv::Optional<char> c = 42;
+    nvcv::Optional<int>  i;
+    i = c;
+    EXPECT_TRUE(i.hasValue());
+    EXPECT_EQ(i.value(), 42);
 }
 
 TEST(Optional, equality)

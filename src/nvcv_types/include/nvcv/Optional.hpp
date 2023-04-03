@@ -24,6 +24,7 @@
 #endif
 
 #include "detail/InPlace.hpp"
+#include "detail/TypeTraits.hpp"
 
 #include <cassert>
 #include <cstddef> // for std::nullptr_t
@@ -74,19 +75,38 @@ public:
         }
     }
 
-    template<class U,
-             typename std::enable_if<std::is_constructible<T, U &&>::value
-                                         && !std::is_same<typename std::decay<U>::type, detail::InPlaceT>::value
-                                         && !std::is_same<typename std::decay<U>::type, Optional<U>>::value,
-                                     int>::type
-             = 0>
+    template<typename U, detail::EnableIf_t<std::is_constructible<T, const U &>::value, int> = 0>
+    Optional(const Optional<U> &that)
+        : m_hasValue(that.m_hasValue)
+    {
+        if (m_hasValue)
+        {
+            new (&m_storage) T(that.value());
+        }
+    }
+
+    template<typename U, detail::EnableIf_t<std::is_constructible<T, U &&>::value, int> = 0>
+    Optional(Optional<U> &&that) noexcept(std::is_nothrow_constructible<T, U &&>::value)
+        : m_hasValue(that.m_hasValue)
+    {
+        if (m_hasValue)
+        {
+            new (&m_storage) T(std::move(that.value()));
+            // do not set that.m_hasValue to false as per c++17 standard.
+        }
+    }
+
+    template<class U, detail::EnableIf_t<std::is_constructible<T, U &&>::value
+                                             && !std::is_same<typename std::decay<U>::type, detail::InPlaceT>::value
+                                             && !std::is_same<typename std::decay<U>::type, Optional<U>>::value,
+                                         int> = 0>
     Optional(U &&that)
         : m_hasValue(true)
     {
         new (&m_storage) T(std::forward<U>(that));
     }
 
-    template<class... AA, typename std::enable_if<std::is_constructible<T, AA...>::value, int>::type = 0>
+    template<class... AA, detail::EnableIf_t<std::is_constructible<T, AA...>::value, int> = 0>
     Optional(detail::InPlaceT, AA &&...args)
         : m_hasValue(true)
     {
@@ -108,11 +128,13 @@ public:
             this->value().~T();
             m_hasValue = false;
         }
+        return *this;
     }
 
-    Optional &operator=(const Optional &that)
+    template<typename U>
+    detail::EnableIf_t<std::is_assignable<T &, const U &>::value, Optional &> operator=(const Optional<U> &that)
     {
-        if (that.m_hasValue)
+        if (that.hasValue())
         {
             if (m_hasValue)
             {
@@ -121,6 +143,7 @@ public:
             else
             {
                 new (&m_storage) T(that.value());
+                m_hasValue = true;
             }
         }
         else
@@ -134,9 +157,10 @@ public:
         return *this;
     }
 
-    Optional &operator=(Optional &&that)
+    template<typename U>
+    detail::EnableIf_t<std::is_assignable<T &, U &&>::value, Optional &> operator=(Optional<U> &&that)
     {
-        if (that.m_hasValue)
+        if (that.hasValue())
         {
             if (m_hasValue)
             {
@@ -145,6 +169,7 @@ public:
             else
             {
                 new (&m_storage) T(std::move(that.value()));
+                m_hasValue = true;
             }
             // do not set that.m_hasValue to false as per c++17 standard.
         }
@@ -159,7 +184,45 @@ public:
         return *this;
     }
 
-    template<class... AA, typename std::enable_if<std::is_constructible<T, AA...>::value, int>::type = 0>
+    Optional &operator=(const Optional &that)
+    {
+        return this->operator=<T>(that);
+    }
+
+    Optional &operator=(Optional &&that)
+    {
+        return this->operator=<T>(std::move(that));
+    }
+
+    Optional &operator=(const T &value)
+    {
+        if (m_hasValue)
+        {
+            this->value() = value;
+        }
+        else
+        {
+            new (&m_storage) T(value);
+            m_hasValue = true;
+        }
+        return *this;
+    }
+
+    Optional &operator=(T &&value)
+    {
+        if (m_hasValue)
+        {
+            this->value() = std::move(value);
+        }
+        else
+        {
+            new (&m_storage) T(std::move(value));
+            m_hasValue = true;
+        }
+        return *this;
+    }
+
+    template<class... AA, detail::EnableIf_t<std::is_constructible<T, AA...>::value, int> = 0>
     T &emplace(AA &&...args)
     {
         T *p;
