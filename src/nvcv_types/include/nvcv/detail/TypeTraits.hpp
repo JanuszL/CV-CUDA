@@ -71,16 +71,6 @@ struct IsInvocable : decltype(IsInvocableF<Args...>(AddPointer_t<Callable>()))
 {
 };
 
-std::false_type IsStdFunctionF(...);
-
-template<typename T>
-std::true_type IsStdFunctionF(const std::function<T> *);
-
-template<typename X>
-struct IsStdFunction : decltype(IsStdFunctionF(std::declval<X *>()))
-{
-};
-
 }} // namespace nvcv::detail
 
 #endif // NVCV_TYPE_TRAITS_HPP
