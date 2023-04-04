@@ -408,7 +408,13 @@ inline __host__ __device__ T RoundImpl(U u)
     // round is to nearest; floor is downward; ceil is upward; and trunc is towards zero.
     if constexpr (RM == FE_TONEAREST)
     {
-        return std::round(u);
+        // CUDA does round-to-nearest-even, C/C++ functions that do the same are roundeven*
+        if constexpr (std::is_same_v<U, float>)
+            return roundevenf(u);
+        else if constexpr (std::is_same_v<U, double>)
+            return roundeven(u);
+        else
+            return roundevenl(u);
     }
     else if constexpr (RM == FE_DOWNWARD)
     {
