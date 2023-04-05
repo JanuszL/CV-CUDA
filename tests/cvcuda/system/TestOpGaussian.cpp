@@ -126,29 +126,7 @@ TEST_P(OpGaussian, correct_output)
     ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), outData->basePtr(), outBufSize, cudaMemcpyDeviceToHost));
 
     // generate gold result
-    std::vector<float> kernel(kernelSize.w * kernelSize.h);
-
-    int2 half{kernelSize.w / 2, kernelSize.h / 2};
-
-    float sx  = 2.f * sigma.x * sigma.x;
-    float sy  = 2.f * sigma.y * sigma.y;
-    float s   = 2.f * sigma.x * sigma.y * M_PI;
-    float sum = 0.f;
-    for (int y = -half.y; y <= half.y; ++y)
-    {
-        for (int x = -half.x; x <= half.x; ++x)
-        {
-            float kv = std::exp(-((x * x) / sx + (y * y) / sy)) / s;
-
-            kernel[(y + half.y) * kernelSize.w + (x + half.x)] = kv;
-
-            sum += kv;
-        }
-    }
-    for (int i = 0; i < kernelSize.w * kernelSize.h; ++i)
-    {
-        kernel[i] /= sum;
-    }
+    std::vector<float> kernel = test::ComputeGaussianKernel(kernelSize, sigma);
 
     test::Convolve(goldVec, outStrides, inVec, inStrides, shape, format, kernel, kernelSize, kernelAnchor, borderMode,
                    borderValue);
@@ -280,28 +258,7 @@ TEST_P(OpGaussian, varshape_correct_output)
                                dstRowStride, shape.y, cudaMemcpyDeviceToHost));
 
         // Generate gold result
-        std::vector<float> kernel(kernelSize.w * kernelSize.h);
-
-        int2  half{kernelSize.w / 2, kernelSize.h / 2};
-        float sx  = 2.f * sigma.x * sigma.x;
-        float sy  = 2.f * sigma.y * sigma.y;
-        float s   = 2.f * sigma.x * sigma.y * M_PI;
-        float sum = 0.f;
-        for (int y = -half.y; y <= half.y; ++y)
-        {
-            for (int x = -half.x; x <= half.x; ++x)
-            {
-                float kv = std::exp(-((x * x) / sx + (y * y) / sy)) / s;
-
-                kernel[(y + half.y) * kernelSize.w + (x + half.x)] = kv;
-
-                sum += kv;
-            }
-        }
-        for (int i = 0; i < kernelSize.w * kernelSize.h; ++i)
-        {
-            kernel[i] /= sum;
-        }
+        std::vector<float> kernel = test::ComputeGaussianKernel(kernelSize, sigma);
 
         std::vector<uint8_t> goldVec(shape.y * pitches.y);
 

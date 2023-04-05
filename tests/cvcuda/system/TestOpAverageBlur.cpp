@@ -125,10 +125,7 @@ TEST_P(OpAverageBlur, correct_output)
     ASSERT_EQ(cudaSuccess, cudaMemcpy(testVec.data(), outData->basePtr(), outBufSize, cudaMemcpyDeviceToHost));
 
     // generate gold result
-    std::size_t ks = kernelSize.w * kernelSize.h;
-    float       kv = 1.f / ks;
-
-    std::vector<float> kernel(ks, kv);
+    std::vector<float> kernel = test::ComputeMeanKernel(kernelSize);
 
     test::Convolve(goldVec, outStrides, inVec, inStrides, shape, format, kernel, kernelSize, kernelAnchor, borderMode,
                    borderValue);
@@ -259,10 +256,7 @@ TEST_P(OpAverageBlur, varshape_correct_output)
                                dstRowStride, shape.y, cudaMemcpyDeviceToHost));
 
         // Generate gold result
-        std::size_t ks = kernelSize.w * kernelSize.h;
-        float       kv = 1.f / ks;
-
-        std::vector<float> kernel(ks, kv);
+        std::vector<float> kernel = test::ComputeMeanKernel(kernelSize);
 
         std::vector<uint8_t> goldVec(shape.y * pitches.y);
 

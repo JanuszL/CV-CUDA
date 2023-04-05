@@ -2543,6 +2543,86 @@ private:
     uint32_t m_automatic_thresh;
 };
 
+class AdaptiveThreshold : public CudaBaseOp
+{
+public:
+    AdaptiveThreshold() = delete;
+
+    AdaptiveThreshold(DataShape maxInputShape, DataShape maxOutputShape, int32_t maxBlockSize);
+
+    ~AdaptiveThreshold();
+
+    /**
+     * @brief Applies an adaptive threshold to input images.
+     * @param in gpu pointer, batched input images, whose shape is input_shape and type is data_type.
+     * @param out gpu pointer, batched output images that have the size dsize and the same type as data_type.
+     * @param maxValue Non-zero value assigned to the pixels for which the condition is satisfied.
+     * @param adaptiveMethod Adaptive thresholding algorithm to use, see NVCVAdaptiveThresholdType. The BORDER_REPLICATE | BORDER_ISOLATED is used to process boundaries.
+     * @param thresholdType Thresholding type that must be either THRESH_BINARY or THRESH_BINARY_INV.
+     * @param blockSize Size of a pixel neighborhood that is used to calculate a threshold value for the pixel: 3, 5, 7, and so on.
+     * @param c Constant subtracted from the mean or weighted mean. Normally, it is positive but may be zero or negative as well.
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const TensorDataStridedCuda &in, const TensorDataStridedCuda &out, const double maxValue,
+                    const NVCVAdaptiveThresholdType adaptiveMethod, const NVCVThresholdType thresholdType,
+                    const int32_t blockSize, const double c, cudaStream_t stream);
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param maxInputShape maximum input DataShape that may be used
+     * @param maxOutputShape maximum output DataShape that may be used
+     * @param maxBlockSize maximum block size that may be used
+     */
+    size_t    calBufferSize(DataShape maxInputShape, DataShape maxOutputShape, int maxBlockSize);
+
+private:
+    int   m_blockSize      = -1;
+    int   m_adaptiveMethod = -1;
+    void *m_kernel         = nullptr;
+};
+
+class AdaptiveThresholdVarShape : public CudaBaseOp
+{
+public:
+    AdaptiveThresholdVarShape() = delete;
+
+    AdaptiveThresholdVarShape(DataShape maxInputShape, DataShape maxOutputShape, int32_t maxBlockSize,
+                              int32_t maxVarShapeBatchSize);
+
+    ~AdaptiveThresholdVarShape();
+
+    /**
+     * @brief Applies an adaptive threshold to input images.
+     * @param in gpu pointer, in[i] is input image where i ranges from 0 to batch-1, whose shape is
+     * input_shape[i] and type is data_type.
+     * @param out gpu pointer, out[i] is output image where i ranges from 0 to batch-1, whose size is
+     * input_shape[i] and type is data_type.
+     * @param maxValue Non-zero value assigned to the pixels for which the condition is satisfied.
+     * @param adaptiveMethod Adaptive thresholding algorithm to use, see NVCVAdaptiveThresholdType. The BORDER_REPLICATE | BORDER_ISOLATED is used to process boundaries.
+     * @param thresholdType Thresholding type that must be either THRESH_BINARY or THRESH_BINARY_INV.
+     * @param blockSize Size of a pixel neighborhood that is used to calculate a threshold value for the pixel: 3, 5, 7, and so on.
+     * @param c Constant subtracted from the mean or weighted mean. Normally, it is positive but may be zero or negative as well.
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const ImageBatchVarShapeDataStridedCuda &in, const ImageBatchVarShapeDataStridedCuda &out,
+                    const TensorDataStridedCuda &maxValue, const NVCVAdaptiveThresholdType adaptiveMethod,
+                    const NVCVThresholdType thresholdType, const TensorDataStridedCuda &blockSize,
+                    const TensorDataStridedCuda &c, cudaStream_t stream);
+
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param maxInputShape maximum input DataShape that may be used
+     * @param maxOutputShape maximum output DataShape that may be used
+     * @param maxBlockSize maximum block size that may be used
+     * @param maxBatchSize maximum batch size that may be used
+     */
+    size_t calBufferSize(DataShape maxInputShape, DataShape maxOutputShape, int maxBlockSize, int maxBatchSize);
+
+private:
+    const int m_maxBatchSize;
+    const int m_maxBlockSize;
+    void     *m_kernel = nullptr;
+};
+
 } // namespace nvcv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H

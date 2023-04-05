@@ -14,6 +14,7 @@
 # limitations under the License.
 
 add_library(cvcuda_legacy STATIC
+    filter_utils.cu
     custom_crop.cu
     reformat.cu
     resize.cu
@@ -61,6 +62,8 @@ add_library(cvcuda_legacy STATIC
     pillow_resize.cu
     pillow_resize_var_shape.cu
     threshold.cu
+    adaptive_threshold.cu
+    adaptive_threshold_var_shape.cu
 )
 
 target_link_libraries(cvcuda_legacy
