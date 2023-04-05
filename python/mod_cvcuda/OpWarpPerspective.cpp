@@ -32,8 +32,6 @@ namespace cvcudapy {
 
 namespace {
 
-using pyarray = py::array_t<float, py::array::c_style | py::array::forcecast>;
-
 Tensor WarpPerspectiveInto(Tensor &output, Tensor &input, const pyarray &xform, const int32_t flags,
                            const NVCVBorderType borderMode, const pyarray &borderValue, std::optional<Stream> pstream)
 {
@@ -42,19 +40,7 @@ Tensor WarpPerspectiveInto(Tensor &output, Tensor &input, const pyarray &xform, 
         pstream = Stream::Current();
     }
 
-    size_t bValueSize = borderValue.size();
-    size_t bValueDims = borderValue.ndim();
-    if (bValueSize > 4 || bValueDims != 1)
-    {
-        throw std::runtime_error(util::FormatString(
-            "Channels of borderValue should <= 4 and dimension should be 2, current is '%lu', '%lu' respectively",
-            bValueSize, bValueDims));
-    }
-    float4 bValue;
-    for (size_t i = 0; i < 4; i++)
-    {
-        nvcv::cuda::GetElement(bValue, i) = bValueSize > i ? *borderValue.data(i) : 0.f;
-    }
+    float4 bValue = GetFloat4FromPyArray(borderValue);
 
     size_t xformDims = xform.ndim();
     if (!(xformDims == 2 && xform.shape(0) == 3 && xform.shape(1) == 3))
