@@ -69,7 +69,7 @@ def generate_data(shape, dtype, max_random=None, rng=None):
             assert len(max_random) == shape[-1]
         if issubclass(dtype, numbers.Integral):
             if max_random is None:
-                max_random = [np.iinfo(dtype).max for _ in range(len(shape))]
+                max_random = [np.iinfo(dtype).max for _ in range(shape[-1])]
             data = rng.integers(max_random, size=shape, dtype=dtype)
         elif issubclass(dtype, numbers.Real):
             if max_random is None:

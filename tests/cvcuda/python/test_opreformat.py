@@ -16,6 +16,11 @@
 import cvcuda
 import pytest as t
 import numpy as np
+import threading
+import torch
+
+
+RNG = np.random.default_rng(0)
 
 
 @t.mark.parametrize(
@@ -52,3 +57,30 @@ def test_op_reformat(input, out_shape, out_layout):
     assert out.layout == out_layout
     assert out.shape == out_shape
     assert out.dtype == input.dtype
+
+
+def test_op_reformat_gpuload():
+    stream = cvcuda.Stream()
+    src_layout = "NHWC"
+    dst_layout = "NCHW"
+    src_shape = (2, 720, 1280, 3)
+    dst_shape = (src_shape[0], src_shape[3], src_shape[1], src_shape[2])
+    src = cvcuda.Tensor(src_shape, np.uint8, src_layout)
+    host_data = np.ones(src_shape, np.float32)
+    torch_dst = torch.tensor(0.0, device="cuda")
+
+    thread = threading.Thread(
+        target=lambda: torch.square(
+            torch.as_tensor(host_data, device="cuda").abs().max(), out=torch_dst
+        )
+    )
+    thread.start()
+
+    with stream:
+        dst = cvcuda.reformat(src, dst_layout)
+        assert dst.layout == dst_layout
+        assert dst.dtype == src.dtype
+        assert dst.shape == dst_shape
+
+    thread.join()
+    assert torch_dst.cpu() == 1
