@@ -26,6 +26,8 @@ import numpy as np
 from fractions import Fraction
 import PyNvCodec as nvc
 import PytorchNvCodec as pnvc
+import cvcuda
+import nvcv
 
 
 class nvdecoder:
@@ -52,6 +54,14 @@ class nvdecoder:
             self.crange = nvc.ColorRange.JPEG
         self.cc_ctx = nvc.ColorspaceConversionContext(self.cspace, self.crange)
 
+        # Create 2 cvcuda tensors: color conversion YUV->RGB; reformat HWC->CHW
+        self.cvcuda_RGBtensor = cvcuda.Tensor(
+            (self.h, self.w, 3), nvcv.Type.U8, nvcv.TensorLayout.HWC
+        )
+        self.cvcuda_CHWtensor = cvcuda.Tensor(
+            (3, self.h, self.w), nvcv.Type.U8, nvcv.TensorLayout.CHW
+        )
+
         # In case sample aspect ratio isn't 1:1 we will re-scale the decoded
         # frame to maintain uniform 1:1 ratio across the pipeline.
         sar = 8.0 / 9.0
@@ -64,6 +74,13 @@ class nvdecoder:
             or nvc.PixelFormat.NV12 == self.pix_fmt
         )
         is_yuv444 = nvc.PixelFormat.YUV444 == self.pix_fmt
+
+        # Set cvcuda color conversion code to do YUV->RGB
+        self.cvcuda_code = None
+        if is_yuv420:
+            self.cvcuda_code = cvcuda.ColorConversion.YUV2RGB_NV12
+        elif is_yuv444:
+            self.cvcuda_code = cvcuda.ColorConversion.YUV2RGB
 
         codec = nvDemux.Codec()
         is_hevc = nvc.CudaVideoCodec.HEVC == codec
@@ -169,36 +186,20 @@ class nvdecoder:
         if not dec_surface or dec_surface.Empty():
             raise RuntimeError("Can not decode frame.")
 
-        # Convert to packed RGB
-        rgb_int = self.to_rgb.Execute(dec_surface, self.cc_ctx)
-        if not rgb_int or rgb_int.Empty():
-            raise RuntimeError("Can not convert nv12 -> rgb.")
-
-        # Convert to planar RGB
-        rgb_pln = self.to_pln.Execute(rgb_int, self.cc_ctx)
-        if not rgb_pln or rgb_pln.Empty():
-            raise RuntimeError("Can not convert rgb -> rgb planar.")
-
-        # Resize if necessary to maintain 1:1 SAR
-        if self.to_sar:
-            rgb_pln = self.to_sar.Execute(rgb_pln)
-
-        return rgb_pln
+        return dec_surface
 
     def decode_to_tensor(self, *args, **kwargs) -> torch.Tensor:
         """
         Decode single video frame, convert it to torch.cuda.FloatTensor.
         Image will be planar RGB normalized to range [0.0; 1.0].
         """
-        dec_surface = None
-
         if self.is_hw_dec:
             dec_surface = self.decode_hw(*args, **kwargs)
         else:
             dec_surface = self.decode_sw(*args, **kwargs)
 
         if not dec_surface or dec_surface.Empty():
-            raise RuntimeError("Can not convert rgb -> rgb planar.")
+            raise RuntimeError("Can not decode surface.")
 
         surf_plane = dec_surface.PlanePtr()
 
@@ -213,7 +214,19 @@ class nvdecoder:
         if img_tensor is None:
             raise RuntimeError("Can not export to tensor.")
 
-        img_tensor.resize_(3, int(surf_plane.Height() / 3), surf_plane.Width())
+        if self.is_hw_dec:
+            img_tensor = torch.unsqueeze(img_tensor, -1)  # 3*H, W -> 3*H, W, C=1
+
+            cvcuda_YUVtensor = cvcuda.as_tensor(img_tensor, nvcv.TensorLayout.HWC)
+
+            cvcuda.cvtcolor_into(
+                self.cvcuda_RGBtensor, cvcuda_YUVtensor, self.cvcuda_code
+            )
+            cvcuda.reformat_into(self.cvcuda_CHWtensor, self.cvcuda_RGBtensor)
+
+            img_tensor = torch.as_tensor(self.cvcuda_CHWtensor.cuda(), device="cuda")
+        else:
+            img_tensor.resize_(3, int(surf_plane.Height() / 3), surf_plane.Width())
 
         return img_tensor
 
@@ -267,12 +280,12 @@ class nvencoder:
         :param options: dictionary with encoder initialization options.
         """
 
-        self.to_nv12 = cconverter(width, height, gpu_id=gpu_id)
-        self.to_nv12.add(nvc.PixelFormat.RGB_PLANAR, nvc.PixelFormat.RGB)
-        self.to_nv12.add(nvc.PixelFormat.RGB, nvc.PixelFormat.YUV420)
-        self.to_nv12.add(nvc.PixelFormat.YUV420, nvc.PixelFormat.NV12)
-        self.cc_ctx = nvc.ColorspaceConversionContext(
-            nvc.ColorSpace.BT_601, nvc.ColorRange.MPEG
+        # Create 2 cvcuda tensors: reformat CHW->HWC; color conversion RGB->YUV
+        self.cvcuda_HWCtensor = cvcuda.Tensor(
+            (height, width, 3), nvcv.Type.U8, nvcv.TensorLayout.HWC
+        )
+        self.cvcuda_YUVtensor = cvcuda.Tensor(
+            ((height // 2) * 3, width, 1), nvcv.Type.U8, nvcv.TensorLayout.HWC
         )
         fps = round(Fraction(fps), 6)
 
@@ -297,6 +310,8 @@ class nvencoder:
         self.stream.width = width
         self.stream.height = height
         self.stream.time_base = 1 / Fraction(fps)  # 1/fps would be our scale.
+        self.surface = None
+        self.surf_plane = None
 
     def width(self) -> int:
         """
@@ -314,29 +329,25 @@ class nvencoder:
         """
         Converts cuda float tensor to planar rgb surface.
         """
-        if len(img_tensor.shape) != 3 and img_tensor.shape[0] != 3:
-            raise RuntimeError("Shape of the tensor must be (3, height, width)")
+        if not self.surface:
+            self.surface = nvc.Surface.Make(
+                format=nvc.PixelFormat.NV12,
+                width=self.width(),
+                height=self.height(),
+                gpu_id=self.gpu_id,
+            )
+            self.surf_plane = self.surface.PlanePtr()
 
-        _, tensor_h, tensor_w = img_tensor.shape
-        assert tensor_w == self.width() and tensor_h == self.height()
-
-        surface = nvc.Surface.Make(
-            nvc.PixelFormat.RGB_PLANAR,
-            tensor_w,
-            tensor_h,
-            self.gpu_id,
-        )
-        surf_plane = surface.PlanePtr()
         pnvc.TensorToDptr(
             img_tensor,
-            surf_plane.GpuMem(),
-            surf_plane.Width(),
-            surf_plane.Height(),
-            surf_plane.Pitch(),
-            surf_plane.ElemSize(),
+            self.surf_plane.GpuMem(),
+            self.surf_plane.Width(),
+            self.surf_plane.Height(),
+            self.surf_plane.Pitch(),
+            self.surf_plane.ElemSize(),
         )
 
-        return surface.Clone()
+        return self.surface
 
     def encode_from_tensor(self, tensor: torch.Tensor):
         """
@@ -347,8 +358,19 @@ class nvencoder:
         assert tensor.dim() == 3
         assert self.gpu_id == tensor.device.index
 
-        surface_rgb = self.tensor_to_surface(tensor)
-        dst_surface = self.to_nv12.Execute(surface_rgb, self.cc_ctx)
+        cvcuda_tensor = cvcuda.as_tensor(tensor, nvcv.TensorLayout.CHW)
+
+        cvcuda.reformat_into(self.cvcuda_HWCtensor, cvcuda_tensor)
+        cvcuda.cvtcolor_into(
+            self.cvcuda_YUVtensor,
+            self.cvcuda_HWCtensor,
+            cvcuda.ColorConversion.RGB2YUV_NV12,
+        )
+
+        tensor = torch.as_tensor(self.cvcuda_YUVtensor.cuda(), device="cuda")
+
+        dst_surface = self.tensor_to_surface(tensor)
+
         if dst_surface.Empty():
             raise RuntimeError("Can not convert to yuv444.")
 
