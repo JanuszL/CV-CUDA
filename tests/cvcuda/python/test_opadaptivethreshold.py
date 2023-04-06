@@ -19,36 +19,44 @@ import numpy as np
 import cvcuda_util as util
 
 
+RNG = np.random.default_rng(0)
+
+
 @t.mark.parametrize(
-    "input, adaptive_method, threshold_type",
+    "tensor_args, adaptive_method, threshold_type",
     [
         (
-            cvcuda.Tensor((4, 360, 640, 1), cvcuda.Type.U8, "NHWC"),
+            ((4, 360, 640, 1), cvcuda.Type.U8, "NHWC"),
             cvcuda.AdaptiveThresholdType.MEAN_C,
             cvcuda.ThresholdType.BINARY,
         ),
         (
-            cvcuda.Tensor((3, 640, 360, 1), cvcuda.Type.U8, "NHWC"),
+            ((3, 640, 360, 1), cvcuda.Type.U8, "NHWC"),
             cvcuda.AdaptiveThresholdType.GAUSSIAN_C,
             cvcuda.ThresholdType.BINARY,
         ),
         (
-            cvcuda.Tensor((2, 1280, 720, 1), cvcuda.Type.U8, "NHWC"),
+            ((2, 1280, 720, 1), cvcuda.Type.U8, "NHWC"),
             cvcuda.AdaptiveThresholdType.MEAN_C,
             cvcuda.ThresholdType.BINARY_INV,
         ),
         (
-            cvcuda.Tensor((1, 1920, 1080, 1), cvcuda.Type.U8, "NHWC"),
+            ((1, 1920, 1080, 1), cvcuda.Type.U8, "NHWC"),
             cvcuda.AdaptiveThresholdType.GAUSSIAN_C,
             cvcuda.ThresholdType.BINARY_INV,
+        ),
+        (
+            ((360, 640, 1), cvcuda.Type.U8, "HWC"),
+            cvcuda.AdaptiveThresholdType.MEAN_C,
+            cvcuda.ThresholdType.BINARY,
         ),
     ],
 )
-def test_op_adaptivethreshold(input, adaptive_method, threshold_type):
+def test_op_adaptivethreshold(tensor_args, adaptive_method, threshold_type):
     max_value = 127.0
     block_size = 3
     c = 2
-
+    input = cvcuda.Tensor(*tensor_args)
     out = cvcuda.adaptivethreshold(
         input, max_value, adaptive_method, threshold_type, block_size, c
     )
@@ -126,7 +134,6 @@ def test_op_adaptivethresholdvarshape(
     num_images, img_size, adaptive_method, threshold_type, max_block_size
 ):
 
-    RNG = np.random.default_rng(0)
     input = util.create_image_batch(
         num_images, cvcuda.Format.U8, size=img_size, max_random=256, rng=RNG
     )
@@ -135,7 +142,7 @@ def test_op_adaptivethresholdvarshape(
         (num_images),
         np.int32,
         "N",
-        max_random=max_block_size + 1,
+        max_random=max_block_size,
         rng=RNG,
         transform_dist=util.dist_odd,
     )
