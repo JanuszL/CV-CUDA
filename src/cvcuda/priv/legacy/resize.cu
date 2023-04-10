@@ -36,7 +36,8 @@ namespace nvcv::legacy::cuda_op {
 
 #define LEGACY_BICUBIC_MATH //apparently the legacy code has an abs() that needs to be matched
 
-#define CACHE_MEMORY_ALIGNMENT 15 //this is 'M' for _cacheAlignedBufferedRead
+// Replaced below 15 to 0 due to a reported regression
+#define CACHE_MEMORY_ALIGNMENT 0 //this is 'M' for _cacheAlignedBufferedRead
 
 //legal values for CACHE_MEMORY_ALIGNMENT are:
 // 31: 256-bit alignment
@@ -608,8 +609,8 @@ void resize(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &ou
     const dim3 quadGridSize(divUp(out_quad_width, blockSize.x), divUp(out_height, blockSize.y), batch_size);
 
     //bool can_quad = ((((size_t)dst_ptr) % sizeof(T)) == 0) && ((out_width % 4) == 0);  //is the output buffer quad-pixel aligned?
-    bool can_quad = ((out_width % 4) == 0); //is the output buffer quad-pixel aligned?
-    //bool can_quad = false; //override
+    //bool can_quad = ((out_width % 4) == 0); //is the output buffer quad-pixel aligned?
+    bool can_quad = false; // turning it off due to a reported regression
 
     //Note: resize is fundamentally a gather memory operation, with a little bit of compute
     //      our goals are to (a) maximize throughput, and (b) minimize occupancy for the same performance
