@@ -40,7 +40,8 @@ namespace {
 
 #define LEGACY_BICUBIC_MATH_VS //apparently the legacy code has an abs() that needs to be matched
 
-#define CACHE_MEMORY_ALIGNMENT_VS 15 //this is 'M' for _cacheAlignedBufferedReadVS
+// Replaced below 15 to 0 due to a reported regression
+#define CACHE_MEMORY_ALIGNMENT_VS 0 //this is 'M' for _cacheAlignedBufferedReadVS
 
 //legal values for CACHE_MEMORY_ALIGNMENT_VS are:
 // 31: 256-bit alignment
@@ -854,7 +855,7 @@ void resize(const ImageBatchVarShapeDataStridedCuda &in, const ImageBatchVarShap
 
     Size2D outMaxSize = out.maxSize();
 
-    bool can_quad = true;
+    bool can_quad = false; // turning it off due to a reported regression
     //bool can_quad = false;  //<-- force single pixel per kernel mode, smaller register file
 
     const int THREADS_PER_BLOCK = 256; //Performance degrades above 256 and below 16 (GMEM speed limited)
