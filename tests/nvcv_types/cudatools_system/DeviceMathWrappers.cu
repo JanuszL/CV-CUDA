@@ -75,6 +75,7 @@ NVCV_TEST_INST_ROUND_SAME(cuda::RoundMode::NEAREST, double4);
 NVCV_TEST_INST_ROUND_SAME(cuda::RoundMode::UP, float2);
 NVCV_TEST_INST_ROUND_SAME(cuda::RoundMode::DOWN, double2);
 NVCV_TEST_INST_ROUND_SAME(cuda::RoundMode::ZERO, float3);
+NVCV_TEST_INST_ROUND_SAME(cuda::RoundMode::NEAREST, float4);
 
 #undef NVCV_TEST_INST_ROUND_SAME
 

@@ -53,7 +53,9 @@ NVCV_TYPED_TEST_SUITE(
     ttype::Types<ttype::Value<float2{-1.23456f, 0.789f}>, ttype::Value<float2{-1.f, 1.f}>, ttype::Value<cuda::RoundMode::UP>>,
     ttype::Types<ttype::Value<double2{1.789, -6.123}>, ttype::Value<double2{1.0, -7.0}>, ttype::Value<cuda::RoundMode::DOWN>>,
     ttype::Types<ttype::Value<float3{-0.999f, -0.23456f, 0.789f}>,
-                 ttype::Value<float3{0.f, 0.f, 0.f}>, ttype::Value<cuda::RoundMode::ZERO>>
+                 ttype::Value<float3{0.f, 0.f, 0.f}>, ttype::Value<cuda::RoundMode::ZERO>>,
+    ttype::Types<ttype::Value<float4{-.5f, -1.5f, 2.5f, -3.5f}>,
+                 ttype::Value<float4{0.f, -2.f, 2.f, -4.f}>, ttype::Value<cuda::RoundMode::NEAREST>>
     >);
 
 // clang-format on

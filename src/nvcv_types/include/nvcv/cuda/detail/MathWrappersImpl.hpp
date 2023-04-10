@@ -38,11 +38,11 @@ __device__ __forceinline__ T DeviceRoundImpl(U u)
             if constexpr (RM == FE_TONEAREST)
                 return rintf(u);
             else if constexpr (RM == FE_DOWNWARD)
-                return static_cast<T>(__float2ll_rd(u));
+                return floorf(u);
             else if constexpr (RM == FE_UPWARD)
-                return static_cast<T>(__float2ll_ru(u));
+                return ceilf(u);
             else if constexpr (RM == FE_TOWARDZERO)
-                return static_cast<T>(__float2ll_rz(u));
+                return truncf(u);
         }
         else if constexpr (std::is_same_v<T, int> || (sizeof(T) < 4 && std::is_integral_v<T> && std::is_signed_v<T>))
         {
@@ -151,11 +151,11 @@ __device__ __forceinline__ T DeviceRoundImpl(U u)
             if constexpr (RM == FE_TONEAREST)
                 return rint(u);
             else if constexpr (RM == FE_DOWNWARD)
-                return static_cast<T>(__double2ll_rd(u));
+                return floor(u);
             else if constexpr (RM == FE_UPWARD)
-                return static_cast<T>(__double2ll_ru(u));
+                return ceil(u);
             else if constexpr (RM == FE_TOWARDZERO)
-                return static_cast<T>(__double2ll_rz(u));
+                return trunc(u);
         }
         else if constexpr (std::is_same_v<T, float>)
         {
@@ -408,7 +408,13 @@ inline __host__ __device__ T RoundImpl(U u)
     // round is to nearest; floor is downward; ceil is upward; and trunc is towards zero.
     if constexpr (RM == FE_TONEAREST)
     {
-        return std::round(u);
+        // CUDA does round-to-nearest-even, C/C++ functions that do the same are roundeven*
+        if constexpr (std::is_same_v<U, float>)
+            return roundevenf(u);
+        else if constexpr (std::is_same_v<U, double>)
+            return roundeven(u);
+        else
+            return roundevenl(u);
     }
     else if constexpr (RM == FE_DOWNWARD)
     {
