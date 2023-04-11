@@ -13,7 +13,9 @@ These are some sample applications showcasing various CV-CUDA APIs. Sample appli
     - Linux: Driver version 520.56.06 or higher
 - TensorRT == 8.5.2.2
 - NVIDIA Video Processing Framework (https://github.com/NVIDIA/VideoProcessingFramework)
-    - Follow the instructions from Github (https://github.com/NVIDIA/VideoProcessingFramework/wiki/Building-from-source) to build it from source on Linux. VPF's dependencies include ffmpeg and NVIDIA's Video Codec SDK.
+    - Follow the instructions from Github (https://github.com/NVIDIA/VideoProcessingFramework/blob/master/README.md) to install it via pip.
+    - Note: ffmpeg is a VPF dependency. It can be built from source by following these steps (https://docs.nvidia.com/video-technologies/video-codec-sdk/12.0/ffmpeg-with-nvidia-gpu/index.html). The version of ffmpeg that comes/installs via apt-get in Ubuntu 20.04 may not be sufficient for VPF.
+    - Note: When installing VPF in a docker image like TensorRT, there is no need to install libnvidia-encode and libnvidia-decode as those already come preinstalled. Other docker images may require an installation of these libraries.
 - Python Packages:
     - torch == 1.13.0
     - torchvision == 0.14.0
@@ -34,9 +36,21 @@ Setting up the following is only required if you want to setup and run the sampl
       docker run -it --gpus=all -v <local_mount_path>:<docker_mount_path> nvcr.io/nvidia/tensorrt:22.09-py3
       ```
 
-2. Install all the dependencies required to run the samples. These are mentioned above in the prerequisites section.
+2. Make sure that the other helper scripts present in the `samples/scripts` folder is executable by executing following chmod commands.
 
-3. Install the CV-CUDA packages. Please note that since the above container comes with Python 3.8.10, we will install nvcv-python3.8-0 package as mentioned below. If you have any other Python distributions, you would need to use the appropriate nvcv-python Debian package below.
+   ```
+   cd samples
+   chmod a+x scripts/*.sh
+   chmod a+x scripts/*.py
+   ```
+
+3. Install all the dependencies required to run the samples. These are mentioned above in the prerequisites section. A convenient script to install all the dependencies is available at `scripts/install_dependencies.sh`. This script may require sudo privileges depending on your setup.
+
+   ```
+   ./scripts/install_dependencies.sh
+   ```
+
+4. Install the CV-CUDA packages. Please note that since the above container comes with Python 3.8.10, we will install nvcv-python3.8-0 package as mentioned below. If you have any other Python distributions, you would need to use the appropriate nvcv-python Debian package below.
 
    ```
    dpkg -i nvcv-lib-0.2.1_alpha-cuda11-x86_64-linux.deb
@@ -44,18 +58,11 @@ Setting up the following is only required if you want to setup and run the sampl
    dpkg -i cvcuda-samples-0.2.1_alpha-cuda11-x86_64-linux.deb
    dpkg -i nvcv-python3.8-0.2.1_alpha-cuda11-x86_64-linux.deb
    ```
-4. Copy the samples folder to the target directory.
+5. Copy the samples folder to the target directory.
 
    ```
    cp -rf /opt/nvidia/cvcuda*/samples ~/
    cd ~/samples
-   ```
-
-5. Make sure that the other helper scripts present in the scripts folder is executable by executing following chmod commands.
-
-   ```
-   chmod a+x scripts/*.sh
-   chmod a+x scripts/*.py
    ```
 
 6. Build the samples (whichever sample requires a build)
