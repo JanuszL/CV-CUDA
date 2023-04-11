@@ -34,11 +34,11 @@ namespace nvcv::cuda {
 
 namespace detail {
 
-template<typename T, NVCVBorderType B>
-class BorderVarShapeWrapImpl
+template<class IW, NVCVBorderType B>
+class BorderIWImpl
 {
 public:
-    using ImageBatchWrapper = ImageBatchVarShapeWrap<T>;
+    using ImageBatchWrapper = IW;
     using ValueType         = typename ImageBatchWrapper::ValueType;
 
     static constexpr int            kNumDimensions = ImageBatchWrapper::kNumDimensions;
@@ -47,15 +47,20 @@ public:
     static constexpr bool kActiveDimensions[]  = {false, false, true, true};
     static constexpr int  kNumActiveDimensions = 2;
 
-    BorderVarShapeWrapImpl() = default;
+    BorderIWImpl() = default;
 
-    explicit __host__ __device__ BorderVarShapeWrapImpl(ImageBatchWrapper imageBatchWrap)
+    explicit __host__ __device__ BorderIWImpl(ImageBatchWrapper imageBatchWrap)
         : m_imageBatchWrap(imageBatchWrap)
     {
     }
 
-    explicit __host__ BorderVarShapeWrapImpl(const ImageBatchVarShapeDataStridedCuda &images)
+    explicit __host__ BorderIWImpl(const ImageBatchVarShapeDataStridedCuda &images)
         : m_imageBatchWrap(images)
+    {
+    }
+
+    explicit __host__ BorderIWImpl(const ImageBatchVarShapeDataStridedCuda &images, int numChannels)
+        : m_imageBatchWrap(images, numChannels)
     {
     }
 
@@ -74,35 +79,10 @@ protected:
 };
 
 template<typename T, NVCVBorderType B>
-class BorderVarShapeWrapNHWCImpl
-{
-public:
-    using ImageBatchWrapNHWC = ImageBatchVarShapeWrapNHWC<T>;
-    using ValueType          = typename ImageBatchWrapNHWC::ValueType;
+using BorderVarShapeWrapImpl = BorderIWImpl<ImageBatchVarShapeWrap<T>, B>;
 
-    static constexpr int            kNumDimensions = ImageBatchWrapNHWC::kNumDimensions;
-    static constexpr NVCVBorderType kBorderType    = B;
-
-    BorderVarShapeWrapNHWCImpl() = default;
-
-    explicit __host__ __device__ BorderVarShapeWrapNHWCImpl(ImageBatchWrapNHWC imageBatchWrap)
-        : m_imageBatchWrap(imageBatchWrap)
-    {
-    }
-
-    explicit __host__ BorderVarShapeWrapNHWCImpl(const ImageBatchVarShapeDataStridedCuda &images, int numChannels)
-        : m_imageBatchWrap(images, numChannels)
-    {
-    }
-
-    inline const __host__ __device__ ImageBatchWrapNHWC &imageBatchWrap() const
-    {
-        return m_imageBatchWrap;
-    }
-
-protected:
-    const ImageBatchWrapNHWC m_imageBatchWrap = {};
-};
+template<typename T, NVCVBorderType B>
+using BorderVarShapeWrapNHWCImpl = BorderIWImpl<ImageBatchVarShapeWrapNHWC<T>, B>;
 
 } // namespace detail
 
@@ -394,7 +374,7 @@ class BorderVarShapeWrapNHWC : public detail::BorderVarShapeWrapNHWCImpl<T, B>
     using Base = detail::BorderVarShapeWrapNHWCImpl<T, B>;
 
 public:
-    using typename Base::ImageBatchWrapNHWC;
+    using typename Base::ImageBatchWrapper;
     using typename Base::ValueType;
 
     using Base::kBorderType;
@@ -408,10 +388,9 @@ public:
      * @param[in] imageBatchWrap An \ref ImageBatchVarShapeWrapNHWC object to be wrapped.
      * @param[in] borderValue The border value is ignored in non-constant border types.
      */
-    explicit __host__ __device__ BorderVarShapeWrapNHWC(ImageBatchWrapNHWC imageBatchWrap, ValueType borderValue = {})
+    explicit __host__ __device__ BorderVarShapeWrapNHWC(ImageBatchWrapper imageBatchWrap, ValueType borderValue = {})
         : Base(imageBatchWrap)
     {
-        // printf("using BorderVarShapeWrapNHWC<T, B>\n");
     }
 
     /**
@@ -504,7 +483,7 @@ class BorderVarShapeWrapNHWC<T, NVCV_BORDER_CONSTANT>
     using Base = detail::BorderVarShapeWrapNHWCImpl<T, NVCV_BORDER_CONSTANT>;
 
 public:
-    using typename Base::ImageBatchWrapNHWC;
+    using typename Base::ImageBatchWrapper;
     using typename Base::ValueType;
 
     using Base::kBorderType;
@@ -518,7 +497,7 @@ public:
      * @param[in] imageBatchWrap An \ref ImageBatchVarShapeWrapNHWC object to be wrapped.
      * @param[in] borderValue The border value to be used when accessing outside the image batch.
      */
-    explicit __host__ __device__ BorderVarShapeWrapNHWC(ImageBatchWrapNHWC imageBatchWrap, ValueType borderValue = {})
+    explicit __host__ __device__ BorderVarShapeWrapNHWC(ImageBatchWrapper imageBatchWrap, ValueType borderValue = {})
         : Base(imageBatchWrap)
         , m_borderValue(borderValue)
     {
