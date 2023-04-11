@@ -75,6 +75,23 @@ constexpr inline int __host__ __device__ GetIndexForInterpolation(float c)
     return static_cast<int>(c);
 }
 
+inline float __host__ __device__ GetCubicCoeff(float c)
+{
+    c = cuda::abs(c);
+    if (c <= 1.0f)
+    {
+        return c * c * (1.5f * c - 2.5f) + 1.0f;
+    }
+    else if (c < 2.0f)
+    {
+        return c * (c * (-0.5f * c + 2.5f) - 4.0f) + 2.0f;
+    }
+    else
+    {
+        return 0.0f;
+    }
+}
+
 /**@}*/
 
 namespace detail {
@@ -519,7 +536,7 @@ public:
         {
             for (int cx = xmin; cx <= xmax; cx++)
             {
-                w = doGetCoeff(x - cx) * doGetCoeff(y - cy);
+                w = GetCubicCoeff(x - cx) * GetCubicCoeff(y - cy);
                 sum += w * Base::doGetValue(c, cx, cy);
                 wsum += w;
             }
@@ -528,24 +545,6 @@ public:
         sum = (wsum == 0.f) ? SetAll<FT>(0) : sum / wsum;
 
         return SaturateCast<ValueType>(sum);
-    }
-
-private:
-    inline __host__ __device__ float doGetCoeff(float c) const
-    {
-        c = cuda::abs(c);
-        if (c <= 1.0f)
-        {
-            return c * c * (1.5f * c - 2.5f) + 1.0f;
-        }
-        else if (c < 2.0f)
-        {
-            return c * (c * (-0.5f * c + 2.5f) - 4.0f) + 2.0f;
-        }
-        else
-        {
-            return 0.0f;
-        }
     }
 };
 

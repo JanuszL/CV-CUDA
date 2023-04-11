@@ -450,7 +450,7 @@ public:
      *
      * @param[in] c N-D coordinate (from last to first dimension) to be accessed.
      *
-     * @return Accessed (const) reference.
+     * @return Accessed const reference.
      */
     template<typename DimType, class = Require<std::is_same_v<int, BaseType<DimType>>>>
     inline const __host__ __device__ ValueType &operator[](DimType c) const
@@ -460,7 +460,7 @@ public:
 
         constexpr auto Is = std::make_index_sequence<N>{};
 
-        ValueType *p = nullptr;
+        const ValueType *p = nullptr;
 
         if constexpr (N == 1)
         {

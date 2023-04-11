@@ -38,15 +38,18 @@ template<typename T, NVCVBorderType B>
 class BorderVarShapeWrapImpl
 {
 public:
-    using ImageBatchWrap = ImageBatchVarShapeWrap<T>;
-    using ValueType      = typename ImageBatchWrap::ValueType;
+    using ImageBatchWrapper = ImageBatchVarShapeWrap<T>;
+    using ValueType         = typename ImageBatchWrapper::ValueType;
 
-    static constexpr int            kNumDimensions = ImageBatchWrap::kNumDimensions;
+    static constexpr int            kNumDimensions = ImageBatchWrapper::kNumDimensions;
     static constexpr NVCVBorderType kBorderType    = B;
+
+    static constexpr bool kActiveDimensions[]  = {false, false, true, true};
+    static constexpr int  kNumActiveDimensions = 2;
 
     BorderVarShapeWrapImpl() = default;
 
-    explicit __host__ __device__ BorderVarShapeWrapImpl(ImageBatchWrap imageBatchWrap)
+    explicit __host__ __device__ BorderVarShapeWrapImpl(ImageBatchWrapper imageBatchWrap)
         : m_imageBatchWrap(imageBatchWrap)
     {
     }
@@ -56,13 +59,18 @@ public:
     {
     }
 
-    inline const __host__ __device__ ImageBatchWrap &imageBatchWrap() const
+    inline const __host__ __device__ ImageBatchWrapper &imageBatchWrap() const
     {
         return m_imageBatchWrap;
     }
 
+    inline __host__ __device__ ValueType borderValue() const
+    {
+        return ValueType{};
+    }
+
 protected:
-    const ImageBatchWrap m_imageBatchWrap = {};
+    const ImageBatchWrapper m_imageBatchWrap = {};
 };
 
 template<typename T, NVCVBorderType B>
@@ -141,7 +149,7 @@ class BorderVarShapeWrap : public detail::BorderVarShapeWrapImpl<T, B>
     using Base = detail::BorderVarShapeWrapImpl<T, B>;
 
 public:
-    using typename Base::ImageBatchWrap;
+    using typename Base::ImageBatchWrapper;
     using typename Base::ValueType;
 
     using Base::kBorderType;
@@ -155,7 +163,7 @@ public:
      * @param[in] imageBatchWrap An \ref ImageBatchVarShapeWrap object to be wrapped.
      * @param[in] borderValue The border value is ignored in non-constant border types.
      */
-    explicit __host__ __device__ BorderVarShapeWrap(ImageBatchWrap imageBatchWrap, ValueType borderValue = {})
+    explicit __host__ __device__ BorderVarShapeWrap(ImageBatchWrapper imageBatchWrap, ValueType borderValue = {})
         : Base(imageBatchWrap)
     {
     }
@@ -247,7 +255,7 @@ class BorderVarShapeWrap<T, NVCV_BORDER_CONSTANT> : public detail::BorderVarShap
     using Base = detail::BorderVarShapeWrapImpl<T, NVCV_BORDER_CONSTANT>;
 
 public:
-    using typename Base::ImageBatchWrap;
+    using typename Base::ImageBatchWrapper;
     using typename Base::ValueType;
 
     using Base::kBorderType;
@@ -261,7 +269,7 @@ public:
      * @param[in] imageBatchWrap An \ref ImageBatchVarShapeWrap object to be wrapped.
      * @param[in] borderValue The border value to be used when accessing outside the image batch.
      */
-    explicit __host__ __device__ BorderVarShapeWrap(ImageBatchWrap imageBatchWrap, ValueType borderValue = {})
+    explicit __host__ __device__ BorderVarShapeWrap(ImageBatchWrapper imageBatchWrap, ValueType borderValue = {})
         : Base(imageBatchWrap)
         , m_borderValue(borderValue)
     {
@@ -283,15 +291,25 @@ public:
     using Base::imageBatchWrap;
 
     /**
+     * Get the border value of this border wrap.
+     *
+     * @return The border value.
+     */
+    inline __host__ __device__ ValueType borderValue() const
+    {
+        return m_borderValue;
+    }
+
+    /**
      * Subscript operator for read-only or read-and-write access (depending on value type).
      *
      * @param[in] c 4D coordinate (w sample, z plane, y row and x column) to be accessed.
      *
-     * @return Accessed (const) reference.
+     * @return Accessed const reference.
      */
-    inline __host__ __device__ ValueType &operator[](int4 c) const
+    inline const __host__ __device__ ValueType &operator[](int4 c) const
     {
-        ValueType *p = doGetPtr(c.w, c.z, c.y, c.x);
+        const ValueType *p = doGetPtr(c.w, c.z, c.y, c.x);
 
         if (p == nullptr)
         {
@@ -306,11 +324,11 @@ public:
      *
      * @param[in] c 3D coordinate (z sample, y row and x column) to be accessed.
      *
-     * @return Accessed (const) reference.
+     * @return Accessed const reference.
      */
-    inline __host__ __device__ ValueType &operator[](int3 c) const
+    inline const __host__ __device__ ValueType &operator[](int3 c) const
     {
-        ValueType *p = doGetPtr(c.z, 0, c.y, c.x);
+        const ValueType *p = doGetPtr(c.z, 0, c.y, c.x);
 
         if (p == nullptr)
         {
@@ -367,7 +385,7 @@ private:
         return Base::m_imageBatchWrap.ptr(s, p, y, x);
     }
 
-    ValueType m_borderValue = SetAll<ValueType>(0);
+    const ValueType m_borderValue = SetAll<ValueType>(0);
 };
 
 template<typename T, NVCVBorderType B>
