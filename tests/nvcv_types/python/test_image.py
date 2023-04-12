@@ -96,14 +96,13 @@ def test_wrap_host_buffer_explicit_format(shape, dt, format):
 buffmt2_common = [
     # packed formats
     (
-        [([6, 8], np.uint8), ([3, 4, 2], np.uint8)],
+        [((6, 8), np.uint8, torch.uint8), ((3, 4, 2), np.uint8, torch.uint8)],
         nvcv.Format.NV12_ER,
     )
 ]
 
 
 @t.mark.parametrize("buffers,format", buffmt2_common)
-@t.mark.xfail  # wrapping of multiple cuda buffers is failing
 def test_wrap_host_buffer_infer_imgformat_multiple_planes(buffers, format):
     img = nvcv.Image([np.ndarray(buf[0], buf[1]) for buf in buffers])
     assert img.width == 8
@@ -111,7 +110,10 @@ def test_wrap_host_buffer_infer_imgformat_multiple_planes(buffers, format):
     assert img.format == format
 
     img = nvcv.as_image(
-        [torch.as_tensor(buf[0], buf[1], device="cuda").cuda() for buf in buffers]
+        [
+            torch.zeros(size=buf[0], dtype=buf[2], device="cuda").cuda()
+            for buf in buffers
+        ]
     )
     assert img.width == 8
     assert img.height == 6
@@ -119,7 +121,6 @@ def test_wrap_host_buffer_infer_imgformat_multiple_planes(buffers, format):
 
 
 @t.mark.parametrize("buffers,format", buffmt2_common)
-@t.mark.xfail  # wrapping of multiple cuda buffers is failing
 def test_wrap_host_buffer_explicit_format2(buffers, format):
     img = nvcv.Image([np.ndarray(buf[0], buf[1]) for buf in buffers], format)
     assert img.width == 8
@@ -127,7 +128,10 @@ def test_wrap_host_buffer_explicit_format2(buffers, format):
     assert img.format == format
 
     img = nvcv.as_image(
-        [torch.as_tensor(buf[0], buf[1], device="cuda").cuda() for buf in buffers],
+        [
+            torch.zeros(size=buf[0], dtype=buf[2], device="cuda").cuda()
+            for buf in buffers
+        ],
         format,
     )
     assert img.width == 8
