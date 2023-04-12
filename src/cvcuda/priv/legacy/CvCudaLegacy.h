@@ -24,6 +24,7 @@
 #include <nvcv/IImageBatch.hpp>
 #include <nvcv/ImageBatchData.hpp>
 #include <nvcv/Rect.h>
+#include <nvcv/cuda/OSD.hpp>
 #include <nvcv/TensorData.hpp>
 
 #include <vector>
@@ -2140,6 +2141,41 @@ public:
                     const ImageBatchVarShapeDataStridedCuda &outData, const TensorDataStridedCuda &diameterData,
                     const TensorDataStridedCuda &sigmaColorData, const TensorDataStridedCuda &sigmaSpaceData,
                     NVCVBorderType borderMode, cudaStream_t stream);
+};
+
+class BndBox : public CudaBaseOp
+{
+public:
+    BndBox() = delete;
+
+    BndBox(DataShape max_input_shape, DataShape max_output_shape);
+
+    ~BndBox();
+
+    /**
+     * @brief Converts an image from one color space to another.
+     * @param inData Input tensor.
+     * @param outData Output tensor.
+     * @param boxes Bounding box rectangle, \ref NVCVRectI.
+     * @param thickness Border thickness of bounding box.
+     * @param borderColor Border color of bounding box.
+     * @param fillColor Filled color of bounding box.
+     * @param enableMSAA Enable MSAA or not.
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData, NVCVRectI bbox,
+                    int thickness, uchar4 borderColor, uchar4 fillColor, bool enableMSAA, cudaStream_t stream);
+
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param max_input_shape maximum input DataShape that may be used
+     * @param max_output_shape maximum output DataShape that may be used
+     * @param max_data_type DataType with the maximum size that may be used
+     */
+    size_t calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
+
+private:
+    nvcv::cuda::osd::cuOSDContext_t m_context;
 };
 
 class CvtColor : public CudaBaseOp

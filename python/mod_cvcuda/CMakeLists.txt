@@ -21,6 +21,7 @@ nvcv_python_add_module(
     OUTPUT_NAME cvcuda
     SOURCES
         Main.cpp
+        OpBndBox.cpp
         InterpolationType.cpp
         BorderType.cpp
         ColorConversionCode.cpp

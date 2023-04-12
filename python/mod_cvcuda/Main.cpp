@@ -74,6 +74,7 @@ PYBIND11_MODULE(cvcuda, m)
     ExportColorConversionCode(m);
 
     // CV-CUDA Operators
+    ExportOpBndBox(m);
     ExportOpReformat(m);
     ExportOpResize(m);
     ExportOpCustomCrop(m);

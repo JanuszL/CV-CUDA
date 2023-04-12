@@ -15,36 +15,37 @@
 
 # system core -------------------------------------------------
 add_executable(cvcuda_test_system
-    FlipUtils.cpp
-    ConvUtils.cpp
-    TestOpReformat.cpp
-    TestOpResize.cpp
-    TestOpCustomCrop.cpp
-    TestOpNormalize.cpp
-    TestOpPadAndStack.cpp
-    TestOpConvertTo.cpp
-    TestOpCopyMakeBorder.cpp
-    TestOpCenterCrop.cpp
-    TestOpRotate.cpp
-    TestOpLaplacian.cpp
-    TestOpGaussian.cpp
-    TestOpErase.cpp
-    TestOpAverageBlur.cpp
-    TestOpConv2D.cpp
-    TestOpMedianBlur.cpp
-    TestOpMorphology.cpp
-    TestOpCvtColor.cpp
-    TestOpWarpAffine.cpp
-    TestOpBilateralFilter.cpp
-    TestOpJointBilateralFilter.cpp
-    TestOpWarpPerspective.cpp
-    TestOpComposite.cpp
-    TestOpChannelReorder.cpp
-    TestOpFlip.cpp
-    TestOpGammaContrast.cpp
-    TestOpPillowResize.cpp
-    TestOpThreshold.cpp
-    TestOpAdaptiveThreshold.cpp
+    TestOpBndBox.cpp
+    # FlipUtils.cpp
+    # ConvUtils.cpp
+    # TestOpReformat.cpp
+    # TestOpResize.cpp
+    # TestOpCustomCrop.cpp
+    # TestOpNormalize.cpp
+    # TestOpPadAndStack.cpp
+    # TestOpConvertTo.cpp
+    # TestOpCopyMakeBorder.cpp
+    # TestOpCenterCrop.cpp
+    # TestOpRotate.cpp
+    # TestOpLaplacian.cpp
+    # TestOpGaussian.cpp
+    # TestOpErase.cpp
+    # TestOpAverageBlur.cpp
+    # TestOpConv2D.cpp
+    # TestOpMedianBlur.cpp
+    # TestOpMorphology.cpp
+    # TestOpCvtColor.cpp
+    # TestOpWarpAffine.cpp
+    # TestOpBilateralFilter.cpp
+    # TestOpJointBilateralFilter.cpp
+    # TestOpWarpPerspective.cpp
+    # TestOpComposite.cpp
+    # TestOpChannelReorder.cpp
+    # TestOpFlip.cpp
+    # TestOpGammaContrast.cpp
+    # TestOpPillowResize.cpp
+    # TestOpThreshold.cpp
+    # TestOpAdaptiveThreshold.cpp
 )
 
 target_link_libraries(cvcuda_test_system

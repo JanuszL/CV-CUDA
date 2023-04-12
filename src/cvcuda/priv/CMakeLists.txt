@@ -16,6 +16,7 @@
 add_subdirectory(legacy)
 
 add_library(cvcuda_priv STATIC
+    OpBndBox.cpp
     IOperator.cpp
     OpReformat.cpp
     OpResize.cpp

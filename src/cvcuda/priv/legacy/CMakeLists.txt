@@ -66,6 +66,7 @@ add_library(cvcuda_legacy STATIC
     adaptive_threshold_var_shape.cu
     threshold_var_shape.cu
     threshold_util.cu
+    bnd_box.cu
 )
 
 target_link_libraries(cvcuda_legacy
