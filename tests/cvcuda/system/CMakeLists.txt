@@ -13,9 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+include_directories(
+    ${CUOSD_SOURCE_DIR}/x86_64/include
+)
+
+link_directories(
+    ${CUOSD_SOURCE_DIR}/x86_64/lib
+)
+
 # system core -------------------------------------------------
 add_executable(cvcuda_test_system
     TestOpBndBox.cpp
+    OsdUtils.cu
     # FlipUtils.cpp
     # ConvUtils.cpp
     # TestOpReformat.cpp
@@ -52,6 +61,7 @@ target_link_libraries(cvcuda_test_system
     PUBLIC
         cvcuda
         nvcv_test_common_system
+        cuosd
 )
 
 nvcv_add_test(cvcuda_test_system)

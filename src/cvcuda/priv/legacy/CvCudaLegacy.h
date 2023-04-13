@@ -2160,11 +2160,10 @@ public:
      * @param thickness Border thickness of bounding box.
      * @param borderColor Border color of bounding box.
      * @param fillColor Filled color of bounding box.
-     * @param enableMSAA Enable MSAA or not.
      * @param stream for the asynchronous execution.
      */
     ErrorCode infer(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData, NVCVRectI bbox,
-                    int thickness, uchar4 borderColor, uchar4 fillColor, bool enableMSAA, cudaStream_t stream);
+                    int thickness, uchar4 borderColor, uchar4 fillColor, cudaStream_t stream);
 
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator

@@ -33,7 +33,7 @@ BndBox::BndBox()
 }
 
 void BndBox::operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out,
-                        const NVCVRectI &bbox, int thickness, uchar4 borderColor, uchar4 fillColor, bool enableMSAA) const
+                        const NVCVRectI &bbox, int thickness, uchar4 borderColor, uchar4 fillColor) const
 {
     auto inData = in.exportData<nvcv::TensorDataStridedCuda>();
     if (inData == nullptr)
@@ -49,7 +49,7 @@ void BndBox::operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv
                               "Output must be cuda-accessible, pitch-linear tensor");
     }
 
-    NVCV_CHECK_THROW(m_legacyOp->infer(*inData, *outData, bbox, thickness, borderColor, fillColor, enableMSAA, stream));
+    NVCV_CHECK_THROW(m_legacyOp->infer(*inData, *outData, bbox, thickness, borderColor, fillColor, stream));
 }
 
 } // namespace cvcuda::priv

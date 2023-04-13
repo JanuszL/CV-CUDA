@@ -317,8 +317,7 @@ static void cuosd_apply(
 
 
 inline ErrorCode ApplyBndBox_RGBA(const nvcv::TensorDataStridedCuda &inData, const nvcv::TensorDataStridedCuda &outData,
-                                  cuOSDContext_t context, int thickness, uchar4 borderColor, uchar4 fillColor, bool enableMSAA,
-                                  cudaStream_t stream)
+                                  cuOSDContext_t context, int thickness, uchar4 borderColor, uchar4 fillColor, cudaStream_t stream)
 {
     auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
@@ -356,28 +355,18 @@ inline ErrorCode ApplyBndBox_RGBA(const nvcv::TensorDataStridedCuda &inData, con
     cuosd_apply(context, inputShape.W, inputShape.H, stream);
     LOG_INFO("context->commands num: " << context->commands.size());
 
-    if (enableMSAA) {
-        render_bndbox_rgba_msaa_kernel<<<gridSize, blockSize, 0, stream>>>(
-            src, dst, 0, 0,
-            context->gpu_commands ? context->gpu_commands->device() : nullptr,
-            context->gpu_commands_offset ? context->gpu_commands_offset->device() : nullptr,
-            context->commands.size(),
-            inputShape.W, inputShape.H);
-    }
-    else {
-        render_bndbox_rgba_womsaa_kernel<<<gridSize, blockSize, 0, stream>>>(
-            src, dst, 0, 0,
-            context->gpu_commands ? context->gpu_commands->device() : nullptr,
-            context->gpu_commands_offset ? context->gpu_commands_offset->device() : nullptr,
-            context->commands.size(),
-            inputShape.W, inputShape.H);
-    }
+    render_bndbox_rgba_womsaa_kernel<<<gridSize, blockSize, 0, stream>>>(
+        src, dst, 0, 0,
+        context->gpu_commands ? context->gpu_commands->device() : nullptr,
+        context->gpu_commands_offset ? context->gpu_commands_offset->device() : nullptr,
+        context->commands.size(),
+        inputShape.W, inputShape.H);
     checkKernelErrors();
 
     return ErrorCode::SUCCESS;
 }
 
-static void cuosd_draw_rectangle(cuOSDContext_t context, std::vector<NVCVRectI> bboxes, int thickness, uchar4 borderColor, uchar4 fillColor, bool enableMSAA){
+static void cuosd_draw_rectangle(cuOSDContext_t context, std::vector<NVCVRectI> bboxes, int thickness, uchar4 borderColor, uchar4 fillColor){
 
     for (const auto & bbox: bboxes) {
         LOG_INFO(bbox.x << " " << bbox.y << " " << bbox.width << " " << bbox.height);
@@ -395,7 +384,7 @@ static void cuosd_draw_rectangle(cuOSDContext_t context, std::vector<NVCVRectI> 
 
             auto cmd = std::make_shared<RectangleCommand>();
             cmd->thickness = -1;
-            cmd->interpolation = enableMSAA;
+            cmd->interpolation = false;
             cmd->c0 = fillColor.x; cmd->c1 = fillColor.y; cmd->c2 = fillColor.z; cmd->c3 = fillColor.w;
 
             // a   d
@@ -408,7 +397,7 @@ static void cuosd_draw_rectangle(cuOSDContext_t context, std::vector<NVCVRectI> 
 
         auto cmd = std::make_shared<RectangleCommand>();
         cmd->thickness = thickness;
-        cmd->interpolation = enableMSAA;
+        cmd->interpolation = false;
         cmd->c0 = borderColor.x; cmd->c1 = borderColor.y; cmd->c2 = borderColor.z; cmd->c3 = borderColor.w;
 
         float half_thickness = thickness / 2.0f;
@@ -460,8 +449,7 @@ size_t BndBox::calBufferSize(DataShape max_input_shape, DataShape max_output_sha
 }
 
 ErrorCode BndBox::infer(const nvcv::TensorDataStridedCuda &inData, const nvcv::TensorDataStridedCuda &outData,
-                        NVCVRectI bbox, int thickness, uchar4 borderColor, uchar4 fillColor, bool enableMSAA,
-                        cudaStream_t stream)
+                        NVCVRectI bbox, int thickness, uchar4 borderColor, uchar4 fillColor, cudaStream_t stream)
 {
     cuda_op::DataFormat input_format  = GetLegacyDataFormat(inData.layout());
     cuda_op::DataFormat output_format = GetLegacyDataFormat(outData.layout());
@@ -511,19 +499,18 @@ ErrorCode BndBox::infer(const nvcv::TensorDataStridedCuda &inData, const nvcv::T
     std::vector<NVCVRectI> bboxes;
     bboxes.push_back(bbox);
     LOG_INFO("before cuosd_draw_rectangle");
-    cuosd_draw_rectangle(m_context, bboxes, thickness, borderColor, fillColor, enableMSAA);
+    cuosd_draw_rectangle(m_context, bboxes, thickness, borderColor, fillColor);
     LOG_INFO("after cuosd_draw_rectangle");
 
     typedef ErrorCode (*func_t)(const nvcv::TensorDataStridedCuda &inData, const nvcv::TensorDataStridedCuda &outData,
-                                cuOSDContext_t context, int thickness, uchar4 borderColor, uchar4 fillColor, bool enableMSAA,
-                                cudaStream_t stream);
+                                cuOSDContext_t context, int thickness, uchar4 borderColor, uchar4 fillColor, cudaStream_t stream);
 
     static const func_t funcs[] = {
         ApplyBndBox_RGBA,
     };
 
     funcs[0](
-        inData, outData, m_context, thickness, borderColor, fillColor, enableMSAA, stream
+        inData, outData, m_context, thickness, borderColor, fillColor, stream
     );
 
     return ErrorCode::SUCCESS;

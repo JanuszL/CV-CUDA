@@ -44,7 +44,7 @@ public:
     ~BndBox();
 
     void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out,
-                    const NVCVRectI bbox, int thickness, uchar4 borderColor, uchar4 fillColor, bool enableMSAA);
+                    const NVCVRectI bbox, int thickness, uchar4 borderColor, uchar4 fillColor);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -65,10 +65,10 @@ inline BndBox::~BndBox()
 }
 
 inline void BndBox::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out,
-                               const NVCVRectI bbox, int thickness, uchar4 borderColor, uchar4 fillColor, bool enableMSAA)
+                               const NVCVRectI bbox, int thickness, uchar4 borderColor, uchar4 fillColor)
 {
     nvcv::detail::CheckThrow(cvcudaBndBoxSubmit(m_handle, stream, in.handle(), out.handle(),
-                                                bbox, thickness, borderColor, fillColor, enableMSAA));
+                                                bbox, thickness, borderColor, fillColor));
 }
 
 inline NVCVOperatorHandle BndBox::handle() const noexcept

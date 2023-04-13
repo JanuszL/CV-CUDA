@@ -26,35 +26,44 @@
 
 #include <iostream>
 #include <random>
+#include "OsdUtils.cuh"
 
 namespace gt   = ::testing;
 namespace test = nvcv::test;
 
-// static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStridedImagePlanar &data,
-//                           NVCVRectI region, uint8_t val)
-// {
-//     int bytesPerChan  = data.dtype().bitsPerChannel()[0] / 8;
-//     int bytesPerPixel = data.numChannels() * bytesPerChan;
+static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStridedImagePlanar &data, nvcv::Byte *inBuf,
+                          NVCVRectI bbox, int thickness, uchar4 borderColor, uchar4 fillColor, cudaStream_t stream)
+{
+    test::osd::Image* image = test::osd::create_image(data.numCols(), data.numRows(), test::osd::ImageFormat::RGBA);
+    EXPECT_EQ(cudaSuccess, cudaMemcpy(image->data0, inBuf, vect.size(), cudaMemcpyDeviceToDevice));
 
-//     uint8_t *ptrTop = vect.data();
-//     for (int img = 0; img < data.numSamples(); img++)
-//     {
-//         uint8_t *ptr = ptrTop + data.sampleStride() * img;
-//         for (int i = 0; i < region.height; i++)
-//         {
-//             memset(ptr, val, region.width * bytesPerPixel);
-//             ptr += data.rowStride();
-//         }
-//     }
-// }
+    test::osd::save_image(image, "workspace/input.png", stream);
+
+    auto context = cuosd_context_create();
+
+    int left    = bbox.x;
+    int top     = bbox.y;
+    int right   = left + bbox.width - 1;
+    int bottom  = top + bbox.height - 1;
+
+    cuosd_draw_rectangle(context, left, top, right, bottom, thickness,
+                         {borderColor.x, borderColor.y, borderColor.z, borderColor.w},
+                         {fillColor.x, fillColor.y, fillColor.z, fillColor.w});
+
+    test::osd::cuosd_apply(context, image, stream);
+    cuosd_context_destroy(context);
+
+    EXPECT_EQ(cudaSuccess, cudaMemcpy(vect.data(), image->data0, vect.size(), cudaMemcpyDeviceToHost));
+    test::osd::save_image(image, "workspace/output.png", stream);
+}
 
 // clang-format off
-NVCV_TEST_SUITE_P(OpBndBox, test::ValueList<int, int, int, int, int, int, int, bool>
+NVCV_TEST_SUITE_P(OpBndBox, test::ValueList<int, int, int, int, int, int, int>
 {
-    // inWidth, inHeight, bboxX, bboxY, bboxW, bboxH, thickness,  MSAA
-    {      4,      4,    0,    0,    2,    2,         -1, true },
-    {      4,      4,    0,    0,    2,    2,         -1, false },
-
+    //      inW,    inH,    bboxX,  bboxY,  bboxW,  bboxH,  thickness
+    {       600,    600,    0,      0,      200,    200,    3       },
+    {       600,    600,    0,      0,      200,    200,    -1      },
+    {       600,    600,    0,      0,      200,    200,    10      },
 });
 
 // clang-format on
@@ -70,7 +79,6 @@ TEST_P(OpBndBox, BndBox_sanity)
     int     bboxW          = GetParamValue<4>();
     int     bboxH          = GetParamValue<5>();
     int     thickness      = GetParamValue<6>();
-    bool    MSAA           = GetParamValue<7>();
 
     uchar4  borderColor    = { 255, 0, 0, 255};
     uchar4  fillColor      = { 0, 0, 255, 100};
@@ -98,16 +106,16 @@ TEST_P(OpBndBox, BndBox_sanity)
 
     NVCVRectI bndBox = {bboxX, bboxY, bboxW, bboxH};
 
-    EXPECT_EQ(cudaSuccess, cudaMemset(input->basePtr(), 0x00, inSampleStride * inAccess->numSamples()));
-    EXPECT_EQ(cudaSuccess, cudaMemset(output->basePtr(), 0x00, outSampleStride * outAccess->numSamples()));
+    EXPECT_EQ(cudaSuccess, cudaMemset(input->basePtr(), 0xFF, inSampleStride * inAccess->numSamples()));
+    EXPECT_EQ(cudaSuccess, cudaMemset(output->basePtr(), 0xFF, outSampleStride * outAccess->numSamples()));
 
     std::vector<uint8_t> gold(outBufSize);
-    // setGoldBuffer(gold, *outAccess, bndBox);
+    setGoldBuffer(gold, *inAccess, input->basePtr(), bndBox, thickness, borderColor, fillColor, stream);
 
     // run operator
     cvcuda::BndBox op;
 
-    EXPECT_NO_THROW(op(stream, imgIn, imgOut, bndBox, thickness, borderColor, fillColor, MSAA));
+    EXPECT_NO_THROW(op(stream, imgIn, imgOut, bndBox, thickness, borderColor, fillColor));
 
     // check cdata
     std::vector<uint8_t> test(outBufSize);

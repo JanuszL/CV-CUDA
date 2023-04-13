@@ -35,3 +35,6 @@ set(PYBIND11_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/pybind11" PARENT_SCOPE)
 
 # dlpack -----------------------------
 set(DLPACK_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/dlpack" PARENT_SCOPE)
+
+# cuOSD -----------------------------
+set(CUOSD_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cuOSD" PARENT_SCOPE)

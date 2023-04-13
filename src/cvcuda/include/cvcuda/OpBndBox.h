@@ -118,7 +118,7 @@ CVCUDA_PUBLIC NVCVStatus cvcudaBndBoxCreate(NVCVOperatorHandle *handle);
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 CVCUDA_PUBLIC NVCVStatus cvcudaBndBoxSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
-                                            NVCVTensorHandle out, const NVCVRectI bbox, int thickness, uchar4 borderColor, uchar4 fillColor, bool enableMSAA);
+                                            NVCVTensorHandle out, const NVCVRectI bbox, int thickness, uchar4 borderColor, uchar4 fillColor);
 
 #ifdef __cplusplus
 }
