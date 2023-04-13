@@ -19,6 +19,7 @@ add_subdirectory(priv)
 add_library(cvcuda SHARED
     OpBoxBlur.cpp
     OpBndBox.cpp
+    OpRemap.cpp
     Operator.cpp
     OpReformat.cpp
     OpResize.cpp

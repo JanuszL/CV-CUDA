@@ -347,6 +347,14 @@ typedef enum
     NVCV_ADAPTIVE_THRESH_GAUSSIAN_C = 1
 } NVCVAdaptiveThresholdType;
 
+// @brief Flag to choose the map value type of the remap operator
+typedef enum
+{
+    NVCV_REMAP_ABSOLUTE            = 0,
+    NVCV_REMAP_ABSOLUTE_NORMALIZED = 1,
+    NVCV_REMAP_RELATIVE_NORMALIZED = 2
+} NVCVRemapMapValueType;
+
 #ifdef __cplusplus
 }
 #endif

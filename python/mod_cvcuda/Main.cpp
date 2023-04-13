@@ -20,6 +20,7 @@
 #include "InterpolationType.hpp"
 #include "MorphologyType.hpp"
 #include "Operators.hpp"
+#include "RemapMapValueType.hpp"
 #include "ThresholdType.hpp"
 
 #include <cvcuda/Version.h>
@@ -72,10 +73,12 @@ PYBIND11_MODULE(cvcuda, m)
     ExportBorderType(m);
     ExportMorphologyType(m);
     ExportColorConversionCode(m);
+    ExportRemapMapValueType(m);
 
     // CV-CUDA Operators
     ExportOpBoxBlur(m);
     ExportOpBndBox(m);
+    ExportOpRemap(m);
     ExportOpReformat(m);
     ExportOpResize(m);
     ExportOpCustomCrop(m);
