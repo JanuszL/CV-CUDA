@@ -24,6 +24,7 @@
 #include <nvcv/IImageBatch.hpp>
 #include <nvcv/ImageBatchData.hpp>
 #include <nvcv/Rect.h>
+#include <nvcv/OsdElement.h>
 #include <nvcv/cuda/OSD.hpp>
 #include <nvcv/TensorData.hpp>
 
@@ -2156,14 +2157,10 @@ public:
      * @brief Converts an image from one color space to another.
      * @param inData Input tensor.
      * @param outData Output tensor.
-     * @param boxes Bounding box rectangle, \ref NVCVRectI.
-     * @param thickness Border thickness of bounding box.
-     * @param borderColor Border color of bounding box.
-     * @param fillColor Filled color of bounding box.
-     * @param stream for the asynchronous execution.
+     * @param boxes Bounding box rectangle, \ref NVCVBndBoxesI.
      */
-    ErrorCode infer(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData, NVCVRectI bbox,
-                    int thickness, uchar4 borderColor, uchar4 fillColor, cudaStream_t stream);
+    ErrorCode infer(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData,
+                    NVCVBndBoxesI bboxes, cudaStream_t stream);
 
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator

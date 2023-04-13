@@ -63,57 +63,6 @@ static __device__ void blend_single_color(uchar4& color, unsigned char& c0, unsi
     color.w = blend_alpha;
 }
 
-// external_msaa4x:
-// check if given coordinate is on border or outside the border, do msaa4x for border pixels
-static __device__ __forceinline__ bool external_msaa4x(
-    float ix, float iy, float ax, float ay, float bx, float by, float cx, float cy, float dx, float dy,
-    unsigned char a, unsigned char& alpha) {
-    bool h0 = !inbox_single_pixel(ix-0.25f, iy-0.25f, ax, ay, bx, by, cx, cy, dx, dy);
-    bool h1 = !inbox_single_pixel(ix+0.25f, iy-0.25f, ax, ay, bx, by, cx, cy, dx, dy);
-    bool h2 = !inbox_single_pixel(ix+0.25f, iy+0.25f, ax, ay, bx, by, cx, cy, dx, dy);
-    bool h3 = !inbox_single_pixel(ix-0.25f, iy+0.25f, ax, ay, bx, by, cx, cy, dx, dy);
-    if (h0 || h1 || h2 || h3) {
-        if (h0 && h1 && h2 && h3) return true;
-        alpha = a * (h0 + h1 + h2 + h3) * 0.25f;
-        return true;
-    }
-    return false;
-}
-
-// internal_msaa4x:
-// check if given coordinate is on border or inside the border, do msaa4x for border pixels
-static __device__ __forceinline__ bool internal_msaa4x(
-    float ix, float iy, float ax, float ay, float bx, float by, float cx, float cy, float dx, float dy,
-    unsigned char a, unsigned char& alpha) {
-    bool h0 = inbox_single_pixel(ix-0.25f, iy-0.25f, ax, ay, bx, by, cx, cy, dx, dy);
-    bool h1 = inbox_single_pixel(ix+0.25f, iy-0.25f, ax, ay, bx, by, cx, cy, dx, dy);
-    bool h2 = inbox_single_pixel(ix+0.25f, iy+0.25f, ax, ay, bx, by, cx, cy, dx, dy);
-    bool h3 = inbox_single_pixel(ix-0.25f, iy+0.25f, ax, ay, bx, by, cx, cy, dx, dy);
-    if (h0 || h1 || h2 || h3) {
-        alpha = a * (h0 + h1 + h2 + h3) * 0.25f;
-        return true;
-    }
-    return false;
-}
-
-// render_rectangle_fill_msaa4x:
-// render filled rectangle with border msaa4x interpolation on
-static __device__ void render_rectangle_fill_msaa4x(int ix, int iy, RectangleCommand* p, uchar4 color[4]) {
-    unsigned char alpha;
-    if (internal_msaa4x(ix, iy, p->ax1, p->ay1, p->bx1, p->by1, p->cx1, p->cy1, p->dx1, p->dy1, p->c3, alpha)) {
-        blend_single_color(color[0], p->c0, p->c1, p->c2, alpha);
-    }
-    if (internal_msaa4x(ix+1, iy, p->ax1, p->ay1, p->bx1, p->by1, p->cx1, p->cy1, p->dx1, p->dy1, p->c3, alpha)) {
-        blend_single_color(color[1], p->c0, p->c1, p->c2, alpha);
-    }
-    if (internal_msaa4x(ix, iy+1, p->ax1, p->ay1, p->bx1, p->by1, p->cx1, p->cy1, p->dx1, p->dy1, p->c3, alpha)) {
-        blend_single_color(color[2], p->c0, p->c1, p->c2, alpha);
-    }
-    if (internal_msaa4x(ix+1, iy+1, p->ax1, p->ay1, p->bx1, p->by1, p->cx1, p->cy1, p->dx1, p->dy1, p->c3, alpha)) {
-        blend_single_color(color[3], p->c0, p->c1, p->c2, alpha);
-    }
-}
-
 // render_rectangle_fill:
 // render filled rectangle with border msaa4x interpolation off
 static __device__ void render_rectangle_fill(int ix, int iy, RectangleCommand* p, uchar4 color[4]) {
@@ -128,32 +77,6 @@ static __device__ void render_rectangle_fill(int ix, int iy, RectangleCommand* p
     }
     if (inbox_single_pixel(ix+1, iy+1, p->ax1, p->ay1, p->bx1, p->by1, p->cx1, p->cy1, p->dx1, p->dy1)) {
         blend_single_color(color[3], p->c0, p->c1, p->c2, p->c3);
-    }
-}
-
-// render_rectangle_border_msaa4x:
-// render hollow rectangle with border msaa4x interpolation on
-static __device__ void render_rectangle_border_msaa4x(int ix, int iy, RectangleCommand* p, uchar4 color[4]) {
-    unsigned char alpha;
-    if (internal_msaa4x(ix, iy, p->ax1, p->ay1, p->bx1, p->by1, p->cx1, p->cy1, p->dx1, p->dy1, p->c3, alpha) &&
-        external_msaa4x(ix, iy, p->ax2, p->ay2, p->bx2, p->by2, p->cx2, p->cy2, p->dx2, p->dy2, p->c3, alpha)
-    ) {
-        blend_single_color(color[0], p->c0, p->c1, p->c2, alpha);
-    }
-    if (internal_msaa4x(ix+1, iy, p->ax1, p->ay1, p->bx1, p->by1, p->cx1, p->cy1, p->dx1, p->dy1, p->c3, alpha) &&
-        external_msaa4x(ix+1, iy, p->ax2, p->ay2, p->bx2, p->by2, p->cx2, p->cy2, p->dx2, p->dy2, p->c3, alpha)
-    ) {
-        blend_single_color(color[1], p->c0, p->c1, p->c2, alpha);
-    }
-    if (internal_msaa4x(ix, iy+1, p->ax1, p->ay1, p->bx1, p->by1, p->cx1, p->cy1, p->dx1, p->dy1, p->c3, alpha) &&
-        external_msaa4x(ix, iy+1, p->ax2, p->ay2, p->bx2, p->by2, p->cx2, p->cy2, p->dx2, p->dy2, p->c3, alpha)
-    ) {
-        blend_single_color(color[2], p->c0, p->c1, p->c2, alpha);
-    }
-    if (internal_msaa4x(ix+1, iy+1, p->ax1, p->ay1, p->bx1, p->by1, p->cx1, p->cy1, p->dx1, p->dy1, p->c3, alpha) &&
-        external_msaa4x(ix+1, iy+1, p->ax2, p->ay2, p->bx2, p->by2, p->cx2, p->cy2, p->dx2, p->dy2, p->c3, alpha)
-    ) {
-        blend_single_color(color[3], p->c0, p->c1, p->c2, alpha);
     }
 }
 
@@ -179,22 +102,6 @@ static __device__ void render_rectangle_border(int ix, int iy, RectangleCommand*
         inbox_single_pixel(ix+1, iy+1, p->ax1, p->ay1, p->bx1, p->by1, p->cx1, p->cy1, p->dx1, p->dy1)
     ) {
         blend_single_color(color[3], p->c0, p->c1, p->c2, p->c3);
-    }
-}
-
-static __device__ void do_rectangle_MSAA(RectangleCommand* cmd, int ix, int iy, uchar4 context_color[4]) {
-    if (cmd->thickness == -1) {
-        if (cmd->interpolation) {
-            render_rectangle_fill_msaa4x(ix, iy, cmd, context_color);
-        } else {
-            render_rectangle_fill(ix, iy, cmd, context_color);
-        }
-    } else {
-        if (cmd->interpolation) {
-            render_rectangle_border_msaa4x(ix, iy, cmd, context_color);
-        } else {
-            render_rectangle_border(ix, iy, cmd, context_color);
-        }
     }
 }
 
@@ -253,29 +160,6 @@ static __global__ void render_bndbox_rgba_womsaa_kernel(
     blending_pixel(src, dst, ix, iy, context_color);
 }
 
-template<class SrcWrapper, class DstWrapper>
-static __global__ void render_bndbox_rgba_msaa_kernel(
-    SrcWrapper src, DstWrapper dst, int bx, int by,
-    const unsigned char* commands, const int* command_offsets, int num_command,
-    int width, int height
-) {
-    int ix = ((blockDim.x * blockIdx.x + threadIdx.x) << 1) + bx;
-    int iy = ((blockDim.y * blockIdx.y + threadIdx.y) << 1) + by;
-    if (ix < 0 || iy < 0 || ix >= width - 1 || iy >= height - 1)
-        return;
-
-    uchar4 context_color[4] = {0};
-    for (int i = 0; i < num_command; ++i) {
-        RectangleCommand* pcommand = (RectangleCommand*)(commands + command_offsets[i]);
-        do_rectangle_MSAA(pcommand, ix, iy, context_color);
-    }
-
-    if (context_color[0].w == 0 && context_color[1].w == 0 && context_color[2].w == 0 && context_color[3].w == 0)
-        return;
-
-    blending_pixel(src, dst, ix, iy, context_color);
-}
-
 static void cuosd_apply(
     cuOSDContext_t context, int width, int height, cudaStream_t stream
 ) 
@@ -317,7 +201,7 @@ static void cuosd_apply(
 
 
 inline ErrorCode ApplyBndBox_RGBA(const nvcv::TensorDataStridedCuda &inData, const nvcv::TensorDataStridedCuda &outData,
-                                  cuOSDContext_t context, int thickness, uchar4 borderColor, uchar4 fillColor, cudaStream_t stream)
+                                  cuOSDContext_t context, cudaStream_t stream)
 {
     auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
@@ -366,26 +250,26 @@ inline ErrorCode ApplyBndBox_RGBA(const nvcv::TensorDataStridedCuda &inData, con
     return ErrorCode::SUCCESS;
 }
 
-static void cuosd_draw_rectangle(cuOSDContext_t context, std::vector<NVCVRectI> bboxes, int thickness, uchar4 borderColor, uchar4 fillColor){
+static void cuosd_draw_rectangle(cuOSDContext_t context, NVCVBndBoxesI bboxes){
 
-    for (const auto & bbox: bboxes) {
-        LOG_INFO(bbox.x << " " << bbox.y << " " << bbox.width << " " << bbox.height);
+    for (int i = 0; i < bboxes.box_num; i++) {
+        auto bbox   = bboxes.boxes[i];
 
         int left    = bbox.x;
         int top     = bbox.y;
         int right   = left + bbox.width - 1;
         int bottom  = top + bbox.height - 1;
 
-        if (borderColor.w == 0) continue;
-        if (fillColor.w || thickness == -1) {
-            if (thickness == -1) {
-                fillColor = borderColor;
+        if (bbox.borderColor.a == 0) continue;
+        if (bbox.fillColor.a || bbox.thickness == -1) {
+            if (bbox.thickness == -1) {
+                bbox.fillColor = bbox.borderColor;
             }
 
             auto cmd = std::make_shared<RectangleCommand>();
             cmd->thickness = -1;
             cmd->interpolation = false;
-            cmd->c0 = fillColor.x; cmd->c1 = fillColor.y; cmd->c2 = fillColor.z; cmd->c3 = fillColor.w;
+            cmd->c0 = bbox.fillColor.r; cmd->c1 = bbox.fillColor.g; cmd->c2 = bbox.fillColor.b; cmd->c3 = bbox.fillColor.a;
 
             // a   d
             // b   c
@@ -393,14 +277,14 @@ static void cuosd_draw_rectangle(cuOSDContext_t context, std::vector<NVCVRectI> 
             cmd->bounding_left  = left; cmd->bounding_right = right; cmd->bounding_top   = top; cmd->bounding_bottom = bottom;
             context->commands.emplace_back(cmd);
         }
-        if (thickness == -1) continue;
+        if (bbox.thickness == -1) continue;
 
         auto cmd = std::make_shared<RectangleCommand>();
-        cmd->thickness = thickness;
+        cmd->thickness = bbox.thickness;
         cmd->interpolation = false;
-        cmd->c0 = borderColor.x; cmd->c1 = borderColor.y; cmd->c2 = borderColor.z; cmd->c3 = borderColor.w;
+        cmd->c0 = bbox.borderColor.r; cmd->c1 = bbox.borderColor.g; cmd->c2 = bbox.borderColor.b; cmd->c3 = bbox.borderColor.a;
 
-        float half_thickness = thickness / 2.0f;
+        float half_thickness = bbox.thickness / 2.0f;
         cmd->ax2 = left + half_thickness;
         cmd->ay2 = top  + half_thickness;
         cmd->dx2 = right - half_thickness;
@@ -449,7 +333,7 @@ size_t BndBox::calBufferSize(DataShape max_input_shape, DataShape max_output_sha
 }
 
 ErrorCode BndBox::infer(const nvcv::TensorDataStridedCuda &inData, const nvcv::TensorDataStridedCuda &outData,
-                        NVCVRectI bbox, int thickness, uchar4 borderColor, uchar4 fillColor, cudaStream_t stream)
+                        NVCVBndBoxesI bboxes, cudaStream_t stream)
 {
     cuda_op::DataFormat input_format  = GetLegacyDataFormat(inData.layout());
     cuda_op::DataFormat output_format = GetLegacyDataFormat(outData.layout());
@@ -490,27 +374,23 @@ ErrorCode BndBox::infer(const nvcv::TensorDataStridedCuda &inData, const nvcv::T
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    if (bbox.height > outAccess->size().h || bbox.width > outAccess->size().w)
+    if (bboxes.box_num <= 0)
     {
-        LOG_ERROR("bbox larger than dst buffer");
+        LOG_ERROR("Invalid bbox num = " << bboxes.box_num);
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    std::vector<NVCVRectI> bboxes;
-    bboxes.push_back(bbox);
-    LOG_INFO("before cuosd_draw_rectangle");
-    cuosd_draw_rectangle(m_context, bboxes, thickness, borderColor, fillColor);
-    LOG_INFO("after cuosd_draw_rectangle");
+    cuosd_draw_rectangle(m_context, bboxes);
 
     typedef ErrorCode (*func_t)(const nvcv::TensorDataStridedCuda &inData, const nvcv::TensorDataStridedCuda &outData,
-                                cuOSDContext_t context, int thickness, uchar4 borderColor, uchar4 fillColor, cudaStream_t stream);
+                                cuOSDContext_t context, cudaStream_t stream);
 
     static const func_t funcs[] = {
         ApplyBndBox_RGBA,
     };
 
     funcs[0](
-        inData, outData, m_context, thickness, borderColor, fillColor, stream
+        inData, outData, m_context, stream
     );
 
     return ErrorCode::SUCCESS;

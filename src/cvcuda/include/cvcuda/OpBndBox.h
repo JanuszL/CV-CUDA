@@ -30,7 +30,7 @@
 #include "detail/Export.h"
 
 #include <cuda_runtime.h>
-#include <nvcv/Rect.h>
+#include <nvcv/OsdElement.h>
 #include <nvcv/Status.h>
 #include <nvcv/Tensor.h>
 #include <stdbool.h>
@@ -105,20 +105,14 @@ CVCUDA_PUBLIC NVCVStatus cvcudaBndBoxCreate(NVCVOperatorHandle *handle);
  *
  * @param [out] out output tensor.
  *
- * @param [in] bbox bounding box rectangle in reference to the input tensor.
- *
- * @param [in] thickness border thickness for bounding box rectangle.
- *
- * @param [in] borderColor border color for bounding box rectangle.
- *
- * @param [in] fillColor fill color for bounding box rectangle.
+ * @param [in] bboxes bounding boxes in reference to the input tensor.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
  * @retval #NVCV_ERROR_INTERNAL         Internal error in the operator, invalid types passed in.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 CVCUDA_PUBLIC NVCVStatus cvcudaBndBoxSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
-                                            NVCVTensorHandle out, const NVCVRectI bbox, int thickness, uchar4 borderColor, uchar4 fillColor);
+                                            NVCVTensorHandle out, const NVCVBndBoxesI bboxes);
 
 #ifdef __cplusplus
 }

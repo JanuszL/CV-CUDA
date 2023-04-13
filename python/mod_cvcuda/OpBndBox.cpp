@@ -27,7 +27,7 @@ namespace cvcudapy {
 
 namespace {
 Tensor BndBoxInto(Tensor &output, Tensor &input,
-                  const NVCVRectI &bbox, int thickness, uchar4 borderColor, uchar4 fillColor,
+                  NVCVBndBoxesI bboxes,
                   std::optional<Stream> pstream)
 {
     if (!pstream)
@@ -42,16 +42,16 @@ Tensor BndBoxInto(Tensor &output, Tensor &input,
     guard.add(LockMode::LOCK_WRITE, {output});
     guard.add(LockMode::LOCK_NONE, {*op});
 
-    op->submit(pstream->cudaHandle(), input, output, bbox, thickness, borderColor, fillColor);
+    op->submit(pstream->cudaHandle(), input, output, bboxes);
 
     return std::move(output);
 }
 
-Tensor BndBox(Tensor &input, const NVCVRectI &bbox, int thickness, uchar4 borderColor, uchar4 fillColor, std::optional<Stream> pstream)
+Tensor BndBox(Tensor &input, NVCVBndBoxesI bboxes, std::optional<Stream> pstream)
 {
     Tensor output = Tensor::Create(input.shape(), input.dtype());
 
-    return BndBoxInto(output, input, bbox, thickness, borderColor, fillColor, pstream);
+    return BndBoxInto(output, input, bboxes, pstream);
 }
 
 } // namespace
@@ -60,8 +60,8 @@ void ExportOpBndBox(py::module &m)
 {
     using namespace pybind11::literals;
 
-    m.def("bndbox", &BndBox, "src"_a, "bbox"_a, "thickness"_a, "borderColor"_a, "fillColor"_a, py::kw_only(), "stream"_a = nullptr);
-    m.def("bndbox_into", &BndBoxInto, "dst"_a, "src"_a, "bbox"_a, "thickness"_a, "borderColor"_a, "fillColor"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("bndbox", &BndBox, "src"_a, "bboxes"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("bndbox_into", &BndBoxInto, "dst"_a, "src"_a, "bboxes"_a, py::kw_only(), "stream"_a = nullptr);
 }
 
 } // namespace cvcudapy

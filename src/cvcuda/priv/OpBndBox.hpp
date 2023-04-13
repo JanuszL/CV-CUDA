@@ -39,7 +39,7 @@ public:
     explicit BndBox();
 
     void operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out,
-                    const NVCVRectI &bbox, int thickness, uchar4 borderColor, uchar4 fillColor) const;
+                    const NVCVBndBoxesI &bboxes) const;
 
 private:
     std::unique_ptr<nvcv::legacy::cuda_op::BndBox>         m_legacyOp;

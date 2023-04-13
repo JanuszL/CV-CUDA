@@ -32,7 +32,7 @@ namespace gt   = ::testing;
 namespace test = nvcv::test;
 
 static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStridedImagePlanar &data, nvcv::Byte *inBuf,
-                          NVCVRectI bbox, int thickness, uchar4 borderColor, uchar4 fillColor, cudaStream_t stream)
+                          NVCVBndBoxesI bboxes, cudaStream_t stream)
 {
     test::osd::Image* image = test::osd::create_image(data.numCols(), data.numRows(), test::osd::ImageFormat::RGBA);
     EXPECT_EQ(cudaSuccess, cudaMemcpy(image->data0, inBuf, vect.size(), cudaMemcpyDeviceToDevice));
@@ -41,14 +41,20 @@ static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAcce
 
     auto context = cuosd_context_create();
 
-    int left    = bbox.x;
-    int top     = bbox.y;
-    int right   = left + bbox.width - 1;
-    int bottom  = top + bbox.height - 1;
+    for (int i = 0; i < bboxes.box_num; i++) {
+        auto bbox   = bboxes.boxes[i];
 
-    cuosd_draw_rectangle(context, left, top, right, bottom, thickness,
-                         {borderColor.x, borderColor.y, borderColor.z, borderColor.w},
-                         {fillColor.x, fillColor.y, fillColor.z, fillColor.w});
+        int left    = bbox.x;
+        int top     = bbox.y;
+        int right   = left + bbox.width - 1;
+        int bottom  = top + bbox.height - 1;
+        int thickness           = bbox.thickness;
+
+        cuOSDColor borderColor  = { bbox.borderColor.r, bbox.borderColor.g, bbox.borderColor.b, bbox.borderColor.a };
+        cuOSDColor fillColor    = { bbox.fillColor.r, bbox.fillColor.g, bbox.fillColor.b, bbox.fillColor.a };
+
+        cuosd_draw_rectangle(context, left, top, right, bottom, thickness, borderColor, fillColor);
+    }
 
     test::osd::cuosd_apply(context, image, stream);
     cuosd_context_destroy(context);
@@ -80,9 +86,6 @@ TEST_P(OpBndBox, BndBox_sanity)
     int     bboxH          = GetParamValue<5>();
     int     thickness      = GetParamValue<6>();
 
-    uchar4  borderColor    = { 255, 0, 0, 255};
-    uchar4  fillColor      = { 0, 0, 255, 100};
-
     nvcv::Tensor imgIn  = test::CreateTensor(1, inWidth, inHeight, nvcv::FMT_RGBA8);
     nvcv::Tensor imgOut = test::CreateTensor(1, inWidth, inHeight, nvcv::FMT_RGBA8);
 
@@ -104,18 +107,31 @@ TEST_P(OpBndBox, BndBox_sanity)
     int inBufSize  = inSampleStride * inAccess->numSamples();
     int outBufSize = outSampleStride * outAccess->numSamples();
 
-    NVCVRectI bndBox = {bboxX, bboxY, bboxW, bboxH};
+    NVCVBndBoxesI bndBoxes;
+
+    std::vector<NVCVBndBoxI> bndBoxVec;
+    NVCVBndBoxI bndBox;
+    bndBox.x            = bboxX;
+    bndBox.y            = bboxY;
+    bndBox.width        = bboxW;
+    bndBox.height       = bboxH;
+    bndBox.fillColor    = { 0, 0, 255, 100};
+    bndBox.borderColor  = { 255, 0, 0, 255};
+    bndBoxVec.push_back(bndBox);
+
+    bndBoxes.box_num    = bndBoxVec.size();
+    bndBoxes.boxes      = bndBoxVec.data();
 
     EXPECT_EQ(cudaSuccess, cudaMemset(input->basePtr(), 0xFF, inSampleStride * inAccess->numSamples()));
     EXPECT_EQ(cudaSuccess, cudaMemset(output->basePtr(), 0xFF, outSampleStride * outAccess->numSamples()));
 
     std::vector<uint8_t> gold(outBufSize);
-    setGoldBuffer(gold, *inAccess, input->basePtr(), bndBox, thickness, borderColor, fillColor, stream);
+    setGoldBuffer(gold, *inAccess, input->basePtr(), bndBoxes, stream);
 
     // run operator
     cvcuda::BndBox op;
 
-    EXPECT_NO_THROW(op(stream, imgIn, imgOut, bndBox, thickness, borderColor, fillColor));
+    EXPECT_NO_THROW(op(stream, imgIn, imgOut, bndBoxes));
 
     // check cdata
     std::vector<uint8_t> test(outBufSize);

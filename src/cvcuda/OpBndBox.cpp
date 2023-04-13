@@ -41,12 +41,12 @@ CVCUDA_DEFINE_API(0, 0, NVCVStatus, cvcudaBndBoxCreate, (NVCVOperatorHandle * ha
 
 CVCUDA_DEFINE_API(0, 0, NVCVStatus, cvcudaBndBoxSubmit,
                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                  const NVCVRectI bbox, int thickness, uchar4 borderColor, uchar4 fillColor))
+                  const NVCVBndBoxesI bboxes))
 {
     return nvcv::ProtectCall(
         [&]
         {
             nvcv::TensorWrapHandle input(in), output(out);
-            priv::ToDynamicRef<priv::BndBox>(handle)(stream, input, output, bbox, thickness, borderColor, fillColor);
+            priv::ToDynamicRef<priv::BndBox>(handle)(stream, input, output, bboxes);
         });
 }
