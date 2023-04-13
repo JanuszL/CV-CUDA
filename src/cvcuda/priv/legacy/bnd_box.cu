@@ -260,6 +260,12 @@ static void cuosd_draw_rectangle(cuOSDContext_t context, NVCVBndBoxesI bboxes){
         int right   = left + bbox.width - 1;
         int bottom  = top + bbox.height - 1;
 
+        if (bbox.width <= 0 || bbox.height <= 0)
+        {
+            LOG_ERROR("Invalid bbox width, height = " << bboxes.width << ", " << bboxes.height);
+            return;
+        }
+
         if (bbox.borderColor.a == 0) continue;
         if (bbox.fillColor.a || bbox.thickness == -1) {
             if (bbox.thickness == -1) {

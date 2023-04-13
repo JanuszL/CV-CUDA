@@ -31,6 +31,11 @@
 namespace gt   = ::testing;
 namespace test = nvcv::test;
 
+static int randl(int l, int h) {
+    int value = rand() % (h - l + 1);
+    return l + value;
+}
+
 static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStridedImagePlanar &data, nvcv::Byte *inBuf,
                           NVCVBndBoxesI bboxes, cudaStream_t stream)
 {
@@ -60,16 +65,23 @@ static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAcce
     cuosd_context_destroy(context);
 
     EXPECT_EQ(cudaSuccess, cudaMemcpy(vect.data(), image->data0, vect.size(), cudaMemcpyDeviceToHost));
-    test::osd::save_image(image, "workspace/output.png", stream);
+    test::osd::save_image(image, "workspace/gold.png", stream);
+}
+
+static void dumpTest(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStridedImagePlanar &data, nvcv::Byte *testBuf){
+    test::osd::Image* image = test::osd::create_image(data.numCols(), data.numRows(), test::osd::ImageFormat::RGBA);
+    EXPECT_EQ(cudaSuccess, cudaMemcpy(image->data0, testBuf, vect.size(), cudaMemcpyDeviceToDevice));
+    test::osd::save_image(image, "workspace/test.png");
 }
 
 // clang-format off
-NVCV_TEST_SUITE_P(OpBndBox, test::ValueList<int, int, int, int, int, int, int>
+NVCV_TEST_SUITE_P(OpBndBox, test::ValueList<int, int, int, int>
 {
-    //      inW,    inH,    bboxX,  bboxY,  bboxW,  bboxH,  thickness
-    {       600,    600,    0,      0,      200,    200,    3       },
-    {       600,    600,    0,      0,      200,    200,    -1      },
-    {       600,    600,    0,      0,      200,    200,    10      },
+    //  inW,    inH,    num,    seed
+    {   224,    224,    100,    11  },
+    {   1280,   720,    100,    23  },
+    {   1920,   1080,   200,    37  },
+    {   3840,   2160,   200,    59  },
 });
 
 // clang-format on
@@ -80,11 +92,27 @@ TEST_P(OpBndBox, BndBox_sanity)
 
     int     inWidth        = GetParamValue<0>();
     int     inHeight       = GetParamValue<1>();
-    int     bboxX          = GetParamValue<2>();
-    int     bboxY          = GetParamValue<3>();
-    int     bboxW          = GetParamValue<4>();
-    int     bboxH          = GetParamValue<5>();
-    int     thickness      = GetParamValue<6>();
+    int     num            = GetParamValue<2>();
+    int     seed           = GetParamValue<3>();
+
+    NVCVBndBoxesI bndBoxes;
+    std::vector<NVCVBndBoxI> bndBoxVec;
+
+    srand(seed);
+    for (int i=0; i<num; i++) {
+        NVCVBndBoxI bndBox;
+        bndBox.x            = randl(0, inWidth - 1);
+        bndBox.y            = randl(0, inHeight - 1);
+        bndBox.width        = randl(1, inWidth - bndBox.x);
+        bndBox.height       = randl(1, inHeight - bndBox.y);
+        bndBox.thickness    = randl(-1, 30);
+        bndBox.fillColor    = { randl(0, 255), randl(0, 255), randl(0, 255), randl(0, 255) };
+        bndBox.borderColor  = { randl(0, 255), randl(0, 255), randl(0, 255), randl(0, 255) };
+        bndBoxVec.push_back(bndBox);
+    }
+
+    bndBoxes.box_num    = bndBoxVec.size();
+    bndBoxes.boxes      = bndBoxVec.data();
 
     nvcv::Tensor imgIn  = test::CreateTensor(1, inWidth, inHeight, nvcv::FMT_RGBA8);
     nvcv::Tensor imgOut = test::CreateTensor(1, inWidth, inHeight, nvcv::FMT_RGBA8);
@@ -107,26 +135,8 @@ TEST_P(OpBndBox, BndBox_sanity)
     int inBufSize  = inSampleStride * inAccess->numSamples();
     int outBufSize = outSampleStride * outAccess->numSamples();
 
-    NVCVBndBoxesI bndBoxes;
-
-    std::vector<NVCVBndBoxI> bndBoxVec;
-    NVCVBndBoxI bndBox;
-    bndBox.x            = bboxX;
-    bndBox.y            = bboxY;
-    bndBox.width        = bboxW;
-    bndBox.height       = bboxH;
-    bndBox.fillColor    = { 0, 0, 255, 100};
-    bndBox.borderColor  = { 255, 0, 0, 255};
-    bndBoxVec.push_back(bndBox);
-
-    bndBoxes.box_num    = bndBoxVec.size();
-    bndBoxes.boxes      = bndBoxVec.data();
-
     EXPECT_EQ(cudaSuccess, cudaMemset(input->basePtr(), 0xFF, inSampleStride * inAccess->numSamples()));
     EXPECT_EQ(cudaSuccess, cudaMemset(output->basePtr(), 0xFF, outSampleStride * outAccess->numSamples()));
-
-    std::vector<uint8_t> gold(outBufSize);
-    setGoldBuffer(gold, *inAccess, input->basePtr(), bndBoxes, stream);
 
     // run operator
     cvcuda::BndBox op;
@@ -141,7 +151,10 @@ TEST_P(OpBndBox, BndBox_sanity)
     EXPECT_EQ(cudaSuccess, cudaMemcpy(testIn.data(), input->basePtr(), inBufSize, cudaMemcpyDeviceToHost));
     EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), output->basePtr(), outBufSize, cudaMemcpyDeviceToHost));
 
+    std::vector<uint8_t> gold(outBufSize);
+    setGoldBuffer(gold, *inAccess, input->basePtr(), bndBoxes, stream);
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
+    dumpTest(gold, *outAccess, output->basePtr());
     EXPECT_EQ(gold, test);
 }
