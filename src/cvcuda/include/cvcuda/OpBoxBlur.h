@@ -16,15 +16,15 @@
  */
 
 /**
- * @file OpBndBox.h
+ * @file OpBoxBlur.h
  *
- * @brief Defines types and functions to handle the BndBox operation.
- * @defgroup NVCV_C_ALGORITHM__BND_BOX BndBox
+ * @brief Defines types and functions to handle the BoxBlur operation.
+ * @defgroup NVCV_C_ALGORITHM__BOX_BLUR BoxBlur
  * @{
  */
 
-#ifndef CVCUDA__BND_BOX_H
-#define CVCUDA__BND_BOX_H
+#ifndef CVCUDA__BOX_BLUR_H
+#define CVCUDA__BOX_BLUR_H
 
 #include "Operator.h"
 #include "detail/Export.h"
@@ -39,7 +39,7 @@ extern "C"
 {
 #endif
 
-/** Constructs and an instance of the BndBox operator.
+/** Constructs and an instance of the BoxBlur operator.
  *
  * @param [out] handle Where the image instance handle will be written to.
  *                     + Must not be NULL.
@@ -48,9 +48,9 @@ extern "C"
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the operator.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-CVCUDA_PUBLIC NVCVStatus cvcudaBndBoxCreate(NVCVOperatorHandle *handle);
+CVCUDA_PUBLIC NVCVStatus cvcudaBoxBlurCreate(NVCVOperatorHandle *handle);
 
-/** Executes the BndBox operation on the given cuda stream. This operation does not
+/** Executes the BoxBlur operation on the given cuda stream. This operation does not
  *  wait for completion.
  *
  *  Limitations:
@@ -104,17 +104,17 @@ CVCUDA_PUBLIC NVCVStatus cvcudaBndBoxCreate(NVCVOperatorHandle *handle);
  *
  * @param [out] out output tensor.
  *
- * @param [in] bboxes bounding boxes in reference to the input tensor.
+ * @param [in] bboxes blur boxes in reference to the input tensor.
  *
  * @retval #NVCV_ERROR_INVALID_ARGUMENT Some parameter is outside valid range.
  * @retval #NVCV_ERROR_INTERNAL         Internal error in the operator, invalid types passed in.
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
-CVCUDA_PUBLIC NVCVStatus cvcudaBndBoxSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
-                                            NVCVTensorHandle out, const NVCVBndBoxesI bboxes);
+CVCUDA_PUBLIC NVCVStatus cvcudaBoxBlurSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
+                                             NVCVTensorHandle out, const NVCVBlurBoxesI bboxes);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* CVCUDA__BND_BOX_H */
+#endif /* CVCUDA__BOX_BLUR_H */

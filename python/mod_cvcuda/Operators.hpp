@@ -72,6 +72,7 @@ void ExportOpGammaContrast(py::module &m);
 void ExportOpPillowResize(py::module &m);
 void ExportOpThreshold(py::module &m);
 void ExportOpBndBox(py::module &m);
+void ExportOpBoxBlur(py::module &m);
 
 // Helper class that serves as python-side operator class.
 // OP: native operator class

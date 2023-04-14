@@ -16,18 +16,18 @@
  */
 
 /**
- * @file OpBndBox.hpp
+ * @file OpBoxBlur.hpp
  *
- * @brief Defines the public C++ Class for the BndBox operation.
- * @defgroup NVCV_CPP_ALGORITHM__BND_BOX BndBox
+ * @brief Defines the public C++ Class for the BoxBlur operation.
+ * @defgroup NVCV_CPP_ALGORITHM__BOX_BLUR BoxBlur
  * @{
  */
 
-#ifndef CVCUDA__BND_BOX_HPP
-#define CVCUDA__BND_BOX_HPP
+#ifndef CVCUDA__BOX_BLUR_HPP
+#define CVCUDA__BOX_BLUR_HPP
 
 #include "IOperator.hpp"
-#include "OpBndBox.h"
+#include "OpBoxBlur.h"
 
 #include <cuda_runtime.h>
 #include <nvcv/ITensor.hpp>
@@ -36,15 +36,15 @@
 
 namespace cvcuda {
 
-class BndBox final : public IOperator
+class BoxBlur final : public IOperator
 {
 public:
-    explicit BndBox();
+    explicit BoxBlur();
 
-    ~BndBox();
+    ~BoxBlur();
 
     void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out,
-                    const NVCVBndBoxesI bboxes);
+                    const NVCVBlurBoxesI bboxes);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -52,29 +52,29 @@ private:
     NVCVOperatorHandle m_handle;
 };
 
-inline BndBox::BndBox()
+inline BoxBlur::BoxBlur()
 {
-    nvcv::detail::CheckThrow(cvcudaBndBoxCreate(&m_handle));
+    nvcv::detail::CheckThrow(cvcudaBoxBlurCreate(&m_handle));
     assert(m_handle);
 }
 
-inline BndBox::~BndBox()
+inline BoxBlur::~BoxBlur()
 {
     nvcvOperatorDestroy(m_handle);
     m_handle = nullptr;
 }
 
-inline void BndBox::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out,
-                               const NVCVBndBoxesI bboxes)
+inline void BoxBlur::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out,
+                                const NVCVBlurBoxesI bboxes)
 {
-    nvcv::detail::CheckThrow(cvcudaBndBoxSubmit(m_handle, stream, in.handle(), out.handle(), bboxes));
+    nvcv::detail::CheckThrow(cvcudaBoxBlurSubmit(m_handle, stream, in.handle(), out.handle(), bboxes));
 }
 
-inline NVCVOperatorHandle BndBox::handle() const noexcept
+inline NVCVOperatorHandle BoxBlur::handle() const noexcept
 {
     return m_handle;
 }
 
 } // namespace cvcuda
 
-#endif // CVCUDA__BND_BOX_HPP
+#endif // CVCUDA__BOX_BLUR_HPP

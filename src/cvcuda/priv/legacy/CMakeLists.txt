@@ -67,6 +67,7 @@ add_library(cvcuda_legacy STATIC
     threshold_var_shape.cu
     threshold_util.cu
     bnd_box.cu
+    box_blur.cu
 )
 
 target_link_libraries(cvcuda_legacy

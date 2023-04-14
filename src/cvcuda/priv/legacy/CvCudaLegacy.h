@@ -2174,6 +2174,36 @@ private:
     nvcv::cuda::osd::cuOSDContext_t m_context;
 };
 
+class BoxBlur : public CudaBaseOp
+{
+public:
+    BoxBlur() = delete;
+
+    BoxBlur(DataShape max_input_shape, DataShape max_output_shape);
+
+    ~BoxBlur();
+
+    /**
+     * @brief Converts an image from one color space to another.
+     * @param inData Input tensor.
+     * @param outData Output tensor.
+     * @param boxes Bounding boxes to blur, \ref NVCVBlurBoxesI.
+     */
+    ErrorCode infer(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData,
+                    NVCVBlurBoxesI bboxes, cudaStream_t stream);
+
+    /**
+     * @brief calculate the cpu/gpu buffer size needed by this operator
+     * @param max_input_shape maximum input DataShape that may be used
+     * @param max_output_shape maximum output DataShape that may be used
+     * @param max_data_type DataType with the maximum size that may be used
+     */
+    size_t calBufferSize(DataShape max_input_shape, DataShape max_output_shape, DataType max_data_type);
+
+private:
+    nvcv::cuda::osd::cuOSDContext_t m_context;
+};
+
 class CvtColor : public CudaBaseOp
 {
 public:

@@ -23,6 +23,7 @@ link_directories(
 
 # system core -------------------------------------------------
 add_executable(cvcuda_test_system
+    TestOpBoxBlur.cpp
     TestOpBndBox.cpp
     OsdUtils.cu
     # FlipUtils.cpp

@@ -118,10 +118,22 @@ struct RectangleCommand {
     float ax2, ay2, bx2, by2, cx2, cy2, dx2, dy2;
 };
 
+struct BoxBlurCommand {
+    unsigned char c0, c1, c2, c3;
+    int bounding_left   = 0;
+    int bounding_top    = 0;
+    int bounding_right  = 0;
+    int bounding_bottom = 0;
+
+    int kernel_size = 7;
+};
+
 struct cuOSDContext {
     std::vector<std::shared_ptr<RectangleCommand>>  commands;
     std::unique_ptr<Memory<unsigned char>>          gpu_commands;
     std::unique_ptr<Memory<int>>                    gpu_commands_offset;
+    std::vector<std::shared_ptr<BoxBlurCommand>>    blur_commands;
+    std::unique_ptr<Memory<BoxBlurCommand>>         gpu_blur_commands;
 
     int bounding_left   = 0;
     int bounding_top    = 0;

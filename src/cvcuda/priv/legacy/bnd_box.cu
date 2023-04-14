@@ -230,14 +230,11 @@ inline ErrorCode ApplyBndBox_RGBA(const nvcv::TensorDataStridedCuda &inData, con
     dim3 blockSize(16, 8);
     dim3 gridSize(divUp(int((inputShape.W + 1) / 2), (int)blockSize.x), divUp(int((inputShape.H + 1) / 2), (int)blockSize.y));
 
-    LOG_INFO("gridSize: " << gridSize.x << " " << gridSize.y);
-
     auto src = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(inData);
     auto dst = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(outData);
 
     // allocate command buffer;
     cuosd_apply(context, inputShape.W, inputShape.H, stream);
-    LOG_INFO("context->commands num: " << context->commands.size());
 
     render_bndbox_rgba_womsaa_kernel<<<gridSize, blockSize, 0, stream>>>(
         src, dst, 0, 0,
@@ -262,7 +259,7 @@ static void cuosd_draw_rectangle(cuOSDContext_t context, NVCVBndBoxesI bboxes){
 
         if (bbox.width <= 0 || bbox.height <= 0)
         {
-            LOG_ERROR("Invalid bbox width, height = " << bboxes.width << ", " << bboxes.height);
+            LOG_ERROR("Invalid bbox width, height = " << bbox.width << ", " << bbox.height);
             return;
         }
 
@@ -328,6 +325,7 @@ BndBox::BndBox(DataShape max_input_shape, DataShape max_output_shape)
 
 BndBox::~BndBox(){
     if (m_context) {
+        m_context->commands.clear();
         cuOSDContext* p = (cuOSDContext*)m_context;
         delete p;
     }

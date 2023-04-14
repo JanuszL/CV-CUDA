@@ -32,10 +32,10 @@ typedef struct {
 
 typedef struct
 {
-    int32_t         x;              //!< x coordinate of the top-left corner
-    int32_t         y;              //!< y coordinate of the top-left corner
-    int32_t         width;          //!< width of the rectangle
-    int32_t         height;         //!< height of the rectangle
+    int32_t         x;              //!< X coordinate of the top-left corner.
+    int32_t         y;              //!< Y coordinate of the top-left corner.
+    int32_t         width;          //!< Width of the bounding box.
+    int32_t         height;         //!< Height of the bounding box.
     int32_t         thickness;      //!< Border thickness of bounding box.
     NVCVColor       borderColor;    //!< Border color of bounding box.
     NVCVColor       fillColor;      //!< Filled color of bounding box.
@@ -46,6 +46,21 @@ typedef struct
     NVCVBndBoxI*    boxes;          //!< Bounding box rectangle, \ref NVCVBndBoxI.
     int32_t         box_num;        //!< Bounding box num.
 } NVCVBndBoxesI;
+
+typedef struct
+{
+    int32_t         x;              //!< X coordinate of the top-left corner.
+    int32_t         y;              //!< Y coordinate of the top-left corner.
+    int32_t         width;          //!< Width of the blur box.
+    int32_t         height;         //!< Height of the blur box.
+    int32_t         kernelSize;     //!< Kernel sizes of mean filter, refer to cv::blur().
+} NVCVBlurBoxI;
+
+typedef struct
+{
+    NVCVBlurBoxI*   boxes;          //!< Blurring box rectangle, \ref NVCVBlurBoxI.
+    int32_t         box_num;        //!< Blurring box num.
+} NVCVBlurBoxesI;
 
 #ifdef __cplusplus
 }
