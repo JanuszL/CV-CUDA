@@ -47,8 +47,7 @@ public:
     static std::shared_ptr<Image> CreateHostVector(std::vector<py::buffer> buffer, nvcv::ImageFormat fmt);
 
     static std::shared_ptr<Image> WrapExternalBuffer(ExternalBuffer &buffer, nvcv::ImageFormat fmt);
-    static std::shared_ptr<Image> WrapExternalBufferVector(std::vector<std::shared_ptr<ExternalBuffer>> buffer,
-                                                           nvcv::ImageFormat                            fmt);
+    static std::shared_ptr<Image> WrapExternalBufferVector(std::vector<py::object> buffer, nvcv::ImageFormat fmt);
 
     std::shared_ptr<Image>       shared_from_this();
     std::shared_ptr<const Image> shared_from_this() const;

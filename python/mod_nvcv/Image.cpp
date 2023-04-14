@@ -564,16 +564,33 @@ std::shared_ptr<Image> Image::Zeros(const Size2D &size, nvcv::ImageFormat fmt)
 
 std::shared_ptr<Image> Image::WrapExternalBuffer(ExternalBuffer &buffer, nvcv::ImageFormat fmt)
 {
-    return WrapExternalBufferVector(std::vector{buffer.shared_from_this()}, fmt);
+    py::object obj = py::cast(buffer.shared_from_this());
+    return WrapExternalBufferVector({obj}, fmt);
 }
 
-std::shared_ptr<Image> Image::WrapExternalBufferVector(std::vector<std::shared_ptr<ExternalBuffer>> buffers,
-                                                       nvcv::ImageFormat                            fmt)
+std::shared_ptr<Image> Image::WrapExternalBufferVector(std::vector<py::object> buffers, nvcv::ImageFormat fmt)
 {
-    std::vector<DLPackTensor> bufinfos;
+    std::vector<std::shared_ptr<ExternalBuffer>> spBuffers;
     for (size_t i = 0; i < buffers.size(); ++i)
     {
-        bufinfos.emplace_back(buffers[i]->dlTensor());
+        // pybind11 2.10.3 can't convert an item from the input list into an ExternalBuffer
+        // automatically. It won't be able to match the call to current method definition.
+        // We have to accept py::objects and try to convert them here.
+        py::detail::type_caster<priv::ExternalBuffer> caster;
+        if (!caster.load(buffers[i], true))
+        {
+            throw std::runtime_error("Input buffer doesn't provide cuda_array_interface or DLPack interfaces");
+        }
+
+        std::shared_ptr<ExternalBuffer> spbuf = caster;
+        spBuffers.push_back(spbuf);
+    }
+
+    std::vector<DLPackTensor> bufinfos;
+
+    for (size_t i = 0; i < spBuffers.size(); ++i)
+    {
+        bufinfos.emplace_back(spBuffers[i]->dlTensor());
     }
 
     nvcv::ImageDataStridedCuda imgData = CreateNVCVImageDataCuda(std::move(bufinfos), fmt);
@@ -588,7 +605,7 @@ std::shared_ptr<Image> Image::WrapExternalBufferVector(std::vector<std::shared_p
     // Need to add wrappers to cache so that they don't get destroyed by
     // the cuda stream when they're last used, and python script isn't
     // holding a reference to them. If we don't do it, things might break.
-    std::shared_ptr<Image> img(new Image(std::move(buffers), imgData));
+    std::shared_ptr<Image> img(new Image(std::move(spBuffers), imgData));
     Cache::Instance().add(*img);
     return img;
 }
@@ -1005,8 +1022,8 @@ void Image::Export(py::module &m)
 
     // Make sure buffer lifetime is tied to image's (keep_alive)
     m.def("as_image", &Image::WrapExternalBuffer, "buffer"_a, "format"_a = nvcv::FMT_NONE, py::keep_alive<0, 1>());
-    m.def("as_image", &Image::WrapExternalBufferVector, "buffer"_a, "format"_a = nvcv::FMT_NONE,
-          py::keep_alive<0, 1>());
+    m.def("as_image", &Image::WrapExternalBufferVector, py::arg_v("buffer", std::vector<py::object>{}),
+          "format"_a = nvcv::FMT_NONE, py::keep_alive<0, 1>());
 }
 
 } // namespace nvcvpy::priv

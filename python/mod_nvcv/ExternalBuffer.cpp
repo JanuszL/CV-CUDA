@@ -377,7 +377,6 @@ bool type_caster<priv::ExternalBuffer>::load(handle src, bool implicit_conv)
         value_and_holder vh = reinterpret_cast<instance *>(src.ptr())->get_value_and_holder();
         value = vh.template holder<std::shared_ptr<priv::ExternalBuffer>>();
         NVCV_ASSERT(value != nullptr);
-        src.inc_ref();
         return true;
     }
     // If not, it could be an object that implements that __cuda_array_interface, let's try to
