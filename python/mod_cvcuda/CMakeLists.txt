@@ -26,6 +26,7 @@ nvcv_python_add_module(
         OsdElement.cpp
         OpRemap.cpp
         RemapMapValueType.cpp
+        OpCropFlipNormalizeReformat.cpp
         InterpolationType.cpp
         BorderType.cpp
         ColorConversionCode.cpp

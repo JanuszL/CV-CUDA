@@ -27,6 +27,7 @@ add_executable(cvcuda_test_system
     TestOpBndBox.cpp
     OsdUtils.cu
     TestOpRemap.cpp
+    TestOpCropFlipNormalizeReformat.cpp
     FlipUtils.cpp
     ConvUtils.cpp
     TestOpReformat.cpp

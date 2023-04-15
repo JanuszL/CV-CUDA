@@ -20,6 +20,7 @@ add_library(cvcuda SHARED
     OpBoxBlur.cpp
     OpBndBox.cpp
     OpRemap.cpp
+    OpCropFlipNormalizeReformat.cpp
     Operator.cpp
     OpReformat.cpp
     OpResize.cpp
