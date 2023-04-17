@@ -43,21 +43,26 @@ static size_t ComputeHash(const nvcv::TensorShape &shape)
 
 namespace nvcvpy::priv {
 
-std::shared_ptr<Tensor> Tensor::CreateForImageBatch(int numImages, const Size2D &size, nvcv::ImageFormat fmt)
+std::shared_ptr<Tensor> Tensor::CreateForImageBatch(int numImages, const Size2D &size, nvcv::ImageFormat fmt,
+                                                    int rowalign)
 {
     nvcv::Tensor::Requirements reqs
-        = nvcv::Tensor::CalcRequirements(numImages, nvcv::Size2D{std::get<0>(size), std::get<1>(size)}, fmt);
+        = nvcv::Tensor::CalcRequirements(numImages, nvcv::Size2D{std::get<0>(size), std::get<1>(size)}, fmt,
+                                         rowalign == 0 ? nvcv::MemAlignment{} : nvcv::MemAlignment{}.rowAddr(rowalign));
     return CreateFromReqs(reqs);
 }
 
-std::shared_ptr<Tensor> Tensor::Create(Shape shape, nvcv::DataType dtype, std::optional<nvcv::TensorLayout> layout)
+std::shared_ptr<Tensor> Tensor::Create(Shape shape, nvcv::DataType dtype, std::optional<nvcv::TensorLayout> layout,
+                                       int rowalign)
 {
     if (!layout)
     {
         layout = nvcv::TENSOR_NONE;
     }
 
-    nvcv::Tensor::Requirements reqs = nvcv::Tensor::CalcRequirements(CreateNVCVTensorShape(shape, *layout), dtype);
+    nvcv::Tensor::Requirements reqs
+        = nvcv::Tensor::CalcRequirements(CreateNVCVTensorShape(shape, *layout), dtype,
+                                         rowalign == 0 ? nvcv::MemAlignment{} : nvcv::MemAlignment{}.rowAddr(rowalign));
     return CreateFromReqs(reqs);
 }
 
@@ -357,8 +362,8 @@ void Tensor::Export(py::module &m)
     py::implicitly_convertible<py::str, nvcv::TensorLayout>();
 
     py::class_<Tensor, std::shared_ptr<Tensor>, Container>(m, "Tensor")
-        .def(py::init(&Tensor::CreateForImageBatch), "nimages"_a, "imgsize"_a, "format"_a)
-        .def(py::init(&Tensor::Create), "shape"_a, "dtype"_a, "layout"_a = std::nullopt)
+        .def(py::init(&Tensor::CreateForImageBatch), "nimages"_a, "imgsize"_a, "format"_a, "rowalign"_a = 0)
+        .def(py::init(&Tensor::Create), "shape"_a, "dtype"_a, "layout"_a = std::nullopt, "rowalign"_a = 0)
         .def_property_readonly("layout", &Tensor::layout)
         .def_property_readonly("shape", &Tensor::shape)
         .def_property_readonly("dtype", &Tensor::dtype)
