@@ -20,7 +20,7 @@ Video Decoding using VPF
 ====================
 
 
-The video batch decoder is responsible for reading an MP4 video as PyTorch tensors. The actual decoding is done per frame using NVIDIA's `Video Processing Framework <https://github.com/NVIDIA/VideoProcessingFramework>`_. Although used in the semantic segmentation sample, this video decoder is generic enough to be used in other applications. The code associated with this class can be found in the ``samples/common/python/vpf_utils.py`` file.
+The video batch decoder is responsible for reading an MP4 video as PyTorch tensors. The actual decoding is done per frame using NVIDIA's `Video Processing Framework <https://github.com/NVIDIA/VideoProcessingFramework>`_. The video decoder is generic enough to be used across the sample applications. The code associated with this class can be found in the ``samples/common/python/vpf_utils.py`` file.
 
 There are two classes responsible for the decoding work:
 

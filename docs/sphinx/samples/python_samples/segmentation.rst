@@ -39,7 +39,7 @@ The segmentation sample app has been designed to be modular in all aspects. It i
 
 2. Modules specific to this sample (i.e. defined in the segmentation sample folder) are ``PreprocessorCvcuda`` and ``PostprocessorCvcuda`` for CVCUDA based pre and post processing pipelines and ``SegmentationPyTorch`` and ``SegmentationTensorRT`` for the model inference.
 
-The first stage in our pipeline is importing all necessary python modules. Apart from the modules described above, this also includes modules such as torch and torchvision, torchnvjpeg, vpf and the main package of CVCUDA (i.e. nvcv) among others. Be sure to import ``pycuda.driver `` before importing any other GPU packages like torch or cvcuda to ensure a proper initialization.
+The first stage in our pipeline is importing all necessary python modules. Apart from the modules described above, this also includes modules such as torch and torchvision, torchnvjpeg, vpf and the main package of CVCUDA (i.e. nvcv) among others. Be sure to import ``pycuda.driver`` before importing any other GPU packages like torch or cvcuda to ensure a proper initialization.
 
 .. literalinclude:: ../../../../samples/segmentation/python/main.py
    :language: python

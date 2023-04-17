@@ -20,7 +20,7 @@ Image Encoding using PyTorch
 ====================
 
 
-The image batch encoder is responsible for saving image tensors to the disk as JPG images. The actual encoding is done in batches using the ``PIL`` library. Although used in the semantic segmentation sample, this image encoder is generic enough to be used in other applications. The code associated with this class can be found in the ``samples/common/python/torch_utils.py`` file.
+The image batch encoder is responsible for saving image tensors to the disk as JPG images. The actual encoding is done in batches using the ``PIL`` library. The image encoder is generic enough to be across the sample applications. The code associated with this class can be found in the ``samples/common/python/torch_utils.py`` file.
 
 The image batch encoder is a relatively simple class. Here is how its ``__init__`` method is defined.
 

@@ -74,4 +74,11 @@ git clone https://github.com/NVIDIA/VideoProcessingFramework.git
 pip3 install /tmp/VideoProcessingFramework
 pip3 install /tmp/VideoProcessingFramework/src/PytorchNvCodec
 
+# Install tao-converter which parses the .etlt model file, and generates an optimized TensorRT engine
+cd /tmp
+mkdir tao_binaries
+cd tao_binaries
+wget --content-disposition 'https://api.ngc.nvidia.com/v2/resources/nvidia/tao/tao-converter/versions/v4.0.0_trt8.5.1.7_x86/files/tao-converter'
+chmod a+x tao-converter
+echo "export PATH=$PATH:/tmp/tao_binaries" >> ~/.bashrc
 # Done

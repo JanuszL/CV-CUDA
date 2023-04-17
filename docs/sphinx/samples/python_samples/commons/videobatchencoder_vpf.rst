@@ -20,7 +20,7 @@ Video Encoding using VPF
 ====================
 
 
-The video batch encoder is responsible for writing PyTorch tensors as an MP4 video. The actual encoding is done in batches using  NVIDIA's `Video Processing Framework <https://github.com/NVIDIA/VideoProcessingFramework>`_. Although used in the semantic segmentation sample, this video encoder is generic enough to be used in other applications. The code associated with this class can be found in the ``samples/common/python/vpf_utils.py`` file.
+The video batch encoder is responsible for writing PyTorch tensors as an MP4 video. The actual encoding is done in batches using  NVIDIA's `Video Processing Framework <https://github.com/NVIDIA/VideoProcessingFramework>`_. The video encoder is generic enough to be used across the sample applications. The code associated with this class can be found in the ``samples/common/python/vpf_utils.py`` file.
 
 There are two classes responsible for the encoding work:
 

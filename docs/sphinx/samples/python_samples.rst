@@ -29,3 +29,4 @@ The following samples demonstrates the use of CVCUDA Python API:
     Classification <python_samples/classification>
     Semantic Segmentation <python_samples/segmentation>
     Semantic Segmentation using Triton <python_samples/segmentation_triton>
+    Object Detection <python_samples/object_detection>

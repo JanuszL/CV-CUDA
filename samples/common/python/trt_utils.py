@@ -126,12 +126,12 @@ def setup_tensort_bindings(trt_model, batch_size, device_id, logger):
         # Append to the appropriate list.
         if trt_model.get_tensor_mode(b_name) == trt.TensorIOMode.OUTPUT:
             # First allocate on device output buffers, using PyTorch.
+            # Get the C, H, W dimensions from the layer shape to set the output layer size for the buffer
             output = torch.zeros(
-                size=(batch_size, b_shape[1], b_shape[2], b_shape[3]),
+                size=(batch_size, b_shape[-3], b_shape[-2], b_shape[-1]),
                 dtype=getattr(torch, b_dtype),
                 device="cuda:%d" % device_id,
             )
-
             # Since we know the name of our output layer, we will check against
             # it and grab its binding index.
             if b_name == "output":
