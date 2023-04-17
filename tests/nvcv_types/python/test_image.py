@@ -401,6 +401,16 @@ def test_image_export_cuda_buffer(
         )
 
 
+def test_image_export_cuda_buffer_strides():
+    # torch returns packed buffers
+    timg = torch.zeros((11, 37), dtype=torch.uint8, device="cuda")
+    img = nvcv.as_image(timg)
+
+    data = img.cuda()
+
+    assert data.strides == (37, 1)
+
+
 def test_image_zeros():
     img = nvcv.Image.zeros((67, 34), nvcv.Format.F32)
     assert (img.cpu() == np.zeros((34, 67), np.float32)).all()
