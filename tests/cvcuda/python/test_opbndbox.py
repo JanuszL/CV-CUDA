@@ -19,41 +19,40 @@ import numpy as np
 
 
 @t.mark.parametrize(
-    "input,dtype",
+    "input, bndboxes",
     [
-        (cvcuda.Tensor((5, 16, 23, 4), np.uint8, "NHWC"), np.int8),
-        (cvcuda.Tensor((16, 23, 2), np.uint8, "HWC"), np.int32),
+        (
+            cvcuda.Tensor((1, 16, 23, 4), np.uint8, "NHWC"),
+            cvcuda.BndBoxesI([
+                cvcuda.BndBoxI(x=1, y=1, width=5, height=5, thickness=20, borderColor=(0, 255, 0), fillColor=(0, 128, 255, 128)),
+                cvcuda.BndBoxI(x=3, y=3, width=5, height=5, thickness=20, borderColor=(0, 255, 0), fillColor=(0, 128, 255, 128)),
+                cvcuda.BndBoxI(x=6, y=6, width=5, height=5, thickness=20, borderColor=(0, 255, 0), fillColor=(0, 128, 255, 128)),
+            ]),
+        ),
     ],
 )
-def test_op_bndbox(input, dtype):
-    out = cvcuda.bndbox(input, dtype)
+def test_op_bndbox(input, bndboxes):
+    out = cvcuda.bndbox(input, bndboxes)
     assert out.layout == input.layout
     assert out.shape == input.shape
-    assert out.dtype == dtype
+    assert out.dtype == input.dtype
 
-    out = cvcuda.Tensor(input.shape, dtype, input.layout)
-    tmp = cvcuda.bndbox_into(out, input)
+    out = cvcuda.Tensor(input.shape, input.dtype, input.layout)
+    tmp = cvcuda.bndbox_into(out, input, bndboxes)
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == input.shape
-    assert out.dtype == dtype
-
-    out = cvcuda.bndbox(input, dtype)
-
-    out = cvcuda.Tensor(input.shape, dtype, input.layout)
-    tmp = cvcuda.bndbox_into(out, input)
+    assert out.dtype == input.dtype
 
     stream = cvcuda.Stream()
-    out = cvcuda.bndbox(src=input, dtype=dtype, stream=stream)
+    out = cvcuda.bndbox(src=input, bboxes=bndboxes, stream=stream)
     assert out.layout == input.layout
     assert out.shape == input.shape
-    assert out.dtype == dtype
+    assert out.dtype == input.dtype
 
-    tmp = cvcuda.bndbox_into(dst=out, src=input, stream=stream)
+    out = cvcuda.Tensor(input.shape, input.dtype, input.layout)
+    tmp = cvcuda.bndbox_into(dst=out, src=input, bboxes=bndboxes, stream=stream)
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == input.shape
-    assert out.dtype == dtype
-
-    # TODO make test pass
-    t.fail("Test failed intentionally")
+    assert out.dtype == input.dtype

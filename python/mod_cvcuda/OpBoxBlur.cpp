@@ -48,7 +48,6 @@ Tensor BoxBlurInto(Tensor &output, Tensor &input, NVCVBlurBoxesI bboxes, std::op
 Tensor BoxBlur(Tensor &input, NVCVBlurBoxesI bboxes, std::optional<Stream> pstream)
 {
     Tensor output = Tensor::Create(input.shape(), input.dtype());
-
     return BoxBlurInto(output, input, bboxes, pstream);
 }
 

@@ -57,6 +57,7 @@ nvcv_python_add_module(
         Image.cpp
         ImageBatch.cpp
         ExternalBuffer.cpp
+        OsdElement.cpp
         Rect.cpp
         Object.cpp
         CAPI.cpp

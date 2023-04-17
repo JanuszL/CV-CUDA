@@ -19,41 +19,40 @@ import numpy as np
 
 
 @t.mark.parametrize(
-    "input,dtype",
+    "input, blurboxes",
     [
-        (cvcuda.Tensor((5, 16, 23, 4), np.uint8, "NHWC"), np.int8),
-        (cvcuda.Tensor((16, 23, 2), np.uint8, "HWC"), np.int32),
+        (
+            cvcuda.Tensor((1, 100, 100, 4), np.uint8, "NHWC"),
+            cvcuda.BlurBoxesI([
+                cvcuda.BlurBoxI(x=50, y=50, width=3, height=3, kernelSize=8),
+                cvcuda.BlurBoxI(x=50, y=50, width=5, height=5, kernelSize=11),
+                cvcuda.BlurBoxI(x=50, y=50, width=7, height=7, kernelSize=17),
+            ]),
+        ),
     ],
 )
-def test_op_boxblur(input, dtype):
-    out = cvcuda.boxblur(input, dtype)
+def test_op_boxblur(input, blurboxes):
+    out = cvcuda.boxblur(input, blurboxes)
     assert out.layout == input.layout
     assert out.shape == input.shape
-    assert out.dtype == dtype
+    assert out.dtype == input.dtype
 
-    out = cvcuda.Tensor(input.shape, dtype, input.layout)
-    tmp = cvcuda.boxblur_into(out, input)
+    out = cvcuda.Tensor(input.shape, input.dtype, input.layout)
+    tmp = cvcuda.boxblur_into(out, input, blurboxes)
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == input.shape
-    assert out.dtype == dtype
-
-    out = cvcuda.boxblur(input, dtype)
-
-    out = cvcuda.Tensor(input.shape, dtype, input.layout)
-    tmp = cvcuda.boxblur_into(out, input)
+    assert out.dtype == input.dtype
 
     stream = cvcuda.Stream()
-    out = cvcuda.boxblur(src=input, dtype=dtype, stream=stream)
+    out = cvcuda.boxblur(src=input, bboxes=blurboxes, stream=stream)
     assert out.layout == input.layout
     assert out.shape == input.shape
-    assert out.dtype == dtype
+    assert out.dtype == input.dtype
 
-    tmp = cvcuda.boxblur_into(dst=out, src=input, stream=stream)
+    out = cvcuda.Tensor(input.shape, input.dtype, input.layout)
+    tmp = cvcuda.boxblur_into(dst=out, src=input, bboxes=blurboxes, stream=stream)
     assert tmp is out
     assert out.layout == input.layout
     assert out.shape == input.shape
-    assert out.dtype == dtype
-
-    # TODO make test pass
-    t.fail("Test failed intentionally")
+    assert out.dtype == input.dtype

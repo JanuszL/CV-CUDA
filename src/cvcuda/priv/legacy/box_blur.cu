@@ -161,7 +161,7 @@ inline ErrorCode ApplyBoxBlur_RGBA(const nvcv::TensorDataStridedCuda &inData, co
     return ErrorCode::SUCCESS;
 }
 
-static void cuosd_draw_boxblur(cuOSDContext_t context, NVCVBlurBoxesI bboxes){
+static ErrorCode cuosd_draw_boxblur(cuOSDContext_t context, NVCVBlurBoxesI bboxes){
 
     for (int i = 0; i < bboxes.box_num; i++) {
         auto bbox   = bboxes.boxes[i];
@@ -173,8 +173,9 @@ static void cuosd_draw_boxblur(cuOSDContext_t context, NVCVBlurBoxesI bboxes){
 
         if (bbox.width < 3 || bbox.height < 3 || bbox.kernelSize < 1)
         {
-            LOG_ERROR("This operation will be ignored because the region of interest is too small, or the kernel is too small.");
-            return;
+            LOG_ERROR("This operation will be ignored because the region of interest is too small, or the kernel is too small."
+                      << bbox.width << " " << bbox.height << " " << bbox.kernelSize);
+            return ErrorCode::INVALID_PARAMETER;
         }
 
         auto cmd = std::make_shared<BoxBlurCommand>();
@@ -185,6 +186,7 @@ static void cuosd_draw_boxblur(cuOSDContext_t context, NVCVBlurBoxesI bboxes){
         cmd->bounding_bottom  = bottom;
         context->blur_commands.emplace_back(cmd);
     }
+    return ErrorCode::SUCCESS;
 }
 
 BoxBlur::BoxBlur(DataShape max_input_shape, DataShape max_output_shape)
@@ -254,7 +256,10 @@ ErrorCode BoxBlur::infer(const nvcv::TensorDataStridedCuda &inData, const nvcv::
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    cuosd_draw_boxblur(m_context, bboxes);
+    auto ret = cuosd_draw_boxblur(m_context, bboxes);
+    if (ret != ErrorCode::SUCCESS) {
+        return ret;
+    }
 
     typedef ErrorCode (*func_t)(const nvcv::TensorDataStridedCuda &inData, const nvcv::TensorDataStridedCuda &outData,
                                 cuOSDContext_t context, cudaStream_t stream);
