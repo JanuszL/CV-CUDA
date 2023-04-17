@@ -42,8 +42,12 @@ public:
     void operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out, nvcv::ITensor &thresh,
                     nvcv::ITensor &maxval) const;
 
+    void operator()(cudaStream_t stream, const nvcv::IImageBatchVarShape &in, const nvcv::IImageBatchVarShape &out,
+                    nvcv::ITensor &thresh, nvcv::ITensor &maxval) const;
+
 private:
-    std::unique_ptr<nvcv::legacy::cuda_op::Threshold> m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::Threshold>         m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::ThresholdVarShape> m_legacyOpVarShape;
 };
 
 } // namespace cvcuda::priv

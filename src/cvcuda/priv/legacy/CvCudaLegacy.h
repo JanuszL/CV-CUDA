@@ -2623,6 +2623,35 @@ private:
     void     *m_kernel = nullptr;
 };
 
+class ThresholdVarShape : public CudaBaseOp
+{
+public:
+    ThresholdVarShape() = delete;
+
+    ThresholdVarShape(DataShape max_input_shape, DataShape max_output_shape, uint32_t type, int maxBatchSize);
+
+    ~ThresholdVarShape();
+
+    /**
+     * @brief Applies a fixed-level threshold to each array element.
+     * @param inData gpu pointer, batched input images.
+     * @param outData gpu pointer, batched output images that have the same type as data_type.
+     * @param type thresholding type, see NVCVThresholdType.
+     * @param threshold threshold value.
+     * @param maxval maximum value to use with the NVCV_THRESH_BINARY and NVCV_THRESH_BINARY_INV thresholding types.
+     * @param stream for the asynchronous execution.
+     *
+     */
+
+    ErrorCode infer(const ImageBatchVarShapeDataStridedCuda &inData, const ImageBatchVarShapeDataStridedCuda &outData,
+                    const TensorDataStridedCuda &thresh, const TensorDataStridedCuda &maxval, cudaStream_t stream);
+
+private:
+    int     *m_histogram;
+    uint32_t m_type;
+    uint32_t m_automatic_thresh;
+};
+
 } // namespace nvcv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H

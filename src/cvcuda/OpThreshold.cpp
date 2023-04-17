@@ -53,3 +53,16 @@ CVCUDA_DEFINE_API(0, 3, NVCVStatus, cvcudaThresholdSubmit,
             priv::ToDynamicRef<priv::Threshold>(handle)(stream, input, output, threshwrap, maxvalwrap);
         });
 }
+
+CVCUDA_DEFINE_API(0, 3, NVCVStatus, cvcudaThresholdVarShapeSubmit,
+                  (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                   NVCVTensorHandle thresh, NVCVTensorHandle maxval))
+{
+    return nvcv::ProtectCall(
+        [&]
+        {
+            nvcv::ImageBatchVarShapeWrapHandle input(in), output(out);
+            nvcv::TensorWrapHandle             threshwrap(thresh), maxvalwrap(maxval);
+            priv::ToDynamicRef<priv::Threshold>(handle)(stream, input, output, threshwrap, maxvalwrap);
+        });
+}

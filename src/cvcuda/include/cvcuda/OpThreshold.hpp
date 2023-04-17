@@ -47,6 +47,9 @@ public:
     void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, nvcv::ITensor &thresh,
                     nvcv::ITensor &maxval);
 
+    void operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
+                    nvcv::ITensor &thresh, nvcv::ITensor &maxval);
+
     virtual NVCVOperatorHandle handle() const noexcept override;
 
 private:
@@ -70,6 +73,13 @@ inline void Threshold::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::
 {
     nvcv::detail::CheckThrow(
         cvcudaThresholdSubmit(m_handle, stream, in.handle(), out.handle(), thresh.handle(), maxval.handle()));
+}
+
+inline void Threshold::operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &in, nvcv::IImageBatchVarShape &out,
+                                  nvcv::ITensor &thresh, nvcv::ITensor &maxval)
+{
+    nvcv::detail::CheckThrow(
+        cvcudaThresholdVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), thresh.handle(), maxval.handle()));
 }
 
 inline NVCVOperatorHandle Threshold::handle() const noexcept

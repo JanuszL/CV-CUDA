@@ -327,3 +327,113 @@ TEST_P(OpThreshold, tensor_correct_output)
 
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 }
+
+TEST_P(OpThreshold, varshape_correct_shape)
+{
+    cudaStream_t stream;
+    EXPECT_EQ(cudaSuccess, cudaStreamCreate(&stream));
+
+    int      batch  = GetParamValue<0>();
+    int      height = GetParamValue<1>();
+    int      width  = GetParamValue<2>();
+    uint32_t type   = GetParamValue<3>();
+    double   thresh = GetParamValue<4>();
+    double   maxval = GetParamValue<5>();
+
+    nvcv::ImageFormat                  fmt = nvcv::FMT_U8;
+    // Create input and output
+    std::default_random_engine         randEng;
+    std::uniform_int_distribution<int> rndWidth(width * 0.8, width * 1.1);
+    std::uniform_int_distribution<int> rndHeight(height * 0.8, height * 1.1);
+
+    std::vector<std::unique_ptr<nvcv::Image>> imgSrc, imgDst;
+    for (int i = 0; i < batch; ++i)
+    {
+        int rw = rndWidth(randEng);
+        int rh = rndHeight(randEng);
+        imgSrc.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{rw, rh}, fmt));
+        imgDst.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{rw, rh}, fmt));
+    }
+
+    nvcv::ImageBatchVarShape batchSrc(batch);
+    batchSrc.pushBack(imgSrc.begin(), imgSrc.end());
+
+    nvcv::ImageBatchVarShape batchDst(batch);
+    batchDst.pushBack(imgDst.begin(), imgDst.end());
+
+    //parameters
+    nvcv::Tensor threshval({{batch}, "N"}, nvcv::TYPE_F64);
+    nvcv::Tensor maxvalval({{batch}, "N"}, nvcv::TYPE_F64);
+
+    auto threshData = threshval.exportData<nvcv::TensorDataStridedCuda>();
+    auto maxvalData = maxvalval.exportData<nvcv::TensorDataStridedCuda>();
+
+    ASSERT_NE(nullptr, threshData);
+    ASSERT_NE(nullptr, maxvalData);
+
+    std::vector<double> threshVec(batch, thresh);
+    std::vector<double> maxvalVec(batch, maxval);
+
+    // Copy vectors to the GPU
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(threshData->basePtr(), threshVec.data(), threshVec.size() * sizeof(double),
+                                           cudaMemcpyHostToDevice, stream));
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(maxvalData->basePtr(), maxvalVec.data(), maxvalVec.size() * sizeof(double),
+                                           cudaMemcpyHostToDevice, stream));
+
+    //Generate input
+    std::vector<std::vector<uint8_t>> srcVec(batch);
+
+    for (int i = 0; i < batch; i++)
+    {
+        const auto srcData = imgSrc[i]->exportData<nvcv::ImageDataStridedCuda>();
+        assert(srcData->numPlanes() == 1);
+
+        int srcWidth  = srcData->plane(0).width;
+        int srcHeight = srcData->plane(0).height;
+
+        int srcRowStride = srcWidth * fmt.planePixelStrideBytes(0);
+
+        std::uniform_int_distribution<uint8_t> rand(0, 255);
+
+        srcVec[i].resize(srcHeight * srcRowStride);
+        std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return rand(randEng); });
+
+        // Copy input data to the GPU
+        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(srcData->plane(0).basePtr, srcData->plane(0).rowStride, srcVec[i].data(),
+                                            srcRowStride, srcRowStride, srcHeight, cudaMemcpyHostToDevice));
+    }
+
+    // Call operator
+    int               maxBatch = 5;
+    cvcuda::Threshold thresholdOp(type, maxBatch);
+    EXPECT_NO_THROW(thresholdOp(stream, batchSrc, batchDst, threshval, maxvalval));
+
+    EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
+
+    for (int i = 0; i < batch; i++)
+    {
+        SCOPED_TRACE(i);
+
+        const auto dstData = imgDst[i]->exportData<nvcv::ImageDataStridedCuda>();
+        assert(dstData->numPlanes() == 1);
+
+        int dstWidth  = dstData->plane(0).width;
+        int dstHeight = dstData->plane(0).height;
+
+        int dstRowStride = dstWidth * fmt.planePixelStrideBytes(0);
+
+        std::vector<uint8_t> testVec(dstHeight * dstRowStride);
+
+        // Copy output data to Host
+        ASSERT_EQ(cudaSuccess,
+                  cudaMemcpy2D(testVec.data(), dstRowStride, dstData->plane(0).basePtr, dstData->plane(0).rowStride,
+                               dstRowStride, // vec has no padding
+                               dstHeight, cudaMemcpyDeviceToHost));
+
+        std::vector<uint8_t> goldVec(dstHeight * dstRowStride);
+        Threshold(srcVec[i], goldVec, thresh, maxval, type);
+        EXPECT_EQ(goldVec, testVec);
+    }
+
+    EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
+}
