@@ -17,6 +17,8 @@ project(nvcv_test_cudatools_system)
 set(CMAKE_FOLDER tests)
 
 add_executable(nvcv_test_cudatools_system
+    TestInterpolationVarShapeWrap.cpp
+    DeviceInterpolationVarShapeWrap.cu
     TestInterpolationWrap.cpp
     DeviceInterpolationWrap.cu
     TestFullTensorWrap.cpp
