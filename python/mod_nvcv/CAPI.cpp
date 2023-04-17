@@ -214,9 +214,9 @@ extern "C" ICacheItem **ImplCache_Fetch(const IKey *pkey)
     return out.release();
 }
 
-extern "C" PyObject *ImplImage_Create(int32_t width, int32_t height, NVCVImageFormat fmt)
+extern "C" PyObject *ImplImage_Create(int32_t width, int32_t height, NVCVImageFormat fmt, int32_t rowAlign)
 {
-    std::shared_ptr<Image> img = Image::Create({width, height}, nvcv::ImageFormat{fmt});
+    std::shared_ptr<Image> img = Image::Create({width, height}, nvcv::ImageFormat{fmt}, rowAlign);
     return py::cast(std::move(img)).release().ptr();
 }
 

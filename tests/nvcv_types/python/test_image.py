@@ -313,6 +313,21 @@ def test_image_wrap_invalid_cuda_buffer():
         nvcv.as_image(obj)
 
 
+def test_image_create_packed():
+    img = nvcv.Image((37, 11), nvcv.Format.U8, rowalign=1)
+    assert img.cuda().strides == (37, 1)
+
+
+def test_image_create_zeros_packed():
+    img = nvcv.Image.zeros((37, 11), nvcv.Format.U8, rowalign=1)
+    assert img.cuda().strides == (37, 1)
+
+
+def test_image_create_from_host_packed():
+    img = nvcv.Image(np.ndarray((11, 37), np.uint8), rowalign=1)
+    assert img.cuda().strides == (37, 1)
+
+
 @t.mark.parametrize(
     "size,format,layout,out_dtype, out_shape, simple_layout",
     [

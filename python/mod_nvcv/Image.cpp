@@ -450,8 +450,10 @@ nvcv::ImageDataStridedHost CreateNVCVImageDataHost(const std::vector<DLPackTenso
 
 } // namespace
 
-Image::Image(const Size2D &size, nvcv::ImageFormat fmt)
-    : m_impl(std::make_unique<nvcv::Image>(nvcv::Size2D{std::get<0>(size), std::get<1>(size)}, fmt))
+Image::Image(const Size2D &size, nvcv::ImageFormat fmt, int rowAlign)
+    : m_impl(
+        std::make_unique<nvcv::Image>(nvcv::Size2D{std::get<0>(size), std::get<1>(size)}, fmt, nullptr /* allocator */,
+                                      rowAlign == 0 ? nvcv::MemAlignment{} : nvcv::MemAlignment{}.rowAddr(rowAlign)))
     , m_key{size, fmt}
 {
 }
@@ -485,13 +487,14 @@ Image::Image(std::vector<std::shared_ptr<ExternalBuffer>> bufs, const nvcv::Imag
     m_impl = std::make_unique<nvcv::ImageWrapData>(imgData);
 }
 
-Image::Image(std::vector<py::buffer> bufs, const nvcv::ImageDataStridedHost &hostData)
+Image::Image(std::vector<py::buffer> bufs, const nvcv::ImageDataStridedHost &hostData, int rowAlign)
 {
     // Input buffer is host data.
     // We'll create a regular image and copy the host data into it.
 
     // Create the image with same size and format as host data
-    m_impl = std::make_unique<nvcv::Image>(hostData.size(), hostData.format());
+    m_impl = std::make_unique<nvcv::Image>(hostData.size(), hostData.format(), nullptr /* allocator */,
+                                           nvcv::MemAlignment{}.rowAddr(rowAlign));
 
     auto devData = *m_impl->exportData<nvcv::ImageDataStridedCuda>();
     NVCV_ASSERT(hostData.format() == devData.format());
@@ -527,14 +530,14 @@ std::shared_ptr<const Image> Image::shared_from_this() const
     return std::static_pointer_cast<const Image>(Container::shared_from_this());
 }
 
-std::shared_ptr<Image> Image::Create(const Size2D &size, nvcv::ImageFormat fmt)
+std::shared_ptr<Image> Image::Create(const Size2D &size, nvcv::ImageFormat fmt, int rowAlign)
 {
     std::vector<std::shared_ptr<CacheItem>> vcont = Cache::Instance().fetch(Key{size, fmt});
 
     // None found?
     if (vcont.empty())
     {
-        std::shared_ptr<Image> img(new Image(size, fmt));
+        std::shared_ptr<Image> img(new Image(size, fmt, rowAlign));
         Cache::Instance().add(*img);
         return img;
     }
@@ -545,9 +548,9 @@ std::shared_ptr<Image> Image::Create(const Size2D &size, nvcv::ImageFormat fmt)
     }
 }
 
-std::shared_ptr<Image> Image::Zeros(const Size2D &size, nvcv::ImageFormat fmt)
+std::shared_ptr<Image> Image::Zeros(const Size2D &size, nvcv::ImageFormat fmt, int rowAlign)
 {
-    auto img = Image::Create(size, fmt);
+    auto img = Image::Create(size, fmt, rowAlign);
 
     auto data = *img->impl().exportData<nvcv::ImageDataStridedCuda>();
 
@@ -610,12 +613,12 @@ std::shared_ptr<Image> Image::WrapExternalBufferVector(std::vector<py::object> b
     return img;
 }
 
-std::shared_ptr<Image> Image::CreateHost(py::buffer buffer, nvcv::ImageFormat fmt)
+std::shared_ptr<Image> Image::CreateHost(py::buffer buffer, nvcv::ImageFormat fmt, int rowAlign)
 {
-    return CreateHostVector(std::vector{buffer}, fmt);
+    return CreateHostVector(std::vector{buffer}, fmt, rowAlign);
 }
 
-std::shared_ptr<Image> Image::CreateHostVector(std::vector<py::buffer> buffers, nvcv::ImageFormat fmt)
+std::shared_ptr<Image> Image::CreateHostVector(std::vector<py::buffer> buffers, nvcv::ImageFormat fmt, int rowAlign)
 {
     std::vector<DLPackTensor> dlTensorList;
 
@@ -631,7 +634,7 @@ std::shared_ptr<Image> Image::CreateHostVector(std::vector<py::buffer> buffers, 
     Image::Key key;
     Cache::Instance().removeAllNotInUseMatching(key);
 
-    std::shared_ptr<Image> img(new Image(std::move(buffers), imgData));
+    std::shared_ptr<Image> img(new Image(std::move(buffers), imgData, rowAlign));
     Cache::Instance().add(*img);
     return img;
 }
@@ -1008,10 +1011,10 @@ void Image::Export(py::module &m)
     using namespace py::literals;
 
     py::class_<Image, std::shared_ptr<Image>, Container>(m, "Image")
-        .def(py::init(&Image::Create), "size"_a, "format"_a)
-        .def(py::init(&Image::CreateHost), "buffer"_a, "format"_a = nvcv::FMT_NONE)
-        .def(py::init(&Image::CreateHostVector), "buffer"_a, "format"_a = nvcv::FMT_NONE)
-        .def_static("zeros", &Image::Zeros, "size"_a, "format"_a)
+        .def(py::init(&Image::Create), "size"_a, "format"_a, "rowalign"_a = 0)
+        .def(py::init(&Image::CreateHost), "buffer"_a, "format"_a = nvcv::FMT_NONE, "rowalign"_a = 0)
+        .def(py::init(&Image::CreateHostVector), "buffer"_a, "format"_a = nvcv::FMT_NONE, "rowalign"_a = 0)
+        .def_static("zeros", &Image::Zeros, "size"_a, "format"_a, "rowalign"_a = 0)
         .def("__repr__", &util::ToString<Image>)
         .def("cuda", &Image::cuda, "layout"_a = std::nullopt)
         .def("cpu", &Image::cpu, "layout"_a = std::nullopt)
