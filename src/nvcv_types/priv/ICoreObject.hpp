@@ -272,7 +272,7 @@ T &ToStaticRef(typename T::HandleType h)
 
     if (child == nullptr)
     {
-        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "Handle was already destroyed");
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT, "The handle is invalid or the object was destroyed.");
     }
 
     return *child;

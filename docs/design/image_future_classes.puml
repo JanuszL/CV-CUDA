@@ -77,20 +77,20 @@ together {
 class Image implements IImage
 {
     + Image(Size2D size, ImageFormat fmt,
-            IAllocator *alloc=nullptr)
+            const Allocator &alloc=nullptr)
 }
 
 class ImageView implements IImageView
 {
     + ImageView(IImage &target, Rect2D rc,
-                IAllocator *alloc=nullptr)
+                const Allocator &alloc=nullptr)
 }
 
 class ImageWrapData implements IImageWrapData
 {
     + ImageWrapData()
     + ImageWrapData(const ImageData &data,
-                    IAllocator *alloc=nullptr)
+                    const Allocator &alloc=nullptr)
 }
 
 }

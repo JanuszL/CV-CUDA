@@ -33,13 +33,13 @@ inline auto Image::CalcRequirements(const Size2D &size, ImageFormat fmt, const M
     return reqs;
 }
 
-inline Image::Image(const Requirements &reqs, IAllocator *alloc)
+inline Image::Image(const Requirements &reqs, const Allocator &alloc)
 {
-    detail::CheckThrow(nvcvImageConstruct(&reqs, alloc ? alloc->handle() : nullptr, &m_handle));
+    detail::CheckThrow(nvcvImageConstruct(&reqs, alloc.handle(), &m_handle));
     detail::SetObjectAssociation(nvcvImageSetUserPointer, this, m_handle);
 }
 
-inline Image::Image(const Size2D &size, ImageFormat fmt, IAllocator *alloc, const MemAlignment &bufAlign)
+inline Image::Image(const Size2D &size, ImageFormat fmt, const Allocator &alloc, const MemAlignment &bufAlign)
     : Image(CalcRequirements(size, fmt, bufAlign), alloc)
 {
 }

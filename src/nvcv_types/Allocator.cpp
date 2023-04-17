@@ -119,6 +119,17 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvAllocatorGetUserPointer, (NVCVAllocatorHan
         });
 }
 
+NVCV_DEFINE_API(0, 3, NVCVStatus, nvcvAllocatorGet,
+                (NVCVAllocatorHandle halloc, NVCVResourceType resType, int returnDefault, NVCVCustomAllocator *result))
+{
+    return priv::ProtectCall(
+        [&]
+        {
+            auto &alloc = priv::ToStaticRef<priv::IAllocator>(halloc);
+            *result     = alloc.get(resType, returnDefault);
+        });
+}
+
 NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvAllocatorAllocHostMemory,
                 (NVCVAllocatorHandle halloc, void **ptr, int64_t sizeBytes, int32_t alignBytes))
 {

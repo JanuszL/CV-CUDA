@@ -23,8 +23,6 @@
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
-#include <nvcv/alloc/CustomAllocator.hpp>
-#include <nvcv/alloc/CustomResourceAllocator.hpp>
 #include <nvcv/cuda/SaturateCast.hpp>
 
 #include <iostream>

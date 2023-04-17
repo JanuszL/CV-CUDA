@@ -71,6 +71,66 @@ struct IsInvocable : decltype(IsInvocableF<Args...>(AddPointer_t<Callable>()))
 {
 };
 
+template<typename...>
+struct Conjunction : std::true_type
+{
+};
+
+template<bool, typename...>
+struct ConjunctionImpl;
+
+template<typename T, typename... Ts>
+struct Conjunction<T, Ts...> : ConjunctionImpl<T::value, Ts...>
+{
+};
+
+template<typename... Ts>
+struct ConjunctionImpl<false, Ts...> : std::false_type
+{
+};
+
+template<typename... Ts>
+struct ConjunctionImpl<true, Ts...> : Conjunction<Ts...>
+{
+};
+
+static_assert(Conjunction<>::value, "Conjunction tail should evaluate to true");
+static_assert(Conjunction<std::true_type>::value, "Sanity check failed");
+static_assert(!Conjunction<std::false_type>::value, "Sanity check failed");
+static_assert(!Conjunction<std::true_type, std::true_type, std::false_type, std::true_type>::value,
+              "Sanity check failed");
+static_assert(Conjunction<std::true_type, std::true_type, std::true_type>::value, "Sanity check failed");
+
+template<typename...>
+struct Disjunction : std::false_type
+{
+};
+
+template<bool, typename...>
+struct DisjunctionImpl;
+
+template<typename T, typename... Ts>
+struct Disjunction<T, Ts...> : DisjunctionImpl<T::value, Ts...>
+{
+};
+
+template<typename... Ts>
+struct DisjunctionImpl<true, Ts...> : std::true_type
+{
+};
+
+template<typename... Ts>
+struct DisjunctionImpl<false, Ts...> : Disjunction<Ts...>
+{
+};
+
+static_assert(!Disjunction<>::value, "Disjunction tail should evaluate to false");
+static_assert(Disjunction<std::true_type>::value, "Sanity check failed");
+static_assert(!Disjunction<std::false_type>::value, "Sanity check failed");
+static_assert(Disjunction<std::false_type, std::false_type, std::true_type, std::false_type>::value,
+              "Sanity check failed");
+static_assert(!Disjunction<std::false_type, std::false_type, std::false_type>::value, "Sanity check failed");
+
 }} // namespace nvcv::detail
 
 #endif // NVCV_TYPE_TRAITS_HPP

@@ -19,8 +19,7 @@
 
 #include <nvcv/Casts.hpp>
 #include <nvcv/Image.hpp>
-#include <nvcv/alloc/CustomAllocator.hpp>
-#include <nvcv/alloc/CustomResourceAllocator.hpp>
+#include <nvcv/alloc/Allocator.hpp>
 
 #include <nvcv/Fwd.hpp>
 
@@ -167,7 +166,7 @@ TEST(Image, wip_create_managed)
     };
     // clang-format on
 
-    nvcv::Image img({163, 117}, nvcv::FMT_RGBA8, &managedAlloc,
+    nvcv::Image img({163, 117}, nvcv::FMT_RGBA8, managedAlloc,
                     nvcv::MemAlignment{}.rowAddr(1).baseAddr(32)); // packed rows
     EXPECT_EQ(32, setBufAlign);
 

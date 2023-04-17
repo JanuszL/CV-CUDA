@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -83,10 +83,10 @@ CustomAllocator::CustomAllocator(const NVCVCustomAllocator *customAllocators, in
         filledMap |= 1 << custAlloc.resType;
     }
 
-    // Now go through all allocators, find the ones that aren't customized
-    // and set them to corresponding default allocator.
+    m_customAllocatorMask = filledMap;
 
-    static IAllocator &defAllocator = GetDefaultAllocator();
+    // Now go through all allocators, find the ones that aren't customized
+    // and set them to the corresponding default allocator.
 
     for (int i = 0; i < NVCV_NUM_RESOURCE_TYPES; ++i)
     {
@@ -98,63 +98,33 @@ CustomAllocator::CustomAllocator(const NVCVCustomAllocator *customAllocators, in
             continue; // skip it
         }
 
-        // Context not needed
-        custAllocator.ctx = nullptr;
-
-        custAllocator.resType = static_cast<NVCVResourceType>(i);
         filledMap |= (1 << i);
-
-        switch (static_cast<NVCVResourceType>(i))
-        {
-        case NVCV_RESOURCE_MEM_HOST:
-            static auto defAllocHostMem = [](void *ctx, int64_t size, int32_t align)
-            {
-                return defAllocator.allocHostMem(size, align);
-            };
-            static auto defFreeHostMem = [](void *ctx, void *ptr, int64_t size, int32_t align)
-            {
-                (void)size;
-                (void)align;
-                return defAllocator.freeHostMem(ptr, size, align);
-            };
-            custAllocator.res.mem.fnAlloc = defAllocHostMem;
-            custAllocator.res.mem.fnFree  = defFreeHostMem;
-            break;
-
-        case NVCV_RESOURCE_MEM_CUDA:
-            static auto defAllocCudaMem = [](void *ctx, int64_t size, int32_t align)
-            {
-                return defAllocator.allocCudaMem(size, align);
-            };
-            static auto defFreeCudaMem = [](void *ctx, void *ptr, int64_t size, int32_t align)
-            {
-                (void)size;
-                (void)align;
-                return defAllocator.freeCudaMem(ptr, size, align);
-            };
-            custAllocator.res.mem.fnAlloc = defAllocCudaMem;
-            custAllocator.res.mem.fnFree  = defFreeCudaMem;
-            break;
-
-        case NVCV_RESOURCE_MEM_HOST_PINNED:
-            static auto defAllocHostPinnedMem = [](void *ctx, int64_t size, int32_t align)
-            {
-                return defAllocator.allocHostPinnedMem(size, align);
-            };
-            static auto defFreeHostPinnedMem = [](void *ctx, void *ptr, int64_t size, int32_t align)
-            {
-                (void)size;
-                (void)align;
-                return defAllocator.freeHostPinnedMem(ptr, size, align);
-            };
-            custAllocator.res.mem.fnAlloc = defAllocHostPinnedMem;
-            custAllocator.res.mem.fnFree  = defFreeHostPinnedMem;
-            break;
-        }
+        custAllocator = GetDefaultAllocator().get((NVCVResourceType)i, true);
     }
 
     NVCV_ASSERT((filledMap & ((1 << NVCV_NUM_RESOURCE_TYPES) - 1)) == ((1 << NVCV_NUM_RESOURCE_TYPES) - 1)
                 && "Some allocators weren't filled in");
+}
+
+CustomAllocator::~CustomAllocator()
+{
+    for (NVCVCustomAllocator &alloc : m_allocators)
+    {
+        if (alloc.cleanup)
+        {
+            alloc.cleanup(alloc.ctx, &alloc);
+        }
+    }
+}
+
+NVCVCustomAllocator CustomAllocator::doGet(NVCVResourceType resType, bool returnDefault)
+{
+    NVCV_ASSERT(static_cast<unsigned>(resType) < NVCV_NUM_RESOURCE_TYPES);
+    if (!returnDefault && !(m_customAllocatorMask & (1 << resType)))
+        throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
+            << "There's no custom allocator for the resource type " << resType << ".";
+
+    return m_allocators[resType];
 }
 
 // Host Memory ------------------

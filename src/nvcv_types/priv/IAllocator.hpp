@@ -20,7 +20,7 @@
 
 #include "ICoreObject.hpp"
 
-#include <nvcv/alloc/Fwd.h>
+#include <nvcv/alloc/Allocator.h>
 
 #include <memory>
 
@@ -38,6 +38,8 @@ public:
     void *allocCudaMem(int64_t size, int32_t align);
     void  freeCudaMem(void *ptr, int64_t size, int32_t align) noexcept;
 
+    NVCVCustomAllocator get(NVCVResourceType resType, bool returnDefault);
+
 private:
     // NVI idiom
     virtual void *doAllocHostMem(int64_t size, int32_t align)                    = 0;
@@ -48,6 +50,8 @@ private:
 
     virtual void *doAllocCudaMem(int64_t size, int32_t align)                    = 0;
     virtual void  doFreeCudaMem(void *ptr, int64_t size, int32_t align) noexcept = 0;
+
+    virtual NVCVCustomAllocator doGet(NVCVResourceType resType, bool returnDefault) = 0;
 };
 
 template<class T, class... ARGS>

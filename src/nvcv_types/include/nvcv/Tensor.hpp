@@ -23,7 +23,7 @@
 #include "ImageFormat.hpp"
 #include "Size.hpp"
 #include "TensorData.hpp"
-#include "alloc/IAllocator.hpp"
+#include "alloc/Allocator.hpp"
 #include "detail/Callback.hpp"
 
 namespace nvcv {
@@ -37,11 +37,11 @@ public:
     static Requirements CalcRequirements(int numImages, Size2D imgSize, ImageFormat fmt,
                                          const MemAlignment &bufAlign = {});
 
-    explicit Tensor(const Requirements &reqs, IAllocator *alloc = nullptr);
+    explicit Tensor(const Requirements &reqs, const Allocator &alloc = nullptr);
     explicit Tensor(const TensorShape &shape, DataType dtype, const MemAlignment &bufAlign = {},
-                    IAllocator *alloc = nullptr);
+                    const Allocator &alloc = nullptr);
     explicit Tensor(int numImages, Size2D imgSize, ImageFormat fmt, const MemAlignment &bufAlign = {},
-                    IAllocator *alloc = nullptr);
+                    const Allocator &alloc = nullptr);
     ~Tensor();
 
     Tensor(const Tensor &) = delete;

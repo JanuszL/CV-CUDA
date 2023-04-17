@@ -21,7 +21,7 @@
 #include "IImage.hpp"
 #include "ImageData.hpp"
 #include "Size.hpp"
-#include "alloc/IAllocator.hpp"
+#include "alloc/Allocator.hpp"
 #include "detail/Callback.hpp"
 
 #include <nvcv/ImageFormat.hpp>
@@ -38,8 +38,9 @@ public:
     using Requirements = NVCVImageRequirements;
     static Requirements CalcRequirements(const Size2D &size, ImageFormat fmt, const MemAlignment &bufAlign = {});
 
-    explicit Image(const Requirements &reqs, IAllocator *alloc = nullptr);
-    explicit Image(const Size2D &size, ImageFormat fmt, IAllocator *alloc = nullptr, const MemAlignment &bufAlign = {});
+    explicit Image(const Requirements &reqs, const Allocator &alloc = nullptr);
+    explicit Image(const Size2D &size, ImageFormat fmt, const Allocator &alloc = nullptr,
+                   const MemAlignment &bufAlign = {});
     ~Image();
 
     Image(const Image &) = delete;

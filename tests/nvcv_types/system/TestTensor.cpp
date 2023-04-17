@@ -22,8 +22,7 @@
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
-#include <nvcv/alloc/CustomAllocator.hpp>
-#include <nvcv/alloc/CustomResourceAllocator.hpp>
+#include <nvcv/alloc/Allocator.hpp>
 
 #include <list>
 #include <random>
@@ -216,7 +215,7 @@ TEST(TensorTests, wip_create_allocator)
     // clang-format on
 
     nvcv::Tensor tensor(5, {163, 117}, nvcv::FMT_RGBA8, nvcv::MemAlignment{}.rowAddr(1).baseAddr(32),
-                        &myAlloc); // packed rows
+                        myAlloc); // packed rows
     EXPECT_EQ(32, setBufAlign);
 
     auto devdata = tensor.exportData<nvcv::TensorDataStridedCuda>();

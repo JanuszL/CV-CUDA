@@ -24,8 +24,6 @@
 #include <nvcv/Rect.h>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
-#include <nvcv/alloc/CustomAllocator.hpp>
-#include <nvcv/alloc/CustomResourceAllocator.hpp>
 
 #include <cmath>
 #include <iostream>

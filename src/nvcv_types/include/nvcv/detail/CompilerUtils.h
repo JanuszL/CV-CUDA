@@ -26,8 +26,10 @@
 
 #if __cplusplus < 201703L
 #    define NVCV_NODISCARD
+#    define NVCV_IF_CONSTEXPR
 #else
-#    define NVCV_NODISCARD [[nodiscard]]
+#    define NVCV_NODISCARD    [[nodiscard]]
+#    define NVCV_IF_CONSTEXPR constexpr
 #endif
 
 #endif // NVCV_DETAIL_COMPILERUTILS_H

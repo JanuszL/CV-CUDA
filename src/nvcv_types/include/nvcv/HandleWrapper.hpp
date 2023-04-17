@@ -322,14 +322,19 @@ public:
      * @param handle    The handle to be managed.
      *                  The handle is passed by an r-value reference and is set to null to
      *                  emphasize the transfer of ownership.
+     *
+     * @return The updated reference count of the *old* handle - if it's zero,
+     *         the object was destroyed or the handle was already null. If it's >0, the object
+     *         still had some live references.
      */
-    void reset(HandleType &&handle = HandleOps::Null())
+    int reset(HandleType &&handle = HandleOps::Null())
     {
         auto old = m_handle;
         m_handle = std::move(handle);
         handle   = HandleOps::Null();
         if (!HandleOps::IsNull(old))
-            HandleOps::DecRef(old);
+            return HandleOps::DecRef(old);
+        return 0;
     }
 
     /** Relinquishes the ownership of the handle and returns the formerly managed handle.

@@ -115,7 +115,12 @@ typedef union NVCVCustomResourceAllocatorRec
     NVCVCustomMemAllocator mem;
 } NVCVCustomResourceAllocator;
 
-typedef struct NVCVCustomAllocatorRec
+typedef struct NVCVCustomAllocatorRec NVCVCustomAllocator;
+
+/** Custom allocator cleanup function type */
+typedef void (*NVCVCustomAllocatorCleanupFunc)(void *ctx, NVCVCustomAllocator *data);
+
+struct NVCVCustomAllocatorRec
 {
     /** Pointer to user context.
      *  It's passed unchanged to memory allocation/deallocation functions.
@@ -127,7 +132,9 @@ typedef struct NVCVCustomAllocatorRec
     NVCVResourceType resType;
 
     NVCVCustomResourceAllocator res;
-} NVCVCustomAllocator;
+
+    NVCVCustomAllocatorCleanupFunc cleanup;
+};
 
 typedef struct NVCVAllocator *NVCVAllocatorHandle;
 
@@ -197,6 +204,21 @@ NVCV_PUBLIC NVCVStatus nvcvAllocatorIncRef(NVCVAllocatorHandle handle, int *newR
  * @retval #NVCV_SUCCESS                Operation executed successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvAllocatorRefCount(NVCVAllocatorHandle handle, int *newRefCount);
+
+/** Gets a custom allocator descriptor for given resource type.
+ *
+ * Retrieves a resource descriptor
+ *
+ * @param handle        The allocator handle
+ * @param resType       The resource type for which to get the descriptor
+ * @param returnDefault If false, the function will fail if the allocator doesn't customize given resourceType.
+ *                      If true, it will return a descriptor populated with pointers to default allocation functions.
+ * @param [out] result  The underlying custom allocator
+ * @retval #NVCV_ERROR_INVALID_ARGUMENT The handle is invalid or there's no allocator that corresponds to resType.
+ * @retval #NVCV_SUCCESS                Allocator created successfully.
+ */
+NVCV_PUBLIC NVCVStatus nvcvAllocatorGet(NVCVAllocatorHandle handle, NVCVResourceType resType, int returnDefault,
+                                        NVCVCustomAllocator *result);
 
 /** Associates a user pointer to the allocator handle.
  *
