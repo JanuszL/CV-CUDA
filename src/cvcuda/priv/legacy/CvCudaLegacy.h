@@ -1235,11 +1235,11 @@ public:
      * The src and dist size can be got from input and output tensor.
      * For example, top=1, left=1, src_w=64, src_h=64, dist_w=66, dist_h=66 mean that it builds 1 pixel-wide border.
      * @param border_type border type. See \p NVCVBorderType for details.
-     * @param value border value if borderType==BORDER_CONSTANT.
+     * @param borderValue border value if borderType==BORDER_CONSTANT.
      * @param stream for the asynchronous execution.
      */
     ErrorCode infer(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData, const int top,
-                    const int left, const NVCVBorderType border_type, const float4 value, cudaStream_t stream);
+                    const int left, const NVCVBorderType border_type, const float4 &borderValue, cudaStream_t stream);
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator
      * @param max_input_shape maximum input DataShape that may be used
