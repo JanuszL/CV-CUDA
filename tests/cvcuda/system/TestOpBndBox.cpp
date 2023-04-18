@@ -49,10 +49,16 @@ static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAcce
     for (int i = 0; i < bboxes.box_num; i++) {
         auto bbox   = bboxes.boxes[i];
 
-        int left    = bbox.rect.x;
-        int top     = bbox.rect.y;
-        int right   = left + bbox.rect.width - 1;
-        int bottom  = top + bbox.rect.height - 1;
+        int left    = std::max(std::min(bbox.rect.x, data.numCols() - 1), 0);
+        int top     = std::max(std::min(bbox.rect.y, data.numRows() - 1), 0);
+        int right   = std::max(std::min(left + bbox.rect.width - 1, data.numCols() - 1), 0);
+        int bottom  = std::max(std::min(top + bbox.rect.height - 1, data.numRows() - 1), 0);
+
+        if (left == right || top == bottom || bbox.rect.width <= 0 || bbox.rect.height <= 0)
+        {
+            continue;
+        }
+
         int thickness           = bbox.thickness;
 
         cuOSDColor borderColor  = { bbox.borderColor.r, bbox.borderColor.g, bbox.borderColor.b, bbox.borderColor.a };
@@ -101,13 +107,13 @@ TEST_P(OpBndBox, BndBox_sanity)
     srand(seed);
     for (int i=0; i<num; i++) {
         NVCVBndBoxI bndBox;
-        bndBox.rect.x            = randl(0, inWidth - 1);
-        bndBox.rect.y            = randl(0, inHeight - 1);
-        bndBox.rect.width        = randl(1, inWidth - bndBox.rect.x);
-        bndBox.rect.height       = randl(1, inHeight - bndBox.rect.y);
-        bndBox.thickness    = randl(-1, 30);
-        bndBox.fillColor    = { (unsigned char)randl(0, 255), (unsigned char)randl(0, 255), (unsigned char)randl(0, 255), (unsigned char)randl(0, 255) };
-        bndBox.borderColor  = { (unsigned char)randl(0, 255), (unsigned char)randl(0, 255), (unsigned char)randl(0, 255), (unsigned char)randl(0, 255) };
+        bndBox.rect.x           = randl(0, inWidth - 1);
+        bndBox.rect.y           = randl(0, inHeight - 1);
+        bndBox.rect.width       = randl(1, inWidth);
+        bndBox.rect.height      = randl(1, inHeight);
+        bndBox.thickness        = randl(-1, 30);
+        bndBox.fillColor        = { (unsigned char)randl(0, 255), (unsigned char)randl(0, 255), (unsigned char)randl(0, 255), (unsigned char)randl(0, 255) };
+        bndBox.borderColor      = { (unsigned char)randl(0, 255), (unsigned char)randl(0, 255), (unsigned char)randl(0, 255), (unsigned char)randl(0, 255) };
         bndBoxVec.push_back(bndBox);
     }
 

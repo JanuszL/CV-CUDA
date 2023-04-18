@@ -161,21 +161,28 @@ inline ErrorCode ApplyBoxBlur_RGBA(const nvcv::TensorDataStridedCuda &inData, co
     return ErrorCode::SUCCESS;
 }
 
-static ErrorCode cuosd_draw_boxblur(cuOSDContext_t context, NVCVBlurBoxesI bboxes){
+static ErrorCode cuosd_draw_boxblur(cuOSDContext_t context, int width, int height, NVCVBlurBoxesI bboxes){
 
     for (int i = 0; i < bboxes.box_num; i++) {
         auto bbox   = bboxes.boxes[i];
 
-        int left    = bbox.rect.x;
-        int top     = bbox.rect.y;
-        int right   = left + bbox.rect.width - 1;
-        int bottom  = top + bbox.rect.height - 1;
+        int left    = max(min(bbox.rect.x, width - 1),    0);
+        int top     = max(min(bbox.rect.y, height - 1),   0);
+        int right   = max(min(left + bbox.rect.width - 1, width - 1),  0);
+        int bottom  = max(min(top + bbox.rect.height - 1, height - 1), 0);
+
+        if (left == right || top == bottom)
+        {
+            LOG_INFO("Skipped boxblur at rect(" << bbox.rect.x << ", " << bbox.rect.y << ", "<< bbox.rect.width << ", " << bbox.rect.height
+                     << ") in image(" << width << ", " << height << ")");
+            continue;
+        }
 
         if (bbox.rect.width < 3 || bbox.rect.height < 3 || bbox.kernelSize < 1)
         {
-            LOG_ERROR("This operation will be ignored because the region of interest is too small, or the kernel is too small."
-                      << bbox.rect.width << " " << bbox.rect.height << " " << bbox.kernelSize);
-            return ErrorCode::INVALID_PARAMETER;
+            LOG_INFO("This operation will be ignored because the region of interest is too small, or the kernel is too small at rect(" <<
+                      << bbox.rect.x << ", " << bbox.rect.y << bbox.rect.width << ", " << bbox.rect.height << ") with kernelSize=" << bbox.kernelSize);
+            continue;
         }
 
         auto cmd = std::make_shared<BoxBlurCommand>();
@@ -256,7 +263,7 @@ ErrorCode BoxBlur::infer(const nvcv::TensorDataStridedCuda &inData, const nvcv::
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    auto ret = cuosd_draw_boxblur(m_context, bboxes);
+    auto ret = cuosd_draw_boxblur(m_context, cols, rows, bboxes);
     if (ret != ErrorCode::SUCCESS) {
         return ret;
     }

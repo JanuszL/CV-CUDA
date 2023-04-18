@@ -247,20 +247,21 @@ inline ErrorCode ApplyBndBox_RGBA(const nvcv::TensorDataStridedCuda &inData, con
     return ErrorCode::SUCCESS;
 }
 
-static void cuosd_draw_rectangle(cuOSDContext_t context, NVCVBndBoxesI bboxes){
+static ErrorCode cuosd_draw_rectangle(cuOSDContext_t context, int width, int height, NVCVBndBoxesI bboxes){
 
     for (int i = 0; i < bboxes.box_num; i++) {
         auto bbox   = bboxes.boxes[i];
 
-        int left    = bbox.rect.x;
-        int top     = bbox.rect.y;
-        int right   = left + bbox.rect.width - 1;
-        int bottom  = top + bbox.rect.height - 1;
+        int left    = max(min(bbox.rect.x, width - 1),    0);
+        int top     = max(min(bbox.rect.y, height - 1),   0);
+        int right   = max(min(left + bbox.rect.width - 1, width - 1),  0);
+        int bottom  = max(min(top + bbox.rect.height - 1, height - 1), 0);
 
-        if (bbox.rect.width <= 0 || bbox.rect.height <= 0)
+        if (left == right || top == bottom || bbox.rect.width <= 0 || bbox.rect.height <= 0)
         {
-            LOG_ERROR("Invalid bbox width, height = " << bbox.rect.width << ", " << bbox.rect.height);
-            return;
+            LOG_INFO("Skipped bbox rect(" << bbox.rect.x << ", " << bbox.rect.y << ", "<< bbox.rect.width << ", " << bbox.rect.height
+                     << ") in image(" << width << ", " << height << ")");
+            continue;
         }
 
         if (bbox.borderColor.a == 0) continue;
@@ -315,6 +316,8 @@ static void cuosd_draw_rectangle(cuOSDContext_t context, NVCVBndBoxesI bboxes){
         cmd->bounding_bottom = bottom + int_half;
         context->commands.emplace_back(cmd);
     }
+
+    return ErrorCode::SUCCESS;
 }
 
 BndBox::BndBox(DataShape max_input_shape, DataShape max_output_shape)
@@ -384,7 +387,10 @@ ErrorCode BndBox::infer(const nvcv::TensorDataStridedCuda &inData, const nvcv::T
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    cuosd_draw_rectangle(m_context, bboxes);
+    auto ret = cuosd_draw_rectangle(m_context, cols, rows, bboxes);
+    if (ret != ErrorCode::SUCCESS) {
+        return ret;
+    }
 
     typedef ErrorCode (*func_t)(const nvcv::TensorDataStridedCuda &inData, const nvcv::TensorDataStridedCuda &outData,
                                 cuOSDContext_t context, cudaStream_t stream);
