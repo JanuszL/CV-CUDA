@@ -18,6 +18,8 @@
 #ifndef NVCV_OSD_ELEMENT_H
 #define NVCV_OSD_ELEMENT_H
 
+#include <nvcv/Rect.h>
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -32,10 +34,7 @@ typedef struct {
 
 typedef struct
 {
-    int32_t         x;              //!< X coordinate of the top-left corner.
-    int32_t         y;              //!< Y coordinate of the top-left corner.
-    int32_t         width;          //!< Width of the bounding box.
-    int32_t         height;         //!< Height of the bounding box.
+    NVCVRectI       rect;           //!< Rectangle of the bounding box, \ref NVCVRectI.
     int32_t         thickness;      //!< Border thickness of bounding box.
     NVCVColor       borderColor;    //!< Border color of bounding box.
     NVCVColor       fillColor;      //!< Filled color of bounding box.
@@ -49,10 +48,7 @@ typedef struct
 
 typedef struct
 {
-    int32_t         x;              //!< X coordinate of the top-left corner.
-    int32_t         y;              //!< Y coordinate of the top-left corner.
-    int32_t         width;          //!< Width of the blur box.
-    int32_t         height;         //!< Height of the blur box.
+    NVCVRectI       rect;           //!< Rectangle of the blur box, \ref NVCVRectI.
     int32_t         kernelSize;     //!< Kernel sizes of mean filter, refer to cv::blur().
 } NVCVBlurBoxI;
 

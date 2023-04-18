@@ -42,17 +42,17 @@ static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAcce
     test::osd::Image* image = test::osd::create_image(data.numCols(), data.numRows(), test::osd::ImageFormat::RGBA);
     EXPECT_EQ(cudaSuccess, cudaMemcpy(image->data0, inBuf, vect.size(), cudaMemcpyDeviceToDevice));
 
-    test::osd::save_image(image, "workspace/input.png", stream);
+    test::osd::save_image(image, "workspace/inputBndBox.png", stream);
 
     auto context = cuosd_context_create();
 
     for (int i = 0; i < bboxes.box_num; i++) {
         auto bbox   = bboxes.boxes[i];
 
-        int left    = bbox.x;
-        int top     = bbox.y;
-        int right   = left + bbox.width - 1;
-        int bottom  = top + bbox.height - 1;
+        int left    = bbox.rect.x;
+        int top     = bbox.rect.y;
+        int right   = left + bbox.rect.width - 1;
+        int bottom  = top + bbox.rect.height - 1;
         int thickness           = bbox.thickness;
 
         cuOSDColor borderColor  = { bbox.borderColor.r, bbox.borderColor.g, bbox.borderColor.b, bbox.borderColor.a };
@@ -65,13 +65,13 @@ static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAcce
     cuosd_context_destroy(context);
 
     EXPECT_EQ(cudaSuccess, cudaMemcpy(vect.data(), image->data0, vect.size(), cudaMemcpyDeviceToHost));
-    test::osd::save_image(image, "workspace/gold.png", stream);
+    test::osd::save_image(image, "workspace/goldBndBox.png", stream);
 }
 
 static void dumpTest(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStridedImagePlanar &data, nvcv::Byte *testBuf){
     test::osd::Image* image = test::osd::create_image(data.numCols(), data.numRows(), test::osd::ImageFormat::RGBA);
     EXPECT_EQ(cudaSuccess, cudaMemcpy(image->data0, testBuf, vect.size(), cudaMemcpyDeviceToDevice));
-    test::osd::save_image(image, "workspace/test.png");
+    test::osd::save_image(image, "workspace/testBndBox.png");
 }
 
 // clang-format off
@@ -101,13 +101,13 @@ TEST_P(OpBndBox, BndBox_sanity)
     srand(seed);
     for (int i=0; i<num; i++) {
         NVCVBndBoxI bndBox;
-        bndBox.x            = randl(0, inWidth - 1);
-        bndBox.y            = randl(0, inHeight - 1);
-        bndBox.width        = randl(1, inWidth - bndBox.x);
-        bndBox.height       = randl(1, inHeight - bndBox.y);
+        bndBox.rect.x            = randl(0, inWidth - 1);
+        bndBox.rect.y            = randl(0, inHeight - 1);
+        bndBox.rect.width        = randl(1, inWidth - bndBox.rect.x);
+        bndBox.rect.height       = randl(1, inHeight - bndBox.rect.y);
         bndBox.thickness    = randl(-1, 30);
-        bndBox.fillColor    = { randl(0, 255), randl(0, 255), randl(0, 255), randl(0, 255) };
-        bndBox.borderColor  = { randl(0, 255), randl(0, 255), randl(0, 255), randl(0, 255) };
+        bndBox.fillColor    = { (unsigned char)randl(0, 255), (unsigned char)randl(0, 255), (unsigned char)randl(0, 255), (unsigned char)randl(0, 255) };
+        bndBox.borderColor  = { (unsigned char)randl(0, 255), (unsigned char)randl(0, 255), (unsigned char)randl(0, 255), (unsigned char)randl(0, 255) };
         bndBoxVec.push_back(bndBox);
     }
 

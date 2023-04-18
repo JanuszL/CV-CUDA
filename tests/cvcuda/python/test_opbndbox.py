@@ -24,9 +24,9 @@ import numpy as np
         (
             cvcuda.Tensor((1, 16, 23, 4), np.uint8, "NHWC"),
             cvcuda.BndBoxesI([
-                cvcuda.BndBoxI(x=1, y=1, width=5, height=5, thickness=20, borderColor=(0, 255, 0), fillColor=(0, 128, 255, 128)),
-                cvcuda.BndBoxI(x=3, y=3, width=5, height=5, thickness=20, borderColor=(0, 255, 0), fillColor=(0, 128, 255, 128)),
-                cvcuda.BndBoxI(x=6, y=6, width=5, height=5, thickness=20, borderColor=(0, 255, 0), fillColor=(0, 128, 255, 128)),
+                cvcuda.BndBoxI(rect=(1, 1, 5, 5), thickness=20, borderColor=(0, 255, 0), fillColor=(0, 128, 255, 128)),
+                cvcuda.BndBoxI(rect=(3, 3, 5, 5), thickness=20, borderColor=(0, 255, 0), fillColor=(0, 128, 255, 128)),
+                cvcuda.BndBoxI(rect=(6, 6, 5, 5), thickness=20, borderColor=(0, 255, 0), fillColor=(0, 128, 255, 128)),
             ]),
         ),
     ],

@@ -36,17 +36,17 @@ static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAcce
     test::osd::Image* image = test::osd::create_image(data.numCols(), data.numRows(), test::osd::ImageFormat::RGBA);
     EXPECT_EQ(cudaSuccess, cudaMemcpy(image->data0, inBuf, vect.size(), cudaMemcpyDeviceToDevice));
 
-    test::osd::save_image(image, "workspace/input.png", stream);
+    test::osd::save_image(image, "workspace/inputBoxBlur.png", stream);
 
     auto context = cuosd_context_create();
 
     for (int i = 0; i < bboxes.box_num; i++) {
         auto bbox   = bboxes.boxes[i];
 
-        int left        = bbox.x;
-        int top         = bbox.y;
-        int right       = left + bbox.width - 1;
-        int bottom      = top + bbox.height - 1;
+        int left        = bbox.rect.x;
+        int top         = bbox.rect.y;
+        int right       = left + bbox.rect.width - 1;
+        int bottom      = top + bbox.rect.height - 1;
         int kernelSize  = bbox.kernelSize;
 
         cuosd_draw_boxblur(context, left, top, right, bottom, kernelSize);
@@ -56,13 +56,13 @@ static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAcce
     cuosd_context_destroy(context);
 
     EXPECT_EQ(cudaSuccess, cudaMemcpy(vect.data(), image->data0, vect.size(), cudaMemcpyDeviceToHost));
-    test::osd::save_image(image, "workspace/gold.png", stream);
+    test::osd::save_image(image, "workspace/goldBoxBlur.png", stream);
 }
 
 static void dumpTest(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStridedImagePlanar &data, nvcv::Byte *testBuf){
     test::osd::Image* image = test::osd::create_image(data.numCols(), data.numRows(), test::osd::ImageFormat::RGBA);
     EXPECT_EQ(cudaSuccess, cudaMemcpy(image->data0, testBuf, vect.size(), cudaMemcpyDeviceToDevice));
-    test::osd::save_image(image, "workspace/test.png");
+    test::osd::save_image(image, "workspace/testBoxBlur.png");
 }
 
 // clang-format off
@@ -95,10 +95,10 @@ TEST_P(OpBoxBlur, BoxBlur_sanity)
         int x = (inW / cols) * i + wBox / 2;
         for (int j=0; j<rows; j++) {
             NVCVBlurBoxI blurBox;
-            blurBox.x            = x;
-            blurBox.y            = (inH / rows) * j + hBox / 2;
-            blurBox.width        = wBox;
-            blurBox.height       = hBox;
+            blurBox.rect.x            = x;
+            blurBox.rect.y            = (inH / rows) * j + hBox / 2;
+            blurBox.rect.width        = wBox;
+            blurBox.rect.height       = hBox;
             blurBox.kernelSize   = ks;
             blurBoxVec.push_back(blurBox);
         }

@@ -252,14 +252,14 @@ static void cuosd_draw_rectangle(cuOSDContext_t context, NVCVBndBoxesI bboxes){
     for (int i = 0; i < bboxes.box_num; i++) {
         auto bbox   = bboxes.boxes[i];
 
-        int left    = bbox.x;
-        int top     = bbox.y;
-        int right   = left + bbox.width - 1;
-        int bottom  = top + bbox.height - 1;
+        int left    = bbox.rect.x;
+        int top     = bbox.rect.y;
+        int right   = left + bbox.rect.width - 1;
+        int bottom  = top + bbox.rect.height - 1;
 
-        if (bbox.width <= 0 || bbox.height <= 0)
+        if (bbox.rect.width <= 0 || bbox.rect.height <= 0)
         {
-            LOG_ERROR("Invalid bbox width, height = " << bbox.width << ", " << bbox.height);
+            LOG_ERROR("Invalid bbox width, height = " << bbox.rect.width << ", " << bbox.rect.height);
             return;
         }
 

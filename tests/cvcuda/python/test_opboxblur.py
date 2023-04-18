@@ -24,9 +24,9 @@ import numpy as np
         (
             cvcuda.Tensor((1, 100, 100, 4), np.uint8, "NHWC"),
             cvcuda.BlurBoxesI([
-                cvcuda.BlurBoxI(x=50, y=50, width=3, height=3, kernelSize=8),
-                cvcuda.BlurBoxI(x=50, y=50, width=5, height=5, kernelSize=11),
-                cvcuda.BlurBoxI(x=50, y=50, width=7, height=7, kernelSize=17),
+                cvcuda.BlurBoxI(rect=(50, 50, 3, 3), kernelSize=8),
+                cvcuda.BlurBoxI(rect=(50, 50, 5, 5), kernelSize=11),
+                cvcuda.BlurBoxI(rect=(50, 50, 7, 7), kernelSize=17),
             ]),
         ),
     ],

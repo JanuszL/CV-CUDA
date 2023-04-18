@@ -23,33 +23,46 @@
 
 static std::ostream &operator<<(std::ostream &out, const NVCVBndBoxI &bbox)
 {
-    return out << "BndBox(x=" << bbox.x << ",y=" << bbox.y << ",width=" << bbox.width << ",height=" << bbox.height
+    return out << "BndBox(x=" << bbox.rect.x << ",y=" << bbox.rect.y << ",width=" << bbox.rect.width << ",height=" << bbox.rect.height
             << ",thickness=" << bbox.thickness << ')';
 }
 static std::ostream &operator<<(std::ostream &out, const NVCVBndBoxesI &bboxes)
 {
     for (int i = 0; i < bboxes.box_num; i++) {
         auto bbox = bboxes.boxes[i];
-        out << "BndBoxes[" << i << "](x=" << bbox.x << ",y=" << bbox.y << ",width=" << bbox.width << ",height=" << bbox.height
+        out << "BndBoxes[" << i << "](x=" << bbox.rect.x << ",y=" << bbox.rect.y << ",width=" << bbox.rect.width << ",height=" << bbox.rect.height
             << ",thickness=" << bbox.thickness << ')';
     }
     return out;
 }
 static std::ostream &operator<<(std::ostream &out, const NVCVBlurBoxI &bbox)
 {
-    return out << "BlurBox(x=" << bbox.x << ",y=" << bbox.y << ",width=" << bbox.width << ",height=" << bbox.height
+    return out << "BlurBox(x=" << bbox.rect.x << ",y=" << bbox.rect.y << ",width=" << bbox.rect.width << ",height=" << bbox.rect.height
             << ",kernelSize=" << bbox.kernelSize << ')';
 }
 static std::ostream &operator<<(std::ostream &out, const NVCVBlurBoxesI &bboxes)
 {
     for (int i = 0; i < bboxes.box_num; i++) {
         auto bbox = bboxes.boxes[i];
-        out << "BlurBoxes[" << i << "](x=" << bbox.x << ",y=" << bbox.y << ",width=" << bbox.width << ",height=" << bbox.height
+        out << "BlurBoxes[" << i << "](x=" << bbox.rect.x << ",y=" << bbox.rect.y << ",width=" << bbox.rect.width << ",height=" << bbox.rect.height
             << ",kernelSize=" << bbox.kernelSize << ')';
     }
     return out;
 }
 namespace nvcvpy::priv {
+
+static NVCVRectI pytorect(py::tuple rect){
+  if(rect.size() > 4 || rect.size() == 0) throw py::value_error("Invalid color size.");
+
+  NVCVRectI ret;
+  memset(&ret, 0, sizeof(ret));
+
+  int* pr = (int*)&ret;
+  for(size_t i = 0; i < rect.size(); ++i){
+    pr[i] = rect[i].cast<int>();
+  }
+  return ret;
+}
 
 static NVCVColor pytocolor(py::tuple color){
   if(color.size() > 4 || color.size() == 0) throw py::value_error("Invalid color size.");
@@ -72,23 +85,16 @@ void ExportBndBox(py::module &m)
     py::class_<NVCVBndBoxI>(m, "BndBoxI")
         .def(py::init([]() { return NVCVBndBoxI{}; }))
         .def(py::init(
-                 [](int x, int y, int width, int height, int thickness, py::tuple borderColor, py::tuple fillColor)
+                 [](py::tuple rect, int thickness, py::tuple borderColor, py::tuple fillColor)
                  {
                      NVCVBndBoxI bndbox;
-                     bndbox.x = x;
-                     bndbox.y = y;
-                     bndbox.width = width;
-                     bndbox.height = height;
-                     bndbox.thickness = thickness;
+                     bndbox.rect = pytorect(rect);
                      bndbox.borderColor = pytocolor(borderColor);
                      bndbox.fillColor = pytocolor(fillColor);
                      return bndbox;
                  }),
-             "x"_a, "y"_a, "width"_a, "height"_a, "thickness"_a, "borderColor"_a, "fillColor"_a)
-        .def_readwrite("x", &NVCVBndBoxI::x)
-        .def_readwrite("y", &NVCVBndBoxI::y)
-        .def_readwrite("width", &NVCVBndBoxI::width)
-        .def_readwrite("height", &NVCVBndBoxI::height)
+             "rect"_a, "thickness"_a, "borderColor"_a, "fillColor"_a)
+        .def_readwrite("rect", &NVCVBndBoxI::rect)
         .def_readwrite("thickness", &NVCVBndBoxI::thickness)
         .def_readwrite("borderColor", &NVCVBndBoxI::borderColor)
         .def_readwrite("fillColor", &NVCVBndBoxI::fillColor)
@@ -117,21 +123,15 @@ void ExportBoxBlur(py::module &m)
     py::class_<NVCVBlurBoxI>(m, "BlurBoxI")
         .def(py::init([]() { return NVCVBlurBoxI{}; }))
         .def(py::init(
-                 [](int x, int y, int width, int height, int kernelSize)
+                 [](py::tuple rect, int kernelSize)
                  {
                      NVCVBlurBoxI blurbox;
-                     blurbox.x = x;
-                     blurbox.y = y;
-                     blurbox.width = width;
-                     blurbox.height = height;
+                     blurbox.rect = pytorect(rect);
                      blurbox.kernelSize = kernelSize;
                      return blurbox;
                  }),
-             "x"_a, "y"_a, "width"_a, "height"_a, "kernelSize"_a)
-        .def_readwrite("x", &NVCVBlurBoxI::x)
-        .def_readwrite("y", &NVCVBlurBoxI::y)
-        .def_readwrite("width", &NVCVBlurBoxI::width)
-        .def_readwrite("height", &NVCVBlurBoxI::height)
+             "rect"_a, "kernelSize"_a)
+        .def_readwrite("rect", &NVCVBlurBoxI::rect)
         .def_readwrite("kernelSize", &NVCVBlurBoxI::kernelSize)
         .def("__repr__", &util::ToString<NVCVBlurBoxI>);
 

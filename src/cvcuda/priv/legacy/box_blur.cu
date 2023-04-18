@@ -166,15 +166,15 @@ static ErrorCode cuosd_draw_boxblur(cuOSDContext_t context, NVCVBlurBoxesI bboxe
     for (int i = 0; i < bboxes.box_num; i++) {
         auto bbox   = bboxes.boxes[i];
 
-        int left    = bbox.x;
-        int top     = bbox.y;
-        int right   = left + bbox.width - 1;
-        int bottom  = top + bbox.height - 1;
+        int left    = bbox.rect.x;
+        int top     = bbox.rect.y;
+        int right   = left + bbox.rect.width - 1;
+        int bottom  = top + bbox.rect.height - 1;
 
-        if (bbox.width < 3 || bbox.height < 3 || bbox.kernelSize < 1)
+        if (bbox.rect.width < 3 || bbox.rect.height < 3 || bbox.kernelSize < 1)
         {
             LOG_ERROR("This operation will be ignored because the region of interest is too small, or the kernel is too small."
-                      << bbox.width << " " << bbox.height << " " << bbox.kernelSize);
+                      << bbox.rect.width << " " << bbox.rect.height << " " << bbox.kernelSize);
             return ErrorCode::INVALID_PARAMETER;
         }
 
