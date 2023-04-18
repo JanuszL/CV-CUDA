@@ -75,8 +75,6 @@ static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAcce
 
         bboxes.boxes = (NVCVBndBoxI *)((unsigned char *)bboxes.boxes + numBoxes * sizeof(NVCVBndBoxI));
         EXPECT_EQ(cudaSuccess, cudaMemcpy(vect.data() + n * bufSize, image->data0, bufSize, cudaMemcpyDeviceToHost));
-        // std::string img_path = "workspace/goldBndBox" + std::to_string(n) + ".png";
-        // test::osd::save_image(image, img_path.c_str(), stream);
     }
 
     cuosd_context_destroy(context);
@@ -88,8 +86,6 @@ static void dumpTest(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStr
         test::osd::Image* image = test::osd::create_image(data.numCols(), data.numRows(), test::osd::ImageFormat::RGBA);
         int bufSize = data.numCols() * data.numRows() * data.numChannels();
         EXPECT_EQ(cudaSuccess, cudaMemcpy(image->data0, testBuf + n * bufSize, bufSize, cudaMemcpyDeviceToDevice));
-        // std::string img_path = "workspace/testBndBox" + std::to_string(n) + ".png";
-        // test::osd::save_image(image, img_path.c_str());
     }
 }
 

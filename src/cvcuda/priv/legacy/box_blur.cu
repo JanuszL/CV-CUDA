@@ -103,13 +103,18 @@ static void cuosd_apply(
     cuOSDContext_t context, cudaStream_t stream
 ) 
 {
-    if(!context->blur_commands.empty()){
-        if (context->gpu_blur_commands == nullptr) context->gpu_blur_commands.reset(new Memory<BoxBlurCommand>());
+    if (!context->blur_commands.empty()) {
+        if (context->gpu_blur_commands == nullptr) {
+            context->gpu_blur_commands.reset(new Memory<BoxBlurCommand>());
+        }
+
         context->gpu_blur_commands->alloc_or_resize_to(context->blur_commands.size());
+
         for (int i = 0; i < (int)context->blur_commands.size(); ++i) {
             auto& cmd = context->blur_commands[i];
             memcpy((void*)(context->gpu_blur_commands->host() + i), (void*)cmd.get(), sizeof(BoxBlurCommand));
         }
+
         context->gpu_blur_commands->copy_host_to_device(stream);
     }
 }
@@ -208,6 +213,10 @@ BoxBlur::BoxBlur(DataShape max_input_shape, DataShape max_output_shape)
     : CudaBaseOp(max_input_shape, max_output_shape)
 {
     m_context = new cuOSDContext();
+    if (context->gpu_blur_commands == nullptr) {
+        context->gpu_blur_commands.reset(new Memory<BoxBlurCommand>());
+    }
+    m_context->gpu_blur_commands->alloc_or_resize_to(PREALLOC_CMD_NUM * sizeof(BoxBlurCommand));
 }
 
 BoxBlur::~BoxBlur(){

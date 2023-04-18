@@ -32,12 +32,7 @@ namespace nvcv::cuda {
 namespace osd {
 
 #define checkRuntime(call)  check_runtime(call, #call, __LINE__, __FILE__)
-
-#define CUOSD_PRINT_E(f_, ...) \
-  fprintf(stderr, "[cuOSD Error] at %s:%d : " f_, (const char*)__FILE__, __LINE__, ##__VA_ARGS__)
-
-#define CUOSD_PRINT_W(f_, ...) \
-  printf("[cuOSD Warning] at %s:%d : " f_, (const char*)__FILE__, __LINE__, ##__VA_ARGS__)
+#define PREALLOC_CMD_NUM 100
 
 static bool inline check_runtime(cudaError_t e, const char* call, int line, const char *file) {
     if (e != cudaSuccess) {
@@ -131,9 +126,8 @@ struct BoxBlurCommand {
 };
 
 struct cuOSDContext {
-    std::vector<std::shared_ptr<RectangleCommand>>  commands;
-    std::unique_ptr<Memory<unsigned char>>          gpu_commands;
-    std::unique_ptr<Memory<int>>                    gpu_commands_offset;
+    std::vector<std::shared_ptr<RectangleCommand>>  rect_commands;
+    std::unique_ptr<Memory<RectangleCommand>>       gpu_rect_commands;
     std::vector<std::shared_ptr<BoxBlurCommand>>    blur_commands;
     std::unique_ptr<Memory<BoxBlurCommand>>         gpu_blur_commands;
 

@@ -140,7 +140,7 @@ static __device__ void blending_pixel(
 template<class SrcWrapper, class DstWrapper>
 static __global__ void render_bndbox_rgba_womsaa_kernel(
     SrcWrapper src, DstWrapper dst, int bx, int by,
-    const unsigned char* commands, const int* command_offsets, int num_command,
+    const RectangleCommand* commands, int num_command,
     int width, int height
 ) {
     int ix = ((blockDim.x * blockIdx.x + threadIdx.x) << 1) + bx;
@@ -151,9 +151,9 @@ static __global__ void render_bndbox_rgba_womsaa_kernel(
     uchar4 context_color[4] = {0};
 
     for (int i = 0; i < num_command; ++i) {
-        RectangleCommand* pcommand = (RectangleCommand*)(commands + command_offsets[i]);
-        if(pcommand->batch_index != get_batch_idx()) continue;
-        do_rectangle_woMSAA(pcommand, ix, iy, context_color);
+        RectangleCommand pcommand = commands[i];
+        if(pcommand.batch_index != get_batch_idx()) continue;
+        do_rectangle_woMSAA(&pcommand, ix, iy, context_color);
     }
 
     if (context_color[0].w == 0 && context_color[1].w == 0 && context_color[2].w == 0 && context_color[3].w == 0)
@@ -171,34 +171,26 @@ static void cuosd_apply(
     context->bounding_right  = 0;
     context->bounding_bottom = 0;
 
-    size_t byte_of_commands = 0;
-    std::vector<unsigned int> cmd_offset(context->commands.size());
-    for (int i = 0; i < (int)context->commands.size(); ++i) {
-        auto& cmd = context->commands[i];
-        cmd_offset[i] = byte_of_commands;
-
+    for (int i = 0; i < (int)context->rect_commands.size(); ++i) {
+        auto& cmd = context->rect_commands[i];
         context->bounding_left   = min(context->bounding_left,   cmd->bounding_left);
         context->bounding_top    = min(context->bounding_top,    cmd->bounding_top);
         context->bounding_right  = max(context->bounding_right,  cmd->bounding_right);
         context->bounding_bottom = max(context->bounding_bottom, cmd->bounding_bottom);
-
-        byte_of_commands += sizeof(RectangleCommand);
     }
 
-    if (context->gpu_commands        == nullptr) context->gpu_commands.reset(new Memory<unsigned char>());
-    if (context->gpu_commands_offset == nullptr) context->gpu_commands_offset.reset(new Memory<int>());
-
-    context->gpu_commands->alloc_or_resize_to(byte_of_commands);
-    context->gpu_commands_offset->alloc_or_resize_to(cmd_offset.size());
-    memcpy(context->gpu_commands_offset->host(), cmd_offset.data(), sizeof(int) * cmd_offset.size());
-
-    for (int i = 0; i < (int)context->commands.size(); ++i) {
-        auto& cmd       = context->commands[i];
-        unsigned char* pg_cmd = context->gpu_commands->host() + cmd_offset[i];
-        memcpy(pg_cmd, cmd.get(), sizeof(RectangleCommand));
+    if (context->gpu_rect_commands == nullptr) {
+        context->gpu_rect_commands.reset(new Memory<RectangleCommand>());
     }
-    context->gpu_commands->copy_host_to_device(stream);
-    context->gpu_commands_offset->copy_host_to_device(stream);
+
+    context->gpu_rect_commands->alloc_or_resize_to(context->rect_commands.size());
+
+    for (int i = 0; i < (int)context->rect_commands.size(); ++i) {
+        auto& cmd       = context->rect_commands[i];
+        memcpy((void*)(context->gpu_rect_commands->host() + i), cmd.get(), sizeof(RectangleCommand));
+    }
+
+    context->gpu_rect_commands->copy_host_to_device(stream);
 }
 
 
@@ -240,9 +232,8 @@ inline ErrorCode ApplyBndBox_RGBA(const nvcv::TensorDataStridedCuda &inData, con
 
     render_bndbox_rgba_womsaa_kernel<<<gridSize, blockSize, 0, stream>>>(
         src, dst, 0, 0,
-        context->gpu_commands ? context->gpu_commands->device() : nullptr,
-        context->gpu_commands_offset ? context->gpu_commands_offset->device() : nullptr,
-        context->commands.size(),
+        context->gpu_rect_commands ? context->gpu_rect_commands->device() : nullptr,
+        context->rect_commands.size(),
         inputShape.W, inputShape.H);
     checkKernelErrors();
 
@@ -286,7 +277,7 @@ static ErrorCode cuosd_draw_rectangle(cuOSDContext_t context, int width, int hei
                 // b   c
                 cmd->ax1 = left; cmd->ay1 = top; cmd->dx1 = right; cmd->dy1 = top; cmd->cx1 = right; cmd->cy1 = bottom; cmd->bx1 = left; cmd->by1 = bottom;
                 cmd->bounding_left  = left; cmd->bounding_right = right; cmd->bounding_top   = top; cmd->bounding_bottom = bottom;
-                context->commands.emplace_back(cmd);
+                context->rect_commands.emplace_back(cmd);
             }
             if (bbox.thickness == -1) continue;
 
@@ -322,7 +313,7 @@ static ErrorCode cuosd_draw_rectangle(cuOSDContext_t context, int width, int hei
             cmd->bounding_right = right + int_half;
             cmd->bounding_top   = top - int_half;
             cmd->bounding_bottom = bottom + int_half;
-            context->commands.emplace_back(cmd);
+            context->rect_commands.emplace_back(cmd);
         }
 
         bboxes.boxes = (NVCVBndBoxI *)((unsigned char *)bboxes.boxes + numBoxes * sizeof(NVCVBndBoxI));
@@ -334,11 +325,15 @@ BndBox::BndBox(DataShape max_input_shape, DataShape max_output_shape)
     : CudaBaseOp(max_input_shape, max_output_shape)
 {
     m_context = new cuOSDContext();
+    if (context->gpu_rect_commands == nullptr) {
+        context->gpu_rect_commands.reset(new Memory<RectangleCommand>());
+    }
+    m_context->gpu_rect_commands->alloc_or_resize_to(PREALLOC_CMD_NUM * sizeof(RectangleCommand));
 }
 
 BndBox::~BndBox(){
     if (m_context) {
-        m_context->commands.clear();
+        m_context->rect_commands.clear();
         cuOSDContext* p = (cuOSDContext*)m_context;
         delete p;
     }
