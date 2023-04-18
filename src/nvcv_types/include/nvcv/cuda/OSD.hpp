@@ -111,6 +111,7 @@ struct RectangleCommand {
     int bounding_right  = 0;
     int bounding_bottom = 0;
 
+    int batch_index     = 0;
     int thickness = -1;
     bool interpolation = false;
 
@@ -125,6 +126,7 @@ struct BoxBlurCommand {
     int bounding_right  = 0;
     int bounding_bottom = 0;
 
+    int batch_index     = 0;
     int kernel_size = 7;
 };
 

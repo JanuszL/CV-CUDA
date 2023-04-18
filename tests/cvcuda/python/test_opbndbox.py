@@ -22,12 +22,22 @@ import numpy as np
     "input, bndboxes",
     [
         (
-            cvcuda.Tensor((1, 16, 23, 4), np.uint8, "NHWC"),
-            cvcuda.BndBoxesI([
-                cvcuda.BndBoxI(rect=(1, 1, 5, 5), thickness=20, borderColor=(0, 255, 0), fillColor=(0, 128, 255, 128)),
-                cvcuda.BndBoxI(rect=(3, 3, 5, 5), thickness=20, borderColor=(0, 255, 0), fillColor=(0, 128, 255, 128)),
-                cvcuda.BndBoxI(rect=(6, 6, 5, 5), thickness=20, borderColor=(0, 255, 0), fillColor=(0, 128, 255, 128)),
-            ]),
+            cvcuda.Tensor((4, 16, 23, 4), np.uint8, "NHWC"),
+            cvcuda.BndBoxesI(
+                numBoxes = [
+                    1, 2, 3, 2
+                ],
+                boxes = [
+                    cvcuda.BndBoxI(rect=(10, 10, 5, 5), thickness=2, borderColor=(255, 255, 0), fillColor=(0, 128, 255, 128)),
+                    cvcuda.BndBoxI(rect=(10, 10, 5, 5), thickness=2, borderColor=(255, 255, 0), fillColor=(0, 128, 255, 128)),
+                    cvcuda.BndBoxI(rect=(20, 10, 5, 5), thickness=3, borderColor=(0, 255, 255), fillColor=(0, 128, 255, 128)),
+                    cvcuda.BndBoxI(rect=(30, 10, 5, 5), thickness=3, borderColor=(0, 255, 255), fillColor=(0, 128, 255, 128)),
+                    cvcuda.BndBoxI(rect=(10, 20, 5, 5), thickness=2, borderColor=(255, 255, 0), fillColor=(0, 128, 255, 128)),
+                    cvcuda.BndBoxI(rect=(10, 20, 5, 5), thickness=2, borderColor=(255, 255, 0), fillColor=(0, 128, 255, 128)),
+                    cvcuda.BndBoxI(rect=(20, 20, 5, 5), thickness=3, borderColor=(0, 255, 255), fillColor=(0, 128, 255, 128)),
+                    cvcuda.BndBoxI(rect=(30, 20, 5, 5), thickness=3, borderColor=(0, 255, 255), fillColor=(0, 128, 255, 128)),
+                ]
+            ),
         ),
     ],
 )

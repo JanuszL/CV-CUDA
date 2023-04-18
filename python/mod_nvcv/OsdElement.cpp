@@ -21,34 +21,6 @@
 #include <nvcv/OsdElement.h>
 #include <pybind11/stl.h>
 
-static std::ostream &operator<<(std::ostream &out, const NVCVBndBoxI &bbox)
-{
-    return out << "BndBox(x=" << bbox.rect.x << ",y=" << bbox.rect.y << ",width=" << bbox.rect.width << ",height=" << bbox.rect.height
-            << ",thickness=" << bbox.thickness << ')';
-}
-static std::ostream &operator<<(std::ostream &out, const NVCVBndBoxesI &bboxes)
-{
-    for (int i = 0; i < bboxes.box_num; i++) {
-        auto bbox = bboxes.boxes[i];
-        out << "BndBoxes[" << i << "](x=" << bbox.rect.x << ",y=" << bbox.rect.y << ",width=" << bbox.rect.width << ",height=" << bbox.rect.height
-            << ",thickness=" << bbox.thickness << ')';
-    }
-    return out;
-}
-static std::ostream &operator<<(std::ostream &out, const NVCVBlurBoxI &bbox)
-{
-    return out << "BlurBox(x=" << bbox.rect.x << ",y=" << bbox.rect.y << ",width=" << bbox.rect.width << ",height=" << bbox.rect.height
-            << ",kernelSize=" << bbox.kernelSize << ')';
-}
-static std::ostream &operator<<(std::ostream &out, const NVCVBlurBoxesI &bboxes)
-{
-    for (int i = 0; i < bboxes.box_num; i++) {
-        auto bbox = bboxes.boxes[i];
-        out << "BlurBoxes[" << i << "](x=" << bbox.rect.x << ",y=" << bbox.rect.y << ",width=" << bbox.rect.width << ",height=" << bbox.rect.height
-            << ",kernelSize=" << bbox.kernelSize << ')';
-    }
-    return out;
-}
 namespace nvcvpy::priv {
 
 static NVCVRectI pytorect(py::tuple rect){
@@ -97,23 +69,29 @@ void ExportBndBox(py::module &m)
         .def_readwrite("rect", &NVCVBndBoxI::rect)
         .def_readwrite("thickness", &NVCVBndBoxI::thickness)
         .def_readwrite("borderColor", &NVCVBndBoxI::borderColor)
-        .def_readwrite("fillColor", &NVCVBndBoxI::fillColor)
-        .def("__repr__", &util::ToString<NVCVBndBoxI>);
+        .def_readwrite("fillColor", &NVCVBndBoxI::fillColor);
 
     py::class_<NVCVBndBoxesI>(m, "BndBoxesI")
         .def(py::init([]() { return NVCVBndBoxesI{}; }))
         .def(py::init(
-                 [](std::vector<NVCVBndBoxI> bndboxes_vec)
+                 [](std::vector<int> numBoxes_vec, std::vector<NVCVBndBoxI> bndboxes_vec)
                  {
                      NVCVBndBoxesI bndboxes;
-                     bndboxes.box_num = bndboxes_vec.size();
-                     bndboxes.boxes = bndboxes_vec.data();
+
+                     bndboxes.batch = numBoxes_vec.size();
+                     bndboxes.numBoxes = new int[bndboxes.batch];
+                     memcpy(bndboxes.numBoxes, numBoxes_vec.data(), numBoxes_vec.size() * sizeof(int));
+
+                     int total_box_num = bndboxes_vec.size();
+                     bndboxes.boxes = new NVCVBndBoxI[total_box_num];
+                     memcpy(bndboxes.boxes, bndboxes_vec.data(), bndboxes_vec.size() * sizeof(NVCVBndBoxI));
+
                      return bndboxes;
                  }),
-             "bndboxes"_a)
-        .def_readwrite("box_num", &NVCVBndBoxesI::box_num)
-        .def_readwrite("boxes", &NVCVBndBoxesI::boxes)
-        .def("__repr__", &util::ToString<NVCVBndBoxesI>);
+             "numBoxes"_a, "boxes"_a)
+        .def_readwrite("batch", &NVCVBndBoxesI::batch)
+        .def_readwrite("numBoxes", &NVCVBndBoxesI::numBoxes)
+        .def_readwrite("boxes", &NVCVBndBoxesI::boxes);
 }
 
 void ExportBoxBlur(py::module &m)
@@ -132,8 +110,7 @@ void ExportBoxBlur(py::module &m)
                  }),
              "rect"_a, "kernelSize"_a)
         .def_readwrite("rect", &NVCVBlurBoxI::rect)
-        .def_readwrite("kernelSize", &NVCVBlurBoxI::kernelSize)
-        .def("__repr__", &util::ToString<NVCVBlurBoxI>);
+        .def_readwrite("kernelSize", &NVCVBlurBoxI::kernelSize);
 
     py::class_<NVCVBlurBoxesI>(m, "BlurBoxesI")
         .def(py::init([]() { return NVCVBlurBoxesI{}; }))
@@ -148,8 +125,7 @@ void ExportBoxBlur(py::module &m)
                  }),
              "blurboxes"_a)
         .def_readwrite("box_num", &NVCVBlurBoxesI::box_num)
-        .def_readwrite("boxes", &NVCVBlurBoxesI::boxes)
-        .def("__repr__", &util::ToString<NVCVBlurBoxesI>);
+        .def_readwrite("boxes", &NVCVBlurBoxesI::boxes);
 }
 
 } // namespace nvcvpy::priv

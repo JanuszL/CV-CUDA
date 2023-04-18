@@ -149,8 +149,10 @@ static __global__ void render_bndbox_rgba_womsaa_kernel(
         return;
 
     uchar4 context_color[4] = {0};
+
     for (int i = 0; i < num_command; ++i) {
         RectangleCommand* pcommand = (RectangleCommand*)(commands + command_offsets[i]);
+        if(pcommand->batch_index != get_batch_idx()) continue;
         do_rectangle_woMSAA(pcommand, ix, iy, context_color);
     }
 
@@ -228,7 +230,7 @@ inline ErrorCode ApplyBndBox_RGBA(const nvcv::TensorDataStridedCuda &inData, con
     }
 
     dim3 blockSize(16, 8);
-    dim3 gridSize(divUp(int((inputShape.W + 1) / 2), (int)blockSize.x), divUp(int((inputShape.H + 1) / 2), (int)blockSize.y));
+    dim3 gridSize(divUp(int((inputShape.W + 1) / 2), (int)blockSize.x), divUp(int((inputShape.H + 1) / 2), (int)blockSize.y), inputShape.N);
 
     auto src = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(inData);
     auto dst = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(outData);
@@ -248,75 +250,82 @@ inline ErrorCode ApplyBndBox_RGBA(const nvcv::TensorDataStridedCuda &inData, con
 }
 
 static ErrorCode cuosd_draw_rectangle(cuOSDContext_t context, int width, int height, NVCVBndBoxesI bboxes){
+    for (int n = 0; n < bboxes.batch; n++)
+    {
+        auto numBoxes = bboxes.numBoxes[n];
 
-    for (int i = 0; i < bboxes.box_num; i++) {
-        auto bbox   = bboxes.boxes[i];
-
-        int left    = max(min(bbox.rect.x, width - 1),    0);
-        int top     = max(min(bbox.rect.y, height - 1),   0);
-        int right   = max(min(left + bbox.rect.width - 1, width - 1),  0);
-        int bottom  = max(min(top + bbox.rect.height - 1, height - 1), 0);
-
-        if (left == right || top == bottom || bbox.rect.width <= 0 || bbox.rect.height <= 0)
+        for (int i = 0; i < numBoxes; i++)
         {
-            LOG_INFO("Skipped bbox rect(" << bbox.rect.x << ", " << bbox.rect.y << ", "<< bbox.rect.width << ", " << bbox.rect.height
-                     << ") in image(" << width << ", " << height << ")");
-            continue;
-        }
+            auto bbox = bboxes.boxes[i];
+            int left    = max(min(bbox.rect.x, width - 1),    0);
+            int top     = max(min(bbox.rect.y, height - 1),   0);
+            int right   = max(min(left + bbox.rect.width - 1, width - 1),  0);
+            int bottom  = max(min(top + bbox.rect.height - 1, height - 1), 0);
 
-        if (bbox.borderColor.a == 0) continue;
-        if (bbox.fillColor.a || bbox.thickness == -1) {
-            if (bbox.thickness == -1) {
-                bbox.fillColor = bbox.borderColor;
+            if (left == right || top == bottom || bbox.rect.width <= 0 || bbox.rect.height <= 0)
+            {
+                // LOG_INFO("Skipped bbox rect(" << bbox.rect.x << ", " << bbox.rect.y << ", "<< bbox.rect.width << ", " << bbox.rect.height
+                //         << ") in image(" << width << ", " << height << ")");
+                continue;
             }
 
+            if (bbox.borderColor.a == 0) continue;
+            if (bbox.fillColor.a || bbox.thickness == -1) {
+                if (bbox.thickness == -1) {
+                    bbox.fillColor = bbox.borderColor;
+                }
+
+                auto cmd = std::make_shared<RectangleCommand>();
+                cmd->batch_index = n;
+                cmd->thickness = -1;
+                cmd->interpolation = false;
+                cmd->c0 = bbox.fillColor.r; cmd->c1 = bbox.fillColor.g; cmd->c2 = bbox.fillColor.b; cmd->c3 = bbox.fillColor.a;
+
+                // a   d
+                // b   c
+                cmd->ax1 = left; cmd->ay1 = top; cmd->dx1 = right; cmd->dy1 = top; cmd->cx1 = right; cmd->cy1 = bottom; cmd->bx1 = left; cmd->by1 = bottom;
+                cmd->bounding_left  = left; cmd->bounding_right = right; cmd->bounding_top   = top; cmd->bounding_bottom = bottom;
+                context->commands.emplace_back(cmd);
+            }
+            if (bbox.thickness == -1) continue;
+
             auto cmd = std::make_shared<RectangleCommand>();
-            cmd->thickness = -1;
+            cmd->batch_index = n;
+            cmd->thickness = bbox.thickness;
             cmd->interpolation = false;
-            cmd->c0 = bbox.fillColor.r; cmd->c1 = bbox.fillColor.g; cmd->c2 = bbox.fillColor.b; cmd->c3 = bbox.fillColor.a;
+            cmd->c0 = bbox.borderColor.r; cmd->c1 = bbox.borderColor.g; cmd->c2 = bbox.borderColor.b; cmd->c3 = bbox.borderColor.a;
+
+            float half_thickness = bbox.thickness / 2.0f;
+            cmd->ax2 = left + half_thickness;
+            cmd->ay2 = top  + half_thickness;
+            cmd->dx2 = right - half_thickness;
+            cmd->dy2 = top + half_thickness;
+            cmd->cx2 = right - half_thickness;
+            cmd->cy2 = bottom - half_thickness;
+            cmd->bx2 = left + half_thickness;
+            cmd->by2 = bottom - half_thickness;
 
             // a   d
             // b   c
-            cmd->ax1 = left; cmd->ay1 = top; cmd->dx1 = right; cmd->dy1 = top; cmd->cx1 = right; cmd->cy1 = bottom; cmd->bx1 = left; cmd->by1 = bottom;
-            cmd->bounding_left  = left; cmd->bounding_right = right; cmd->bounding_top   = top; cmd->bounding_bottom = bottom;
+            cmd->ax1 = left - half_thickness;
+            cmd->ay1 = top  - half_thickness;
+            cmd->dx1 = right + half_thickness;
+            cmd->dy1 = top - half_thickness;
+            cmd->cx1 = right + half_thickness;
+            cmd->cy1 = bottom + half_thickness;
+            cmd->bx1 = left - half_thickness;
+            cmd->by1 = bottom + half_thickness;
+
+            int int_half = ceil(half_thickness);
+            cmd->bounding_left  = left - int_half;
+            cmd->bounding_right = right + int_half;
+            cmd->bounding_top   = top - int_half;
+            cmd->bounding_bottom = bottom + int_half;
             context->commands.emplace_back(cmd);
         }
-        if (bbox.thickness == -1) continue;
 
-        auto cmd = std::make_shared<RectangleCommand>();
-        cmd->thickness = bbox.thickness;
-        cmd->interpolation = false;
-        cmd->c0 = bbox.borderColor.r; cmd->c1 = bbox.borderColor.g; cmd->c2 = bbox.borderColor.b; cmd->c3 = bbox.borderColor.a;
-
-        float half_thickness = bbox.thickness / 2.0f;
-        cmd->ax2 = left + half_thickness;
-        cmd->ay2 = top  + half_thickness;
-        cmd->dx2 = right - half_thickness;
-        cmd->dy2 = top + half_thickness;
-        cmd->cx2 = right - half_thickness;
-        cmd->cy2 = bottom - half_thickness;
-        cmd->bx2 = left + half_thickness;
-        cmd->by2 = bottom - half_thickness;
-
-        // a   d
-        // b   c
-        cmd->ax1 = left - half_thickness;
-        cmd->ay1 = top  - half_thickness;
-        cmd->dx1 = right + half_thickness;
-        cmd->dy1 = top - half_thickness;
-        cmd->cx1 = right + half_thickness;
-        cmd->cy1 = bottom + half_thickness;
-        cmd->bx1 = left - half_thickness;
-        cmd->by1 = bottom + half_thickness;
-
-        int int_half = ceil(half_thickness);
-        cmd->bounding_left  = left - int_half;
-        cmd->bounding_right = right + int_half;
-        cmd->bounding_top   = top - int_half;
-        cmd->bounding_bottom = bottom + int_half;
-        context->commands.emplace_back(cmd);
+        bboxes.boxes = (NVCVBndBoxI *)((unsigned char *)bboxes.boxes + numBoxes * sizeof(NVCVBndBoxI));
     }
-
     return ErrorCode::SUCCESS;
 }
 
@@ -375,16 +384,16 @@ ErrorCode BndBox::infer(const nvcv::TensorDataStridedCuda &inData, const nvcv::T
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
+    if (bboxes.batch != batch)
+    {
+        LOG_ERROR("Invalid bboxes batch = " << bboxes.batch);
+        return ErrorCode::INVALID_DATA_SHAPE;
+    }
+
     auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(outData);
     if (!outAccess)
     {
         return ErrorCode::INVALID_DATA_FORMAT;
-    }
-
-    if (bboxes.box_num <= 0)
-    {
-        LOG_ERROR("Invalid bbox num = " << bboxes.box_num);
-        return ErrorCode::INVALID_DATA_SHAPE;
     }
 
     auto ret = cuosd_draw_rectangle(m_context, cols, rows, bboxes);

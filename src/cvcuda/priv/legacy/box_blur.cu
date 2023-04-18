@@ -173,15 +173,15 @@ static ErrorCode cuosd_draw_boxblur(cuOSDContext_t context, int width, int heigh
 
         if (left == right || top == bottom)
         {
-            LOG_INFO("Skipped boxblur at rect(" << bbox.rect.x << ", " << bbox.rect.y << ", "<< bbox.rect.width << ", " << bbox.rect.height
-                     << ") in image(" << width << ", " << height << ")");
+            // LOG_INFO("Skipped boxblur at rect(" << bbox.rect.x << ", " << bbox.rect.y << ", "<< bbox.rect.width << ", " << bbox.rect.height
+            //          << ") in image(" << width << ", " << height << ")");
             continue;
         }
 
         if (bbox.rect.width < 3 || bbox.rect.height < 3 || bbox.kernelSize < 1)
         {
-            LOG_INFO("This operation will be ignored because the region of interest is too small, or the kernel is too small at rect(" <<
-                      << bbox.rect.x << ", " << bbox.rect.y << bbox.rect.width << ", " << bbox.rect.height << ") with kernelSize=" << bbox.kernelSize);
+            // LOG_INFO("This operation will be ignored because the region of interest is too small, or the kernel is too small at rect("
+            //           << bbox.rect.x << ", " << bbox.rect.y << bbox.rect.width << ", " << bbox.rect.height << ") with kernelSize=" << bbox.kernelSize);
             continue;
         }
 
