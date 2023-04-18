@@ -32,8 +32,9 @@ namespace test = nvcv::test;
 
 TEST(AllocatorTest, CreateAndUseCustom)
 {
-    NVCVCustomAllocator allocators[2];
-    int                 ctx0 = 100, ctx1 = 200;
+    NVCVCustomAllocator allocators[2] = {};
+
+    int ctx0 = 100, ctx1 = 200;
 
     allocators[0].resType         = NVCV_RESOURCE_MEM_HOST;
     allocators[0].ctx             = &ctx0;

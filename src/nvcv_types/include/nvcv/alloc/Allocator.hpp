@@ -397,7 +397,9 @@ private:
         };
 
         m_data.cleanup = nullptr;
-        std::memcpy(&m_data.ctx, &ctx, sizeof(ctx));
+
+        if NVCV_IF_CONSTEXPR (!std::is_empty<T>::value)
+            std::memcpy(&m_data.ctx, &ctx, DataSize<T>());
     }
 
     template<typename AllocFunction, typename FreeFunction>

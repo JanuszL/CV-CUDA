@@ -24,7 +24,7 @@
 
 namespace n = nvcv;
 
-TEST(Allocator2, FromEmpty)
+TEST(AllocatorTest, FromEmpty)
 {
     // Use thread-local variables because they don't need to be captured
     thread_local bool    alloc_called, free_called;
@@ -41,7 +41,7 @@ TEST(Allocator2, FromEmpty)
         {
             alloc_called   = true;
             allocated_size = size;
-            allocated_ptr  = memalign(size, align);
+            allocated_ptr  = memalign(align, size);
             return allocated_ptr;
         },
         [](void *mem, int64_t size, int32_t align)
@@ -65,7 +65,7 @@ TEST(Allocator2, FromEmpty)
     EXPECT_TRUE(free_called);
 }
 
-TEST(Allocator2, FromSmall)
+TEST(AllocatorTest, FromSmall)
 {
     // Use thread-local variables because they don't need to be captured
     thread_local bool alloc_called, free_called;
@@ -78,7 +78,7 @@ TEST(Allocator2, FromSmall)
         {
             alloc_called = true;
             EXPECT_EQ(c1, 123);
-            return memalign(size, align);
+            return memalign(align, size);
         },
         [c2](void *mem, int64_t size, int32_t align)
         {
@@ -99,20 +99,21 @@ TEST(Allocator2, FromSmall)
     EXPECT_TRUE(free_called);
 }
 
-TEST(Allocator2, FromDuplicate)
+TEST(AllocatorTest, FromDuplicate)
 {
     // Use thread-local variables because they don't need to be captured
     thread_local bool alloc_called, free_called;
     alloc_called = false;
     free_called  = false;
 
-    intptr_t                                       c = 0x12345678;
+    intptr_t c = 0x12345678;
+
     n::CustomMemAllocatorImpl<n::HostMemAllocator> alloc(
         [c](int64_t size, int32_t align)
         {
             alloc_called = true;
             EXPECT_EQ(c, 0x12345678);
-            return memalign(size, align);
+            return memalign(align, size);
         },
         [c](void *mem, int64_t size, int32_t align)
         {
@@ -133,7 +134,7 @@ TEST(Allocator2, FromDuplicate)
     EXPECT_TRUE(free_called);
 }
 
-TEST(Allocator2, FromComplexType)
+TEST(AllocatorTest, FromComplexType)
 {
     // Use thread-local variables because they don't need to be captured
     thread_local bool alloc_called, free_called;
@@ -162,7 +163,7 @@ TEST(Allocator2, FromComplexType)
             {
                 alloc_called = true;
                 EXPECT_EQ(p->val, 0x12345678);
-                return memalign(size, align);
+                return memalign(align, size);
             },
             [p](void *mem, int64_t size, int32_t align)
             {
@@ -187,7 +188,7 @@ TEST(Allocator2, FromComplexType)
     EXPECT_TRUE(destroyed);
 }
 
-TEST(Allocator2, ConstructCustom)
+TEST(AllocatorTest, ConstructCustom)
 {
     struct Status
     {
@@ -241,7 +242,7 @@ TEST(Allocator2, ConstructCustom)
     EXPECT_TRUE(status.host_free_called);
 }
 
-TEST(Allocator2, ConstructCustomWithDeleter)
+TEST(AllocatorTest, ConstructCustomWithDeleter)
 {
     struct Status
     {
