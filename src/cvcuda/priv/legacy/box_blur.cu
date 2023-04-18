@@ -44,22 +44,22 @@ template<class SrcWrapper, class DstWrapper>
 static __global__ void render_blur_rgba_kernel(
     SrcWrapper src, DstWrapper dst,
     const BoxBlurCommand* commands, int num_command,
-    int image_width, int image_height
+    int image_batch, int image_width, int image_height
 ) {
     if (blockIdx.x >= num_command) return;
+    const BoxBlurCommand& box = commands[blockIdx.x];
+    if(box.batch_index >= image_batch) return;
 
     __shared__ uchar3 crop[32][32];
     int ix = threadIdx.x;
     int iy = threadIdx.y;
-    const BoxBlurCommand& box = commands[blockIdx.x];
 
     int boxwidth  = box.bounding_right  - box.bounding_left;
     int boxheight = box.bounding_bottom - box.bounding_top;
     int sx = limit((int)(ix / 32.0f * (float)boxwidth + 0.5f + box.bounding_left), 0, image_width);
     int sy = limit((int)(iy / 32.0f * (float)boxheight + 0.5f + box.bounding_top), 0, image_height);
 
-    const int batch_idx = get_batch_idx();
-    crop[iy][ix] = *(uchar3*)(src.ptr(batch_idx, sy, sx, 0));
+    crop[iy][ix] = *(uchar3*)(src.ptr(box.batch_index, sy, sx, 0));
     __syncthreads();
 
     uint3 color = make_uint3(0, 0, 0);
@@ -92,7 +92,7 @@ static __global__ void render_blur_rgba_kernel(
                 int sy = (iy * gap_height + i) / (float)boxheight * 32;
                 if(sx < 32 && sy < 32){
                     auto& pix = crop[sy][sx];
-                    *(uchar4*)(dst.ptr(batch_idx, fy, fx, 0)) = make_uchar4(pix.x, pix.y, pix.z, 255);
+                    *(uchar4*)(dst.ptr(box.batch_index, fy, fx, 0)) = make_uchar4(pix.x, pix.y, pix.z, 255);
                 }
             }
         }
@@ -146,7 +146,7 @@ inline ErrorCode ApplyBoxBlur_RGBA(const nvcv::TensorDataStridedCuda &inData, co
     cuosd_apply(context, stream);
 
     dim3 blockSize(32, 32);
-    dim3 gridSize(context->blur_commands.size());
+    dim3 gridSize(context->blur_commands.size(), 1);
 
     auto src = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(inData);
     auto dst = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(outData);
@@ -155,7 +155,7 @@ inline ErrorCode ApplyBoxBlur_RGBA(const nvcv::TensorDataStridedCuda &inData, co
         src, dst,
         context->gpu_blur_commands ? context->gpu_blur_commands->device() : nullptr,
         context->blur_commands.size(),
-        inputShape.W, inputShape.H);
+        inputShape.N, inputShape.W, inputShape.H);
     checkKernelErrors();
 
     return ErrorCode::SUCCESS;
@@ -163,35 +163,43 @@ inline ErrorCode ApplyBoxBlur_RGBA(const nvcv::TensorDataStridedCuda &inData, co
 
 static ErrorCode cuosd_draw_boxblur(cuOSDContext_t context, int width, int height, NVCVBlurBoxesI bboxes){
 
-    for (int i = 0; i < bboxes.box_num; i++) {
-        auto bbox   = bboxes.boxes[i];
+    for (int n = 0; n < bboxes.batch; n++)
+    {
+        auto numBoxes = bboxes.numBoxes[n];
 
-        int left    = max(min(bbox.rect.x, width - 1),    0);
-        int top     = max(min(bbox.rect.y, height - 1),   0);
-        int right   = max(min(left + bbox.rect.width - 1, width - 1),  0);
-        int bottom  = max(min(top + bbox.rect.height - 1, height - 1), 0);
-
-        if (left == right || top == bottom)
+        for (int i = 0; i < numBoxes; i++)
         {
-            // LOG_INFO("Skipped boxblur at rect(" << bbox.rect.x << ", " << bbox.rect.y << ", "<< bbox.rect.width << ", " << bbox.rect.height
-            //          << ") in image(" << width << ", " << height << ")");
-            continue;
+            auto bbox = bboxes.boxes[i];
+            int left    = max(min(bbox.rect.x, width - 1),    0);
+            int top     = max(min(bbox.rect.y, height - 1),   0);
+            int right   = max(min(left + bbox.rect.width - 1, width - 1),  0);
+            int bottom  = max(min(top + bbox.rect.height - 1, height - 1), 0);
+
+            if (left == right || top == bottom)
+            {
+                LOG_DEBUG("Skipped boxblur at rect(" << bbox.rect.x << ", " << bbox.rect.y << ", "<< bbox.rect.width << ", " << bbox.rect.height
+                         << ") in image(" << width << ", " << height << ")");
+                continue;
+            }
+
+            if (bbox.rect.width < 3 || bbox.rect.height < 3 || bbox.kernelSize < 1)
+            {
+                LOG_DEBUG("This operation will be ignored because the region of interest is too small, or the kernel is too small at rect("
+                          << bbox.rect.x << ", " << bbox.rect.y << bbox.rect.width << ", " << bbox.rect.height << ") with kernelSize=" << bbox.kernelSize);
+                continue;
+            }
+
+            auto cmd = std::make_shared<BoxBlurCommand>();
+            cmd->batch_index = n;
+            cmd->kernel_size = bbox.kernelSize;
+            cmd->bounding_left    = left;
+            cmd->bounding_right   = right;
+            cmd->bounding_top     = top;
+            cmd->bounding_bottom  = bottom;
+            context->blur_commands.emplace_back(cmd);
         }
 
-        if (bbox.rect.width < 3 || bbox.rect.height < 3 || bbox.kernelSize < 1)
-        {
-            // LOG_INFO("This operation will be ignored because the region of interest is too small, or the kernel is too small at rect("
-            //           << bbox.rect.x << ", " << bbox.rect.y << bbox.rect.width << ", " << bbox.rect.height << ") with kernelSize=" << bbox.kernelSize);
-            continue;
-        }
-
-        auto cmd = std::make_shared<BoxBlurCommand>();
-        cmd->kernel_size = bbox.kernelSize;
-        cmd->bounding_left    = left;
-        cmd->bounding_right   = right;
-        cmd->bounding_top     = top;
-        cmd->bounding_bottom  = bottom;
-        context->blur_commands.emplace_back(cmd);
+        bboxes.boxes = (NVCVBlurBoxI *)((unsigned char *)bboxes.boxes + numBoxes * sizeof(NVCVBlurBoxI));
     }
     return ErrorCode::SUCCESS;
 }
@@ -251,16 +259,16 @@ ErrorCode BoxBlur::infer(const nvcv::TensorDataStridedCuda &inData, const nvcv::
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
+    if (bboxes.batch != batch)
+    {
+        LOG_ERROR("Invalid bboxes batch = " << bboxes.batch);
+        return ErrorCode::INVALID_DATA_SHAPE;
+    }
+
     auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(outData);
     if (!outAccess)
     {
         return ErrorCode::INVALID_DATA_FORMAT;
-    }
-
-    if (bboxes.box_num <= 0)
-    {
-        LOG_ERROR("Invalid bbox num = " << bboxes.box_num);
-        return ErrorCode::INVALID_DATA_SHAPE;
     }
 
     auto ret = cuosd_draw_boxblur(m_context, cols, rows, bboxes);

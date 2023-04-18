@@ -115,16 +115,23 @@ void ExportBoxBlur(py::module &m)
     py::class_<NVCVBlurBoxesI>(m, "BlurBoxesI")
         .def(py::init([]() { return NVCVBlurBoxesI{}; }))
         .def(py::init(
-                 [](std::vector<NVCVBlurBoxI> blurboxes_vec)
+                 [](std::vector<int> numBoxes_vec, std::vector<NVCVBlurBoxI> blurboxes_vec)
                  {
                      NVCVBlurBoxesI blurboxes;
-                     blurboxes.box_num = blurboxes_vec.size();
-                     blurboxes.boxes = new NVCVBlurBoxI[blurboxes.box_num];
+
+                     blurboxes.batch = numBoxes_vec.size();
+                     blurboxes.numBoxes = new int[blurboxes.batch];
+                     memcpy(blurboxes.numBoxes, numBoxes_vec.data(), numBoxes_vec.size() * sizeof(int));
+
+                     int total_box_num = blurboxes_vec.size();
+                     blurboxes.boxes = new NVCVBlurBoxI[total_box_num];
                      memcpy(blurboxes.boxes, blurboxes_vec.data(), blurboxes_vec.size() * sizeof(NVCVBlurBoxI));
+
                      return blurboxes;
                  }),
-             "blurboxes"_a)
-        .def_readwrite("box_num", &NVCVBlurBoxesI::box_num)
+             "numBoxes"_a, "boxes"_a)
+        .def_readwrite("batch", &NVCVBlurBoxesI::batch)
+        .def_readwrite("numBoxes", &NVCVBlurBoxesI::numBoxes)
         .def_readwrite("boxes", &NVCVBlurBoxesI::boxes);
 }
 

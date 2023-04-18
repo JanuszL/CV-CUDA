@@ -229,14 +229,14 @@ inline ErrorCode ApplyBndBox_RGBA(const nvcv::TensorDataStridedCuda &inData, con
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
+    // allocate command buffer;
+    cuosd_apply(context, inputShape.W, inputShape.H, stream);
+
     dim3 blockSize(16, 8);
     dim3 gridSize(divUp(int((inputShape.W + 1) / 2), (int)blockSize.x), divUp(int((inputShape.H + 1) / 2), (int)blockSize.y), inputShape.N);
 
     auto src = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(inData);
     auto dst = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(outData);
-
-    // allocate command buffer;
-    cuosd_apply(context, inputShape.W, inputShape.H, stream);
 
     render_bndbox_rgba_womsaa_kernel<<<gridSize, blockSize, 0, stream>>>(
         src, dst, 0, 0,
@@ -250,6 +250,7 @@ inline ErrorCode ApplyBndBox_RGBA(const nvcv::TensorDataStridedCuda &inData, con
 }
 
 static ErrorCode cuosd_draw_rectangle(cuOSDContext_t context, int width, int height, NVCVBndBoxesI bboxes){
+
     for (int n = 0; n < bboxes.batch; n++)
     {
         auto numBoxes = bboxes.numBoxes[n];
@@ -264,8 +265,8 @@ static ErrorCode cuosd_draw_rectangle(cuOSDContext_t context, int width, int hei
 
             if (left == right || top == bottom || bbox.rect.width <= 0 || bbox.rect.height <= 0)
             {
-                // LOG_INFO("Skipped bbox rect(" << bbox.rect.x << ", " << bbox.rect.y << ", "<< bbox.rect.width << ", " << bbox.rect.height
-                //         << ") in image(" << width << ", " << height << ")");
+                LOG_DEBUG("Skipped bbox rect(" << bbox.rect.x << ", " << bbox.rect.y << ", "<< bbox.rect.width << ", " << bbox.rect.height
+                        << ") in image(" << width << ", " << height << ")");
                 continue;
             }
 

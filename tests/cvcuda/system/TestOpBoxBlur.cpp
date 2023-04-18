@@ -33,51 +33,67 @@ namespace test = nvcv::test;
 static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStridedImagePlanar &data, nvcv::Byte *inBuf,
                           NVCVBlurBoxesI bboxes, cudaStream_t stream)
 {
-    test::osd::Image* image = test::osd::create_image(data.numCols(), data.numRows(), test::osd::ImageFormat::RGBA);
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(image->data0, inBuf, vect.size(), cudaMemcpyDeviceToDevice));
-
-    test::osd::save_image(image, "workspace/inputBoxBlur.png", stream);
-
     auto context = cuosd_context_create();
 
-    for (int i = 0; i < bboxes.box_num; i++) {
-        auto bbox   = bboxes.boxes[i];
+    for (int n = 0; n < bboxes.batch; n++)
+    {
+        test::osd::Image* image = test::osd::create_image(data.numCols(), data.numRows(), test::osd::ImageFormat::RGBA);
+        int bufSize = data.numCols() * data.numRows() * data.numChannels();
+        EXPECT_EQ(cudaSuccess, cudaMemcpy(image->data0, inBuf + n * bufSize, bufSize, cudaMemcpyDeviceToDevice));
 
-        int left    = std::max(std::min(bbox.rect.x, data.numCols() - 1), 0);
-        int top     = std::max(std::min(bbox.rect.y, data.numRows() - 1), 0);
-        int right   = std::max(std::min(left + bbox.rect.width - 1, data.numCols() - 1), 0);
-        int bottom  = std::max(std::min(top + bbox.rect.height - 1, data.numRows() - 1), 0);
+        auto numBoxes = bboxes.numBoxes[n];
 
-        if (left == right || top == bottom || bbox.rect.width < 3 || bbox.rect.height < 3 || bbox.kernelSize < 1)
+        for (int i = 0; i < numBoxes; i++)
         {
-            continue;
+            auto bbox   = bboxes.boxes[i];
+
+            int left    = std::max(std::min(bbox.rect.x, data.numCols() - 1), 0);
+            int top     = std::max(std::min(bbox.rect.y, data.numRows() - 1), 0);
+            int right   = std::max(std::min(left + bbox.rect.width - 1, data.numCols() - 1), 0);
+            int bottom  = std::max(std::min(top + bbox.rect.height - 1, data.numRows() - 1), 0);
+
+            if (left == right || top == bottom || bbox.rect.width < 3 || bbox.rect.height < 3 || bbox.kernelSize < 1)
+            {
+                continue;
+            }
+
+            int kernelSize  = bbox.kernelSize;
+
+            cuosd_draw_boxblur(context, left, top, right, bottom, kernelSize);
         }
 
-        int kernelSize  = bbox.kernelSize;
+        test::osd::cuosd_apply(context, image, stream);
 
-        cuosd_draw_boxblur(context, left, top, right, bottom, kernelSize);
+        bboxes.boxes = (NVCVBlurBoxI *)((unsigned char *)bboxes.boxes + numBoxes * sizeof(NVCVBlurBoxI));
+        EXPECT_EQ(cudaSuccess, cudaMemcpy(vect.data() + n * bufSize, image->data0, bufSize, cudaMemcpyDeviceToHost));
+        // std::string img_path = "workspace/goldBlurBox" + std::to_string(n) + ".png";
+        // test::osd::save_image(image, img_path.c_str(), stream);
     }
 
-    test::osd::cuosd_apply(context, image, stream);
     cuosd_context_destroy(context);
-
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(vect.data(), image->data0, vect.size(), cudaMemcpyDeviceToHost));
-    test::osd::save_image(image, "workspace/goldBoxBlur.png", stream);
 }
 
 static void dumpTest(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStridedImagePlanar &data, nvcv::Byte *testBuf){
-    test::osd::Image* image = test::osd::create_image(data.numCols(), data.numRows(), test::osd::ImageFormat::RGBA);
-    EXPECT_EQ(cudaSuccess, cudaMemcpy(image->data0, testBuf, vect.size(), cudaMemcpyDeviceToDevice));
-    test::osd::save_image(image, "workspace/testBoxBlur.png");
+    for (int n = 0; n < data.numSamples(); n++)
+    {
+        test::osd::Image* image = test::osd::create_image(data.numCols(), data.numRows(), test::osd::ImageFormat::RGBA);
+        int bufSize = data.numCols() * data.numRows() * data.numChannels();
+        EXPECT_EQ(cudaSuccess, cudaMemcpy(image->data0, testBuf + n * bufSize, bufSize, cudaMemcpyDeviceToDevice));
+        // std::string img_path = "workspace/testBlurBox" + std::to_string(n) + ".png";
+        // test::osd::save_image(image, img_path.c_str());
+    }
 }
 
 // clang-format off
-NVCV_TEST_SUITE_P(OpBoxBlur, test::ValueList<int, int, int, int, int, int, int>
+NVCV_TEST_SUITE_P(OpBoxBlur, test::ValueList<int, int, int, int, int, int, int, int>
 {
-    //  inW,    inH,    cols,   rows,   wBox,   hBox,   ks
-    {   224,    224,    5,      5,      16,     16,     7   },
-    {   1280,   720,    10,    10,      64,     64,     13  },
-    {   1920,   1080,   15,    15,      64,     64,     19  },
+    //  inN,    inW,    inH,    cols,   rows,   wBox,   hBox,   ks
+    {   1,      224,    224,    5,      5,      16,     16,     7   },
+    {   8,      224,    224,    5,      5,      16,     16,     7   },
+    {   16,     224,    224,    5,      5,      16,     16,     7   },
+    {   1,      1280,   720,    10,     10,     64,     64,     13  },
+    {   1,      1920,   1080,   15,     15,     64,     64,     19  },
+    {   1,      3840,   2160,   15,     15,     128,    128,    23  },
 });
 
 // clang-format on
@@ -86,35 +102,41 @@ TEST_P(OpBoxBlur, BoxBlur_sanity)
     cudaStream_t stream;
     ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
 
-    int     inW     = GetParamValue<0>();
-    int     inH     = GetParamValue<1>();
-    int     cols    = GetParamValue<2>();
-    int     rows    = GetParamValue<3>();
-    int     wBox    = GetParamValue<4>();
-    int     hBox    = GetParamValue<5>();
-    int     ks      = GetParamValue<6>();
+    int     inN     = GetParamValue<0>();
+    int     inW     = GetParamValue<1>();
+    int     inH     = GetParamValue<2>();
+    int     cols    = GetParamValue<3>();
+    int     rows    = GetParamValue<4>();
+    int     wBox    = GetParamValue<5>();
+    int     hBox    = GetParamValue<6>();
+    int     ks      = GetParamValue<7>();
 
     NVCVBlurBoxesI blurBoxes;
+    std::vector<int> numBoxVec;
     std::vector<NVCVBlurBoxI> blurBoxVec;
 
-    for (int i=0; i<cols; i++) {
-        int x = (inW / cols) * i + wBox / 2;
-        for (int j=0; j<rows; j++) {
-            NVCVBlurBoxI blurBox;
-            blurBox.rect.x          = x;
-            blurBox.rect.y          = (inH / rows) * j + hBox / 2;
-            blurBox.rect.width      = wBox;
-            blurBox.rect.height     = hBox;
-            blurBox.kernelSize      = ks;
-            blurBoxVec.push_back(blurBox);
+    for (int n=0; n<inN; n++) {
+        numBoxVec.push_back(cols * rows);
+        for (int i=0; i<cols; i++) {
+            int x = (inW / cols) * i + wBox / 2;
+            for (int j=0; j<rows; j++) {
+                NVCVBlurBoxI blurBox;
+                blurBox.rect.x          = x;
+                blurBox.rect.y          = (inH / rows) * j + hBox / 2;
+                blurBox.rect.width      = wBox;
+                blurBox.rect.height     = hBox;
+                blurBox.kernelSize      = ks;
+                blurBoxVec.push_back(blurBox);
+            }
         }
     }
 
-    blurBoxes.box_num    = blurBoxVec.size();
+    blurBoxes.batch      = inN;
+    blurBoxes.numBoxes   = numBoxVec.data();
     blurBoxes.boxes      = blurBoxVec.data();
 
-    nvcv::Tensor imgIn  = test::CreateTensor(1, inW, inH, nvcv::FMT_RGBA8);
-    nvcv::Tensor imgOut = test::CreateTensor(1, inW, inH, nvcv::FMT_RGBA8);
+    nvcv::Tensor imgIn  = test::CreateTensor(inN, inW, inH, nvcv::FMT_RGBA8);
+    nvcv::Tensor imgOut = test::CreateTensor(inN, inW, inH, nvcv::FMT_RGBA8);
 
     auto input  = imgIn.exportData<nvcv::TensorDataStridedCuda>();
     auto output = imgOut.exportData<nvcv::TensorDataStridedCuda>();

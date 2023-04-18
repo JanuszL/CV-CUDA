@@ -22,12 +22,23 @@ import numpy as np
     "input, blurboxes",
     [
         (
-            cvcuda.Tensor((1, 100, 100, 4), np.uint8, "NHWC"),
-            cvcuda.BlurBoxesI([
-                cvcuda.BlurBoxI(rect=(50, 50, 3, 3), kernelSize=8),
-                cvcuda.BlurBoxI(rect=(50, 50, 5, 5), kernelSize=11),
-                cvcuda.BlurBoxI(rect=(50, 50, 7, 7), kernelSize=17),
-            ]),
+            cvcuda.Tensor((3, 224, 224, 4), np.uint8, "NHWC"),
+            cvcuda.BlurBoxesI(
+                numBoxes = [
+                    3, 3, 3
+                ],
+                boxes = [
+                    cvcuda.BlurBoxI(rect=(10, 10, 5, 5), kernelSize=7),
+                    cvcuda.BlurBoxI(rect=(50, 50, 7, 7), kernelSize=11),
+                    cvcuda.BlurBoxI(rect=(90, 90, 9, 9), kernelSize=17),
+                    cvcuda.BlurBoxI(rect=(10, 10, 5, 5), kernelSize=7),
+                    cvcuda.BlurBoxI(rect=(50, 50, 7, 7), kernelSize=11),
+                    cvcuda.BlurBoxI(rect=(90, 90, 9, 9), kernelSize=17),
+                    cvcuda.BlurBoxI(rect=(10, 10, 5, 5), kernelSize=7),
+                    cvcuda.BlurBoxI(rect=(50, 50, 7, 7), kernelSize=11),
+                    cvcuda.BlurBoxI(rect=(90, 90, 9, 9), kernelSize=17),
+                ]
+            ),
         ),
     ],
 )

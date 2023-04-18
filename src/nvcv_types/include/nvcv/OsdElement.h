@@ -55,16 +55,10 @@ typedef struct
 
 typedef struct
 {
-    NVCVBlurBoxI*   boxes;          //!< Blurring box rectangle, \ref NVCVBlurBoxI.
-    int32_t         box_num;        //!< Blurring box num.
+    int32_t         batch;          // Number of images in the image batch.
+    int32_t*        numBoxes;       // Number array of blurring boxes for image batch.
+    NVCVBlurBoxI*   boxes;          // Blurring box array for image batch, \ref NVCVBlurBoxI.
 } NVCVBlurBoxesI;
-
-// typedef struct
-// {
-//     int32_t         batch;          // Number of images in the image batch.
-//     int32_t*        numBoxes;       // Number array of blurring boxes for image batch.
-//     NVCVBlurBoxI*   boxes;          // Blurring box array for image batch, \ref NVCVBlurBoxI.
-// } NVCVBlurBoxesI;
 
 #ifdef __cplusplus
 }
