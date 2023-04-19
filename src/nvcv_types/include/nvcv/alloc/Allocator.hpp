@@ -30,18 +30,6 @@
 
 namespace nvcv {
 
-namespace detail {
-template<typename>
-struct IsRefWrapper : std::false_type
-{
-};
-
-template<typename T>
-struct IsRefWrapper<std::reference_wrapper<T>> : std::true_type
-{
-};
-} // namespace detail
-
 // Helper class to explicitly assign
 // address alignments.
 class MemAlignment
@@ -148,13 +136,15 @@ public:
     }
 };
 
+namespace detail {
+
 /** Provides a common implementation for different memory allocator wrappers
  */
-template<NVCVResourceType kind>
+template<NVCVResourceType KIND>
 class MemAllocatorWithKind : public MemAllocator
 {
 public:
-    static constexpr NVCVResourceType kResourceType = kind;
+    static constexpr NVCVResourceType kResourceType = KIND;
 
     MemAllocatorWithKind() = default;
 
@@ -173,27 +163,29 @@ public:
     }
 };
 
+} // namespace detail
+
 /** Encapsulates a host memory allocator descriptor
  */
-class HostMemAllocator : public MemAllocatorWithKind<NVCV_RESOURCE_MEM_HOST>
+class HostMemAllocator : public detail::MemAllocatorWithKind<NVCV_RESOURCE_MEM_HOST>
 {
-    using Impl = MemAllocatorWithKind<NVCV_RESOURCE_MEM_HOST>;
+    using Impl = detail::MemAllocatorWithKind<NVCV_RESOURCE_MEM_HOST>;
     using Impl::Impl;
 };
 
 /** Encapsulates a host pinned memory allocator descriptor
  */
-class HostPinnedMemAllocator : public MemAllocatorWithKind<NVCV_RESOURCE_MEM_HOST_PINNED>
+class HostPinnedMemAllocator : public detail::MemAllocatorWithKind<NVCV_RESOURCE_MEM_HOST_PINNED>
 {
-    using Impl = MemAllocatorWithKind<NVCV_RESOURCE_MEM_HOST_PINNED>;
+    using Impl = detail::MemAllocatorWithKind<NVCV_RESOURCE_MEM_HOST_PINNED>;
     using Impl::Impl;
 };
 
 /** Encapsulates a CUDA memory allocator descriptor
  */
-class CudaMemAllocator : public MemAllocatorWithKind<NVCV_RESOURCE_MEM_CUDA>
+class CudaMemAllocator : public detail::MemAllocatorWithKind<NVCV_RESOURCE_MEM_CUDA>
 {
-    using Impl = MemAllocatorWithKind<NVCV_RESOURCE_MEM_CUDA>;
+    using Impl = detail::MemAllocatorWithKind<NVCV_RESOURCE_MEM_CUDA>;
     using Impl::Impl;
 };
 
@@ -212,8 +204,6 @@ public:
     ResAlloc get(bool returnDefault = true) const;
 
     virtual ~Allocator() = default;
-
-private:
 };
 
 inline ResourceAllocator Allocator::get(NVCVResourceType resType, bool returnDefault) const

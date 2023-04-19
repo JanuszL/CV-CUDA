@@ -89,6 +89,9 @@ public:
     using Base::release;
     using Base::reset;
     using Base::operator bool;
+
+protected:
+    ~CoreResource() = default;
 };
 
 } // namespace nvcv

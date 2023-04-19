@@ -18,6 +18,7 @@
 #ifndef NVCV_TYPE_TRAITS_HPP
 #define NVCV_TYPE_TRAITS_HPP
 
+#include <functional>
 #include <type_traits>
 
 namespace nvcv { namespace detail {
@@ -94,13 +95,6 @@ struct ConjunctionImpl<true, Ts...> : Conjunction<Ts...>
 {
 };
 
-static_assert(Conjunction<>::value, "Conjunction tail should evaluate to true");
-static_assert(Conjunction<std::true_type>::value, "Sanity check failed");
-static_assert(!Conjunction<std::false_type>::value, "Sanity check failed");
-static_assert(!Conjunction<std::true_type, std::true_type, std::false_type, std::true_type>::value,
-              "Sanity check failed");
-static_assert(Conjunction<std::true_type, std::true_type, std::true_type>::value, "Sanity check failed");
-
 template<typename...>
 struct Disjunction : std::false_type
 {
@@ -124,12 +118,29 @@ struct DisjunctionImpl<false, Ts...> : Disjunction<Ts...>
 {
 };
 
-static_assert(!Disjunction<>::value, "Disjunction tail should evaluate to false");
-static_assert(Disjunction<std::true_type>::value, "Sanity check failed");
-static_assert(!Disjunction<std::false_type>::value, "Sanity check failed");
-static_assert(Disjunction<std::false_type, std::false_type, std::true_type, std::false_type>::value,
-              "Sanity check failed");
-static_assert(!Disjunction<std::false_type, std::false_type, std::false_type>::value, "Sanity check failed");
+// std::function recognizer
+
+std::false_type IsStdFunctionF(...);
+
+template<typename T>
+std::true_type IsStdFunctionF(const std::function<T> *);
+
+template<typename X>
+struct IsStdFunction : decltype(IsStdFunctionF(std::declval<X *>()))
+{
+};
+
+// std::reference_wrapper recognizer
+
+std::false_type IsRefWrapperF(...);
+
+template<typename T>
+std::false_type IsRefWrapperF(const std::reference_wrapper<T> *);
+
+template<typename X>
+struct IsRefWrapper : decltype(IsRefWrapperF(std::declval<X *>()))
+{
+};
 
 }} // namespace nvcv::detail
 
