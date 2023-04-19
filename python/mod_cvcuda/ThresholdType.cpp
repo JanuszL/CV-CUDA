@@ -24,13 +24,13 @@ namespace cvcudapy {
 void ExportThresholdType(py::module &m)
 {
     py::enum_<NVCVThresholdType>(m, "ThresholdType", py::arithmetic())
-        .value("BINARY", NVCV_THRESH_BINARY)
-        .value("BINARY_INV", NVCV_THRESH_BINARY_INV)
-        .value("TRUNC", NVCV_THRESH_TRUNC)
-        .value("TOZERO", NVCV_THRESH_TOZERO)
-        .value("TOZERO_INV", NVCV_THRESH_TOZERO_INV)
-        .value("OTSU", NVCV_THRESH_OTSU)
-        .value("TRIANGLE", NVCV_THRESH_TRIANGLE);
+        .value("BINARY", NVCV_THRESH_BINARY, "Value above threshold is set to maxval, otherwise set to 0")
+        .value("BINARY_INV", NVCV_THRESH_BINARY_INV, "Value above threshold is set to 0, otherwise set to maxval")
+        .value("TRUNC", NVCV_THRESH_TRUNC, "Value above threshold is set to threshold, otherwise unchanged")
+        .value("TOZERO", NVCV_THRESH_TOZERO, "Value above threshold is unchanged, otherwise set to 0")
+        .value("TOZERO_INV", NVCV_THRESH_TOZERO_INV, "Value above threshold is set to 0, otherwise unchanged")
+        .value("OTSU", NVCV_THRESH_OTSU, "Use Otsu's algorithm to automatically determine threshold")
+        .value("TRIANGLE", NVCV_THRESH_TRIANGLE, "Use Triangle algorithm to automatically determine threshold");
 }
 
 } // namespace cvcudapy

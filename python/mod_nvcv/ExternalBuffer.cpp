@@ -364,11 +364,11 @@ const DLTensor &ExternalBuffer::dlTensor() const
 void ExternalBuffer::Export(py::module &m)
 {
     py::class_<ExternalBuffer, std::shared_ptr<ExternalBuffer>>(m, "ExternalBuffer", py::dynamic_attr())
-        .def_property_readonly("shape", &ExternalBuffer::shape)
-        .def_property_readonly("strides", &ExternalBuffer::strides)
-        .def_property_readonly("dtype", &ExternalBuffer::dtype)
-        .def("__dlpack__", &ExternalBuffer::dlpack, "stream"_a=1)
-        .def("__dlpack_device__", &ExternalBuffer::dlpackDevice);
+        .def_property_readonly("shape", &ExternalBuffer::shape, "Get the shape of the buffer as an array")
+        .def_property_readonly("strides", &ExternalBuffer::strides, "Get the strides of the buffer")
+        .def_property_readonly("dtype", &ExternalBuffer::dtype, "Get the data type of the buffer")
+        .def("__dlpack__", &ExternalBuffer::dlpack, "stream"_a=1, "Export the buffer as a DLPack tensor")
+        .def("__dlpack_device__", &ExternalBuffer::dlpackDevice, "Get the device associated with the buffer");
 }
 
 } // namespace nv::vpi::python

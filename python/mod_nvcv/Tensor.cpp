@@ -355,27 +355,30 @@ void Tensor::Export(py::module &m)
 #define NVCV_DETAIL_DEF_TLAYOUT(LAYOUT) .def_readonly_static(#LAYOUT, &nvcv::TENSOR_##LAYOUT)
 #include <nvcv/TensorLayoutDef.inc>
 #undef NVCV_DETAIL_DEF_TLAYOUT
-        .def(py::self == py::self)
-        .def(py::self != py::self)
-        .def("__repr__", &TensorLayoutToString);
+        .def(py::self == py::self, "Check if two TensorLayout objects are equal.")
+        .def(py::self != py::self, "Check if two TensorLayout objects are not equal.")
+        .def("__repr__", &TensorLayoutToString, "Return the string representation of the TensorLayout object.");
 
     py::implicitly_convertible<py::str, nvcv::TensorLayout>();
 
     py::class_<Tensor, std::shared_ptr<Tensor>, Container>(m, "Tensor")
-        .def(py::init(&Tensor::CreateForImageBatch), "nimages"_a, "imgsize"_a, "format"_a, "rowalign"_a = 0)
-        .def(py::init(&Tensor::Create), "shape"_a, "dtype"_a, "layout"_a = std::nullopt, "rowalign"_a = 0)
-        .def_property_readonly("layout", &Tensor::layout)
-        .def_property_readonly("shape", &Tensor::shape)
-        .def_property_readonly("dtype", &Tensor::dtype)
+        .def(py::init(&Tensor::CreateForImageBatch), "nimages"_a, "imgsize"_a, "format"_a, "rowalign"_a = 0,
+             "Create a Tensor object for an ImageBatch.")
+        .def(py::init(&Tensor::Create), "shape"_a, "dtype"_a, "layout"_a = std::nullopt, "rowalign"_a = 0,
+             "Create a Tensor object with the given shape, data type and layout.")
+        .def_property_readonly("layout", &Tensor::layout, "The TensorLayout of the Tensor.")
+        .def_property_readonly("shape", &Tensor::shape, "The shape of the Tensor.")
+        .def_property_readonly("dtype", &Tensor::dtype, "The data type of the Tensor.")
         // numpy and others use ndim, let's be consistent with them in python.
         // It's not a requirement to be consistent between NVCV Python and C/C++.
         // Each language use whatever is appropriate (and expected) in their environment.
-        .def_property_readonly("ndim", &Tensor::rank)
-        .def("cuda", &Tensor::cuda)
-        .def("__repr__", &util::ToString<Tensor>);
+        .def_property_readonly("ndim", &Tensor::rank, "The number of dimensions of the Tensor.")
+        .def("cuda", &Tensor::cuda, "Referance to the Tensor on the CUDA device.")
+        .def("__repr__", &util::ToString<Tensor>, "Return the string representation of the Tensor object.");
 
-    m.def("as_tensor", &Tensor::Wrap, "buffer"_a, "layout"_a = std::nullopt);
-    m.def("as_tensor", &Tensor::WrapImage, "image"_a);
+    m.def("as_tensor", &Tensor::Wrap, "buffer"_a, "layout"_a = std::nullopt,
+          "Wrap an existing buffer into a Tensor object with the given layout.");
+    m.def("as_tensor", &Tensor::WrapImage, "image"_a, "Wrap an existing image into a Tensor object.");
 }
 
 } // namespace nvcvpy::priv

@@ -1013,22 +1013,28 @@ void Image::Export(py::module &m)
     using namespace py::literals;
 
     py::class_<Image, std::shared_ptr<Image>, Container>(m, "Image")
-        .def(py::init(&Image::Create), "size"_a, "format"_a, "rowalign"_a = 0)
-        .def(py::init(&Image::CreateHost), "buffer"_a, "format"_a = nvcv::FMT_NONE, "rowalign"_a = 0)
-        .def(py::init(&Image::CreateHostVector), "buffer"_a, "format"_a = nvcv::FMT_NONE, "rowalign"_a = 0)
-        .def_static("zeros", &Image::Zeros, "size"_a, "format"_a, "rowalign"_a = 0)
+        .def(py::init(&Image::Create), "size"_a, "format"_a, "rowalign"_a = 0,
+             "Constructor that takes a size, format and optional row align of the image")
+        .def(py::init(&Image::CreateHost), "buffer"_a, "format"_a = nvcv::FMT_NONE, "rowalign"_a = 0,
+             "Constructor that takes a host buffer, format and optional row align")
+        .def(py::init(&Image::CreateHostVector), "buffer"_a, "format"_a = nvcv::FMT_NONE, "rowalign"_a = 0,
+             "Constructor that takes a host buffer vector, format and optional row align")
+        .def_static("zeros", &Image::Zeros, "size"_a, "format"_a, "rowalign"_a = 0,
+                    "Create an image filled with zeros with a given size, format and optional row align")
         .def("__repr__", &util::ToString<Image>)
-        .def("cuda", &Image::cuda, "layout"_a = std::nullopt)
-        .def("cpu", &Image::cpu, "layout"_a = std::nullopt)
-        .def_property_readonly("size", &Image::size)
-        .def_property_readonly("width", &Image::width)
-        .def_property_readonly("height", &Image::height)
-        .def_property_readonly("format", &Image::format);
+        .def("cuda", &Image::cuda, "layout"_a = std::nullopt, "The image on the CUDA device")
+        .def("cpu", &Image::cpu, "layout"_a = std::nullopt, "The image on the CPU")
+        .def_property_readonly("size", &Image::size, "Read-only property that returns the size of the image")
+        .def_property_readonly("width", &Image::width, "Read-only property that returns the width of the image")
+        .def_property_readonly("height", &Image::height, "Read-only property that returns the height of the image")
+        .def_property_readonly("format", &Image::format, "Read-only property that returns the format of the image");
 
     // Make sure buffer lifetime is tied to image's (keep_alive)
-    m.def("as_image", &Image::WrapExternalBuffer, "buffer"_a, "format"_a = nvcv::FMT_NONE, py::keep_alive<0, 1>());
+    m.def("as_image", &Image::WrapExternalBuffer, "buffer"_a, "format"_a = nvcv::FMT_NONE, py::keep_alive<0, 1>(),
+          "Wrap an external buffer as an image and tie the buffer lifetime to the image");
     m.def("as_image", &Image::WrapExternalBufferVector, py::arg_v("buffer", std::vector<py::object>{}),
-          "format"_a = nvcv::FMT_NONE, py::keep_alive<0, 1>());
+          "format"_a = nvcv::FMT_NONE, py::keep_alive<0, 1>(),
+          "Wrap a vector of external buffers as an image and tie the buffer lifetime to the image");
 }
 
 } // namespace nvcvpy::priv

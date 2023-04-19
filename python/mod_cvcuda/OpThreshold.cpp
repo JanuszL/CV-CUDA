@@ -103,13 +103,107 @@ void ExportOpThreshold(py::module &m)
 {
     using namespace pybind11::literals;
 
-    m.def("threshold", &Threshold, "src"_a, "thresh"_a, "maxval"_a, "type"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("threshold", &Threshold, "src"_a, "thresh"_a, "maxval"_a, "type"_a, py::kw_only(), "stream"_a = nullptr,
+          R"pbdoc(
+
+        Executes the Threshold operation on the given cuda stream.
+
+        See also:
+            Refer to the CV-CUDA C API reference for the Threshold operator
+            for more details and usage examples.
+
+        Args:
+            src (Tensor): Input tensor containing one or more images.
+            thresh (Tensor): An array of size batch that gives the threshold value of each image.
+            maxval (Tensor): An array of size batch that gives the maxval value of each image,
+                             using with the NVCV_THRESH_BINARY and NVCV_THRESH_BINARY_INV threshold types.
+            type (ThresholdType): Thresholding type.
+            stream (Stream, optional): CUDA Stream on which to perform the operation.
+
+        Returns:
+            cvcuda.Tensor: The output tensor.
+
+        Caution:
+            Restrictions to several arguments may apply. Check the C
+            API references of the CV-CUDA operator.
+    )pbdoc");
+
     m.def("threshold_into", &ThresholdInto, "dst"_a, "src"_a, "thresh"_a, "maxval"_a, "type"_a, py::kw_only(),
-          "stream"_a = nullptr);
+          "stream"_a = nullptr, R"pbdoc(
+
+        Executes the Threshold operation on the given cuda stream.
+
+        See also:
+            Refer to the CV-CUDA C API reference for the Threshold operator
+            for more details and usage examples.
+
+        Args:
+            dst (Tensor): Output tensor to store the result of the operation.
+            src (Tensor): Input tensor containing one or more images.
+            thresh (Tensor): An array of size batch that gives the threshold value of each image.
+            maxval (Tensor): An array of size batch that gives the maxval value of each image,
+                             using with the NVCV_THRESH_BINARY and NVCV_THRESH_BINARY_INV threshold types.
+            type (ThresholdType): Thresholding type.
+            stream (Stream, optional): CUDA Stream on which to perform the operation.
+
+        Returns:
+            None
+
+        Caution:
+            Restrictions to several arguments may apply. Check the C
+            API references of the CV-CUDA operator.
+    )pbdoc");
+
     m.def("threshold", &ThresholdVarShape, "src"_a, "thresh"_a, "maxval"_a, "type"_a, py::kw_only(),
-          "stream"_a = nullptr);
+          "stream"_a = nullptr, R"pbdoc(
+
+        Executes the Threshold operation on the given cuda stream.
+
+        See also:
+            Refer to the CV-CUDA C API reference for the Threshold operator
+            for more details and usage examples.
+
+        Args:
+            src (ImageBatchVarShape): Input image batch containing one or more images.
+            thresh (Tensor): An array of size batch that gives the threshold value of each image.
+            maxval (Tensor): An array of size batch that gives the maxval value of each image,
+                             using with the NVCV_THRESH_BINARY and NVCV_THRESH_BINARY_INV threshold types.
+            type (ThresholdType): Thresholding type.
+            stream (Stream, optional): CUDA Stream on which to perform the operation.
+
+        Returns:
+            cvcuda.ImageBatchVarShape: The output image batch.
+
+        Caution:
+            Restrictions to several arguments may apply. Check the C
+            API references of the CV-CUDA operator.
+    )pbdoc");
+
     m.def("threshold_into", &ThresholdVarShapeInto, "dst"_a, "src"_a, "thresh"_a, "maxval"_a, "type"_a, py::kw_only(),
-          "stream"_a = nullptr);
+          "stream"_a = nullptr, R"pbdoc(
+
+        Executes the Threshold operation on the given cuda stream.
+
+        See also:
+            Refer to the CV-CUDA C API reference for the Threshold operator
+            for more details and usage examples.
+
+        Args:
+            dst (ImageBatchVarShape): Output image batch containing the result of the operation.
+            src (ImageBatchVarShape): Input image batch containing one or more images.
+            thresh (Tensor): An array of size batch that gives the threshold value of each image.
+            maxval (Tensor): An array of size batch that gives the maxval value of each image,
+                             using with the NVCV_THRESH_BINARY and NVCV_THRESH_BINARY_INV threshold types.
+            type (ThresholdType): Thresholding type.
+            stream (Stream, optional): CUDA Stream on which to perform the operation.
+
+        Returns:
+            None
+
+        Caution:
+            Restrictions to several arguments may apply. Check the C
+            API references of the CV-CUDA operator.
+    )pbdoc");
 }
 
 } // namespace cvcudapy
