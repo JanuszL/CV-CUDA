@@ -19,7 +19,7 @@
  * @file Op__OPNAME__.h
  *
  * @brief Defines types and functions to handle the __OPNAME__ operation.
- * @defgroup NVCV_C_ALGORITHM___OPNAMECAP__ __OPNAME__
+ * @defgroup NVCV_C_ALGORITHM___OPNAMECAP__ __OPNAMESPACE__
  * @{
  */
 
@@ -99,7 +99,7 @@ CVCUDA_PUBLIC NVCVStatus cvcuda__OPNAME__Create(NVCVOperatorHandle *handle);
  *                    + Must not be NULL.
  * @param [in] stream Handle to a valid CUDA stream.
  *
- * @param [in] in intput tensor.
+ * @param [in] in input tensor.
  *
  * @param [out] out output tensor.
  *

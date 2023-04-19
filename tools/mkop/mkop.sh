@@ -25,11 +25,13 @@ modify_and_update_template() {
     year=$(date +%Y)
     capName=$(echo "$name" | sed 's/\([A-Z]\)/_\L\1/g' | tr '[:lower:]' '[:upper:]')
     lowName=$(echo "$name" | tr '[:upper:]' '[:lower:]')
+    spacedName=$(echo $name | sed 's/\([a-z]\)\([A-Z]\)/\1 \2/g')
     # Replace all occurrences of the "TAG" string with the provided name
     sed "s/__OPNAME__/$name/g" "$file" > "$destination"
     sed -i 's/\(.*(\s*c\s*)\).*\(NVIDIA.*\)/\1'" $year "'\2/' "$destination"
     sed -i "s/__OPNAMECAP__/$capName/g" "$destination"
     sed -i "s/__OPNAMELOW__/$lowName/g" "$destination"
+    sed -i "s/__OPNAMESPACE__/$spacedName/g" "$destination"
 }
 
 add_to_cmake() {

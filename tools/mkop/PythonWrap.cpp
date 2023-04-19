@@ -58,8 +58,45 @@ void ExportOp__OPNAME__(py::module &m)
 {
     using namespace pybind11::literals;
 
-    m.def("__OPNAMELOW__", &__OPNAME__, "src"_a, "dtype"_a, py::kw_only(), "stream"_a = nullptr);
-    m.def("__OPNAMELOW___into", &__OPNAME__Into, "dst"_a, "src"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("__OPNAMELOW__", &__OPNAME__, "src"_a, "dtype"_a, py::kw_only(), "stream"_a = nullptr, R"pbdoc(
+
+        Executes the __OPNAMESPACE__ operation on the given cuda stream.
+
+        See also:
+            Refer to the CV-CUDA C API reference for the __OPNAMESPACE__ operator
+            for more details and usage examples.
+
+        Args:
+            TBD args
+            stream (Stream, optional): CUDA Stream on which to perform the operation.
+
+        Returns:
+            TBD
+
+        Caution:
+            Restrictions to several arguments may apply. Check the C
+            API references of the CV-CUDA operator.
+    )pbdoc");
+
+    m.def("__OPNAMELOW___into", &__OPNAME__Into, "dst"_a, "src"_a, py::kw_only(), "stream"_a = nullptr, R"pbdoc(
+
+        Executes the __OPNAMESPACE__ operation on the given cuda stream.
+
+        See also:
+            Refer to the CV-CUDA C API reference for the __OPNAMESPACE__ operator
+            for more details and usage examples.
+
+        Args:
+            TBD args
+            stream (Stream, optional): CUDA Stream on which to perform the operation.
+
+        Returns:
+            TBD
+
+        Caution:
+            Restrictions to several arguments may apply. Check the C
+            API references of the CV-CUDA operator.
+    )pbdoc");
 }
 
 } // namespace cvcudapy
