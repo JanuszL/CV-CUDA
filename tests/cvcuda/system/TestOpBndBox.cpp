@@ -26,11 +26,10 @@
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 
-#include <iostream>
-#include <random>
-
 #include <fstream>
+#include <iostream>
 #include <iterator>
+#include <random>
 
 namespace gt   = ::testing;
 namespace test = nvcv::test;
@@ -48,7 +47,7 @@ static void loadGoldBuffer(std::vector<uint8_t> &vect, std::string goldPath)
 }
 
 static void dumpGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStridedImagePlanar &data,
-                          nvcv::Byte *inBuf, NVCVBndBoxesI bboxes, cudaStream_t stream, std::string goldPath)
+                           nvcv::Byte *inBuf, NVCVBndBoxesI bboxes, cudaStream_t stream, std::string goldPath)
 {
     auto context = cuosd_context_create();
 
@@ -125,11 +124,11 @@ TEST_P(OpBndBox, BndBox_sanity)
     cudaStream_t stream;
     ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
 
-    int inN              = GetParamValue<0>();
-    int inW              = GetParamValue<1>();
-    int inH              = GetParamValue<2>();
-    int num              = GetParamValue<3>();
-    int sed              = GetParamValue<4>();
+    int         inN      = GetParamValue<0>();
+    int         inW      = GetParamValue<1>();
+    int         inH      = GetParamValue<2>();
+    int         num      = GetParamValue<3>();
+    int         sed      = GetParamValue<4>();
     std::string goldPath = GetParamValue<5>();
 
     NVCVBndBoxesI            bndBoxes;

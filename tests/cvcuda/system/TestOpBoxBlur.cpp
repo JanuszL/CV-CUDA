@@ -26,8 +26,8 @@
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <iterator>
 
 namespace gt   = ::testing;
@@ -40,7 +40,7 @@ static void loadGoldBuffer(std::vector<uint8_t> &vect, std::string goldPath)
 }
 
 static void dumpGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStridedImagePlanar &data,
-                          nvcv::Byte *inBuf, NVCVBlurBoxesI bboxes, cudaStream_t stream, std::string goldPath)
+                           nvcv::Byte *inBuf, NVCVBlurBoxesI bboxes, cudaStream_t stream, std::string goldPath)
 {
     auto context = cuosd_context_create();
 
@@ -114,14 +114,14 @@ TEST_P(OpBoxBlur, BoxBlur_sanity)
     cudaStream_t stream;
     ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
 
-    int inN              = GetParamValue<0>();
-    int inW              = GetParamValue<1>();
-    int inH              = GetParamValue<2>();
-    int cols             = GetParamValue<3>();
-    int rows             = GetParamValue<4>();
-    int wBox             = GetParamValue<5>();
-    int hBox             = GetParamValue<6>();
-    int ks               = GetParamValue<7>();
+    int         inN      = GetParamValue<0>();
+    int         inW      = GetParamValue<1>();
+    int         inH      = GetParamValue<2>();
+    int         cols     = GetParamValue<3>();
+    int         rows     = GetParamValue<4>();
+    int         wBox     = GetParamValue<5>();
+    int         hBox     = GetParamValue<6>();
+    int         ks       = GetParamValue<7>();
     std::string goldPath = GetParamValue<8>();
 
     NVCVBlurBoxesI            blurBoxes;
