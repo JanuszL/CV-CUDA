@@ -363,7 +363,7 @@ public:
      *      Height        | No
      *
      *
-     * @param [in] in intput tensor.
+     * @param [in] in input tensor.
      *
      * @param [out] out output tensor.
      * @param [in]  roi region of interest, defined in pixels
@@ -661,7 +661,7 @@ public:
      *      Width         | No
      *      Height        | No
      *
-     * @param [in] inData Intput tensor.
+     * @param [in] inData input tensor.
      * @param [out] outData Output tensor.
      * @param [in] interpolation Interpolation method. See \ref NVCVInterpolationType for more details.
      * @param [in] stream Stream for the asynchronous execution.

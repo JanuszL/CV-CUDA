@@ -19,7 +19,7 @@
  * @file OpAdaptiveThreshold.h
  *
  * @brief Defines types and functions to handle the adaptive threshold operation.
- * @defgroup NVCV_C_ALGORITHM_ADAPTIVETHRESHOLD Adaptive threshold
+ * @defgroup NVCV_C_ALGORITHM_ADAPTIVETHRESHOLD Adaptive Threshold
  * @{
  */
 
