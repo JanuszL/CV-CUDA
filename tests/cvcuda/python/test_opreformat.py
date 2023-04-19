@@ -24,16 +24,17 @@ RNG = np.random.default_rng(0)
 
 
 @t.mark.parametrize(
-    "input,out_shape,out_layout",
+    "input_args,out_shape,out_layout",
     [
-        (cvcuda.Tensor((5, 16, 23, 4), np.uint8, "NHWC"), (5, 4, 16, 23), "NCHW"),
-        (cvcuda.Tensor((5, 16, 23, 3), np.uint8, "NHWC"), (5, 3, 16, 23), "NCHW"),
-        (cvcuda.Tensor((5, 3, 16, 23), np.uint8, "NCHW"), (5, 16, 23, 3), "NHWC"),
-        (cvcuda.Tensor((3, 6, 4), np.uint8, "CHW"), (6, 4, 3), "HWC"),
-        (cvcuda.Tensor((7, 5, 4), np.uint8, "HWC"), (4, 7, 5), "CHW"),
+        (((5, 16, 23, 4), np.uint8, "NHWC"), (5, 4, 16, 23), "NCHW"),
+        (((5, 16, 23, 3), np.uint8, "NHWC"), (5, 3, 16, 23), "NCHW"),
+        (((5, 3, 16, 23), np.uint8, "NCHW"), (5, 16, 23, 3), "NHWC"),
+        (((3, 6, 4), np.uint8, "CHW"), (6, 4, 3), "HWC"),
+        (((7, 5, 4), np.uint8, "HWC"), (4, 7, 5), "CHW"),
     ],
 )
-def test_op_reformat(input, out_shape, out_layout):
+def test_op_reformat(input_args, out_shape, out_layout):
+    input = cvcuda.Tensor(*input_args)
     out = cvcuda.reformat(input, out_layout)
     assert out.layout == out_layout
     assert out.shape == out_shape

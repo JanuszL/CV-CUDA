@@ -25,47 +25,48 @@ RNG = np.random.default_rng(0)
 
 
 @t.mark.parametrize(
-    "input,out_shape,interp,fmt",
+    "input_args,out_shape,interp,fmt",
     [
         (
-            cvcuda.Tensor((5, 16, 23, 4), np.uint8, "NHWC"),
+            ((5, 16, 23, 4), np.uint8, "NHWC"),
             (5, 132, 15, 4),
             cvcuda.Interp.LINEAR,
             cvcuda.Format.RGB8,
         ),
         (
-            cvcuda.Tensor((5, 31, 31, 4), np.uint8, "NHWC"),
+            ((5, 31, 31, 4), np.uint8, "NHWC"),
             (5, 55, 55, 4),
             cvcuda.Interp.LINEAR,
             cvcuda.Format.RGB8,
         ),
         (
-            cvcuda.Tensor((5, 55, 55, 4), np.uint8, "NHWC"),
+            ((5, 55, 55, 4), np.uint8, "NHWC"),
             (5, 31, 31, 4),
             cvcuda.Interp.LINEAR,
             cvcuda.Format.RGB8,
         ),
         (
-            cvcuda.Tensor((5, 16, 23, 4), np.float32, "NHWC"),
+            ((5, 16, 23, 4), np.float32, "NHWC"),
             (5, 132, 15, 4),
             cvcuda.Interp.LINEAR,
             cvcuda.Format.RGBf32,
         ),
         (
-            cvcuda.Tensor((5, 31, 31, 4), np.float32, "NHWC"),
+            ((5, 31, 31, 4), np.float32, "NHWC"),
             (5, 55, 55, 4),
             cvcuda.Interp.LINEAR,
             cvcuda.Format.RGBf32,
         ),
         (
-            cvcuda.Tensor((5, 55, 55, 4), np.float32, "NHWC"),
+            ((5, 55, 55, 4), np.float32, "NHWC"),
             (5, 31, 31, 4),
             cvcuda.Interp.LINEAR,
             cvcuda.Format.RGBf32,
         ),
     ],
 )
-def test_op_pillowresize(input, out_shape, interp, fmt):
+def test_op_pillowresize(input_args, out_shape, interp, fmt):
+    input = cvcuda.Tensor(*input_args)
 
     out = cvcuda.pillowresize(input, out_shape, fmt, interp)
     assert out.layout == input.layout

@@ -19,19 +19,22 @@ import pytest as t
 
 
 @t.mark.parametrize(
-    "src, map",
+    "src_args, map_args",
     [
         (
-            cvcuda.Tensor((5, 16, 23, 4), nvcv.Type.U8, "NHWC"),
-            cvcuda.Tensor((5, 17, 13, 2), nvcv.Type.F32, "NHWC"),
+            ((5, 16, 23, 4), nvcv.Type.U8, "NHWC"),
+            ((5, 17, 13, 2), nvcv.Type.F32, "NHWC"),
         ),
         (
-            cvcuda.Tensor((13, 21, 1), nvcv.Type._3U8, "HWC"),
-            cvcuda.Tensor((23, 11, 1), nvcv.Type._2F32, "HWC"),
+            ((13, 21, 1), nvcv.Type._3U8, "HWC"),
+            ((23, 11, 1), nvcv.Type._2F32, "HWC"),
         ),
     ],
 )
-def test_op_remap(src, map):
+def test_op_remap(src_args, map_args):
+    src = cvcuda.Tensor(*src_args)
+    map = cvcuda.Tensor(*map_args)
+
     dst = cvcuda.remap(src, map)
     assert dst.layout == src.layout
     assert dst.dtype == src.dtype

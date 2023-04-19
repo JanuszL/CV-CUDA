@@ -19,39 +19,40 @@ from random import randint
 
 
 @t.mark.parametrize(
-    "input, thtype",
+    "input_args, thtype",
     [
         (
-            cvcuda.Tensor((1, 460, 640, 3), cvcuda.Type.U8, "NHWC"),
+            ((1, 460, 640, 3), cvcuda.Type.U8, "NHWC"),
             cvcuda.ThresholdType.BINARY,
         ),
         (
-            cvcuda.Tensor((5, 640, 460, 3), cvcuda.Type.U8, "NHWC"),
+            ((5, 640, 460, 3), cvcuda.Type.U8, "NHWC"),
             cvcuda.ThresholdType.BINARY_INV,
         ),
         (
-            cvcuda.Tensor((4, 1920, 1080, 3), cvcuda.Type.U8, "NHWC"),
+            ((4, 1920, 1080, 3), cvcuda.Type.U8, "NHWC"),
             cvcuda.ThresholdType.TRUNC,
         ),
         (
-            cvcuda.Tensor((2, 1000, 1000, 3), cvcuda.Type.U8, "NHWC"),
+            ((2, 1000, 1000, 3), cvcuda.Type.U8, "NHWC"),
             cvcuda.ThresholdType.TOZERO,
         ),
         (
-            cvcuda.Tensor((3, 100, 100, 3), cvcuda.Type.U8, "NHWC"),
+            ((3, 100, 100, 3), cvcuda.Type.U8, "NHWC"),
             cvcuda.ThresholdType.TOZERO_INV,
         ),
         (
-            cvcuda.Tensor((5, 460, 640, 1), cvcuda.Type.U8, "NHWC"),
+            ((5, 460, 640, 1), cvcuda.Type.U8, "NHWC"),
             cvcuda.ThresholdType.OTSU | cvcuda.ThresholdType.BINARY,
         ),
         (
-            cvcuda.Tensor((1, 1000, 1000, 1), cvcuda.Type.U8, "NHWC"),
+            ((1, 1000, 1000, 1), cvcuda.Type.U8, "NHWC"),
             cvcuda.ThresholdType.TRIANGLE | cvcuda.ThresholdType.BINARY_INV,
         ),
     ],
 )
-def test_op_threshold(input, thtype):
+def test_op_threshold(input_args, thtype):
+    input = cvcuda.Tensor(*input_args)
 
     parameter_shape = (input.shape[0],)
     thresh = cvcuda.Tensor(parameter_shape, cvcuda.Type.F64, "N")
