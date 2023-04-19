@@ -16,6 +16,7 @@
  */
 
 #include "priv/OpBndBox.hpp"
+
 #include "priv/SymbolVersioning.hpp"
 
 #include <nvcv/Exception.hpp>
@@ -41,7 +42,7 @@ CVCUDA_DEFINE_API(0, 0, NVCVStatus, cvcudaBndBoxCreate, (NVCVOperatorHandle * ha
 
 CVCUDA_DEFINE_API(0, 0, NVCVStatus, cvcudaBndBoxSubmit,
                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                  const NVCVBndBoxesI bboxes))
+                   const NVCVBndBoxesI bboxes))
 {
     return nvcv::ProtectCall(
         [&]

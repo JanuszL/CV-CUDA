@@ -23,10 +23,10 @@
 #include <nvcv/BorderType.h>
 #include <nvcv/IImageBatch.hpp>
 #include <nvcv/ImageBatchData.hpp>
-#include <nvcv/Rect.h>
 #include <nvcv/OsdElement.h>
-#include <nvcv/cuda/OSD.hpp>
+#include <nvcv/Rect.h>
 #include <nvcv/TensorData.hpp>
+#include <nvcv/cuda/OSD.hpp>
 
 #include <vector>
 
@@ -2159,8 +2159,8 @@ public:
      * @param outData Output tensor.
      * @param boxes Bounding box rectangle, \ref NVCVBndBoxesI.
      */
-    ErrorCode infer(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData,
-                    NVCVBndBoxesI bboxes, cudaStream_t stream);
+    ErrorCode infer(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData, NVCVBndBoxesI bboxes,
+                    cudaStream_t stream);
 
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator
@@ -2189,8 +2189,8 @@ public:
      * @param outData Output tensor.
      * @param boxes Bounding boxes to blur, \ref NVCVBlurBoxesI.
      */
-    ErrorCode infer(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData,
-                    NVCVBlurBoxesI bboxes, cudaStream_t stream);
+    ErrorCode infer(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData, NVCVBlurBoxesI bboxes,
+                    cudaStream_t stream);
 
     /**
      * @brief calculate the cpu/gpu buffer size needed by this operator

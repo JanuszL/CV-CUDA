@@ -42,7 +42,7 @@ public:
                     const NVCVBlurBoxesI &bboxes) const;
 
 private:
-    std::unique_ptr<nvcv::legacy::cuda_op::BoxBlur>         m_legacyOp;
+    std::unique_ptr<nvcv::legacy::cuda_op::BoxBlur> m_legacyOp;
 };
 
 } // namespace cvcuda::priv

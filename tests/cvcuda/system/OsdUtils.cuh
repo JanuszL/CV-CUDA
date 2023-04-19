@@ -20,53 +20,45 @@
 
 #include "cuosd.h"
 
-namespace nvcv::test {
-namespace osd {
+namespace nvcv::test { namespace osd {
 
-    enum class ImageFormat : int {
-        None = 0,
-        RGB  = 1,
-        RGBA = 2,
-        BlockLinearNV12 = 3,
-        PitchLinearNV12 = 4
-    };
+enum class ImageFormat : int
+{
+    None            = 0,
+    RGB             = 1,
+    RGBA            = 2,
+    BlockLinearNV12 = 3,
+    PitchLinearNV12 = 4
+};
 
-    struct Image{
-        void* data0    = nullptr;
-        void* data1    = nullptr;
-        void *reserve0 = nullptr;
-        void *reserve1 = nullptr;
-        int width      = 0;
-        int height     = 0;
-        int stride  = 0;
-        ImageFormat format = ImageFormat::None;
-    };
+struct Image
+{
+    void       *data0    = nullptr;
+    void       *data1    = nullptr;
+    void       *reserve0 = nullptr;
+    void       *reserve1 = nullptr;
+    int         width    = 0;
+    int         height   = 0;
+    int         stride   = 0;
+    ImageFormat format   = ImageFormat::None;
+};
 
-    // Get name of enumerate type
-    const char* image_format_name(ImageFormat format);
+// Get name of enumerate type
+const char *image_format_name(ImageFormat format);
 
-    // Create gpu image using size and format
-    Image* create_image(int width, int height, ImageFormat format);
+// Create gpu image using size and format
+Image *create_image(int width, int height, ImageFormat format);
 
-    // Set image color
-    void set_color(Image* image, unsigned char r, unsigned char g, unsigned char b, unsigned char a=255, void* _stream=nullptr);
+// Set image color
+void set_color(Image *image, unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255,
+               void *_stream = nullptr);
 
-    // mask specific r-g-b pixel to transparent, and apply uniform alpha for none-transparent pixels
-    void mask_rgba_alpha(Image* image, unsigned char r, unsigned char g, unsigned char b, unsigned char a, void* _stream);
+// Free image pointer
+void free_image(Image *image);
 
-    // Copy yuv to image
-    void copy_yuvnv12_to(Image* image, int dst_x, int dst_y, int dst_w, int dst_h, const char* yuvnv12file, int yuvwidth, int yuvheight, unsigned char yuvalpha=255, void* _stream=nullptr);
+void cuosd_apply(cuOSDContext_t context, Image *image, void *_stream, bool launch = true);
 
-    // Save image to file, file format is png if rgba, otherwise jpg
-    bool save_image(Image* image, const char* file, void* _stream=nullptr);
-
-    // Free image pointer
-    void free_image(Image* image);
-
-    void cuosd_apply(cuOSDContext_t context, Image* image, void* _stream, bool launch=true);
-    
-    void cuosd_launch(cuOSDContext_t context, Image* image, void* _stream);
-}
-} // namespace nvcv::test
+void cuosd_launch(cuOSDContext_t context, Image *image, void *_stream);
+}} // namespace nvcv::test::osd
 
 #endif // NVCV_TEST_COMMON_OSD_UTILS_HPP

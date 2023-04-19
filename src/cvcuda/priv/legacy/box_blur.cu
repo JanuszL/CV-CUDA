@@ -36,40 +36,44 @@ using namespace nvcv::cuda::osd;
 namespace nvcv::legacy::cuda_op {
 
 template<typename _T>
-static __forceinline__ __device__ _T limit(_T value, _T low, _T high){
+static __forceinline__ __device__ _T limit(_T value, _T low, _T high)
+{
     return value < low ? low : (value > high ? high : value);
 }
 
 template<class SrcWrapper, class DstWrapper>
-static __global__ void render_blur_rgba_kernel(
-    SrcWrapper src, DstWrapper dst,
-    const BoxBlurCommand* commands, int num_command,
-    int image_batch, int image_width, int image_height
-) {
-    if (blockIdx.x >= num_command) return;
-    const BoxBlurCommand& box = commands[blockIdx.x];
-    if(box.batch_index >= image_batch) return;
+static __global__ void render_blur_rgba_kernel(SrcWrapper src, DstWrapper dst, const BoxBlurCommand *commands,
+                                               int num_command, int image_batch, int image_width, int image_height)
+{
+    if (blockIdx.x >= num_command)
+        return;
+    const BoxBlurCommand &box = commands[blockIdx.x];
+    if (box.batch_index >= image_batch)
+        return;
 
     __shared__ uchar3 crop[32][32];
-    int ix = threadIdx.x;
-    int iy = threadIdx.y;
+    int               ix = threadIdx.x;
+    int               iy = threadIdx.y;
 
-    int boxwidth  = box.bounding_right  - box.bounding_left;
+    int boxwidth  = box.bounding_right - box.bounding_left;
     int boxheight = box.bounding_bottom - box.bounding_top;
-    int sx = limit((int)(ix / 32.0f * (float)boxwidth + 0.5f + box.bounding_left), 0, image_width);
-    int sy = limit((int)(iy / 32.0f * (float)boxheight + 0.5f + box.bounding_top), 0, image_height);
+    int sx        = limit((int)(ix / 32.0f * (float)boxwidth + 0.5f + box.bounding_left), 0, image_width);
+    int sy        = limit((int)(iy / 32.0f * (float)boxheight + 0.5f + box.bounding_top), 0, image_height);
 
-    crop[iy][ix] = *(uchar3*)(src.ptr(box.batch_index, sy, sx, 0));
+    crop[iy][ix] = *(uchar3 *)(src.ptr(box.batch_index, sy, sx, 0));
     __syncthreads();
 
     uint3 color = make_uint3(0, 0, 0);
-    int n = 0;
-    for(int i = -box.kernel_size / 2; i <= box.kernel_size / 2; ++i){
-        for(int j = -box.kernel_size / 2; j <= box.kernel_size / 2; ++j){
+    int   n     = 0;
+    for (int i = -box.kernel_size / 2; i <= box.kernel_size / 2; ++i)
+    {
+        for (int j = -box.kernel_size / 2; j <= box.kernel_size / 2; ++j)
+        {
             int u = i + iy;
             int v = j + ix;
-            if(u >= 0 && u < 32 && v >= 0 && v < 32){
-                auto& c = crop[u][v];
+            if (u >= 0 && u < 32 && v >= 0 && v < 32)
+            {
+                auto &c = crop[u][v];
                 color.x += c.x;
                 color.y += c.y;
                 color.z += c.z;
@@ -81,47 +85,52 @@ static __global__ void render_blur_rgba_kernel(
     crop[iy][ix] = make_uchar3(color.x / n, color.y / n, color.z / n);
     __syncthreads();
 
-    int gap_width  = (boxwidth  + 31) / 32;
+    int gap_width  = (boxwidth + 31) / 32;
     int gap_height = (boxheight + 31) / 32;
-    for(int i = 0; i < gap_height; ++i){
-        for(int j = 0; j < gap_width; ++j){
+    for (int i = 0; i < gap_height; ++i)
+    {
+        for (int j = 0; j < gap_width; ++j)
+        {
             int fx = ix * gap_width + j + box.bounding_left;
             int fy = iy * gap_height + i + box.bounding_top;
-            if(fx >= 0 && fx < image_width && fy >= 0 && fy < image_height){
+            if (fx >= 0 && fx < image_width && fy >= 0 && fy < image_height)
+            {
                 int sx = (ix * gap_width + j) / (float)boxwidth * 32;
                 int sy = (iy * gap_height + i) / (float)boxheight * 32;
-                if(sx < 32 && sy < 32){
-                    auto& pix = crop[sy][sx];
-                    *(uchar4*)(dst.ptr(box.batch_index, fy, fx, 0)) = make_uchar4(pix.x, pix.y, pix.z, 255);
+                if (sx < 32 && sy < 32)
+                {
+                    auto &pix                                        = crop[sy][sx];
+                    *(uchar4 *)(dst.ptr(box.batch_index, fy, fx, 0)) = make_uchar4(pix.x, pix.y, pix.z, 255);
                 }
             }
         }
     }
 }
 
-static void cuosd_apply(
-    cuOSDContext_t context, cudaStream_t stream
-) 
+static void cuosd_apply(cuOSDContext_t context, cudaStream_t stream)
 {
-    if (!context->blur_commands.empty()) {
-        if (context->gpu_blur_commands == nullptr) {
+    if (!context->blur_commands.empty())
+    {
+        if (context->gpu_blur_commands == nullptr)
+        {
             context->gpu_blur_commands.reset(new Memory<BoxBlurCommand>());
         }
 
         context->gpu_blur_commands->alloc_or_resize_to(context->blur_commands.size());
 
-        for (int i = 0; i < (int)context->blur_commands.size(); ++i) {
-            auto& cmd = context->blur_commands[i];
-            memcpy((void*)(context->gpu_blur_commands->host() + i), (void*)cmd.get(), sizeof(BoxBlurCommand));
+        for (int i = 0; i < (int)context->blur_commands.size(); ++i)
+        {
+            auto &cmd = context->blur_commands[i];
+            memcpy((void *)(context->gpu_blur_commands->host() + i), (void *)cmd.get(), sizeof(BoxBlurCommand));
         }
 
         context->gpu_blur_commands->copy_host_to_device(stream);
     }
 }
 
-
-inline ErrorCode ApplyBoxBlur_RGBA(const nvcv::TensorDataStridedCuda &inData, const nvcv::TensorDataStridedCuda &outData,
-                                   cuOSDContext_t context, cudaStream_t stream)
+inline ErrorCode ApplyBoxBlur_RGBA(const nvcv::TensorDataStridedCuda &inData,
+                                   const nvcv::TensorDataStridedCuda &outData, cuOSDContext_t context,
+                                   cudaStream_t stream)
 {
     auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
@@ -157,50 +166,52 @@ inline ErrorCode ApplyBoxBlur_RGBA(const nvcv::TensorDataStridedCuda &inData, co
     auto dst = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(outData);
 
     render_blur_rgba_kernel<<<gridSize, blockSize, 0, stream>>>(
-        src, dst,
-        context->gpu_blur_commands ? context->gpu_blur_commands->device() : nullptr,
-        context->blur_commands.size(),
-        inputShape.N, inputShape.W, inputShape.H);
+        src, dst, context->gpu_blur_commands ? context->gpu_blur_commands->device() : nullptr,
+        context->blur_commands.size(), inputShape.N, inputShape.W, inputShape.H);
     checkKernelErrors();
 
     return ErrorCode::SUCCESS;
 }
 
-static ErrorCode cuosd_draw_boxblur(cuOSDContext_t context, int width, int height, NVCVBlurBoxesI bboxes){
-
+static ErrorCode cuosd_draw_boxblur(cuOSDContext_t context, int width, int height, NVCVBlurBoxesI bboxes)
+{
     for (int n = 0; n < bboxes.batch; n++)
     {
         auto numBoxes = bboxes.numBoxes[n];
 
         for (int i = 0; i < numBoxes; i++)
         {
-            auto bbox = bboxes.boxes[i];
-            int left    = max(min(bbox.rect.x, width - 1),    0);
-            int top     = max(min(bbox.rect.y, height - 1),   0);
-            int right   = max(min(left + bbox.rect.width - 1, width - 1),  0);
-            int bottom  = max(min(top + bbox.rect.height - 1, height - 1), 0);
+            auto bbox   = bboxes.boxes[i];
+            int  left   = max(min(bbox.rect.x, width - 1), 0);
+            int  top    = max(min(bbox.rect.y, height - 1), 0);
+            int  right  = max(min(left + bbox.rect.width - 1, width - 1), 0);
+            int  bottom = max(min(top + bbox.rect.height - 1, height - 1), 0);
 
             if (left == right || top == bottom)
             {
-                LOG_DEBUG("Skipped boxblur at rect(" << bbox.rect.x << ", " << bbox.rect.y << ", "<< bbox.rect.width << ", " << bbox.rect.height
-                         << ") in image(" << width << ", " << height << ")");
+                LOG_DEBUG("Skipped boxblur at rect(" << bbox.rect.x << ", " << bbox.rect.y << ", " << bbox.rect.width
+                                                     << ", " << bbox.rect.height << ") in image(" << width << ", "
+                                                     << height << ")");
                 continue;
             }
 
             if (bbox.rect.width < 3 || bbox.rect.height < 3 || bbox.kernelSize < 1)
             {
-                LOG_DEBUG("This operation will be ignored because the region of interest is too small, or the kernel is too small at rect("
-                          << bbox.rect.x << ", " << bbox.rect.y << bbox.rect.width << ", " << bbox.rect.height << ") with kernelSize=" << bbox.kernelSize);
+                LOG_DEBUG(
+                    "This operation will be ignored because the region of interest is too small, or the kernel is too "
+                    "small at rect("
+                    << bbox.rect.x << ", " << bbox.rect.y << bbox.rect.width << ", " << bbox.rect.height
+                    << ") with kernelSize=" << bbox.kernelSize);
                 continue;
             }
 
-            auto cmd = std::make_shared<BoxBlurCommand>();
-            cmd->batch_index = n;
-            cmd->kernel_size = bbox.kernelSize;
-            cmd->bounding_left    = left;
-            cmd->bounding_right   = right;
-            cmd->bounding_top     = top;
-            cmd->bounding_bottom  = bottom;
+            auto cmd             = std::make_shared<BoxBlurCommand>();
+            cmd->batch_index     = n;
+            cmd->kernel_size     = bbox.kernelSize;
+            cmd->bounding_left   = left;
+            cmd->bounding_right  = right;
+            cmd->bounding_top    = top;
+            cmd->bounding_bottom = bottom;
             context->blur_commands.emplace_back(cmd);
         }
 
@@ -213,16 +224,19 @@ BoxBlur::BoxBlur(DataShape max_input_shape, DataShape max_output_shape)
     : CudaBaseOp(max_input_shape, max_output_shape)
 {
     m_context = new cuOSDContext();
-    if (context->gpu_blur_commands == nullptr) {
-        context->gpu_blur_commands.reset(new Memory<BoxBlurCommand>());
+    if (m_context->gpu_blur_commands == nullptr)
+    {
+        m_context->gpu_blur_commands.reset(new Memory<BoxBlurCommand>());
     }
     m_context->gpu_blur_commands->alloc_or_resize_to(PREALLOC_CMD_NUM * sizeof(BoxBlurCommand));
 }
 
-BoxBlur::~BoxBlur(){
-    if (m_context) {
+BoxBlur::~BoxBlur()
+{
+    if (m_context)
+    {
         m_context->blur_commands.clear();
-        cuOSDContext* p = (cuOSDContext*)m_context;
+        cuOSDContext *p = (cuOSDContext *)m_context;
         delete p;
     }
 }
@@ -233,7 +247,7 @@ size_t BoxBlur::calBufferSize(DataShape max_input_shape, DataShape max_output_sh
 }
 
 ErrorCode BoxBlur::infer(const nvcv::TensorDataStridedCuda &inData, const nvcv::TensorDataStridedCuda &outData,
-                        NVCVBlurBoxesI bboxes, cudaStream_t stream)
+                         NVCVBlurBoxesI bboxes, cudaStream_t stream)
 {
     cuda_op::DataFormat input_format  = GetLegacyDataFormat(inData.layout());
     cuda_op::DataFormat output_format = GetLegacyDataFormat(outData.layout());
@@ -281,7 +295,8 @@ ErrorCode BoxBlur::infer(const nvcv::TensorDataStridedCuda &inData, const nvcv::
     }
 
     auto ret = cuosd_draw_boxblur(m_context, cols, rows, bboxes);
-    if (ret != ErrorCode::SUCCESS) {
+    if (ret != ErrorCode::SUCCESS)
+    {
         return ret;
     }
 
@@ -292,9 +307,7 @@ ErrorCode BoxBlur::infer(const nvcv::TensorDataStridedCuda &inData, const nvcv::
         ApplyBoxBlur_RGBA,
     };
 
-    funcs[0](
-        inData, outData, m_context, stream
-    );
+    funcs[0](inData, outData, m_context, stream);
 
     return ErrorCode::SUCCESS;
 }

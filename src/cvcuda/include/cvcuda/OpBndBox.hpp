@@ -43,8 +43,7 @@ public:
 
     ~BndBox();
 
-    void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out,
-                    const NVCVBndBoxesI bboxes);
+    void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, const NVCVBndBoxesI bboxes);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -64,8 +63,7 @@ inline BndBox::~BndBox()
     m_handle = nullptr;
 }
 
-inline void BndBox::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out,
-                               const NVCVBndBoxesI bboxes)
+inline void BndBox::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, const NVCVBndBoxesI bboxes)
 {
     nvcv::detail::CheckThrow(cvcudaBndBoxSubmit(m_handle, stream, in.handle(), out.handle(), bboxes));
 }

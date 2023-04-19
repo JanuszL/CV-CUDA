@@ -25,44 +25,69 @@
 #define NVCV_CUDA_OSD_HPP
 
 #include <cuda_runtime.h>
-#include <vector>
+
 #include <memory>
+#include <vector>
 
-namespace nvcv::cuda {
-namespace osd {
+namespace nvcv::cuda { namespace osd {
 
-#define checkRuntime(call)  check_runtime(call, #call, __LINE__, __FILE__)
-#define PREALLOC_CMD_NUM 100
+#define checkRuntime(call) check_runtime(call, #call, __LINE__, __FILE__)
+#define PREALLOC_CMD_NUM   100
 
-static bool inline check_runtime(cudaError_t e, const char* call, int line, const char *file) {
-    if (e != cudaSuccess) {
-        fprintf(stderr, "CUDA Runtime error %s # %s, code = %s [ %d ] in file %s:%d\n", call, cudaGetErrorString(e), cudaGetErrorName(e), e, file, line);
+inline static bool check_runtime(cudaError_t e, const char *call, int line, const char *file)
+{
+    if (e != cudaSuccess)
+    {
+        fprintf(stderr, "CUDA Runtime error %s # %s, code = %s [ %d ] in file %s:%d\n", call, cudaGetErrorString(e),
+                cudaGetErrorName(e), e, file, line);
         return false;
     }
     return true;
 }
 
 template<typename T>
-class Memory{
+class Memory
+{
 public:
-    T* host()   const{return host_;}
-    T* device() const{return device_;}
-    size_t size() const{return size_;}
-    size_t bytes() const{return size_ * sizeof(T);}
+    T *host() const
+    {
+        return host_;
+    }
 
-    virtual ~Memory() {
+    T *device() const
+    {
+        return device_;
+    }
+
+    size_t size() const
+    {
+        return size_;
+    }
+
+    size_t bytes() const
+    {
+        return size_ * sizeof(T);
+    }
+
+    virtual ~Memory()
+    {
         free_memory();
     }
 
-    void copy_host_to_device(cudaStream_t stream=nullptr) {
+    void copy_host_to_device(cudaStream_t stream = nullptr)
+    {
         checkRuntime(cudaMemcpyAsync(device_, host_, bytes(), cudaMemcpyHostToDevice, stream));
     }
-    void copy_device_to_host(cudaStream_t stream=nullptr) {
+
+    void copy_device_to_host(cudaStream_t stream = nullptr)
+    {
         checkRuntime(cudaMemcpyAsync(host_, device_, bytes(), cudaMemcpyDeviceToHost, stream));
     }
 
-    void alloc_or_resize_to(size_t size) {
-        if (capacity_ < size) {
+    void alloc_or_resize_to(size_t size)
+    {
+        if (capacity_ < size)
+        {
             free_memory();
 
             checkRuntime(cudaMallocHost(&host_, size * sizeof(T)));
@@ -72,8 +97,10 @@ public:
         size_ = size;
     }
 
-    void free_memory() {
-        if (host_ || device_) {
+    void free_memory()
+    {
+        if (host_ || device_)
+        {
             checkRuntime(cudaFreeHost(host_));
             checkRuntime(cudaFree(device_));
             host_     = nullptr;
@@ -84,8 +111,8 @@ public:
     }
 
 private:
-    T* host_         = nullptr;
-    T* device_       = nullptr;
+    T     *host_     = nullptr;
+    T     *device_   = nullptr;
     size_t size_     = 0;
     size_t capacity_ = 0;
 };
@@ -99,37 +126,40 @@ private:
 //    | b2---c2 |
 //    b1 ------ c1
 // thickness: border width in case > 0, -1 stands for fill mode
-struct RectangleCommand {
+struct RectangleCommand
+{
     unsigned char c0, c1, c2, c3;
-    int bounding_left   = 0;
-    int bounding_top    = 0;
-    int bounding_right  = 0;
-    int bounding_bottom = 0;
+    int           bounding_left   = 0;
+    int           bounding_top    = 0;
+    int           bounding_right  = 0;
+    int           bounding_bottom = 0;
 
-    int batch_index     = 0;
-    int thickness = -1;
+    int  batch_index   = 0;
+    int  thickness     = -1;
     bool interpolation = false;
 
     float ax1, ay1, bx1, by1, cx1, cy1, dx1, dy1;
     float ax2, ay2, bx2, by2, cx2, cy2, dx2, dy2;
 };
 
-struct BoxBlurCommand {
+struct BoxBlurCommand
+{
     unsigned char c0, c1, c2, c3;
-    int bounding_left   = 0;
-    int bounding_top    = 0;
-    int bounding_right  = 0;
-    int bounding_bottom = 0;
+    int           bounding_left   = 0;
+    int           bounding_top    = 0;
+    int           bounding_right  = 0;
+    int           bounding_bottom = 0;
 
-    int batch_index     = 0;
+    int batch_index = 0;
     int kernel_size = 7;
 };
 
-struct cuOSDContext {
-    std::vector<std::shared_ptr<RectangleCommand>>  rect_commands;
-    std::unique_ptr<Memory<RectangleCommand>>       gpu_rect_commands;
-    std::vector<std::shared_ptr<BoxBlurCommand>>    blur_commands;
-    std::unique_ptr<Memory<BoxBlurCommand>>         gpu_blur_commands;
+struct cuOSDContext
+{
+    std::vector<std::shared_ptr<RectangleCommand>> rect_commands;
+    std::unique_ptr<Memory<RectangleCommand>>      gpu_rect_commands;
+    std::vector<std::shared_ptr<BoxBlurCommand>>   blur_commands;
+    std::unique_ptr<Memory<BoxBlurCommand>>        gpu_blur_commands;
 
     int bounding_left   = 0;
     int bounding_top    = 0;
@@ -137,10 +167,8 @@ struct cuOSDContext {
     int bounding_bottom = 0;
 };
 
-typedef cuOSDContext*   cuOSDContext_t;
+typedef cuOSDContext *cuOSDContext_t;
 
-}
-}
-
+}} // namespace nvcv::cuda::osd
 
 #endif // NVCV_CUDA_OSD_HPP

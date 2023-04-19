@@ -23,31 +23,37 @@
 
 namespace nvcvpy::priv {
 
-static NVCVRectI pytorect(py::tuple rect){
-  if(rect.size() > 4 || rect.size() == 0) throw py::value_error("Invalid color size.");
+static NVCVRectI pytorect(py::tuple rect)
+{
+    if (rect.size() > 4 || rect.size() == 0)
+        throw py::value_error("Invalid color size.");
 
-  NVCVRectI ret;
-  memset(&ret, 0, sizeof(ret));
+    NVCVRectI ret;
+    memset(&ret, 0, sizeof(ret));
 
-  int* pr = (int*)&ret;
-  for(size_t i = 0; i < rect.size(); ++i){
-    pr[i] = rect[i].cast<int>();
-  }
-  return ret;
+    int *pr = (int *)&ret;
+    for (size_t i = 0; i < rect.size(); ++i)
+    {
+        pr[i] = rect[i].cast<int>();
+    }
+    return ret;
 }
 
-static NVCVColor pytocolor(py::tuple color){
-  if(color.size() > 4 || color.size() == 0) throw py::value_error("Invalid color size.");
+static NVCVColor pytocolor(py::tuple color)
+{
+    if (color.size() > 4 || color.size() == 0)
+        throw py::value_error("Invalid color size.");
 
-  NVCVColor ret;
-  memset(&ret, 0, sizeof(ret));
-  ret.a = 255;
+    NVCVColor ret;
+    memset(&ret, 0, sizeof(ret));
+    ret.a = 255;
 
-  unsigned char* pr = (unsigned char*)&ret;
-  for(size_t i = 0; i < color.size(); ++i){
-    pr[i] = color[i].cast<unsigned char>();
-  }
-  return ret;
+    unsigned char *pr = (unsigned char *)&ret;
+    for (size_t i = 0; i < color.size(); ++i)
+    {
+        pr[i] = color[i].cast<unsigned char>();
+    }
+    return ret;
 }
 
 void ExportBndBox(py::module &m)
@@ -60,9 +66,9 @@ void ExportBndBox(py::module &m)
                  [](py::tuple rect, int thickness, py::tuple borderColor, py::tuple fillColor)
                  {
                      NVCVBndBoxI bndbox;
-                     bndbox.rect = pytorect(rect);
+                     bndbox.rect        = pytorect(rect);
                      bndbox.borderColor = pytocolor(borderColor);
-                     bndbox.fillColor = pytocolor(fillColor);
+                     bndbox.fillColor   = pytocolor(fillColor);
                      return bndbox;
                  }),
              "rect"_a, "thickness"_a, "borderColor"_a, "fillColor"_a)
@@ -78,12 +84,12 @@ void ExportBndBox(py::module &m)
                  {
                      NVCVBndBoxesI bndboxes;
 
-                     bndboxes.batch = numBoxes_vec.size();
+                     bndboxes.batch    = numBoxes_vec.size();
                      bndboxes.numBoxes = new int[bndboxes.batch];
                      memcpy(bndboxes.numBoxes, numBoxes_vec.data(), numBoxes_vec.size() * sizeof(int));
 
                      int total_box_num = bndboxes_vec.size();
-                     bndboxes.boxes = new NVCVBndBoxI[total_box_num];
+                     bndboxes.boxes    = new NVCVBndBoxI[total_box_num];
                      memcpy(bndboxes.boxes, bndboxes_vec.data(), bndboxes_vec.size() * sizeof(NVCVBndBoxI));
 
                      return bndboxes;
@@ -104,7 +110,7 @@ void ExportBoxBlur(py::module &m)
                  [](py::tuple rect, int kernelSize)
                  {
                      NVCVBlurBoxI blurbox;
-                     blurbox.rect = pytorect(rect);
+                     blurbox.rect       = pytorect(rect);
                      blurbox.kernelSize = kernelSize;
                      return blurbox;
                  }),
@@ -119,12 +125,12 @@ void ExportBoxBlur(py::module &m)
                  {
                      NVCVBlurBoxesI blurboxes;
 
-                     blurboxes.batch = numBoxes_vec.size();
+                     blurboxes.batch    = numBoxes_vec.size();
                      blurboxes.numBoxes = new int[blurboxes.batch];
                      memcpy(blurboxes.numBoxes, numBoxes_vec.data(), numBoxes_vec.size() * sizeof(int));
 
                      int total_box_num = blurboxes_vec.size();
-                     blurboxes.boxes = new NVCVBlurBoxI[total_box_num];
+                     blurboxes.boxes   = new NVCVBlurBoxI[total_box_num];
                      memcpy(blurboxes.boxes, blurboxes_vec.data(), blurboxes_vec.size() * sizeof(NVCVBlurBoxI));
 
                      return blurboxes;

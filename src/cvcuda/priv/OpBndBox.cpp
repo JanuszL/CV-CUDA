@@ -16,6 +16,7 @@
  */
 
 #include "OpBndBox.hpp"
+
 #include "legacy/CvCudaLegacy.h"
 #include "legacy/CvCudaLegacyHelpers.hpp"
 
@@ -29,7 +30,7 @@ namespace legacy = nvcv::legacy::cuda_op;
 BndBox::BndBox()
 {
     legacy::DataShape maxIn, maxOut; //maxIn/maxOut not used by op.
-    m_legacyOp         = std::make_unique<legacy::BndBox>(maxIn, maxOut);
+    m_legacyOp = std::make_unique<legacy::BndBox>(maxIn, maxOut);
 }
 
 void BndBox::operator()(cudaStream_t stream, const nvcv::ITensor &in, const nvcv::ITensor &out,

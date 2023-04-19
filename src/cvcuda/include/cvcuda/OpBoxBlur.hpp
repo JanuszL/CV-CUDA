@@ -43,8 +43,7 @@ public:
 
     ~BoxBlur();
 
-    void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out,
-                    const NVCVBlurBoxesI bboxes);
+    void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, const NVCVBlurBoxesI bboxes);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -64,8 +63,7 @@ inline BoxBlur::~BoxBlur()
     m_handle = nullptr;
 }
 
-inline void BoxBlur::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out,
-                                const NVCVBlurBoxesI bboxes)
+inline void BoxBlur::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, const NVCVBlurBoxesI bboxes)
 {
     nvcv::detail::CheckThrow(cvcudaBoxBlurSubmit(m_handle, stream, in.handle(), out.handle(), bboxes));
 }

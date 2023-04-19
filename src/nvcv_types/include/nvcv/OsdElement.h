@@ -25,7 +25,8 @@ extern "C"
 {
 #endif
 
-typedef struct {
+typedef struct
+{
     unsigned char r;
     unsigned char g;
     unsigned char b;
@@ -34,30 +35,30 @@ typedef struct {
 
 typedef struct
 {
-    NVCVRectI       rect;           // Rectangle of the bounding box, \ref NVCVRectI.
-    int32_t         thickness;      // Border thickness of bounding box.
-    NVCVColor       borderColor;    // Border color of bounding box.
-    NVCVColor       fillColor;      // Filled color of bounding box.
+    NVCVRectI rect;        // Rectangle of the bounding box, \ref NVCVRectI.
+    int32_t   thickness;   // Border thickness of bounding box.
+    NVCVColor borderColor; // Border color of bounding box.
+    NVCVColor fillColor;   // Filled color of bounding box.
 } NVCVBndBoxI;
 
 typedef struct
 {
-    int32_t         batch;          // Number of images in the image batch.
-    int32_t*        numBoxes;       // Number array of bounding boxes for image batch.
-    NVCVBndBoxI*    boxes;          // Bounding box array for image batch, \ref NVCVBndBoxI.
+    int32_t      batch;    // Number of images in the image batch.
+    int32_t     *numBoxes; // Number array of bounding boxes for image batch.
+    NVCVBndBoxI *boxes;    // Bounding box array for image batch, \ref NVCVBndBoxI.
 } NVCVBndBoxesI;
 
 typedef struct
 {
-    NVCVRectI       rect;           // Rectangle of the blur box, \ref NVCVRectI.
-    int32_t         kernelSize;     // Kernel sizes of mean filter, refer to cv::blur().
+    NVCVRectI rect;       // Rectangle of the blur box, \ref NVCVRectI.
+    int32_t   kernelSize; // Kernel sizes of mean filter, refer to cv::blur().
 } NVCVBlurBoxI;
 
 typedef struct
 {
-    int32_t         batch;          // Number of images in the image batch.
-    int32_t*        numBoxes;       // Number array of blurring boxes for image batch.
-    NVCVBlurBoxI*   boxes;          // Blurring box array for image batch, \ref NVCVBlurBoxI.
+    int32_t       batch;    // Number of images in the image batch.
+    int32_t      *numBoxes; // Number array of blurring boxes for image batch.
+    NVCVBlurBoxI *boxes;    // Blurring box array for image batch, \ref NVCVBlurBoxI.
 } NVCVBlurBoxesI;
 
 #ifdef __cplusplus

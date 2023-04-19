@@ -26,9 +26,7 @@
 namespace cvcudapy {
 
 namespace {
-Tensor BndBoxInto(Tensor &output, Tensor &input,
-                  NVCVBndBoxesI bboxes,
-                  std::optional<Stream> pstream)
+Tensor BndBoxInto(Tensor &output, Tensor &input, NVCVBndBoxesI bboxes, std::optional<Stream> pstream)
 {
     if (!pstream)
     {

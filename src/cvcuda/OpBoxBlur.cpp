@@ -16,6 +16,7 @@
  */
 
 #include "priv/OpBoxBlur.hpp"
+
 #include "priv/SymbolVersioning.hpp"
 
 #include <nvcv/Exception.hpp>
@@ -41,7 +42,7 @@ CVCUDA_DEFINE_API(0, 0, NVCVStatus, cvcudaBoxBlurCreate, (NVCVOperatorHandle * h
 
 CVCUDA_DEFINE_API(0, 0, NVCVStatus, cvcudaBoxBlurSubmit,
                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
-                  const NVCVBlurBoxesI bboxes))
+                   const NVCVBlurBoxesI bboxes))
 {
     return nvcv::ProtectCall(
         [&]
