@@ -100,12 +100,12 @@ static void dumpTest(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStr
 NVCV_TEST_SUITE_P(OpBoxBlur, test::ValueList<int, int, int, int, int, int, int, int, std::string>
 {
     //  inN,    inW,    inH,    cols,   rows,   wBox,   hBox,   ks,   goldPath
-    {   1,      224,    224,    5,      5,      16,     16,     7,    "workspace/GoldBoxBlur0.bin"   },
-    {   8,      224,    224,    5,      5,      16,     16,     7,    "workspace/GoldBoxBlur1.bin"   },
-    {   16,     224,    224,    5,      5,      16,     16,     7,    "workspace/GoldBoxBlur2.bin"   },
-    {   1,      1280,   720,    10,     10,     64,     64,     13,   "workspace/GoldBoxBlur3.bin"   },
-    {   1,      1920,   1080,   15,     15,     64,     64,     19,   "workspace/GoldBoxBlur4.bin"   },
-    {   1,      3840,   2160,   15,     15,     128,    128,    23,   "workspace/GoldBoxBlur5.bin"   },
+    {   1,      224,    224,    5,      5,      16,     16,     7,    "GoldBoxBlur0.bin"   },
+    {   8,      224,    224,    5,      5,      16,     16,     7,    "GoldBoxBlur1.bin"   },
+    {   16,     224,    224,    5,      5,      16,     16,     7,    "GoldBoxBlur2.bin"   },
+    {   1,      1280,   720,    10,     10,     64,     64,     13,   "GoldBoxBlur3.bin"   },
+    {   1,      1920,   1080,   15,     15,     64,     64,     19,   "GoldBoxBlur4.bin"   },
+    {   1,      3840,   2160,   15,     15,     128,    128,    23,   "GoldBoxBlur5.bin"   },
 });
 
 // clang-format on
@@ -195,7 +195,7 @@ TEST_P(OpBoxBlur, BoxBlur_sanity)
     EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), output->basePtr(), outBufSize, cudaMemcpyDeviceToHost));
 
     std::vector<uint8_t> gold(outBufSize);
-    // dumpGoldBuffer(gold, *inAccess, input->basePtr(), blurBoxes, stream, goldPath);
+    dumpGoldBuffer(gold, *inAccess, input->basePtr(), blurBoxes, stream, goldPath);
     loadGoldBuffer(gold, goldPath);
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 
