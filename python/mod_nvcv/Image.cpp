@@ -662,7 +662,9 @@ nvcv::ImageFormat Image::format() const
 
 std::ostream &operator<<(std::ostream &out, const Image &img)
 {
-    return out << "<nvcv.Image " << img.impl().size() << ' ' << img.impl().format() << '>';
+    std::string size_str = std::to_string(img.width()) + 'x' + std::to_string(img.height());
+
+    return out << "<nvcv.Image " << size_str << ' ' << img.format() << '>';
 }
 
 namespace {

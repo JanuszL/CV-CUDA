@@ -325,7 +325,7 @@ py::object Tensor::cuda() const
 
 std::ostream &operator<<(std::ostream &out, const Tensor &tensor)
 {
-    return out << "<nvcv.Tensor shape=" << tensor.impl().shape()
+    return out << "<nvcv.Tensor shape=" << tensor.shape()
                << " dtype=" << py::str(py::cast(tensor.dtype())).cast<std::string>() << '>';
 }
 
