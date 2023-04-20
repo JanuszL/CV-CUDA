@@ -35,6 +35,7 @@ add_executable(nvcv_test_types_unit
     TestCallback.cpp
     TestHandleWrapper.cpp
     TestTypeTraits.cpp
+    TestSharedCoreObj.cpp
 )
 
 if(ENABLE_COMPAT_OLD_GLIBC)

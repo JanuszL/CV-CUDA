@@ -1,0 +1,160 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef NVCV_CORE_PRIV_SHARED_CORE_OBJ_HPP
+#define NVCV_CORE_PRIV_SHARED_CORE_OBJ_HPP
+
+#include "ICoreObject.hpp"
+
+#include <cassert>
+#include <type_traits>
+
+namespace nvcv::priv {
+
+template<typename CoreObj>
+class SharedCoreObj
+{
+public:
+    static_assert(std::is_base_of_v<ICoreObject, CoreObj>,
+                  "The CoreObj type must inherity from the ICoreObject inteface.");
+
+    SharedCoreObj() = default;
+
+    SharedCoreObj(std::nullptr_t) {}
+
+    static SharedCoreObj FromHandle(typename CoreObj::HandleType handle)
+    {
+        if (handle)
+        {
+            CoreObjectIncRef(handle);
+            auto *obj = ToStaticPtr<CoreObj>(handle);
+            assert(obj);
+            assert(obj->handle() == handle());
+            return SharedCoreObj(std::move(obj));
+        }
+        else
+        {
+            return {};
+        }
+    }
+
+    static SharedCoreObj FromRawPointer(CoreObj *obj, bool incRef)
+    {
+        if (obj && incRef)
+        {
+            if (auto h = obj->handle())
+                CoreObjectIncRef(h);
+            else
+                throw std::logic_error("Cannot use incRef on an object without a handle");
+        }
+        return SharedCoreObj(std::move(obj));
+    }
+
+    explicit SharedCoreObj(CoreObj *&&obj)
+        : m_obj(obj)
+    {
+        obj = nullptr;
+    }
+
+    SharedCoreObj(const SharedCoreObj &obj)
+    {
+        *this = obj;
+    }
+
+    SharedCoreObj(SharedCoreObj &&obj)
+    {
+        *this = std::move(obj);
+    }
+
+    int reset(CoreObj *&&obj)
+    {
+        int ret = 0;
+        if (m_obj)
+            if (auto h = m_obj->handle())
+                ret = CoreObjectDecRef(h);
+
+        m_obj = obj;
+        obj   = nullptr;
+        return ret;
+    }
+
+    CoreObj *release()
+    {
+        CoreObj *ret = m_obj;
+        m_obj        = nullptr;
+        return ret;
+    }
+
+    SharedCoreObj &operator=(const SharedCoreObj &obj)
+    {
+        reset(obj.get(), true);
+        return *this;
+    }
+
+    SharedCoreObj &operator=(SharedCoreObj &&obj)
+    {
+        reset(obj.release(), false);
+        return *this;
+    }
+
+    template<typename T>
+    SharedCoreObj &operator=(const SharedCoreObj<T> &obj)
+    {
+        reset(obj.get(), true);
+        return *this;
+    }
+
+    template<typename T>
+    SharedCoreObj &operator=(SharedCoreObj<T> &&obj)
+    {
+        reset(obj.release(), false);
+        return *this;
+    }
+
+    constexpr CoreObj *get() const
+    {
+        return m_obj;
+    }
+
+    constexpr CoreObj *operator->() const
+    {
+        return m_obj;
+    }
+
+    constexpr CoreObj &operator*() const
+    {
+        return *m_obj;
+    }
+
+    ~SharedCoreObj()
+    {
+        reset(nullptr);
+    }
+
+private:
+    CoreObj *m_obj;
+};
+
+template<typename T, typename HandleType>
+inline SharedCoreObj<T> ToSharedObj(HandleType h)
+{
+    return SharedCoreObj<T>::FromRawPointer(ToStaticPtr<T>(h), true);
+}
+
+} // namespace nvcv::priv
+
+#endif // NVCV_CORE_PRIV_SHARED_CORE_OBJ_HPP
