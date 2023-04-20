@@ -36,7 +36,7 @@ TEST(AllocatorTest, FromEmpty)
     allocated_size = -1;
     allocated_ptr  = nullptr;
 
-    n::CustomMemAllocatorImpl<n::HostMemAllocator> alloc(
+    n::CustomMemAllocator<n::HostMemAllocator> alloc(
         [](int64_t size, int32_t align)
         {
             alloc_called   = true;
@@ -72,8 +72,9 @@ TEST(AllocatorTest, FromSmall)
     alloc_called = false;
     free_called  = false;
 
-    int16_t                                        c1 = 123, c2 = 321;
-    n::CustomMemAllocatorImpl<n::HostMemAllocator> alloc(
+    int16_t c1 = 123, c2 = 321;
+
+    n::CustomMemAllocator<n::HostMemAllocator> alloc(
         [c1](int64_t size, int32_t align)
         {
             alloc_called = true;
@@ -108,7 +109,7 @@ TEST(AllocatorTest, FromDuplicate)
 
     intptr_t c = 0x12345678;
 
-    n::CustomMemAllocatorImpl<n::HostMemAllocator> alloc(
+    n::CustomMemAllocator<n::HostMemAllocator> alloc(
         [c](int64_t size, int32_t align)
         {
             alloc_called = true;

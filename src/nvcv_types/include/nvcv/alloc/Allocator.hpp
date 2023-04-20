@@ -65,6 +65,12 @@ private:
 };
 
 /** A base class that encapsulates an NVCVCustomAllocator struct
+ *
+ * This class is a convenience wrapper around NVCVCustomAllocator. The derived classes expose
+ * additional functionality, specific to the resource type being allocated.
+ *
+ * @warning ResourceAllocator does not own the context object pointed to by cdata().ctx.
+ *          The destruction of ResourceAllocator does not call the cleanup function.
  */
 class ResourceAllocator
 {
@@ -76,16 +82,22 @@ public:
     {
     }
 
+    /** Returns the underlying allocator descriptor
+     */
     const NVCVCustomAllocator &cdata() const &
     {
         return m_data;
     }
 
+    /** Returns the underlying allocator descriptor
+     */
     NVCVCustomAllocator cdata() &&
     {
         return m_data;
     }
 
+    /** Casts the resource allocator to a compatible type.
+     */
     template<typename Derived>
     Derived cast() const
     {
@@ -119,11 +131,15 @@ public:
 
     static constexpr int DEFAULT_ALIGN = alignof(std::max_align_t);
 
+    /** Calls the allocation function from the underlying descriptor
+     */
     void *alloc(int64_t size, int32_t align = DEFAULT_ALIGN)
     {
         return m_data.res.mem.fnAlloc(m_data.ctx, size, align);
     }
 
+    /** Calls the deallocation function from the underlying descriptor
+     */
     void free(void *ptr, int64_t size, int32_t align = DEFAULT_ALIGN) noexcept
     {
         m_data.res.mem.fnFree(m_data.ctx, ptr, size, align);
@@ -148,14 +164,7 @@ public:
 
     MemAllocatorWithKind() = default;
 
-    MemAllocatorWithKind(const NVCVCustomAllocator &data)
-        : MemAllocator(data)
-    {
-        if (!IsCompatibleKind(data.resType))
-        {
-            throw Exception(Status::ERROR_INVALID_ARGUMENT, "Incompatible allocated resource type.");
-        }
-    }
+    MemAllocatorWithKind(const NVCVCustomAllocator &data);
 
     static constexpr bool IsCompatibleKind(NVCVResourceType resType)
     {
@@ -189,6 +198,15 @@ class CudaMemAllocator : public detail::MemAllocatorWithKind<NVCV_RESOURCE_MEM_C
     using Impl::Impl;
 };
 
+NVCV_IMPL_SHARED_HANDLE(Allocator);
+
+/** Represents a reference to an allocator object.
+ *
+ * The allocator object defines functions for allocating various resources, including
+ * different kinds of memory.
+ *
+ * A custom allocator can be created via `nvcv::CustomAllocator` helper class.
+ */
 class Allocator : public CoreResource<NVCVAllocatorHandle, Allocator>
 {
 public:
@@ -206,43 +224,22 @@ public:
     virtual ~Allocator() = default;
 };
 
-inline ResourceAllocator Allocator::get(NVCVResourceType resType) const
-{
-    NVCVCustomAllocator data;
-    detail::CheckThrow(nvcvAllocatorGet(handle(), resType, &data));
-    return ResourceAllocator(data);
-}
-
-template<typename ResAlloc>
-ResAlloc Allocator::get() const
-{
-    static_assert(std::is_base_of<ResourceAllocator, ResAlloc>::value,
-                  "The requested resource allocator type is not derived from ResourceAllocator.");
-    NVCVCustomAllocator data;
-    detail::CheckThrow(nvcvAllocatorGet(handle(), ResAlloc::kResourceType, &data));
-    return ResAlloc(data);
-}
-
-inline HostMemAllocator Allocator::hostMem() const
-{
-    return get<HostMemAllocator>();
-}
-
-inline HostPinnedMemAllocator Allocator::hostPinnedMem() const
-{
-    return get<HostPinnedMemAllocator>();
-}
-
-inline CudaMemAllocator Allocator::cudaMem() const
-{
-    return get<CudaMemAllocator>();
-}
-
 ///////////////////////////////////////////////
 // Custom allocators
 
+/** Marshals a set of allocation/deallocation functions as NVCVCustomAllocator
+ *
+ * @note This class should not be used directly. Use one of the following typedefs:
+ *       - CustomHostMemAllocator
+ *       - CustomHostPinnedMemAllocator
+ *       - CustomCudaMemAllocator
+ *
+ * A `CustomMemAllocator` is passed as a constructor argument to `CustomAllocator`.
+ *
+ * @tparam AllocatorType  the type of the allocator (one of: HostMemAllocator, HostPinnedMemAllocator, CudaMemAllocator)
+ */
 template<typename AllocatorType>
-class CustomMemAllocatorImpl
+class CustomMemAllocator
 {
 private:
     template<typename Callable>
@@ -267,60 +264,39 @@ private:
     }
 
 public:
+    /**  Constructs a custom memory allocator from a pair of alloc/free functions
+     *
+     * Usage:
+     *
+     * ```
+     * nvcv::CustomHostMemAllocator alloc(
+     *     [&alloc](int64_t size, int32_t align)
+     *     {
+     *         return alloc.allocate(size, align);
+     *     },
+     *     [&alloc](void *mem, int64_t size, int32_t align)
+     *     {
+     *         alloc.free(mem, size, align);
+     *     });
+     * ```
+     *
+     * @note When used with lambda functions, the user is responsible for ensuring
+     *       that the allocator object doesn't outlive the variables captured by reference.
+     */
     template<typename AllocFunction, typename FreeFunction,
              typename = detail::EnableIf_t<detail::IsInvocableR<void *, AllocFunction, int64_t, int32_t>::value>,
              typename = detail::EnableIf_t<detail::IsInvocableR<void, FreeFunction, void *, int64_t, int32_t>::value>>
-    CustomMemAllocatorImpl(AllocFunction &&alloc, FreeFunction &&free)
-    {
-        static_assert(!std::is_lvalue_reference<AllocFunction>::value && !std::is_lvalue_reference<FreeFunction>::value,
-                      "The allocation and deallocation functions must not be L-Value references. Use std::ref "
-                      "if a reference is required. Note that using references will place additional requirements "
-                      "on the lifetime of the function objects.");
+    CustomMemAllocator(AllocFunction &&alloc, FreeFunction &&free);
 
-        using T            = std::tuple<AllocFunction, FreeFunction>;
-        const bool trivial = has_trivial_copy_and_destruction<AllocFunction>::value
-                          && has_trivial_copy_and_destruction<FreeFunction>::value;
+    // TODO(michalz): Add a way of constructing a custom allocator without using lambdas/captures, e.g.
+    //                from an object that matches the allocator concept.
 
-        const bool tuple_by_value = trivial && sizeof(T) <= sizeof(void *) && alignof(T) <= alignof(void *);
-
-        const bool construct_from_one_value_if_equal = trivial && by_value<AllocFunction>::value
-                                                    && by_value<FreeFunction>::value
-                                                    && sizeof(AllocFunction) == sizeof(FreeFunction);
-
-        // Can we fit the tuple inside a single pointer? If yes, go for it!
-        if NVCV_IF_CONSTEXPR (tuple_by_value)
-        {
-            Construct(std::forward<AllocFunction>(alloc), std::forward<FreeFunction>(free),
-                      std::integral_constant<bool, tuple_by_value>());
-        }
-        // Are the two callables trivial and do they context objects coincide? If yes, use that object and reinterpret the data
-        // This might be useful in a common case where both alloc and free are lambdas that capture only one - and the same - pointer-like value.
-        else if NVCV_IF_CONSTEXPR (construct_from_one_value_if_equal)
-        {
-            if (!std::memcmp(&alloc, &free, std::min(DataSize<AllocFunction>(), DataSize<FreeFunction>())))
-                ConstructFromDuplicateValues(std::forward<AllocFunction>(alloc), std::forward<FreeFunction>(free),
-                                             std::integral_constant<bool, construct_from_one_value_if_equal>());
-            else
-                Construct(std::forward<AllocFunction>(alloc), std::forward<FreeFunction>(free),
-                          std::integral_constant<bool, tuple_by_value>());
-        }
-        // Back to square one - need to dynamically allocate the objects - we still have _one_ context object for two functions;
-        // with std::function we'd end up dynamically allocating a pair of std::functions, each of which could dynamically allocate
-        // - so we're still good; possibly down from 3 dynamic allocations to one
-        else
-        {
-            Construct(std::forward<AllocFunction>(alloc), std::forward<FreeFunction>(free),
-                      std::integral_constant<bool, tuple_by_value>());
-        }
-        m_data.resType = AllocatorType::kResourceType;
-    }
-
-    CustomMemAllocatorImpl(CustomMemAllocatorImpl &&other)
+    CustomMemAllocator(CustomMemAllocator &&other)
     {
         *this = std::move(other);
     }
 
-    ~CustomMemAllocatorImpl()
+    ~CustomMemAllocator()
     {
         reset();
     }
@@ -330,24 +306,34 @@ public:
         return m_data.cleanup != nullptr;
     }
 
+    /** Gets the underlying allocator descriptor.
+     */
     const NVCVCustomAllocator &cdata() const &noexcept
     {
         return m_data;
     }
 
-    NVCVCustomAllocator release() noexcept
+    /** Removes the underlying allocator descriptor, passing the ownership to the caller.
+     */
+    NVCV_NODISCARD NVCVCustomAllocator release() noexcept
     {
         NVCVCustomAllocator ret = {};
         std::swap(ret, m_data);
         return ret;
     }
 
+    /** Replaces the currently owned descriptor with the one passed in the argument.
+     *
+     * The ownership of the descriptor is transfered to `CustomMemAllocator`.
+     */
     void reset(NVCVCustomAllocator &&alloc) noexcept
     {
         reset();
         std::swap(m_data, alloc);
     }
 
+    /** Clears the allocator descriptor, performing cleanup, if necessary.
+     */
     void reset() noexcept
     {
         if (m_data.cleanup)
@@ -355,9 +341,14 @@ public:
         m_data = {};
     }
 
-    CustomMemAllocatorImpl &operator=(CustomMemAllocatorImpl &&impl) noexcept
+    /** Moves the descriptor from another CustomMemAllocator to this one.
+     *
+     * If the previously owned descriptor requries cleanup, it is performed.
+     * After the call, `other` has its descriptor cleared.
+     */
+    CustomMemAllocator &operator=(CustomMemAllocator &&other) noexcept
     {
-        reset(impl.release());
+        reset(other.release());
         return *this;
     }
 
@@ -366,80 +357,13 @@ private:
     friend class CustomAllocator;
 
     template<typename AllocFunction, typename FreeFunction>
-    void Construct(AllocFunction &&alloc, FreeFunction &&free, std::true_type)
-    {
-        using T = std::tuple<AllocFunction, FreeFunction>; // TODO - use something that's trivially copyable
-        T ctx{std::move(alloc), std::move(free)};
-        static_assert(sizeof(T) <= sizeof(void *),
-                      "Internal error - this should never be invoked with a type that large.");
-
-        m_data.res.mem.fnAlloc = [](void *c, int64_t size, int32_t align) -> void *
-        {
-            T     *target   = reinterpret_cast<T *>(&c);
-            auto &&callable = std::get<0>(*target);
-            return callable(size, align);
-        };
-        m_data.res.mem.fnFree = [](void *c, void *ptr, int64_t size, int32_t align)
-        {
-            T     *target   = reinterpret_cast<T *>(&c);
-            auto &&callable = std::get<1>(*target);
-            callable(ptr, size, align);
-        };
-
-        m_data.cleanup = nullptr;
-
-        if NVCV_IF_CONSTEXPR (!std::is_empty<T>::value)
-            std::memcpy(&m_data.ctx, &ctx, DataSize<T>());
-    }
+    void Construct(AllocFunction &&alloc, FreeFunction &&free, std::true_type);
 
     template<typename AllocFunction, typename FreeFunction>
-    void Construct(AllocFunction &&alloc, FreeFunction &&free, std::false_type)
-    {
-        using T = std::tuple<AllocFunction, FreeFunction>;
-        std::unique_ptr<T> ctx(new T{std::move(alloc), std::move(free)});
-        auto               cleanup = [](void *ctx, NVCVCustomAllocator *) noexcept
-        {
-            delete (T *)ctx;
-        };
-
-        m_data.res.mem.fnAlloc = [](void *c, int64_t size, int32_t align) -> void *
-        {
-            return std::get<0>(*static_cast<T *>(c))(size, align);
-        };
-        m_data.res.mem.fnFree = [](void *c, void *ptr, int64_t size, int32_t align)
-        {
-            std::get<1> (*static_cast<T *>(c))(ptr, size, align);
-        };
-
-        m_data.cleanup = cleanup;
-        m_data.ctx     = ctx.release();
-    }
+    void Construct(AllocFunction &&alloc, FreeFunction &&free, std::false_type);
 
     template<typename AllocFunction, typename FreeFunction>
-    void ConstructFromDuplicateValues(AllocFunction &&alloc, FreeFunction &&free, std::true_type)
-    {
-        static_assert(std::is_trivially_copyable<AllocFunction>::value || std::is_empty<AllocFunction>::value,
-                      "Internal error - should not pick this overload");
-        static_assert(std::is_trivially_copyable<FreeFunction>::value || std::is_empty<FreeFunction>::value,
-                      "Internal error - should not pick this overload");
-        m_data.res.mem.fnAlloc = [](void *c, int64_t size, int32_t align) -> void *
-        {
-            AllocFunction *alloc = reinterpret_cast<AllocFunction *>(&c);
-            return (*alloc)(size, align);
-        };
-        m_data.res.mem.fnFree = [](void *c, void *ptr, int64_t size, int32_t align)
-        {
-            FreeFunction *free = reinterpret_cast<FreeFunction *>(&c);
-            (*free)(ptr, size, align);
-        };
-
-        m_data.cleanup = nullptr;
-        m_data.ctx     = nullptr;
-        if (DataSize<AllocFunction>() >= DataSize<FreeFunction>())
-            std::memcpy(&m_data.ctx, &alloc, DataSize<AllocFunction>());
-        else
-            std::memcpy(&m_data.ctx, &free, DataSize<FreeFunction>());
-    }
+    void ConstructFromDuplicateValues(AllocFunction &&alloc, FreeFunction &&free, std::true_type);
 
 #if __cplusplus < 201703L
     template<typename AllocFunction, typename FreeFunction>
@@ -452,23 +376,24 @@ private:
     NVCVCustomAllocator m_data{};
 };
 
-using CustomHostMemAllocator       = CustomMemAllocatorImpl<HostMemAllocator>;
-using CustomHostPinnedMemAllocator = CustomMemAllocatorImpl<HostPinnedMemAllocator>;
-using CustomCudaMemAllocator       = CustomMemAllocatorImpl<CudaMemAllocator>;
+using CustomHostMemAllocator       = CustomMemAllocator<HostMemAllocator>;
+using CustomHostPinnedMemAllocator = CustomMemAllocator<HostPinnedMemAllocator>;
+using CustomCudaMemAllocator       = CustomMemAllocator<CudaMemAllocator>;
 
+/** A helper clas for defining custom allocators.
+ *
+ * @note Direct use of this class is recommended only in C++ 17 and newer.
+ *       For older standards, use CreateCustomAllocator function insted.
+ *
+ * This class aggregates custom resource allocators.
+ *
+ * @tparam ResourceAllocators
+ */
 template<typename... ResourceAllocators>
 class CustomAllocator final : public Allocator
 {
 public:
-    explicit CustomAllocator(ResourceAllocators &&...allocators)
-    {
-        NVCVCustomAllocator data[] = {allocators.cdata()...};
-        NVCVAllocatorHandle h      = {};
-        detail::CheckThrow(nvcvAllocatorConstructCustom(data, sizeof...(allocators), &h));
-        int dummy[] = {(allocators.release(), 0)...};
-        (void)dummy;
-        reset(std::move(h));
-    }
+    explicit CustomAllocator(ResourceAllocators &&...allocators);
 
     ~CustomAllocator()
     {
@@ -493,14 +418,16 @@ private:
     }
 };
 
+/** Constructs a `CustomAllocator` from a set of resource allocators.
+ */
 template<typename... ResourceAllocators>
 CustomAllocator<ResourceAllocators...> CreateCustomAllocator(ResourceAllocators &&...allocators)
 {
     return CustomAllocator<ResourceAllocators...>{std::move(allocators)...};
 }
 
-NVCV_IMPL_SHARED_HANDLE(Allocator);
-
 } // namespace nvcv
+
+#include "AllocatorImpl.hpp"
 
 #endif // NVCV_ALLOC_ALLOCATOR_HPP
