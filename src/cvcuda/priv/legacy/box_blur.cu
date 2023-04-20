@@ -215,7 +215,7 @@ static ErrorCode cuosd_draw_boxblur(cuOSDContext_t context, int width, int heigh
             context->blur_commands.emplace_back(cmd);
         }
 
-        bboxes.boxes = (NVCVBlurBoxI *)((unsigned char *)bboxes.boxes + numBoxes * sizeof(NVCVBlurBoxI));
+        bboxes.boxes = (NVCVBlurBoxI *)((uint8_t *)bboxes.boxes + numBoxes * sizeof(NVCVBlurBoxI));
     }
     return ErrorCode::SUCCESS;
 }

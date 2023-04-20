@@ -36,7 +36,7 @@ using namespace nvcv::cuda::osd;
 namespace nvcv::legacy::cuda_op {
 
 template<typename _T>
-static __host__ __device__ unsigned char u8cast(_T value)
+static __host__ __device__ uint8_t u8cast(_T value)
 {
     return value < 0 ? 0 : (value > 255 ? 255 : value);
 }
@@ -53,8 +53,7 @@ static __device__ __forceinline__ bool inbox_single_pixel(float ix, float iy, fl
         && ((dx - cx) * (iy - cy) - (dy - cy) * (ix - cx)) < 0 && ((ax - dx) * (iy - dy) - (ay - dy) * (ix - dx)) < 0;
 }
 
-static __device__ void blend_single_color(uchar4 &color, unsigned char &c0, unsigned char &c1, unsigned char &c2,
-                                          unsigned char a)
+static __device__ void blend_single_color(uchar4 &color, uint8_t &c0, uint8_t &c1, uint8_t &c2, uint8_t a)
 {
     int foreground_alpha = a;
     int background_alpha = color.w;
@@ -356,7 +355,7 @@ static ErrorCode cuosd_draw_rectangle(cuOSDContext_t context, int width, int hei
             context->rect_commands.emplace_back(cmd);
         }
 
-        bboxes.boxes = (NVCVBndBoxI *)((unsigned char *)bboxes.boxes + numBoxes * sizeof(NVCVBndBoxI));
+        bboxes.boxes = (NVCVBndBoxI *)((uint8_t *)bboxes.boxes + numBoxes * sizeof(NVCVBndBoxI));
     }
     return ErrorCode::SUCCESS;
 }

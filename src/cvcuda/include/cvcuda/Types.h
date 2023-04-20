@@ -28,6 +28,9 @@
 
 #include "detail/Export.h"
 
+#include <nvcv/Rect.h>
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -354,6 +357,42 @@ typedef enum
     NVCV_REMAP_ABSOLUTE_NORMALIZED = 1,
     NVCV_REMAP_RELATIVE_NORMALIZED = 2
 } NVCVRemapMapValueType;
+
+typedef struct
+{
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+    uint8_t a;
+} NVCVColorRGBA;
+
+typedef struct
+{
+    NVCVRectI     rect;        // Rectangle of the bounding box, \ref NVCVRectI.
+    int32_t       thickness;   // Border thickness of bounding box.
+    NVCVColorRGBA borderColor; // Border color of bounding box.
+    NVCVColorRGBA fillColor;   // Filled color of bounding box.
+} NVCVBndBoxI;
+
+typedef struct
+{
+    int32_t      batch;    // Number of images in the image batch.
+    int32_t     *numBoxes; // Number array of bounding boxes for image batch.
+    NVCVBndBoxI *boxes;    // Bounding box array for image batch, \ref NVCVBndBoxI.
+} NVCVBndBoxesI;
+
+typedef struct
+{
+    NVCVRectI rect;       // Rectangle of the blur box, \ref NVCVRectI.
+    int32_t   kernelSize; // Kernel sizes of mean filter, refer to cv::blur().
+} NVCVBlurBoxI;
+
+typedef struct
+{
+    int32_t       batch;    // Number of images in the image batch.
+    int32_t      *numBoxes; // Number array of blurring boxes for image batch.
+    NVCVBlurBoxI *boxes;    // Blurring box array for image batch, \ref NVCVBlurBoxI.
+} NVCVBlurBoxesI;
 
 #ifdef __cplusplus
 }

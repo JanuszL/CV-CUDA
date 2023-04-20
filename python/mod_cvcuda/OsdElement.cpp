@@ -18,10 +18,12 @@
 #include "OsdElement.hpp"
 
 #include <common/String.hpp>
-#include <nvcv/OsdElement.h>
+#include <cvcuda/Types.h>
 #include <pybind11/stl.h>
 
-namespace nvcvpy::priv {
+namespace cvcudapy {
+
+namespace {
 
 static NVCVRectI pytorect(py::tuple rect)
 {
@@ -39,12 +41,12 @@ static NVCVRectI pytorect(py::tuple rect)
     return ret;
 }
 
-static NVCVColor pytocolor(py::tuple color)
+static NVCVColorRGBA pytocolor(py::tuple color)
 {
     if (color.size() > 4 || color.size() == 0)
         throw py::value_error("Invalid color size.");
 
-    NVCVColor ret;
+    NVCVColorRGBA ret;
     memset(&ret, 0, sizeof(ret));
     ret.a = 255;
 
@@ -54,6 +56,8 @@ static NVCVColor pytocolor(py::tuple color)
         pr[i] = color[i].cast<unsigned char>();
     }
     return ret;
+}
+
 }
 
 void ExportBndBox(py::module &m)

@@ -27,10 +27,10 @@
 #define CVCUDA__BOX_BLUR_H
 
 #include "Operator.h"
+#include "Types.h"
 #include "detail/Export.h"
 
 #include <cuda_runtime.h>
-#include <nvcv/OsdElement.h>
 #include <nvcv/Status.h>
 #include <nvcv/Tensor.h>
 

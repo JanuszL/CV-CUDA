@@ -18,15 +18,15 @@
 #ifndef CV_CUDA_LEGACY_H
 #define CV_CUDA_LEGACY_H
 
+#include "CvCudaOSD.hpp"
+
 #include <cuda_runtime.h>
 #include <cvcuda/Types.h>
 #include <nvcv/BorderType.h>
 #include <nvcv/IImageBatch.hpp>
 #include <nvcv/ImageBatchData.hpp>
-#include <nvcv/OsdElement.h>
 #include <nvcv/Rect.h>
 #include <nvcv/TensorData.hpp>
-#include <nvcv/cuda/OSD.hpp>
 
 #include <vector>
 

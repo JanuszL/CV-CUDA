@@ -23,7 +23,6 @@
 #include "Image.hpp"
 #include "ImageBatch.hpp"
 #include "ImageFormat.hpp"
-#include "OsdElement.hpp"
 #include "Rect.hpp"
 #include "Resource.hpp"
 #include "Stream.hpp"
@@ -59,8 +58,6 @@ PYBIND11_MODULE(nvcv, m)
     ExportImageFormat(m);
     ExportDataType(m);
     ExportRect(m);
-    ExportBndBox(m);
-    ExportBoxBlur(m);
     Resource::Export(m);
     Container::Export(m);
     Tensor::Export(m);

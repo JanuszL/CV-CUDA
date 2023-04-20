@@ -20,7 +20,7 @@
 
 #include <pybind11/pybind11.h>
 
-namespace nvcvpy::priv {
+namespace cvcudapy {
 
 namespace py = ::pybind11;
 

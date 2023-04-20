@@ -15,14 +15,8 @@
  * limitations under the License.
  */
 
-/**
- * @file OSD.hpp
- *
- * @brief Defines cuOSD types.
- */
-
-#ifndef NVCV_CUDA_OSD_HPP
-#define NVCV_CUDA_OSD_HPP
+#ifndef CV_CUDA_OSD_HPP
+#define CV_CUDA_OSD_HPP
 
 #include <cuda_runtime.h>
 
@@ -128,7 +122,7 @@ private:
 // thickness: border width in case > 0, -1 stands for fill mode
 struct RectangleCommand
 {
-    unsigned char c0, c1, c2, c3;
+    uint8_t c0, c1, c2, c3;
     int           bounding_left   = 0;
     int           bounding_top    = 0;
     int           bounding_right  = 0;
@@ -144,7 +138,7 @@ struct RectangleCommand
 
 struct BoxBlurCommand
 {
-    unsigned char c0, c1, c2, c3;
+    uint8_t c0, c1, c2, c3;
     int           bounding_left   = 0;
     int           bounding_top    = 0;
     int           bounding_right  = 0;
@@ -171,4 +165,4 @@ typedef cuOSDContext *cuOSDContext_t;
 
 }} // namespace nvcv::cuda::osd
 
-#endif // NVCV_CUDA_OSD_HPP
+#endif // CV_CUDA_OSD_HPP
