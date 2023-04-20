@@ -24,9 +24,9 @@
 
 namespace nvcv::priv {
 
-NVCVCustomAllocator IAllocator::get(NVCVResourceType resType, bool returnDefault)
+NVCVCustomAllocator IAllocator::get(NVCVResourceType resType)
 {
-    return doGet(resType, returnDefault);
+    return doGet(resType);
 }
 
 void *IAllocator::allocHostMem(int64_t size, int32_t align)

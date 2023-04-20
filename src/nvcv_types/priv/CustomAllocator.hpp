@@ -43,7 +43,7 @@ private:
     void *doAllocCudaMem(int64_t size, int32_t align) override;
     void  doFreeCudaMem(void *ptr, int64_t size, int32_t align) noexcept override;
 
-    NVCVCustomAllocator doGet(NVCVResourceType resType, bool returnDefault) override;
+    NVCVCustomAllocator doGet(NVCVResourceType resType) override;
 };
 
 } // namespace nvcv::priv

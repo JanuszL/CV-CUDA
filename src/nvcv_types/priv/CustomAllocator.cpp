@@ -99,7 +99,7 @@ CustomAllocator::CustomAllocator(const NVCVCustomAllocator *customAllocators, in
         }
 
         filledMap |= (1 << i);
-        custAllocator = GetDefaultAllocator().get((NVCVResourceType)i, true);
+        custAllocator = GetDefaultAllocator().get((NVCVResourceType)i);
     }
 
     NVCV_ASSERT((filledMap & ((1 << NVCV_NUM_RESOURCE_TYPES) - 1)) == ((1 << NVCV_NUM_RESOURCE_TYPES) - 1)
@@ -117,13 +117,9 @@ CustomAllocator::~CustomAllocator()
     }
 }
 
-NVCVCustomAllocator CustomAllocator::doGet(NVCVResourceType resType, bool returnDefault)
+NVCVCustomAllocator CustomAllocator::doGet(NVCVResourceType resType)
 {
     NVCV_ASSERT(static_cast<unsigned>(resType) < NVCV_NUM_RESOURCE_TYPES);
-    if (!returnDefault && !(m_customAllocatorMask & (1 << resType)))
-        throw Exception(NVCV_ERROR_INVALID_ARGUMENT)
-            << "There's no custom allocator for the resource type " << resType << ".";
-
     return m_allocators[resType];
 }
 

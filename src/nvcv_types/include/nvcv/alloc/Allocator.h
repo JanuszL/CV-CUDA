@@ -211,13 +211,11 @@ NVCV_PUBLIC NVCVStatus nvcvAllocatorRefCount(NVCVAllocatorHandle handle, int *ne
  *
  * @param handle        The allocator handle
  * @param resType       The resource type for which to get the descriptor
- * @param returnDefault If false, the function will fail if the allocator doesn't customize given resourceType.
- *                      If true, it will return a descriptor populated with pointers to default allocation functions.
  * @param [out] result  The underlying custom allocator
  * @retval #NVCV_ERROR_INVALID_ARGUMENT The handle is invalid or there's no allocator that corresponds to resType.
  * @retval #NVCV_SUCCESS                Allocator created successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvAllocatorGet(NVCVAllocatorHandle handle, NVCVResourceType resType, int returnDefault,
+NVCV_PUBLIC NVCVStatus nvcvAllocatorGet(NVCVAllocatorHandle handle, NVCVResourceType resType,
                                         NVCVCustomAllocator *result);
 
 /** Associates a user pointer to the allocator handle.

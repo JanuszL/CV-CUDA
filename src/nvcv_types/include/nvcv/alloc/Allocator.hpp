@@ -198,28 +198,28 @@ public:
     HostPinnedMemAllocator hostPinnedMem() const;
     CudaMemAllocator       cudaMem() const;
 
-    ResourceAllocator get(NVCVResourceType resType, bool returnDefault = true) const;
+    ResourceAllocator get(NVCVResourceType resType) const;
 
     template<typename ResAlloc>
-    ResAlloc get(bool returnDefault = true) const;
+    ResAlloc get() const;
 
     virtual ~Allocator() = default;
 };
 
-inline ResourceAllocator Allocator::get(NVCVResourceType resType, bool returnDefault) const
+inline ResourceAllocator Allocator::get(NVCVResourceType resType) const
 {
     NVCVCustomAllocator data;
-    detail::CheckThrow(nvcvAllocatorGet(handle(), resType, returnDefault, &data));
+    detail::CheckThrow(nvcvAllocatorGet(handle(), resType, &data));
     return ResourceAllocator(data);
 }
 
 template<typename ResAlloc>
-ResAlloc Allocator::get(bool returnDefault) const
+ResAlloc Allocator::get() const
 {
     static_assert(std::is_base_of<ResourceAllocator, ResAlloc>::value,
                   "The requested resource allocator type is not derived from ResourceAllocator.");
     NVCVCustomAllocator data;
-    detail::CheckThrow(nvcvAllocatorGet(handle(), ResAlloc::kResourceType, returnDefault, &data));
+    detail::CheckThrow(nvcvAllocatorGet(handle(), ResAlloc::kResourceType, &data));
     return ResAlloc(data);
 }
 

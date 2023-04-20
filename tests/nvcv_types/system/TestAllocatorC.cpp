@@ -86,7 +86,7 @@ TEST(AllocatorTest, CreateAndUseCustom)
     {
         NVCVCustomAllocator  alloc = {};
         NVCVCustomAllocator &ref   = allocators[i];
-        auto                 res   = nvcvAllocatorGet(halloc, ref.resType, true, &alloc);
+        auto                 res   = nvcvAllocatorGet(halloc, ref.resType, &alloc);
         EXPECT_EQ(res, NVCV_SUCCESS);
         if (res != NVCV_SUCCESS)
             continue;
@@ -102,9 +102,7 @@ TEST(AllocatorTest, CreateAndUseCustom)
     }
 
     NVCVCustomAllocator pinnedAlloc{};
-    EXPECT_EQ(nvcvAllocatorGet(halloc, NVCV_RESOURCE_MEM_HOST_PINNED, false, &pinnedAlloc),
-              NVCV_ERROR_INVALID_ARGUMENT);
-    EXPECT_EQ(nvcvAllocatorGet(halloc, NVCV_RESOURCE_MEM_HOST_PINNED, true, &pinnedAlloc), NVCV_SUCCESS);
+    EXPECT_EQ(nvcvAllocatorGet(halloc, NVCV_RESOURCE_MEM_HOST_PINNED, &pinnedAlloc), NVCV_SUCCESS);
 
     void *p0 = nullptr, *p1 = nullptr, *p2 = nullptr;
     EXPECT_EQ(nvcvAllocatorAllocHostMemory(halloc, &p0, (1 << 20), 256), NVCV_SUCCESS);
