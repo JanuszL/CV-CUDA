@@ -58,7 +58,7 @@ static NVCVColorRGBA pytocolor(py::tuple color)
     return ret;
 }
 
-}
+} // namespace
 
 void ExportBndBox(py::module &m)
 {
@@ -145,4 +145,4 @@ void ExportBoxBlur(py::module &m)
         .def_readwrite("boxes", &NVCVBlurBoxesI::boxes);
 }
 
-} // namespace nvcvpy::priv
+} // namespace cvcudapy

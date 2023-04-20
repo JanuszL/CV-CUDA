@@ -123,10 +123,10 @@ private:
 struct RectangleCommand
 {
     uint8_t c0, c1, c2, c3;
-    int           bounding_left   = 0;
-    int           bounding_top    = 0;
-    int           bounding_right  = 0;
-    int           bounding_bottom = 0;
+    int     bounding_left   = 0;
+    int     bounding_top    = 0;
+    int     bounding_right  = 0;
+    int     bounding_bottom = 0;
 
     int  batch_index   = 0;
     int  thickness     = -1;
@@ -139,10 +139,10 @@ struct RectangleCommand
 struct BoxBlurCommand
 {
     uint8_t c0, c1, c2, c3;
-    int           bounding_left   = 0;
-    int           bounding_top    = 0;
-    int           bounding_right  = 0;
-    int           bounding_bottom = 0;
+    int     bounding_left   = 0;
+    int     bounding_top    = 0;
+    int     bounding_right  = 0;
+    int     bounding_bottom = 0;
 
     int batch_index = 0;
     int kernel_size = 7;
