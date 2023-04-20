@@ -40,14 +40,8 @@ static int randl(int l, int h)
     return l + value;
 }
 
-static void loadGoldBuffer(std::vector<uint8_t> &vect, std::string goldPath)
-{
-    std::ifstream input(goldPath.c_str(), std::ios::binary);
-    vect = std::vector<uint8_t>(std::istreambuf_iterator<char>(input), {});
-}
-
-static void dumpGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStridedImagePlanar &data,
-                           nvcv::Byte *inBuf, NVCVBndBoxesI bboxes, cudaStream_t stream, std::string goldPath)
+static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStridedImagePlanar &data,
+                          nvcv::Byte *inBuf, NVCVBndBoxesI bboxes, cudaStream_t stream)
 {
     auto context = cuosd_context_create();
 
@@ -89,33 +83,18 @@ static void dumpGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAcc
     }
 
     cuosd_context_destroy(context);
-
-    std::ofstream output(goldPath.c_str(), std::ios::out | std::ios::binary);
-    output.write((const char *)vect.data(), vect.size());
-    output.close();
-}
-
-static void dumpTest(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStridedImagePlanar &data,
-                     nvcv::Byte *testBuf)
-{
-    for (int n = 0; n < data.numSamples(); n++)
-    {
-        test::osd::Image *image = test::osd::create_image(data.numCols(), data.numRows(), test::osd::ImageFormat::RGBA);
-        int               bufSize = data.numCols() * data.numRows() * data.numChannels();
-        EXPECT_EQ(cudaSuccess, cudaMemcpy(image->data0, testBuf + n * bufSize, bufSize, cudaMemcpyDeviceToDevice));
-    }
 }
 
 // clang-format off
-NVCV_TEST_SUITE_P(OpBndBox, test::ValueList<int, int, int, int, int, std::string>
+NVCV_TEST_SUITE_P(OpBndBox, test::ValueList<int, int, int, int, int>
 {
-    //  inN,    inW,    inH,    num,    seed,   goldPath
-    {   1,      224,    224,    100,    3,      "GoldBndBox0.bin"   },
-    {   8,      224,    224,    100,    7,      "GoldBndBox1.bin"   },
-    {   16,     224,    224,    100,    11,     "GoldBndBox2.bin"   },
-    {   1,      1280,   720,    100,    23,     "GoldBndBox3.bin"   },
-    {   1,      1920,   1080,   200,    37,     "GoldBndBox4.bin"   },
-    {   1,      3840,   2160,   200,    59,     "GoldBndBox5.bin"   },
+    //  inN,    inW,    inH,    num,    seed
+    {   1,      224,    224,    100,    3   },
+    {   8,      224,    224,    100,    7   },
+    {   16,     224,    224,    100,    11  },
+    {   1,      1280,   720,    100,    23  },
+    {   1,      1920,   1080,   200,    37  },
+    {   1,      3840,   2160,   200,    59  },
 });
 
 // clang-format on
@@ -124,12 +103,11 @@ TEST_P(OpBndBox, BndBox_sanity)
     cudaStream_t stream;
     ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
 
-    int         inN      = GetParamValue<0>();
-    int         inW      = GetParamValue<1>();
-    int         inH      = GetParamValue<2>();
-    int         num      = GetParamValue<3>();
-    int         sed      = GetParamValue<4>();
-    std::string goldPath = GetParamValue<5>();
+    int inN = GetParamValue<0>();
+    int inW = GetParamValue<1>();
+    int inH = GetParamValue<2>();
+    int num = GetParamValue<3>();
+    int sed = GetParamValue<4>();
 
     NVCVBndBoxesI            bndBoxes;
     std::vector<int>         numBoxVec;
@@ -197,10 +175,8 @@ TEST_P(OpBndBox, BndBox_sanity)
     EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), output->basePtr(), outBufSize, cudaMemcpyDeviceToHost));
 
     std::vector<uint8_t> gold(outBufSize);
-    dumpGoldBuffer(gold, *inAccess, input->basePtr(), bndBoxes, stream, goldPath);
-    loadGoldBuffer(gold, goldPath);
-    EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
+    setGoldBuffer(gold, *inAccess, input->basePtr(), bndBoxes, stream);
 
-    dumpTest(gold, *outAccess, output->basePtr());
+    EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
     EXPECT_EQ(gold, test);
 }

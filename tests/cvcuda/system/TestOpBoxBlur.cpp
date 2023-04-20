@@ -33,14 +33,8 @@
 namespace gt   = ::testing;
 namespace test = nvcv::test;
 
-static void loadGoldBuffer(std::vector<uint8_t> &vect, std::string goldPath)
-{
-    std::ifstream input(goldPath.c_str(), std::ios::binary);
-    vect = std::vector<uint8_t>(std::istreambuf_iterator<char>(input), {});
-}
-
-static void dumpGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStridedImagePlanar &data,
-                           nvcv::Byte *inBuf, NVCVBlurBoxesI bboxes, cudaStream_t stream, std::string goldPath)
+static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStridedImagePlanar &data,
+                          nvcv::Byte *inBuf, NVCVBlurBoxesI bboxes, cudaStream_t stream)
 {
     auto context = cuosd_context_create();
 
@@ -79,33 +73,18 @@ static void dumpGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAcc
     }
 
     cuosd_context_destroy(context);
-
-    std::ofstream output(goldPath.c_str(), std::ios::out | std::ios::binary);
-    output.write((const char *)vect.data(), vect.size());
-    output.close();
-}
-
-static void dumpTest(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStridedImagePlanar &data,
-                     nvcv::Byte *testBuf)
-{
-    for (int n = 0; n < data.numSamples(); n++)
-    {
-        test::osd::Image *image = test::osd::create_image(data.numCols(), data.numRows(), test::osd::ImageFormat::RGBA);
-        int               bufSize = data.numCols() * data.numRows() * data.numChannels();
-        EXPECT_EQ(cudaSuccess, cudaMemcpy(image->data0, testBuf + n * bufSize, bufSize, cudaMemcpyDeviceToDevice));
-    }
 }
 
 // clang-format off
-NVCV_TEST_SUITE_P(OpBoxBlur, test::ValueList<int, int, int, int, int, int, int, int, std::string>
+NVCV_TEST_SUITE_P(OpBoxBlur, test::ValueList<int, int, int, int, int, int, int, int>
 {
-    //  inN,    inW,    inH,    cols,   rows,   wBox,   hBox,   ks,   goldPath
-    {   1,      224,    224,    5,      5,      16,     16,     7,    "GoldBoxBlur0.bin"   },
-    {   8,      224,    224,    5,      5,      16,     16,     7,    "GoldBoxBlur1.bin"   },
-    {   16,     224,    224,    5,      5,      16,     16,     7,    "GoldBoxBlur2.bin"   },
-    {   1,      1280,   720,    10,     10,     64,     64,     13,   "GoldBoxBlur3.bin"   },
-    {   1,      1920,   1080,   15,     15,     64,     64,     19,   "GoldBoxBlur4.bin"   },
-    {   1,      3840,   2160,   15,     15,     128,    128,    23,   "GoldBoxBlur5.bin"   },
+    //  inN,    inW,    inH,    cols,   rows,   wBox,   hBox,   ks
+    {   1,      224,    224,    5,      5,      16,     16,     7   },
+    {   8,      224,    224,    5,      5,      16,     16,     7   },
+    {   16,     224,    224,    5,      5,      16,     16,     7   },
+    {   1,      1280,   720,    10,     10,     64,     64,     13  },
+    {   1,      1920,   1080,   15,     15,     64,     64,     19  },
+    {   1,      3840,   2160,   15,     15,     128,    128,    23  },
 });
 
 // clang-format on
@@ -114,15 +93,14 @@ TEST_P(OpBoxBlur, BoxBlur_sanity)
     cudaStream_t stream;
     ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
 
-    int         inN      = GetParamValue<0>();
-    int         inW      = GetParamValue<1>();
-    int         inH      = GetParamValue<2>();
-    int         cols     = GetParamValue<3>();
-    int         rows     = GetParamValue<4>();
-    int         wBox     = GetParamValue<5>();
-    int         hBox     = GetParamValue<6>();
-    int         ks       = GetParamValue<7>();
-    std::string goldPath = GetParamValue<8>();
+    int inN  = GetParamValue<0>();
+    int inW  = GetParamValue<1>();
+    int inH  = GetParamValue<2>();
+    int cols = GetParamValue<3>();
+    int rows = GetParamValue<4>();
+    int wBox = GetParamValue<5>();
+    int hBox = GetParamValue<6>();
+    int ks   = GetParamValue<7>();
 
     NVCVBlurBoxesI            blurBoxes;
     std::vector<int>          numBoxVec;
@@ -195,10 +173,8 @@ TEST_P(OpBoxBlur, BoxBlur_sanity)
     EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), output->basePtr(), outBufSize, cudaMemcpyDeviceToHost));
 
     std::vector<uint8_t> gold(outBufSize);
-    dumpGoldBuffer(gold, *inAccess, input->basePtr(), blurBoxes, stream, goldPath);
-    loadGoldBuffer(gold, goldPath);
-    EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
+    setGoldBuffer(gold, *inAccess, input->basePtr(), blurBoxes, stream);
 
-    dumpTest(gold, *outAccess, output->basePtr());
+    EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
     EXPECT_EQ(gold, test);
 }
