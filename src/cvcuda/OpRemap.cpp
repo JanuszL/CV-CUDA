@@ -20,6 +20,7 @@
 #include "priv/SymbolVersioning.hpp"
 
 #include <nvcv/Exception.hpp>
+#include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <util/Assert.h>
 
@@ -49,6 +50,21 @@ CVCUDA_DEFINE_API(0, 3, NVCVStatus, cvcudaRemapSubmit,
         [&]
         {
             nvcv::TensorWrapHandle _in(in), _out(out), _map(map);
+            priv::ToDynamicRef<priv::Remap>(handle)(stream, _in, _out, _map, inInterp, mapInterp, mapValueType,
+                                                    static_cast<bool>(alignCorners), border, borderValue);
+        });
+}
+
+CVCUDA_DEFINE_API(0, 3, NVCVStatus, cvcudaRemapVarShapeSubmit,
+                  (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                   NVCVTensorHandle map, NVCVInterpolationType inInterp, NVCVInterpolationType mapInterp,
+                   NVCVRemapMapValueType mapValueType, int8_t alignCorners, NVCVBorderType border, float4 borderValue))
+{
+    return nvcv::ProtectCall(
+        [&]
+        {
+            nvcv::ImageBatchVarShapeWrapHandle _in(in), _out(out);
+            nvcv::TensorWrapHandle             _map(map);
             priv::ToDynamicRef<priv::Remap>(handle)(stream, _in, _out, _map, inInterp, mapInterp, mapValueType,
                                                     static_cast<bool>(alignCorners), border, borderValue);
         });

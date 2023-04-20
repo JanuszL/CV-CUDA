@@ -28,6 +28,7 @@
 
 #include <cuda_runtime.h>
 #include <cvcuda/OpRemap.h>
+#include <nvcv/IImageBatch.hpp>
 #include <nvcv/ITensor.hpp>
 
 namespace cvcuda::priv {
@@ -39,6 +40,11 @@ public:
 
     void operator()(cudaStream_t stream, nvcv::ITensor &src, nvcv::ITensor &dst, nvcv::ITensor &map,
                     NVCVInterpolationType srcInterp, NVCVInterpolationType mapInterp,
+                    NVCVRemapMapValueType mapValueType, bool alignCorners, NVCVBorderType border,
+                    float4 borderValue) const;
+
+    void operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &src, nvcv::IImageBatchVarShape &dst,
+                    nvcv::ITensor &map, NVCVInterpolationType srcInterp, NVCVInterpolationType mapInterp,
                     NVCVRemapMapValueType mapValueType, bool alignCorners, NVCVBorderType border,
                     float4 borderValue) const;
 };

@@ -30,6 +30,7 @@
 #include "OpRemap.h"
 
 #include <cuda_runtime.h>
+#include <nvcv/IImageBatch.hpp>
 #include <nvcv/ITensor.hpp>
 #include <nvcv/ImageFormat.hpp>
 #include <nvcv/alloc/Requirements.hpp>
@@ -44,6 +45,10 @@ public:
     ~Remap();
 
     void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, nvcv::ITensor &map,
+                    NVCVInterpolationType inInterp, NVCVInterpolationType mapInterp, NVCVRemapMapValueType mapValueType,
+                    bool alignCorners, NVCVBorderType border, float4 borderValue);
+
+    void operator()(cudaStream_t stream, nvcv::IImageBatch &in, nvcv::IImageBatch &out, nvcv::ITensor &map,
                     NVCVInterpolationType inInterp, NVCVInterpolationType mapInterp, NVCVRemapMapValueType mapValueType,
                     bool alignCorners, NVCVBorderType border, float4 borderValue);
 
@@ -72,6 +77,16 @@ inline void Remap::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITen
     nvcv::detail::CheckThrow(cvcudaRemapSubmit(m_handle, stream, in.handle(), out.handle(), map.handle(), inInterp,
                                                mapInterp, mapValueType, static_cast<int8_t>(alignCorners), border,
                                                borderValue));
+}
+
+inline void Remap::operator()(cudaStream_t stream, nvcv::IImageBatch &in, nvcv::IImageBatch &out, nvcv::ITensor &map,
+                              NVCVInterpolationType inInterp, NVCVInterpolationType mapInterp,
+                              NVCVRemapMapValueType mapValueType, bool alignCorners, NVCVBorderType border,
+                              float4 borderValue)
+{
+    nvcv::detail::CheckThrow(cvcudaRemapVarShapeSubmit(m_handle, stream, in.handle(), out.handle(), map.handle(),
+                                                       inInterp, mapInterp, mapValueType,
+                                                       static_cast<int8_t>(alignCorners), border, borderValue));
 }
 
 inline NVCVOperatorHandle Remap::handle() const noexcept

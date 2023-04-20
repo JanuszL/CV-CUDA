@@ -32,6 +32,7 @@
 
 #include <cuda_runtime.h>
 #include <nvcv/BorderType.h>
+#include <nvcv/ImageBatch.h>
 #include <nvcv/Status.h>
 #include <nvcv/Tensor.h>
 
@@ -115,8 +116,20 @@ CVCUDA_PUBLIC NVCVStatus cvcudaRemapCreate(NVCVOperatorHandle *handle);
  *       Data Layout   | Yes
  *       Data Type     | Yes
  *       Channels      | Yes
- *       Width         | Yes
- *       Height        | Yes
+ *       Width         | No
+ *       Height        | No
+ *       Samples       | Yes
+ *
+ *  Input/Map dependency
+ *
+ *       Property      |  Input == Map
+ *      -------------- | -------------
+ *       Data Layout   | No
+ *       Data Type     | No
+ *       Channels      | No
+ *       Width         | No
+ *       Height        | No
+ *       Samples       | Yes or 1
  *
  * @param [in] handle Handle to the operator.
  *                    + Must not be NULL.
@@ -131,9 +144,10 @@ CVCUDA_PUBLIC NVCVStatus cvcudaRemapCreate(NVCVOperatorHandle *handle);
  * @param [in] map Input tensor to get {x, y} (float2) absolute positions (either normalized or not) or relative
  *                 differences to map values from input to output.  For each normalized position in the output, the
  *                 map is read to get the map value used to fetch values from the input tensor and store them at
- *                 that normalized position.  The map value interpretation depends on \ref mapValueType.
- *                 + The input, output and map tensors can have different dimensions for width and height,
- *                   but should have the same number of samples.
+ *                 that normalized position.  The map value interpretation depends on \ref mapValueType.  The
+ *                 input, output and map tensors can have different width and height, but the input and output
+ *                 tensors must have the same number of samples.  The number of samples of the map can be either
+ *                 equal to the input or one.  In case it is one, the same map is applied to all input samples.
  *                 + Must have float2 (2F32) data type.
  *                 + Must not be NULL.
  *
@@ -179,6 +193,20 @@ CVCUDA_PUBLIC NVCVStatus cvcudaRemapSubmit(NVCVOperatorHandle handle, cudaStream
                                            NVCVTensorHandle out, NVCVTensorHandle map, NVCVInterpolationType inInterp,
                                            NVCVInterpolationType mapInterp, NVCVRemapMapValueType mapValueType,
                                            int8_t alignCorners, NVCVBorderType border, float4 borderValue);
+
+/**
+ * Executes the Remap operation on a batch of images.
+ *
+ * Apart from input and output image batches, all parameters are the same as \ref cvcudaRemapSubmit.
+ *
+ * @param[in] in Input image batch.
+ * @param[out] out Output image batch.
+ */
+CVCUDA_PUBLIC NVCVStatus cvcudaRemapVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
+                                                   NVCVImageBatchHandle in, NVCVImageBatchHandle out,
+                                                   NVCVTensorHandle map, NVCVInterpolationType inInterp,
+                                                   NVCVInterpolationType mapInterp, NVCVRemapMapValueType mapValueType,
+                                                   int8_t alignCorners, NVCVBorderType border, float4 borderValue);
 
 #ifdef __cplusplus
 }
