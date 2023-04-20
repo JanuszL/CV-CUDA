@@ -29,7 +29,7 @@ namespace nvcv {
  * It also exposes the `handle` with a `get` and re-exposes `reset` and `release` functions.
  *
  * @tparam Handle   The handle type, e.g. NVCVImageHandle
- * @tparam Actual   The derived class, e.g. Image
+ * @tparam Actual   The actual class, e.g. Image
  */
 template<typename Handle, typename Actual>
 class CoreResource : private SharedHandle<Handle>
@@ -42,6 +42,12 @@ public:
 
     CoreResource(std::nullptr_t) {}
 
+    /** Wraps and assumes ownership of a handle.
+     *
+     * This functions stores the resource handle in the wrapper object.
+     * The handle passed in the argument is reset to a null handle value to prevent
+     * inadvertent usage by the caller after the ownership has been transfered to the wrapper.
+     */
     explicit CoreResource(HandleType &&handle)
         : Base(std::move(handle))
     {

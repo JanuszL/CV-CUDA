@@ -32,7 +32,7 @@ namespace test = nvcv::test;
 
 TEST(AllocatorTest, CreateAndUseCustom)
 {
-    NVCVCustomAllocator allocators[2] = {};
+    NVCVResourceAllocator allocators[2] = {};
 
     int ctx0 = 100, ctx1 = 200;
 
@@ -48,7 +48,7 @@ TEST(AllocatorTest, CreateAndUseCustom)
         *(int *)ctx += 10;
         free(ptr);
     };
-    allocators[0].cleanup = [](void *ctx, NVCVCustomAllocator *alloc)
+    allocators[0].cleanup = [](void *ctx, NVCVResourceAllocator *alloc)
     {
         EXPECT_EQ(ctx, alloc->ctx);
         int *ctx_int = static_cast<int *>(ctx);
@@ -70,7 +70,7 @@ TEST(AllocatorTest, CreateAndUseCustom)
         *(int *)ctx += 10;
         EXPECT_EQ(cudaFree(ptr), cudaSuccess);
     };
-    allocators[1].cleanup = [](void *ctx, NVCVCustomAllocator *alloc)
+    allocators[1].cleanup = [](void *ctx, NVCVResourceAllocator *alloc)
     {
         EXPECT_EQ(ctx, alloc->ctx);
         int *ctx_int = static_cast<int *>(ctx);
@@ -84,9 +84,9 @@ TEST(AllocatorTest, CreateAndUseCustom)
 
     for (int i = 0; i < 2; i++)
     {
-        NVCVCustomAllocator  alloc = {};
-        NVCVCustomAllocator &ref   = allocators[i];
-        auto                 res   = nvcvAllocatorGet(halloc, ref.resType, &alloc);
+        NVCVResourceAllocator  alloc = {};
+        NVCVResourceAllocator &ref   = allocators[i];
+        auto                   res   = nvcvAllocatorGet(halloc, ref.resType, &alloc);
         EXPECT_EQ(res, NVCV_SUCCESS);
         if (res != NVCV_SUCCESS)
             continue;
@@ -101,7 +101,7 @@ TEST(AllocatorTest, CreateAndUseCustom)
             << "The free function pointer doesn't match the one passsed to construction.";
     }
 
-    NVCVCustomAllocator pinnedAlloc{};
+    NVCVResourceAllocator pinnedAlloc{};
     EXPECT_EQ(nvcvAllocatorGet(halloc, NVCV_RESOURCE_MEM_HOST_PINNED, &pinnedAlloc), NVCV_SUCCESS);
 
     void *p0 = nullptr, *p1 = nullptr, *p2 = nullptr;

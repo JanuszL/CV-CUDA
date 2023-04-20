@@ -64,9 +64,9 @@ private:
     int32_t m_rowAddrAlignment  = 0;
 };
 
-/** A base class that encapsulates an NVCVCustomAllocator struct
+/** A base class that encapsulates an NVCVResourceAllocator struct
  *
- * This class is a convenience wrapper around NVCVCustomAllocator. The derived classes expose
+ * This class is a convenience wrapper around NVCVResourceAllocator. The derived classes expose
  * additional functionality, specific to the resource type being allocated.
  *
  * @warning ResourceAllocator does not own the context object pointed to by cdata().ctx.
@@ -77,21 +77,21 @@ class ResourceAllocator
 public:
     ResourceAllocator() = default;
 
-    explicit ResourceAllocator(const NVCVCustomAllocator &alloc)
+    explicit ResourceAllocator(const NVCVResourceAllocator &alloc)
         : m_data(alloc)
     {
     }
 
     /** Returns the underlying allocator descriptor
      */
-    const NVCVCustomAllocator &cdata() const &
+    const NVCVResourceAllocator &cdata() const &
     {
         return m_data;
     }
 
     /** Returns the underlying allocator descriptor
      */
-    NVCVCustomAllocator cdata() &&
+    NVCVResourceAllocator cdata() &&
     {
         return m_data;
     }
@@ -103,8 +103,8 @@ public:
     {
         static_assert(std::is_base_of<ResourceAllocator, Derived>::value,
                       "The requested type does not inherit from ResourceAllocator");
-        static_assert(std::is_constructible<Derived, NVCVCustomAllocator>::value,
-                      "The requested type must be constructible from NVCVCustomAllocator");
+        static_assert(std::is_constructible<Derived, NVCVResourceAllocator>::value,
+                      "The requested type must be constructible from NVCVResourceAllocator");
         return Derived(m_data);
     }
 
@@ -114,12 +114,12 @@ public:
     }
 
 protected:
-    NVCVCustomAllocator &data() &
+    NVCVResourceAllocator &data() &
     {
         return m_data;
     }
 
-    NVCVCustomAllocator m_data{};
+    NVCVResourceAllocator m_data{};
 };
 
 /** Encapculates a memory allocator (NVCV_RESOURCE_MEM_*)
@@ -164,7 +164,7 @@ public:
 
     MemAllocatorWithKind() = default;
 
-    MemAllocatorWithKind(const NVCVCustomAllocator &data);
+    MemAllocatorWithKind(const NVCVResourceAllocator &data);
 
     static constexpr bool IsCompatibleKind(NVCVResourceType resType)
     {
@@ -220,14 +220,12 @@ public:
 
     template<typename ResAlloc>
     ResAlloc get() const;
-
-    virtual ~Allocator() = default;
 };
 
 ///////////////////////////////////////////////
 // Custom allocators
 
-/** Marshals a set of allocation/deallocation functions as NVCVCustomAllocator
+/** Marshals a set of allocation/deallocation functions as NVCVResourceAllocator
  *
  * @note This class should not be used directly. Use one of the following typedefs:
  *       - CustomHostMemAllocator
@@ -308,16 +306,16 @@ public:
 
     /** Gets the underlying allocator descriptor.
      */
-    const NVCVCustomAllocator &cdata() const &noexcept
+    const NVCVResourceAllocator &cdata() const &noexcept
     {
         return m_data;
     }
 
     /** Removes the underlying allocator descriptor, passing the ownership to the caller.
      */
-    NVCV_NODISCARD NVCVCustomAllocator release() noexcept
+    NVCV_NODISCARD NVCVResourceAllocator release() noexcept
     {
-        NVCVCustomAllocator ret = {};
+        NVCVResourceAllocator ret = {};
         std::swap(ret, m_data);
         return ret;
     }
@@ -326,7 +324,7 @@ public:
      *
      * The ownership of the descriptor is transfered to `CustomMemAllocator`.
      */
-    void reset(NVCVCustomAllocator &&alloc) noexcept
+    void reset(NVCVResourceAllocator &&alloc) noexcept
     {
         reset();
         std::swap(m_data, alloc);
@@ -373,7 +371,7 @@ private:
     }
 #endif
 
-    NVCVCustomAllocator m_data{};
+    NVCVResourceAllocator m_data{};
 };
 
 using CustomHostMemAllocator       = CustomMemAllocator<HostMemAllocator>;

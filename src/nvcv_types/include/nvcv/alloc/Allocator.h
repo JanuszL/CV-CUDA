@@ -115,12 +115,12 @@ typedef union NVCVCustomResourceAllocatorRec
     NVCVCustomMemAllocator mem;
 } NVCVCustomResourceAllocator;
 
-typedef struct NVCVCustomAllocatorRec NVCVCustomAllocator;
+typedef struct NVCVResourceAllocatorRec NVCVResourceAllocator;
 
 /** Custom allocator cleanup function type */
-typedef void (*NVCVCustomAllocatorCleanupFunc)(void *ctx, NVCVCustomAllocator *data);
+typedef void (*NVCVResourceAllocatorCleanupFunc)(void *ctx, NVCVResourceAllocator *data);
 
-struct NVCVCustomAllocatorRec
+struct NVCVResourceAllocatorRec
 {
     /** Pointer to user context.
      *  It's passed unchanged to memory allocation/deallocation functions.
@@ -133,7 +133,7 @@ struct NVCVCustomAllocatorRec
 
     NVCVCustomResourceAllocator res;
 
-    NVCVCustomAllocatorCleanupFunc cleanup;
+    NVCVResourceAllocatorCleanupFunc cleanup;
 };
 
 typedef struct NVCVAllocator *NVCVAllocatorHandle;
@@ -149,7 +149,7 @@ typedef struct NVCVAllocator *NVCVAllocatorHandle;
  * @param [in] customAllocators    Array of custom resource allocators.
  *                                 + There must be at most one custom allocator for each memory type.
  *                                 + Restrictions on the custom allocator members apply,
- *                                   see \ref NVCVCustomAllocator.
+ *                                   see \ref NVCVResourceAllocator.
  *
  * @param [in] numCustomAllocators Number of custom allocators in the array.
  *
@@ -160,7 +160,7 @@ typedef struct NVCVAllocator *NVCVAllocatorHandle;
  * @retval #NVCV_ERROR_OUT_OF_MEMORY    Not enough memory to create the allocator.
  * @retval #NVCV_SUCCESS                Allocator created successfully.
  */
-NVCV_PUBLIC NVCVStatus nvcvAllocatorConstructCustom(const NVCVCustomAllocator *customAllocators,
+NVCV_PUBLIC NVCVStatus nvcvAllocatorConstructCustom(const NVCVResourceAllocator *customAllocators,
                                                     int32_t numCustomAllocators, NVCVAllocatorHandle *handle);
 
 /** Decrements the reference count of an existing allocator instance.
@@ -216,7 +216,7 @@ NVCV_PUBLIC NVCVStatus nvcvAllocatorRefCount(NVCVAllocatorHandle handle, int *ne
  * @retval #NVCV_SUCCESS                Allocator created successfully.
  */
 NVCV_PUBLIC NVCVStatus nvcvAllocatorGet(NVCVAllocatorHandle handle, NVCVResourceType resType,
-                                        NVCVCustomAllocator *result);
+                                        NVCVResourceAllocator *result);
 
 /** Associates a user pointer to the allocator handle.
  *

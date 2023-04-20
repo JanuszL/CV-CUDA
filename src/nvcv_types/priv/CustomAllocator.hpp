@@ -27,12 +27,12 @@ namespace nvcv::priv {
 class CustomAllocator final : public CoreObjectBase<IAllocator>
 {
 public:
-    CustomAllocator(const NVCVCustomAllocator *customAllocators, int32_t numCustomAllocators);
+    CustomAllocator(const NVCVResourceAllocator *customAllocators, int32_t numCustomAllocators);
     ~CustomAllocator();
 
 private:
-    NVCVCustomAllocator m_allocators[NVCV_NUM_RESOURCE_TYPES] = {};
-    uint32_t            m_customAllocatorMask                 = 0;
+    NVCVResourceAllocator m_allocators[NVCV_NUM_RESOURCE_TYPES] = {};
+    uint32_t              m_customAllocatorMask                 = 0;
 
     void *doAllocHostMem(int64_t size, int32_t align) override;
     void  doFreeHostMem(void *ptr, int64_t size, int32_t align) noexcept override;
@@ -43,7 +43,7 @@ private:
     void *doAllocCudaMem(int64_t size, int32_t align) override;
     void  doFreeCudaMem(void *ptr, int64_t size, int32_t align) noexcept override;
 
-    NVCVCustomAllocator doGet(NVCVResourceType resType) override;
+    NVCVResourceAllocator doGet(NVCVResourceType resType) override;
 };
 
 } // namespace nvcv::priv

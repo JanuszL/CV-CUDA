@@ -24,7 +24,7 @@
 
 namespace nvcv::priv {
 
-NVCVCustomAllocator IAllocator::get(NVCVResourceType resType)
+NVCVResourceAllocator IAllocator::get(NVCVResourceType resType)
 {
     return doGet(resType);
 }

@@ -28,7 +28,7 @@
 
 namespace nvcv::priv {
 
-CustomAllocator::CustomAllocator(const NVCVCustomAllocator *customAllocators, int32_t numCustomAllocators)
+CustomAllocator::CustomAllocator(const NVCVResourceAllocator *customAllocators, int32_t numCustomAllocators)
 {
     if (customAllocators == nullptr && numCustomAllocators != 0)
     {
@@ -45,7 +45,7 @@ CustomAllocator::CustomAllocator(const NVCVCustomAllocator *customAllocators, in
     {
         NVCV_ASSERT(customAllocators != nullptr);
 
-        const NVCVCustomAllocator &custAlloc = customAllocators[i];
+        const NVCVResourceAllocator &custAlloc = customAllocators[i];
 
         bool valid = false;
         switch (custAlloc.resType)
@@ -90,7 +90,7 @@ CustomAllocator::CustomAllocator(const NVCVCustomAllocator *customAllocators, in
 
     for (int i = 0; i < NVCV_NUM_RESOURCE_TYPES; ++i)
     {
-        NVCVCustomAllocator &custAllocator = m_allocators[i];
+        NVCVResourceAllocator &custAllocator = m_allocators[i];
 
         // Resource allocator already defined?
         if (filledMap & (1 << i))
@@ -108,7 +108,7 @@ CustomAllocator::CustomAllocator(const NVCVCustomAllocator *customAllocators, in
 
 CustomAllocator::~CustomAllocator()
 {
-    for (NVCVCustomAllocator &alloc : m_allocators)
+    for (NVCVResourceAllocator &alloc : m_allocators)
     {
         if (alloc.cleanup)
         {
@@ -117,7 +117,7 @@ CustomAllocator::~CustomAllocator()
     }
 }
 
-NVCVCustomAllocator CustomAllocator::doGet(NVCVResourceType resType)
+NVCVResourceAllocator CustomAllocator::doGet(NVCVResourceType resType)
 {
     NVCV_ASSERT(static_cast<unsigned>(resType) < NVCV_NUM_RESOURCE_TYPES);
     return m_allocators[resType];
@@ -127,14 +127,14 @@ NVCVCustomAllocator CustomAllocator::doGet(NVCVResourceType resType)
 
 void *CustomAllocator::doAllocHostMem(int64_t size, int32_t align)
 {
-    NVCVCustomAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_HOST];
+    NVCVResourceAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_HOST];
     NVCV_ASSERT(custom.res.mem.fnAlloc != nullptr);
     return custom.res.mem.fnAlloc(custom.ctx, size, align);
 }
 
 void CustomAllocator::doFreeHostMem(void *ptr, int64_t size, int32_t align) noexcept
 {
-    NVCVCustomAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_HOST];
+    NVCVResourceAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_HOST];
     NVCV_ASSERT(custom.res.mem.fnFree != nullptr);
     return custom.res.mem.fnFree(custom.ctx, ptr, size, align);
 }
@@ -143,14 +143,14 @@ void CustomAllocator::doFreeHostMem(void *ptr, int64_t size, int32_t align) noex
 
 void *CustomAllocator::doAllocHostPinnedMem(int64_t size, int32_t align)
 {
-    NVCVCustomAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_HOST_PINNED];
+    NVCVResourceAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_HOST_PINNED];
     NVCV_ASSERT(custom.res.mem.fnAlloc != nullptr);
     return custom.res.mem.fnAlloc(custom.ctx, size, align);
 }
 
 void CustomAllocator::doFreeHostPinnedMem(void *ptr, int64_t size, int32_t align) noexcept
 {
-    NVCVCustomAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_HOST_PINNED];
+    NVCVResourceAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_HOST_PINNED];
     NVCV_ASSERT(custom.res.mem.fnFree != nullptr);
     return custom.res.mem.fnFree(custom.ctx, ptr, size, align);
 }
@@ -159,14 +159,14 @@ void CustomAllocator::doFreeHostPinnedMem(void *ptr, int64_t size, int32_t align
 
 void *CustomAllocator::doAllocCudaMem(int64_t size, int32_t align)
 {
-    NVCVCustomAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_CUDA];
+    NVCVResourceAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_CUDA];
     NVCV_ASSERT(custom.res.mem.fnAlloc != nullptr);
     return custom.res.mem.fnAlloc(custom.ctx, size, align);
 }
 
 void CustomAllocator::doFreeCudaMem(void *ptr, int64_t size, int32_t align) noexcept
 {
-    NVCVCustomAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_CUDA];
+    NVCVResourceAllocator &custom = m_allocators[NVCV_RESOURCE_MEM_CUDA];
     NVCV_ASSERT(custom.res.mem.fnFree != nullptr);
     return custom.res.mem.fnFree(custom.ctx, ptr, size, align);
 }

@@ -30,7 +30,8 @@
 namespace priv = nvcv::priv;
 
 NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvAllocatorConstructCustom,
-                (const NVCVCustomAllocator *customAllocators, int32_t numCustomAllocators, NVCVAllocatorHandle *handle))
+                (const NVCVResourceAllocator *customAllocators, int32_t numCustomAllocators,
+                 NVCVAllocatorHandle *handle))
 {
     return priv::ProtectCall(
         [&]
@@ -120,7 +121,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvAllocatorGetUserPointer, (NVCVAllocatorHan
 }
 
 NVCV_DEFINE_API(0, 3, NVCVStatus, nvcvAllocatorGet,
-                (NVCVAllocatorHandle halloc, NVCVResourceType resType, NVCVCustomAllocator *result))
+                (NVCVAllocatorHandle halloc, NVCVResourceType resType, NVCVResourceAllocator *result))
 {
     return priv::ProtectCall(
         [&]

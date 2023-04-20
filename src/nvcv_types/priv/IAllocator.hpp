@@ -38,7 +38,7 @@ public:
     void *allocCudaMem(int64_t size, int32_t align);
     void  freeCudaMem(void *ptr, int64_t size, int32_t align) noexcept;
 
-    NVCVCustomAllocator get(NVCVResourceType resType);
+    NVCVResourceAllocator get(NVCVResourceType resType);
 
 private:
     // NVI idiom
@@ -51,7 +51,7 @@ private:
     virtual void *doAllocCudaMem(int64_t size, int32_t align)                    = 0;
     virtual void  doFreeCudaMem(void *ptr, int64_t size, int32_t align) noexcept = 0;
 
-    virtual NVCVCustomAllocator doGet(NVCVResourceType resType) = 0;
+    virtual NVCVResourceAllocator doGet(NVCVResourceType resType) = 0;
 };
 
 template<class T, class... ARGS>

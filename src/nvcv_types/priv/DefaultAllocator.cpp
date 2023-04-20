@@ -83,11 +83,11 @@ void DefaultAllocator::doFreeCudaMem(void *ptr, int64_t size, int32_t align) noe
     NVCV_CHECK_LOG(::cudaFree(ptr));
 }
 
-NVCVCustomAllocator DefaultAllocator::doGet(NVCVResourceType resType)
+NVCVResourceAllocator DefaultAllocator::doGet(NVCVResourceType resType)
 {
-    NVCVCustomAllocator custAllocator = {};
-    custAllocator.ctx                 = this;
-    custAllocator.resType             = resType;
+    NVCVResourceAllocator custAllocator = {};
+    custAllocator.ctx                   = this;
+    custAllocator.resType               = resType;
 
     switch (resType)
     {

@@ -40,7 +40,7 @@ inline CudaMemAllocator Allocator::cudaMem() const
 
 inline ResourceAllocator Allocator::get(NVCVResourceType resType) const
 {
-    NVCVCustomAllocator data;
+    NVCVResourceAllocator data;
     detail::CheckThrow(nvcvAllocatorGet(handle(), resType, &data));
     return ResourceAllocator(data);
 }
@@ -50,7 +50,7 @@ ResAlloc Allocator::get() const
 {
     static_assert(std::is_base_of<ResourceAllocator, ResAlloc>::value,
                   "The requested resource allocator type is not derived from ResourceAllocator.");
-    NVCVCustomAllocator data;
+    NVCVResourceAllocator data;
     detail::CheckThrow(nvcvAllocatorGet(handle(), ResAlloc::kResourceType, &data));
     return ResAlloc(data);
 }
@@ -138,7 +138,7 @@ void CustomMemAllocator<AllocatorType>::Construct(AllocFunction &&alloc, FreeFun
 {
     using T = std::tuple<AllocFunction, FreeFunction>;
     std::unique_ptr<T> ctx(new T{std::move(alloc), std::move(free)});
-    auto               cleanup = [](void *ctx, NVCVCustomAllocator *) noexcept
+    auto               cleanup = [](void *ctx, NVCVResourceAllocator *) noexcept
     {
         delete (T *)ctx;
     };
@@ -190,8 +190,8 @@ void CustomMemAllocator<AllocatorType>::ConstructFromDuplicateValues(AllocFuncti
 template<typename... ResourceAllocators>
 inline CustomAllocator<ResourceAllocators...>::CustomAllocator(ResourceAllocators &&...allocators)
 {
-    NVCVCustomAllocator data[] = {allocators.cdata()...};
-    NVCVAllocatorHandle h      = {};
+    NVCVResourceAllocator data[] = {allocators.cdata()...};
+    NVCVAllocatorHandle   h      = {};
     detail::CheckThrow(nvcvAllocatorConstructCustom(data, sizeof...(allocators), &h));
     // void-cast the (nodiscard) result of the allocators - we know what we're doing here...
     int dummy[] = {((void)allocators.release(), 0)...};
@@ -202,7 +202,7 @@ inline CustomAllocator<ResourceAllocators...>::CustomAllocator(ResourceAllocator
 namespace detail {
 
 template<NVCVResourceType KIND>
-MemAllocatorWithKind<KIND>::MemAllocatorWithKind(const NVCVCustomAllocator &data)
+MemAllocatorWithKind<KIND>::MemAllocatorWithKind(const NVCVResourceAllocator &data)
     : MemAllocator(data)
 {
     if (!IsCompatibleKind(data.resType))
