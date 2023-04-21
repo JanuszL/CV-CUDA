@@ -26,7 +26,7 @@
 
 namespace priv = cvcuda::priv;
 
-CVCUDA_DEFINE_API(0, 2, NVCVStatus, cvcudaAdaptiveThresholdCreate,
+CVCUDA_DEFINE_API(0, 3, NVCVStatus, cvcudaAdaptiveThresholdCreate,
                   (NVCVOperatorHandle * handle, int32_t maxBlockSize, int32_t maxVarShapeBatchSize))
 {
     return nvcv::ProtectCall(
@@ -43,7 +43,7 @@ CVCUDA_DEFINE_API(0, 2, NVCVStatus, cvcudaAdaptiveThresholdCreate,
         });
 }
 
-CVCUDA_DEFINE_API(0, 2, NVCVStatus, cvcudaAdaptiveThresholdSubmit,
+CVCUDA_DEFINE_API(0, 3, NVCVStatus, cvcudaAdaptiveThresholdSubmit,
                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
                    double maxValue, NVCVAdaptiveThresholdType adaptiveMethod, NVCVThresholdType thresholdType,
                    int32_t blockSize, double c))
@@ -57,7 +57,7 @@ CVCUDA_DEFINE_API(0, 2, NVCVStatus, cvcudaAdaptiveThresholdSubmit,
         });
 }
 
-CVCUDA_DEFINE_API(0, 2, NVCVStatus, cvcudaAdaptiveThresholdVarShapeSubmit,
+CVCUDA_DEFINE_API(0, 3, NVCVStatus, cvcudaAdaptiveThresholdVarShapeSubmit,
                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
                    NVCVTensorHandle maxValue, NVCVAdaptiveThresholdType adaptiveMethod, NVCVThresholdType thresholdType,
                    NVCVTensorHandle blockSize, NVCVTensorHandle c))

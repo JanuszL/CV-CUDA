@@ -26,7 +26,7 @@
 
 namespace priv = cvcuda::priv;
 
-CVCUDA_DEFINE_API(0, 2, NVCVStatus, cvcudaCropFlipNormalizeReformatCreate, (NVCVOperatorHandle * handle))
+CVCUDA_DEFINE_API(0, 3, NVCVStatus, cvcudaCropFlipNormalizeReformatCreate, (NVCVOperatorHandle * handle))
 {
     return nvcv::ProtectCall(
         [&]
@@ -41,7 +41,7 @@ CVCUDA_DEFINE_API(0, 2, NVCVStatus, cvcudaCropFlipNormalizeReformatCreate, (NVCV
         });
 }
 
-CVCUDA_DEFINE_API(0, 2, NVCVStatus, cvcudaCropFlipNormalizeReformatSubmit,
+CVCUDA_DEFINE_API(0, 3, NVCVStatus, cvcudaCropFlipNormalizeReformatSubmit,
                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVTensorHandle out,
                    NVCVTensorHandle cropRect, NVCVBorderType borderMode, float borderValue, NVCVTensorHandle flipCode,
                    NVCVTensorHandle base, NVCVTensorHandle scale, float global_scale, float shift, float epsilon,
