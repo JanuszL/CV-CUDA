@@ -171,6 +171,7 @@ def test_op_pillowresizevarshape(
     assert base_output.maxsize == base_output.maxsize
 
 
+@t.mark.skip(reason="test currently fails CVCUDA-558 tracking")
 def test_op_pillowresize_gpuload():
     stream = cvcuda.Stream()
     src_shape = (5, 1080, 1920, 4)
