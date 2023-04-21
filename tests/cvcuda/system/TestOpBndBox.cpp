@@ -40,15 +40,18 @@ static int randl(int l, int h)
     return l + value;
 }
 
-static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAccessStridedImagePlanar &data,
-                          nvcv::Byte *inBuf, NVCVBndBoxesI bboxes, cudaStream_t stream)
+static void setGoldBuffer(std::vector<uint8_t> &vect, nvcv::ImageFormat format,
+                          const nvcv::TensorDataAccessStridedImagePlanar &data, nvcv::Byte *inBuf, NVCVBndBoxesI bboxes,
+                          cudaStream_t stream)
 {
     auto context = cuosd_context_create();
 
     for (int n = 0; n < bboxes.batch; n++)
     {
-        test::osd::Image *image = test::osd::create_image(data.numCols(), data.numRows(), test::osd::ImageFormat::RGBA);
-        int               bufSize = data.numCols() * data.numRows() * data.numChannels();
+        test::osd::Image *image = test::osd::create_image(
+            data.numCols(), data.numRows(),
+            format == nvcv::FMT_RGBA8 ? test::osd::ImageFormat::RGBA : test::osd::ImageFormat::RGB);
+        int bufSize = data.numCols() * data.numRows() * data.numChannels();
         EXPECT_EQ(cudaSuccess, cudaMemcpy(image->data0, inBuf + n * bufSize, bufSize, cudaMemcpyDeviceToDevice));
 
         auto numBoxes = bboxes.numBoxes[n];
@@ -86,15 +89,21 @@ static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAcce
 }
 
 // clang-format off
-NVCV_TEST_SUITE_P(OpBndBox, test::ValueList<int, int, int, int, int>
+NVCV_TEST_SUITE_P(OpBndBox, test::ValueList<int, int, int, int, int, nvcv::ImageFormat>
 {
-    //  inN,    inW,    inH,    num,    seed
-    {   1,      224,    224,    100,    3   },
-    {   8,      224,    224,    100,    7   },
-    {   16,     224,    224,    100,    11  },
-    {   1,      1280,   720,    100,    23  },
-    {   1,      1920,   1080,   200,    37  },
-    {   1,      3840,   2160,   200,    59  },
+    //  inN,    inW,    inH,    num,    seed,   format
+    {   1,      224,    224,    100,    3,      nvcv::FMT_RGBA8 },
+    {   8,      224,    224,    100,    7,      nvcv::FMT_RGBA8 },
+    {   16,     224,    224,    100,    11,     nvcv::FMT_RGBA8 },
+    {   1,      224,    224,    100,    3,      nvcv::FMT_RGB8  },
+    {   8,      224,    224,    100,    7,      nvcv::FMT_RGB8  },
+    {   16,     224,    224,    100,    11,     nvcv::FMT_RGB8  },
+    {   1,      1280,   720,    100,    23,     nvcv::FMT_RGBA8 },
+    {   1,      1920,   1080,   200,    37,     nvcv::FMT_RGBA8 },
+    {   1,      3840,   2160,   200,    59,     nvcv::FMT_RGBA8 },
+    {   1,      1280,   720,    100,    23,     nvcv::FMT_RGB8  },
+    {   1,      1920,   1080,   200,    37,     nvcv::FMT_RGB8  },
+    {   1,      3840,   2160,   200,    59,     nvcv::FMT_RGB8  },
 });
 
 // clang-format on
@@ -103,11 +112,12 @@ TEST_P(OpBndBox, BndBox_sanity)
     cudaStream_t stream;
     ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
 
-    int inN = GetParamValue<0>();
-    int inW = GetParamValue<1>();
-    int inH = GetParamValue<2>();
-    int num = GetParamValue<3>();
-    int sed = GetParamValue<4>();
+    int               inN    = GetParamValue<0>();
+    int               inW    = GetParamValue<1>();
+    int               inH    = GetParamValue<2>();
+    int               num    = GetParamValue<3>();
+    int               sed    = GetParamValue<4>();
+    nvcv::ImageFormat format = GetParamValue<5>();
 
     NVCVBndBoxesI            bndBoxes;
     std::vector<int>         numBoxVec;
@@ -137,8 +147,8 @@ TEST_P(OpBndBox, BndBox_sanity)
     bndBoxes.numBoxes = numBoxVec.data();
     bndBoxes.boxes    = bndBoxVec.data();
 
-    nvcv::Tensor imgIn  = test::CreateTensor(inN, inW, inH, nvcv::FMT_RGBA8);
-    nvcv::Tensor imgOut = test::CreateTensor(inN, inW, inH, nvcv::FMT_RGBA8);
+    nvcv::Tensor imgIn  = test::CreateTensor(inN, inW, inH, format);
+    nvcv::Tensor imgOut = test::CreateTensor(inN, inW, inH, format);
 
     auto input  = imgIn.exportData<nvcv::TensorDataStridedCuda>();
     auto output = imgOut.exportData<nvcv::TensorDataStridedCuda>();
@@ -175,7 +185,7 @@ TEST_P(OpBndBox, BndBox_sanity)
     EXPECT_EQ(cudaSuccess, cudaMemcpy(test.data(), output->basePtr(), outBufSize, cudaMemcpyDeviceToHost));
 
     std::vector<uint8_t> gold(outBufSize);
-    setGoldBuffer(gold, *inAccess, input->basePtr(), bndBoxes, stream);
+    setGoldBuffer(gold, format, *inAccess, input->basePtr(), bndBoxes, stream);
 
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
     EXPECT_EQ(gold, test);

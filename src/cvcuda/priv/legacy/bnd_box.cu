@@ -194,19 +194,24 @@ static __global__ void render_bndbox_rgb_womsaa_kernel(SrcWrapper src, DstWrappe
     if (ix < 0 || iy < 0 || ix >= width - 1 || iy >= height - 1)
         return;
 
-    uchar4 context_color[4] = {0};
+    uchar4    context_color[4] = {0};
+    const int batch_idx        = get_batch_idx();
 
     for (int i = 0; i < num_command; ++i)
     {
         RectangleCommand pcommand = commands[i];
-        if (pcommand.batch_index != get_batch_idx())
+        if (pcommand.batch_index != batch_idx)
             continue;
         do_rectangle_woMSAA(&pcommand, ix, iy, context_color);
     }
 
-    if (inplace && context_color[0].w == 0 && context_color[1].w == 0 && context_color[2].w == 0
-        && context_color[3].w == 0)
+    if (context_color[0].w == 0 && context_color[1].w == 0 && context_color[2].w == 0 && context_color[3].w == 0)
+    {
+        if (inplace)
+            return;
+        *(uchar3 *)(dst.ptr(batch_idx, iy, ix, 0)) = *(uchar3 *)(src.ptr(batch_idx, iy, ix, 0));
         return;
+    }
 
     blending_rgb_pixel(src, dst, ix, iy, context_color);
 }
@@ -221,19 +226,24 @@ static __global__ void render_bndbox_rgba_womsaa_kernel(SrcWrapper src, DstWrapp
     if (ix < 0 || iy < 0 || ix >= width - 1 || iy >= height - 1)
         return;
 
-    uchar4 context_color[4] = {0};
+    uchar4    context_color[4] = {0};
+    const int batch_idx        = get_batch_idx();
 
     for (int i = 0; i < num_command; ++i)
     {
         RectangleCommand pcommand = commands[i];
-        if (pcommand.batch_index != get_batch_idx())
+        if (pcommand.batch_index != batch_idx)
             continue;
         do_rectangle_woMSAA(&pcommand, ix, iy, context_color);
     }
 
-    if (inplace && context_color[0].w == 0 && context_color[1].w == 0 && context_color[2].w == 0
-        && context_color[3].w == 0)
+    if (context_color[0].w == 0 && context_color[1].w == 0 && context_color[2].w == 0 && context_color[3].w == 0)
+    {
+        if (inplace)
+            return;
+        *(uchar4 *)(dst.ptr(batch_idx, iy, ix, 0)) = *(uchar4 *)(src.ptr(batch_idx, iy, ix, 0));
         return;
+    }
 
     blending_rgba_pixel(src, dst, ix, iy, context_color);
 }
