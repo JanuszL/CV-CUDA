@@ -58,8 +58,48 @@ void ExportOpBndBox(py::module &m)
 {
     using namespace pybind11::literals;
 
-    m.def("bndbox", &BndBox, "src"_a, "bboxes"_a, py::kw_only(), "stream"_a = nullptr);
-    m.def("bndbox_into", &BndBoxInto, "dst"_a, "src"_a, "bboxes"_a, py::kw_only(), "stream"_a = nullptr);
+    m.def("bndbox", &BndBox, "src"_a, "bboxes"_a, py::kw_only(), "stream"_a = nullptr, R"pbdoc(
+
+        Executes the BndBox operation on the given cuda stream.
+
+        See also:
+            Refer to the CV-CUDA C API reference for the Convolve 2D operator
+            for more details and usage examples.
+
+        Args:
+            src (Tensor): Input tensor containing one or more images.
+            bboxes (NVCVBndBoxesI): Bounding boxes in reference to the input tensor.
+            stream (Stream, optional): CUDA Stream on which to perform the operation.
+
+        Returns:
+            cvcuda.Tensor: The output tensor.
+
+        Caution:
+            Restrictions to several arguments may apply. Check the C
+            API references of the CV-CUDA operator.
+    )pbdoc");
+
+    m.def("bndbox_into", &BndBoxInto, "dst"_a, "src"_a, "bboxes"_a, py::kw_only(), "stream"_a = nullptr, R"pbdoc(
+
+        Executes the BndBox operation on the given cuda stream.
+
+        See also:
+            Refer to the CV-CUDA C API reference for the Convolve 2D operator
+            for more details and usage examples.
+
+        Args:
+            dst (Tensor): Output tensor to store the result of the operation.
+            src (Tensor): Input tensor containing one or more images.
+            bboxes (NVCVBndBoxesI): Bounding boxes in reference to the input tensor.
+            stream (Stream, optional): CUDA Stream on which to perform the operation.
+
+        Returns:
+            None
+
+        Caution:
+            Restrictions to several arguments may apply. Check the C
+            API references of the CV-CUDA operator.
+    )pbdoc");
 }
 
 } // namespace cvcudapy

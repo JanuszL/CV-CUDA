@@ -25,7 +25,7 @@
 
 namespace priv = cvcuda::priv;
 
-CVCUDA_DEFINE_API(0, 0, NVCVStatus, cvcudaBoxBlurCreate, (NVCVOperatorHandle * handle))
+CVCUDA_DEFINE_API(0, 3, NVCVStatus, cvcudaBoxBlurCreate, (NVCVOperatorHandle * handle))
 {
     return nvcv::ProtectCall(
         [&]
@@ -40,7 +40,7 @@ CVCUDA_DEFINE_API(0, 0, NVCVStatus, cvcudaBoxBlurCreate, (NVCVOperatorHandle * h
         });
 }
 
-CVCUDA_DEFINE_API(0, 0, NVCVStatus, cvcudaBoxBlurSubmit,
+CVCUDA_DEFINE_API(0, 3, NVCVStatus, cvcudaBoxBlurSubmit,
                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
                    const NVCVBlurBoxesI bboxes))
 {

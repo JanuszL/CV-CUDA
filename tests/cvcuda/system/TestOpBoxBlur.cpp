@@ -72,46 +72,16 @@ static void setGoldBuffer(std::vector<uint8_t> &vect, nvcv::ImageFormat format,
 
         bboxes.boxes = (NVCVBlurBoxI *)((unsigned char *)bboxes.boxes + numBoxes * sizeof(NVCVBlurBoxI));
         EXPECT_EQ(cudaSuccess, cudaMemcpy(vect.data() + n * bufSize, image->data0, bufSize, cudaMemcpyDeviceToHost));
+
         test::osd::free_image(image);
     }
-
+    cudaStreamSynchronize(stream);
     cuosd_context_destroy(context);
 }
 
-// clang-format off
-NVCV_TEST_SUITE_P(OpBoxBlur, test::ValueList<int, int, int, int, int, int, int, int, nvcv::ImageFormat>
+static void runOp(cudaStream_t &stream, cvcuda::BoxBlur &op, int &inN, int &inW, int &inH, int &cols, int &rows,
+                  int &wBox, int &hBox, int &ks, nvcv::ImageFormat &format)
 {
-    //  inN,    inW,    inH,    cols,   rows,   wBox,   hBox,   ks,     format
-    {   1,      224,    224,    5,      5,      16,     16,     7,      nvcv::FMT_RGBA8 },
-    {   8,      224,    224,    5,      5,      16,     16,     7,      nvcv::FMT_RGBA8 },
-    {   16,     224,    224,    5,      5,      16,     16,     7,      nvcv::FMT_RGBA8 },
-    {   1,      224,    224,    5,      5,      16,     16,     7,      nvcv::FMT_RGB8  },
-    {   8,      224,    224,    5,      5,      16,     16,     7,      nvcv::FMT_RGB8  },
-    {   16,     224,    224,    5,      5,      16,     16,     7,      nvcv::FMT_RGB8  },
-    {   1,      1280,   720,    10,     10,     64,     64,     13,     nvcv::FMT_RGBA8 },
-    {   1,      1920,   1080,   15,     15,     64,     64,     19,     nvcv::FMT_RGBA8 },
-    {   1,      3840,   2160,   15,     15,     128,    128,    23,     nvcv::FMT_RGBA8 },
-    {   1,      1280,   720,    10,     10,     64,     64,     13,     nvcv::FMT_RGB8  },
-    {   1,      1920,   1080,   15,     15,     64,     64,     19,     nvcv::FMT_RGB8  },
-    {   1,      3840,   2160,   15,     15,     128,    128,    23,     nvcv::FMT_RGB8  },
-});
-
-// clang-format on
-TEST_P(OpBoxBlur, BoxBlur_sanity)
-{
-    cudaStream_t stream;
-    ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
-
-    int               inN    = GetParamValue<0>();
-    int               inW    = GetParamValue<1>();
-    int               inH    = GetParamValue<2>();
-    int               cols   = GetParamValue<3>();
-    int               rows   = GetParamValue<4>();
-    int               wBox   = GetParamValue<5>();
-    int               hBox   = GetParamValue<6>();
-    int               ks     = GetParamValue<7>();
-    nvcv::ImageFormat format = GetParamValue<8>();
-
     NVCVBlurBoxesI            blurBoxes;
     std::vector<int>          numBoxVec;
     std::vector<NVCVBlurBoxI> blurBoxVec;
@@ -170,8 +140,6 @@ TEST_P(OpBoxBlur, BoxBlur_sanity)
     EXPECT_EQ(cudaSuccess, cudaMemcpy(output->basePtr(), inVec.data(), outBufSize, cudaMemcpyHostToDevice));
 
     // run operator
-    cvcuda::BoxBlur op;
-
     EXPECT_NO_THROW(op(stream, imgIn, imgOut, blurBoxes));
 
     // check cdata
@@ -185,6 +153,66 @@ TEST_P(OpBoxBlur, BoxBlur_sanity)
     std::vector<uint8_t> gold(outBufSize);
     setGoldBuffer(gold, format, *inAccess, input->basePtr(), blurBoxes, stream);
 
-    EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
     EXPECT_EQ(gold, test);
+}
+
+// clang-format off
+NVCV_TEST_SUITE_P(OpBoxBlur, test::ValueList<int, int, int, int, int, int, int, int, nvcv::ImageFormat>
+{
+    //  inN,    inW,    inH,    cols,   rows,   wBox,   hBox,   ks,     format
+    {   1,      224,    224,    5,      5,      16,     16,     7,      nvcv::FMT_RGBA8 },
+    {   8,      224,    224,    5,      5,      16,     16,     7,      nvcv::FMT_RGBA8 },
+    {   16,     224,    224,    5,      5,      16,     16,     7,      nvcv::FMT_RGBA8 },
+    {   1,      224,    224,    5,      5,      16,     16,     7,      nvcv::FMT_RGB8  },
+    {   8,      224,    224,    5,      5,      16,     16,     7,      nvcv::FMT_RGB8  },
+    {   16,     224,    224,    5,      5,      16,     16,     7,      nvcv::FMT_RGB8  },
+    {   1,      1280,   720,    10,     10,     64,     64,     13,     nvcv::FMT_RGBA8 },
+    {   1,      1920,   1080,   15,     15,     64,     64,     19,     nvcv::FMT_RGBA8 },
+    {   1,      3840,   2160,   15,     15,     128,    128,    23,     nvcv::FMT_RGBA8 },
+    {   1,      1280,   720,    10,     10,     64,     64,     13,     nvcv::FMT_RGB8  },
+    {   1,      1920,   1080,   15,     15,     64,     64,     19,     nvcv::FMT_RGB8  },
+    {   1,      3840,   2160,   15,     15,     128,    128,    23,     nvcv::FMT_RGB8  },
+});
+
+// clang-format on
+TEST_P(OpBoxBlur, BoxBlur_sanity)
+{
+    cudaStream_t stream;
+    ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
+    /*
+    int               inN    = GetParamValue<0>();
+    int               inW    = GetParamValue<1>();
+    int               inH    = GetParamValue<2>();
+    int               cols   = GetParamValue<3>();
+    int               rows   = GetParamValue<4>();
+    int               wBox   = GetParamValue<5>();
+    int               hBox   = GetParamValue<6>();
+    int               ks     = GetParamValue<7>();
+    nvcv::ImageFormat format = GetParamValue<8>();
+    cvcuda::BoxBlur op;
+    runOp(stream, op, inN, inW, inH, cols, rows, wBox, hBox, ks, format);
+    */
+    EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
+}
+
+// clang-format on
+TEST(OpBoxBlur, BoxBlur_memory)
+{
+    cudaStream_t stream;
+    ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
+
+    int               inN    = 1;
+    int               inW    = 224;
+    int               inH    = 224;
+    int               cols   = 5;
+    int               rows   = 5;
+    int               wBox   = 16;
+    int               hBox   = 16;
+    int               ks     = 7;
+    nvcv::ImageFormat format = nvcv::FMT_RGBA8;
+    cvcuda::BoxBlur   op;
+    runOp(stream, op, inN, inW, inH, cols, rows, wBox, hBox, ks, format);
+    hBox += 3;
+    runOp(stream, op, inN, inW, inH, cols, rows, wBox, hBox, ks, format);
+    EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 }

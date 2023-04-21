@@ -82,43 +82,17 @@ static void setGoldBuffer(std::vector<uint8_t> &vect, nvcv::ImageFormat format,
 
         bboxes.boxes = (NVCVBndBoxI *)((unsigned char *)bboxes.boxes + numBoxes * sizeof(NVCVBndBoxI));
         EXPECT_EQ(cudaSuccess, cudaMemcpy(vect.data() + n * bufSize, image->data0, bufSize, cudaMemcpyDeviceToHost));
+
         test::osd::free_image(image);
     }
-
+    cudaStreamSynchronize(stream);
     cuosd_context_destroy(context);
 }
 
-// clang-format off
-NVCV_TEST_SUITE_P(OpBndBox, test::ValueList<int, int, int, int, int, nvcv::ImageFormat>
+// run operator
+static void runOp(cudaStream_t &stream, cvcuda::BndBox &op, int &inN, int &inW, int &inH, int &num, int &sed,
+                  nvcv::ImageFormat &format)
 {
-    //  inN,    inW,    inH,    num,    seed,   format
-    {   1,      224,    224,    100,    3,      nvcv::FMT_RGBA8 },
-    {   8,      224,    224,    100,    7,      nvcv::FMT_RGBA8 },
-    {   16,     224,    224,    100,    11,     nvcv::FMT_RGBA8 },
-    {   1,      224,    224,    100,    3,      nvcv::FMT_RGB8  },
-    {   8,      224,    224,    100,    7,      nvcv::FMT_RGB8  },
-    {   16,     224,    224,    100,    11,     nvcv::FMT_RGB8  },
-    {   1,      1280,   720,    100,    23,     nvcv::FMT_RGBA8 },
-    {   1,      1920,   1080,   200,    37,     nvcv::FMT_RGBA8 },
-    {   1,      3840,   2160,   200,    59,     nvcv::FMT_RGBA8 },
-    {   1,      1280,   720,    100,    23,     nvcv::FMT_RGB8  },
-    {   1,      1920,   1080,   200,    37,     nvcv::FMT_RGB8  },
-    {   1,      3840,   2160,   200,    59,     nvcv::FMT_RGB8  },
-});
-
-// clang-format on
-TEST_P(OpBndBox, BndBox_sanity)
-{
-    cudaStream_t stream;
-    ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
-
-    int               inN    = GetParamValue<0>();
-    int               inW    = GetParamValue<1>();
-    int               inH    = GetParamValue<2>();
-    int               num    = GetParamValue<3>();
-    int               sed    = GetParamValue<4>();
-    nvcv::ImageFormat format = GetParamValue<5>();
-
     NVCVBndBoxesI            bndBoxes;
     std::vector<int>         numBoxVec;
     std::vector<NVCVBndBoxI> bndBoxVec;
@@ -171,9 +145,6 @@ TEST_P(OpBndBox, BndBox_sanity)
     EXPECT_EQ(cudaSuccess, cudaMemset(input->basePtr(), 0xFF, inSampleStride * inAccess->numSamples()));
     EXPECT_EQ(cudaSuccess, cudaMemset(output->basePtr(), 0xFF, outSampleStride * outAccess->numSamples()));
 
-    // run operator
-    cvcuda::BndBox op;
-
     EXPECT_NO_THROW(op(stream, imgIn, imgOut, bndBoxes));
 
     // check cdata
@@ -187,6 +158,58 @@ TEST_P(OpBndBox, BndBox_sanity)
     std::vector<uint8_t> gold(outBufSize);
     setGoldBuffer(gold, format, *inAccess, input->basePtr(), bndBoxes, stream);
 
-    EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
     EXPECT_EQ(gold, test);
+}
+
+// clang-format off
+NVCV_TEST_SUITE_P(OpBndBox, test::ValueList<int, int, int, int, int, nvcv::ImageFormat>
+{
+    //  inN,    inW,    inH,    num,    seed,   format
+    {   1,      224,    224,    100,    3,      nvcv::FMT_RGBA8 },
+    {   8,      224,    224,    100,    7,      nvcv::FMT_RGBA8 },
+    {   16,     224,    224,    100,    11,     nvcv::FMT_RGBA8 },
+    {   1,      224,    224,    100,    3,      nvcv::FMT_RGB8  },
+    {   8,      224,    224,    100,    7,      nvcv::FMT_RGB8  },
+    {   16,     224,    224,    100,    11,     nvcv::FMT_RGB8  },
+    {   1,      1280,   720,    100,    23,     nvcv::FMT_RGBA8 },
+    {   1,      1920,   1080,   200,    37,     nvcv::FMT_RGBA8 },
+    {   1,      3840,   2160,   200,    59,     nvcv::FMT_RGBA8 },
+    {   1,      1280,   720,    100,    23,     nvcv::FMT_RGB8  },
+    {   1,      1920,   1080,   200,    37,     nvcv::FMT_RGB8  },
+    {   1,      3840,   2160,   200,    59,     nvcv::FMT_RGB8  },
+});
+
+// clang-format on
+TEST_P(OpBndBox, BndBox_sanity)
+{
+    cudaStream_t stream;
+    ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
+    int               inN    = GetParamValue<0>();
+    int               inW    = GetParamValue<1>();
+    int               inH    = GetParamValue<2>();
+    int               num    = GetParamValue<3>();
+    int               sed    = GetParamValue<4>();
+    nvcv::ImageFormat format = GetParamValue<5>();
+    cvcuda::BndBox    op;
+    runOp(stream, op, inN, inW, inH, num, sed, format);
+    EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
+}
+
+// clang-format on
+TEST(OpBndBox, BndBox_memory)
+{
+    cudaStream_t stream;
+    ASSERT_EQ(cudaSuccess, cudaStreamCreate(&stream));
+    int               inN    = 1;
+    int               inW    = 224;
+    int               inH    = 224;
+    int               num    = 100;
+    int               sed    = 3;
+    nvcv::ImageFormat format = nvcv::FMT_RGBA8;
+    cvcuda::BndBox    op;
+    runOp(stream, op, inN, inW, inH, num, sed, format);
+    //check if data is cleared
+    sed++;
+    runOp(stream, op, inN, inW, inH, num, sed, format);
+    EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 }

@@ -559,7 +559,8 @@ ErrorCode BndBox::infer(const nvcv::TensorDataStridedCuda &inData, const nvcv::T
 
     int type_idx = channels - 3;
     funcs[type_idx](inData, outData, m_context, stream);
-
+    m_context->rect_commands.clear(); // Clear the command buffer so next render does not contain previous boxes.
+    m_context->blur_commands.clear();
     return ErrorCode::SUCCESS;
 }
 

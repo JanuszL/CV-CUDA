@@ -77,10 +77,10 @@ void ExportBndBox(py::module &m)
                      return bndbox;
                  }),
              "box"_a, "thickness"_a, "borderColor"_a, "fillColor"_a)
-        .def_readwrite("box", &NVCVBndBoxI::box)
-        .def_readwrite("thickness", &NVCVBndBoxI::thickness)
-        .def_readwrite("borderColor", &NVCVBndBoxI::borderColor)
-        .def_readwrite("fillColor", &NVCVBndBoxI::fillColor);
+        .def_readwrite("box", &NVCVBndBoxI::box, "Tuple describing a box: x-coordinate, y-coordinate, width, height.")
+        .def_readwrite("thickness", &NVCVBndBoxI::thickness, "Border thickness of bounding box.")
+        .def_readwrite("borderColor", &NVCVBndBoxI::borderColor, "Border color of bounding box.")
+        .def_readwrite("fillColor", &NVCVBndBoxI::fillColor, "Filled color of bounding box.");
 
     py::class_<NVCVBndBoxesI>(m, "BndBoxesI")
         .def(py::init([]() { return NVCVBndBoxesI{}; }))
@@ -100,9 +100,9 @@ void ExportBndBox(py::module &m)
                      return bndboxes;
                  }),
              "numBoxes"_a, "boxes"_a)
-        .def_readwrite("batch", &NVCVBndBoxesI::batch)
-        .def_readwrite("numBoxes", &NVCVBndBoxesI::numBoxes)
-        .def_readwrite("boxes", &NVCVBndBoxesI::boxes);
+        .def_readwrite("batch", &NVCVBndBoxesI::batch, "Number of images in the image batch.")
+        .def_readwrite("numBoxes", &NVCVBndBoxesI::numBoxes, "Number array of bounding boxes for image batch.")
+        .def_readwrite("boxes", &NVCVBndBoxesI::boxes, "Bounding box array for image batch, \ref NVCVBndBoxI.");
 }
 
 void ExportBoxBlur(py::module &m)
@@ -120,8 +120,8 @@ void ExportBoxBlur(py::module &m)
                      return blurbox;
                  }),
              "box"_a, "kernelSize"_a)
-        .def_readwrite("box", &NVCVBlurBoxI::box)
-        .def_readwrite("kernelSize", &NVCVBlurBoxI::kernelSize);
+        .def_readwrite("box", &NVCVBlurBoxI::box, "Tuple describing a box: x-coordinate, y-coordinate, width, height.")
+        .def_readwrite("kernelSize", &NVCVBlurBoxI::kernelSize, "Kernel sizes of mean filter.");
 
     py::class_<NVCVBlurBoxesI>(m, "BlurBoxesI")
         .def(py::init([]() { return NVCVBlurBoxesI{}; }))
@@ -141,9 +141,9 @@ void ExportBoxBlur(py::module &m)
                      return blurboxes;
                  }),
              "numBoxes"_a, "boxes"_a)
-        .def_readwrite("batch", &NVCVBlurBoxesI::batch)
-        .def_readwrite("numBoxes", &NVCVBlurBoxesI::numBoxes)
-        .def_readwrite("boxes", &NVCVBlurBoxesI::boxes);
+        .def_readwrite("batch", &NVCVBlurBoxesI::batch, "Number of images in the image batch.")
+        .def_readwrite("numBoxes", &NVCVBlurBoxesI::numBoxes, "Number array of blurring boxes for image batch.")
+        .def_readwrite("boxes", &NVCVBlurBoxesI::boxes, "Blurring box array for image batch, \ref NVCVBlurBoxI.");
 }
 
 } // namespace cvcudapy
