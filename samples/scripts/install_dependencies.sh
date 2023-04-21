@@ -52,42 +52,23 @@ apt-get update && apt-get install -y --no-install-recommends \
 
 # Install pip and all the python packages.
 pip3 install --upgrade pip
-pip3 install torch==1.13.0 torchvision==0.14.0 av==10.0.0
+pip3 install torch==1.13.0 torchvision==0.14.0 av==10.0.0 pycuda==2022.1 nvtx==0.2.5
 cd /tmp
 git clone https://github.com/itsliupeng/torchnvjpeg.git
 cd torchnvjpeg && python setup.py bdist_wheel && cd dist && pip3 install torchnvjpeg-0.1.0-cp38-cp38-linux_x86_64.whl
 echo "export PATH=$PATH:/opt/tensorrt/bin" >> ~/.bashrc
 
 # Install VPF and its dependencies.
-cd /tmp
-# 1. ffmpeg with nv accelerated codecs.
-git clone https://git.videolan.org/git/ffmpeg/nv-codec-headers.git
-cd ./nv-codec-headers
-make install
-cd /tmp
-git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg/
-apt-get update && apt-get install -y --no-install-recommends \
-    libtool \
-    libc6 \
-    libc6-dev \
-    libnuma1 \
-    libnuma-dev \
-    && rm -rf /var/lib/apt/lists/*
-cd ./ffmpeg
-./configure --enable-nonfree --enable-cuda-nvcc --enable-libnpp --extra-cflags=-I/usr/local/cuda/include --extra-ldflags=-L/usr/local/cuda/lib64 --disable-static --enable-shared
-make -j 8
-make install
-# 2. other libraries needed for VPF.
+# 1. ffmpeg and other libraries needed for VPF.
 # Note: We are not installing either libnv-encode or decode libraries here.
 apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
     libavfilter-dev \
     libavformat-dev \
     libavcodec-dev \
     libswresample-dev \
     libavutil-dev\
     && rm -rf /var/lib/apt/lists/*
-# VPF temporary bug fix requires the following soft link.
-ln -s /usr/lib/x86_64-linux-gnu/libnvcuvid.so.1 /usr/lib/x86_64-linux-gnu/libnvcuvid.so
 cd /tmp
 git clone https://github.com/NVIDIA/VideoProcessingFramework.git
 pip3 install /tmp/VideoProcessingFramework

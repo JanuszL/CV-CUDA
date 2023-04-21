@@ -21,6 +21,8 @@ These are some sample applications showcasing various CV-CUDA APIs. Sample appli
     - torchvision == 0.14.0
     - torchnvjpeg (https://github.com/itsliupeng/torchnvjpeg)
     - av == 10.0.0
+    - pycuda == 2022.1
+    - nvtx == 0.2.5
 
 Setting up the following is only required if you want to setup and run the samples in a docker container:
 - nvidia-docker v2.11.0
