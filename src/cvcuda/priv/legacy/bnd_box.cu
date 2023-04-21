@@ -268,15 +268,15 @@ static ErrorCode cuosd_draw_rectangle(cuOSDContext_t context, int width, int hei
         for (int i = 0; i < numBoxes; i++)
         {
             auto bbox   = bboxes.boxes[i];
-            int  left   = max(min(bbox.rect.x, width - 1), 0);
-            int  top    = max(min(bbox.rect.y, height - 1), 0);
-            int  right  = max(min(left + bbox.rect.width - 1, width - 1), 0);
-            int  bottom = max(min(top + bbox.rect.height - 1, height - 1), 0);
+            int  left   = max(min(bbox.box.x, width - 1), 0);
+            int  top    = max(min(bbox.box.y, height - 1), 0);
+            int  right  = max(min(left + bbox.box.width - 1, width - 1), 0);
+            int  bottom = max(min(top + bbox.box.height - 1, height - 1), 0);
 
-            if (left == right || top == bottom || bbox.rect.width <= 0 || bbox.rect.height <= 0)
+            if (left == right || top == bottom || bbox.box.width <= 0 || bbox.box.height <= 0)
             {
-                LOG_DEBUG("Skipped bbox rect(" << bbox.rect.x << ", " << bbox.rect.y << ", " << bbox.rect.width << ", "
-                                               << bbox.rect.height << ") in image(" << width << ", " << height << ")");
+                LOG_DEBUG("Skipped bnd_box(" << bbox.box.x << ", " << bbox.box.y << ", " << bbox.box.width << ", "
+                                             << bbox.box.height << ") in image(" << width << ", " << height << ")");
                 continue;
             }
 

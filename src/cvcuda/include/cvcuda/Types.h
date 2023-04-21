@@ -28,9 +28,6 @@
 
 #include "detail/Export.h"
 
-#include <nvcv/Rect.h>
-#include <stdint.h>
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -358,6 +355,9 @@ typedef enum
     NVCV_REMAP_RELATIVE_NORMALIZED = 2
 } NVCVRemapMapValueType;
 
+typedef unsigned char uint8_t;
+typedef int           int32_t;
+
 typedef struct
 {
     uint8_t r;
@@ -368,7 +368,15 @@ typedef struct
 
 typedef struct
 {
-    NVCVRectI     rect;        // Rectangle of the bounding box, \ref NVCVRectI.
+    int32_t x;      //!< x coordinate of the top-left corner
+    int32_t y;      //!< y coordinate of the top-left corner
+    int32_t width;  //!< width of the box
+    int32_t height; //!< height of the box
+} NVCVBoxI;
+
+typedef struct
+{
+    NVCVBoxI      box;         // Bounding box, \ref NVCVBoxI.
     int32_t       thickness;   // Border thickness of bounding box.
     NVCVColorRGBA borderColor; // Border color of bounding box.
     NVCVColorRGBA fillColor;   // Filled color of bounding box.
@@ -383,8 +391,8 @@ typedef struct
 
 typedef struct
 {
-    NVCVRectI rect;       // Rectangle of the blur box, \ref NVCVRectI.
-    int32_t   kernelSize; // Kernel sizes of mean filter, refer to cv::blur().
+    NVCVBoxI box;        // Blur box, \ref NVCVBoxI.
+    int32_t  kernelSize; // Kernel sizes of mean filter, refer to cv::blur().
 } NVCVBlurBoxI;
 
 typedef struct

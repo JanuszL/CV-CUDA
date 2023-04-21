@@ -50,12 +50,12 @@ static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAcce
         {
             auto bbox = bboxes.boxes[i];
 
-            int left   = std::max(std::min(bbox.rect.x, data.numCols() - 1), 0);
-            int top    = std::max(std::min(bbox.rect.y, data.numRows() - 1), 0);
-            int right  = std::max(std::min(left + bbox.rect.width - 1, data.numCols() - 1), 0);
-            int bottom = std::max(std::min(top + bbox.rect.height - 1, data.numRows() - 1), 0);
+            int left   = std::max(std::min(bbox.box.x, data.numCols() - 1), 0);
+            int top    = std::max(std::min(bbox.box.y, data.numRows() - 1), 0);
+            int right  = std::max(std::min(left + bbox.box.width - 1, data.numCols() - 1), 0);
+            int bottom = std::max(std::min(top + bbox.box.height - 1, data.numRows() - 1), 0);
 
-            if (left == right || top == bottom || bbox.rect.width < 3 || bbox.rect.height < 3 || bbox.kernelSize < 1)
+            if (left == right || top == bottom || bbox.box.width < 3 || bbox.box.height < 3 || bbox.kernelSize < 1)
             {
                 continue;
             }
@@ -115,11 +115,11 @@ TEST_P(OpBoxBlur, BoxBlur_sanity)
             for (int j = 0; j < rows; j++)
             {
                 NVCVBlurBoxI blurBox;
-                blurBox.rect.x      = x;
-                blurBox.rect.y      = (inH / rows) * j + hBox / 2;
-                blurBox.rect.width  = wBox;
-                blurBox.rect.height = hBox;
-                blurBox.kernelSize  = ks;
+                blurBox.box.x      = x;
+                blurBox.box.y      = (inH / rows) * j + hBox / 2;
+                blurBox.box.width  = wBox;
+                blurBox.box.height = hBox;
+                blurBox.kernelSize = ks;
                 blurBoxVec.push_back(blurBox);
             }
         }

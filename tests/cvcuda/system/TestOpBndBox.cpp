@@ -57,12 +57,12 @@ static void setGoldBuffer(std::vector<uint8_t> &vect, const nvcv::TensorDataAcce
         {
             auto bbox = bboxes.boxes[i];
 
-            int left   = std::max(std::min(bbox.rect.x, data.numCols() - 1), 0);
-            int top    = std::max(std::min(bbox.rect.y, data.numRows() - 1), 0);
-            int right  = std::max(std::min(left + bbox.rect.width - 1, data.numCols() - 1), 0);
-            int bottom = std::max(std::min(top + bbox.rect.height - 1, data.numRows() - 1), 0);
+            int left   = std::max(std::min(bbox.box.x, data.numCols() - 1), 0);
+            int top    = std::max(std::min(bbox.box.y, data.numRows() - 1), 0);
+            int right  = std::max(std::min(left + bbox.box.width - 1, data.numCols() - 1), 0);
+            int bottom = std::max(std::min(top + bbox.box.height - 1, data.numRows() - 1), 0);
 
-            if (left == right || top == bottom || bbox.rect.width <= 0 || bbox.rect.height <= 0)
+            if (left == right || top == bottom || bbox.box.width <= 0 || bbox.box.height <= 0)
             {
                 continue;
             }
@@ -120,10 +120,10 @@ TEST_P(OpBndBox, BndBox_sanity)
         for (int i = 0; i < num; i++)
         {
             NVCVBndBoxI bndBox;
-            bndBox.rect.x      = randl(0, inW - 1);
-            bndBox.rect.y      = randl(0, inH - 1);
-            bndBox.rect.width  = randl(1, inW);
-            bndBox.rect.height = randl(1, inH);
+            bndBox.box.x       = randl(0, inW - 1);
+            bndBox.box.y       = randl(0, inH - 1);
+            bndBox.box.width   = randl(1, inW);
+            bndBox.box.height  = randl(1, inH);
             bndBox.thickness   = randl(-1, 30);
             bndBox.fillColor   = {(unsigned char)randl(0, 255), (unsigned char)randl(0, 255),
                                   (unsigned char)randl(0, 255), (unsigned char)randl(0, 255)};

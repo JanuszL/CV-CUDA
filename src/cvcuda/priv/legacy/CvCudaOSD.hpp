@@ -19,14 +19,17 @@
 #define CV_CUDA_OSD_HPP
 
 #include <cuda_runtime.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <memory>
 #include <vector>
 
 namespace nvcv::cuda { namespace osd {
 
+#define PREALLOC_CMD_NUM 100
+
 #define checkRuntime(call) check_runtime(call, #call, __LINE__, __FILE__)
-#define PREALLOC_CMD_NUM   100
 
 inline static bool check_runtime(cudaError_t e, const char *call, int line, const char *file)
 {

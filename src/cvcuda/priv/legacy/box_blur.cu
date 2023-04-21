@@ -182,25 +182,24 @@ static ErrorCode cuosd_draw_boxblur(cuOSDContext_t context, int width, int heigh
         for (int i = 0; i < numBoxes; i++)
         {
             auto bbox   = bboxes.boxes[i];
-            int  left   = max(min(bbox.rect.x, width - 1), 0);
-            int  top    = max(min(bbox.rect.y, height - 1), 0);
-            int  right  = max(min(left + bbox.rect.width - 1, width - 1), 0);
-            int  bottom = max(min(top + bbox.rect.height - 1, height - 1), 0);
+            int  left   = max(min(bbox.box.x, width - 1), 0);
+            int  top    = max(min(bbox.box.y, height - 1), 0);
+            int  right  = max(min(left + bbox.box.width - 1, width - 1), 0);
+            int  bottom = max(min(top + bbox.box.height - 1, height - 1), 0);
 
             if (left == right || top == bottom)
             {
-                LOG_DEBUG("Skipped boxblur at rect(" << bbox.rect.x << ", " << bbox.rect.y << ", " << bbox.rect.width
-                                                     << ", " << bbox.rect.height << ") in image(" << width << ", "
-                                                     << height << ")");
+                LOG_DEBUG("Skipped box_blur(" << bbox.box.x << ", " << bbox.box.y << ", " << bbox.box.width << ", "
+                                              << bbox.box.height << ") in image(" << width << ", " << height << ")");
                 continue;
             }
 
-            if (bbox.rect.width < 3 || bbox.rect.height < 3 || bbox.kernelSize < 1)
+            if (bbox.box.width < 3 || bbox.box.height < 3 || bbox.kernelSize < 1)
             {
                 LOG_DEBUG(
                     "This operation will be ignored because the region of interest is too small, or the kernel is too "
-                    "small at rect("
-                    << bbox.rect.x << ", " << bbox.rect.y << bbox.rect.width << ", " << bbox.rect.height
+                    "small at box_blur("
+                    << bbox.box.x << ", " << bbox.box.y << bbox.box.width << ", " << bbox.box.height
                     << ") with kernelSize=" << bbox.kernelSize);
                 continue;
             }

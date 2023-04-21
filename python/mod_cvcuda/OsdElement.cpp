@@ -25,18 +25,18 @@ namespace cvcudapy {
 
 namespace {
 
-static NVCVRectI pytorect(py::tuple rect)
+static NVCVBoxI pytobox(py::tuple box)
 {
-    if (rect.size() > 4 || rect.size() == 0)
+    if (box.size() > 4 || box.size() == 0)
         throw py::value_error("Invalid color size.");
 
-    NVCVRectI ret;
+    NVCVBoxI ret;
     memset(&ret, 0, sizeof(ret));
 
     int *pr = (int *)&ret;
-    for (size_t i = 0; i < rect.size(); ++i)
+    for (size_t i = 0; i < box.size(); ++i)
     {
-        pr[i] = rect[i].cast<int>();
+        pr[i] = box[i].cast<int>();
     }
     return ret;
 }
@@ -67,16 +67,16 @@ void ExportBndBox(py::module &m)
     py::class_<NVCVBndBoxI>(m, "BndBoxI")
         .def(py::init([]() { return NVCVBndBoxI{}; }))
         .def(py::init(
-                 [](py::tuple rect, int thickness, py::tuple borderColor, py::tuple fillColor)
+                 [](py::tuple box, int thickness, py::tuple borderColor, py::tuple fillColor)
                  {
                      NVCVBndBoxI bndbox;
-                     bndbox.rect        = pytorect(rect);
+                     bndbox.box         = pytobox(box);
                      bndbox.borderColor = pytocolor(borderColor);
                      bndbox.fillColor   = pytocolor(fillColor);
                      return bndbox;
                  }),
-             "rect"_a, "thickness"_a, "borderColor"_a, "fillColor"_a)
-        .def_readwrite("rect", &NVCVBndBoxI::rect)
+             "box"_a, "thickness"_a, "borderColor"_a, "fillColor"_a)
+        .def_readwrite("box", &NVCVBndBoxI::box)
         .def_readwrite("thickness", &NVCVBndBoxI::thickness)
         .def_readwrite("borderColor", &NVCVBndBoxI::borderColor)
         .def_readwrite("fillColor", &NVCVBndBoxI::fillColor);
@@ -111,15 +111,15 @@ void ExportBoxBlur(py::module &m)
     py::class_<NVCVBlurBoxI>(m, "BlurBoxI")
         .def(py::init([]() { return NVCVBlurBoxI{}; }))
         .def(py::init(
-                 [](py::tuple rect, int kernelSize)
+                 [](py::tuple box, int kernelSize)
                  {
                      NVCVBlurBoxI blurbox;
-                     blurbox.rect       = pytorect(rect);
+                     blurbox.box        = pytobox(box);
                      blurbox.kernelSize = kernelSize;
                      return blurbox;
                  }),
-             "rect"_a, "kernelSize"_a)
-        .def_readwrite("rect", &NVCVBlurBoxI::rect)
+             "box"_a, "kernelSize"_a)
+        .def_readwrite("box", &NVCVBlurBoxI::box)
         .def_readwrite("kernelSize", &NVCVBlurBoxI::kernelSize);
 
     py::class_<NVCVBlurBoxesI>(m, "BlurBoxesI")

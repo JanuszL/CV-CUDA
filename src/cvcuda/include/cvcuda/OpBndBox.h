@@ -56,45 +56,45 @@ CVCUDA_PUBLIC NVCVStatus cvcudaBndBoxCreate(NVCVOperatorHandle *handle);
  *  Limitations:
  *
  *  Input:
- *       Data Layout:    [TODO]
- *       Channels:       [TODO]
+ *       Data Layout:    [kNHWC, kHWC]
+ *       Channels:       [4]
  *
  *       Data Type      | Allowed
  *       -------------- | -------------
- *       8bit  Unsigned | TODO
- *       8bit  Signed   | TODO
- *       16bit Unsigned | TODO
- *       16bit Signed   | TODO
- *       32bit Unsigned | TODO
- *       32bit Signed   | TODO
- *       32bit Float    | TODO
- *       64bit Float    | TODO
+ *       8bit  Unsigned | Yes
+ *       8bit  Signed   | Yes
+ *       16bit Unsigned | No
+ *       16bit Signed   | No
+ *       32bit Unsigned | No
+ *       32bit Signed   | No
+ *       32bit Float    | No
+ *       64bit Float    | No
  *
  *  Output:
- *       Data Layout:    [TODO]
- *       Channels:       [TODO]
+ *       Data Layout:    [kNHWC, kHWC]
+ *       Channels:       [4]
  *
  *       Data Type      | Allowed
  *       -------------- | -------------
- *       8bit  Unsigned | TODO
- *       8bit  Signed   | TODO
- *       16bit Unsigned | TODO
- *       16bit Signed   | TODO
- *       32bit Unsigned | TODO
- *       32bit Signed   | TODO
- *       32bit Float    | TODO
- *       64bit Float    | TODO
+ *       8bit  Unsigned | Yes
+ *       8bit  Signed   | Yes
+ *       16bit Unsigned | No
+ *       16bit Signed   | No
+ *       32bit Unsigned | No
+ *       32bit Signed   | No
+ *       32bit Float    | No
+ *       64bit Float    | No
  *
  *  Input/Output dependency
  *
  *       Property      |  Input == Output
  *      -------------- | -------------
- *       Data Layout   | TODO
- *       Data Type     | TODO
- *       Number        | TODO
- *       Channels      | TODO
- *       Width         | TODO
- *       Height        | TODO
+ *       Data Layout   | Yes
+ *       Data Type     | Yes
+ *       Number        | Yes
+ *       Channels      | Yes
+ *       Width         | Yes
+ *       Height        | Yes
  *
  * @param [in] handle Handle to the operator.
  *                    + Must not be NULL.
