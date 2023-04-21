@@ -19,10 +19,10 @@ import numpy as np
 
 
 @t.mark.parametrize(
-    "input, bndboxes",
+    "inputp, bndboxes",
     [
         (
-            cvcuda.Tensor((3, 224, 224, 4), np.uint8, "NHWC"),
+            (((3, 224, 224, 4), np.uint8, "NHWC")),
             cvcuda.BndBoxesI(
                 numBoxes=[3, 3, 3],
                 boxes=[
@@ -85,7 +85,9 @@ import numpy as np
         ),
     ],
 )
-def test_op_bndbox(input, bndboxes):
+def test_op_bndbox(inputp, bndboxes):
+    input = cvcuda.Tensor(*inputp)
+
     out = cvcuda.bndbox(input, bndboxes)
     assert out.layout == input.layout
     assert out.shape == input.shape

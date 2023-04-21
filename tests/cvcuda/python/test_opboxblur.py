@@ -19,10 +19,10 @@ import numpy as np
 
 
 @t.mark.parametrize(
-    "input, blurboxes",
+    "inputp, blurboxes",
     [
         (
-            cvcuda.Tensor((3, 224, 224, 4), np.uint8, "NHWC"),
+            (((3, 224, 224, 4), np.uint8, "NHWC")),
             cvcuda.BlurBoxesI(
                 numBoxes=[3, 3, 3],
                 boxes=[
@@ -40,7 +40,9 @@ import numpy as np
         ),
     ],
 )
-def test_op_boxblur(input, blurboxes):
+def test_op_boxblur(inputp, blurboxes):
+    input = cvcuda.Tensor(*inputp)
+
     out = cvcuda.boxblur(input, blurboxes)
     assert out.layout == input.layout
     assert out.shape == input.shape
