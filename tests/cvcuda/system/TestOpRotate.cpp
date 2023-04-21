@@ -22,6 +22,7 @@
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
+#include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/cuda/MathWrappers.hpp>
 #include <nvcv/cuda/SaturateCast.hpp>
 
