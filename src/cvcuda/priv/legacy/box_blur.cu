@@ -42,6 +42,72 @@ static __forceinline__ __device__ _T limit(_T value, _T low, _T high)
 }
 
 template<class SrcWrapper, class DstWrapper>
+static __global__ void render_blur_rgb_kernel(SrcWrapper src, DstWrapper dst, const BoxBlurCommand *commands,
+                                              int num_command, int image_batch, int image_width, int image_height)
+{
+    if (blockIdx.x >= num_command)
+        return;
+    const BoxBlurCommand &box = commands[blockIdx.x];
+    if (box.batch_index >= image_batch)
+        return;
+
+    __shared__ uchar3 crop[32][32];
+    int               ix = threadIdx.x;
+    int               iy = threadIdx.y;
+
+    int boxwidth  = box.bounding_right - box.bounding_left;
+    int boxheight = box.bounding_bottom - box.bounding_top;
+    int sx        = limit((int)(ix / 32.0f * (float)boxwidth + 0.5f + box.bounding_left), 0, image_width);
+    int sy        = limit((int)(iy / 32.0f * (float)boxheight + 0.5f + box.bounding_top), 0, image_height);
+
+    crop[iy][ix] = *(uchar3 *)(src.ptr(box.batch_index, sy, sx, 0));
+    __syncthreads();
+
+    uint3 color = make_uint3(0, 0, 0);
+    int   n     = 0;
+    for (int i = -box.kernel_size / 2; i <= box.kernel_size / 2; ++i)
+    {
+        for (int j = -box.kernel_size / 2; j <= box.kernel_size / 2; ++j)
+        {
+            int u = i + iy;
+            int v = j + ix;
+            if (u >= 0 && u < 32 && v >= 0 && v < 32)
+            {
+                auto &c = crop[u][v];
+                color.x += c.x;
+                color.y += c.y;
+                color.z += c.z;
+                n++;
+            }
+        }
+    }
+    __syncthreads();
+    crop[iy][ix] = make_uchar3(color.x / n, color.y / n, color.z / n);
+    __syncthreads();
+
+    int gap_width  = (boxwidth + 31) / 32;
+    int gap_height = (boxheight + 31) / 32;
+    for (int i = 0; i < gap_height; ++i)
+    {
+        for (int j = 0; j < gap_width; ++j)
+        {
+            int fx = ix * gap_width + j + box.bounding_left;
+            int fy = iy * gap_height + i + box.bounding_top;
+            if (fx >= 0 && fx < image_width && fy >= 0 && fy < image_height)
+            {
+                int sx = (ix * gap_width + j) / (float)boxwidth * 32;
+                int sy = (iy * gap_height + i) / (float)boxheight * 32;
+                if (sx < 32 && sy < 32)
+                {
+                    auto &pix                                        = crop[sy][sx];
+                    *(uchar3 *)(dst.ptr(box.batch_index, fy, fx, 0)) = make_uchar3(pix.x, pix.y, pix.z);
+                }
+            }
+        }
+    }
+}
+
+template<class SrcWrapper, class DstWrapper>
 static __global__ void render_blur_rgba_kernel(SrcWrapper src, DstWrapper dst, const BoxBlurCommand *commands,
                                                int num_command, int image_batch, int image_width, int image_height)
 {
@@ -126,6 +192,49 @@ static void cuosd_apply(cuOSDContext_t context, cudaStream_t stream)
 
         context->gpu_blur_commands->copy_host_to_device(stream);
     }
+}
+
+inline ErrorCode ApplyBoxBlur_RGB(const nvcv::TensorDataStridedCuda &inData, const nvcv::TensorDataStridedCuda &outData,
+                                  cuOSDContext_t context, cudaStream_t stream)
+{
+    auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(inData);
+    NVCV_ASSERT(inAccess);
+
+    cuda_op::DataType  inDataType = helpers::GetLegacyDataType(inData.dtype());
+    cuda_op::DataShape inputShape = helpers::GetLegacyDataShape(inAccess->infoShape());
+
+    auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(outData);
+    NVCV_ASSERT(outAccess);
+
+    cuda_op::DataType  outDataType = helpers::GetLegacyDataType(outData.dtype());
+    cuda_op::DataShape outputShape = helpers::GetLegacyDataShape(outAccess->infoShape());
+
+    if (outDataType != inDataType)
+    {
+        LOG_ERROR("Unsupported input/output DataType " << inDataType << "/" << outDataType);
+        return ErrorCode::INVALID_DATA_TYPE;
+    }
+    if (outputShape.H != inputShape.H || outputShape.W != inputShape.W || outputShape.N != inputShape.N
+        || outputShape.C != inputShape.C || outputShape.C != 3)
+    {
+        LOG_ERROR("Invalid output shape " << outputShape);
+        return ErrorCode::INVALID_DATA_SHAPE;
+    }
+
+    cuosd_apply(context, stream);
+
+    dim3 blockSize(32, 32);
+    dim3 gridSize(context->blur_commands.size(), 1);
+
+    auto src = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(inData);
+    auto dst = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(outData);
+
+    render_blur_rgb_kernel<<<gridSize, blockSize, 0, stream>>>(
+        src, dst, context->gpu_blur_commands ? context->gpu_blur_commands->device() : nullptr,
+        context->blur_commands.size(), inputShape.N, inputShape.W, inputShape.H);
+    checkKernelErrors();
+
+    return ErrorCode::SUCCESS;
 }
 
 inline ErrorCode ApplyBoxBlur_RGBA(const nvcv::TensorDataStridedCuda &inData,
@@ -303,10 +412,12 @@ ErrorCode BoxBlur::infer(const nvcv::TensorDataStridedCuda &inData, const nvcv::
                                 cuOSDContext_t context, cudaStream_t stream);
 
     static const func_t funcs[] = {
+        ApplyBoxBlur_RGB,
         ApplyBoxBlur_RGBA,
     };
 
-    funcs[0](inData, outData, m_context, stream);
+    int type_idx = channels - 3;
+    funcs[type_idx](inData, outData, m_context, stream);
 
     return ErrorCode::SUCCESS;
 }

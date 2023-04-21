@@ -71,6 +71,7 @@ void ExportBndBox(py::module &m)
                  {
                      NVCVBndBoxI bndbox;
                      bndbox.box         = pytobox(box);
+                     bndbox.thickness   = thickness;
                      bndbox.borderColor = pytocolor(borderColor);
                      bndbox.fillColor   = pytocolor(fillColor);
                      return bndbox;

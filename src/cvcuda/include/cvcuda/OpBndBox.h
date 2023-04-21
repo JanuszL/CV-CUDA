@@ -57,7 +57,7 @@ CVCUDA_PUBLIC NVCVStatus cvcudaBndBoxCreate(NVCVOperatorHandle *handle);
  *
  *  Input:
  *       Data Layout:    [kNHWC, kHWC]
- *       Channels:       [4]
+ *       Channels:       [3, 4]
  *
  *       Data Type      | Allowed
  *       -------------- | -------------
@@ -72,7 +72,7 @@ CVCUDA_PUBLIC NVCVStatus cvcudaBndBoxCreate(NVCVOperatorHandle *handle);
  *
  *  Output:
  *       Data Layout:    [kNHWC, kHWC]
- *       Channels:       [4]
+ *       Channels:       [3, 4]
  *
  *       Data Type      | Allowed
  *       -------------- | -------------

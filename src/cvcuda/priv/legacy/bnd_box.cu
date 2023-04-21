@@ -128,7 +128,35 @@ static __device__ void do_rectangle_woMSAA(RectangleCommand *cmd, int ix, int iy
 }
 
 template<class SrcWrapper, class DstWrapper, typename T = typename DstWrapper::ValueType>
-static __device__ void blending_pixel(SrcWrapper src, DstWrapper dst, int x, int y, uchar4 plot_colors[4])
+static __device__ void blending_rgb_pixel(SrcWrapper src, DstWrapper dst, int x, int y, uchar4 plot_colors[4])
+{
+    const int batch_idx = get_batch_idx();
+
+    for (int i = 0; i < 2; ++i)
+    {
+        T *in  = src.ptr(batch_idx, y + i, x, 0);
+        T *out = dst.ptr(batch_idx, y + i, x, 0);
+        for (int j = 0; j < 2; ++j, in += 3, out += 3)
+        {
+            uchar4 &rcolor           = plot_colors[i * 2 + j];
+            int     foreground_alpha = rcolor.w;
+            int     background_alpha = 255;
+            int     blend_alpha      = ((background_alpha * (255 - foreground_alpha)) >> 8) + foreground_alpha;
+            out[0]
+                = u8cast((((in[0] * background_alpha * (255 - foreground_alpha)) >> 8) + (rcolor.x * foreground_alpha))
+                         / blend_alpha);
+            out[1]
+                = u8cast((((in[1] * background_alpha * (255 - foreground_alpha)) >> 8) + (rcolor.y * foreground_alpha))
+                         / blend_alpha);
+            out[2]
+                = u8cast((((in[2] * background_alpha * (255 - foreground_alpha)) >> 8) + (rcolor.z * foreground_alpha))
+                         / blend_alpha);
+        }
+    }
+}
+
+template<class SrcWrapper, class DstWrapper, typename T = typename DstWrapper::ValueType>
+static __device__ void blending_rgba_pixel(SrcWrapper src, DstWrapper dst, int x, int y, uchar4 plot_colors[4])
 {
     const int batch_idx = get_batch_idx();
 
@@ -157,6 +185,32 @@ static __device__ void blending_pixel(SrcWrapper src, DstWrapper dst, int x, int
 }
 
 template<class SrcWrapper, class DstWrapper>
+static __global__ void render_bndbox_rgb_womsaa_kernel(SrcWrapper src, DstWrapper dst, int bx, int by,
+                                                       const RectangleCommand *commands, int num_command, int width,
+                                                       int height)
+{
+    int ix = ((blockDim.x * blockIdx.x + threadIdx.x) << 1) + bx;
+    int iy = ((blockDim.y * blockIdx.y + threadIdx.y) << 1) + by;
+    if (ix < 0 || iy < 0 || ix >= width - 1 || iy >= height - 1)
+        return;
+
+    uchar4 context_color[4] = {0};
+
+    for (int i = 0; i < num_command; ++i)
+    {
+        RectangleCommand pcommand = commands[i];
+        if (pcommand.batch_index != get_batch_idx())
+            continue;
+        do_rectangle_woMSAA(&pcommand, ix, iy, context_color);
+    }
+
+    if (context_color[0].w == 0 && context_color[1].w == 0 && context_color[2].w == 0 && context_color[3].w == 0)
+        return;
+
+    blending_rgb_pixel(src, dst, ix, iy, context_color);
+}
+
+template<class SrcWrapper, class DstWrapper>
 static __global__ void render_bndbox_rgba_womsaa_kernel(SrcWrapper src, DstWrapper dst, int bx, int by,
                                                         const RectangleCommand *commands, int num_command, int width,
                                                         int height)
@@ -179,84 +233,7 @@ static __global__ void render_bndbox_rgba_womsaa_kernel(SrcWrapper src, DstWrapp
     if (context_color[0].w == 0 && context_color[1].w == 0 && context_color[2].w == 0 && context_color[3].w == 0)
         return;
 
-    blending_pixel(src, dst, ix, iy, context_color);
-}
-
-static void cuosd_apply(cuOSDContext_t context, int width, int height, cudaStream_t stream)
-{
-    context->bounding_left   = width;
-    context->bounding_top    = height;
-    context->bounding_right  = 0;
-    context->bounding_bottom = 0;
-
-    for (int i = 0; i < (int)context->rect_commands.size(); ++i)
-    {
-        auto &cmd                = context->rect_commands[i];
-        context->bounding_left   = min(context->bounding_left, cmd->bounding_left);
-        context->bounding_top    = min(context->bounding_top, cmd->bounding_top);
-        context->bounding_right  = max(context->bounding_right, cmd->bounding_right);
-        context->bounding_bottom = max(context->bounding_bottom, cmd->bounding_bottom);
-    }
-
-    if (context->gpu_rect_commands == nullptr)
-    {
-        context->gpu_rect_commands.reset(new Memory<RectangleCommand>());
-    }
-
-    context->gpu_rect_commands->alloc_or_resize_to(context->rect_commands.size());
-
-    for (int i = 0; i < (int)context->rect_commands.size(); ++i)
-    {
-        auto &cmd = context->rect_commands[i];
-        memcpy((void *)(context->gpu_rect_commands->host() + i), cmd.get(), sizeof(RectangleCommand));
-    }
-
-    context->gpu_rect_commands->copy_host_to_device(stream);
-}
-
-inline ErrorCode ApplyBndBox_RGBA(const nvcv::TensorDataStridedCuda &inData, const nvcv::TensorDataStridedCuda &outData,
-                                  cuOSDContext_t context, cudaStream_t stream)
-{
-    auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(inData);
-    NVCV_ASSERT(inAccess);
-
-    cuda_op::DataType  inDataType = helpers::GetLegacyDataType(inData.dtype());
-    cuda_op::DataShape inputShape = helpers::GetLegacyDataShape(inAccess->infoShape());
-
-    auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(outData);
-    NVCV_ASSERT(outAccess);
-
-    cuda_op::DataType  outDataType = helpers::GetLegacyDataType(outData.dtype());
-    cuda_op::DataShape outputShape = helpers::GetLegacyDataShape(outAccess->infoShape());
-
-    if (outDataType != inDataType)
-    {
-        LOG_ERROR("Unsupported input/output DataType " << inDataType << "/" << outDataType);
-        return ErrorCode::INVALID_DATA_TYPE;
-    }
-    if (outputShape.H != inputShape.H || outputShape.W != inputShape.W || outputShape.N != inputShape.N
-        || outputShape.C != inputShape.C)
-    {
-        LOG_ERROR("Invalid output shape " << outputShape);
-        return ErrorCode::INVALID_DATA_SHAPE;
-    }
-
-    // allocate command buffer;
-    cuosd_apply(context, inputShape.W, inputShape.H, stream);
-
-    dim3 blockSize(16, 8);
-    dim3 gridSize(divUp(int((inputShape.W + 1) / 2), (int)blockSize.x),
-                  divUp(int((inputShape.H + 1) / 2), (int)blockSize.y), inputShape.N);
-
-    auto src = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(inData);
-    auto dst = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(outData);
-
-    render_bndbox_rgba_womsaa_kernel<<<gridSize, blockSize, 0, stream>>>(
-        src, dst, 0, 0, context->gpu_rect_commands ? context->gpu_rect_commands->device() : nullptr,
-        context->rect_commands.size(), inputShape.W, inputShape.H);
-    checkKernelErrors();
-
-    return ErrorCode::SUCCESS;
+    blending_rgba_pixel(src, dst, ix, iy, context_color);
 }
 
 static ErrorCode cuosd_draw_rectangle(cuOSDContext_t context, int width, int height, NVCVBndBoxesI bboxes)
@@ -360,6 +337,127 @@ static ErrorCode cuosd_draw_rectangle(cuOSDContext_t context, int width, int hei
     return ErrorCode::SUCCESS;
 }
 
+static void cuosd_apply(cuOSDContext_t context, int width, int height, cudaStream_t stream)
+{
+    context->bounding_left   = width;
+    context->bounding_top    = height;
+    context->bounding_right  = 0;
+    context->bounding_bottom = 0;
+
+    for (int i = 0; i < (int)context->rect_commands.size(); ++i)
+    {
+        auto &cmd                = context->rect_commands[i];
+        context->bounding_left   = min(context->bounding_left, cmd->bounding_left);
+        context->bounding_top    = min(context->bounding_top, cmd->bounding_top);
+        context->bounding_right  = max(context->bounding_right, cmd->bounding_right);
+        context->bounding_bottom = max(context->bounding_bottom, cmd->bounding_bottom);
+    }
+
+    if (context->gpu_rect_commands == nullptr)
+    {
+        context->gpu_rect_commands.reset(new Memory<RectangleCommand>());
+    }
+
+    context->gpu_rect_commands->alloc_or_resize_to(context->rect_commands.size());
+
+    for (int i = 0; i < (int)context->rect_commands.size(); ++i)
+    {
+        auto &cmd = context->rect_commands[i];
+        memcpy((void *)(context->gpu_rect_commands->host() + i), cmd.get(), sizeof(RectangleCommand));
+    }
+
+    context->gpu_rect_commands->copy_host_to_device(stream);
+}
+
+inline ErrorCode ApplyBndBox_RGB(const nvcv::TensorDataStridedCuda &inData, const nvcv::TensorDataStridedCuda &outData,
+                                 cuOSDContext_t context, cudaStream_t stream)
+{
+    auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(inData);
+    NVCV_ASSERT(inAccess);
+
+    cuda_op::DataType  inDataType = helpers::GetLegacyDataType(inData.dtype());
+    cuda_op::DataShape inputShape = helpers::GetLegacyDataShape(inAccess->infoShape());
+
+    auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(outData);
+    NVCV_ASSERT(outAccess);
+
+    cuda_op::DataType  outDataType = helpers::GetLegacyDataType(outData.dtype());
+    cuda_op::DataShape outputShape = helpers::GetLegacyDataShape(outAccess->infoShape());
+
+    if (outDataType != inDataType)
+    {
+        LOG_ERROR("Unsupported input/output DataType " << inDataType << "/" << outDataType);
+        return ErrorCode::INVALID_DATA_TYPE;
+    }
+    if (outputShape.H != inputShape.H || outputShape.W != inputShape.W || outputShape.N != inputShape.N
+        || outputShape.C != inputShape.C || outputShape.C != 3)
+    {
+        LOG_ERROR("Invalid output shape " << outputShape);
+        return ErrorCode::INVALID_DATA_SHAPE;
+    }
+
+    cuosd_apply(context, inputShape.W, inputShape.H, stream);
+
+    dim3 blockSize(16, 8);
+    dim3 gridSize(divUp(int((inputShape.W + 1) / 2), (int)blockSize.x),
+                  divUp(int((inputShape.H + 1) / 2), (int)blockSize.y), inputShape.N);
+
+    auto src = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(inData);
+    auto dst = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(outData);
+
+    render_bndbox_rgb_womsaa_kernel<<<gridSize, blockSize, 0, stream>>>(
+        src, dst, 0, 0, context->gpu_rect_commands ? context->gpu_rect_commands->device() : nullptr,
+        context->rect_commands.size(), inputShape.W, inputShape.H);
+    checkKernelErrors();
+
+    return ErrorCode::SUCCESS;
+}
+
+inline ErrorCode ApplyBndBox_RGBA(const nvcv::TensorDataStridedCuda &inData, const nvcv::TensorDataStridedCuda &outData,
+                                  cuOSDContext_t context, cudaStream_t stream)
+{
+    auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(inData);
+    NVCV_ASSERT(inAccess);
+
+    cuda_op::DataType  inDataType = helpers::GetLegacyDataType(inData.dtype());
+    cuda_op::DataShape inputShape = helpers::GetLegacyDataShape(inAccess->infoShape());
+
+    auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(outData);
+    NVCV_ASSERT(outAccess);
+
+    cuda_op::DataType  outDataType = helpers::GetLegacyDataType(outData.dtype());
+    cuda_op::DataShape outputShape = helpers::GetLegacyDataShape(outAccess->infoShape());
+
+    if (outDataType != inDataType)
+    {
+        LOG_ERROR("Unsupported input/output DataType " << inDataType << "/" << outDataType);
+        return ErrorCode::INVALID_DATA_TYPE;
+    }
+    if (outputShape.H != inputShape.H || outputShape.W != inputShape.W || outputShape.N != inputShape.N
+        || outputShape.C != inputShape.C || outputShape.C != 4)
+    {
+        LOG_ERROR("Invalid output shape " << outputShape);
+        return ErrorCode::INVALID_DATA_SHAPE;
+    }
+
+    // allocate command buffer;
+    cuosd_apply(context, inputShape.W, inputShape.H, stream);
+
+    dim3 blockSize(16, 8);
+    dim3 gridSize(divUp(int((inputShape.W + 1) / 2), (int)blockSize.x),
+                  divUp(int((inputShape.H + 1) / 2), (int)blockSize.y), inputShape.N);
+
+    auto src = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(inData);
+    auto dst = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(outData);
+
+    render_bndbox_rgba_womsaa_kernel<<<gridSize, blockSize, 0, stream>>>(
+        src, dst, 0, 0, context->gpu_rect_commands ? context->gpu_rect_commands->device() : nullptr,
+        context->rect_commands.size(), inputShape.W, inputShape.H);
+    checkKernelErrors();
+
+    return ErrorCode::SUCCESS;
+}
+
 BndBox::BndBox(DataShape max_input_shape, DataShape max_output_shape)
     : CudaBaseOp(max_input_shape, max_output_shape)
 {
@@ -444,10 +542,12 @@ ErrorCode BndBox::infer(const nvcv::TensorDataStridedCuda &inData, const nvcv::T
                                 cuOSDContext_t context, cudaStream_t stream);
 
     static const func_t funcs[] = {
+        ApplyBndBox_RGB,
         ApplyBndBox_RGBA,
     };
 
-    funcs[0](inData, outData, m_context, stream);
+    int type_idx = channels - 3;
+    funcs[type_idx](inData, outData, m_context, stream);
 
     return ErrorCode::SUCCESS;
 }
