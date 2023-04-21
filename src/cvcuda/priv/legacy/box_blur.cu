@@ -42,6 +42,26 @@ static __forceinline__ __device__ _T limit(_T value, _T low, _T high)
 }
 
 template<class SrcWrapper, class DstWrapper>
+static __global__ void render_p2p_kernel(SrcWrapper src, DstWrapper dst, int batch, int height, int width, int channel)
+{
+    int       ix        = blockDim.x * blockIdx.x + threadIdx.x;
+    int       iy        = blockDim.y * blockIdx.y + threadIdx.y;
+    const int batch_idx = get_batch_idx();
+
+    if (ix >= width || iy >= height || batch_idx >= batch)
+        return;
+
+    if (channel == 3)
+    {
+        *(uchar3 *)(dst.ptr(batch_idx, iy, ix, 0)) = *(uchar3 *)(src.ptr(batch_idx, iy, ix, 0));
+    }
+    else
+    {
+        *(uchar4 *)(dst.ptr(batch_idx, iy, ix, 0)) = *(uchar4 *)(src.ptr(batch_idx, iy, ix, 0));
+    }
+}
+
+template<class SrcWrapper, class DstWrapper>
 static __global__ void render_blur_rgb_kernel(SrcWrapper src, DstWrapper dst, const BoxBlurCommand *commands,
                                               int num_command, int image_batch, int image_width, int image_height)
 {
@@ -223,11 +243,22 @@ inline ErrorCode ApplyBoxBlur_RGB(const nvcv::TensorDataStridedCuda &inData, con
 
     cuosd_apply(context, stream);
 
-    dim3 blockSize(32, 32);
-    dim3 gridSize(context->blur_commands.size(), 1);
-
     auto src = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(inData);
     auto dst = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(outData);
+
+    if (inData.basePtr() != outData.basePtr())
+    {
+        dim3 blockSize(32, 32);
+        dim3 gridSize(divUp(int(inputShape.W + 1), (int)blockSize.x), divUp(int(inputShape.H + 1), (int)blockSize.y),
+                      inputShape.N);
+
+        render_p2p_kernel<<<gridSize, blockSize, 0, stream>>>(src, dst, inputShape.N, inputShape.H, inputShape.W,
+                                                              inputShape.C);
+        checkKernelErrors();
+    }
+
+    dim3 blockSize(32, 32);
+    dim3 gridSize(context->blur_commands.size(), 1);
 
     render_blur_rgb_kernel<<<gridSize, blockSize, 0, stream>>>(
         src, dst, context->gpu_blur_commands ? context->gpu_blur_commands->device() : nullptr,
@@ -265,14 +296,24 @@ inline ErrorCode ApplyBoxBlur_RGBA(const nvcv::TensorDataStridedCuda &inData,
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    // allocate command buffer;
     cuosd_apply(context, stream);
-
-    dim3 blockSize(32, 32);
-    dim3 gridSize(context->blur_commands.size(), 1);
 
     auto src = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(inData);
     auto dst = nvcv::cuda::CreateTensorWrapNHWC<uint8_t>(outData);
+
+    if (inData.basePtr() != outData.basePtr())
+    {
+        dim3 blockSize(32, 32);
+        dim3 gridSize(divUp(int(inputShape.W + 1), (int)blockSize.x), divUp(int(inputShape.H + 1), (int)blockSize.y),
+                      inputShape.N);
+
+        render_p2p_kernel<<<gridSize, blockSize, 0, stream>>>(src, dst, inputShape.N, inputShape.H, inputShape.W,
+                                                              inputShape.C);
+        checkKernelErrors();
+    }
+
+    dim3 blockSize(32, 32);
+    dim3 gridSize(context->blur_commands.size(), 1);
 
     render_blur_rgba_kernel<<<gridSize, blockSize, 0, stream>>>(
         src, dst, context->gpu_blur_commands ? context->gpu_blur_commands->device() : nullptr,

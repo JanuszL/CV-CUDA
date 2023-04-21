@@ -187,7 +187,7 @@ static __device__ void blending_rgba_pixel(SrcWrapper src, DstWrapper dst, int x
 template<class SrcWrapper, class DstWrapper>
 static __global__ void render_bndbox_rgb_womsaa_kernel(SrcWrapper src, DstWrapper dst, int bx, int by,
                                                        const RectangleCommand *commands, int num_command, int width,
-                                                       int height)
+                                                       int height, bool inplace)
 {
     int ix = ((blockDim.x * blockIdx.x + threadIdx.x) << 1) + bx;
     int iy = ((blockDim.y * blockIdx.y + threadIdx.y) << 1) + by;
@@ -204,7 +204,8 @@ static __global__ void render_bndbox_rgb_womsaa_kernel(SrcWrapper src, DstWrappe
         do_rectangle_woMSAA(&pcommand, ix, iy, context_color);
     }
 
-    if (context_color[0].w == 0 && context_color[1].w == 0 && context_color[2].w == 0 && context_color[3].w == 0)
+    if (inplace && context_color[0].w == 0 && context_color[1].w == 0 && context_color[2].w == 0
+        && context_color[3].w == 0)
         return;
 
     blending_rgb_pixel(src, dst, ix, iy, context_color);
@@ -213,7 +214,7 @@ static __global__ void render_bndbox_rgb_womsaa_kernel(SrcWrapper src, DstWrappe
 template<class SrcWrapper, class DstWrapper>
 static __global__ void render_bndbox_rgba_womsaa_kernel(SrcWrapper src, DstWrapper dst, int bx, int by,
                                                         const RectangleCommand *commands, int num_command, int width,
-                                                        int height)
+                                                        int height, bool inplace)
 {
     int ix = ((blockDim.x * blockIdx.x + threadIdx.x) << 1) + bx;
     int iy = ((blockDim.y * blockIdx.y + threadIdx.y) << 1) + by;
@@ -230,7 +231,8 @@ static __global__ void render_bndbox_rgba_womsaa_kernel(SrcWrapper src, DstWrapp
         do_rectangle_woMSAA(&pcommand, ix, iy, context_color);
     }
 
-    if (context_color[0].w == 0 && context_color[1].w == 0 && context_color[2].w == 0 && context_color[3].w == 0)
+    if (inplace && context_color[0].w == 0 && context_color[1].w == 0 && context_color[2].w == 0
+        && context_color[3].w == 0)
         return;
 
     blending_rgba_pixel(src, dst, ix, iy, context_color);
@@ -407,7 +409,7 @@ inline ErrorCode ApplyBndBox_RGB(const nvcv::TensorDataStridedCuda &inData, cons
 
     render_bndbox_rgb_womsaa_kernel<<<gridSize, blockSize, 0, stream>>>(
         src, dst, 0, 0, context->gpu_rect_commands ? context->gpu_rect_commands->device() : nullptr,
-        context->rect_commands.size(), inputShape.W, inputShape.H);
+        context->rect_commands.size(), inputShape.W, inputShape.H, inData.basePtr() == outData.basePtr());
     checkKernelErrors();
 
     return ErrorCode::SUCCESS;
@@ -440,7 +442,6 @@ inline ErrorCode ApplyBndBox_RGBA(const nvcv::TensorDataStridedCuda &inData, con
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
-    // allocate command buffer;
     cuosd_apply(context, inputShape.W, inputShape.H, stream);
 
     dim3 blockSize(16, 8);
@@ -452,7 +453,7 @@ inline ErrorCode ApplyBndBox_RGBA(const nvcv::TensorDataStridedCuda &inData, con
 
     render_bndbox_rgba_womsaa_kernel<<<gridSize, blockSize, 0, stream>>>(
         src, dst, 0, 0, context->gpu_rect_commands ? context->gpu_rect_commands->device() : nullptr,
-        context->rect_commands.size(), inputShape.W, inputShape.H);
+        context->rect_commands.size(), inputShape.W, inputShape.H, inData.basePtr() == outData.basePtr());
     checkKernelErrors();
 
     return ErrorCode::SUCCESS;
