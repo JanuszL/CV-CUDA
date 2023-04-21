@@ -22,7 +22,7 @@ RNG = np.random.default_rng(0)
 
 
 @t.mark.parametrize(
-    "format,num_images,min_size,max_size,border,bvalue,base,scale,gscale,gshift,eps,flags,ch,dtype,layout",
+    "format,num_images,min_size,max_size,border,bvalue,basep,scalep,gscale,gshift,eps,flags,ch,dtype,layout",
     [
         (
             cvcuda.Format.RGBA8,
@@ -31,8 +31,8 @@ RNG = np.random.default_rng(0)
             (20, 20),
             cvcuda.Border.REPLICATE,
             0,
-            cvcuda.Tensor((1, 1, 1, 4), np.float32, "NHWC"),
-            cvcuda.Tensor((1, 1, 1, 4), np.float32, "NHWC"),
+            (((1, 1, 1, 4), np.float32, "NHWC")),
+            (((1, 1, 1, 4), np.float32, "NHWC")),
             1,
             2,
             3,
@@ -50,8 +50,8 @@ def test_op_crop_flip_normalize_reformat_tensor_out(
     max_size,
     border,
     bvalue,
-    base,
-    scale,
+    basep,
+    scalep,
     gscale,
     gshift,
     eps,
@@ -60,7 +60,8 @@ def test_op_crop_flip_normalize_reformat_tensor_out(
     dtype,
     layout,
 ):
-
+    base = cvcuda.Tensor(*basep)
+    scale = cvcuda.Tensor(*scalep)
     input = cvcuda.ImageBatchVarShape(num_images)
 
     input.pushback(
