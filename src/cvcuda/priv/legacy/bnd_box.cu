@@ -209,7 +209,10 @@ static __global__ void render_bndbox_rgb_womsaa_kernel(SrcWrapper src, DstWrappe
     {
         if (inplace)
             return;
-        *(uchar3 *)(dst.ptr(batch_idx, iy, ix, 0)) = *(uchar3 *)(src.ptr(batch_idx, iy, ix, 0));
+        *(uchar3 *)(dst.ptr(batch_idx, iy, ix, 0))         = *(uchar3 *)(src.ptr(batch_idx, iy, ix, 0));
+        *(uchar3 *)(dst.ptr(batch_idx, iy, ix + 1, 0))     = *(uchar3 *)(src.ptr(batch_idx, iy, ix + 1, 0));
+        *(uchar3 *)(dst.ptr(batch_idx, iy + 1, ix, 0))     = *(uchar3 *)(src.ptr(batch_idx, iy + 1, ix, 0));
+        *(uchar3 *)(dst.ptr(batch_idx, iy + 1, ix + 1, 0)) = *(uchar3 *)(src.ptr(batch_idx, iy + 1, ix + 1, 0));
         return;
     }
 
@@ -241,7 +244,10 @@ static __global__ void render_bndbox_rgba_womsaa_kernel(SrcWrapper src, DstWrapp
     {
         if (inplace)
             return;
-        *(uchar4 *)(dst.ptr(batch_idx, iy, ix, 0)) = *(uchar4 *)(src.ptr(batch_idx, iy, ix, 0));
+        *(uchar4 *)(dst.ptr(batch_idx, iy, ix, 0))         = *(uchar4 *)(src.ptr(batch_idx, iy, ix, 0));
+        *(uchar4 *)(dst.ptr(batch_idx, iy, ix + 1, 0))     = *(uchar4 *)(src.ptr(batch_idx, iy, ix + 1, 0));
+        *(uchar4 *)(dst.ptr(batch_idx, iy + 1, ix, 0))     = *(uchar4 *)(src.ptr(batch_idx, iy + 1, ix, 0));
+        *(uchar4 *)(dst.ptr(batch_idx, iy + 1, ix + 1, 0)) = *(uchar4 *)(src.ptr(batch_idx, iy + 1, ix + 1, 0));
         return;
     }
 
