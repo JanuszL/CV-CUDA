@@ -169,7 +169,7 @@ void ExportOpAverageBlur(py::module &m)
         Executes the AverageBlur operation with a variable shape tensors on the given cuda stream.
 
         Args:
-            src (ImageBatchVarShape): input containing one or more images.
+            src (Tensor): Input tensor containing one or more images.
             max_kernel_size (Tuple [int,int]): Specifies the maximum size of the blur kernel.
             kernel_size (Tuple [int,int]): Specifies the size of the blur kernel within the maximum kernel size.
             kernel_anchor (Tuple [int,int]): Kernel anchor, use (-1,-1) to indicate kernel center.
@@ -191,8 +191,8 @@ void ExportOpAverageBlur(py::module &m)
         Executes the AverageBlur operation with a variable shape tensors on the given cuda stream.
 
         Args:
-            src (ImageBatchVarShape): input containing one or more images.
-            dst (ImageBatchVarShape): output containing one or more images.
+            dst (ImageBatchVarShape): Output containing one or more images.
+            src (ImageBatchVarShape): Input containing one or more images.
             max_kernel_size (Tuple [int,int]): Specifies the maximum size of the blur kernel.
             kernel_size (Tuple [int,int]): Specifies the size of the blur kernel within the maximum kernel size.
             kernel_anchor (Tuple [int,int]): Kernel anchor, use (-1,-1) to indicate kernel center.

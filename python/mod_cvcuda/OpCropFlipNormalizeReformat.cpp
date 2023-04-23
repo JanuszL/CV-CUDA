@@ -86,11 +86,84 @@ void ExportOpCropFlipNormalizeReformat(py::module &m)
     m.def("crop_flip_normalize_reformat", &CropFlipNormalizeReformat, "src"_a, "out_shape"_a, "out_dtype"_a,
           "out_layout"_a, "rect"_a, "flip_code"_a, "base"_a, "scale"_a, "globalscale"_a = defGlobalScale,
           "globalshift"_a = defGlobalShift, "epsilon"_a = defEpsilon, "flags"_a = std::nullopt,
-          "border"_a = NVCV_BORDER_CONSTANT, "bvalue"_a = 0, py::kw_only(), "stream"_a = nullptr);
+          "border"_a = NVCV_BORDER_CONSTANT, "bvalue"_a = 0, py::kw_only(), "stream"_a = nullptr, R"pbdoc(
+
+        Executes the CropFlipNormalizeReformat operation on the given cuda stream.
+
+        See also:
+            Refer to the CV-CUDA C API reference for the Copy Make Border operator
+            for more details and usage examples.
+
+        Args:
+            src (ImageBatchVarShape): Input image batch containing one or more images.
+            out_shape (Shape): The shape of the output.
+            out_dtype (DataType): The data type of the output.
+            out_layout (TensorLayout): The layout of the output.
+            rect (Tensor): The crop rectangle tensor which has shape of [batch_size, 1, 1, 4] in reference to the input tensor.
+                           The crop value of [crop_x, crop_y, crop_width, crop_height] stored in the final dimension of
+                           the crop tensor, provided per image.
+            flip_code (Tensor): A tensor flag to specify how to flip the array; 0 means flipping
+                                around the x-axis and positive value (for example, 1) means flipping
+                                around y-axis. Negative value (for example, -1) means flipping around both axes, provided per image.
+            base (Tensor): Tensor providing base values for normalization.
+            scale (Tensor): Tensor providing scale values for normalization.
+            globalscale (float ,optional): Additional scale value to be used in addition to scale
+            globalshift (float ,optional): Additional bias value to be used in addition to base.
+            epsilon (float ,optional): Epsilon to use when CVCUDA_NORMALIZE_SCALE_IS_STDDEV flag is set as a regularizing term to be
+                                       added to variance.
+            flags (int ,optional): Algorithm flags, use CVCUDA_NORMALIZE_SCALE_IS_STDDEV if scale passed as argument
+                                   is standard deviation instead or 0 if it is scaling.
+            border (BorderType ,optional): Border mode to be used when accessing elements outside input image.
+            bvalue (float ,optional): Border value to be used for constant border mode NVCV_BORDER_CONSTANT.
+            stream (Stream, optional): CUDA Stream on which to perform the operation.
+
+        Returns:
+            None
+
+        Caution:
+            Restrictions to several arguments may apply. Check the C
+            API references of the CV-CUDA operator.
+    )pbdoc");
+
     m.def("crop_flip_normalize_reformat_into", &CropFlipNormalizeReformatInto, "dst"_a, "src"_a, "rect"_a,
           "flip_code"_a, "base"_a, "scale"_a, "globalscale"_a = defGlobalScale, "globalshift"_a = defGlobalShift,
           "epsilon"_a = defEpsilon, "flags"_a = std::nullopt, "border"_a = NVCV_BORDER_CONSTANT, "bvalue"_a = 0,
-          py::kw_only(), "stream"_a = nullptr);
+          py::kw_only(), "stream"_a = nullptr, R"pbdoc(
+
+        Executes the CropFlipNormalizeReformat operation on the given cuda stream.
+
+        See also:
+            Refer to the CV-CUDA C API reference for the Copy Make Border operator
+            for more details and usage examples.
+
+        Args:
+            dst (ImageBatchVarShape): Output image batch containing the result of the operation.
+            src (ImageBatchVarShape): Input image batch containing one or more images.
+            rect (Tensor): The crop rectangle tensor which has shape of [batch_size, 1, 1, 4] in reference to the input tensor.
+                           The crop value of [crop_x, crop_y, crop_width, crop_height] stored in the final dimension of
+                           the crop tensor, provided per image.
+            flip_code (Tensor): A tensor flag to specify how to flip the array; 0 means flipping
+                                around the x-axis and positive value (for example, 1) means flipping
+                                around y-axis. Negative value (for example, -1) means flipping around both axes, provided per image.
+            base (Tensor): Tensor providing base values for normalization.
+            scale (Tensor): Tensor providing scale values for normalization.
+            globalscale (float ,optional): Additional scale value to be used in addition to scale
+            globalshift (float ,optional): Additional bias value to be used in addition to base.
+            epsilon (float ,optional): Epsilon to use when CVCUDA_NORMALIZE_SCALE_IS_STDDEV flag is set as a regularizing term to be
+                                       added to variance.
+            flags (int ,optional): Algorithm flags, use CVCUDA_NORMALIZE_SCALE_IS_STDDEV if scale passed as argument
+                                   is standard deviation instead or 0 if it is scaling.
+            border (BorderType ,optional): Border mode to be used when accessing elements outside input image.
+            bvalue (float ,optional): Border value to be used for constant border mode NVCV_BORDER_CONSTANT.
+            stream (Stream, optional): CUDA Stream on which to perform the operation.
+
+        Returns:
+            None
+
+        Caution:
+            Restrictions to several arguments may apply. Check the C
+            API references of the CV-CUDA operator.
+    )pbdoc");
 }
 
 } // namespace cvcudapy

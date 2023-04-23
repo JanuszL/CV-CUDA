@@ -150,13 +150,13 @@ CVCUDA_PUBLIC NVCVStatus cvcudaCropFlipNormalizeReformatCreate(NVCVOperatorHandl
  *      around y-axis. Negative value (for example, -1) means flipping around
  *      both axes.
  *
- * @param [in] base Base tensor.
+ * @param [in] base Tensor providing base values for normalization.
  *
- * @param [in] scale Scale tensor.
+ * @param [in] scale Tensor providing scale values for normalization.
  *
  * @param [in] global_scale Additional scale value to be used in addition to scale.
  *
- * @param [in] shift Additional bias value to be used in additon to base.
+ * @param [in] shift Additional bias value to be used in addition to base.
  *
  * @param [in] epsilon Epsilon to use when \p CVCUDA_NORMALIZE_SCALE_IS_STDDEV flag is set as a regularizing term to be
  *                     added to variance.

@@ -85,8 +85,7 @@ void ExportOpConv2D(py::module &m)
             for more details and usage examples.
 
         Args:
-            dst (ImageBatchVarShape): Output tensor to store the result of the operation.
-            src (ImageBatchVarShape): Input tensor containing one or more images.
+            src (ImageBatchVarShape): Input image batch containing one or more images.
             kernel(Tensor): Convolution kernels (one for each batch image) to be used. Each image width and height
                             correspond to the kernel width and height. (must be float)
             kernel_anchor(Tensor): 1D Tensor with the anchor of each kernel (one for each batch image).  The anchor (x, y)
@@ -95,7 +94,7 @@ void ExportOpConv2D(py::module &m)
             stream (Stream, optional): CUDA Stream on which to perform the operation.
 
         Returns:
-            cvcuda.Tensor: The output tensor.
+            cvcuda.ImageBatchVarShape: The output image batch.
 
         Caution:
             Restrictions to several arguments may apply. Check the C
@@ -112,7 +111,8 @@ void ExportOpConv2D(py::module &m)
             for more details and usage examples.
 
         Args:
-            src (ImageBatchVarShape): Input tensor containing one or more images.
+            dst (ImageBatchVarShape): Output image batch to store the result of the operation.
+            src (ImageBatchVarShape): Input image batch containing one or more images.
             kernel(Tensor): Convolution kernels (one for each batch image) to be used. Each image width and height
                             correspond to the kernel width and height. (must be float)
             kernel_anchor(Tensor): 1D Tensor with the anchor of each kernel (one for each batch image).  The anchor (x, y)
