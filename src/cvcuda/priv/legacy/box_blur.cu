@@ -257,14 +257,16 @@ inline ErrorCode ApplyBoxBlur_RGB(const nvcv::TensorDataStridedCuda &inData, con
         checkKernelErrors();
     }
 
-    dim3 blockSize(32, 32);
-    dim3 gridSize(context->blur_commands.size(), 1);
+    if (context->blur_commands.size() > 0)
+    {
+        dim3 blockSize(32, 32);
+        dim3 gridSize(context->blur_commands.size(), 1);
 
-    render_blur_rgb_kernel<<<gridSize, blockSize, 0, stream>>>(
-        src, dst, context->gpu_blur_commands ? context->gpu_blur_commands->device() : nullptr,
-        context->blur_commands.size(), inputShape.N, inputShape.W, inputShape.H);
-    checkKernelErrors();
-
+        render_blur_rgb_kernel<<<gridSize, blockSize, 0, stream>>>(
+            src, dst, context->gpu_blur_commands ? context->gpu_blur_commands->device() : nullptr,
+            context->blur_commands.size(), inputShape.N, inputShape.W, inputShape.H);
+        checkKernelErrors();
+    }
     return ErrorCode::SUCCESS;
 }
 
@@ -312,14 +314,16 @@ inline ErrorCode ApplyBoxBlur_RGBA(const nvcv::TensorDataStridedCuda &inData,
         checkKernelErrors();
     }
 
-    dim3 blockSize(32, 32);
-    dim3 gridSize(context->blur_commands.size(), 1);
+    if (context->blur_commands.size() > 0)
+    {
+        dim3 blockSize(32, 32);
+        dim3 gridSize(context->blur_commands.size(), 1);
 
-    render_blur_rgba_kernel<<<gridSize, blockSize, 0, stream>>>(
-        src, dst, context->gpu_blur_commands ? context->gpu_blur_commands->device() : nullptr,
-        context->blur_commands.size(), inputShape.N, inputShape.W, inputShape.H);
-    checkKernelErrors();
-
+        render_blur_rgba_kernel<<<gridSize, blockSize, 0, stream>>>(
+            src, dst, context->gpu_blur_commands ? context->gpu_blur_commands->device() : nullptr,
+            context->blur_commands.size(), inputShape.N, inputShape.W, inputShape.H);
+        checkKernelErrors();
+    }
     return ErrorCode::SUCCESS;
 }
 

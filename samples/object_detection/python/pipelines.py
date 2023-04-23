@@ -254,9 +254,7 @@ class BoundingBoxUtilsCvcuda:
         # Render bounding boxes and blur the ROI inside the bounding box
         cvcuda.bndbox_into(frame_nhwc, frame_nhwc, cusod_boxes)
 
-        # Invoke boxblur only when number of boxes > 0
-        if cuosd_blur_boxes.numBoxes:
-            cvcuda.boxblur_into(frame_nhwc, frame_nhwc, cuosd_blur_boxes)
+        cvcuda.boxblur_into(frame_nhwc, frame_nhwc, cuosd_blur_boxes)
 
         # docs_tag: end_call_cuosd_bboxes
         return frame_nhwc
