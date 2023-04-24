@@ -93,7 +93,7 @@ class PreprocessorCvcuda:
 
 
 class PostprocessorCvcuda:
-    def __init__(self, threshold, device_id, output_layout, gpu_output):
+    def __init__(self, threshold, device_id, output_layout, gpu_output, batch_size):
         # docs_tag: begin_init_postprocessorcvcuda
         self.logger = logging.getLogger(__name__)
         self.device_id = device_id
@@ -113,43 +113,71 @@ class PostprocessorCvcuda:
         self.offset = 0.5
         # Number of classes the mode is trained on
         self.num_classes = 3
-
+        self.batch_size = batch_size
         # Define the Bounding Box utils
         self.bboxutil = BoundingBoxUtilsCvcuda()
+
+        # Center of grids
+        self.center_x = None
+        self.center_y = None
+        self.x_values = None
+        self.y_values = None
 
         self.logger.info("Using CVCUDA as post-processor.")
 
     # docs_tag: end_init_postprocessorcvcuda
 
-    def interpolate_bboxes(
-        self,
-        curr_left,
-        curr_right,
-        curr_bottom,
-        curr_top,
-        x_scaler,
-        y_scaler,
-        curr_column,
-        curr_row,
-    ):
-        # docs_tag: begin_interpolate_bboxes
-        center_x = (curr_column * x_scaler + self.offset) / self.bbox_norm
-        center_y = (curr_row * y_scaler + self.offset) / self.bbox_norm
-        left = curr_left - center_x
-        right = curr_right + center_x
-        top = curr_top - center_y
-        bottom = curr_bottom + center_y
-        xmin = left * -self.bbox_norm
-        xmax = right * self.bbox_norm
-        ymin = top * -self.bbox_norm
-        ymax = bottom * self.bbox_norm
-        # docs_tag: end_interpolate_bboxes
-        return [
-            int(xmin.item()),
-            int(ymin.item()),
-            int(xmax.item() - xmin.item()),
-            int(ymax.item() - ymin.item()),
-        ]
+    def interpolate(self, boxes, x_scaler, y_scaler, batch_size):
+        # docs_tag: begin_interpolate
+        boxes = torch.as_tensor(boxes)
+
+        # Buffer batch size needs to be updated if batch size is modified
+        if (
+            self.center_x is None
+            or self.center_y is None
+            or self.batch_size != batch_size
+        ):
+            self.center_x = torch.zeros(
+                [batch_size, self.num_rows, self.num_cols]
+            ).cuda(device=self.device_id)
+            self.center_y = torch.zeros(
+                [batch_size, self.num_rows, self.num_cols]
+            ).cuda(device=self.device_id)
+            self.y_values = torch.full([self.num_cols], 1).cuda(device=self.device_id)
+            self.x_values = torch.arange(0, self.num_cols).cuda(device=self.device_id)
+
+        # Denormalize the bounding boxes
+        # Compute the center of each grid
+        for b in range(batch_size):
+            for r in range(0, self.num_rows):
+                self.center_y[b, r, :] = (
+                    self.y_values * r * y_scaler + self.offset
+                ) / self.bbox_norm
+                self.center_x[b, r, :] = (
+                    self.x_values * x_scaler + self.offset
+                ) / self.bbox_norm
+
+        """
+        The raw bounding boxes shape is [N, C*4, X, Y]
+        Where N is batch size, C is number of classes, 4 is the bounding box coordinates,
+        X is the row index of the grid, Y is the column index of the grid
+        The order of the coordinates is left, bottom, right, top
+        """
+
+        for c in range(self.num_classes):
+            # Shift the grid centers
+            boxes[:, 4 * c + 0, :, :] -= self.center_x
+            boxes[:, 4 * c + 1, :, :] += self.center_y
+            boxes[:, 4 * c + 2, :, :] += self.center_x
+            boxes[:, 4 * c + 3, :, :] -= self.center_y
+            # Apply the bounding box scale of the model
+            boxes[:, 4 * c + 0, :, :] *= -self.bbox_norm
+            boxes[:, 4 * c + 1, :, :] *= self.bbox_norm
+            boxes[:, 4 * c + 2, :, :] *= self.bbox_norm
+            boxes[:, 4 * c + 3, :, :] *= -self.bbox_norm
+        return boxes
+
+    # docs_tag: end_interpolate
 
     def __call__(self, raw_boxes, raw_scores, frame_nhwc):
 
@@ -160,6 +188,9 @@ class PostprocessorCvcuda:
         y_scaler = frame_nhwc.shape[1] / self.num_rows
         batch_size = raw_boxes.shape[0]
         filtered_bboxes = []
+
+        # Interpolate bounding boxes to original image resolution
+        interpolated_boxes = self.interpolate(raw_boxes, x_scaler, y_scaler, batch_size)
         # TODO Refactor and improve after adding NMS
         for b in range(batch_size):
             bboxes = []
@@ -168,21 +199,17 @@ class PostprocessorCvcuda:
                     for x in range(self.num_cols):
                         score = raw_scores[b][c][y][x]
                         if score > self.threshold:
-                            bbox = self.interpolate_bboxes(
-                                raw_boxes[b][c * 4][y][x],
-                                raw_boxes[b][c * 4 + 2][y][x],
-                                raw_boxes[b][c * 4 + 1][y][x],
-                                raw_boxes[b][c * 4 + 3][y][x],
-                                x_scaler,
-                                y_scaler,
-                                x,
-                                y,
+                            bbox = (
+                                interpolated_boxes[b][c * 4][y][x],
+                                interpolated_boxes[b][c * 4 + 3][y][x],
+                                interpolated_boxes[b][c * 4 + 2][y][x],
+                                interpolated_boxes[b][c * 4 + 1][y][x],
                             )
                             bboxes.append(bbox)
             filtered_bboxes.append(bboxes)
         # docs_tag: end_call_filterbboxcvcuda
 
-        # Stage 5: render bounding boxes and Blur ROI's
+        # render bounding boxes and Blur ROI's
         # docs_tag: start_outbuffer
         frame_nhwc = self.bboxutil(filtered_bboxes, frame_nhwc)
         if self.output_layout == "NCHW":
@@ -232,8 +259,8 @@ class BoundingBoxUtilsCvcuda:
                 box = [
                     bboxes[b][i][0],
                     bboxes[b][i][1],
-                    bboxes[b][i][2],
-                    bboxes[b][i][3],
+                    bboxes[b][i][2] - bboxes[b][i][0],
+                    bboxes[b][i][3] - bboxes[b][i][1],
                 ]
                 boxes.append(
                     cvcuda.BndBoxI(

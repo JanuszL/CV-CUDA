@@ -112,7 +112,7 @@ def run_sample(
 
     # Define the post-processor
     postprocess = PostprocessorCvcuda(
-        conf_threshold, device_id, encoder.input_layout, encoder.gpu_input
+        conf_threshold, device_id, encoder.input_layout, encoder.gpu_input, batch_size
     )
 
     # Define the inferencer
