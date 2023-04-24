@@ -75,6 +75,12 @@ public:
         *this = obj;
     }
 
+    template<typename U, std::enable_if_t<std::is_convertible_v<U *, CoreObj *>, int> = 0>
+    SharedCoreObj(const SharedCoreObj<U> &obj)
+    {
+        *this = obj;
+    }
+
     SharedCoreObj(SharedCoreObj &&obj)
     {
         *this = std::move(obj);
@@ -125,12 +131,12 @@ public:
         return *this;
     }
 
-    constexpr CoreObj *get() const
+    constexpr CoreObj *get() const noexcept
     {
         return m_obj;
     }
 
-    constexpr CoreObj *operator->() const
+    constexpr CoreObj *operator->() const noexcept
     {
         return m_obj;
     }
@@ -143,6 +149,24 @@ public:
     ~SharedCoreObj()
     {
         reset(nullptr);
+    }
+
+    template<typename U>
+    constexpr bool operator==(const SharedCoreObj<U> &other) const noexcept
+    {
+        return get() == other.get();
+    }
+
+    template<typename U>
+    constexpr bool operator!=(const SharedCoreObj<U> &other) const noexcept
+    {
+        return !(*this == other);
+    }
+
+    template<typename U>
+    constexpr bool operator<(const SharedCoreObj<U> &other) const noexcept
+    {
+        return static_cast<void *>(get()) < static_cast<void *>(other.get());
     }
 
 private:

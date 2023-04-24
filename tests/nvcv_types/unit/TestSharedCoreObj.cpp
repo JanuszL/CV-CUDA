@@ -26,7 +26,7 @@
 #include <nvcv_types/priv/ImageManager.hpp>
 #include <nvcv_types/priv/SharedCoreObj.hpp>
 
-TEST(SharedCoreObjTest, ConstructFromPointer)
+TEST(SharedCoreObjTest, Construct)
 {
     nvcv::Size2D          size{640, 480};
     nvcv::ImageFormat     fmt = nvcv::FMT_RGBA8;
@@ -37,9 +37,13 @@ TEST(SharedCoreObjTest, ConstructFromPointer)
     auto h = nvcv::priv::CreateCoreObject<nvcv::priv::Image>(reqs, alloc);
     EXPECT_EQ(nvcv::priv::CoreObjectRefCount(h), 1);
     {
-        nvcv::priv::SharedCoreObj<nvcv::priv::Image> s = nvcv::priv::ToSharedObj<nvcv::priv::Image>(h);
+        nvcv::priv::SharedCoreObj<nvcv::priv::Image> s1 = nvcv::priv::ToSharedObj<nvcv::priv::Image>(h);
         EXPECT_EQ(nvcv::priv::CoreObjectRefCount(h), 2);
-        EXPECT_EQ(s->handle(), h);
+        nvcv::priv::SharedCoreObj<nvcv::priv::Image> s2(nvcv::priv::ToStaticPtr<nvcv::priv::Image>(h));
+        EXPECT_EQ(nvcv::priv::CoreObjectRefCount(h), 3);
+        EXPECT_EQ(s1, s2);
+        EXPECT_EQ(s1->handle(), h);
+        EXPECT_EQ(s2->handle(), h);
     }
     EXPECT_EQ(nvcv::priv::CoreObjectRefCount(h), 1);
     EXPECT_EQ(nvcv::priv::CoreObjectDecRef(h), 0);
