@@ -20,6 +20,8 @@
 
 #include "ICoreObject.hpp"
 
+#include <nvcv/detail/CompilerUtils.h>
+
 #include <cassert>
 #include <type_traits>
 
@@ -43,7 +45,7 @@ public:
             CoreObjectIncRef(handle);
             auto *obj = ToStaticPtr<CoreObj>(handle);
             assert(obj);
-            assert(obj->handle() == handle());
+            assert(obj->handle() == handle);
             return SharedCoreObj(std::move(obj));
         }
         else
@@ -86,6 +88,11 @@ public:
         *this = std::move(obj);
     }
 
+    ~SharedCoreObj()
+    {
+        reset(nullptr);
+    }
+
     int reset(CoreObj *&&obj)
     {
         int ret = 0;
@@ -98,7 +105,7 @@ public:
         return ret;
     }
 
-    CoreObj *release()
+    NVCV_NODISCARD CoreObj *release()
     {
         CoreObj *ret = m_obj;
         m_obj        = nullptr;
@@ -107,48 +114,49 @@ public:
 
     SharedCoreObj &operator=(const SharedCoreObj &obj)
     {
-        reset(obj.get(), true);
+        if (obj && obj->handle())
+            CoreObjectIncRef(obj->handle());
+        reset(obj.get());
         return *this;
     }
 
     SharedCoreObj &operator=(SharedCoreObj &&obj)
     {
-        reset(obj.release(), false);
+        reset(obj.release());
         return *this;
     }
 
     template<typename T>
     SharedCoreObj &operator=(const SharedCoreObj<T> &obj)
     {
-        reset(obj.get(), true);
+        if (obj && obj->handle())
+            CoreObjectIncRef(obj->handle());
+        reset(obj.get());
         return *this;
     }
 
     template<typename T>
     SharedCoreObj &operator=(SharedCoreObj<T> &&obj)
     {
-        reset(obj.release(), false);
+        reset(obj.release());
         return *this;
     }
 
-    constexpr CoreObj *get() const noexcept
+    constexpr CoreObj *get() const &noexcept
     {
         return m_obj;
     }
 
     constexpr CoreObj *operator->() const noexcept
     {
+        assert(m_obj && "Accessing a member via a null pointer.");
         return m_obj;
     }
 
-    constexpr CoreObj &operator*() const
+    constexpr CoreObj &operator*() const &noexcept
     {
+        assert(m_obj && "Dereferencing a null pointer.");
         return *m_obj;
-    }
-
-    ~SharedCoreObj()
-    {
-        reset(nullptr);
     }
 
     template<typename U>
@@ -169,9 +177,26 @@ public:
         return static_cast<void *>(get()) < static_cast<void *>(other.get());
     }
 
+    constexpr operator bool() const noexcept
+    {
+        return m_obj != nullptr;
+    }
+
 private:
-    CoreObj *m_obj;
+    CoreObj *m_obj = nullptr;
 };
+
+template<typename T>
+constexpr bool operator==(nullptr_t, const SharedCoreObj<T> &x)
+{
+    return !x;
+}
+
+template<typename T>
+constexpr bool operator!=(nullptr_t, const SharedCoreObj<T> &x)
+{
+    return x;
+}
 
 template<typename T, typename HandleType>
 inline SharedCoreObj<T> ToSharedObj(HandleType h)
