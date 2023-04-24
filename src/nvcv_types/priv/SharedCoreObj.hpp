@@ -32,17 +32,18 @@ class SharedCoreObj
 {
 public:
     static_assert(std::is_base_of_v<ICoreObject, CoreObj>,
-                  "The CoreObj type must inherity from the ICoreObject inteface.");
+                  "The CoreObj type must inherit from the ICoreObject interface.");
 
     SharedCoreObj() = default;
 
     SharedCoreObj(std::nullptr_t) {}
 
-    static SharedCoreObj FromHandle(typename CoreObj::HandleType handle)
+    static SharedCoreObj FromHandle(typename CoreObj::HandleType handle, bool incRef)
     {
         if (handle)
         {
-            CoreObjectIncRef(handle);
+            if (incRef)
+                CoreObjectIncRef(handle);
             auto *obj = ToStaticPtr<CoreObj>(handle);
             assert(obj);
             assert(obj->handle() == handle);

@@ -55,7 +55,7 @@ TEST(SharedCoreObjTest, Construct)
         EXPECT_EQ(s1->handle(), h);
         EXPECT_EQ(s3->handle(), h);
 
-        Ptr s4 = Ptr::FromHandle(h);
+        Ptr s4 = Ptr::FromHandle(h, true);
         EXPECT_EQ(s4->handle(), h);
         EXPECT_EQ(nvcv::priv::CoreObjectRefCount(h), 4);
 
@@ -68,6 +68,10 @@ TEST(SharedCoreObjTest, Construct)
         EXPECT_EQ(s5->handle(), h);
         EXPECT_EQ(s6->handle(), h);
         EXPECT_EQ(nvcv::priv::CoreObjectRefCount(h), 5);
+
+        Ptr s7 = Ptr::FromHandle(h, false);
+        EXPECT_EQ(nvcv::priv::CoreObjectRefCount(h), 5);
+        EXPECT_EQ(s7.release(), s6.get());
     }
     EXPECT_EQ(nvcv::priv::CoreObjectRefCount(h), 1);
     EXPECT_EQ(nvcv::priv::CoreObjectDecRef(h), 0);
@@ -80,10 +84,10 @@ TEST(SharedCoreObjTest, Comparison)
     auto h1 = CreateImage();
     auto h2 = CreateImage();
 
-    Ptr s1 = Ptr::FromHandle(h1);
+    Ptr s1 = Ptr::FromHandle(h1, true);
     EXPECT_EQ(nvcv::priv::CoreObjectDecRef(h1), 1);
 
-    Ptr s2 = Ptr::FromHandle(h2);
+    Ptr s2 = Ptr::FromHandle(h2, true);
     EXPECT_EQ(nvcv::priv::CoreObjectDecRef(h2), 1);
 
     Ptr s3 = nullptr;
@@ -136,7 +140,7 @@ TEST(SharedCoreObjTest, AssignCopyMove)
         EXPECT_EQ(s2, nullptr) << "Not moved out properly";
 
         s2 = s3;
-        EXPECT_EQ(nvcv::priv::CoreObjectRefCount(h), 4) << "Ref count not raised after copy,";
+        EXPECT_EQ(nvcv::priv::CoreObjectRefCount(h), 4) << "Ref count not raised after copy.";
         s3 = nullptr;
         EXPECT_EQ(s3.get(), nullptr) << "Null assignment failed.";
         EXPECT_EQ(nvcv::priv::CoreObjectRefCount(h), 3) << "Ref count not dropped after null assignment.";
