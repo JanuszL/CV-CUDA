@@ -62,6 +62,7 @@ def run_sample(
     target_img_width,
     device_id,
     conf_threshold,
+    iou_threshold,
 ):
     logger = logging.getLogger(__name__)
 
@@ -112,7 +113,12 @@ def run_sample(
 
     # Define the post-processor
     postprocess = PostprocessorCvcuda(
-        conf_threshold, device_id, encoder.input_layout, encoder.gpu_input, batch_size
+        conf_threshold,
+        iou_threshold,
+        device_id,
+        encoder.input_layout,
+        encoder.gpu_input,
+        batch_size,
     )
 
     # Define the inferencer
@@ -255,6 +261,14 @@ def main():
         help="The confidence threshold for the detections.",
     )
 
+    parser.add_argument(
+        "-iou",
+        "--iou_threshold",
+        default=0.1,
+        type=float,
+        help="The iou threshold for NMS.",
+    )
+
     # Parse the command line arguments.
     args = parser.parse_args()
 
@@ -289,6 +303,7 @@ def main():
         args.target_img_width,
         args.device_id,
         args.conf_threshold,
+        args.iou_threshold,
     )
     # docs_tag: end_call_run_sample
 

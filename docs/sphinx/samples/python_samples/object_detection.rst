@@ -137,7 +137,7 @@ Note: The peoplenet model currently supports implicit batch dimensions
 
    ./samples/object_detection/models/download_models.sh /tmp
 
-The sample can be invoked without any command-line arguments like the following. In that case it will use the default values. It uses peoplenet.jpg as the input image, renders the bounding boxes and writes the image to /tmp directory with batch size of 1.
+The sample can be invoked without any command-line arguments like the following. In that case it will use the default values. It uses peoplenet.jpg as the input image, renders the bounding boxes and writes the image to /tmp directory with batch size of 1. The default confidence threshold is 0.9 and iou threshold is 0.1.
 
 .. code-block:: bash
 
@@ -158,4 +158,25 @@ Running the sample on a video input with batch size 4
 Understanding the Output
 ------------------------
 
-TODO
+This sample takes as input one or more images or one video and generates the object detection boxes with the regions inside the bounding box blurred. The iou threshold for NMS and confidence threshold for the bounding boxes can be configured as a runtime parameter from the command line. Since this sample works on batches, sometimes the batch size and the number of images read may not be a perfect multiple. In such cases, the last batch may have a smaller batch size.
+
+.. code-block:: bash
+
+        user@machine:~/cvcuda/samples$ python3 ./samples/object_detection/python/main.py -i peoplenet.jpg -b 1 -e peoplenet.engine
+        [torch_utils:76] 2023-04-26 05:17:47 INFO   Using torchnvjpeg as decoder.
+        [torch_utils:148] 2023-04-26 05:17:47 INFO   Using PyTorch/PIL as encoder.
+        [pipelines:30] 2023-04-26 05:17:47 INFO   Using CVCUDA as preprocessor.
+        [pipelines:134] 2023-04-26 05:17:47 INFO   Using CVCUDA as post-processor.
+        [model_inference:57] 2023-04-26 05:17:48 INFO   Using TensorRT as the inference engine.
+        [__main__:144] 2023-04-26 05:17:48 INFO   Processing batch 0
+        [torch_utils:162] 2023-04-26 05:17:49 INFO   Saving the overlay result to: /tmp/out_peoplenet.jpg
+
+Input image
+
+.. image:: peoplenet.jpg
+   :width: 350
+
+Output Image
+
+.. image:: out_peoplenet.jpg
+   :width: 350
