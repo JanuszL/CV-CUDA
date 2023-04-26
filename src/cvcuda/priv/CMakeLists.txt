@@ -20,6 +20,7 @@ add_library(cvcuda_priv STATIC
     OpBndBox.cpp
     OpRemap.cu
     OpCropFlipNormalizeReformat.cu
+    OpNonMaximumSuppression.cu
     IOperator.cpp
     OpReformat.cpp
     OpResize.cpp

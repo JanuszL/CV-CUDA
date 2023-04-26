@@ -86,6 +86,7 @@ PYBIND11_MODULE(cvcuda, m)
     ExportOpBndBox(m);
     ExportOpRemap(m);
     ExportOpCropFlipNormalizeReformat(m);
+    ExportOpNonMaximumSuppression(m);
     ExportOpReformat(m);
     ExportOpResize(m);
     ExportOpCustomCrop(m);

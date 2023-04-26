@@ -30,6 +30,7 @@ add_executable(cvcuda_test_system
     TestOpCropFlipNormalizeReformat.cpp
     FlipUtils.cpp
     ConvUtils.cpp
+    TestOpNonMaximumSuppression.cpp
     TestOpReformat.cpp
     TestOpResize.cpp
     TestOpCustomCrop.cpp

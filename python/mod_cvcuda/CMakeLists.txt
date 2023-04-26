@@ -33,6 +33,7 @@ nvcv_python_add_module(
         MorphologyType.cpp
         ThresholdType.cpp
         AdaptiveThresholdType.cpp
+        OpNonMaximumSuppression.cpp
         OpReformat.cpp
         OpResize.cpp
         OpCustomCrop.cpp

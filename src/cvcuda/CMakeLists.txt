@@ -21,6 +21,7 @@ add_library(cvcuda SHARED
     OpBndBox.cpp
     OpRemap.cpp
     OpCropFlipNormalizeReformat.cpp
+    OpNonMaximumSuppression.cpp
     Operator.cpp
     OpReformat.cpp
     OpResize.cpp

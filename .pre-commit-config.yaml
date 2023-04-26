@@ -75,6 +75,7 @@ repos:
     types: ['file', 'text']
     exclude_types: ['markdown', 'xml', 'json', 'csv']
     entry: ./lint/copyright_check.sh
+    exclude: 'models/.*'
   - id: lfs_check
     name: 'check LFS objects'
     language: system

@@ -76,6 +76,7 @@ void ExportOpBoxBlur(py::module &m);
 void ExportOpRemap(py::module &m);
 void ExportOpCropFlipNormalizeReformat(py::module &m);
 void ExportOpAdaptiveThreshold(py::module &m);
+void ExportOpNonMaximumSuppression(py::module &m);
 
 // Helper class that serves as python-side operator class.
 // OP: native operator class
