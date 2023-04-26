@@ -82,7 +82,7 @@ void CPUNonMaximumSuppression(const std::vector<NVCVRectI> &in, std::vector<NVCV
     const NVCVRectI ZERO_BBOX = {0, 0, 0, 0};
 
     out = in;
-    for (size_t i = 0; i < out.size(); ++i)
+    for (size_t i = 0; i < 5; ++i)
     {
         if (scores[i] < score_threshold)
         {
@@ -90,9 +90,9 @@ void CPUNonMaximumSuppression(const std::vector<NVCVRectI> &in, std::vector<NVCV
         }
     }
 
-    for (size_t i = 0; i < out.size(); ++i)
+    for (size_t i = 0; i < 5; ++i)
     {
-        for (size_t j = 0; j < in.size(); ++j)
+        for (size_t j = 0; j < 5; ++j)
         {
             if (i != j && out[i] != ZERO_BBOX && in[j] != ZERO_BBOX && scores[i] < scores[j]
                 && IntersectionOverUnion(out[i], in[j]) > iou_threshold)

@@ -30,14 +30,6 @@
 namespace cuda = nvcv::cuda;
 namespace util = nvcv::util;
 
-namespace __detail {
-struct Params
-{
-    static constexpr int  TILE_DIM = 16;
-    static constexpr int4 ZERO_BBOX{0, 0, 0, 0};
-};
-} // namespace __detail
-
 __device__ float compute_bbox_iou(int batch, int bboxX, int bboxY, const cuda::Tensor3DWrap<int> &bBoxX,
                                   const cuda::Tensor3DWrap<int> &bBoxY);
 
@@ -106,8 +98,6 @@ __global__ void copy_bbox(int batch, int numProposals, const cuda::Tensor3DWrap<
                           const cuda::Tensor3DWrap<int> bBoxSelected, const cuda::Tensor2DWrap<float> bBoxScores,
                           float scoreThreshold, float iouThreshold)
 {
-    using namespace __detail;
-
     int bboxX = blockDim.x * blockIdx.x + threadIdx.x;
 
     if (bboxX < numProposals)
@@ -165,7 +155,7 @@ __host__ void non_maximum_suppresion(const nvcv::TensorDataStridedCuda &in, cons
                                      const nvcv::TensorDataStridedCuda &scores, float score_threshold,
                                      float iou_threshold, cudaStream_t stream)
 {
-    using namespace __detail;
+    constexpr int TILE_DIM = 16;
 
     auto inAccess = nvcv::TensorDataAccessStrided::Create(in);
     NVCV_ASSERT(inAccess);
@@ -179,7 +169,7 @@ __host__ void non_maximum_suppresion(const nvcv::TensorDataStridedCuda &in, cons
     auto bboxLength = inShape[1];
 
     // Tiling threads over image at tiling dimension block size
-    auto blockSize = dim3(Params::TILE_DIM * Params::TILE_DIM, 1);
+    auto blockSize = dim3(TILE_DIM * TILE_DIM, 1);
     auto gridSize  = dim3((bboxLength + blockSize.x - 1) / blockSize.x, 1);
 
     for (auto batch = 0; batch < batchSize; ++batch)
