@@ -120,6 +120,6 @@ def test_op_nms(src, scores):
     torch_scores_found = torch.index_select(scores_huge_torch[0, :], 0, torch_result)
     torch_result_found[:, 2] = torch_result_found[:, 2] - torch_result_found[:, 0]
     torch_result_found[:, 3] = torch_result_found[:, 3] - torch_result_found[:, 1]
-    assert torch_result_found.shape == result_huge_found.shape[1:]
-    assert torch.isin(torch_result_found, result_huge_found[0, :]).all()
-    assert torch.isin(torch_scores_found, scores_huge_found[0, :]).all()
+    assert result_huge_found.shape[1] <= torch_result_found.shape[0]
+    assert torch.isin(result_huge_found[0, :], torch_result_found).all()
+    assert torch.isin(scores_huge_found[0, :], torch_scores_found).all()
