@@ -13,13 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include_directories(
-    ${CUOSD_SOURCE_DIR}/x86_64/include
-)
-
-link_directories(
-    ${CUOSD_SOURCE_DIR}/x86_64/lib
-)
+if(ENABLE_TEGRA)
+    include_directories(
+        ${CUOSD_SOURCE_DIR}/aarch64/include
+    )
+    link_directories(
+        ${CUOSD_SOURCE_DIR}/aarch64/lib
+    )
+else()
+    include_directories(
+        ${CUOSD_SOURCE_DIR}/x86_64/include
+    )
+    link_directories(
+        ${CUOSD_SOURCE_DIR}/x86_64/lib
+    )
+endif()
 
 # system core -------------------------------------------------
 add_executable(cvcuda_test_system
