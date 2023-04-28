@@ -580,16 +580,16 @@ NVCV_DEFINE_API(0, 0, const char *, nvcvImageFormatGetName, (NVCVImageFormat fmt
 
         using namespace std::literals;
 
-        util::ReplaceAllInline(buffer, bufSize, "NVCV_RAW_"sv, ""sv);
-        util::ReplaceAllInline(buffer, bufSize, "NVCV_COLOR_MODEL_"sv, ""sv);
-        util::ReplaceAllInline(buffer, bufSize, "NVCV_COLOR_SPEC_"sv, ""sv);
-        util::ReplaceAllInline(buffer, bufSize, "NVCV_CSS_"sv, ""sv);
-        util::ReplaceAllInline(buffer, bufSize, "NVCV_MEM_LAYOUT_"sv, ""sv);
-        util::ReplaceAllInline(buffer, bufSize, "NVCV_DATA_KIND_"sv, ""sv);
-        util::ReplaceAllInline(buffer, bufSize, "NVCV_PACKING_"sv, ""sv);
-        util::ReplaceAllInline(buffer, bufSize, "NVCV_CHROMA_"sv, ""sv);
-        util::ReplaceAllInline(buffer, bufSize, "NVCV_YCbCr_"sv, ""sv);
-        util::ReplaceAllInline(buffer, bufSize, "NVCV_COLOR_"sv, ""sv);
+        util::ReplaceAllInline(buffer, bufSize, "NVCV_RAW_", "");
+        util::ReplaceAllInline(buffer, bufSize, "NVCV_COLOR_MODEL_", "");
+        util::ReplaceAllInline(buffer, bufSize, "NVCV_COLOR_SPEC_", "");
+        util::ReplaceAllInline(buffer, bufSize, "NVCV_CSS_", "");
+        util::ReplaceAllInline(buffer, bufSize, "NVCV_MEM_LAYOUT_", "");
+        util::ReplaceAllInline(buffer, bufSize, "NVCV_DATA_KIND_", "");
+        util::ReplaceAllInline(buffer, bufSize, "NVCV_PACKING_", "");
+        util::ReplaceAllInline(buffer, bufSize, "NVCV_CHROMA_", "");
+        util::ReplaceAllInline(buffer, bufSize, "NVCV_YCbCr_", "");
+        util::ReplaceAllInline(buffer, bufSize, "NVCV_COLOR_", "");
     }
     catch (std::exception &e)
     {
