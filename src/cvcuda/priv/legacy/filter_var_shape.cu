@@ -203,12 +203,12 @@ ErrorCode Conv2DVarShape::infer(const ImageBatchVarShapeDataStridedCuda &inData,
 
 // clang-format off
 
-constexpr __device__ cuda::math::Vector<float, 9> kLaplacianKernel1{
+__device__ cuda::math::Vector<float, 9> kLaplacianKernel1{
     {0.0f,  1.0f, 0.0f,
      1.0f, -4.0f, 1.0f,
      0.0f,  1.0f, 0.0f}
 };
-constexpr __device__ cuda::math::Vector<float, 9> kLaplacianKernel3{
+__device__ cuda::math::Vector<float, 9> kLaplacianKernel3{
     {2.0f,  0.0f, 2.0f,
      0.0f, -8.0f, 0.0f,
      2.0f,  0.0f, 2.0f}
