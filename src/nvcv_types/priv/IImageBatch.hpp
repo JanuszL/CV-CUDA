@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -54,6 +54,15 @@ public:
     virtual ImageFormat uniqueFormat() const = 0;
 
     virtual void getImages(int32_t begIndex, NVCVImageHandle *outImages, int32_t numImages) const = 0;
+};
+
+template<>
+class CoreObjManager<NVCVImageBatchHandle> : public HandleManager<IImageBatch>
+{
+    using Base = HandleManager<IImageBatch>;
+
+public:
+    using Base::Base;
 };
 
 } // namespace nvcv::priv

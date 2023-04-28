@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,6 +40,15 @@ public:
     virtual IAllocator &alloc() const = 0;
 
     virtual void exportData(NVCVTensorData &data) const = 0;
+};
+
+template<>
+class CoreObjManager<NVCVTensorHandle> : public HandleManager<ITensor>
+{
+    using Base = HandleManager<ITensor>;
+
+public:
+    using Base::Base;
 };
 
 } // namespace nvcv::priv

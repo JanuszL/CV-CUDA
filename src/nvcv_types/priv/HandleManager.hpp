@@ -58,10 +58,18 @@ using GetHandleType = typename detail::GetHandleType<T>::type;
 // R=resource address, G=generation, P=private API bit
 static constexpr int kResourceAlignment = 16; // Must be a power of two.
 
-template<typename Interface, typename Storage>
+/** A type trait that defines storage for objects implementing given interface
+ *
+ * This struct must define a ::type that is sufficiently large and aligned to contain
+ * any type that the user might want to store inside a HandleManager<Interface>.
+ */
+template<typename Interface>
+struct ResourceStorage;
+
+template<typename Interface>
 class HandleManager
 {
-    struct alignas(kResourceAlignment) Resource
+    struct ResourceBase
     {
         // We allow the resource to be reused up to 8 times,
         // the corresponding handle will have a different value each time.
@@ -69,22 +77,22 @@ class HandleManager
         // refer to a different object.
         uint8_t generation : 3; // must be log2(kResourceAlignment-1)
 
-        Resource *next = nullptr;
+        ResourceBase *next = nullptr;
 
-        Resource();
-        ~Resource();
+        ResourceBase();
 
         template<class T, typename... Args>
         T *constructObject(Args &&...args)
         {
             static_assert(std::is_base_of_v<Interface, T>);
 
+            using Storage = typename ResourceStorage<Interface>::type;
             static_assert(sizeof(Storage) >= sizeof(T));
             static_assert(alignof(Storage) % alignof(T) == 0);
 
             NVCV_ASSERT(!this->live());
-            T *obj   = new (m_storage) T{std::forward<Args>(args)...};
-            m_ptrObj = obj;
+            T *obj         = new (getStorage()) T{std::forward<Args>(args)...};
+            this->m_ptrObj = obj;
             this->generation++;
 
             NVCV_ASSERT(this->live());
@@ -119,10 +127,12 @@ class HandleManager
             return m_ptrObj != nullptr;
         }
 
-    private:
+    protected:
+        void *getStorage();
+
+        ~ResourceBase();
         Interface      *m_ptrObj = nullptr;
         std::atomic_int m_refCount{0};
-        alignas(Storage) std::byte m_storage[sizeof(Storage)];
     };
 
 public:
@@ -134,7 +144,7 @@ public:
     template<class T, typename... Args>
     std::pair<HandleType, T *> create(Args &&...args)
     {
-        Resource *res = doFetchFreeResource();
+        ResourceBase *res = doFetchFreeResource();
         try
         {
             T *obj = res->template constructObject<T>(std::forward<Args>(args)...);
@@ -181,14 +191,14 @@ private:
     void doAllocate(size_t count);
     void doGrow();
 
-    Resource *getValidResource(HandleType handle) const;
+    ResourceBase *getValidResource(HandleType handle) const;
 
-    Resource  *doFetchFreeResource();
-    void       doReturnResource(Resource *r);
-    uint8_t    doGetHandleGeneration(HandleType handle) const noexcept;
-    HandleType doGetHandleFromResource(Resource *r) const noexcept;
-    Resource  *doGetResourceFromHandle(HandleType handle) const noexcept;
-    bool       isManagedResource(Resource *r) const;
+    ResourceBase *doFetchFreeResource();
+    void          doReturnResource(ResourceBase *r);
+    uint8_t       doGetHandleGeneration(HandleType handle) const noexcept;
+    HandleType    doGetHandleFromResource(ResourceBase *r) const noexcept;
+    ResourceBase *doGetResourceFromHandle(HandleType handle) const noexcept;
+    bool          isManagedResource(ResourceBase *r) const;
 };
 
 inline bool MustProvideHiddenFunctionality(void *h)
