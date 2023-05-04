@@ -18,7 +18,6 @@
 #include "ConvUtils.hpp"
 #include "Definitions.hpp"
 
-#include <common/TensorDataUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <cvcuda/OpCvtColor.hpp>
 #include <nvcv/Image.hpp>
@@ -26,6 +25,7 @@
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/cuda/TypeTraits.hpp>
+#include <util/TensorDataUtils.hpp>
 
 #include <random>
 
@@ -118,8 +118,8 @@ TEST_P(OpCvtColor, correct_output)
 
     double maxDiff{GetParamValue<7>()};
 
-    nvcv::Tensor srcTensor = test::CreateTensor(batches, width, height, srcFormat);
-    nvcv::Tensor dstTensor = test::CreateTensor(batches, width, height, dstFormat);
+    nvcv::Tensor srcTensor = nvcv::util::CreateTensor(batches, width, height, srcFormat);
+    nvcv::Tensor dstTensor = nvcv::util::CreateTensor(batches, width, height, dstFormat);
 
     auto srcData = srcTensor.exportData<nvcv::TensorDataStridedCuda>();
     auto dstData = dstTensor.exportData<nvcv::TensorDataStridedCuda>();

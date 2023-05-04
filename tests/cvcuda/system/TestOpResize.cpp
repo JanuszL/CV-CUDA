@@ -18,7 +18,6 @@
 #include "Definitions.hpp"
 
 #include <common/InterpUtils.hpp>
-#include <common/TensorDataUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <cvcuda/OpResize.hpp>
 #include <nvcv/Image.hpp>
@@ -27,6 +26,7 @@
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/cuda/MathWrappers.hpp>
 #include <nvcv/cuda/SaturateCast.hpp>
+#include <util/TensorDataUtils.hpp>
 
 #include <cmath>
 #include <random>
@@ -298,7 +298,7 @@ TEST_P(OpResize, tensor_correct_output)
     const nvcv::ImageFormat fmt = nvcv::FMT_RGBA8;
 
     // Generate input
-    nvcv::Tensor imgSrc = test::CreateTensor(numberOfImages, srcWidth, srcHeight, fmt);
+    nvcv::Tensor imgSrc = nvcv::util::CreateTensor(numberOfImages, srcWidth, srcHeight, fmt);
 
     auto srcData = imgSrc.exportData<nvcv::TensorDataStridedCuda>();
 
@@ -327,7 +327,7 @@ TEST_P(OpResize, tensor_correct_output)
     }
 
     // Generate test result
-    nvcv::Tensor imgDst = test::CreateTensor(numberOfImages, dstWidth, dstHeight, fmt);
+    nvcv::Tensor imgDst = nvcv::util::CreateTensor(numberOfImages, dstWidth, dstHeight, fmt);
 
     cvcuda::Resize resizeOp;
     EXPECT_NO_THROW(resizeOp(stream, imgSrc, imgDst, interpolation));

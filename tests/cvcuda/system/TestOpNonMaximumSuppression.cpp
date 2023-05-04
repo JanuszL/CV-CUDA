@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-#include <common/TensorDataUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <cvcuda/OpNonMaximumSuppression.hpp>
 #include <nvcv/Rect.h>
@@ -25,6 +24,7 @@
 #include <nvcv/cuda/MathOps.hpp>
 #include <nvcv/cuda/StaticCast.hpp>
 #include <nvcv/cuda/TypeTraits.hpp>
+#include <util/TensorDataUtils.hpp>
 
 #include <iostream>
 #include <vector>
@@ -144,12 +144,12 @@ TEST(OpNonMaximumSuppression, correct_output)
     decltype(inBBoxValues)  verBBoxValues(numBBElements, ZERO_BBOX);
     decltype(inScoreValues) verScoreValues(numScoreElements, 0.0f);
 
-    test::SetTensorFromVector<NVCVRectI>(inBBoxes.exportData(), inBBoxValues, -1);
-    test::GetVectorFromTensor<NVCVRectI>(inBBoxes.exportData(), 0, verBBoxValues);
+    nvcv::util::SetTensorFromVector<NVCVRectI>(inBBoxes.exportData(), inBBoxValues, -1);
+    nvcv::util::GetVectorFromTensor<NVCVRectI>(inBBoxes.exportData(), 0, verBBoxValues);
     ASSERT_EQ(inBBoxValues, verBBoxValues);
 
-    test::SetTensorFromVector<float>(inScores.exportData(), inScoreValues, -1);
-    test::GetVectorFromTensor<float>(inScores.exportData(), 0, verScoreValues);
+    nvcv::util::SetTensorFromVector<float>(inScores.exportData(), inScoreValues, -1);
+    nvcv::util::GetVectorFromTensor<float>(inScores.exportData(), 0, verScoreValues);
     ASSERT_EQ(inScoreValues, verScoreValues);
 
     cudaStream_t stream;
@@ -165,7 +165,7 @@ TEST(OpNonMaximumSuppression, correct_output)
     decltype(inBBoxValues) outBBoxValues(numBBElements, ZERO_BBOX);
     decltype(inBBoxValues) outBBoxValues2(numBBElements, ZERO_BBOX);
 
-    test::GetVectorFromTensor<NVCVRectI>(outBBoxes.exportData(), 0, outBBoxValues);
+    nvcv::util::GetVectorFromTensor<NVCVRectI>(outBBoxes.exportData(), 0, outBBoxValues);
 
     CPUNonMaximumSuppression(inBBoxValues, outBBoxValues2, inScoreValues, scoreThresh, iouThresh);
 

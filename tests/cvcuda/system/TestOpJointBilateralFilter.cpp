@@ -17,13 +17,13 @@
 
 #include "Definitions.hpp"
 
-#include <common/TensorDataUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <cvcuda/OpJointBilateralFilter.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
+#include <util/TensorDataUtils.hpp>
 
 #include <iostream>
 #include <random>
@@ -192,9 +192,9 @@ TEST_P(OpJointBilateralFilter, JointBilateralFilter_packed)
     float sigmaSpace     = GetParamValue<4>();
     int   numberOfImages = GetParamValue<5>();
 
-    nvcv::Tensor imgOut     = test::CreateTensor(numberOfImages, width, height, nvcv::FMT_U8);
-    nvcv::Tensor imgIn      = test::CreateTensor(numberOfImages, width, height, nvcv::FMT_U8);
-    nvcv::Tensor imgInColor = test::CreateTensor(numberOfImages, width, height, nvcv::FMT_U8);
+    nvcv::Tensor imgOut     = nvcv::util::CreateTensor(numberOfImages, width, height, nvcv::FMT_U8);
+    nvcv::Tensor imgIn      = nvcv::util::CreateTensor(numberOfImages, width, height, nvcv::FMT_U8);
+    nvcv::Tensor imgInColor = nvcv::util::CreateTensor(numberOfImages, width, height, nvcv::FMT_U8);
 
     auto inData      = imgIn.exportData<nvcv::TensorDataStridedCuda>();
     auto inColorData = imgInColor.exportData<nvcv::TensorDataStridedCuda>();

@@ -17,13 +17,13 @@
 
 #include "Definitions.hpp"
 
-#include <common/TensorDataUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <cvcuda/OpThreshold.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
+#include <util/TensorDataUtils.hpp>
 
 #include <cmath>
 #include <iostream>
@@ -242,8 +242,8 @@ TEST_P(OpThreshold, tensor_correct_output)
     double   maxval = GetParamValue<5>();
 
     nvcv::ImageFormat fmt    = nvcv::FMT_U8;
-    nvcv::Tensor      imgIn  = nvcv::test::CreateTensor(batch, width, height, fmt);
-    nvcv::Tensor      imgOut = nvcv::test::CreateTensor(batch, width, height, fmt);
+    nvcv::Tensor      imgIn  = nvcv::util::CreateTensor(batch, width, height, fmt);
+    nvcv::Tensor      imgOut = nvcv::util::CreateTensor(batch, width, height, fmt);
 
     auto inData = imgIn.exportData<nvcv::TensorDataStridedCuda>();
     ASSERT_NE(nullptr, inData);

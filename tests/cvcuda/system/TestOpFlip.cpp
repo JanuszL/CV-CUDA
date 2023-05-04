@@ -18,7 +18,6 @@
 #include "Definitions.hpp"
 #include "FlipUtils.hpp"
 
-#include <common/TensorDataUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <cvcuda/OpFlip.hpp>
 #include <nvcv/Image.hpp>
@@ -26,6 +25,7 @@
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/cuda/TypeTraits.hpp>
+#include <util/TensorDataUtils.hpp>
 
 #include <random>
 
@@ -62,8 +62,8 @@ TEST_P(OpFlip, correct_output)
 
     int3 shape{width, height, batches};
 
-    nvcv::Tensor inTensor  = test::CreateTensor(batches, width, height, format);
-    nvcv::Tensor outTensor = test::CreateTensor(batches, width, height, format);
+    nvcv::Tensor inTensor  = nvcv::util::CreateTensor(batches, width, height, format);
+    nvcv::Tensor outTensor = nvcv::util::CreateTensor(batches, width, height, format);
 
     auto input  = inTensor.exportData<nvcv::TensorDataStridedCuda>();
     auto output = outTensor.exportData<nvcv::TensorDataStridedCuda>();

@@ -24,7 +24,7 @@
 
 #include <random>
 
-namespace nvcv::test {
+namespace nvcv::util {
 
 enum chflags
 {
@@ -468,6 +468,6 @@ void SetCvDataTo(TensorImageData &cvImg, DT data, Size2D region, uint8_t chFlags
     return;
 }
 
-} // namespace nvcv::test
+} // namespace nvcv::util
 
 #endif // NVCV_TEST_COMMON_TENSOR_DATA_UTILS_HPP

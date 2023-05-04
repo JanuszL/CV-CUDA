@@ -19,7 +19,7 @@
 
 #include <cmath>
 
-namespace nvcv::test {
+namespace nvcv::util {
 
 static void printPlane(const uint8_t *data, int width, int height, int rowStride, int bytesPC, int numC)
 {
@@ -184,4 +184,4 @@ nvcv::Tensor CreateTensor(int numImages, int imgWidth, int imgHeight, const nvcv
     return nvcv::Tensor(numImages, {imgWidth, imgHeight}, imgFormat);
 }
 
-} // namespace nvcv::test
+} // namespace nvcv::util
