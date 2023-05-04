@@ -56,9 +56,17 @@ private:
 };
 } // namespace
 
+namespace nvcv::priv {
+template<>
+struct ResourceStorage<IObject>
+{
+    using type = CompatibleStorage<Object>;
+};
+} // namespace nvcv::priv
+
 TEST(HandleManager, wip_handle_generation_wraps_around)
 {
-    priv::HandleManager<IObject, Object> mgr("Object");
+    priv::HandleManager<IObject> mgr("Object");
 
     mgr.setFixedSize(1);
 
@@ -104,7 +112,7 @@ TEST(HandleManager, wip_handle_generation_wraps_around)
 
 TEST(HandleManager, wip_destroy_already_destroyed)
 {
-    priv::HandleManager<IObject, Object> mgr("Object");
+    priv::HandleManager<IObject> mgr("Object");
 
     void *h = mgr.create<Object>(0).first;
     ASSERT_EQ(0, mgr.decRef(h));
@@ -113,7 +121,7 @@ TEST(HandleManager, wip_destroy_already_destroyed)
 
 TEST(HandleManager, wip_ref_unref)
 {
-    priv::HandleManager<IObject, Object> mgr("Object");
+    priv::HandleManager<IObject> mgr("Object");
 
     void *h = mgr.create<Object>(0).first;
     ASSERT_EQ(2, mgr.incRef(h));
@@ -128,7 +136,7 @@ TEST(HandleManager, wip_ref_unref)
 
 TEST(HandleManager, wip_dec_ref_invalid)
 {
-    priv::HandleManager<IObject, Object> mgr("Object");
+    priv::HandleManager<IObject> mgr("Object");
 
     void *h = mgr.create<Object>(0).first;
     EXPECT_THROW(mgr.decRef((void *)0x666), nvcv::priv::Exception);
@@ -137,7 +145,7 @@ TEST(HandleManager, wip_dec_ref_invalid)
 
 TEST(HandleManager, wip_validate_already_destroyed)
 {
-    priv::HandleManager<IObject, Object> mgr("Object");
+    priv::HandleManager<IObject> mgr("Object");
 
     void *h = mgr.create<Object>(0).first;
     ASSERT_NE(nullptr, mgr.validate(h));
@@ -148,7 +156,7 @@ TEST(HandleManager, wip_validate_already_destroyed)
 
 TEST(HandleManager, wip_validate_invalid)
 {
-    priv::HandleManager<IObject, Object> mgr("Object");
+    priv::HandleManager<IObject> mgr("Object");
 
     void *h = mgr.create<Object>(0).first;
     ASSERT_NE(nullptr, mgr.validate(h)); // just to have something being managed already
@@ -160,7 +168,7 @@ TEST(HandleManager, wip_validate_invalid)
 
 TEST(HandleManager, wip_handle_count_overflow)
 {
-    priv::HandleManager<IObject, Object> mgr("Object");
+    priv::HandleManager<IObject> mgr("Object");
     mgr.setFixedSize(1);
 
     void *h = nullptr;
@@ -172,7 +180,7 @@ TEST(HandleManager, wip_handle_count_overflow)
 
 TEST(HandleManager, wip_no_handle_leak_if_object_creation_throws)
 {
-    priv::HandleManager<IObject, Object> mgr("Object");
+    priv::HandleManager<IObject> mgr("Object");
     mgr.setFixedSize(1);
 
     ASSERT_THROW(mgr.create<Object>(FORCE_FAILURE), std::runtime_error);
