@@ -19,7 +19,6 @@
 #include "Definitions.hpp"
 
 #include <common/BorderUtils.hpp>
-#include <common/TensorDataUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <cvcuda/OpAdaptiveThreshold.hpp>
 #include <nvcv/Image.hpp>
@@ -29,6 +28,7 @@
 #include <nvcv/cuda/DropCast.hpp>
 #include <nvcv/cuda/SaturateCast.hpp>
 #include <nvcv/cuda/TypeTraits.hpp>
+#include <util/TensorDataUtils.hpp>
 
 #include <random>
 
@@ -101,8 +101,8 @@ TEST_P(OpAdaptiveThreshold, correct_output)
     double                    c                     = GetParamValue<7>();
 
     nvcv::ImageFormat fmt    = nvcv::FMT_U8;
-    nvcv::Tensor      imgIn  = nvcv::test::CreateTensor(batch, width, height, fmt);
-    nvcv::Tensor      imgOut = nvcv::test::CreateTensor(batch, width, height, fmt);
+    nvcv::Tensor      imgIn  = nvcv::util::CreateTensor(batch, width, height, fmt);
+    nvcv::Tensor      imgOut = nvcv::util::CreateTensor(batch, width, height, fmt);
 
     auto inData = imgIn.exportData<nvcv::TensorDataStridedCuda>();
     ASSERT_NE(nullptr, inData);

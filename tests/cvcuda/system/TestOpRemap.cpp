@@ -16,7 +16,6 @@
  */
 
 #include <common/InterpUtils.hpp>
-#include <common/TensorDataUtils.hpp>
 #include <common/TypedTests.hpp>
 #include <cvcuda/OpRemap.hpp>
 #include <nvcv/Image.hpp>
@@ -26,6 +25,7 @@
 #include <nvcv/cuda/DropCast.hpp>
 #include <nvcv/cuda/StaticCast.hpp>
 #include <nvcv/cuda/TypeTraits.hpp>
+#include <util/TensorDataUtils.hpp>
 
 #include <iostream>
 #include <random>
@@ -177,9 +177,9 @@ TYPED_TEST(OpRemap, correct_output)
 
     const float4 borderValue = nvcv::cuda::SetAll<float4>(ttype::GetValue<TypeParam, 10>);
 
-    nvcv::Tensor srcTensor = test::CreateTensor(srcShape.z, srcShape.x, srcShape.y, imgFormat);
-    nvcv::Tensor dstTensor = test::CreateTensor(dstShape.z, dstShape.x, dstShape.y, imgFormat);
-    nvcv::Tensor mapTensor = test::CreateTensor(mapShape.z, mapShape.x, mapShape.y, nvcv::FMT_2F32);
+    nvcv::Tensor srcTensor = nvcv::util::CreateTensor(srcShape.z, srcShape.x, srcShape.y, imgFormat);
+    nvcv::Tensor dstTensor = nvcv::util::CreateTensor(dstShape.z, dstShape.x, dstShape.y, imgFormat);
+    nvcv::Tensor mapTensor = nvcv::util::CreateTensor(mapShape.z, mapShape.x, mapShape.y, nvcv::FMT_2F32);
 
     auto srcData = srcTensor.exportData<nvcv::TensorDataStridedCuda>();
     auto dstData = dstTensor.exportData<nvcv::TensorDataStridedCuda>();
@@ -316,7 +316,7 @@ TYPED_TEST(OpRemap, varshape_correct_output)
     nvcv::ImageBatchVarShape batchDst(dstShape.z);
     batchDst.pushBack(imgDst.begin(), imgDst.end());
 
-    nvcv::Tensor mapTensor = test::CreateTensor(mapShape.z, mapShape.x, mapShape.y, nvcv::FMT_2F32);
+    nvcv::Tensor mapTensor = nvcv::util::CreateTensor(mapShape.z, mapShape.x, mapShape.y, nvcv::FMT_2F32);
 
     auto mapData = mapTensor.exportData<nvcv::TensorDataStridedCuda>();
     ASSERT_TRUE(mapData);

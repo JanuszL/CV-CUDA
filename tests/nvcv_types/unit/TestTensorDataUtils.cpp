@@ -17,18 +17,19 @@
 
 #include "Definitions.hpp"
 
-#include <common/TensorDataUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <stdint.h>
+#include <util/TensorDataUtils.hpp>
 
 #include <iostream>
 #include <random>
 
 namespace gt   = ::testing;
 namespace test = nvcv::test;
+namespace util = nvcv::util;
 
 // clang-format off
 NVCV_TEST_SUITE_P(TensorDataUtils, test::ValueList<int, int, int, uint8_t, nvcv::ImageFormat>
@@ -84,8 +85,8 @@ static void GetSetTensor(nvcv::Tensor &tensor)
     generate(vec.begin(), vec.end(), [&rng, &rand] { return rand(rng); });
 
     std::vector<DT> vecOut(numElements, 0);
-    test::SetTensorFromVector<DT>(tensor.exportData(), vec);
-    test::GetVectorFromTensor<DT>(tensor.exportData(), 0, vecOut);
+    util::SetTensorFromVector<DT>(tensor.exportData(), vec);
+    util::GetVectorFromTensor<DT>(tensor.exportData(), 0, vecOut);
     if (vec != vec)
         throw std::runtime_error("Vectors not equal");
 
@@ -99,7 +100,7 @@ static void checkRndRange(nvcv::Tensor &tensor, DT lowBound, DT highBound)
 
     for (int sample = 0; sample < tDataAc->numSamples(); sample++)
     {
-        test::TensorImageData img(tensor.exportData(), sample);
+        nvcv::util::TensorImageData img(tensor.exportData(), sample);
 
         for (int x = 0; x < img.size().w; x++)
             for (int y = 0; y < img.size().h; y++)
@@ -126,16 +127,16 @@ TEST_P(TensorDataUtils, SetTensorTo)
 
     nvcv::Tensor tensor(number, {width, height}, fmt);
 
-    EXPECT_NO_THROW(test::SetTensorTo<uint8_t>(tensor.exportData(), fillVal));
+    EXPECT_NO_THROW(nvcv::util::SetTensorTo<uint8_t>(tensor.exportData(), fillVal));
     EXPECT_NO_THROW(compareTensor<uint8_t>(tensor, (uint8_t)fillVal));
 
-    EXPECT_NO_THROW(test::SetTensorTo<uint16_t>(tensor.exportData(), fillVal));
+    EXPECT_NO_THROW(nvcv::util::SetTensorTo<uint16_t>(tensor.exportData(), fillVal));
     EXPECT_NO_THROW(compareTensor<uint16_t>(tensor, (uint16_t)fillVal));
 
-    EXPECT_NO_THROW(test::SetTensorTo<int>(tensor.exportData(), fillVal));
+    EXPECT_NO_THROW(nvcv::util::SetTensorTo<int>(tensor.exportData(), fillVal));
     EXPECT_NO_THROW(compareTensor<int>(tensor, (int)fillVal));
 
-    EXPECT_NO_THROW(test::SetTensorTo<float>(tensor.exportData(), fillVal));
+    EXPECT_NO_THROW(nvcv::util::SetTensorTo<float>(tensor.exportData(), fillVal));
     EXPECT_NO_THROW(compareTensor<float>(tensor, (float)fillVal));
 }
 
@@ -148,13 +149,13 @@ TEST_P(TensorDataUtils, SetTensorToRandom)
     nvcv::Tensor tensor(number, {width, height}, nvcv::FMT_RGBA8);
     nvcv::Tensor tensorFloat(number, {width, height}, nvcv::FMT_RGBAf32p);
 
-    EXPECT_NO_THROW(test::SetTensorToRandomValue<uint8_t>(tensor.exportData(), 0, 0xFF));
+    EXPECT_NO_THROW(util::SetTensorToRandomValue<uint8_t>(tensor.exportData(), 0, 0xFF));
     EXPECT_NO_THROW(checkRndRange<uint8_t>(tensor, 0, 0xFF));
 
-    EXPECT_NO_THROW(test::SetTensorToRandomValue<uint8_t>(tensor.exportData(), 0x05, 0x11));
+    EXPECT_NO_THROW(util::SetTensorToRandomValue<uint8_t>(tensor.exportData(), 0x05, 0x11));
     EXPECT_NO_THROW(checkRndRange<uint8_t>(tensor, 0x05, 0x11));
 
-    EXPECT_NO_THROW(test::SetTensorToRandomValue<float>(tensorFloat.exportData(), .01f, 1.0f));
+    EXPECT_NO_THROW(util::SetTensorToRandomValue<float>(tensorFloat.exportData(), .01f, 1.0f));
     EXPECT_NO_THROW(checkRndRange<float>(tensorFloat, .01f, 1.0f));
 }
 
@@ -181,14 +182,14 @@ TEST(TensorDataUtils, SanityCvImageData)
     nvcv::Tensor tensor1(number, {width, height}, nvcv::FMT_RGBAf32p);
     nvcv::Tensor tensor2(number, {width, height}, nvcv::FMT_BGR8);
 
-    EXPECT_NO_THROW(test::SetTensorTo<float>(tensor1.exportData(), 0.5f));
-    EXPECT_NO_THROW(test::SetTensorTo<uint8_t>(tensor2.exportData(), 0xa0));
-    EXPECT_NO_THROW(test::SetTensorTo<uint8_t>(tensor2.exportData(), 0xb0, 1));
+    EXPECT_NO_THROW(util::SetTensorTo<float>(tensor1.exportData(), 0.5f));
+    EXPECT_NO_THROW(util::SetTensorTo<uint8_t>(tensor2.exportData(), 0xa0));
+    EXPECT_NO_THROW(util::SetTensorTo<uint8_t>(tensor2.exportData(), 0xb0, 1));
 
-    test::TensorImageData cvImage1(tensor1.exportData());
-    test::TensorImageData cvImage2(tensor1.exportData(), 1);
-    test::TensorImageData cvImage3(tensor2.exportData());
-    test::TensorImageData cvImage4(tensor2.exportData(), 1);
+    util::TensorImageData cvImage1(tensor1.exportData());
+    util::TensorImageData cvImage2(tensor1.exportData(), 1);
+    util::TensorImageData cvImage3(tensor2.exportData());
+    util::TensorImageData cvImage4(tensor2.exportData(), 1);
 
     EXPECT_EQ(cvImage1, cvImage2);
     EXPECT_NE(cvImage2, cvImage3);
@@ -213,12 +214,12 @@ TEST(TensorDataUtils, SetCvImageData)
     int height = 5;
 
     nvcv::Tensor tensor(1, {width, height}, nvcv::FMT_RGBA8);
-    EXPECT_NO_THROW(test::SetTensorTo<uint8_t>(tensor.exportData(), 0xCA));
-    test::TensorImageData cvTensor(tensor.exportData());
+    EXPECT_NO_THROW(util::SetTensorTo<uint8_t>(tensor.exportData(), 0xCA));
+    util::TensorImageData cvTensor(tensor.exportData());
 
     nvcv::Size2D region = {width - 1, height - 1};
     EXPECT_NO_THROW(
-        test::SetCvDataTo<uint8_t>(cvTensor, 0xFF, region, test::chflags::C0 | test::chflags::C2 | test::chflags::C3));
+        util::SetCvDataTo<uint8_t>(cvTensor, 0xFF, region, util::chflags::C0 | util::chflags::C2 | util::chflags::C3));
 
     uint8_t *dataPtr = cvTensor.getVector().data();
     //1st Col
@@ -271,11 +272,11 @@ TEST(TensorDataUtils, SetCvImageDataP)
     int          width  = 5;
     int          height = 5;
     nvcv::Tensor tensor(1, {width, height}, nvcv::FMT_RGBAf32p);
-    EXPECT_NO_THROW(test::SetTensorTo<float>(tensor.exportData(), 1.0f));
-    test::TensorImageData cvTensorFp(tensor.exportData());
+    EXPECT_NO_THROW(util::SetTensorTo<float>(tensor.exportData(), 1.0f));
+    util::TensorImageData cvTensorFp(tensor.exportData());
     nvcv::Size2D          region = {width - 1, height - 1};
     EXPECT_NO_THROW(
-        test::SetCvDataTo<float>(cvTensorFp, .5f, region, test::chflags::C0 | test::chflags::C2 | test::chflags::C3));
+        util::SetCvDataTo<float>(cvTensorFp, .5f, region, util::chflags::C0 | util::chflags::C2 | util::chflags::C3));
 
     float *dataPtr = (float *)cvTensorFp.getVector().data();
     EXPECT_EQ(*dataPtr, .5f);
@@ -318,12 +319,12 @@ TEST(TensorDataUtils, SetCvImageDataPrint)
     int          width  = 2;
     int          height = 2;
     nvcv::Tensor tensorFp(1, {width, height}, nvcv::FMT_RGBAf32p);
-    EXPECT_NO_THROW(test::SetTensorTo<float>(tensorFp.exportData(), 3.0f));
-    test::TensorImageData cvTensorFp(tensorFp.exportData());
+    EXPECT_NO_THROW(util::SetTensorTo<float>(tensorFp.exportData(), 3.0f));
+    nvcv::util::TensorImageData cvTensorFp(tensorFp.exportData());
     std::cout << cvTensorFp;
 
     nvcv::Tensor tensor(1, {width, height}, nvcv::FMT_RGB8);
-    EXPECT_NO_THROW(test::SetTensorTo<uint8_t>(tensor.exportData(), 0x55));
-    test::TensorImageData cvTensor(tensor.exportData());
+    EXPECT_NO_THROW(nvcv::util::SetTensorTo<uint8_t>(tensor.exportData(), 0x55));
+    util::TensorImageData cvTensor(tensor.exportData());
     std::cout << cvTensor;
 }

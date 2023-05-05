@@ -17,13 +17,13 @@
 
 #include "Definitions.hpp"
 
-#include <common/TensorDataUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <cvcuda/OpNormalize.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
+#include <util/TensorDataUtils.hpp>
 
 #include <cmath>
 #include <random>
@@ -129,7 +129,7 @@ TEST_P(OpNormalize, tensor_correct_output)
     std::default_random_engine rng;
 
     // Create input tensor
-    nvcv::Tensor imgSrc  = test::CreateTensor(numImages, width, height, fmt);
+    nvcv::Tensor imgSrc  = nvcv::util::CreateTensor(numImages, width, height, fmt);
     auto         srcData = imgSrc.exportData<nvcv::TensorDataStridedCuda>();
     ASSERT_NE(nullptr, srcData);
     auto srcAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*srcData);

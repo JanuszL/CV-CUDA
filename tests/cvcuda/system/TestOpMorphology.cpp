@@ -18,7 +18,6 @@
 #include "ConvUtils.hpp"
 #include "Definitions.hpp"
 
-#include <common/TensorDataUtils.hpp>
 #include <common/ValueTests.hpp>
 #include <cvcuda/OpMorphology.hpp>
 #include <nvcv/Image.hpp>
@@ -26,6 +25,7 @@
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/cuda/TypeTraits.hpp>
+#include <util/TensorDataUtils.hpp>
 
 #include <random>
 
@@ -36,7 +36,7 @@ using uchar = unsigned char;
 
 // checks pixels only in the logical image region.
 template<class T>
-static bool imageRegionValuesSame(test::TensorImageData &a, test::TensorImageData &b)
+static bool imageRegionValuesSame(nvcv::util::TensorImageData &a, nvcv::util::TensorImageData &b)
 {
     int minWidth  = a.size().w > b.size().w ? b.size().w : a.size().w;
     int minHeight = a.size().h > b.size().h ? b.size().h : a.size().h;
@@ -56,19 +56,19 @@ static bool imageRegionValuesSame(test::TensorImageData &a, test::TensorImageDat
 template<class T, size_t rows, size_t cols>
 void SetTensorToTestVector(const uchar inputVals[rows][cols], int width, int height, nvcv::Tensor &tensor, int sample)
 {
-    test::TensorImageData data(tensor.exportData(), sample);
+    nvcv::util::TensorImageData data(tensor.exportData(), sample);
 
     for (int x = 0; x < width; ++x)
         for (int y = 0; y < height; ++y)
             for (int c = 0; c < data.numC(); ++c) *data.item<T>(x, y, c) = (T)inputVals[y][x];
 
-    EXPECT_NO_THROW(test::SetTensorFromVector<T>(tensor.exportData(), data.getVector(), sample));
+    EXPECT_NO_THROW(nvcv::util::SetTensorFromVector<T>(tensor.exportData(), data.getVector(), sample));
 }
 
 template<class T, size_t rows, size_t cols>
 bool MatchTensorToTestVector(const uchar checkVals[rows][cols], int width, int height, nvcv::Tensor &Tensor, int sample)
 {
-    test::TensorImageData data(Tensor.exportData(), sample);
+    nvcv::util::TensorImageData data(Tensor.exportData(), sample);
     for (int x = 0; x < width; ++x)
         for (int y = 0; y < height; ++y)
             for (int c = 0; c < data.numC(); ++c)
@@ -117,8 +117,8 @@ TEST(OpMorphology, morph_check_dilate_kernel)
 
     nvcv::ImageFormat format{NVCV_IMAGE_FORMAT_U8};
 
-    nvcv::Tensor inTensor  = test::CreateTensor(batches, width, height, format);
-    nvcv::Tensor outTensor = test::CreateTensor(batches, width, height, format);
+    nvcv::Tensor inTensor  = nvcv::util::CreateTensor(batches, width, height, format);
+    nvcv::Tensor outTensor = nvcv::util::CreateTensor(batches, width, height, format);
 
     int2               anchor(-1, -1);
     nvcv::Size2D       maskSize(3, 3);
@@ -270,8 +270,8 @@ TEST(OpMorphology, morph_check_erode_kernel)
 
     nvcv::ImageFormat format{NVCV_IMAGE_FORMAT_U8};
 
-    nvcv::Tensor inTensor  = test::CreateTensor(batches, width, height, format);
-    nvcv::Tensor outTensor = test::CreateTensor(batches, width, height, format);
+    nvcv::Tensor inTensor  = nvcv::util::CreateTensor(batches, width, height, format);
+    nvcv::Tensor outTensor = nvcv::util::CreateTensor(batches, width, height, format);
 
     int2               anchor(-1, -1);
     nvcv::Size2D       maskSize(3, 3);
@@ -316,8 +316,8 @@ TEST(OpMorphology, morph_check_dilate_kernel_even)
 
     nvcv::ImageFormat format{NVCV_IMAGE_FORMAT_U8};
 
-    nvcv::Tensor inTensor  = test::CreateTensor(batches, width, height, format);
-    nvcv::Tensor outTensor = test::CreateTensor(batches, width, height, format);
+    nvcv::Tensor inTensor  = nvcv::util::CreateTensor(batches, width, height, format);
+    nvcv::Tensor outTensor = nvcv::util::CreateTensor(batches, width, height, format);
 
     int2               anchor(-1, -1);
     nvcv::Size2D       maskSize(3, 3);
@@ -380,11 +380,11 @@ TEST_P(OpMorphology, morph_noop)
 
     nvcv::ImageFormat format{NVCV_IMAGE_FORMAT_U8};
 
-    nvcv::Tensor inTensor  = test::CreateTensor(batches, width, height, format);
-    nvcv::Tensor outTensor = test::CreateTensor(batches, width, height, format);
+    nvcv::Tensor inTensor  = nvcv::util::CreateTensor(batches, width, height, format);
+    nvcv::Tensor outTensor = nvcv::util::CreateTensor(batches, width, height, format);
 
-    EXPECT_NO_THROW(test::SetTensorToRandomValue<uint8_t>(inTensor.exportData(), 0, 0xFF));
-    EXPECT_NO_THROW(test::SetTensorTo<uint8_t>(outTensor.exportData(), 0));
+    EXPECT_NO_THROW(nvcv::util::SetTensorToRandomValue<uint8_t>(inTensor.exportData(), 0, 0xFF));
+    EXPECT_NO_THROW(nvcv::util::SetTensorTo<uint8_t>(outTensor.exportData(), 0));
 
     cvcuda::Morphology morphOp(0);
     int2               anchor(0, 0);
@@ -397,8 +397,8 @@ TEST_P(OpMorphology, morph_noop)
 
     for (int i = 0; i < batches; ++i)
     {
-        test::TensorImageData cvTensorIn(inTensor.exportData());
-        test::TensorImageData cvTensorOut(outTensor.exportData());
+        nvcv::util::TensorImageData cvTensorIn(inTensor.exportData());
+        nvcv::util::TensorImageData cvTensorOut(outTensor.exportData());
         EXPECT_TRUE(imageRegionValuesSame<uint8_t>(cvTensorIn, cvTensorOut));
     }
 
@@ -426,8 +426,8 @@ TEST_P(OpMorphology, morph_random)
     int  iteration = 1;
     int3 shape{width, height, batches};
 
-    nvcv::Tensor inTensor  = test::CreateTensor(batches, width, height, format);
-    nvcv::Tensor outTensor = test::CreateTensor(batches, width, height, format);
+    nvcv::Tensor inTensor  = nvcv::util::CreateTensor(batches, width, height, format);
+    nvcv::Tensor outTensor = nvcv::util::CreateTensor(batches, width, height, format);
 
     auto inData  = inTensor.exportData<nvcv::TensorDataStridedCuda>();
     auto outData = outTensor.exportData<nvcv::TensorDataStridedCuda>();

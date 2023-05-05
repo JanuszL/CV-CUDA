@@ -19,7 +19,6 @@
 
 #include <common/BorderUtils.hpp>
 #include <common/InterpUtils.hpp>
-#include <common/TensorDataUtils.hpp>
 #include <common/TypedTests.hpp>
 #include <common/ValueTests.hpp>
 #include <cvcuda/OpCropFlipNormalizeReformat.hpp>
@@ -30,6 +29,7 @@
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
 #include <nvcv/cuda/SaturateCast.hpp>
+#include <util/TensorDataUtils.hpp>
 
 #include <cmath>
 #include <iostream>
