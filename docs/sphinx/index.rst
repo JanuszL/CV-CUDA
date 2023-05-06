@@ -1,5 +1,5 @@
 ..
-  # SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+  # SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
   # SPDX-License-Identifier: Apache-2.0
   #
   # Licensed under the Apache License, Version 2.0 (the "License");
@@ -116,6 +116,7 @@ Copyright
 
     C Modules <modules/c_modules>
     C++ Modules <modules/cpp_modules>
+    Python Modules <modules/python_modules>
     Index <_exhale_api/cvcuda_api>
 
 .. toctree::
