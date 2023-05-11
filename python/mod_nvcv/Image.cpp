@@ -219,7 +219,7 @@ std::vector<BufferImageInfo> ExtractBufferImageInfo(const std::vector<DLPackTens
         bufInfo.numPlanes        = bufInfo.isChannelLast ? infoShape->numSamples() : infoShape->numChannels();
         bufInfo.numChannels      = infoShape->numChannels();
         bufInfo.size             = infoShape->size();
-        bufInfo.planeStride      = strides[infoLayout->idxSample()];
+        bufInfo.planeStride      = strides[bufInfo.isChannelLast ? infoLayout->idxSample() : infoLayout->idxChannel()];
         bufInfo.rowStride        = strides[infoLayout->idxHeight()];
         bufInfo.data             = tensor.data;
         bufInfo.dtype            = ToNVCVDataType(tensor.dtype);
