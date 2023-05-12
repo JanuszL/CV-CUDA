@@ -29,25 +29,30 @@
 
 namespace nvcv {
 
-class IImage;
+class Image;
 class ImageData;
 class ImageDataCudaArray;
 class ImageDataStrided;
 class ImageDataStridedCuda;
 class ImageDataStridedHost;
 
-class IImageBatch;
+class ImageBatch;
 class ImageBatchData;
 
-class IImageBatchVarShape;
+class ImageBatchVarShape;
 class ImageBatchVarShapeData;
 class ImageBatchVarShapeDataStrided;
 class ImageBatchVarShapeDataStridedCuda;
 
-class ITensor;
+class Tensor;
 class TensorData;
 class TensorDataStrided;
 class TensorDataStridedCuda;
+
+using IImage              = const Image;
+using IImageBatch         = const ImageBatch;
+using IImageBatchVarShape = const ImageBatchVarShape;
+using ITensor             = const Tensor;
 
 } // namespace nvcv
 

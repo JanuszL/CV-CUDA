@@ -29,7 +29,6 @@ add_executable(nvcv_test_types_unit
     TestOptional.cpp
     TestLockFreeStack.cpp
     TestHandleManager.cpp
-    TestTensorDataUtils.cpp
     TestAlgorithm.cpp
     TestRange.cpp
     TestCallback.cpp

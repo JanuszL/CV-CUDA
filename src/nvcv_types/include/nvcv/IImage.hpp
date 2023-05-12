@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,48 +18,10 @@
 #ifndef NVCV_IIMAGE_HPP
 #define NVCV_IIMAGE_HPP
 
-#include "Casts.hpp"
-#include "Image.h"
-#include "ImageData.hpp"
-#include "Size.hpp"
-
-#include <nvcv/ImageFormat.hpp>
-
-#include <type_traits> // for std::aligned_storage
+#include "Image.hpp"
 
 namespace nvcv {
-
-class IImage
-{
-public:
-    using HandleType    = NVCVImageHandle;
-    using BaseInterface = IImage;
-
-    virtual ~IImage();
-
-    HandleType     handle() const;
-    static IImage *cast(HandleType h);
-
-    Size2D      size() const;
-    ImageFormat format() const;
-
-    ImageData exportData() const;
-
-    template<typename DATA>
-    Optional<DATA> exportData() const;
-
-    void  setUserPointer(void *ptr);
-    void *userPointer() const;
-
-protected:
-    IImage();
-
-private:
-    virtual NVCVImageHandle doGetHandle() const = 0;
-};
-
+using IImage = const Image;
 } // namespace nvcv
-
-#include "detail/IImageImpl.hpp"
 
 #endif // NVCV_IIMAGE_HPP

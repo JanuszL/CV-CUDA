@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,50 +18,10 @@
 #ifndef NVCV_ITENSOR_HPP
 #define NVCV_ITENSOR_HPP
 
-#include "Casts.hpp"
-#include "Optional.hpp"
-#include "Tensor.h"
-#include "TensorData.hpp"
-#include "TensorLayout.hpp"
-#include "TensorShape.hpp"
-
-#include <nvcv/DataType.hpp>
+#include "Tensor.hpp"
 
 namespace nvcv {
-
-class ITensor
-{
-public:
-    using HandleType    = NVCVTensorHandle;
-    using BaseInterface = ITensor;
-
-    virtual ~ITensor() = default;
-
-    HandleType      handle() const;
-    static ITensor *cast(HandleType h);
-
-    int          rank() const;
-    TensorShape  shape() const;
-    DataType     dtype() const;
-    TensorLayout layout() const;
-
-    TensorData exportData() const;
-
-    template<typename DerivedTensorData>
-    Optional<DerivedTensorData> exportData() const
-    {
-        return exportData().cast<DerivedTensorData>();
-    }
-
-    void  setUserPointer(void *ptr);
-    void *userPointer() const;
-
-private:
-    virtual NVCVTensorHandle doGetHandle() const = 0;
-};
-
+using ITensor = const Tensor;
 } // namespace nvcv
-
-#include "detail/ITensorImpl.hpp"
 
 #endif // NVCV_ITENSOR_HPP

@@ -45,7 +45,7 @@ TEST(SharedCoreObjTest, Construct)
         using Ptr = nvcv::priv::SharedCoreObj<nvcv::priv::Image>;
         Ptr s1    = nvcv::priv::ToSharedObj<nvcv::priv::Image>(h);
         EXPECT_EQ(nvcv::priv::CoreObjectRefCount(h), 2);
-        Ptr s2 = Ptr::FromRawPointer(nvcv::priv::ToStaticPtr<nvcv::priv::Image>(h), true);
+        Ptr s2 = Ptr::FromPointer(nvcv::priv::ToStaticPtr<nvcv::priv::Image>(h), true);
         EXPECT_EQ(nvcv::priv::CoreObjectRefCount(h), 3);
         Ptr s3(s2.release());
         EXPECT_EQ(nvcv::priv::CoreObjectRefCount(h), 3)

@@ -344,13 +344,13 @@ TEST_P(OpThreshold, varshape_correct_shape)
     std::uniform_int_distribution<int> rndWidth(width * 0.8, width * 1.1);
     std::uniform_int_distribution<int> rndHeight(height * 0.8, height * 1.1);
 
-    std::vector<std::unique_ptr<nvcv::Image>> imgSrc, imgDst;
+    std::vector<nvcv::Image> imgSrc, imgDst;
     for (int i = 0; i < batch; ++i)
     {
         int rw = rndWidth(randEng);
         int rh = rndHeight(randEng);
-        imgSrc.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{rw, rh}, fmt));
-        imgDst.emplace_back(std::make_unique<nvcv::Image>(nvcv::Size2D{rw, rh}, fmt));
+        imgSrc.emplace_back(nvcv::Size2D{rw, rh}, fmt);
+        imgDst.emplace_back(nvcv::Size2D{rw, rh}, fmt);
     }
 
     nvcv::ImageBatchVarShape batchSrc(batch);
@@ -383,7 +383,7 @@ TEST_P(OpThreshold, varshape_correct_shape)
 
     for (int i = 0; i < batch; i++)
     {
-        const auto srcData = imgSrc[i]->exportData<nvcv::ImageDataStridedCuda>();
+        const auto srcData = imgSrc[i].exportData<nvcv::ImageDataStridedCuda>();
         assert(srcData->numPlanes() == 1);
 
         int srcWidth  = srcData->plane(0).width;
@@ -412,7 +412,7 @@ TEST_P(OpThreshold, varshape_correct_shape)
     {
         SCOPED_TRACE(i);
 
-        const auto dstData = imgDst[i]->exportData<nvcv::ImageDataStridedCuda>();
+        const auto dstData = imgDst[i].exportData<nvcv::ImageDataStridedCuda>();
         assert(dstData->numPlanes() == 1);
 
         int dstWidth  = dstData->plane(0).width;

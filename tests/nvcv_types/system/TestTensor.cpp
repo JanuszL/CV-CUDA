@@ -229,28 +229,6 @@ TEST(TensorTests, wip_create_allocator)
 
 TEST(Tensor, wip_cast)
 {
-    nvcv::Tensor tensor(3, {163, 117}, nvcv::FMT_RGBA8);
-
-    EXPECT_EQ(&tensor, nvcv::StaticCast<nvcv::Tensor *>(tensor.handle()));
-    EXPECT_EQ(&tensor, &nvcv::StaticCast<nvcv::Tensor>(tensor.handle()));
-
-    EXPECT_EQ(&tensor, nvcv::StaticCast<nvcv::ITensor *>(tensor.handle()));
-    EXPECT_EQ(&tensor, &nvcv::StaticCast<nvcv::ITensor>(tensor.handle()));
-
-    EXPECT_EQ(&tensor, nvcv::DynamicCast<nvcv::Tensor *>(tensor.handle()));
-    EXPECT_EQ(&tensor, &nvcv::DynamicCast<nvcv::Tensor>(tensor.handle()));
-
-    EXPECT_EQ(&tensor, nvcv::DynamicCast<nvcv::ITensor *>(tensor.handle()));
-    EXPECT_EQ(&tensor, &nvcv::DynamicCast<nvcv::ITensor>(tensor.handle()));
-
-    EXPECT_EQ(nullptr, nvcv::DynamicCast<nvcv::TensorWrapData *>(tensor.handle()));
-
-    EXPECT_EQ(nullptr, nvcv::StaticCast<nvcv::ITensor *>(nullptr));
-    EXPECT_EQ(nullptr, nvcv::DynamicCast<nvcv::ITensor *>(nullptr));
-    EXPECT_THROW(nvcv::DynamicCast<nvcv::ITensor>(nullptr), std::bad_cast);
-
-    // Now when we create the object via C API
-
     NVCVTensorHandle       handle;
     NVCVTensorRequirements reqs;
     ASSERT_EQ(NVCV_SUCCESS, nvcvTensorCalcRequirementsForImages(5, 163, 117, NVCV_IMAGE_FORMAT_RGBA8, 0, 0, &reqs));
@@ -259,34 +237,18 @@ TEST(Tensor, wip_cast)
     EXPECT_EQ(NVCV_SUCCESS, nvcvTensorRefCount(handle, &ref));
     EXPECT_EQ(ref, 1);
 
-    uintptr_t max = 512;
+    auto         h = handle;
+    nvcv::Tensor tensor(std::move(handle));
 
-    EXPECT_GE(max, sizeof(nvcv::detail::WrapHandle<nvcv::ITensor>)) << "Must be big enough for the WrapHandle";
+    EXPECT_EQ(h, tensor.handle());
+    ASSERT_EQ(4, tensor.rank());
+    EXPECT_EQ(4, tensor.shape()[3]);
+    EXPECT_EQ(163, tensor.shape()[2]);
+    EXPECT_EQ(117, tensor.shape()[1]);
+    EXPECT_EQ(5, tensor.shape()[0]);
+    EXPECT_EQ(nvcv::TYPE_U8, tensor.dtype());
 
-    void *cxxPtr = &max;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvTensorGetUserPointer((NVCVTensorHandle)(((uintptr_t)handle) | 1), &cxxPtr));
-    ASSERT_NE(&max, cxxPtr) << "Pointer must have been changed";
-
-    // Buffer too big, bail.
-    max    = 513;
-    cxxPtr = &max;
-    ASSERT_EQ(NVCV_ERROR_INTERNAL, nvcvTensorGetUserPointer((NVCVTensorHandle)(((uintptr_t)handle) | 1), &cxxPtr))
-        << "Required WrapHandle buffer storage should have been too big";
-
-    nvcv::ITensor *ptensor = nvcv::StaticCast<nvcv::ITensor *>(handle);
-    ASSERT_NE(nullptr, ptensor);
-    EXPECT_EQ(handle, ptensor->handle());
-    ASSERT_EQ(4, ptensor->rank());
-    EXPECT_EQ(4, ptensor->shape()[3]);
-    EXPECT_EQ(163, ptensor->shape()[2]);
-    EXPECT_EQ(117, ptensor->shape()[1]);
-    EXPECT_EQ(5, ptensor->shape()[0]);
-    EXPECT_EQ(nvcv::TYPE_U8, ptensor->dtype());
-
-    EXPECT_EQ(ptensor, nvcv::DynamicCast<nvcv::ITensor *>(handle));
-    EXPECT_EQ(nullptr, nvcv::DynamicCast<nvcv::Tensor *>(handle));
-
-    EXPECT_EQ(NVCV_SUCCESS, nvcvTensorDecRef(handle, &ref));
+    ref = tensor.reset();
     EXPECT_EQ(ref, 0);
 }
 
@@ -295,21 +257,21 @@ TEST(Tensor, wip_user_pointer)
     nvcv::Tensor tensor(3, {163, 117}, nvcv::FMT_RGBA8);
     EXPECT_EQ(nullptr, tensor.userPointer());
 
-    void *cxxPtr;
-    ASSERT_EQ(NVCV_SUCCESS, nvcvTensorGetUserPointer((NVCVTensorHandle)(((uintptr_t)tensor.handle()) | 1), &cxxPtr));
-    ASSERT_EQ(&tensor, cxxPtr) << "cxx object pointer must always be associated with the corresponding handle";
+    void *userPtr;
+    ASSERT_EQ(NVCV_SUCCESS, nvcvTensorGetUserPointer(tensor.handle(), &userPtr));
+    ASSERT_EQ(nullptr, userPtr);
 
     tensor.setUserPointer((void *)0x123);
     EXPECT_EQ((void *)0x123, tensor.userPointer());
 
-    ASSERT_EQ(NVCV_SUCCESS, nvcvTensorGetUserPointer((NVCVTensorHandle)(((uintptr_t)tensor.handle()) | 1), &cxxPtr));
-    ASSERT_EQ(&tensor, cxxPtr) << "cxx object pointer must always be associated with the corresponding handle";
+    ASSERT_EQ(NVCV_SUCCESS, nvcvTensorGetUserPointer(tensor.handle(), &userPtr));
+    ASSERT_EQ((void *)0x123, userPtr);
 
     tensor.setUserPointer(nullptr);
     EXPECT_EQ(nullptr, tensor.userPointer());
 
-    ASSERT_EQ(NVCV_SUCCESS, nvcvTensorGetUserPointer((NVCVTensorHandle)(((uintptr_t)tensor.handle()) | 1), &cxxPtr));
-    ASSERT_EQ(&tensor, cxxPtr) << "cxx object pointer must always be associated with the corresponding handle";
+    ASSERT_EQ(NVCV_SUCCESS, nvcvTensorGetUserPointer(tensor.handle(), &userPtr));
+    ASSERT_EQ(nullptr, userPtr);
 }
 
 TEST(TensorWrapData, wip_create)
@@ -341,7 +303,7 @@ TEST(TensorWrapData, wip_create)
     EXPECT_EQ(2, tdata->stride(3));
     EXPECT_EQ(173 * 2, tdata->stride(2));
 
-    nvcv::TensorWrapData tensor{*tdata};
+    auto tensor = nvcv::TensorWrapData(*tdata);
 
     ASSERT_NE(nullptr, tensor.handle());
 
@@ -407,7 +369,7 @@ TEST_P(TensorWrapImageTests, wip_create)
 
     nvcv::Image img(PARAM_SIZE, PARAM_FORMAT);
 
-    nvcv::TensorWrapImage tensor(img);
+    auto tensor = nvcv::TensorWrapImage(img);
 
     EXPECT_EQ(GOLD_SHAPE, tensor.shape());
     EXPECT_EQ(GOLD_DTYPE, tensor.dtype());
@@ -478,13 +440,13 @@ TEST_P(TensorWrapParamTests, wip_create)
     // we're not accessing the memory in any way, let's set it to something not null
     buf.basePtr = (NVCVByte *)0xDEADBEEF;
 
-    std::unique_ptr<nvcv::TensorWrapData> tensor;
-    NVCV_ASSERT_STATUS(GOLD_STATUS, tensor = std::make_unique<nvcv::TensorWrapData>(
-                                        nvcv::TensorDataStridedCuda(PARAM_TSHAPE, PARAM_DTYPE, buf)));
+    nvcv::Tensor tensor;
+    NVCV_ASSERT_STATUS(GOLD_STATUS,
+                       tensor = TensorWrapData(nvcv::TensorDataStridedCuda(PARAM_TSHAPE, PARAM_DTYPE, buf)));
 
     if (GOLD_STATUS == NVCV_SUCCESS)
     {
-        auto data = tensor->exportData<nvcv::TensorDataStridedCuda>();
+        auto data = tensor.exportData<nvcv::TensorDataStridedCuda>();
         ASSERT_NE(nullptr, data);
 
         EXPECT_EQ(buf.basePtr, (NVCVByte *)data->basePtr());

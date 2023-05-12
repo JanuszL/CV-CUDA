@@ -56,8 +56,8 @@ public:
     nvcv::DataType                    dtype() const;
     int                               rank() const;
 
-    nvcv::ITensor       &impl();
-    const nvcv::ITensor &impl() const;
+    nvcv::Tensor       &impl();
+    const nvcv::Tensor &impl() const;
 
     class Key final : public IKey
     {
@@ -89,8 +89,8 @@ private:
     Tensor(Image &img);
 
     // m_impl must come before m_key
-    std::unique_ptr<nvcv::ITensor> m_impl;
-    Key                            m_key;
+    nvcv::Tensor m_impl;
+    Key          m_key;
 
     mutable py::object                        m_cacheExternalObject;
     mutable std::optional<nvcv::TensorLayout> m_cacheExternalObjectLayout;

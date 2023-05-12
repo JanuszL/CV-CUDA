@@ -20,6 +20,7 @@
 
 #include "ICoreObject.hpp"
 #include "ImageFormat.hpp"
+#include "SharedCoreObj.hpp"
 
 #include <nvcv/Image.h>
 
@@ -35,7 +36,7 @@ public:
 
     virtual NVCVTypeImage type() const = 0;
 
-    virtual IAllocator &alloc() const = 0;
+    virtual SharedCoreObj<IAllocator> alloc() const = 0;
 
     virtual void exportData(NVCVImageData &data) const = 0;
 };

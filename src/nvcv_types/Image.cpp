@@ -165,7 +165,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageGetAllocator, (NVCVImageHandle handle
 
             auto &img = priv::ToStaticRef<const priv::IImage>(handle);
 
-            *halloc = img.alloc().handle();
+            *halloc = img.alloc().release()->handle();
         });
 }
 

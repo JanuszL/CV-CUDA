@@ -55,7 +55,7 @@ public:
         }
     }
 
-    static SharedCoreObj FromRawPointer(CoreObj *obj, bool incRef)
+    static SharedCoreObj FromPointer(CoreObj *obj, bool incRef)
     {
         if (obj && incRef)
         {
@@ -76,6 +76,16 @@ public:
     SharedCoreObj(const SharedCoreObj &obj)
     {
         *this = obj;
+    }
+
+    SharedCoreObj(CoreObj &&obj) = delete;
+
+    // Temporary workaround to avoid too many changes in the code
+    SharedCoreObj(CoreObj &obj)
+        : m_obj(&obj)
+    {
+        if (auto h = obj.handle())
+            CoreObjectIncRef(h);
     }
 
     template<typename U, std::enable_if_t<std::is_convertible_v<U *, CoreObj *>, int> = 0>
@@ -202,7 +212,7 @@ constexpr bool operator!=(nullptr_t, const SharedCoreObj<T> &x)
 template<typename T, typename HandleType>
 inline SharedCoreObj<T> ToSharedObj(HandleType h)
 {
-    return SharedCoreObj<T>::FromRawPointer(ToStaticPtr<T>(h), true);
+    return SharedCoreObj<T>::FromPointer(ToStaticPtr<T>(h), true);
 }
 
 } // namespace nvcv::priv
