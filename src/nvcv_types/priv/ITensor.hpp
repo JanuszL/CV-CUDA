@@ -20,6 +20,7 @@
 
 #include "ICoreObject.hpp"
 #include "ImageFormat.hpp"
+#include "SharedCoreObj.hpp"
 
 #include <nvcv/Tensor.h>
 
@@ -37,7 +38,7 @@ public:
 
     virtual DataType dtype() const = 0;
 
-    virtual IAllocator &alloc() const = 0;
+    virtual SharedCoreObj<IAllocator> alloc() const = 0;
 
     virtual void exportData(NVCVTensorData &data) const = 0;
 };

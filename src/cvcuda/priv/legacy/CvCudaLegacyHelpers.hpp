@@ -26,6 +26,9 @@
 
 #include "CvCudaLegacy.h"
 
+#include <nvcv/IImage.hpp>
+#include <nvcv/IImageBatch.hpp>
+#include <nvcv/ITensor.hpp>
 #include <nvcv/ImageBatchData.hpp>
 #include <nvcv/TensorData.hpp>
 #include <nvcv/TensorShapeInfo.hpp>

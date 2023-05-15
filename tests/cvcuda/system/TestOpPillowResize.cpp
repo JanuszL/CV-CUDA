@@ -938,13 +938,11 @@ void StartVarShapeTest(int srcWidthBase, int srcHeightBase, int dstWidthBase, in
     std::uniform_int_distribution<int> rndDstWidth(dstWidthBase * 0.8, dstWidthBase * 1.1);
     std::uniform_int_distribution<int> rndDstHeight(dstHeightBase * 0.8, dstHeightBase * 1.1);
 
-    std::vector<std::unique_ptr<nvcv::Image>> imgSrc, imgDst;
+    std::vector<nvcv::Image> imgSrc, imgDst;
     for (int i = 0; i < numberOfImages; ++i)
     {
-        imgSrc.emplace_back(
-            std::make_unique<nvcv::Image>(nvcv::Size2D{rndSrcWidth(randEng), rndSrcHeight(randEng)}, fmt));
-        imgDst.emplace_back(
-            std::make_unique<nvcv::Image>(nvcv::Size2D{rndDstWidth(randEng), rndDstHeight(randEng)}, fmt));
+        imgSrc.emplace_back(nvcv::Size2D{rndSrcWidth(randEng), rndSrcHeight(randEng)}, fmt);
+        imgDst.emplace_back(nvcv::Size2D{rndDstWidth(randEng), rndDstHeight(randEng)}, fmt);
     }
 
     nvcv::ImageBatchVarShape batchSrc(numberOfImages);
@@ -959,7 +957,7 @@ void StartVarShapeTest(int srcWidthBase, int srcHeightBase, int dstWidthBase, in
     // Populate input
     for (int i = 0; i < numberOfImages; ++i)
     {
-        const auto srcData = imgSrc[i]->exportData<nvcv::ImageDataStridedCuda>();
+        const auto srcData = imgSrc[i].exportData<nvcv::ImageDataStridedCuda>();
         assert(srcData->numPlanes() == 1);
 
         int srcWidth  = srcData->plane(0).width;
@@ -1002,12 +1000,12 @@ void StartVarShapeTest(int srcWidthBase, int srcHeightBase, int dstWidthBase, in
     {
         SCOPED_TRACE(i);
 
-        const auto srcData = imgSrc[i]->exportData<nvcv::ImageDataStridedCuda>();
+        const auto srcData = imgSrc[i].exportData<nvcv::ImageDataStridedCuda>();
         assert(srcData->numPlanes() == 1);
         int srcWidth  = srcData->plane(0).width;
         int srcHeight = srcData->plane(0).height;
 
-        const auto dstData = imgDst[i]->exportData<nvcv::ImageDataStridedCuda>();
+        const auto dstData = imgDst[i].exportData<nvcv::ImageDataStridedCuda>();
         assert(dstData->numPlanes() == 1);
 
         int dstWidth  = dstData->plane(0).width;

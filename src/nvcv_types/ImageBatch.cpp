@@ -221,7 +221,7 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvImageBatchGetAllocator,
 
             auto &batch = priv::ToStaticRef<const priv::IImageBatch>(handle);
 
-            *halloc = batch.alloc().handle();
+            *halloc = batch.alloc().release()->handle();
         });
 }
 

@@ -100,7 +100,7 @@ static void checkRndRange(nvcv::Tensor &tensor, DT lowBound, DT highBound)
 
     for (int sample = 0; sample < tDataAc->numSamples(); sample++)
     {
-        nvcv::util::TensorImageData img(tensor.exportData(), sample);
+        util::TensorImageData img(tensor.exportData(), sample);
 
         for (int x = 0; x < img.size().w; x++)
             for (int y = 0; y < img.size().h; y++)
@@ -127,16 +127,16 @@ TEST_P(TensorDataUtils, SetTensorTo)
 
     nvcv::Tensor tensor(number, {width, height}, fmt);
 
-    EXPECT_NO_THROW(nvcv::util::SetTensorTo<uint8_t>(tensor.exportData(), fillVal));
+    EXPECT_NO_THROW(util::SetTensorTo<uint8_t>(tensor.exportData(), fillVal));
     EXPECT_NO_THROW(compareTensor<uint8_t>(tensor, (uint8_t)fillVal));
 
-    EXPECT_NO_THROW(nvcv::util::SetTensorTo<uint16_t>(tensor.exportData(), fillVal));
+    EXPECT_NO_THROW(util::SetTensorTo<uint16_t>(tensor.exportData(), fillVal));
     EXPECT_NO_THROW(compareTensor<uint16_t>(tensor, (uint16_t)fillVal));
 
-    EXPECT_NO_THROW(nvcv::util::SetTensorTo<int>(tensor.exportData(), fillVal));
+    EXPECT_NO_THROW(util::SetTensorTo<int>(tensor.exportData(), fillVal));
     EXPECT_NO_THROW(compareTensor<int>(tensor, (int)fillVal));
 
-    EXPECT_NO_THROW(nvcv::util::SetTensorTo<float>(tensor.exportData(), fillVal));
+    EXPECT_NO_THROW(util::SetTensorTo<float>(tensor.exportData(), fillVal));
     EXPECT_NO_THROW(compareTensor<float>(tensor, (float)fillVal));
 }
 
@@ -320,11 +320,11 @@ TEST(TensorDataUtils, SetCvImageDataPrint)
     int          height = 2;
     nvcv::Tensor tensorFp(1, {width, height}, nvcv::FMT_RGBAf32p);
     EXPECT_NO_THROW(util::SetTensorTo<float>(tensorFp.exportData(), 3.0f));
-    nvcv::util::TensorImageData cvTensorFp(tensorFp.exportData());
+    util::TensorImageData cvTensorFp(tensorFp.exportData());
     std::cout << cvTensorFp;
 
     nvcv::Tensor tensor(1, {width, height}, nvcv::FMT_RGB8);
-    EXPECT_NO_THROW(nvcv::util::SetTensorTo<uint8_t>(tensor.exportData(), 0x55));
+    EXPECT_NO_THROW(util::SetTensorTo<uint8_t>(tensor.exportData(), 0x55));
     util::TensorImageData cvTensor(tensor.exportData());
     std::cout << cvTensor;
 }

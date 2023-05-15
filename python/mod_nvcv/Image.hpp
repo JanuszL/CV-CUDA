@@ -59,14 +59,14 @@ public:
 
     friend std::ostream &operator<<(std::ostream &out, const Image &img);
 
-    nvcv::IImage &impl()
+    nvcv::Image &impl()
     {
-        return *m_impl;
+        return m_impl;
     }
 
-    const nvcv::IImage &impl() const
+    const nvcv::Image &impl() const
     {
-        return *m_impl;
+        return m_impl;
     }
 
     class Key final : public IKey
@@ -106,8 +106,8 @@ private:
     explicit Image(std::vector<std::shared_ptr<ExternalBuffer>> buf, const nvcv::ImageDataStridedCuda &imgData);
     explicit Image(std::vector<py::buffer> buf, const nvcv::ImageDataStridedHost &imgData, int rowalign);
 
-    std::unique_ptr<nvcv::IImage> m_impl; // must come before m_key
-    Key                           m_key;
+    nvcv::Image m_impl; // must come before m_key
+    Key         m_key;
 
     struct WrapData
     {
