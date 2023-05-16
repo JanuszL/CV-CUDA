@@ -309,7 +309,7 @@ Remap::Remap() {}
 
 // Tensor operator -------------------------------------------------------------
 
-void Remap::operator()(cudaStream_t stream, nvcv::ITensor &src, nvcv::ITensor &dst, nvcv::ITensor &map,
+void Remap::operator()(cudaStream_t stream, const nvcv::Tensor &src, const nvcv::Tensor &dst, const nvcv::Tensor &map,
                        NVCVInterpolationType srcInterp, NVCVInterpolationType mapInterp,
                        NVCVRemapMapValueType mapValueType, bool alignCorners, NVCVBorderType border,
                        float4 borderValue) const
@@ -382,8 +382,8 @@ void Remap::operator()(cudaStream_t stream, nvcv::ITensor &src, nvcv::ITensor &d
 
 // VarShape operator -----------------------------------------------------------
 
-void Remap::operator()(cudaStream_t stream, nvcv::IImageBatchVarShape &src, nvcv::IImageBatchVarShape &dst,
-                       nvcv::ITensor &map, NVCVInterpolationType srcInterp, NVCVInterpolationType mapInterp,
+void Remap::operator()(cudaStream_t stream, const nvcv::ImageBatchVarShape &src, const nvcv::ImageBatchVarShape &dst,
+                       const nvcv::Tensor &map, NVCVInterpolationType srcInterp, NVCVInterpolationType mapInterp,
                        NVCVRemapMapValueType mapValueType, bool alignCorners, NVCVBorderType border,
                        float4 borderValue) const
 {

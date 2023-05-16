@@ -49,11 +49,6 @@ class TensorData;
 class TensorDataStrided;
 class TensorDataStridedCuda;
 
-using IImage              = const Image;
-using IImageBatch         = const ImageBatch;
-using IImageBatchVarShape = const ImageBatchVarShape;
-using ITensor             = const Tensor;
-
 } // namespace nvcv
 
 #endif // NVCV_FWD_HPP
