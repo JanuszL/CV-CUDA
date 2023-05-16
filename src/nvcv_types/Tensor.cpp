@@ -279,24 +279,17 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorGetDataType, (NVCVTensorHandle handl
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorSetUserPointer, (NVCVTensorHandle handle, void *userPtr))
+NVCV_DEFINE_API(0, 3, NVCVStatus, nvcvTensorSetUserPointer, (NVCVTensorHandle handle, void *userPtr))
 {
     return priv::ProtectCall(
         [&]
         {
             auto &tensor = priv::ToStaticRef<priv::ITensor>(handle);
-            if (priv::MustProvideHiddenFunctionality(handle))
-            {
-                tensor.setCXXObject(userPtr);
-            }
-            else
-            {
-                tensor.setUserPointer(userPtr);
-            }
+            tensor.setUserPointer(userPtr);
         });
 }
 
-NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorGetUserPointer, (NVCVTensorHandle handle, void **outUserPtr))
+NVCV_DEFINE_API(0, 3, NVCVStatus, nvcvTensorGetUserPointer, (NVCVTensorHandle handle, void **outUserPtr))
 {
     return priv::ProtectCall(
         [&]
@@ -308,13 +301,6 @@ NVCV_DEFINE_API(0, 2, NVCVStatus, nvcvTensorGetUserPointer, (NVCVTensorHandle ha
 
             auto &tensor = priv::ToStaticRef<const priv::ITensor>(handle);
 
-            if (priv::MustProvideHiddenFunctionality(handle))
-            {
-                tensor.getCXXObject(outUserPtr);
-            }
-            else
-            {
-                *outUserPtr = tensor.userPointer();
-            }
+            *outUserPtr = tensor.userPointer();
         });
 }

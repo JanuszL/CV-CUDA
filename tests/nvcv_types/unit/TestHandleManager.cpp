@@ -81,8 +81,8 @@ TEST(HandleManager, wip_handle_generation_wraps_around)
 
     void *origh = h;
 
-    // Maximum of 8 generations
-    for (int i = 1; i < 8; ++i)
+    // Maximum of 16 generations
+    for (int i = 1; i < 16; ++i)
     {
         IObject *obj = mgr.validate(h);
         ASSERT_EQ(i - 1, obj->value());

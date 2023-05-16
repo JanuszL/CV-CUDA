@@ -49,13 +49,11 @@ struct GetHandleType<T, std::void_t<decltype(sizeof(typename T::HandleType))>>
 template<class T>
 using GetHandleType = typename detail::GetHandleType<T>::type;
 
-// We use the 1st LSB of the Resource address to enable special (private) API
-// processing, which dependent on the C function the handle is passed to.
-// The next 3 bits are used to store the handle generation.
-// For all of this  to work, Resource object address must be aligned to 16 bytes.
-// Handle:        RRRR.RRRR.RRRR.GGGP
+// The 4 least significant bits are used to store the handle generation.
+// For this to work, Resource object address must be aligned to 16 bytes.
+// Handle:        RRRR.RRRR.RRRR.GGGG
 // Resource addr: RRRR.RRRR.RRRR.0000
-// R=resource address, G=generation, P=private API bit
+// R=resource address, G=generation
 static constexpr int kResourceAlignment = 16; // Must be a power of two.
 
 /** A type trait that defines storage for objects implementing given interface
@@ -71,11 +69,11 @@ class HandleManager
 {
     struct ResourceBase
     {
-        // We allow the resource to be reused up to 8 times,
+        // We allow the resource to be reused up to 16 times,
         // the corresponding handle will have a different value each time.
         // After that, a handle to an object that was already destroyed might
         // refer to a different object.
-        uint8_t generation : 3; // must be log2(kResourceAlignment-1)
+        uint8_t generation : 4; // must be log2(kResourceAlignment-1)
 
         ResourceBase *next = nullptr;
 
@@ -200,13 +198,6 @@ private:
     ResourceBase *doGetResourceFromHandle(HandleType handle) const noexcept;
     bool          isManagedResource(ResourceBase *r) const;
 };
-
-inline bool MustProvideHiddenFunctionality(void *h)
-{
-    // Handle LSB tells us whether C public function that receives it
-    // must provide special/hidden functionality.
-    return ((uintptr_t)h) & 1;
-}
 
 template<class... AA>
 struct alignas(util::Max(alignof(AA)...)) CompatibleStorage
