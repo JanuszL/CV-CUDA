@@ -187,8 +187,8 @@ namespace cvcuda::priv {
 
 NonMaximumSuppression::NonMaximumSuppression() {}
 
-void NonMaximumSuppression::operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out,
-                                       nvcv::ITensor &scores, float score_threshold, float iou_threshold) const
+void NonMaximumSuppression::operator()(cudaStream_t stream, const nvcv::Tensor &in, const nvcv::Tensor &out,
+                                       const nvcv::Tensor &scores, float score_threshold, float iou_threshold) const
 {
     auto inData = in.exportData<nvcv::TensorDataStridedCuda>();
     if (!inData)

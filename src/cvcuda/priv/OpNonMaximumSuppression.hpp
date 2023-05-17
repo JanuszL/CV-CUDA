@@ -27,7 +27,7 @@
 #include "IOperator.hpp"
 
 #include <cuda_runtime.h>
-#include <nvcv/ITensor.hpp>
+#include <nvcv/Tensor.hpp>
 
 namespace cvcuda::priv {
 
@@ -55,7 +55,7 @@ public:
      *   over-Union (IoU)
      * @param stream for the asynchronous execution.
      */
-    void operator()(cudaStream_t stream, nvcv::ITensor &in, nvcv::ITensor &out, nvcv::ITensor &scores,
+    void operator()(cudaStream_t stream, const nvcv::Tensor &in, const nvcv::Tensor &out, const nvcv::Tensor &scores,
                     float score_threshold, float iou_threshold) const;
 };
 

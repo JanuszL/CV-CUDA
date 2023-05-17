@@ -294,7 +294,7 @@ __global__ void vertical_pass_var_shape(const Ptr2dNHWC<T1> src, Ptr2dVarShapeNH
 }
 
 template<typename Filter, typename elem_type>
-void pillow_resize_var_shape(const IImageBatchVarShape &inDataBase, const IImageBatchVarShape &outDataBase,
+void pillow_resize_var_shape(const ImageBatchVarShape &inDataBase, const ImageBatchVarShape &outDataBase,
                              void *gpu_workspace, void *cpu_workspace, bool normalize_coeff, work_type init_buffer,
                              bool round_up, cudaStream_t stream)
 {
@@ -504,7 +504,7 @@ void pillow_resize_var_shape(const IImageBatchVarShape &inDataBase, const IImage
 } // namespace
 
 template<typename Filter>
-void pillow_resize_filter_var_shape(const IImageBatchVarShape &inData, const IImageBatchVarShape &outData,
+void pillow_resize_filter_var_shape(const ImageBatchVarShape &inData, const ImageBatchVarShape &outData,
                                     void *gpu_workspace, void *cpu_workspace, NVCVInterpolationType interpolation,
                                     cudaStream_t stream)
 {
@@ -587,8 +587,8 @@ size_t PillowResizeVarShape::calBufferSize(DataShape max_input_shape, DataShape 
     return buffer_size;
 }
 
-ErrorCode PillowResizeVarShape::infer(const nvcv::IImageBatchVarShape &inDataBase,
-                                      const nvcv::IImageBatchVarShape &outDataBase,
+ErrorCode PillowResizeVarShape::infer(const nvcv::ImageBatchVarShape &inDataBase,
+                                      const nvcv::ImageBatchVarShape &outDataBase,
                                       const NVCVInterpolationType interpolation, cudaStream_t stream)
 {
     if (!inDataBase.uniqueFormat() || !outDataBase.uniqueFormat())

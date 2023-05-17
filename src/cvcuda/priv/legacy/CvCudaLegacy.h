@@ -23,7 +23,7 @@
 #include <cuda_runtime.h>
 #include <cvcuda/Types.h>
 #include <nvcv/BorderType.h>
-#include <nvcv/IImageBatch.hpp>
+#include <nvcv/ImageBatch.hpp>
 #include <nvcv/ImageBatchData.hpp>
 #include <nvcv/Rect.h>
 #include <nvcv/TensorData.hpp>
@@ -808,7 +808,7 @@ public:
      * @param borderMode the border mode to use when acessing data outside of source
      * @param stream for the asynchronous execution.
      */
-    ErrorCode infer(const nvcv::IImageBatchVarShape &inData, const nvcv::IImageBatchVarShape &outData,
+    ErrorCode infer(const nvcv::ImageBatchVarShape &inData, const nvcv::ImageBatchVarShape &outData,
                     NVCVMorphologyType morph_type, const TensorDataStridedCuda &masks,
                     const TensorDataStridedCuda &anchors, int iteration, NVCVBorderType borderMode,
                     cudaStream_t stream);
@@ -1838,7 +1838,7 @@ public:
     * @param inplace for perform inplace op.
     * @param stream for the asynchronous execution.
     */
-    ErrorCode infer(const IImageBatchVarShape &inbatch, const IImageBatchVarShape &outbatch,
+    ErrorCode infer(const ImageBatchVarShape &inbatch, const ImageBatchVarShape &outbatch,
                     const TensorDataStridedCuda &anchor, const TensorDataStridedCuda &erasing,
                     const TensorDataStridedCuda &values, const TensorDataStridedCuda &imgIdx, bool random,
                     unsigned int seed, bool inplace, cudaStream_t stream);
@@ -2560,7 +2560,7 @@ public:
      * @param stream for the asynchronous execution.
      *
      */
-    ErrorCode infer(const IImageBatchVarShape &inData, const IImageBatchVarShape &outData,
+    ErrorCode infer(const ImageBatchVarShape &inData, const ImageBatchVarShape &outData,
                     const NVCVInterpolationType interpolation, cudaStream_t stream);
 
     /**
