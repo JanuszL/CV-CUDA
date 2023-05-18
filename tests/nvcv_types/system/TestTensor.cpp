@@ -68,7 +68,7 @@ NVCV_INSTANTIATE_TEST_SUITE_P(_, TensorImageTests,
 
 // clang-format on
 
-TEST_P(TensorImageTests, wip_create)
+TEST_P(TensorImageTests, smoke_create)
 {
     const int               PARAM_NUM_IMAGES = std::get<0>(GetParam());
     const int               PARAM_WIDTH      = std::get<1>(GetParam());
@@ -162,7 +162,7 @@ NVCV_INSTANTIATE_TEST_SUITE_P(_, TensorTests,
 
 // clang-format on
 
-TEST_P(TensorTests, wip_create)
+TEST_P(TensorTests, smoke_create)
 {
     const nvcv::TensorShape    PARAM_SHAPE = std::get<0>(GetParam());
     const nvcv::DataType       PARAM_DTYPE = std::get<1>(GetParam());
@@ -185,7 +185,7 @@ TEST_P(TensorTests, wip_create)
     }
 }
 
-TEST(TensorTests, wip_create_allocator)
+TEST(TensorTests, smoke_create_allocator)
 {
     ;
 
@@ -227,7 +227,7 @@ TEST(TensorTests, wip_create_allocator)
     EXPECT_EQ(117 * 163 * 4 * 1, devdata->stride(0));
 }
 
-TEST(Tensor, wip_cast)
+TEST(Tensor, smoke_cast)
 {
     NVCVTensorHandle       handle;
     NVCVTensorRequirements reqs;
@@ -252,7 +252,7 @@ TEST(Tensor, wip_cast)
     EXPECT_EQ(ref, 0);
 }
 
-TEST(Tensor, wip_user_pointer)
+TEST(Tensor, smoke_user_pointer)
 {
     nvcv::Tensor tensor(3, {163, 117}, nvcv::FMT_RGBA8);
     EXPECT_EQ(nullptr, tensor.userPointer());
@@ -274,7 +274,7 @@ TEST(Tensor, wip_user_pointer)
     ASSERT_EQ(nullptr, userPtr);
 }
 
-TEST(TensorWrapData, wip_create)
+TEST(TensorWrapData, smoke_create)
 {
     nvcv::ImageFormat fmt
         = nvcv::ImageFormat(nvcv::ColorModel::RGB, nvcv::CSPEC_BT601_ER, nvcv::MemLayout::PL, nvcv::DataKind::FLOAT,
@@ -360,7 +360,7 @@ NVCV_INSTANTIATE_TEST_SUITE_P(_, TensorWrapImageTests,
 
 // clang-format on
 
-TEST_P(TensorWrapImageTests, wip_create)
+TEST_P(TensorWrapImageTests, smoke_create)
 {
     const nvcv::Size2D      PARAM_SIZE   = std::get<0>(GetParam());
     const nvcv::ImageFormat PARAM_FORMAT = std::get<1>(GetParam());
@@ -425,7 +425,7 @@ NVCV_INSTANTIATE_TEST_SUITE_P(Negative, TensorWrapParamTests,
 
 // clang-format on
 
-TEST_P(TensorWrapParamTests, wip_create)
+TEST_P(TensorWrapParamTests, smoke_create)
 {
     const nvcv::TensorShape PARAM_TSHAPE  = std::get<0>(GetParam());
     const std::vector<int>  PARAM_STRIDES = std::get<1>(GetParam());

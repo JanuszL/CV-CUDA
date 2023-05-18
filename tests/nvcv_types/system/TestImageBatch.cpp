@@ -71,7 +71,7 @@ static std::ostream &operator<<(std::ostream &out, const NVCVImageBufferStrided 
     return out;
 }
 
-TEST(ImageBatchVarShape, wip_create)
+TEST(ImageBatchVarShape, smoke_create)
 {
     nvcv::ImageBatchVarShape batch(100);
 
@@ -287,7 +287,7 @@ TEST(ImageBatchVarShape, wip_create)
     ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 }
 
-TEST(ImageBatchVarShape, wip_sync)
+TEST(ImageBatchVarShape, smoke_sync)
 {
     std::vector<NVCVImageBufferStrided> goldImages;
     std::vector<NVCVImageFormat>        goldFormats;
@@ -356,7 +356,7 @@ TEST(ImageBatchVarShape, wip_sync)
     ASSERT_EQ(cudaSuccess, cudaStreamDestroy(stream));
 }
 
-TEST(ImageBatch, wip_user_pointer)
+TEST(ImageBatch, smoke_user_pointer)
 {
     nvcv::ImageBatchVarShape batch(3);
     EXPECT_EQ(nullptr, batch.userPointer());
@@ -368,7 +368,7 @@ TEST(ImageBatch, wip_user_pointer)
     EXPECT_EQ(nullptr, batch.userPointer());
 }
 
-TEST(ImageBatch, wip_cast)
+TEST(ImageBatch, smoke_cast)
 {
     // Now when we create the object via C API
 
