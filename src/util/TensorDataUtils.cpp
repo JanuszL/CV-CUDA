@@ -68,6 +68,29 @@ static void printPlane(const uint8_t *data, int width, int height, int rowStride
     std::cout << "\n";
 }
 
+void PrintImageFromByteVector(const uint8_t *data, int width, int height, int rowStride, int bytesPC, int numC,
+                              bool planar)
+{
+    std::cout << "\n[H = " << height << " W = " << width << " C = " << numC << "]\n[planar = " << planar
+              << " bytesPerC = " << bytesPC << " rowStride = " << rowStride << " planeStride = " << rowStride * height
+              << " sampleStride = " << (planar ? (rowStride * height * numC) : (rowStride * height)) << "]\n";
+
+    if (!planar)
+    {
+        printPlane(data, width, height, rowStride, bytesPC, numC);
+    }
+    else
+    {
+        for (int i = 0; i < numC; i++)
+        {
+            std::cout << "\nPlane = " << i << "\n";
+            printPlane(&data[rowStride * i], width, height, rowStride, bytesPC, 1);
+        }
+    }
+    std::cout << "\n";
+    return;
+}
+
 TensorImageData::TensorImageData(const TensorData &tensorData, int sampleIndex)
     : m_planeStride(0)
 {

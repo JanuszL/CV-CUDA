@@ -236,6 +236,22 @@ template<typename DT>
 static void SetTensorFromVector(const TensorData &tensorData, std::vector<DT> &data, int sample = -1);
 
 /**
+ * Sets the TensorData to the values contained in the data parameter.
+ * The data parameter must contain all of the data for the image, however it should
+ * not include any padding. Also the DT must be data type contained in the TensorImageData.
+ * Data should be size of Width*Height*NumChannels.
+ *
+ * @param[in,out] tensorData TensorImageData object.
+ *
+ * @param[in] data vector of data to set the image to.
+ *
+ * @param[in] sample sample number to set the vector to, -1 indicates all samples.
+ *
+ */
+template<typename DT>
+static void SetImageTensorFromVector(const TensorData &tensorData, std::vector<DT> &data, int sample = -1);
+
+/**
  * Returns a vector contains the values of the provided sample.
  *
  * @param[in] tensorData created tensor object.
@@ -247,6 +263,20 @@ static void SetTensorFromVector(const TensorData &tensorData, std::vector<DT> &d
  */
 template<typename DT>
 static void GetVectorFromTensor(const TensorData &tensorData, int sample, std::vector<DT> &outData);
+
+/**
+ * Returns a vector contains the values of the provided sample. This vector will only contain
+ * the values of the image and not any padding/stride.
+ *
+ * @param[in] tensorData created tensor object.
+ *
+ * @param[in] sample the sample to copy to vector 0 index.
+ *
+ * @param[out] outData the data to set the tensor to.
+ *
+ */
+template<typename DT>
+static void GetImageVectorFromTensor(const TensorData &tensorData, int sample, std::vector<DT> &outData);
 
 /**
  * Sets the TensorImageData to the value set by the data parameter
@@ -263,6 +293,20 @@ static void GetVectorFromTensor(const TensorData &tensorData, int sample, std::v
  */
 template<typename DT>
 static void SetCvDataTo(TensorImageData &cvImg, DT data, Size2D region, uint8_t chFlags);
+
+/**
+ * @brief Prints a image from a byte vector, useful for debugging does not check bounds on the passed in data.
+ *
+ * @param[in] data        Pointer to the image data.
+ * @param[in] width       Width of the image in pixels.
+ * @param[in] height      Height of the image in pixels.
+ * @param[in] rowStride   Number of bytes each row of the image uses/
+ * @param[in] bytesPC     Number of bytes per channel. i.e 1 for a uint8_t etc
+ * @param[in] numC        Number of color channels in the image. i.e 3 for an RGB image.
+ * @param[in] planar      If true, data is in planar format; if false, data is in interleaved format.
+ */
+void PrintImageFromByteVector(const uint8_t *data, int width, int height, int rowStride, int bytesPC, int numC,
+                              bool planar);
 
 template<typename DT>
 void SetTensorTo(const TensorData &tensorData, DT data, int sample)
@@ -440,7 +484,7 @@ void GetVectorFromTensor(const TensorData &tensorData, int sample, std::vector<D
 
     auto tDataAc = nvcv::TensorDataAccessStrided::Create(tensorData);
 
-    if (tDataAc->numSamples() <= sample)
+    if (tDataAc->numSamples() <= sample || sample < 0)
         throw std::runtime_error("Number of samples smaller than requested sample.");
 
     int elements = (tDataAc->sampleStride() / sizeof(DT));
@@ -453,6 +497,144 @@ void GetVectorFromTensor(const TensorData &tensorData, int sample, std::vector<D
         throw std::runtime_error("CudaMemcpy failed");
     }
 
+    return;
+}
+
+template<typename DT>
+static void SetImageTensorFromVectorPlanar(const TensorData &tensorData, std::vector<DT> &data, int sample)
+{
+    Optional<TensorDataAccessStridedImagePlanar> tDataAc = nvcv::TensorDataAccessStridedImagePlanar::Create(tensorData);
+
+    if (!tDataAc)
+        throw std::runtime_error("Tensor Data not compatible with planar image access.");
+
+    if (tDataAc->numSamples() <= sample)
+        throw std::runtime_error("Number of samples smaller than requested sample.");
+
+    if ((int64_t)data.size() != tDataAc->numCols() * tDataAc->numRows() * tDataAc->numChannels())
+        throw std::runtime_error("Data vector is incorrect size, size must be W*C*sizeof(DT)*channels.");
+
+    auto copyToGpu = [&](int i)
+    {
+        Byte *basePtr = tDataAc->sampleData(i);
+        for (int i = 0; i < tDataAc->numChannels(); ++i)
+        {
+            if (cudaSuccess
+                != cudaMemcpy2D(basePtr, tDataAc->rowStride(),
+                                data.data() + (i * (tDataAc->numCols() * tDataAc->numRows())),
+                                tDataAc->numCols() * sizeof(DT), tDataAc->numCols() * sizeof(DT), tDataAc->numRows(),
+                                cudaMemcpyHostToDevice))
+            {
+                throw std::runtime_error("CudaMemcpy failed for channel plane copy from host to device.");
+            }
+            basePtr += tDataAc->planeStride();
+        }
+    };
+
+    if (sample < 0)
+        for (auto i = 0; i < tDataAc->numSamples(); ++i)
+        {
+            copyToGpu(i);
+        }
+    else
+        copyToGpu(sample);
+}
+
+template<typename DT>
+static void SetImageTensorFromVector(const TensorData &tensorData, std::vector<DT> &data, int sample)
+{
+    Optional<TensorDataAccessStridedImage> tDataAc = nvcv::TensorDataAccessStridedImage::Create(tensorData);
+
+    if (!tDataAc)
+        throw std::runtime_error("Tensor Data not compatible with pitch access.");
+
+    if (tDataAc->infoLayout().isChannelFirst()) // planar case
+        return SetImageTensorFromVectorPlanar<DT>(tensorData, data, sample);
+
+    if (tDataAc->numSamples() <= sample)
+        throw std::runtime_error("Number of samples smaller than requested sample.");
+
+    if ((int64_t)data.size() != tDataAc->numCols() * tDataAc->numRows() * tDataAc->numChannels())
+        throw std::runtime_error("Data vector is incorrect size, size must be N*W*C*sizeof(DT).");
+
+    auto copyToGpu = [&](int i)
+    {
+        Byte *basePtr = tDataAc->sampleData(i);
+        if (cudaSuccess
+            != cudaMemcpy2D(
+                basePtr, tDataAc->rowStride(), data.data(), tDataAc->numCols() * tDataAc->numChannels() * sizeof(DT),
+                tDataAc->numCols() * tDataAc->numChannels() * sizeof(DT), tDataAc->numRows(), cudaMemcpyHostToDevice))
+        {
+            throw std::runtime_error("CudaMemcpy failed on copy of image from host to device.");
+        }
+    };
+
+    if (sample < 0)
+        for (auto i = 0; i < tDataAc->numSamples(); ++i)
+        {
+            copyToGpu(i);
+        }
+    else
+        copyToGpu(sample);
+}
+
+template<typename DT>
+static void GetImageVectorFromTensorPlanar(const TensorData &tensorData, int sample, std::vector<DT> &outData)
+{
+    Optional<TensorDataAccessStridedImagePlanar> tDataAc = nvcv::TensorDataAccessStridedImagePlanar::Create(tensorData);
+
+    if (!tDataAc)
+        throw std::runtime_error("Tensor Data not compatible with planar access.");
+
+    if (tDataAc->numSamples() <= sample || sample < 0)
+        throw std::runtime_error("Number of samples smaller than requested sample.");
+
+    int elements = tDataAc->numRows() * tDataAc->numCols() * tDataAc->numChannels();
+
+    // Make sure we have the right size.
+    outData.resize(elements);
+    Byte *basePtr = tDataAc->sampleData(sample);
+    for (int i = 0; i < tDataAc->numChannels(); ++i)
+    {
+        if (cudaSuccess
+            != cudaMemcpy2D(outData.data() + (i * (tDataAc->numCols() * tDataAc->numRows())),
+                            tDataAc->numCols() * sizeof(DT), basePtr, tDataAc->rowStride(),
+                            tDataAc->numCols() * sizeof(DT), tDataAc->numRows(), cudaMemcpyDeviceToHost))
+        {
+            throw std::runtime_error("CudaMemcpy failed on copy of channel plane from device to host.");
+        }
+        basePtr += tDataAc->planeStride();
+    }
+    return;
+}
+
+// sets the tensor data to the value of data, but honors strides.
+template<typename DT>
+static void GetImageVectorFromTensor(const TensorData &tensorData, int sample, std::vector<DT> &outData)
+{
+    Optional<TensorDataAccessStridedImage> tDataAc = nvcv::TensorDataAccessStridedImage::Create(tensorData);
+
+    if (!tDataAc)
+        throw std::runtime_error("Tensor Data not compatible with pitch access.");
+    if (tDataAc->infoLayout().isChannelFirst())
+        return GetImageVectorFromTensorPlanar<DT>(tensorData, sample, outData);
+
+    if (tDataAc->numSamples() <= sample || sample < 0)
+        throw std::runtime_error("Number of samples smaller than requested sample.");
+
+    int elements = tDataAc->numRows() * tDataAc->numCols() * tDataAc->numChannels();
+
+    // Make sure we have the right size.
+    outData.resize(elements);
+
+    if (cudaSuccess
+        != cudaMemcpy2D(outData.data(), tDataAc->numCols() * sizeof(DT) * tDataAc->numChannels(),
+                        tDataAc->sampleData(sample), tDataAc->rowStride(),
+                        tDataAc->numCols() * sizeof(DT) * tDataAc->numChannels(), tDataAc->numRows(),
+                        cudaMemcpyDeviceToHost))
+    {
+        throw std::runtime_error("CudaMemcpy failed");
+    }
     return;
 }
 

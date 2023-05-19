@@ -38,20 +38,22 @@ NVCV_TEST_SUITE_P(TensorDataUtils, test::ValueList<int, int, int, uint8_t, nvcv:
     {     2,      2,         2,         2, nvcv::FMT_RGB8},
     {     3,      3,         5,         2, nvcv::FMT_BGR8},
     {     10,    11,         2,         2, nvcv::FMT_RGBA8},
-    {     12,    12,         2,         2, nvcv::FMT_BGRA8},
-    {     2,      2,         2,         2, nvcv::FMT_BGR8p},
-    {     2,      2,         2,         2, nvcv::FMT_RGB8p},
-    {     5,      2,         2,         2, nvcv::FMT_RGBA8p},
-    {     2,      2,         2,         2, nvcv::FMT_BGRA8p},
-    {     2,      2,         2,         2, nvcv::FMT_RGBf32},
-    {     2,      2,         2,         2, nvcv::FMT_BGRf32},
-    {     2,      2,         2,         2, nvcv::FMT_RGBAf32},
+    {     5,      5,         1,         2, nvcv::FMT_BGRA8},
+    {     2,      4,         2,         2, nvcv::FMT_BGR8p},
+    {     4,      9,         2,         2, nvcv::FMT_RGB8p},
+    {     43,     1,         4,         2, nvcv::FMT_RGBA8p},
+    {     4,      42,        3,         2, nvcv::FMT_BGRA8p},
+    {     2,      2,         2,         2, nvcv::FMT_U32},
+    {     4,      2,         2,         2, nvcv::FMT_RGBf32},
+    {     6,      6,         2,         2, nvcv::FMT_BGRf32},
+    {     5,      7,         5,         2, nvcv::FMT_RGBAf32},
     {     2,      2,         2,         2, nvcv::FMT_BGRAf32},
-    {     2,      2,         2,         2, nvcv::FMT_RGBf32p},
-    {     2,      2,         2,         2, nvcv::FMT_BGRf32p},
+    {     7,      8,         2,         2, nvcv::FMT_RGBf32p},
+    {     2,      2,         1,         2, nvcv::FMT_BGRf32p},
     {     6,      3,         2,         2, nvcv::FMT_RGBAf32p},
     {     2,      2,         2,         2, nvcv::FMT_BGRAf32p},
-    {     3,      5,         2,         2, nvcv::FMT_RGBA8},
+    {     2,      7,         2,         2, nvcv::FMT_F64},
+    {     3,      5,         3,         2, nvcv::FMT_RGBA8},
 });
 
 // clang-format on
@@ -69,13 +71,14 @@ static void compareTensor(nvcv::Tensor &tensor, DT fillVal)
             throw std::runtime_error("CudaMemcpy failed");
         if (goldVec != readVec)
             throw std::runtime_error("Vectors not equal");
-        ;
     }
     return;
 }
 
+// This function will set the provided tensor (including any strides) to random values, then read it back and compare using
+// TensorDataUtils::SetXXXFromVector, GetXXXFromTensor functions
 template<typename DT>
-static void GetSetTensor(nvcv::Tensor &tensor)
+static void GetSetTensor(const nvcv::Tensor &tensor)
 {
     auto                          ac          = nvcv::TensorDataAccessStrided::Create(tensor.exportData());
     int                           numElements = ac->sampleStride() / sizeof(DT);
@@ -87,14 +90,54 @@ static void GetSetTensor(nvcv::Tensor &tensor)
     std::vector<DT> vecOut(numElements, 0);
     util::SetTensorFromVector<DT>(tensor.exportData(), vec);
     util::GetVectorFromTensor<DT>(tensor.exportData(), 0, vecOut);
-    if (vec != vec)
+    if (vec != vecOut)
         throw std::runtime_error("Vectors not equal");
 
     return;
 }
 
+// This function will set the provided tensor image area to random values, then read it back and compare using
+// TensorDataUtils::SetXXXFromVector, GetXXXFromTensor functions
 template<typename DT>
-static void checkRndRange(nvcv::Tensor &tensor, DT lowBound, DT highBound)
+static void setGetTensorImage(const nvcv::Tensor &tensor)
+{
+    auto                          ac              = nvcv::TensorDataAccessStridedImage::Create(tensor.exportData());
+    int                           numElements     = ac->numCols() * ac->numRows() * ac->numChannels();
+    int                           numElementsFull = ac->sampleStride() / sizeof(DT);
+    std::vector<DT>               vec(numElements, 0);
+    std::default_random_engine    rng;
+    std::uniform_int_distribution rand;
+    generate(vec.begin(), vec.end(), [&rng, &rand] { return rand(rng); });
+    std::vector<DT> vecOutImage(numElements, 0);
+
+    std::vector<DT> vecImageOriginal(numElements, 0);
+
+    std::vector<DT> vecOriginal(numElementsFull, 0);
+    std::vector<DT> vecOutFull(numElementsFull, 0);
+
+    // copy the original data out
+    util::GetImageVectorFromTensor<DT>(tensor.exportData(), 0, vecImageOriginal);
+    util::GetVectorFromTensor<DT>(tensor.exportData(), 0, vecOriginal);
+
+    // set the image data
+    util::SetImageTensorFromVector<DT>(tensor.exportData(), vec);
+    util::GetImageVectorFromTensor<DT>(tensor.exportData(), 0, vecOutImage);
+
+    if (vec != vecOutImage)
+        throw std::runtime_error(
+            "Vectors not equal vector out image does note contain the same data as the input vector");
+
+    util::SetImageTensorFromVector<DT>(tensor.exportData(), vecImageOriginal);
+    util::GetVectorFromTensor<DT>(tensor.exportData(), 0, vecOutFull);
+
+    if (vecOriginal != vecOutFull)
+        throw std::runtime_error("Vectors not equal, vector not restored to original state");
+
+    return;
+}
+
+template<typename DT>
+static void checkRndRange(const nvcv::Tensor &tensor, DT lowBound, DT highBound)
 {
     auto tDataAc = nvcv::TensorDataAccessStrided::Create(tensor.exportData());
 
@@ -171,6 +214,62 @@ TEST_P(TensorDataUtils, SetGetTensorFromVector)
     EXPECT_NO_THROW(GetSetTensor<uint16_t>(tensor));
     EXPECT_NO_THROW(GetSetTensor<int>(tensor));
     EXPECT_NO_THROW(GetSetTensor<float>(tensor));
+}
+
+TEST_P(TensorDataUtils, SetGetTensorFromImageVector)
+{
+    int               width  = GetParamValue<0>();
+    int               height = GetParamValue<1>();
+    int               number = GetParamValue<2>();
+    nvcv::ImageFormat fmt    = GetParamValue<4>();
+
+    nvcv::Tensor tensor(number, {width, height}, fmt);
+    // Just put in some random data
+    EXPECT_NO_THROW(util::SetTensorToRandomValue<uint8_t>(tensor.exportData(), 0, 0xFF));
+    switch (fmt)
+    {
+    case nvcv::FMT_BGR8:
+    case nvcv::FMT_RGBA8:
+    case nvcv::FMT_BGRA8:
+    case nvcv::FMT_BGR8p:
+    case nvcv::FMT_RGB8p:
+    case nvcv::FMT_RGBA8p:
+    case nvcv::FMT_BGRA8p:
+    {
+        EXPECT_NO_THROW(setGetTensorImage<uint8_t>(tensor));
+        break;
+    }
+
+    case nvcv::FMT_U32:
+    {
+        EXPECT_NO_THROW(setGetTensorImage<uint32_t>(tensor));
+        break;
+    }
+
+    case nvcv::FMT_RGBf32:
+    case nvcv::FMT_BGRf32:
+    case nvcv::FMT_RGBAf32:
+    case nvcv::FMT_BGRAf32:
+    case nvcv::FMT_RGBf32p:
+    case nvcv::FMT_BGRf32p:
+    case nvcv::FMT_RGBAf32p:
+    case nvcv::FMT_BGRAf32p:
+    {
+        EXPECT_NO_THROW(setGetTensorImage<float>(tensor));
+        break;
+    }
+
+    case nvcv::FMT_F64:
+
+    {
+        EXPECT_NO_THROW(setGetTensorImage<double>(tensor));
+        break;
+    }
+
+    default:
+
+        break;
+    }
 }
 
 TEST(TensorDataUtils, SanityCvImageData)
