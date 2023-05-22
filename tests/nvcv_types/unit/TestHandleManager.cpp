@@ -64,7 +64,7 @@ struct ResourceStorage<IObject>
 };
 } // namespace nvcv::priv
 
-TEST(HandleManager, wip_handle_generation_wraps_around)
+TEST(HandleManager, smoke_handle_generation_wraps_around)
 {
     priv::HandleManager<IObject> mgr("Object");
 
@@ -110,7 +110,7 @@ TEST(HandleManager, wip_handle_generation_wraps_around)
     mgr.decRef(h);
 }
 
-TEST(HandleManager, wip_destroy_already_destroyed)
+TEST(HandleManager, smoke_destroy_already_destroyed)
 {
     priv::HandleManager<IObject> mgr("Object");
 
@@ -119,7 +119,7 @@ TEST(HandleManager, wip_destroy_already_destroyed)
     ASSERT_THROW(mgr.decRef(h), nvcv::priv::Exception);
 }
 
-TEST(HandleManager, wip_ref_unref)
+TEST(HandleManager, smoke_ref_unref)
 {
     priv::HandleManager<IObject> mgr("Object");
 
@@ -134,7 +134,7 @@ TEST(HandleManager, wip_ref_unref)
     EXPECT_THROW(mgr.decRef(h), nvcv::priv::Exception); // invalid handle
 }
 
-TEST(HandleManager, wip_dec_ref_invalid)
+TEST(HandleManager, smoke_dec_ref_invalid)
 {
     priv::HandleManager<IObject> mgr("Object");
 
@@ -143,7 +143,7 @@ TEST(HandleManager, wip_dec_ref_invalid)
     EXPECT_EQ(0, mgr.decRef(h));
 }
 
-TEST(HandleManager, wip_validate_already_destroyed)
+TEST(HandleManager, smoke_validate_already_destroyed)
 {
     priv::HandleManager<IObject> mgr("Object");
 
@@ -154,7 +154,7 @@ TEST(HandleManager, wip_validate_already_destroyed)
     ASSERT_EQ(nullptr, mgr.validate(h));
 }
 
-TEST(HandleManager, wip_validate_invalid)
+TEST(HandleManager, smoke_validate_invalid)
 {
     priv::HandleManager<IObject> mgr("Object");
 
@@ -166,7 +166,7 @@ TEST(HandleManager, wip_validate_invalid)
     ASSERT_EQ(0, mgr.decRef(h));
 }
 
-TEST(HandleManager, wip_handle_count_overflow)
+TEST(HandleManager, smoke_handle_count_overflow)
 {
     priv::HandleManager<IObject> mgr("Object");
     mgr.setFixedSize(1);
@@ -178,7 +178,7 @@ TEST(HandleManager, wip_handle_count_overflow)
     mgr.decRef(h);
 }
 
-TEST(HandleManager, wip_no_handle_leak_if_object_creation_throws)
+TEST(HandleManager, smoke_no_handle_leak_if_object_creation_throws)
 {
     priv::HandleManager<IObject> mgr("Object");
     mgr.setFixedSize(1);

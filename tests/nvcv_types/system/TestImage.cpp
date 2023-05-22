@@ -22,7 +22,7 @@
 
 #include <nvcv/Fwd.hpp>
 
-TEST(Image, wip_create)
+TEST(Image, smoke_create)
 {
     nvcv::Image img({163, 117}, nvcv::FMT_RGBA8);
 
@@ -51,7 +51,7 @@ TEST(Image, wip_create)
     EXPECT_EQ(cudaSuccess, cudaMemset2D(plane.basePtr, plane.rowStride, 123, plane.width * 4, plane.height));
 }
 
-TEST(Image, wip_cast)
+TEST(Image, smoke_cast)
 {
     NVCVImageHandle       handle;
     NVCVImageRequirements reqs;
@@ -72,7 +72,7 @@ TEST(Image, wip_cast)
     EXPECT_EQ(ref, 0);
 }
 
-TEST(Image, wip_user_pointer)
+TEST(Image, smoke_user_pointer)
 {
     nvcv::Image img({163, 117}, nvcv::FMT_RGBA8);
     EXPECT_EQ(nullptr, img.userPointer());
@@ -94,7 +94,7 @@ TEST(Image, wip_user_pointer)
     EXPECT_EQ(nullptr, userPtr);
 }
 
-TEST(Image, wip_create_managed)
+TEST(Image, smoke_create_managed)
 {
     ;
 
@@ -151,7 +151,7 @@ TEST(Image, wip_create_managed)
     }
 }
 
-TEST(ImageWrapData, wip_create)
+TEST(ImageWrapData, smoke_create)
 {
     nvcv::ImageDataStridedCuda::Buffer buf;
     buf.numPlanes           = 1;
@@ -185,7 +185,7 @@ TEST(ImageWrapData, wip_create)
     EXPECT_EQ(buf.planes[0].basePtr, devdata->plane(0).basePtr);
 }
 
-TEST(ImageWrapData, wip_user_pointer)
+TEST(ImageWrapData, smoke_user_pointer)
 {
     nvcv::ImageDataStridedCuda::Buffer buf;
     buf.numPlanes           = 1;
@@ -205,7 +205,7 @@ TEST(ImageWrapData, wip_user_pointer)
     EXPECT_EQ(nullptr, img.userPointer());
 }
 
-TEST(Image, wip_operator)
+TEST(Image, smoke_operator)
 {
     ;
 
@@ -247,7 +247,7 @@ TEST(Image, wip_operator)
     }
 }
 
-TEST(ImageWrapData, wip_cleanup)
+TEST(ImageWrapData, smoke_cleanup)
 {
     nvcv::ImageDataStridedCuda::Buffer buf;
     buf.numPlanes           = 1;
@@ -269,7 +269,7 @@ TEST(ImageWrapData, wip_cleanup)
     EXPECT_EQ(1, cleanupCalled) << "Cleanup must have been called when img got destroyed";
 }
 
-TEST(ImageWrapData, wip_mem_reqs)
+TEST(ImageWrapData, smoke_mem_reqs)
 {
     nvcv::Image::Requirements reqs = nvcv::Image::CalcRequirements({512, 256}, nvcv::FMT_NV12);
 
@@ -302,7 +302,7 @@ TEST(ImageWrapData, wip_mem_reqs)
 
 // Future API ideas
 #if 0
-TEST(Image, wip_image_managed_memory)
+TEST(Image, smoke_image_managed_memory)
 {
     ;
 
@@ -394,7 +394,7 @@ TEST(Image, wip_image_managed_memory)
     img.lock(nvcv::READ).accept(ProcessImageVisitor(stream));
 }
 
-TEST(Image, wip_wrap_opencv_read)
+TEST(Image, smoke_wrap_opencv_read)
 {
     ;
 
@@ -411,7 +411,7 @@ TEST(Image, wip_wrap_opencv_read)
     }
 }
 
-TEST(Image, wip_wrap_opencv_write)
+TEST(Image, smoke_wrap_opencv_write)
 {
     ;
 
@@ -427,7 +427,7 @@ TEST(Image, wip_wrap_opencv_write)
     // ... op read from img ...
 }
 
-TEST(Image, wip_img_opencv_read)
+TEST(Image, smoke_img_opencv_read)
 {
     ;
 
@@ -442,7 +442,7 @@ TEST(Image, wip_img_opencv_read)
     }
 }
 
-TEST(Image, wip_memcpy_opencv_read)
+TEST(Image, smoke_memcpy_opencv_read)
 {
     ;
 
@@ -462,7 +462,7 @@ TEST(Image, wip_memcpy_opencv_read)
 }
 
 
-TEST(Image, wip_memcpy_opencv_write)
+TEST(Image, smoke_memcpy_opencv_write)
 {
     ;
 
