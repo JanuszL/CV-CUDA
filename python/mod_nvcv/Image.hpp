@@ -90,7 +90,7 @@ public:
         bool              m_isWrapper;
 
         virtual size_t doGetHash() const override;
-        virtual bool   doIsEqual(const IKey &that) const override;
+        virtual bool   doIsCompatible(const IKey &that) const override;
     };
 
     virtual const Key &key() const override

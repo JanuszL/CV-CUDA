@@ -44,7 +44,7 @@ public:
     {
         if (typeid(*this) == typeid(that))
         {
-            return doIsEqual(that);
+            return doIsCompatible(that);
         }
         else
         {
@@ -53,8 +53,8 @@ public:
     }
 
 private:
-    virtual size_t doGetHash() const                 = 0;
-    virtual bool   doIsEqual(const IKey &that) const = 0;
+    virtual size_t doGetHash() const                      = 0;
+    virtual bool   doIsCompatible(const IKey &that) const = 0;
 };
 
 class ICacheItem : public std::enable_shared_from_this<ICacheItem>

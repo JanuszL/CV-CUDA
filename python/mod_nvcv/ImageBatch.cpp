@@ -29,7 +29,7 @@ size_t ImageBatchVarShape::Key::doGetHash() const
     return ComputeHash(m_capacity);
 }
 
-bool ImageBatchVarShape::Key::doIsEqual(const IKey &ithat) const
+bool ImageBatchVarShape::Key::doIsCompatible(const IKey &ithat) const
 {
     auto &that = static_cast<const Key &>(ithat);
     return m_capacity == that.m_capacity;
