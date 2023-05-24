@@ -63,6 +63,30 @@ RNG = np.random.default_rng(0)
             cvcuda.Interp.LINEAR,
             cvcuda.Format.RGBf32,
         ),
+        (
+            ((5, 55, 55, 4), np.float32, "NHWC"),
+            (5, 31, 31, 4),
+            cvcuda.Interp.CUBIC,
+            cvcuda.Format.RGBf32,
+        ),
+        (
+            ((5, 55, 55, 4), np.float32, "NHWC"),
+            (5, 31, 31, 4),
+            cvcuda.Interp.LANCZOS,
+            cvcuda.Format.RGBf32,
+        ),
+        (
+            ((5, 55, 55, 4), np.float32, "NHWC"),
+            (5, 31, 31, 4),
+            cvcuda.Interp.HAMMING,
+            cvcuda.Format.RGBf32,
+        ),
+        (
+            ((5, 55, 55, 4), np.float32, "NHWC"),
+            (5, 31, 31, 4),
+            cvcuda.Interp.BOX,
+            cvcuda.Format.RGBf32,
+        ),
     ],
 )
 def test_op_pillowresize(input_args, out_shape, interp, fmt):
