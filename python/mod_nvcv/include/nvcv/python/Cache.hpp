@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -87,6 +87,11 @@ public:
             out.emplace_back(list[i]->shared_from_this());
         }
         return out;
+    }
+
+    static void removeAllNotInUseMatching(const IKey &key)
+    {
+        capi().Cache_RemoveAllNotInUseMatching(&key);
     }
 };
 
