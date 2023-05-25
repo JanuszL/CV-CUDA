@@ -333,7 +333,7 @@ protected:
         // Handles values from -640 to 639.
         const uchar *clip8_lookups = &_clip8_lut<1280, -640>[640]; // NOLINT
         // NOLINTNEXTLINE
-        return clip8_lookups[static_cast<unsigned int>(in) >> precision_bits];
+        return clip8_lookups[(static_cast<unsigned int>(in) >> precision_bits) & 0x3FF];
     }
 
     /**
