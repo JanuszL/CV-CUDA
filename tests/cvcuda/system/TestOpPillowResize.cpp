@@ -948,13 +948,13 @@ NVCV_TEST_SUITE_P(OpPillowResize, test::ValueList<int, int, int, int, NVCVInterp
     {        21,        21,       42,        42,  NVCV_INTERP_LINEAR,           5, nvcv::FMT_RGB8},
     {        42,        42,       21,        21,  NVCV_INTERP_LINEAR,           6, nvcv::FMT_RGBf32},
     {        21,        21,       42,        42,  NVCV_INTERP_LINEAR,           7, nvcv::FMT_RGBf32},
-    {        21,        21,       40,        40,  NVCV_INTERP_BOX,           3, nvcv::FMT_RGBf32},
-    {        41,        41,       20,        20,  NVCV_INTERP_HAMMING,           3, nvcv::FMT_RGB8},
-    {        21,        21,       40,        40,  NVCV_INTERP_HAMMING,           3, nvcv::FMT_RGBf32},
-    {        41,        41,       20,        20,  NVCV_INTERP_CUBIC,           3, nvcv::FMT_RGB8},
-    {        21,        21,       40,        40,  NVCV_INTERP_CUBIC,           3, nvcv::FMT_RGBf32},
-    {        41,        41,       20,        20,  NVCV_INTERP_LANCZOS,           3, nvcv::FMT_RGB8},
-    {        21,        21,       40,        40,  NVCV_INTERP_LANCZOS,           3, nvcv::FMT_RGBf32},
+    {        21,        21,       40,        40,  NVCV_INTERP_BOX,              3, nvcv::FMT_RGBf32},
+    {        41,        41,       20,        20,  NVCV_INTERP_HAMMING,          3, nvcv::FMT_RGB8},
+    {        21,        21,       40,        40,  NVCV_INTERP_HAMMING,          3, nvcv::FMT_RGBf32},
+    {        41,        41,       20,        20,  NVCV_INTERP_CUBIC,            3, nvcv::FMT_RGB8},
+    {        21,        21,       40,        40,  NVCV_INTERP_CUBIC,            3, nvcv::FMT_RGBf32},
+    {        41,        41,       20,        20,  NVCV_INTERP_LANCZOS,          3, nvcv::FMT_RGB8},
+    {        21,        21,       40,        40,  NVCV_INTERP_LANCZOS,          3, nvcv::FMT_RGBf32},
 });
 
 // clang-format on
