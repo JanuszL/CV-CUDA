@@ -20,6 +20,7 @@
 
 #include "CvCudaLegacy.h"
 #include "CvCudaLegacyHelpers.hpp"
+#include "pillow_resize.h"
 
 #include "CvCudaUtils.cuh"
 
@@ -30,42 +31,12 @@ using namespace nvcv::legacy::helpers;
 
 #define BLOCK           32
 #define SHARE_MEM_LIMIT 4096
-#define work_type       float
 
 namespace nvcv::legacy::cuda_op {
 
-static constexpr float        bilinear_filter_support_var_shape = 1.;
-static constexpr unsigned int precision_bits_var_shape          = 32 - 8 - 2;
+static constexpr unsigned int precision_bits_var_shape = 32 - 8 - 2;
 
 namespace {
-
-class BilinearFilterVarShape
-{
-public:
-    __host__ __device__ BilinearFilterVarShape()
-        : _support(bilinear_filter_support_var_shape){};
-
-    __host__ __device__ work_type filter(work_type x)
-    {
-        if (x < 0.0)
-        {
-            x = -x;
-        }
-        if (x < 1.0)
-        {
-            return 1.0 - x;
-        }
-        return 0.0;
-    }
-
-    __host__ __device__ work_type support() const
-    {
-        return _support;
-    };
-
-private:
-    work_type _support;
-};
 
 template<class Filter>
 __global__ void _precomputeCoeffsVarShape(int *in_size_batch, int *in0_batch, work_type *scale_batch,
@@ -627,20 +598,31 @@ ErrorCode PillowResizeVarShape::infer(const nvcv::ImageBatchVarShape &inDataBase
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
-    if (!(interpolation == NVCV_INTERP_LINEAR))
-    {
-        LOG_ERROR("Unsupported interpolation method " << interpolation);
-        return ErrorCode::INVALID_PARAMETER;
-    }
-
     switch (interpolation)
     {
     case NVCV_INTERP_LINEAR:
-        pillow_resize_filter_var_shape<BilinearFilterVarShape>(inDataBase, outDataBase, gpu_workspace, cpu_workspace,
-                                                               interpolation, stream);
+        pillow_resize_filter_var_shape<BilinearFilter>(inDataBase, outDataBase, gpu_workspace, cpu_workspace,
+                                                       interpolation, stream);
+        break;
+    case NVCV_INTERP_BOX:
+        pillow_resize_filter_var_shape<BoxFilter>(inDataBase, outDataBase, gpu_workspace, cpu_workspace, interpolation,
+                                                  stream);
+        break;
+    case NVCV_INTERP_HAMMING:
+        pillow_resize_filter_var_shape<HammingFilter>(inDataBase, outDataBase, gpu_workspace, cpu_workspace,
+                                                      interpolation, stream);
+        break;
+    case NVCV_INTERP_CUBIC:
+        pillow_resize_filter_var_shape<BicubicFilter>(inDataBase, outDataBase, gpu_workspace, cpu_workspace,
+                                                      interpolation, stream);
+        break;
+    case NVCV_INTERP_LANCZOS:
+        pillow_resize_filter_var_shape<LanczosFilter>(inDataBase, outDataBase, gpu_workspace, cpu_workspace,
+                                                      interpolation, stream);
         break;
     default:
-        break;
+        LOG_ERROR("Unsupported interpolation method " << interpolation);
+        return ErrorCode::INVALID_PARAMETER;
     }
     return ErrorCode::SUCCESS;
 }
