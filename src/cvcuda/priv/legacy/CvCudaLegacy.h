@@ -21,6 +21,7 @@
 #include "CvCudaOSD.hpp"
 
 #include <cuda_runtime.h>
+#include <curand_kernel.h>
 #include <cvcuda/Types.h>
 #include <nvcv/BorderType.h>
 #include <nvcv/ImageBatch.hpp>
@@ -2778,6 +2779,36 @@ public:
      */
     ErrorCode infer(const ImageBatchVarShape &inData, const ImageBatchVarShape &outData,
                     const NVCVInterpolationType interpolation, cudaStream_t stream);
+};
+
+class GaussianNoiseVarShape : public CudaBaseOp
+{
+public:
+    GaussianNoiseVarShape() = delete;
+
+    GaussianNoiseVarShape(DataShape max_input_shape, DataShape max_output_shape, int maxBatchSize);
+
+    ~GaussianNoiseVarShape();
+
+    /**
+     * @brief Add gaussian noise on images.
+     * @param inData gpu pointer, batched input images.
+     * @param outData gpu pointer, batched output images.
+     * @param mu mu value for gaussian noise.
+     * @param sigma sigma value for gaussian noise.
+     * @param per_channel whether to add the same noise for all channels.
+     * @param stream for the asynchronous execution.
+     */
+
+    ErrorCode infer(const ImageBatchVarShapeDataStridedCuda &inData, const ImageBatchVarShapeDataStridedCuda &outData,
+                    const TensorDataStridedCuda &mu, const TensorDataStridedCuda &sigma, bool per_channel,
+                    unsigned long long seed, cudaStream_t stream);
+
+private:
+    curandState       *m_states;
+    unsigned long long m_seed;
+    bool               m_setupDone = false;
+    int                m_maxBatchSize;
 };
 
 } // namespace nvcv::legacy::cuda_op

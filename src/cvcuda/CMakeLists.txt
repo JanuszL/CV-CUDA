@@ -53,6 +53,7 @@ add_library(cvcuda SHARED
     OpThreshold.cpp
     OpAdaptiveThreshold.cpp
     OpRandomResizedCrop.cpp
+    OpGaussianNoise.cpp
 )
 
 target_link_libraries(cvcuda

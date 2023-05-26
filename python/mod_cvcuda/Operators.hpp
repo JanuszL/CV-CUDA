@@ -79,6 +79,7 @@ void ExportOpCropFlipNormalizeReformat(py::module &m);
 void ExportOpAdaptiveThreshold(py::module &m);
 void ExportOpNonMaximumSuppression(py::module &m);
 void ExportOpRandomResizedCrop(py::module &m);
+void ExportOpGaussianNoise(py::module &m);
 
 // Helper class that serves as generic python-side operator class.
 // OP: native operator class
