@@ -34,6 +34,7 @@ add_executable(cvcuda_test_system
     TestOpBoxBlur.cpp
     TestOpBndBox.cpp
     OsdUtils.cu
+    TestOpColorTwist.cpp
     TestOpRemap.cpp
     TestOpCropFlipNormalizeReformat.cpp
     FlipUtils.cpp

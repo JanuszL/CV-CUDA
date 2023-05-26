@@ -84,6 +84,7 @@ PYBIND11_MODULE(cvcuda, m)
     // CV-CUDA Operators
     ExportOpBoxBlur(m);
     ExportOpBndBox(m);
+    ExportOpColorTwist(m);
     ExportOpRemap(m);
     ExportOpCropFlipNormalizeReformat(m);
     ExportOpNonMaximumSuppression(m);
