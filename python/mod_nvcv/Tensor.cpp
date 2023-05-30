@@ -274,7 +274,7 @@ size_t Tensor::Key::doGetHash() const
     }
 }
 
-bool Tensor::Key::doIsEqual(const IKey &that_) const
+bool Tensor::Key::doIsCompatible(const IKey &that_) const
 {
     const Key &that = static_cast<const Key &>(that_);
 

@@ -35,7 +35,7 @@
 
 namespace nvcvpy::priv {
 
-bool Image::Key::doIsEqual(const IKey &ithat) const
+bool Image::Key::doIsCompatible(const IKey &ithat) const
 {
     auto &that = static_cast<const Key &>(ithat);
 

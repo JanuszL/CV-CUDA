@@ -221,3 +221,25 @@ def test_op_pillowresize_gpuload():
 
     thread.join()
     assert torch_dst.cpu() == 1
+
+
+def test_op_pillowresize_reused_from_cache():
+    fmt = cvcuda.Format.RGBA8
+    src = [
+        cvcuda.Tensor((3, 51, 15, 4), np.uint8, "NHWC"),
+        util.create_image_batch(2, fmt, max_size=(12, 35), rng=RNG),
+    ]
+    dst = [
+        cvcuda.Tensor((3, 13, 31, 4), np.uint8, "NHWC"),
+        cvcuda.Tensor((3, 46, 33, 4), np.uint8, "NHWC"),
+        util.create_image_batch(2, fmt, max_size=(47, 32), rng=RNG),
+    ]
+
+    cvcuda.pillowresize_into(dst[0], src[0], fmt)
+
+    items_in_cache = cvcuda.cache_size()
+
+    cvcuda.pillowresize_into(dst[1], src[0], fmt)
+    cvcuda.pillowresize_into(dst[2], src[1])
+
+    assert cvcuda.cache_size() == items_in_cache

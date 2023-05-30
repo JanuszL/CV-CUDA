@@ -76,7 +76,7 @@ public:
         bool              m_wrapper;
 
         virtual size_t doGetHash() const override;
-        virtual bool   doIsEqual(const IKey &that) const override;
+        virtual bool   doIsCompatible(const IKey &that) const override;
     };
 
     virtual const Key &key() const override;
