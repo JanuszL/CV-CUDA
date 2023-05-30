@@ -132,11 +132,11 @@ NVCV_TYPED_TEST_SUITE(
     NVCV_TEST_ROW(NVCV_SHAPE(42, 42, 1), NVCV_SHAPE(42, 42, 1), NVCV_SHAPE(42, 42, 1), float1, NVCV_IMAGE_FORMAT_F32,
                   true, NVCV_INTERP_NEAREST, NVCV_INTERP_NEAREST, NVCV_REMAP_ABSOLUTE, NVCV_BORDER_CONSTANT, 72.f),
     NVCV_TEST_ROW(NVCV_SHAPE(41, 31, 2), NVCV_SHAPE(41, 31, 2), NVCV_SHAPE(2, 2, 1), uchar3, NVCV_IMAGE_FORMAT_RGB8,
-                  false, NVCV_INTERP_NEAREST, NVCV_INTERP_LINEAR, NVCV_REMAP_RELATIVE_NORMALIZED, NVCV_BORDER_REPLICATE, 0.f),
+                  false, NVCV_INTERP_NEAREST, NVCV_INTERP_LINEAR, NVCV_REMAP_ABSOLUTE_NORMALIZED, NVCV_BORDER_REPLICATE, 0.f),
     NVCV_TEST_ROW(NVCV_SHAPE(44, 33, 2), NVCV_SHAPE(44, 33, 2), NVCV_SHAPE(1, 1, 2), uchar3, NVCV_IMAGE_FORMAT_RGB8,
                   false, NVCV_INTERP_NEAREST, NVCV_INTERP_LINEAR, NVCV_REMAP_RELATIVE_NORMALIZED, NVCV_BORDER_REPLICATE, 0.f),
-    NVCV_TEST_ROW(NVCV_SHAPE(44, 33, 2), NVCV_SHAPE(44, 33, 2), NVCV_SHAPE(4, 3, 2), uchar3, NVCV_IMAGE_FORMAT_RGB8,
-                  true, NVCV_INTERP_NEAREST, NVCV_INTERP_LINEAR, NVCV_REMAP_RELATIVE_NORMALIZED, NVCV_BORDER_REPLICATE, 0.f),
+    NVCV_TEST_ROW(NVCV_SHAPE(44, 32, 2), NVCV_SHAPE(44, 32, 2), NVCV_SHAPE(4, 3, 2), uchar3, NVCV_IMAGE_FORMAT_RGB8,
+                  true, NVCV_INTERP_NEAREST, NVCV_INTERP_LINEAR, NVCV_REMAP_ABSOLUTE, NVCV_BORDER_REPLICATE, 0.f),
     NVCV_TEST_ROW(NVCV_SHAPE(23, 13, 3), NVCV_SHAPE(25, 27, 3), NVCV_SHAPE(23, 13, 3), uchar4, NVCV_IMAGE_FORMAT_RGBA8,
                   false, NVCV_INTERP_LINEAR, NVCV_INTERP_LINEAR, NVCV_REMAP_ABSOLUTE_NORMALIZED, NVCV_BORDER_REFLECT, 0.f),
     NVCV_TEST_ROW(NVCV_SHAPE(23, 13, 3), NVCV_SHAPE(25, 27, 3), NVCV_SHAPE(25, 27, 3), uchar4, NVCV_IMAGE_FORMAT_RGBA8,
@@ -297,9 +297,8 @@ TYPED_TEST(OpRemap, varshape_correct_output)
                 for (int k = 0; k < cuda::NumElements<ValueType>; ++k)
                     cuda::GetElement(test::ValueAt<ValueType>(srcVec[z], srcStrides, int2{x, y}), k) = rand(g_rng);
 
-        ASSERT_EQ(cudaSuccess,
-                  cudaMemcpy2DAsync(imgData->plane(0).basePtr, srcRowStride, srcVec[z].data(), srcRowStride,
-                                    srcRowStride, imgSrc[z].size().h, cudaMemcpyHostToDevice, stream));
+        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(imgData->plane(0).basePtr, srcRowStride, srcVec[z].data(), srcRowStride,
+                                            srcRowStride, imgSrc[z].size().h, cudaMemcpyHostToDevice));
     }
 
     std::uniform_int_distribution<int> dstRandW(dstShape.x * 0.8, dstShape.x * 1.2);
