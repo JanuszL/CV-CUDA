@@ -39,10 +39,14 @@ class GaussianNoise final : public IOperator
 public:
     explicit GaussianNoise(int maxBatchSize);
 
+    void operator()(cudaStream_t stream, const nvcv::Tensor &in, const nvcv::Tensor &out, const nvcv::Tensor &mu,
+                    const nvcv::Tensor &sigma, bool per_channel, unsigned long long seed) const;
+
     void operator()(cudaStream_t stream, const nvcv::ImageBatchVarShape &in, const nvcv::ImageBatchVarShape &out,
                     const nvcv::Tensor &mu, const nvcv::Tensor &sigma, bool per_channel, unsigned long long seed) const;
 
 private:
+    std::unique_ptr<nvcv::legacy::cuda_op::GaussianNoise>         m_legacyOp;
     std::unique_ptr<nvcv::legacy::cuda_op::GaussianNoiseVarShape> m_legacyOpVarShape;
 };
 

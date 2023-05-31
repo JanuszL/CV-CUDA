@@ -70,7 +70,9 @@ add_library(cvcuda_legacy STATIC
     box_blur.cu
     random_resized_crop.cu
     random_resized_crop_var_shape.cu
+    gaussian_noise.cu
     gaussian_noise_var_shape.cu
+    gaussian_noise_util.cu
 )
 
 target_link_libraries(cvcuda_legacy

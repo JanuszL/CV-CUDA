@@ -26,7 +26,7 @@
 
 namespace priv = cvcuda::priv;
 
-CVCUDA_DEFINE_API(0, 3, NVCVStatus, cvcudaGaussianNoiseCreate, (NVCVOperatorHandle * handle, int maxBatchSize))
+CVCUDA_DEFINE_API(0, 4, NVCVStatus, cvcudaGaussianNoiseCreate, (NVCVOperatorHandle * handle, int maxBatchSize))
 {
     return nvcv::ProtectCall(
         [&]
@@ -41,7 +41,20 @@ CVCUDA_DEFINE_API(0, 3, NVCVStatus, cvcudaGaussianNoiseCreate, (NVCVOperatorHand
         });
 }
 
-CVCUDA_DEFINE_API(0, 3, NVCVStatus, cvcudaGaussianNoiseVarShapeSubmit,
+CVCUDA_DEFINE_API(0, 4, NVCVStatus, cvcudaGaussianNoiseSubmit,
+                  (NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in, NVCVTensorHandle out,
+                   NVCVTensorHandle mu, NVCVTensorHandle sigma, int8_t per_channel, unsigned long long seed))
+{
+    return nvcv::ProtectCall(
+        [&]
+        {
+            nvcv::TensorWrapHandle input(in), output(out), muwrap(mu), sigmawrap(sigma);
+            priv::ToDynamicRef<priv::GaussianNoise>(handle)(stream, input, output, muwrap, sigmawrap,
+                                                            static_cast<bool>(per_channel), seed);
+        });
+}
+
+CVCUDA_DEFINE_API(0, 4, NVCVStatus, cvcudaGaussianNoiseVarShapeSubmit,
                   (NVCVOperatorHandle handle, cudaStream_t stream, NVCVImageBatchHandle in, NVCVImageBatchHandle out,
                    NVCVTensorHandle mu, NVCVTensorHandle sigma, int8_t per_channel, unsigned long long seed))
 {

@@ -135,6 +135,10 @@ CVCUDA_PUBLIC NVCVStatus cvcudaGaussianNoiseCreate(NVCVOperatorHandle *handle, i
 */
 /** @{ */
 
+CVCUDA_PUBLIC NVCVStatus cvcudaGaussianNoiseSubmit(NVCVOperatorHandle handle, cudaStream_t stream, NVCVTensorHandle in,
+                                                   NVCVTensorHandle out, NVCVTensorHandle mu, NVCVTensorHandle sigma,
+                                                   int8_t per_channel, unsigned long long seed);
+
 CVCUDA_PUBLIC NVCVStatus cvcudaGaussianNoiseVarShapeSubmit(NVCVOperatorHandle handle, cudaStream_t stream,
                                                            NVCVImageBatchHandle in, NVCVImageBatchHandle out,
                                                            NVCVTensorHandle mu, NVCVTensorHandle sigma,

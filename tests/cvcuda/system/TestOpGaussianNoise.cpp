@@ -81,6 +81,105 @@ NVCV_TEST_SUITE_P(OpGaussianNoise, nvcv::test::ValueList<int, int, int, float, f
 
 // clang-format on
 
+TEST_P(OpGaussianNoise, tensor_correct_output)
+{
+    cudaStream_t stream;
+    EXPECT_EQ(cudaSuccess, cudaStreamCreate(&stream));
+
+    int   batch       = GetParamValue<0>();
+    int   height      = GetParamValue<1>();
+    int   width       = GetParamValue<2>();
+    float mu          = GetParamValue<3>();
+    float sigma       = GetParamValue<4>();
+    bool  per_channel = GetParamValue<5>();
+
+    nvcv::ImageFormat fmt = nvcv::FMT_RGB8;
+    using datatype        = uint8_t;
+    nvcv::Tensor imgIn    = nvcv::util::CreateTensor(batch, width, height, fmt);
+    nvcv::Tensor imgOut   = nvcv::util::CreateTensor(batch, width, height, fmt);
+
+    auto inData = imgIn.exportData<nvcv::TensorDataStridedCuda>();
+    ASSERT_NE(nullptr, inData);
+    auto inAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*inData);
+    ASSERT_TRUE(inAccess);
+    ASSERT_EQ(batch, inAccess->numSamples());
+
+    auto outData = imgOut.exportData<nvcv::TensorDataStridedCuda>();
+    ASSERT_NE(nullptr, outData);
+    auto outAccess = nvcv::TensorDataAccessStridedImagePlanar::Create(*outData);
+    ASSERT_TRUE(outAccess);
+    ASSERT_EQ(batch, outAccess->numSamples());
+
+    int64_t outSampleStride = outAccess->sampleStride();
+
+    if (outData->rank() == 3)
+    {
+        outSampleStride = outAccess->numRows() * outAccess->rowStride();
+    }
+
+    int64_t outBufferSize = outSampleStride * outAccess->numSamples();
+
+    // Set output buffer to dummy value
+    EXPECT_EQ(cudaSuccess, cudaMemset(outAccess->sampleData(0), 0xFA, outBufferSize));
+
+    //parameters
+    nvcv::Tensor muval({{batch}, "N"}, nvcv::TYPE_F32);
+    nvcv::Tensor sigmaval({{batch}, "N"}, nvcv::TYPE_F32);
+
+    auto muData    = muval.exportData<nvcv::TensorDataStridedCuda>();
+    auto sigmaData = sigmaval.exportData<nvcv::TensorDataStridedCuda>();
+
+    ASSERT_NE(nullptr, muData);
+    ASSERT_NE(nullptr, sigmaData);
+
+    std::vector<float> muVec(batch, mu);
+    std::vector<float> sigmaVec(batch, sigma);
+
+    // Copy vectors to the GPU
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(muData->basePtr(), muVec.data(), muVec.size() * sizeof(float),
+                                           cudaMemcpyHostToDevice, stream));
+    ASSERT_EQ(cudaSuccess, cudaMemcpyAsync(sigmaData->basePtr(), sigmaVec.data(), sigmaVec.size() * sizeof(float),
+                                           cudaMemcpyHostToDevice, stream));
+
+    //Generate input
+    std::vector<std::vector<uint8_t>> srcVec(batch);
+    std::default_random_engine        randEng;
+    int                               rowStride = width * fmt.planePixelStrideBytes(0);
+
+    for (int i = 0; i < batch; i++)
+    {
+        std::uniform_int_distribution<uint8_t> rand(0, 255);
+        srcVec[i].resize(height * rowStride / sizeof(datatype));
+        std::generate(srcVec[i].begin(), srcVec[i].end(), [&]() { return rand(randEng); });
+        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(inAccess->sampleData(i), inAccess->rowStride(), srcVec[i].data(), rowStride,
+                                            rowStride, height, cudaMemcpyHostToDevice));
+    }
+
+    // Call operator
+    int                   maxBatch = 4;
+    unsigned long long    seed     = 12345;
+    cvcuda::GaussianNoise GaussianNoiseOp(maxBatch);
+    EXPECT_NO_THROW(GaussianNoiseOp(stream, imgIn, imgOut, muval, sigmaval, per_channel, seed));
+
+    EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
+
+    for (int i = 0; i < batch; i++)
+    {
+        SCOPED_TRACE(i);
+
+        std::vector<datatype> testVec(height * rowStride / sizeof(datatype));
+        // Copy output data to Host
+        ASSERT_EQ(cudaSuccess, cudaMemcpy2D(testVec.data(), rowStride, outAccess->sampleData(i), outAccess->rowStride(),
+                                            rowStride, height, cudaMemcpyDeviceToHost));
+
+        std::vector<datatype> goldVec(height * rowStride / sizeof(datatype));
+        GaussianNoise<datatype>(srcVec[i], goldVec, mu, sigma, i, per_channel);
+        EXPECT_EQ(goldVec, testVec);
+    }
+
+    EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
+}
+
 TEST_P(OpGaussianNoise, varshape_correct_shape)
 {
     cudaStream_t stream;
