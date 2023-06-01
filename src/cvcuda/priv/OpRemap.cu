@@ -110,9 +110,8 @@ inline void __device__ DoRemap(SrcWrapper src, DstWrapper dst, MapWrapper map, c
 
     // The source is accessed at destination coordinate scaled by source scale, plus the map value that is either a
     // relative distance from destination or an absolute position at source (either normalized or not), multiplied
-    // by value scale and offset by source offset.  The result of the map value scaled must be rounded to get an
-    // absolute position regardless of source interpolation.  The source interpolation type only affects the source
-    // scaling and offset values.
+    // by value scale and offset by source offset.  The source interpolation type only affects the source scaling
+    // and offset values.
 
     srcCoord.x = dstCoord.x * params.srcScale.x + mapValue.x * params.valScale.x + params.srcOffset.x;
     srcCoord.y = dstCoord.y * params.srcScale.y + mapValue.y * params.valScale.y + params.srcOffset.y;
