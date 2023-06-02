@@ -955,6 +955,7 @@ NVCV_TEST_SUITE_P(OpPillowResize, test::ValueList<int, int, int, int, NVCVInterp
     {        21,        21,       40,        40,  NVCV_INTERP_CUBIC,            3, nvcv::FMT_RGBf32},
     {        41,        41,       20,        20,  NVCV_INTERP_LANCZOS,          3, nvcv::FMT_RGB8},
     {        21,        21,       40,        40,  NVCV_INTERP_LANCZOS,          3, nvcv::FMT_RGBf32},
+    {      1920,      1080,       40,        40,   NVCV_INTERP_LINEAR,         16, nvcv::FMT_RGBA8},
 });
 
 // clang-format on
