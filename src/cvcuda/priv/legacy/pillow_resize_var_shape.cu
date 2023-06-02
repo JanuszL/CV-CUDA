@@ -158,6 +158,7 @@ __global__ void horizontal_pass_var_shape(const Ptr2dVarShapeNHWC<T1> src, Ptr2d
     work_type *h_kk      = h_kk_batch + h_kk_offset[batch_idx];
 
     int out_height = dst.at_rows(batch_idx), out_width = dst.at_cols(batch_idx);
+    int in_height = src.at_rows(batch_idx), in_width = src.at_cols(batch_idx);
 
     work_type *h_k_tmp = h_kk + x_offset * h_ksize;
 
@@ -189,10 +190,13 @@ __global__ void horizontal_pass_var_shape(const Ptr2dVarShapeNHWC<T1> src, Ptr2d
             for (int x = 0; x < xmax; ++x)
             {
                 // offset = offset_src + x * src.nch + c = (dst_y * src.at_cols(batch_idx) + xmin  + x) * src.nch + c
-                h_ss = h_ss
-                     + *src.ptr(batch_idx, dst_y + (xmin + x) / src.at_cols(batch_idx),
-                                (xmin + x) % src.at_cols(batch_idx), c)
-                           * h_k[x];
+                int src_y = dst_y + (xmin + x) / src.at_cols(batch_idx);
+                int src_x = (xmin + x) % src.at_cols(batch_idx);
+                if (src_y < 0 || src_y >= in_height || src_x < 0 || src_x >= in_width)
+                {
+                    continue;
+                }
+                h_ss = h_ss + *src.ptr(batch_idx, src_y, src_x, c) * h_k[x];
             }
             if (round_up)
                 *dst.ptr(batch_idx, dst_y, dst_x, c) = cuda::SaturateCast<T2>(std::round(h_ss));
@@ -220,6 +224,7 @@ __global__ void vertical_pass_var_shape(const Ptr2dNHWC<T1> src, Ptr2dVarShapeNH
     work_type *v_kk      = v_kk_batch + v_kk_offset[batch_idx];
 
     int out_height = dst.at_rows(batch_idx), out_width = dst.at_cols(batch_idx);
+    int in_height = src.at_rows(batch_idx), in_width = src.at_cols(batch_idx);
 
     work_type *v_k_tmp = v_kk + y_offset * v_ksize;
     if (use_share_mem)
@@ -251,9 +256,13 @@ __global__ void vertical_pass_var_shape(const Ptr2dNHWC<T1> src, Ptr2dVarShapeNH
             for (int y = 0; y < ymax; ++y)
             {
                 // offset =  offset_src + y * col_offset_src + c = ((y + ymin)* src.at_cols(batch_idx) + dst_x) * src.nch + c
-                ss = ss
-                   + *src.ptr(batch_idx, y + ymin + (dst_x / src.at_cols(batch_idx)), dst_x % src.at_cols(batch_idx), c)
-                         * v_k[y];
+                int src_y = y + ymin + (dst_x / src.at_cols(batch_idx));
+                int src_x = dst_x % src.at_cols(batch_idx);
+                if (src_y < 0 || src_y >= in_height || src_x < 0 || src_x >= in_width)
+                {
+                    continue;
+                }
+                ss = ss + *src.ptr(batch_idx, src_y, src_x, c) * v_k[y];
             }
 
             if (round_up)
