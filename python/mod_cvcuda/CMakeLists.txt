@@ -63,6 +63,7 @@ nvcv_python_add_module(
         OpPillowResize.cpp
         OpThreshold.cpp
         OpAdaptiveThreshold.cpp
+        OpRandomResizedCrop.cpp
 )
 
 target_link_libraries(cvcuda_module_python

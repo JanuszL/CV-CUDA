@@ -116,4 +116,5 @@ PYBIND11_MODULE(cvcuda, m)
     ExportOpPillowResize(m);
     ExportOpThreshold(m);
     ExportOpAdaptiveThreshold(m);
+    ExportOpRandomResizedCrop(m);
 }
