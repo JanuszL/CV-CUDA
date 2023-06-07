@@ -20,7 +20,7 @@
 
 #include <common/InterpUtils.hpp>
 #include <common/ValueTests.hpp>
-#include <cvcuda/OpResize.hpp>
+#include <cvcuda/OpRandomResizedCrop.hpp>
 #include <nvcv/Image.hpp>
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/Tensor.hpp>
@@ -36,9 +36,65 @@ namespace cuda = nvcv::cuda;
 namespace test = nvcv::test;
 namespace t    = ::testing;
 
+static void GetCropParams(std::mt19937 &generator, double minScale, double maxScale, double minRatio, double maxRatio,
+                          int input_rows, int input_cols, int *top_indices, int *left_indices, int *crop_rows,
+                          int *crop_cols)
+{
+    int          rows          = input_rows;
+    int          cols          = input_cols;
+    double       area          = rows * cols;
+    const double log_min_ratio = std::log(minRatio);
+    const double log_max_ratio = std::log(maxRatio);
+
+    std::uniform_real_distribution<double> scale_dist(minScale, maxScale);
+    std::uniform_real_distribution<double> ratio_dist(log_min_ratio, log_max_ratio);
+    bool                                   got_params = false;
+    for (int i = 0; i < 10; ++i)
+    {
+        if (got_params)
+            return;
+        int    target_area  = area * scale_dist(generator);
+        double aspect_ratio = std::exp(ratio_dist(generator));
+
+        *crop_cols = int(std::round(std::sqrt(target_area * aspect_ratio)));
+        *crop_rows = int(std::round(std::sqrt(target_area / aspect_ratio)));
+
+        if (*crop_cols > 0 && *crop_cols <= cols && *crop_rows > 0 && *crop_rows <= rows)
+        {
+            std::uniform_int_distribution<int> row_uni(0, rows - *crop_rows);
+            std::uniform_int_distribution<int> col_uni(0, cols - *crop_cols);
+            *top_indices  = row_uni(generator);
+            *left_indices = col_uni(generator);
+            got_params    = true;
+        }
+    }
+    // Fallback to central crop
+    if (!got_params)
+    {
+        double in_ratio = double(cols) / double(rows);
+        if (in_ratio < minRatio)
+        {
+            *crop_cols = cols;
+            *crop_rows = int(std::round(*crop_cols / minRatio));
+        }
+        else if (in_ratio > maxRatio)
+        {
+            *crop_rows = rows;
+            *crop_cols = int(std::round(*crop_rows * maxRatio));
+        }
+        else // whole image
+        {
+            *crop_cols = cols;
+            *crop_rows = rows;
+        }
+        *top_indices  = (rows - *crop_rows) / 2;
+        *left_indices = (cols - *crop_cols) / 2;
+    }
+}
+
 // clang-format off
 
-NVCV_TEST_SUITE_P(OpResize, test::ValueList<int, int, int, int, NVCVInterpolationType, int>
+NVCV_TEST_SUITE_P(OpRandomResizedCrop, test::ValueList<int, int, int, int, NVCVInterpolationType, int>
 {
     // srcWidth, srcHeight, dstWidth, dstHeight,       interpolation, numberImages
     {        42,        48,       23,        24, NVCV_INTERP_NEAREST,           1},
@@ -56,13 +112,11 @@ NVCV_TEST_SUITE_P(OpResize, test::ValueList<int, int, int, int, NVCVInterpolatio
     {        420,      420,       40,        42,   NVCV_INTERP_CUBIC,           1},
     {       1920,     1080,      640,       320,   NVCV_INTERP_CUBIC,           1},
     {       1920,     1080,      640,       320,   NVCV_INTERP_CUBIC,           2},
-    {         44,       40,       22,        20,    NVCV_INTERP_AREA,           1},
-    {         30,       30,       20,        20,    NVCV_INTERP_AREA,           2},
 });
 
 // clang-format on
 
-TEST_P(OpResize, tensor_correct_output)
+TEST_P(OpRandomResizedCrop, tensor_correct_output)
 {
     cudaStream_t stream;
     EXPECT_EQ(cudaSuccess, cudaStreamCreate(&stream));
@@ -71,6 +125,11 @@ TEST_P(OpResize, tensor_correct_output)
     int srcHeight = GetParamValue<1>();
     int dstWidth  = GetParamValue<2>();
     int dstHeight = GetParamValue<3>();
+
+    double minScale = 0.08;
+    double maxScale = 1.0;
+    double minRatio = 3.0 / 4;
+    double maxRatio = 4.0 / 3;
 
     NVCVInterpolationType interpolation = GetParamValue<4>();
 
@@ -110,8 +169,10 @@ TEST_P(OpResize, tensor_correct_output)
     // Generate test result
     nvcv::Tensor imgDst = nvcv::util::CreateTensor(numberOfImages, dstWidth, dstHeight, fmt);
 
-    cvcuda::Resize resizeOp;
-    EXPECT_NO_THROW(resizeOp(stream, imgSrc, imgDst, interpolation));
+    // use fixed seed
+    uint32_t                  seed = 1;
+    cvcuda::RandomResizedCrop randomResizedCropOp(minScale, maxScale, minRatio, maxRatio, numberOfImages, seed);
+    EXPECT_NO_THROW(randomResizedCropOp(stream, imgSrc, imgDst, interpolation));
 
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
@@ -124,6 +185,9 @@ TEST_P(OpResize, tensor_correct_output)
     ASSERT_TRUE(dstAccess);
 
     int dstVecRowStride = dstWidth * fmt.planePixelStrideBytes(0);
+
+    std::mt19937 generator(seed);
+
     for (int i = 0; i < numberOfImages; ++i)
     {
         SCOPED_TRACE(i);
@@ -136,17 +200,30 @@ TEST_P(OpResize, tensor_correct_output)
                                dstVecRowStride, // vec has no padding
                                dstHeight, cudaMemcpyDeviceToHost));
 
+        int top, left, crop_rows, crop_cols;
+        GetCropParams(generator, minScale, maxScale, minRatio, maxRatio, srcHeight, srcWidth, &top, &left, &crop_rows,
+                      &crop_cols);
+
         std::vector<uint8_t> goldVec(dstHeight * dstVecRowStride);
 
         // Generate gold result
-        test::Resize(goldVec, dstVecRowStride, {dstWidth, dstHeight}, srcVec[i], srcVecRowStride, {srcWidth, srcHeight},
-                     fmt, interpolation);
+        test::ResizedCrop(goldVec, dstVecRowStride, {dstWidth, dstHeight}, srcVec[i], srcVecRowStride,
+                          {srcWidth, srcHeight}, top, left, crop_rows, crop_cols, fmt, interpolation);
 
-        EXPECT_EQ(goldVec, testVec);
+        // maximum absolute error
+        std::vector<int> mae(testVec.size());
+        for (size_t i = 0; i < mae.size(); ++i)
+        {
+            mae[i] = abs(static_cast<int>(goldVec[i]) - static_cast<int>(testVec[i]));
+        }
+
+        int maeThreshold = 1;
+
+        EXPECT_THAT(mae, t::Each(t::Le(maeThreshold)));
     }
 }
 
-TEST_P(OpResize, varshape_correct_output)
+TEST_P(OpRandomResizedCrop, varshape_correct_output)
 {
     cudaStream_t stream;
     EXPECT_EQ(cudaSuccess, cudaStreamCreate(&stream));
@@ -155,6 +232,11 @@ TEST_P(OpResize, varshape_correct_output)
     int srcHeightBase = GetParamValue<1>();
     int dstWidthBase  = GetParamValue<2>();
     int dstHeightBase = GetParamValue<3>();
+
+    double minScale = 0.08;
+    double maxScale = 1.0;
+    double minRatio = 3.0 / 4;
+    double maxRatio = 4.0 / 3;
 
     NVCVInterpolationType interpolation = GetParamValue<4>();
 
@@ -211,13 +293,16 @@ TEST_P(OpResize, varshape_correct_output)
                                srcHeight, cudaMemcpyHostToDevice));
     }
 
-    // Generate test result
-    cvcuda::Resize resizeOp;
-    EXPECT_NO_THROW(resizeOp(stream, batchSrc, batchDst, interpolation));
+    // Generate test result, using fixed seed
+    uint32_t                  seed = 1;
+    cvcuda::RandomResizedCrop randomResizedCropOp(minScale, maxScale, minRatio, maxRatio, numberOfImages, seed);
+    EXPECT_NO_THROW(randomResizedCropOp(stream, batchSrc, batchDst, interpolation));
 
     // Get test data back
     EXPECT_EQ(cudaSuccess, cudaStreamSynchronize(stream));
     EXPECT_EQ(cudaSuccess, cudaStreamDestroy(stream));
+
+    std::mt19937 generator(seed);
 
     // Check test data against gold
     for (int i = 0; i < numberOfImages; ++i)
@@ -245,11 +330,15 @@ TEST_P(OpResize, varshape_correct_output)
                                dstRowStride, // vec has no padding
                                dstHeight, cudaMemcpyDeviceToHost));
 
+        int top, left, crop_rows, crop_cols;
+        GetCropParams(generator, minScale, maxScale, minRatio, maxRatio, srcHeight, srcWidth, &top, &left, &crop_rows,
+                      &crop_cols);
+
         std::vector<uint8_t> goldVec(dstHeight * dstRowStride);
 
         // Generate gold result
-        test::Resize(goldVec, dstRowStride, {dstWidth, dstHeight}, srcVec[i], srcVecRowStride[i], {srcWidth, srcHeight},
-                     fmt, interpolation);
+        test::ResizedCrop(goldVec, dstRowStride, {dstWidth, dstHeight}, srcVec[i], srcVecRowStride[i],
+                          {srcWidth, srcHeight}, top, left, crop_rows, crop_cols, fmt, interpolation);
 
         // maximum absolute error
         std::vector<int> mae(testVec.size());

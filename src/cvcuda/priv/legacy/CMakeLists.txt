@@ -68,6 +68,8 @@ add_library(cvcuda_legacy STATIC
     threshold_util.cu
     bnd_box.cu
     box_blur.cu
+    random_resized_crop.cu
+    random_resized_crop_var_shape.cu
 )
 
 target_link_libraries(cvcuda_legacy

@@ -51,6 +51,7 @@ add_library(cvcuda_priv STATIC
     OpPillowResize.cpp
     OpThreshold.cpp
     OpAdaptiveThreshold.cpp
+    OpRandomResizedCrop.cpp
 )
 
 target_link_libraries(cvcuda_priv
