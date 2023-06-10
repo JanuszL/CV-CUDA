@@ -39,6 +39,7 @@ add_executable(cvcuda_test_system
     TestOpCropFlipNormalizeReformat.cpp
     FlipUtils.cpp
     ConvUtils.cpp
+    ResizeUtils.cpp
     TestOpNonMaximumSuppression.cpp
     TestOpReformat.cpp
     TestOpResize.cpp
@@ -68,6 +69,7 @@ add_executable(cvcuda_test_system
     TestOpPillowResize.cpp
     TestOpThreshold.cpp
     TestOpAdaptiveThreshold.cpp
+    TestOpRandomResizedCrop.cpp
 )
 
 target_link_libraries(cvcuda_test_system

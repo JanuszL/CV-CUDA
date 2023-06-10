@@ -52,6 +52,7 @@ add_library(cvcuda SHARED
     OpPillowResize.cpp
     OpThreshold.cpp
     OpAdaptiveThreshold.cpp
+    OpRandomResizedCrop.cpp
 )
 
 target_link_libraries(cvcuda
