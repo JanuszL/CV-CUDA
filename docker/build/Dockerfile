@@ -36,12 +36,9 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get update \
         pre-commit shellcheck \
         curl \
     && rm -rf /var/lib/apt/lists/* \
-    && curl https://github.com/Kitware/CMake/releases/download/v3.18.4/cmake-3.18.4.tar.gz --output /tmp/cmake-3.18.4.tar.gz \
-    && tar -xzf /tmp/cmake-3.18.4.tar.gz -C /tmp/ \
-    && pushd /tmp/cmake-3.18.4 \
-    && ./bootstrap --parallel=$(grep ^processor /proc/cpuinfo | wc -l) --prefix=/usr/local/ -- -DCMAKE_USE_OPENSSL=OFF \
-    && make -j"$(grep ^processor /proc/cpuinfo | wc -l)" \
-    && make install && popd
+    && curl -L https://cmake.org/files/v3.18/cmake-3.18.6-Linux-x86_64.tar.gz --output /tmp/cmake-3.18.6.tar.gz \
+    && tar -xzf /tmp/cmake-3.18.6.tar.gz -C /tmp/ && cd /tmp/cmake-3.18.6-Linux-x86_64/ \
+    && cp bin/ share/ doc/ /usr/local/ -r && rm -rf /tmp/cmake-3.18.6*
 
 # Configure ccache
 RUN mkdir -p /cache
