@@ -23,6 +23,7 @@ nvcv_python_add_module(
         Main.cpp
         OpBndBox.cpp
         OpBoxBlur.cpp
+        OpBrightnessContrast.cpp
         OpColorTwist.cpp
         OsdElement.cpp
         OpRemap.cpp
