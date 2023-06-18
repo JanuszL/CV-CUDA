@@ -21,6 +21,7 @@
 #include "CoreResource.hpp"
 #include "Image.hpp"
 #include "ImageFormat.hpp"
+#include "Optional.hpp"
 #include "Size.hpp"
 #include "Tensor.h"
 #include "TensorData.hpp"
@@ -91,6 +92,13 @@ inline Tensor TensorWrapData(const TensorData &data, TensorDataCleanupCallback &
 inline Tensor TensorWrapImage(const Image &img);
 
 using TensorWrapHandle = NonOwningResource<Tensor>;
+
+// Tensor const ref optional definition ---------------------------
+
+using OptionalTensorConstRef = nvcv::Optional<std::reference_wrapper<const nvcv::Tensor>>;
+
+#define NVCV_HANDLE_TO_OPTIONAL(X) X ? nvcv::OptionalTensorConstRef(nvcv::TensorWrapHandle{X}) : nvcv::NullOpt
+#define NVCV_OPTIONAL_TO_HANDLE(X) X ? X->get().handle() : nullptr
 
 } // namespace nvcv
 

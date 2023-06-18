@@ -27,6 +27,7 @@
 #include <nvcv/ImageBatch.hpp>
 #include <nvcv/ImageBatchData.hpp>
 #include <nvcv/Rect.h>
+#include <nvcv/Tensor.hpp>
 #include <nvcv/TensorData.hpp>
 
 #include <random>
@@ -2839,6 +2840,21 @@ private:
     unsigned long long m_seed;
     bool               m_setupDone = false;
     int                m_maxBatchSize;
+};
+
+class Histogram : public CudaBaseOp
+{
+public:
+    Histogram() = default;
+    /**
+     * @brief Resize and crop images
+     * @param inData input tensor kNHWC/HWC tensor representing the input image(s)
+     * @param mask mask tensor of the same size as the input image(s). Only non-zero values are counted for histogram.
+     * @param histogram output tensor of size HWC representing the histogram where each row is an image histogram.
+     * @param stream for the asynchronous execution.
+     */
+    ErrorCode infer(const TensorDataStridedCuda &inData, OptionalTensorConstRef mask,
+                    const TensorDataStridedCuda &histogram, cudaStream_t stream);
 };
 
 class Inpaint : public CudaBaseOp

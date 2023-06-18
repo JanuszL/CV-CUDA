@@ -24,6 +24,7 @@ nvcv_python_add_module(
         OpSIFT.cpp
         SIFTFlagType.cpp
         OpMinMaxLoc.cpp
+        OpHistogram.cpp
         OpBndBox.cpp
         OpBoxBlur.cpp
         OpBrightnessContrast.cpp
