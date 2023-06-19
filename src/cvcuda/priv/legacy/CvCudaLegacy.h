@@ -2841,6 +2841,60 @@ private:
     int                m_maxBatchSize;
 };
 
+class Inpaint : public CudaBaseOp
+{
+public:
+    Inpaint() = delete;
+
+    Inpaint(DataShape max_input_shape, DataShape max_output_shape, int maxBatchSize, Size2D maxShape);
+
+    ~Inpaint();
+
+    /**
+    * @brief Restores the selected region in an image using the region neighborhood. TELEA algorithm is used here.
+    * @param inputs gpu pointer, batched input images.
+    * @param masks gpu pointer, batched inpainting mask, 8-bit 1-channel image. Non-zero pixels indicate the area that needs to be inpainted.
+    * @param outputs gpu pointer, batched output images that have the same type.
+    * @param inpaintRadius Radius of a circular neighborhood of each point inpainted that is considered by the algorithm.
+    * @param stream for the asynchronous execution.
+    */
+    ErrorCode infer(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &masks,
+                    const TensorDataStridedCuda &outData, double inpaintRadius, cudaStream_t stream);
+
+private:
+    bool     m_init_dilate = false; // whether kernel is initialized
+    int      m_maxBatchSize;
+    uint8_t *m_kernel_ptr;
+    void    *m_workspace;
+};
+
+class InpaintVarShape : public CudaBaseOp
+{
+public:
+    InpaintVarShape() = delete;
+
+    InpaintVarShape(DataShape max_input_shape, DataShape max_output_shape, int maxBatchSize, Size2D maxShape);
+
+    ~InpaintVarShape();
+
+    /**
+    * @brief Restores the selected region in an image using the region neighborhood. TELEA algorithm is used here.
+    * @param inputs gpu pointer, batched input images.
+    * @param masks gpu pointer, batched inpainting mask, 8-bit 1-channel image. Non-zero pixels indicate the area that needs to be inpainted.
+    * @param outputs gpu pointer, batched output images that have the same type.
+    * @param inpaintRadius Radius of a circular neighborhood of each point inpainted that is considered by the algorithm.
+    * @param stream for the asynchronous execution.
+    */
+    ErrorCode infer(const ImageBatchVarShape &inBatch, const ImageBatchVarShapeDataStridedCuda &masks,
+                    const ImageBatchVarShape &outBatch, double inpaintRadius, cudaStream_t stream);
+
+private:
+    bool     m_init_dilate = false; // whether kernel is initialized
+    int      m_maxBatchSize;
+    uint8_t *m_kernel_ptr;
+    void    *m_workspace;
+};
+
 } // namespace nvcv::legacy::cuda_op
 
 #endif // CV_CUDA_LEGACY_H

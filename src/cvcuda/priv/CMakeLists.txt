@@ -56,6 +56,7 @@ add_library(cvcuda_priv STATIC
     OpAdaptiveThreshold.cpp
     OpRandomResizedCrop.cpp
     OpGaussianNoise.cpp
+    OpInpaint.cpp
 )
 
 target_link_libraries(cvcuda_priv

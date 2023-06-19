@@ -69,6 +69,7 @@ nvcv_python_add_module(
         OpAdaptiveThreshold.cpp
         OpRandomResizedCrop.cpp
         OpGaussianNoise.cpp
+        OpInpaint.cpp
 )
 
 target_link_libraries(cvcuda_module_python

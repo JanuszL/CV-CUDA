@@ -54,6 +54,8 @@ typedef signed char   schar;
 
 #define get_batch_idx() (blockIdx.z)
 #define get_lid()       (threadIdx.y * blockDim.x + threadIdx.x)
+#define get_bid()       (blockIdx.x + blockIdx.y * gridDim.x)
+#define get_grid_size() (gridDim.x * gridDim.y)
 
 inline int divUp(int a, int b)
 {

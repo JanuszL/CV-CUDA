@@ -73,6 +73,9 @@ add_library(cvcuda_legacy STATIC
     gaussian_noise.cu
     gaussian_noise_var_shape.cu
     gaussian_noise_util.cu
+    inpaint.cu
+    inpaint_var_shape.cu
+    inpaint_utils.cu
 )
 
 target_link_libraries(cvcuda_legacy

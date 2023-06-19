@@ -75,6 +75,7 @@ add_executable(cvcuda_test_system
     TestOpRandomResizedCrop.cpp
     TestOpGaussianNoise.cpp
     GaussianNoiseUtils.cu
+    TestOpInpaint.cpp
 )
 
 target_link_libraries(cvcuda_test_system
