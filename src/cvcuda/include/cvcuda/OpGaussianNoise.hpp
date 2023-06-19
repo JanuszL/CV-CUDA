@@ -44,6 +44,9 @@ public:
 
     ~GaussianNoise();
 
+    void operator()(cudaStream_t stream, const nvcv::Tensor &in, const nvcv::Tensor &out, const nvcv::Tensor &mu,
+                    const nvcv::Tensor &sigma, bool per_channel, unsigned long long seed);
+
     void operator()(cudaStream_t stream, const nvcv::ImageBatchVarShape &in, const nvcv::ImageBatchVarShape &out,
                     const nvcv::Tensor &mu, const nvcv::Tensor &sigma, bool per_channel, unsigned long long seed);
 
@@ -63,6 +66,14 @@ inline GaussianNoise::~GaussianNoise()
 {
     nvcvOperatorDestroy(m_handle);
     m_handle = nullptr;
+}
+
+inline void GaussianNoise::operator()(cudaStream_t stream, const nvcv::Tensor &in, const nvcv::Tensor &out,
+                                      const nvcv::Tensor &mu, const nvcv::Tensor &sigma, bool per_channel,
+                                      unsigned long long seed)
+{
+    nvcv::detail::CheckThrow(cvcudaGaussianNoiseSubmit(m_handle, stream, in.handle(), out.handle(), mu.handle(),
+                                                       sigma.handle(), static_cast<int8_t>(per_channel), seed));
 }
 
 inline void GaussianNoise::operator()(cudaStream_t stream, const nvcv::ImageBatchVarShape &in,

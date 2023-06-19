@@ -31,7 +31,42 @@ GaussianNoise::GaussianNoise(int maxBatchSize)
 {
     legacy::DataShape maxIn, maxOut;
     // maxIn/maxOut not used by op.
+    m_legacyOp         = std::make_unique<legacy::GaussianNoise>(maxIn, maxOut, maxBatchSize);
     m_legacyOpVarShape = std::make_unique<legacy::GaussianNoiseVarShape>(maxIn, maxOut, maxBatchSize);
+}
+
+void GaussianNoise::operator()(cudaStream_t stream, const nvcv::Tensor &in, const nvcv::Tensor &out,
+                               const nvcv::Tensor &mu, const nvcv::Tensor &sigma, bool per_channel,
+                               unsigned long long seed) const
+{
+    auto inData = in.exportData<nvcv::TensorDataStridedCuda>();
+    if (inData == nullptr)
+    {
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Input must be cuda-accessible, pitch-linear tensor");
+    }
+
+    auto outData = out.exportData<nvcv::TensorDataStridedCuda>();
+    if (outData == nullptr)
+    {
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "Output must be cuda-accessible, pitch-linear tensor");
+    }
+
+    auto muData = mu.exportData<nvcv::TensorDataStridedCuda>();
+    if (muData == nullptr)
+    {
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT, "mu must be cuda-accessible, pitch-linear tensor");
+    }
+
+    auto sigmaData = sigma.exportData<nvcv::TensorDataStridedCuda>();
+    if (sigmaData == nullptr)
+    {
+        throw nvcv::Exception(nvcv::Status::ERROR_INVALID_ARGUMENT,
+                              "sigma must be cuda-accessible, pitch-linear tensor");
+    }
+
+    NVCV_CHECK_THROW(m_legacyOp->infer(*inData, *outData, *muData, *sigmaData, per_channel, seed, stream));
 }
 
 void GaussianNoise::operator()(cudaStream_t stream, const nvcv::ImageBatchVarShape &in,

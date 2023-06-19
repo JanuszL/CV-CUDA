@@ -19,6 +19,77 @@ from random import randint
 
 
 @t.mark.parametrize(
+    "input_args, per_channel",
+    [
+        (
+            ((1, 460, 640, 3), cvcuda.Type.U8, "NHWC"),
+            False,
+        ),
+        (
+            ((5, 640, 460, 3), cvcuda.Type.U8, "NHWC"),
+            True,
+        ),
+        (
+            ((4, 1920, 1080, 3), cvcuda.Type.F32, "NHWC"),
+            False,
+        ),
+        (
+            ((2, 1000, 1000, 3), cvcuda.Type.F32, "NHWC"),
+            True,
+        ),
+        (
+            ((3, 100, 100, 1), cvcuda.Type.U16, "NHWC"),
+            False,
+        ),
+        (
+            ((5, 460, 640, 1), cvcuda.Type.U16, "NHWC"),
+            True,
+        ),
+    ],
+)
+def test_op_gaussiannoise(input_args, per_channel):
+    input = cvcuda.Tensor(*input_args)
+
+    parameter_shape = (input.shape[0],)
+    mu = cvcuda.Tensor(parameter_shape, cvcuda.Type.F32, "N")
+    sigma = cvcuda.Tensor(parameter_shape, cvcuda.Type.F32, "N")
+
+    seed = 12345
+    out = cvcuda.gaussiannoise(input, mu, sigma, per_channel, seed)
+    assert out.layout == input.layout
+    assert out.shape == input.shape
+    assert out.dtype == input.dtype
+
+    out = cvcuda.Tensor(input.shape, input.dtype, input.layout)
+    tmp = cvcuda.gaussiannoise_into(out, input, mu, sigma, per_channel, seed)
+    assert tmp is out
+
+    stream = cvcuda.Stream()
+    out = cvcuda.gaussiannoise(
+        src=input,
+        mu=mu,
+        sigma=sigma,
+        per_channel=per_channel,
+        seed=seed,
+        stream=stream,
+    )
+    assert out.layout == input.layout
+    assert out.shape == input.shape
+    assert out.dtype == input.dtype
+
+    tmp = cvcuda.gaussiannoise_into(
+        src=input,
+        dst=out,
+        mu=mu,
+        sigma=sigma,
+        per_channel=per_channel,
+        seed=seed,
+        stream=stream,
+    )
+    assert tmp is out
+
+
+@t.mark.parametrize(
     "num_images, format, min_size, max_size, per_channel",
     [
         (

@@ -2781,6 +2781,36 @@ public:
                     const NVCVInterpolationType interpolation, cudaStream_t stream);
 };
 
+class GaussianNoise : public CudaBaseOp
+{
+public:
+    GaussianNoise() = delete;
+
+    GaussianNoise(DataShape max_input_shape, DataShape max_output_shape, int maxBatchSize);
+
+    ~GaussianNoise();
+
+    /**
+     * @brief Add gaussian noise on images.
+     * @param inData gpu pointer, batched input images.
+     * @param outData gpu pointer, batched output images.
+     * @param mu mu value for gaussian noise.
+     * @param sigma sigma value for gaussian noise.
+     * @param per_channel whether to add the same noise for all channels.
+     * @param stream for the asynchronous execution.
+     */
+
+    ErrorCode infer(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &outData,
+                    const TensorDataStridedCuda &mu, const TensorDataStridedCuda &sigma, bool per_channel,
+                    unsigned long long seed, cudaStream_t stream);
+
+private:
+    curandState       *m_states;
+    unsigned long long m_seed;
+    bool               m_setupDone = false;
+    int                m_maxBatchSize;
+};
+
 class GaussianNoiseVarShape : public CudaBaseOp
 {
 public:
