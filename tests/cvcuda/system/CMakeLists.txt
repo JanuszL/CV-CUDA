@@ -33,6 +33,7 @@ endif()
 add_executable(cvcuda_test_system
     TestOpBoxBlur.cpp
     TestOpBndBox.cpp
+    TestOpBrightnessContrast.cpp
     OsdUtils.cu
     TestOpColorTwist.cpp
     TestOpRemap.cpp
