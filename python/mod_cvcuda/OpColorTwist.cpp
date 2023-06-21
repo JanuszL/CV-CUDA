@@ -48,7 +48,7 @@ inline ImageBatchVarShape batchLike(ImageBatchVarShape &src)
 }
 
 template<typename Op, typename Src, typename Dst, typename Call>
-auto runGuard(Op &op, Src &src, Dst &dst, std::optional<Stream> &pstream, Call &&call)
+auto runGuard(Op &op, Src &src, Dst &dst, const Tensor &twist, std::optional<Stream> &pstream, Call &&call)
 {
     if (!pstream)
     {
@@ -56,7 +56,7 @@ auto runGuard(Op &op, Src &src, Dst &dst, std::optional<Stream> &pstream, Call &
     }
 
     ResourceGuard guard(*pstream);
-    guard.add(LockMode::LOCK_READ, {src});
+    guard.add(LockMode::LOCK_READ, {src, twist});
     guard.add(LockMode::LOCK_WRITE, {dst});
     guard.add(LockMode::LOCK_NONE, {*op});
 
@@ -66,7 +66,7 @@ auto runGuard(Op &op, Src &src, Dst &dst, std::optional<Stream> &pstream, Call &
 Tensor ColorTwistMatrixInto(Tensor &dst, Tensor &src, Tensor &twist, std::optional<Stream> pstream)
 {
     auto op = CreateOperator<cvcuda::ColorTwist>();
-    runGuard(op, src, dst, pstream, [&](Stream &stream) { op->submit(stream.cudaHandle(), src, dst, twist); });
+    runGuard(op, src, dst, twist, pstream, [&](Stream &stream) { op->submit(stream.cudaHandle(), src, dst, twist); });
     return dst;
 }
 
@@ -80,7 +80,7 @@ ImageBatchVarShape VarShapeColorTwistMatrixInto(ImageBatchVarShape &dst, ImageBa
                                                 std::optional<Stream> pstream)
 {
     auto op = CreateOperator<cvcuda::ColorTwist>();
-    runGuard(op, src, dst, pstream, [&](Stream &stream) { op->submit(stream.cudaHandle(), src, dst, twist); });
+    runGuard(op, src, dst, twist, pstream, [&](Stream &stream) { op->submit(stream.cudaHandle(), src, dst, twist); });
     return dst;
 }
 
