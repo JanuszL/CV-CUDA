@@ -220,7 +220,7 @@ class PostprocessorCvcuda:
                 # Reshape 4, B to B, 4
                 per_class_bboxes = per_class_bboxes.T
                 # Convert to int32 data type required by cvcuda NMS
-                per_class_bboxes = per_class_bboxes.type(torch.int32)
+                per_class_bboxes = per_class_bboxes.type(torch.int16)
                 # Convert from left, bottom, right, top format to x, y, w, h format
                 per_class_bboxes[:, [1, 3]] = per_class_bboxes[:, [3, 1]]
                 per_class_bboxes[:, 2] = per_class_bboxes[:, 2] - per_class_bboxes[:, 0]
@@ -246,27 +246,22 @@ class PostprocessorCvcuda:
                     (batch_scores, per_batch_scores.unsqueeze(0)), 0
                 )
 
+        torch_bboxes = batch_boxes.contiguous().cuda()
+
         # Wrap torch tensor as cvcuda array
-        cvcuda_boxes = cvcuda.as_tensor(batch_boxes.contiguous().cuda())
+        cvcuda_boxes = cvcuda.as_tensor(torch_bboxes)
         cvcuda_scores = cvcuda.as_tensor(batch_scores.contiguous().cuda())
 
         # Filter bounding boxes using NMS
-        nms_boxes = cvcuda.nms(
+        nms_masks = cvcuda.nms(
             cvcuda_boxes, cvcuda_scores, self.confidence_threshold, self.iou_threshold
         )
-
-        # Wrap output of NMS as torch tensor. CVCUDA NMS zeros out the invalid bboxes
-        filtered_bboxes = torch.as_tensor(nms_boxes.cuda()).contiguous()
-
-        # Get the indices of the non zero bounding boxes
-        torch_indices = torch.nonzero(filtered_bboxes)
-        torch_unique_indices = torch.unique(torch_indices.T[1])
-        filtered_bboxes = torch.index_select(filtered_bboxes, 1, torch_unique_indices)
+        torch_masks = torch.as_tensor(nms_masks.cuda(), dtype=np.bool)
         # docs_tag: end_call_filterbboxcvcuda
 
         # render bounding boxes and Blur ROI's
         # docs_tag: start_outbuffer
-        frame_nhwc = self.bboxutil(filtered_bboxes, frame_nhwc)
+        frame_nhwc = self.bboxutil(torch_bboxes, torch_masks, frame_nhwc)
         if self.output_layout == "NCHW":
             render_output = cvcuda.reformat(frame_nhwc, "NCHW")
         else:
@@ -282,10 +277,8 @@ class PostprocessorCvcuda:
 
         nvtx.pop_range()  # postprocess
 
-        # Return 2 pieces of information:
-        #   1. The original nhwc frame with bboxes rendered and ROI's blurred
-        #   2. The bounding boxes predicted
-        return (render_output, filtered_bboxes)
+        # Return the original nhwc frame with bboxes rendered and ROI's blurred
+        return render_output
         # docs_tag: end_outbuffer
 
 
@@ -300,22 +293,26 @@ class BoundingBoxUtilsCvcuda:
         self.kernel_size = 7
         # docs_tag: end_init_cuosd_bboxes
 
-    def __call__(self, bboxes, frame_nhwc):
+    def __call__(self, bboxes, masks, frame_nhwc):
         # docs_tag: begin_call_cuosd_bboxes
         batch_size = frame_nhwc.shape[0]
         num_boxes = []
-        for b in range(len(bboxes)):
-            num_boxes.append(len(bboxes[b]))
         boxes = []
         blur_boxes = []
+
         # Create an array of bounding boxes with render settings.
         for b in range(batch_size):
-            for i in range(num_boxes[b]):
+            mask = masks[b]
+            box = bboxes[b, :, :]
+            filtered_boxes = box[mask, :]
+            len_boxes = filtered_boxes.shape[0]
+            num_boxes.append(len_boxes)
+            for i in range(len_boxes):
                 box = [
-                    bboxes[b][i][0],
-                    bboxes[b][i][1],
-                    bboxes[b][i][2],
-                    bboxes[b][i][3],
+                    filtered_boxes[i][0],
+                    filtered_boxes[i][1],
+                    filtered_boxes[i][2],
+                    filtered_boxes[i][3],
                 ]
                 boxes.append(
                     cvcuda.BndBoxI(
