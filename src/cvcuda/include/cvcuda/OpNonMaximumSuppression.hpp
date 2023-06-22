@@ -41,7 +41,7 @@ public:
     ~NonMaximumSuppression();
 
     void operator()(cudaStream_t stream, const nvcv::Tensor &in, const nvcv::Tensor &out, const nvcv::Tensor &scores,
-                    float score_threshold, float iou_threshold);
+                    float scoreThreshold, float iouThreshold);
 
     virtual NVCVOperatorHandle handle() const noexcept override;
 
@@ -61,10 +61,10 @@ inline NonMaximumSuppression::~NonMaximumSuppression()
 }
 
 inline void NonMaximumSuppression::operator()(cudaStream_t stream, const nvcv::Tensor &in, const nvcv::Tensor &out,
-                                              const nvcv::Tensor &scores, float score_threshold, float iou_threshold)
+                                              const nvcv::Tensor &scores, float scoreThreshold, float iouThreshold)
 {
     nvcv::detail::CheckThrow(cvcudaNonMaximumSuppressionSubmit(m_handle, stream, in.handle(), out.handle(),
-                                                               scores.handle(), score_threshold, iou_threshold));
+                                                               scores.handle(), scoreThreshold, iouThreshold));
 }
 
 inline NVCVOperatorHandle NonMaximumSuppression::handle() const noexcept

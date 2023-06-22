@@ -21,6 +21,7 @@
 #include <cuda_runtime.h>
 #include <nvcv/Tensor.hpp>
 #include <nvcv/TensorDataAccess.hpp>
+#include <nvcv/cuda/MathOps.hpp>
 
 #include <random>
 
@@ -33,6 +34,20 @@ enum chflags
     C2 = 0x1 << 2,
     C3 = 0x1 << 3
 };
+
+// Generic ValueAt can be used with any tensor data with any strides and coordinate to access
+// E.g.:
+//   std::vector<uint8_t> vec(...);
+//   long3 strides{...};
+//   int3 coord{...};
+//   ValueAt<int4>(vec, strides, coord) = 0;
+template<typename T, class VecType, typename ST, typename CT,
+         class       = nvcv::cuda::Require<nvcv::cuda::detail::IsSameCompound<ST, CT>>,
+         typename RT = std::conditional_t<std::is_const_v<VecType>, const T, T>>
+inline RT &ValueAt(VecType &vec, const ST &strides, const CT &coord)
+{
+    return *reinterpret_cast<RT *>(&vec[nvcv::cuda::dot(coord, strides)]);
+}
 
 // Holds a single image copied from an ITensor in host memory
 // (N)CHW and (N)HWC tensors are supported but only 1 sample is held.
