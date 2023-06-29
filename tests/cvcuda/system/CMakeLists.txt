@@ -31,6 +31,7 @@ endif()
 
 # system core -------------------------------------------------
 add_executable(cvcuda_test_system
+    TestOpSIFT.cpp
     TestOpMinMaxLoc.cpp
     TestOpBoxBlur.cpp
     TestOpBndBox.cpp
