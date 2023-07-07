@@ -82,6 +82,7 @@ PYBIND11_MODULE(cvcuda, m)
     ExportAdaptiveThresholdType(m);
 
     // CV-CUDA Operators
+    ExportOpMinMaxLoc(m);
     ExportOpBoxBlur(m);
     ExportOpBndBox(m);
     ExportOpBrightnessContrast(m);

@@ -21,6 +21,7 @@ nvcv_python_add_module(
     OUTPUT_NAME cvcuda
     SOURCES
         Main.cpp
+        OpMinMaxLoc.cpp
         OpBndBox.cpp
         OpBoxBlur.cpp
         OpBrightnessContrast.cpp
