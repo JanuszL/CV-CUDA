@@ -297,3 +297,52 @@ def test_op_min_max_loc_var_shape_api(num_images, img_format, max_size):
     )
     for ret, out in zip(rets, outs):
         assert ret is out
+
+
+@t.mark.parametrize("input_type", ["tensor", "image_batch"])
+def test_op_min_max_loc_content(input_type):
+    src = None
+    if input_type == "tensor":
+        a_src = RNG.integers(3, high=253, size=(2, 1080, 1920, 1), dtype=np.uint8)
+        a_src[0, 444, 777, 0] = 1
+        a_src[1, 445, 778, 0] = 2
+        a_src[0, 333, 888, 0] = 254
+        a_src[1, 332, 887, 0] = 253
+
+        src = util.to_nvcv_tensor(a_src, "NHWC")
+
+    elif input_type == "image_batch":
+        src = cvcuda.ImageBatchVarShape(2)
+        for i in range(2):
+            a_img = RNG.integers(
+                3, high=253, size=(1080 - i, 1920 - i, 1), dtype=np.uint8
+            )
+            a_img[444 + i, 777 + i, 0] = 1 + i
+            a_img[333 - i, 888 - i, 0] = 254 - i
+
+            src.pushback(util.to_nvcv_image(a_img))
+
+    outputs = cvcuda.min_max_loc(src)
+
+    a_test_min_val = util.to_cpu_numpy_buffer(outputs[0].cuda())
+    a_test_min_loc = util.to_cpu_numpy_buffer(outputs[1].cuda())
+    a_test_num_min = util.to_cpu_numpy_buffer(outputs[2].cuda())
+    a_test_max_val = util.to_cpu_numpy_buffer(outputs[3].cuda())
+    a_test_max_loc = util.to_cpu_numpy_buffer(outputs[4].cuda())
+    a_test_num_max = util.to_cpu_numpy_buffer(outputs[5].cuda())
+
+    a_gold_min_loc = np.zeros(a_test_min_loc.shape, dtype=a_test_min_loc.dtype)
+    a_gold_min_loc[0, 0, 0:2] = [777, 444]
+    a_gold_min_loc[1, 0, 0:2] = [778, 445]
+
+    a_gold_max_loc = np.zeros(a_test_max_loc.shape, dtype=a_test_max_loc.dtype)
+    a_gold_max_loc[0, 0, 0:2] = [888, 333]
+    a_gold_max_loc[1, 0, 0:2] = [887, 332]
+
+    np.testing.assert_array_equal(a_test_min_val, np.array([1, 2]))
+    np.testing.assert_array_equal(a_test_min_loc, a_gold_min_loc)
+    np.testing.assert_array_equal(a_test_num_min, np.array([1, 1]))
+
+    np.testing.assert_array_equal(a_test_max_val, np.array([254, 253]))
+    np.testing.assert_array_equal(a_test_max_loc, a_gold_max_loc)
+    np.testing.assert_array_equal(a_test_num_max, np.array([1, 1]))
