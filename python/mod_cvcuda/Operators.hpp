@@ -16,6 +16,7 @@
  */
 
 #include <common/Hash.hpp>
+#include <nvcv/cuda/MathOps.hpp>
 #include <nvcv/python/Cache.hpp>
 #include <nvcv/python/Container.hpp>
 #include <nvcv/python/ImageFormat.hpp>
