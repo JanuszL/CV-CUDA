@@ -358,6 +358,13 @@ typedef enum
     NVCV_REMAP_RELATIVE_NORMALIZED = 2
 } NVCVRemapMapValueType;
 
+// @brief Flag to choose SIFT operator flags
+typedef enum
+{
+    NVCV_SIFT_USE_ORIGINAL_INPUT = 0,
+    NVCV_SIFT_USE_EXPANDED_INPUT = 1
+} NVCVSIFTFlagType;
+
 typedef unsigned char uint8_t;
 typedef int           int32_t;
 

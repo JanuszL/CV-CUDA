@@ -83,6 +83,7 @@ void ExportOpNonMaximumSuppression(py::module &m);
 void ExportOpRandomResizedCrop(py::module &m);
 void ExportOpGaussianNoise(py::module &m);
 void ExportOpMinMaxLoc(py::module &m);
+void ExportOpSIFT(py::module &m);
 
 // Helper class that serves as generic python-side operator class.
 // OP: native operator class

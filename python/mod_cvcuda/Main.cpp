@@ -23,6 +23,7 @@
 #include "Operators.hpp"
 #include "OsdElement.hpp"
 #include "RemapMapValueType.hpp"
+#include "SIFTFlagType.hpp"
 #include "ThresholdType.hpp"
 
 #include <cvcuda/Version.h>
@@ -80,8 +81,10 @@ PYBIND11_MODULE(cvcuda, m)
     ExportBoxBlur(m);
     ExportThresholdType(m);
     ExportAdaptiveThresholdType(m);
+    ExportSIFTFlagType(m);
 
     // CV-CUDA Operators
+    ExportOpSIFT(m);
     ExportOpMinMaxLoc(m);
     ExportOpBoxBlur(m);
     ExportOpBndBox(m);
