@@ -123,4 +123,5 @@ PYBIND11_MODULE(cvcuda, m)
     ExportOpAdaptiveThreshold(m);
     ExportOpRandomResizedCrop(m);
     ExportOpGaussianNoise(m);
+    ExportOpInpaint(m);
 }
