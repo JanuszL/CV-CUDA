@@ -600,27 +600,51 @@ Inpaint::~Inpaint()
 ErrorCode Inpaint::infer(const TensorDataStridedCuda &inData, const TensorDataStridedCuda &masks,
                          const TensorDataStridedCuda &outData, double inpaintRadius, cudaStream_t stream)
 {
-    DataFormat format    = GetLegacyDataFormat(inData.layout());
-    DataType   data_type = GetLegacyDataType(inData.dtype());
-    if (!(format == kNHWC || format == kHWC))
+    DataFormat in_format    = GetLegacyDataFormat(inData.layout());
+    DataType   in_data_type = GetLegacyDataType(inData.dtype());
+    if (!(in_format == kNHWC || in_format == kHWC))
     {
-        LOG_ERROR("Invalid DataFormat " << format);
+        LOG_ERROR("Invalid DataFormat " << in_format);
         return ErrorCode::INVALID_DATA_FORMAT;
     }
 
-    if (!(data_type == kCV_8U || data_type == kCV_32S || data_type == kCV_32F))
+    if (!(in_data_type == kCV_8U || in_data_type == kCV_32S || in_data_type == kCV_32F))
     {
-        LOG_ERROR("Invalid DataType " << data_type);
+        LOG_ERROR("Invalid DataType " << in_data_type);
         return ErrorCode::INVALID_DATA_TYPE;
     }
 
     auto inAccess = TensorDataAccessStridedImagePlanar::Create(inData);
     NVCV_ASSERT(inAccess);
-    const int channels = inAccess->numChannels();
+    const int in_channels = inAccess->numChannels();
 
-    if (channels > 4)
+    if (in_channels > 4)
     {
-        LOG_ERROR("Invalid channel number " << channels);
+        LOG_ERROR("Invalid channel number " << in_channels);
+        return ErrorCode::INVALID_DATA_SHAPE;
+    }
+
+    DataFormat out_format    = GetLegacyDataFormat(outData.layout());
+    DataType   out_data_type = GetLegacyDataType(outData.dtype());
+    if (!(out_format == kNHWC || out_format == kHWC))
+    {
+        LOG_ERROR("Invalid DataFormat " << out_format);
+        return ErrorCode::INVALID_DATA_FORMAT;
+    }
+
+    if (in_data_type != out_data_type)
+    {
+        LOG_ERROR("Invalid DataType " << out_data_type);
+        return ErrorCode::INVALID_DATA_TYPE;
+    }
+
+    auto outAccess = TensorDataAccessStridedImagePlanar::Create(outData);
+    NVCV_ASSERT(outAccess);
+    const int out_channels = outAccess->numChannels();
+
+    if (out_channels != in_channels)
+    {
+        LOG_ERROR("Invalid channel number " << out_channels);
         return ErrorCode::INVALID_DATA_SHAPE;
     }
 
@@ -651,8 +675,8 @@ ErrorCode Inpaint::infer(const TensorDataStridedCuda &inData, const TensorDataSt
     int range = (int)std::round(inpaintRadius);
     range     = std::max(range, 1);
     range     = std::min(range, 100);
-    funcs[data_type](inData, masks, outData, m_workspace, m_kernel_ptr, range, m_init_dilate, inAccess->numSamples(),
-                     inAccess->numRows(), inAccess->numCols(), channels, m_maxBatchSize, stream);
+    funcs[in_data_type](inData, masks, outData, m_workspace, m_kernel_ptr, range, m_init_dilate, inAccess->numSamples(),
+                        inAccess->numRows(), inAccess->numCols(), in_channels, m_maxBatchSize, stream);
     return SUCCESS;
 }
 

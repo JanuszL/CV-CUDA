@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -79,6 +79,20 @@ CVCUDA_PUBLIC NVCVStatus cvcudaInpaintCreate(NVCVOperatorHandle *handle, int32_t
  *       32bit Float    | Yes
  *       64bit Float    | No
  *
+ *  Mask:
+ *       Data Layout:    [kNHWC, kHWC]
+ *       Channels:       [1]
+ *
+ *       Data Type      | Allowed
+ *       -------------- | -------------
+ *       8bit  Unsigned | Yes
+ *       8bit  Signed   | No
+ *       16bit Unsigned | No
+ *       16bit Signed   | No
+ *       32bit Unsigned | No
+ *       32bit Signed   | No
+ *       32bit Float    | No
+ *       64bit Float    | No
  *
  *  Output:
  *       Data Layout:    [kNHWC, kHWC]
