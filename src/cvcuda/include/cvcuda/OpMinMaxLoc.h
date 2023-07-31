@@ -52,6 +52,9 @@ CVCUDA_PUBLIC NVCVStatus cvcudaMinMaxLocCreate(NVCVOperatorHandle *handle);
 
 /** Executes the MinMaxLoc operation on the given cuda stream. This operation does not wait for completion.
  *
+ * @note The MinMaxLoc operation does not guarantee deterministic output.  The order of output minimum or maximum
+ *       locations found is in no particular order and might differ in different runs.
+ *
  *  Limitations:
  *
  *  Input:

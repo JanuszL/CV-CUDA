@@ -22,12 +22,6 @@ import cvcuda_util as util
 RNG = np.random.default_rng(0)
 
 
-def gold_max_locs(src_tensor):
-    w = src_tensor.shape[str(src_tensor.layout).index("W")]
-    h = src_tensor.shape[str(src_tensor.layout).index("H")]
-    return max(w * h // 100, 1)
-
-
 def gold_val_dtype(in_dtype):
     if in_dtype in {cvcuda.Type.U8, cvcuda.Type.U16, cvcuda.Type.U32}:
         return cvcuda.Type.U32
@@ -63,7 +57,7 @@ def gold_num_dtype():
         ),
     ],
 )
-def test_op_min_max_loc_output_api(operator, val_args, loc_args, num_args):
+def test_opminmaxloc_output_api(operator, val_args, loc_args, num_args):
     t_val = cvcuda.Tensor(*val_args)
     t_loc = cvcuda.Tensor(*loc_args)
     t_min = cvcuda.Tensor(*num_args)
@@ -90,15 +84,15 @@ def test_op_min_max_loc_output_api(operator, val_args, loc_args, num_args):
         ((1, 19, 20), np.int32, "CHW"),
     ],
 )
-def test_op_min_max_loc_tensor_api(src_args):
+def test_opminmaxloc_tensor_api(src_args):
     src = cvcuda.Tensor(*src_args)
     num_samples = src.shape[0] if src.ndim == 4 else 1
 
-    outs = cvcuda.min_loc(src)
+    outs = cvcuda.min_loc(src, 100)
     min_val, min_loc, num_min = outs
-    assert min_val.shape == (num_samples,)
-    assert min_loc.shape == (num_samples, gold_max_locs(src), 2)
-    assert num_min.shape == (num_samples,)
+    assert min_val.shape == (num_samples, 1)
+    assert min_loc.shape == (num_samples, 100, 2)
+    assert num_min.shape == (num_samples, 1)
     assert min_val.dtype == gold_val_dtype(src.dtype)
     assert num_min.dtype == gold_num_dtype()
 
@@ -106,11 +100,11 @@ def test_op_min_max_loc_tensor_api(src_args):
     for ret, out in zip(rets, outs):
         assert ret is out
 
-    outs = cvcuda.max_loc(src)
+    outs = cvcuda.max_loc(src, 100)
     max_val, max_loc, num_max = outs
-    assert max_val.shape == (num_samples,)
-    assert max_loc.shape == (num_samples, gold_max_locs(src), 2)
-    assert num_max.shape == (num_samples,)
+    assert max_val.shape == (num_samples, 1)
+    assert max_loc.shape == (num_samples, 100, 2)
+    assert num_max.shape == (num_samples, 1)
     assert max_val.dtype == gold_val_dtype(src.dtype)
     assert num_max.dtype == gold_num_dtype()
 
@@ -118,14 +112,14 @@ def test_op_min_max_loc_tensor_api(src_args):
     for ret, out in zip(rets, outs):
         assert ret is out
 
-    outs = cvcuda.min_max_loc(src)
+    outs = cvcuda.min_max_loc(src, 100)
     min_val, min_loc, num_min, max_val, max_loc, num_max = outs
-    assert min_val.shape == (num_samples,)
-    assert min_loc.shape == (num_samples, gold_max_locs(src), 2)
-    assert num_min.shape == (num_samples,)
-    assert max_val.shape == (num_samples,)
-    assert max_loc.shape == (num_samples, gold_max_locs(src), 2)
-    assert num_max.shape == (num_samples,)
+    assert min_val.shape == (num_samples, 1)
+    assert min_loc.shape == (num_samples, 100, 2)
+    assert num_min.shape == (num_samples, 1)
+    assert max_val.shape == (num_samples, 1)
+    assert max_loc.shape == (num_samples, 100, 2)
+    assert num_max.shape == (num_samples, 1)
     assert min_val.dtype == gold_val_dtype(src.dtype)
     assert max_val.dtype == gold_val_dtype(src.dtype)
     assert num_min.dtype == gold_num_dtype()
@@ -139,11 +133,11 @@ def test_op_min_max_loc_tensor_api(src_args):
 
     stream = cvcuda.Stream()
 
-    outs = cvcuda.min_loc(src=src, stream=stream)
+    outs = cvcuda.min_loc(src=src, max_locations=100, stream=stream)
     min_val, min_loc, num_min = outs
-    assert min_val.shape == (num_samples,)
-    assert min_loc.shape == (num_samples, gold_max_locs(src), 2)
-    assert num_min.shape == (num_samples,)
+    assert min_val.shape == (num_samples, 1)
+    assert min_loc.shape == (num_samples, 100, 2)
+    assert num_min.shape == (num_samples, 1)
     assert min_val.dtype == gold_val_dtype(src.dtype)
     assert num_min.dtype == gold_num_dtype()
 
@@ -153,11 +147,11 @@ def test_op_min_max_loc_tensor_api(src_args):
     for ret, out in zip(rets, outs):
         assert ret is out
 
-    outs = cvcuda.max_loc(src=src, stream=stream)
+    outs = cvcuda.max_loc(src=src, max_locations=100, stream=stream)
     max_val, max_loc, num_max = outs
-    assert max_val.shape == (num_samples,)
-    assert max_loc.shape == (num_samples, gold_max_locs(src), 2)
-    assert num_max.shape == (num_samples,)
+    assert max_val.shape == (num_samples, 1)
+    assert max_loc.shape == (num_samples, 100, 2)
+    assert num_max.shape == (num_samples, 1)
     assert max_val.dtype == gold_val_dtype(src.dtype)
     assert num_max.dtype == gold_num_dtype()
 
@@ -167,14 +161,14 @@ def test_op_min_max_loc_tensor_api(src_args):
     for ret, out in zip(rets, outs):
         assert ret is out
 
-    outs = cvcuda.min_max_loc(src=src, stream=stream)
+    outs = cvcuda.min_max_loc(src=src, max_locations=100, stream=stream)
     min_val, min_loc, num_min, max_val, max_loc, num_max = outs
-    assert min_val.shape == (num_samples,)
-    assert min_loc.shape == (num_samples, gold_max_locs(src), 2)
-    assert num_min.shape == (num_samples,)
-    assert max_val.shape == (num_samples,)
-    assert max_loc.shape == (num_samples, gold_max_locs(src), 2)
-    assert num_max.shape == (num_samples,)
+    assert min_val.shape == (num_samples, 1)
+    assert min_loc.shape == (num_samples, 100, 2)
+    assert num_min.shape == (num_samples, 1)
+    assert max_val.shape == (num_samples, 1)
+    assert max_loc.shape == (num_samples, 100, 2)
+    assert num_max.shape == (num_samples, 1)
     assert min_val.dtype == gold_val_dtype(src.dtype)
     assert max_val.dtype == gold_val_dtype(src.dtype)
     assert num_min.dtype == gold_num_dtype()
@@ -207,11 +201,11 @@ def test_op_min_max_loc_tensor_api(src_args):
         (8, cvcuda.Format.F64, (29, 19)),
     ],
 )
-def test_op_min_max_loc_var_shape_api(num_images, img_format, max_size):
+def test_opminmaxloc_varshape_api(num_images, img_format, max_size):
     src = util.create_image_batch(num_images, img_format, max_size=max_size, rng=RNG)
     src_dtype = [util.IMG_FORMAT_TO_TYPE[img.format] for img in src]
 
-    outs = cvcuda.min_loc(src)
+    outs = cvcuda.min_loc(src, 10)
     for out in outs:
         assert out.shape[0] == num_images
     min_val, min_loc, num_min = outs
@@ -222,7 +216,7 @@ def test_op_min_max_loc_var_shape_api(num_images, img_format, max_size):
     for ret, out in zip(rets, outs):
         assert ret is out
 
-    outs = cvcuda.max_loc(src)
+    outs = cvcuda.max_loc(src, 10)
     for out in outs:
         assert out.shape[0] == num_images
     max_val, max_loc, num_max = outs
@@ -233,7 +227,7 @@ def test_op_min_max_loc_var_shape_api(num_images, img_format, max_size):
     for ret, out in zip(rets, outs):
         assert ret is out
 
-    outs = cvcuda.min_max_loc(src)
+    outs = cvcuda.min_max_loc(src, 10)
     for out in outs:
         assert out.shape[0] == num_images
     min_val, min_loc, num_min, max_val, max_loc, num_max = outs
@@ -250,7 +244,7 @@ def test_op_min_max_loc_var_shape_api(num_images, img_format, max_size):
 
     stream = cvcuda.cuda.Stream()
 
-    outs = cvcuda.min_loc(src=src, stream=stream)
+    outs = cvcuda.min_loc(src=src, max_locations=10, stream=stream)
     for out in outs:
         assert out.shape[0] == num_images
     min_val, min_loc, num_min = outs
@@ -263,7 +257,7 @@ def test_op_min_max_loc_var_shape_api(num_images, img_format, max_size):
     for ret, out in zip(rets, outs):
         assert ret is out
 
-    outs = cvcuda.max_loc(src=src, stream=stream)
+    outs = cvcuda.max_loc(src=src, max_locations=10, stream=stream)
     for out in outs:
         assert out.shape[0] == num_images
     max_val, max_loc, num_max = outs
@@ -276,7 +270,7 @@ def test_op_min_max_loc_var_shape_api(num_images, img_format, max_size):
     for ret, out in zip(rets, outs):
         assert ret is out
 
-    outs = cvcuda.min_max_loc(src=src, stream=stream)
+    outs = cvcuda.min_max_loc(src=src, max_locations=10, stream=stream)
     for out in outs:
         assert out.shape[0] == num_images
     min_val, min_loc, num_min, max_val, max_loc, num_max = outs
@@ -300,29 +294,38 @@ def test_op_min_max_loc_var_shape_api(num_images, img_format, max_size):
 
 
 @t.mark.parametrize("input_type", ["tensor", "image_batch"])
-def test_op_min_max_loc_content(input_type):
+def test_opminmaxloc_content(input_type):
+    # Test with fixed number of images and lists of minimum and maximum locations,
+    # the lists must be in ascending order in x dimension for comparisons
+    n_img = 5
+    l_min_loc = [[123, 456], [222, 333], [777, 444]]
+    l_max_loc = [[100, 789], [111, 555], [888, 333]]
+
     src = None
     if input_type == "tensor":
-        a_src = RNG.integers(3, high=253, size=(2, 1080, 1920, 1), dtype=np.uint8)
-        a_src[0, 444, 777, 0] = 1
-        a_src[1, 445, 778, 0] = 2
-        a_src[0, 333, 888, 0] = 254
-        a_src[1, 332, 887, 0] = 253
+        shape = (n_img, 1080, 1920, 1)
+        a_src = RNG.integers(1, high=255, size=shape, dtype=np.uint8)
+        for i in range(n_img):
+            for min_loc in l_min_loc:
+                a_src[i, min_loc[1] + i, min_loc[0] + i, 0] = 0
+            for max_loc in l_max_loc:
+                a_src[i, max_loc[1] - i, max_loc[0] - i, 0] = 255
 
         src = util.to_nvcv_tensor(a_src, "NHWC")
 
     elif input_type == "image_batch":
-        src = cvcuda.ImageBatchVarShape(2)
-        for i in range(2):
-            a_img = RNG.integers(
-                3, high=253, size=(1080 - i, 1920 - i, 1), dtype=np.uint8
-            )
-            a_img[444 + i, 777 + i, 0] = 1 + i
-            a_img[333 - i, 888 - i, 0] = 254 - i
+        src = cvcuda.ImageBatchVarShape(n_img)
+        for i in range(n_img):
+            shape = (1080 - i, 1920 - i, 1)
+            a_img = RNG.integers(1, high=255, size=shape, dtype=np.uint8)
+            for min_loc in l_min_loc:
+                a_img[min_loc[1] + i, min_loc[0] + i, 0] = 0
+            for max_loc in l_max_loc:
+                a_img[max_loc[1] - i, max_loc[0] - i, 0] = 255
 
             src.pushback(util.to_nvcv_image(a_img))
 
-    outputs = cvcuda.min_max_loc(src)
+    outputs = cvcuda.min_max_loc(src, max_locations=len(l_min_loc))
 
     a_test_min_val = util.to_cpu_numpy_buffer(outputs[0].cuda())
     a_test_min_loc = util.to_cpu_numpy_buffer(outputs[1].cuda())
@@ -331,18 +334,25 @@ def test_op_min_max_loc_content(input_type):
     a_test_max_loc = util.to_cpu_numpy_buffer(outputs[4].cuda())
     a_test_num_max = util.to_cpu_numpy_buffer(outputs[5].cuda())
 
+    # Locations are found in no particular order, so they must be sorted for comparison
+
+    for i in range(n_img):
+        a_test_min_loc[i] = a_test_min_loc[i, np.argsort(a_test_min_loc[i, :, 0]), :]
+        a_test_max_loc[i] = a_test_max_loc[i, np.argsort(a_test_max_loc[i, :, 0]), :]
+
     a_gold_min_loc = np.zeros(a_test_min_loc.shape, dtype=a_test_min_loc.dtype)
-    a_gold_min_loc[0, 0, 0:2] = [777, 444]
-    a_gold_min_loc[1, 0, 0:2] = [778, 445]
-
     a_gold_max_loc = np.zeros(a_test_max_loc.shape, dtype=a_test_max_loc.dtype)
-    a_gold_max_loc[0, 0, 0:2] = [888, 333]
-    a_gold_max_loc[1, 0, 0:2] = [887, 332]
 
-    np.testing.assert_array_equal(a_test_min_val, np.array([1, 2]))
+    for i in range(n_img):
+        for j, min_loc in enumerate(l_min_loc):
+            a_gold_min_loc[i, j, 0:2] = np.array(min_loc) + i
+        for j, max_loc in enumerate(l_max_loc):
+            a_gold_max_loc[i, j, 0:2] = np.array(max_loc) - i
+
+    np.testing.assert_array_equal(a_test_min_val, np.full([n_img, 1], 0))
     np.testing.assert_array_equal(a_test_min_loc, a_gold_min_loc)
-    np.testing.assert_array_equal(a_test_num_min, np.array([1, 1]))
+    np.testing.assert_array_equal(a_test_num_min, np.full([n_img, 1], len(l_min_loc)))
 
-    np.testing.assert_array_equal(a_test_max_val, np.array([254, 253]))
+    np.testing.assert_array_equal(a_test_max_val, np.full([n_img, 1], 255))
     np.testing.assert_array_equal(a_test_max_loc, a_gold_max_loc)
-    np.testing.assert_array_equal(a_test_num_max, np.array([1, 1]))
+    np.testing.assert_array_equal(a_test_num_max, np.full([n_img, 1], len(l_max_loc)))
