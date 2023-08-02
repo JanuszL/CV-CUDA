@@ -18,6 +18,7 @@ add_subdirectory(legacy)
 add_library(cvcuda_priv STATIC
     OpSIFT.cu
     OpMinMaxLoc.cu
+    OpHistogram.cpp
     OpBoxBlur.cpp
     OpBndBox.cpp
     OpBrightnessContrast.cu

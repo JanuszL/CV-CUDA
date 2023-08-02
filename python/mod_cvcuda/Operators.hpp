@@ -84,6 +84,7 @@ void ExportOpRandomResizedCrop(py::module &m);
 void ExportOpGaussianNoise(py::module &m);
 void ExportOpMinMaxLoc(py::module &m);
 void ExportOpSIFT(py::module &m);
+void ExportOpHistogram(py::module &m);
 void ExportOpInpaint(py::module &m);
 
 // Helper class that serves as generic python-side operator class.

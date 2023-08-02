@@ -76,6 +76,7 @@ add_library(cvcuda_legacy STATIC
     inpaint.cu
     inpaint_var_shape.cu
     inpaint_utils.cu
+    calc_hist.cu
 )
 
 target_link_libraries(cvcuda_legacy
