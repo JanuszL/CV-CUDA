@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the "License")
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
@@ -16,7 +16,13 @@
 # cvcuda private implementation
 add_subdirectory(priv)
 
+<<<<<<< Updated upstream
 add_library(cvcuda SHARED
+=======
+set(CV_CUDA_LIB_FILES Operator.cpp)
+
+set(CV_CUDA_OP_FILES
+>>>>>>> Stashed changes
     OpBoxBlur.cpp
     OpBndBox.cpp
     OpBrightnessContrast.cpp
@@ -55,6 +61,28 @@ add_library(cvcuda SHARED
     OpAdaptiveThreshold.cpp
     OpRandomResizedCrop.cpp
     OpGaussianNoise.cpp
+<<<<<<< Updated upstream
+=======
+)
+
+# filter only one that matches the patern
+if (NOT CV_CUDA_SRC_PATERN STREQUAL "")
+    foreach(PATTERN ${CV_CUDA_SRC_PATERN})
+        string(TOLOWER ${PATTERN} PATTERN)
+        foreach(FILENAME ${CV_CUDA_OP_FILES})
+            string(TOLOWER ${FILENAME} FILENAME_LOWERCASE)
+            if (${FILENAME_LOWERCASE} MATCHES ${PATTERN})
+                list(APPEND CV_CUDA_LIB_FILES ${FILENAME})
+            endif()
+        endforeach()
+    endforeach()
+else()
+    list(APPEND CV_CUDA_LIB_FILES ${CV_CUDA_OP_FILES})
+endif()
+
+add_library(cvcuda SHARED
+    ${CV_CUDA_LIB_FILES}
+>>>>>>> Stashed changes
 )
 
 target_link_libraries(cvcuda

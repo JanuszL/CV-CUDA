@@ -13,7 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+<<<<<<< Updated upstream
 add_library(cvcuda_legacy STATIC
+=======
+set(CV_CUDA_PRIV_LEGACY_FILES CvCudaLegacyHelpers.cpp)
+
+set(CV_CUDA_PRIV_LEGACY_OP_FILES
+>>>>>>> Stashed changes
     filter_utils.cu
     custom_crop.cu
     reformat.cu
@@ -49,7 +55,10 @@ add_library(cvcuda_legacy STATIC
     flip.cu
     flip_or_copy_var_shape.cu
     composite_var_shape.cu
+<<<<<<< Updated upstream
     CvCudaLegacyHelpers.cpp
+=======
+>>>>>>> Stashed changes
     custom_crop.cu
     reformat.cu
     resize.cu
@@ -73,6 +82,29 @@ add_library(cvcuda_legacy STATIC
     gaussian_noise.cu
     gaussian_noise_var_shape.cu
     gaussian_noise_util.cu
+<<<<<<< Updated upstream
+=======
+
+)
+
+# filter only one that matches the patern
+if (NOT CV_CUDA_SRC_PATERN STREQUAL "")
+    foreach(PATTERN ${CV_CUDA_SRC_PATERN})
+        string(TOLOWER ${PATTERN} PATTERN)
+        foreach(FILENAME ${CV_CUDA_PRIV_LEGACY_OP_FILES})
+            string(TOLOWER ${FILENAME} FILENAME_LOWERCASE)
+            if (${FILENAME_LOWERCASE} MATCHES ${PATTERN})
+                list(APPEND CV_CUDA_PRIV_LEGACY_FILES ${FILENAME})
+            endif()
+        endforeach()
+    endforeach()
+else()
+    list(APPEND CV_CUDA_PRIV_LEGACY_FILES ${CV_CUDA_PRIV_LEGACY_OP_FILES})
+endif()
+
+add_library(cvcuda_legacy STATIC
+    ${CV_CUDA_PRIV_LEGACY_FILES}
+>>>>>>> Stashed changes
 )
 
 target_link_libraries(cvcuda_legacy

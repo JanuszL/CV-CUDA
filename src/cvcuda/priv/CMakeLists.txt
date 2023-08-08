@@ -15,15 +15,24 @@
 
 add_subdirectory(legacy)
 
+<<<<<<< Updated upstream
 add_library(cvcuda_priv STATIC
     OpBoxBlur.cpp
+=======
+set(CV_CUDA_PRIV_FILES IOperator.cpp)
+
+set(CV_CUDA_PRIV_OP_FILES OpBoxBlur.cpp
+>>>>>>> Stashed changes
     OpBndBox.cpp
     OpBrightnessContrast.cu
     OpRemap.cu
     OpColorTwist.cu
     OpCropFlipNormalizeReformat.cu
     OpNonMaximumSuppression.cu
+<<<<<<< Updated upstream
     IOperator.cpp
+=======
+>>>>>>> Stashed changes
     OpReformat.cpp
     OpResize.cpp
     OpCustomCrop.cpp
@@ -54,6 +63,28 @@ add_library(cvcuda_priv STATIC
     OpAdaptiveThreshold.cpp
     OpRandomResizedCrop.cpp
     OpGaussianNoise.cpp
+<<<<<<< Updated upstream
+=======
+)
+
+# filter only one that matches the patern
+if (NOT CV_CUDA_SRC_PATERN STREQUAL "")
+    foreach(PATTERN ${CV_CUDA_SRC_PATERN})
+        string(TOLOWER ${PATTERN} PATTERN)
+        foreach(FILENAME ${CV_CUDA_PRIV_OP_FILES})
+            string(TOLOWER ${FILENAME} FILENAME_LOWERCASE)
+            if (${FILENAME_LOWERCASE} MATCHES ${PATTERN})
+                list(APPEND CV_CUDA_PRIV_FILES ${FILENAME})
+            endif()
+        endforeach()
+    endforeach()
+else()
+    list(APPEND CV_CUDA_PRIV_FILES ${CV_CUDA_PRIV_OP_FILES})
+endif()
+
+add_library(cvcuda_priv STATIC
+    ${CV_CUDA_PRIV_FILES}
+>>>>>>> Stashed changes
 )
 
 target_link_libraries(cvcuda_priv
