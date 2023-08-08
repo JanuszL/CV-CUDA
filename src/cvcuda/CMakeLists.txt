@@ -17,44 +17,8 @@
 add_subdirectory(priv)
 
 add_library(cvcuda SHARED
-    OpBoxBlur.cpp
-    OpBndBox.cpp
-    OpBrightnessContrast.cpp
-    OpRemap.cpp
-    OpColorTwist.cpp
-    OpCropFlipNormalizeReformat.cpp
-    OpNonMaximumSuppression.cpp
     Operator.cpp
-    OpReformat.cpp
-    OpResize.cpp
-    OpCustomCrop.cpp
-    OpNormalize.cpp
-    OpPadAndStack.cpp
-    OpConvertTo.cpp
-    OpCopyMakeBorder.cpp
-    OpCenterCrop.cpp
-    OpRotate.cpp
-    OpLaplacian.cpp
-    OpGaussian.cpp
-    OpErase.cpp
-    OpAverageBlur.cpp
-    OpConv2D.cpp
     OpMedianBlur.cpp
-    OpBilateralFilter.cpp
-    OpJointBilateralFilter.cpp
-    OpMorphology.cpp
-    OpCvtColor.cpp
-    OpWarpAffine.cpp
-    OpWarpPerspective.cpp
-    OpComposite.cpp
-    OpChannelReorder.cpp
-    OpFlip.cpp
-    OpGammaContrast.cpp
-    OpPillowResize.cpp
-    OpThreshold.cpp
-    OpAdaptiveThreshold.cpp
-    OpRandomResizedCrop.cpp
-    OpGaussianNoise.cpp
 )
 
 target_link_libraries(cvcuda

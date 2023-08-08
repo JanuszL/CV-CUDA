@@ -16,44 +16,8 @@
 add_subdirectory(legacy)
 
 add_library(cvcuda_priv STATIC
-    OpBoxBlur.cpp
-    OpBndBox.cpp
-    OpBrightnessContrast.cu
-    OpRemap.cu
-    OpColorTwist.cu
-    OpCropFlipNormalizeReformat.cu
-    OpNonMaximumSuppression.cu
     IOperator.cpp
-    OpReformat.cpp
-    OpResize.cpp
-    OpCustomCrop.cpp
-    OpNormalize.cpp
-    OpPadAndStack.cpp
-    OpConvertTo.cpp
-    OpCopyMakeBorder.cpp
-    OpCenterCrop.cpp
-    OpRotate.cpp
-    OpLaplacian.cpp
-    OpGaussian.cpp
-    OpErase.cpp
-    OpAverageBlur.cpp
-    OpConv2D.cpp
     OpMedianBlur.cpp
-    OpMorphology.cpp
-    OpBilateralFilter.cpp
-    OpJointBilateralFilter.cpp
-    OpCvtColor.cpp
-    OpWarpAffine.cpp
-    OpWarpPerspective.cpp
-    OpComposite.cpp
-    OpChannelReorder.cpp
-    OpFlip.cpp
-    OpGammaContrast.cpp
-    OpPillowResize.cpp
-    OpThreshold.cpp
-    OpAdaptiveThreshold.cpp
-    OpRandomResizedCrop.cpp
-    OpGaussianNoise.cpp
 )
 
 target_link_libraries(cvcuda_priv
